@@ -139,12 +139,14 @@ export default defineSchema({
     resumo: v.optional(v.string()),
     textoBase: v.optional(v.string()),
     audioUrl: v.optional(v.string()),
+    youtubeUrl: v.optional(v.string()),
     materiaisComplementares: v.optional(v.array(v.string())),
     tags: v.optional(v.array(v.string())),
     status: v.union(v.literal("RASCUNHO"), v.literal("PUBLICADO")),
     // IA Processing fields
     iaStatus: v.optional(v.union(
       v.literal("PENDENTE"),
+      v.literal("BAIXANDO"),
       v.literal("TRANSCREVENDO"),
       v.literal("ANALISANDO"),
       v.literal("CONCLUIDO"),
@@ -155,6 +157,16 @@ export default defineSchema({
     iaResultado: v.optional(v.any()),
     iaProcessadoEm: v.optional(v.number()),
     iaProcessadoPor: v.optional(v.id("membros")),
+    // Sermon boundaries (seconds) — detected by IA
+    inicioSermao: v.optional(v.number()),
+    fimSermao: v.optional(v.number()),
+    // Announcements boundaries (seconds) — detected by IA
+    inicioAvisos: v.optional(v.number()),
+    fimAvisos: v.optional(v.number()),
+    iaAvisos: v.optional(v.array(v.object({
+      titulo: v.string(),
+      descricao: v.string(),
+    }))),
   })
     .index("by_tipo", ["tipo"])
     .index("by_status", ["status"])

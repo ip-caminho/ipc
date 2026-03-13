@@ -9,6 +9,12 @@ function getProcessSermonRef() {
   return internal.gravacoes.aiAction.processSermon;
 }
 
+function getDownloadYouTubeRef() {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { internal } = require("../_generated/api");
+  return internal.gravacoes.youtubeAction.downloadYouTubeAudio;
+}
+
 // ===== INTERNAL MUTATION: update IA status =====
 
 export const updateIaStatus = internalMutation({
@@ -20,6 +26,7 @@ export const updateIaStatus = internalMutation({
     iaResultado: v.optional(v.any()),
     iaProcessadoEm: v.optional(v.number()),
     iaProcessadoPor: v.optional(v.id("membros")),
+    audioUrl: v.optional(v.string()),
     // Auto-fill fields from IA
     titulo: v.optional(v.string()),
     pregadorNome: v.optional(v.string()),
@@ -27,6 +34,14 @@ export const updateIaStatus = internalMutation({
     resumo: v.optional(v.string()),
     descricao: v.optional(v.string()),
     tags: v.optional(v.array(v.string())),
+    inicioSermao: v.optional(v.number()),
+    fimSermao: v.optional(v.number()),
+    inicioAvisos: v.optional(v.number()),
+    fimAvisos: v.optional(v.number()),
+    iaAvisos: v.optional(v.array(v.object({
+      titulo: v.string(),
+      descricao: v.string(),
+    }))),
   },
   handler: async (ctx, args) => {
     const { id, ...data } = args;
@@ -83,13 +98,57 @@ export const createFromAudio = mutation({
   },
 });
 
+// ===== PUBLIC MUTATION: create from YouTube URL + auto-process =====
+
+export const createFromYouTube = mutation({
+  args: {
+    youtubeUrl: v.string(),
+    tipo: v.optional(v.union(
+      v.literal("SERMAO"),
+      v.literal("ESTUDO_BIBLICO"),
+      v.literal("PALESTRA"),
+      v.literal("TESTEMUNHO")
+    )),
+    data: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    const membro = await ctx.db
+      .query("membros")
+      .withIndex("by_user_id", (q) => q.eq("userId", userId))
+      .first();
+
+    if (!membro) throw new Error("Membro nao encontrado");
+
+    const id = await ctx.db.insert("gravacoes", {
+      titulo: "Importando do YouTube...",
+      tipo: args.tipo || "SERMAO",
+      data: args.data || new Date().toISOString().split("T")[0],
+      youtubeUrl: args.youtubeUrl,
+      status: "RASCUNHO",
+      iaStatus: "BAIXANDO",
+    });
+
+    await ctx.scheduler.runAfter(0, getDownloadYouTubeRef(), {
+      gravacaoId: id,
+      youtubeUrl: args.youtubeUrl,
+      membroId: membro._id,
+    });
+
+    return id;
+  },
+});
+
 // ===== PUBLIC MUTATION: start processing =====
 
 export const startProcessing = mutation({
   args: {
     id: v.id("gravacoes"),
+    retryFrom: v.optional(v.union(v.literal("BAIXANDO"), v.literal("TRANSCREVENDO"), v.literal("ANALISANDO"))),
   },
-  handler: async (ctx, { id }) => {
+  handler: async (ctx, { id, retryFrom }) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
 
@@ -118,11 +177,36 @@ export const startProcessing = mutation({
 
     const gravacao = await ctx.db.get(id);
     if (!gravacao) throw new Error("Gravacao nao encontrada");
-    if (!gravacao.audioUrl) throw new Error("Gravacao sem audio para processar");
 
-    if (gravacao.iaStatus === "TRANSCREVENDO" || gravacao.iaStatus === "ANALISANDO") {
+    if (gravacao.iaStatus === "BAIXANDO" || gravacao.iaStatus === "TRANSCREVENDO" || gravacao.iaStatus === "ANALISANDO") {
       throw new Error("Processamento ja em andamento");
     }
+
+    // Retry YouTube download
+    if (retryFrom === "BAIXANDO") {
+      if (!gravacao.youtubeUrl) throw new Error("Gravacao sem URL do YouTube");
+
+      await ctx.db.patch(id, {
+        iaStatus: "BAIXANDO",
+        iaErro: undefined,
+      });
+
+      await ctx.scheduler.runAfter(0, getDownloadYouTubeRef(), {
+        gravacaoId: id,
+        youtubeUrl: gravacao.youtubeUrl,
+        membroId: membro._id,
+      });
+
+      return id;
+    }
+
+    if (!gravacao.audioUrl) throw new Error("Gravacao sem audio para processar");
+
+    // Retry from analysis: skip Deepgram, reuse existing transcription
+    const skipTranscription =
+      retryFrom === "ANALISANDO" && gravacao.iaTranscricao
+        ? gravacao.iaTranscricao
+        : undefined;
 
     await ctx.db.patch(id, {
       iaStatus: "PENDENTE",
@@ -133,6 +217,7 @@ export const startProcessing = mutation({
       gravacaoId: id,
       audioUrl: gravacao.audioUrl,
       membroId: membro._id,
+      skipTranscription,
     });
 
     return id;

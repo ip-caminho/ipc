@@ -16,6 +16,7 @@ interface IaStatusBadgeProps {
 
 const STATUS_CONFIG: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; animate?: boolean }> = {
   PENDENTE: { label: "IA: Pendente", variant: "secondary", animate: true },
+  BAIXANDO: { label: "IA: Baixando audio", variant: "secondary", animate: true },
   TRANSCREVENDO: { label: "IA: Transcrevendo", variant: "secondary", animate: true },
   ANALISANDO: { label: "IA: Analisando", variant: "secondary", animate: true },
   CONCLUIDO: { label: "IA: Concluido", variant: "default" },
