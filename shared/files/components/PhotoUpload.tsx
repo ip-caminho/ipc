@@ -55,7 +55,7 @@ async function getCroppedImg(imageSrc: string, pixelCrop: Area): Promise<Blob> {
     canvas.toBlob(
       (blob) => (blob ? resolve(blob) : reject(new Error("Falha ao gerar imagem"))),
       "image/jpeg",
-      0.9
+      0.8
     );
   });
 }

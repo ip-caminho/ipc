@@ -6,6 +6,7 @@ import { Input } from "@/shared/components/ui/input";
 import { Upload, X, Loader2, FileAudio, FileVideo, File as FileIcon } from "lucide-react";
 import { cn } from "@shared/lib/utils/cn";
 import { useFileUpload } from "../hooks/useFileUpload";
+import { useAudioCompressor } from "../hooks/useAudioCompressor";
 import { toast } from "sonner";
 
 interface FileUploadProps {
@@ -34,9 +35,11 @@ export function FileUpload({
   label,
 }: FileUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const { upload, isUploading, progress } = useFileUpload();
+  const { upload, isUploading, progress: uploadProgress } = useFileUpload();
+  const { compress, isCompressing, progress: compressProgress } = useAudioCompressor();
   const [dragOver, setDragOver] = useState(false);
   const Icon = getFileIcon(accept);
+  const isAudio = accept?.includes("audio");
 
   const handleFile = async (file: File) => {
     if (file.size > maxSizeMB * 1024 * 1024) {
@@ -45,7 +48,19 @@ export function FileUpload({
     }
 
     try {
-      const url = await upload(file, folder, entityId);
+      let fileToUpload = file;
+
+      // Compress audio files client-side (64kbps mono MP3)
+      if (isAudio && file.type.startsWith("audio/")) {
+        const originalSize = (file.size / 1024 / 1024).toFixed(1);
+        fileToUpload = await compress(file);
+        const compressedSize = (fileToUpload.size / 1024 / 1024).toFixed(1);
+        if (fileToUpload !== file) {
+          toast.info(`Audio comprimido: ${originalSize}MB → ${compressedSize}MB`);
+        }
+      }
+
+      const url = await upload(fileToUpload, folder, entityId);
       onChange(url);
       toast.success("Arquivo enviado");
     } catch (error) {
@@ -85,12 +100,14 @@ export function FileUpload({
     );
   }
 
+  const isBusy = isCompressing || isUploading;
+
   return (
     <div
       className={cn(
         "border-2 border-dashed rounded-md p-4 text-center cursor-pointer transition-colors",
         dragOver ? "border-primary bg-primary/5" : "border-muted-foreground/25 hover:border-muted-foreground/50",
-        isUploading && "pointer-events-none opacity-60"
+        isBusy && "pointer-events-none opacity-60"
       )}
       onClick={() => inputRef.current?.click()}
       onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
@@ -104,10 +121,14 @@ export function FileUpload({
         className="hidden"
         onChange={handleInputChange}
       />
-      {isUploading ? (
+      {isBusy ? (
         <div className="flex flex-col items-center gap-2 py-2">
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-          <span className="text-xs text-muted-foreground">Enviando... {progress}%</span>
+          <span className="text-xs text-muted-foreground">
+            {isCompressing
+              ? `Comprimindo audio... ${compressProgress}%`
+              : `Enviando... ${uploadProgress}%`}
+          </span>
         </div>
       ) : (
         <div className="flex flex-col items-center gap-2 py-2">
