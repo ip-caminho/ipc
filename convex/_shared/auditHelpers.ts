@@ -4,10 +4,10 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 
 type MutationCtx = GenericMutationCtx<DataModel>;
 
-const SKIP_FIELDS = new Set(["_id", "_creationTime"]);
-const SENSITIVE_FIELDS = new Set(["cpf", "rg"]);
+export const SKIP_FIELDS = new Set(["_id", "_creationTime"]);
+export const SENSITIVE_FIELDS = new Set(["cpf", "rg"]);
 
-function maskSensitiveValue(field: string, value: any): any {
+export function maskSensitiveValue(field: string, value: any): any {
   if (!SENSITIVE_FIELDS.has(field) || typeof value !== "string") return value;
   if (value.length <= 4) return "***";
   // CPF: ***.456.789-** / RG: mask first 3 and last 2
@@ -20,7 +20,7 @@ function maskSensitiveValue(field: string, value: any): any {
   return `***${clean.slice(3, -2)}**`;
 }
 
-function hasChanged(oldValue: any, newValue: any): boolean {
+export function hasChanged(oldValue: any, newValue: any): boolean {
   if (oldValue === newValue) return false;
   if (oldValue == null && newValue == null) return false;
   if (oldValue == null || newValue == null) return true;
@@ -38,13 +38,13 @@ function hasChanged(oldValue: any, newValue: any): boolean {
   return oldKeys.some((key) => hasChanged(oldValue[key], newValue[key]));
 }
 
-function formatValue(value: any): any {
+export function formatValue(value: any): any {
   if (value === null || value === undefined) return undefined;
   if (typeof value === "object" && !Array.isArray(value)) return JSON.stringify(value);
   return value;
 }
 
-function collectChangedFields(
+export function collectChangedFields(
   oldRecord: any,
   newRecord: any,
   parentPath: string = ""

@@ -1,6 +1,7 @@
 import { query, mutation } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { calcProgress, isComplete, mergeHeartbeat } from "./escutasHelpers";
 
 async function getMembroId(ctx: any) {
   const userId = await getAuthUserId(ctx);
@@ -22,8 +23,8 @@ export const heartbeat = mutation({
     const membroId = await getMembroId(ctx);
     if (!membroId || duration <= 0) return;
 
-    const progresso = Math.min(100, Math.round((currentTime / duration) * 100));
-    const completou = progresso >= 90;
+    const progresso = calcProgress(currentTime, duration);
+    const completou = isComplete(progresso);
     const now = Date.now();
 
     // Upsert: find existing record
@@ -35,14 +36,12 @@ export const heartbeat = mutation({
       .first();
 
     if (existing) {
-      // Only update if progress advanced
-      const newProgresso = Math.max(existing.progresso, progresso);
-      const newUltimoSegundo = Math.max(existing.ultimoSegundo, currentTime);
+      const merged = mergeHeartbeat(existing, progresso, currentTime);
       await ctx.db.patch(existing._id, {
-        ultimoSegundo: newUltimoSegundo,
+        ultimoSegundo: merged.ultimoSegundo,
         duracaoTotal: duration,
-        progresso: newProgresso,
-        completou: existing.completou || completou,
+        progresso: merged.progresso,
+        completou: merged.completou,
         atualizadoEm: now,
       });
     } else {

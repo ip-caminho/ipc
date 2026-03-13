@@ -1,6 +1,7 @@
 import { query, mutation } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { INITIAL_ROLE_PERMISSIONS as ROLE_DEFAULTS, resolvePermissions } from "./rbacHelpers";
 
 // ===== PERMISSION DEFINITIONS =====
 
@@ -81,23 +82,6 @@ function getPermissionDescription(perm: string): string {
   return descriptions[perm] ?? "";
 }
 
-// Initial role-permission mapping (Phase 1: 3 roles)
-const INITIAL_ROLE_PERMISSIONS: Record<string, string[]> = {
-  admin: ["*"],
-  secretaria: [
-    "membros:read", "membros:create", "membros:update",
-    "entidades:read", "entidades:create", "entidades:update", "entidades:delete",
-    "diretorio:read",
-    "gravacoes:read", "gravacoes:create", "gravacoes:update", "gravacoes:delete", "gravacoes:process_ai",
-    "audit:read",
-  ],
-  membro: [
-    "membros:self_service",
-    "diretorio:read",
-    "gravacoes:read",
-  ],
-};
-
 // Visible roles in matrix (exclude admin — has wildcard *)
 const VISIBLE_ROLES = ["secretaria", "membro"];
 
@@ -137,16 +121,15 @@ export const getUserPermissionContext = query({
     if (!entidade || entidade.status !== "ATIVO") return null;
 
     // Use membro-level permissions if set, else fall back to role
-    let permissions: string[];
-    if (membro.permissions && membro.permissions.length > 0) {
-      permissions = membro.permissions;
-    } else {
-      const rolePerms = await ctx.db
-        .query("rolePermissions")
-        .withIndex("by_role", (q) => q.eq("role", membro.role))
-        .first();
-      permissions = rolePerms?.permissions ?? INITIAL_ROLE_PERMISSIONS[membro.role] ?? [];
-    }
+    const rolePermsRecord = await ctx.db
+      .query("rolePermissions")
+      .withIndex("by_role", (q) => q.eq("role", membro.role))
+      .first();
+    const permissions = resolvePermissions(
+      membro.permissions,
+      rolePermsRecord?.permissions,
+      membro.role
+    );
 
     return {
       membroId: membro._id,
@@ -204,7 +187,7 @@ export const getAllRolesWithPermissions = query({
         .first();
       results.push({
         role,
-        permissions: rolePerms?.permissions ?? INITIAL_ROLE_PERMISSIONS[role] ?? [],
+        permissions: rolePerms?.permissions ?? ROLE_DEFAULTS[role] ?? [],
       });
     }
     return results;
@@ -232,16 +215,11 @@ export const getAllMembrosWithPermissions = query({
       if (!entidade || entidade.status !== "ATIVO") continue;
 
       // Effective permissions: membro-level if set, else role-level
-      let permissions: string[];
-      if (m.permissions && m.permissions.length > 0) {
-        permissions = m.permissions;
-      } else {
-        const rolePerms = await ctx.db
-          .query("rolePermissions")
-          .withIndex("by_role", (q) => q.eq("role", m.role))
-          .first();
-        permissions = rolePerms?.permissions ?? INITIAL_ROLE_PERMISSIONS[m.role] ?? [];
-      }
+      const rolePerms = await ctx.db
+        .query("rolePermissions")
+        .withIndex("by_role", (q) => q.eq("role", m.role))
+        .first();
+      const permissions = resolvePermissions(m.permissions, rolePerms?.permissions, m.role);
 
       results.push({
         _id: m._id,
@@ -283,7 +261,7 @@ export const listRolePermissions = query({
 export const seedRolePermissions = mutation({
   args: {},
   handler: async (ctx) => {
-    for (const [role, permissions] of Object.entries(INITIAL_ROLE_PERMISSIONS)) {
+    for (const [role, permissions] of Object.entries(ROLE_DEFAULTS) as [string, string[]][]) {
       const existing = await ctx.db
         .query("rolePermissions")
         .withIndex("by_role", (q) => q.eq("role", role))
@@ -343,7 +321,7 @@ export const setMembroPermission = mutation({
         .query("rolePermissions")
         .withIndex("by_role", (q) => q.eq("role", membro.role))
         .first();
-      currentPerms = [...(rolePerms?.permissions ?? INITIAL_ROLE_PERMISSIONS[membro.role] ?? [])];
+      currentPerms = [...(rolePerms?.permissions ?? ROLE_DEFAULTS[membro.role] ?? [])];
     }
 
     if (hasPermission && !currentPerms.includes(permission)) {

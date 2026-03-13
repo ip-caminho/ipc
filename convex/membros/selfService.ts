@@ -2,16 +2,7 @@ import { query, mutation } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { createFieldAuditLogs } from "../_shared/auditHelpers";
-
-// Fields a member can edit about themselves
-const SELF_SERVICE_FIELDS = new Set([
-  "telefone",
-  "email",
-  "endereco",
-  "profissao",
-  "formacao",
-  "foto",
-]);
+import { filterSelfServiceFields } from "./selfServiceHelpers";
 
 export const getMyProfile = query({
   args: {},
@@ -52,14 +43,8 @@ export const updateMyProfile = mutation({
     }
 
     // Filter to only allowed fields
-    const filteredData: Record<string, any> = {};
-    for (const [key, value] of Object.entries(data)) {
-      if (SELF_SERVICE_FIELDS.has(key)) {
-        filteredData[key] = value;
-      }
-    }
-
-    if (Object.keys(filteredData).length === 0) {
+    const filteredData = filterSelfServiceFields(data);
+    if (!filteredData) {
       throw new Error("No valid fields to update");
     }
 
