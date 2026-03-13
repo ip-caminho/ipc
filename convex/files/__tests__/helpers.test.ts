@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { getPublicUrl, generateObjectKey, extractKeyFromUrl, getBucketName } from "../helpers";
+import { getPublicUrl, generateObjectKey, extractKeyFromUrl, getBucketName, toCdnUrl } from "../helpers";
 
 describe("helpers (B2/S3)", () => {
   beforeEach(() => {
@@ -14,21 +14,30 @@ describe("helpers (B2/S3)", () => {
   });
 
   describe("getPublicUrl", () => {
-    it("gera URL publica correta para B2", () => {
+    it("gera URL via CDN", () => {
       const url = getPublicUrl("gravacoes-audio/abc_123.mp3");
-      expect(url).toBe("https://f005.backblazeb2.com/file/ipc-files/gravacoes-audio/abc_123.mp3");
+      expect(url).toBe("https://cdn.yhc.com.br/gravacoes-audio/abc_123.mp3");
     });
 
-    it("extrai numero da regiao do endpoint", () => {
-      vi.stubEnv("BACKBLAZE_ENDPOINT", "s3.us-west-001.backblazeb2.com");
-      const url = getPublicUrl("test/file.jpg");
-      expect(url).toBe("https://f001.backblazeb2.com/file/ipc-files/test/file.jpg");
+    it("funciona com subpaths", () => {
+      const url = getPublicUrl("membros/fotos/m123_456.jpg");
+      expect(url).toBe("https://cdn.yhc.com.br/membros/fotos/m123_456.jpg");
+    });
+  });
+
+  describe("toCdnUrl", () => {
+    it("converte URL legada do B2 para CDN", () => {
+      const legacy = "https://f005.backblazeb2.com/file/ipc-files/gravacoes-audio/abc_123.mp3";
+      expect(toCdnUrl(legacy)).toBe("https://cdn.yhc.com.br/gravacoes-audio/abc_123.mp3");
     });
 
-    it("usa 005 como fallback se regiao nao reconhecida", () => {
-      vi.stubEnv("BACKBLAZE_ENDPOINT", "custom-endpoint.example.com");
-      const url = getPublicUrl("test/file.jpg");
-      expect(url).toBe("https://f005.backblazeb2.com/file/ipc-files/test/file.jpg");
+    it("mantem URL que ja é CDN", () => {
+      const cdn = "https://cdn.yhc.com.br/gravacoes-audio/abc_123.mp3";
+      expect(toCdnUrl(cdn)).toBe(cdn);
+    });
+
+    it("retorna original se nao reconhecer o formato", () => {
+      expect(toCdnUrl("https://example.com/file.mp3")).toBe("https://example.com/file.mp3");
     });
   });
 
@@ -40,7 +49,6 @@ describe("helpers (B2/S3)", () => {
 
       expect(key).toMatch(/^gravacoes-audio\/entity123_\d+\.mp3$/);
 
-      // Verifica que o timestamp esta no range correto
       const timestamp = parseInt(key.split("_")[1].split(".")[0]);
       expect(timestamp).toBeGreaterThanOrEqual(before);
       expect(timestamp).toBeLessThanOrEqual(after);

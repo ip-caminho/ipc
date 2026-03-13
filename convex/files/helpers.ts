@@ -18,13 +18,21 @@ export function getBucketName(): string {
   return process.env.BACKBLAZE_BUCKET_NAME!;
 }
 
+const CDN_BASE = "https://cdn.yhc.com.br";
+
 export function getPublicUrl(key: string): string {
-  const bucketName = getBucketName();
-  const endpoint = process.env.BACKBLAZE_ENDPOINT!;
-  // s3.us-east-005.backblazeb2.com → f005.backblazeb2.com
-  const regionMatch = endpoint.match(/s3\.(us-\w+-\d+)/);
-  const regionNum = regionMatch ? regionMatch[1].split("-").pop() : "005";
-  return `https://f${regionNum}.backblazeb2.com/file/${bucketName}/${key}`;
+  return `${CDN_BASE}/${key}`;
+}
+
+/**
+ * Convert any B2 direct URL or CDN URL to the CDN URL.
+ * Handles legacy URLs stored in the DB (f005.backblazeb2.com/file/bucket/...).
+ */
+export function toCdnUrl(url: string): string {
+  if (url.startsWith(CDN_BASE)) return url;
+  const key = extractKeyFromUrl(url);
+  if (key) return `${CDN_BASE}/${key}`;
+  return url;
 }
 
 export function generateObjectKey(
