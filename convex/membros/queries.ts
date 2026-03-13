@@ -1,0 +1,121 @@
+import { query } from "../_generated/server";
+import { v } from "convex/values";
+
+export const list = query({
+  args: {
+    search: v.optional(v.string()),
+    cargoEclesiastico: v.optional(v.string()),
+    status: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const membros = await ctx.db.query("membros").collect();
+
+    const results = await Promise.all(
+      membros.map(async (m) => {
+        const entidade = await ctx.db.get(m.entidadeId);
+        return entidade ? { ...m, entidade } : null;
+      })
+    );
+
+    let filtered = results.filter(Boolean) as NonNullable<(typeof results)[0]>[];
+
+    if (args.status) {
+      filtered = filtered.filter((r) => r!.entidade.status === args.status);
+    } else {
+      // Default: show only ATIVO
+      filtered = filtered.filter((r) => r!.entidade.status === "ATIVO");
+    }
+
+    if (args.cargoEclesiastico) {
+      filtered = filtered.filter((r) => r!.cargoEclesiastico === args.cargoEclesiastico);
+    }
+
+    if (args.search) {
+      const term = args.search.toLowerCase();
+      filtered = filtered.filter((r) => {
+        const name = (r!.entidade.nomeCompleto || "").toLowerCase();
+        const phone = (r!.entidade.whatsapp || "").toLowerCase();
+        return name.includes(term) || phone.includes(term);
+      });
+    }
+
+    return filtered;
+  },
+});
+
+export const getById = query({
+  args: { id: v.id("membros") },
+  handler: async (ctx, { id }) => {
+    const membro = await ctx.db.get(id);
+    if (!membro) return null;
+    const entidade = await ctx.db.get(membro.entidadeId);
+    return { ...membro, entidade };
+  },
+});
+
+export const getPublicProfile = query({
+  args: { id: v.id("membros") },
+  handler: async (ctx, { id }) => {
+    const membro = await ctx.db.get(id);
+    if (!membro) return null;
+    const entidade = await ctx.db.get(membro.entidadeId);
+    if (!entidade || entidade.status !== "ATIVO") return null;
+    return {
+      nome: entidade.nomeCompleto || entidade.nomeRazaoSocial || "",
+      foto: entidade.foto || null,
+      whatsapp: entidade.whatsapp || null,
+      email: entidade.email || null,
+      cargoEclesiastico: membro.cargoEclesiastico || null,
+    };
+  },
+});
+
+export const birthdaysThisMonth = query({
+  args: {},
+  handler: async (ctx) => {
+    const now = new Date();
+    const currentMonth = String(now.getMonth() + 1).padStart(2, "0");
+
+    const membros = await ctx.db.query("membros").collect();
+    const results = await Promise.all(
+      membros.map(async (m) => {
+        const entidade = await ctx.db.get(m.entidadeId);
+        return entidade ? { ...m, entidade } : null;
+      })
+    );
+
+    return results
+      .filter((r): r is NonNullable<typeof r> => {
+        if (!r || !r.entidade.dataNascimento || r.entidade.status !== "ATIVO") return false;
+        // dataNascimento format: YYYY-MM-DD
+        const month = r.entidade.dataNascimento.split("-")[1];
+        return month === currentMonth;
+      })
+      .sort((a, b) => {
+        const dayA = parseInt(a!.entidade.dataNascimento!.split("-")[2]);
+        const dayB = parseInt(b!.entidade.dataNascimento!.split("-")[2]);
+        return dayA - dayB;
+      });
+  },
+});
+
+export const getByUserId = query({
+  args: {},
+  handler: async (ctx) => {
+    const { auth } = ctx;
+    // @ts-ignore
+    const identity = await auth.getUserIdentity();
+    if (!identity) return null;
+    // Try to find by subject (userId)
+    const userId = identity.subject;
+    const membro = await ctx.db
+      .query("membros")
+      .withIndex("by_user_id")
+      .filter((q) => q.neq(q.field("userId"), undefined))
+      .collect();
+    const match = membro.find((m) => m.userId === userId as any);
+    if (!match) return null;
+    const entidade = await ctx.db.get(match.entidadeId);
+    return { ...match, entidade };
+  },
+});
