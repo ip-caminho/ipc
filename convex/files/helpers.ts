@@ -45,6 +45,11 @@ export function generateObjectKey(
 }
 
 export function extractKeyFromUrl(url: string): string | null {
+  // CDN URL: https://cdn.yhc.com.br/gravacoes-audio/abc.mp3 → gravacoes-audio/abc.mp3
+  if (url.startsWith(CDN_BASE + "/")) {
+    return url.substring(CDN_BASE.length + 1);
+  }
+  // Legacy B2 URL: https://f005.backblazeb2.com/file/ipc-files/gravacoes-audio/abc.mp3
   const bucketName = getBucketName();
   const pattern = `/file/${bucketName}/`;
   const idx = url.indexOf(pattern);

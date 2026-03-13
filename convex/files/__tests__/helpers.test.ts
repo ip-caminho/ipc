@@ -61,12 +61,22 @@ describe("helpers (B2/S3)", () => {
   });
 
   describe("extractKeyFromUrl", () => {
-    it("extrai chave de URL publica B2", () => {
+    it("extrai chave de URL CDN", () => {
+      const url = "https://cdn.yhc.com.br/gravacoes-audio/abc_123.mp3";
+      expect(extractKeyFromUrl(url)).toBe("gravacoes-audio/abc_123.mp3");
+    });
+
+    it("extrai chave de URL CDN com subpath", () => {
+      const url = "https://cdn.yhc.com.br/membros/fotos/m123_456.jpg";
+      expect(extractKeyFromUrl(url)).toBe("membros/fotos/m123_456.jpg");
+    });
+
+    it("extrai chave de URL publica B2 (legada)", () => {
       const url = "https://f005.backblazeb2.com/file/ipc-files/gravacoes-audio/abc_123.mp3";
       expect(extractKeyFromUrl(url)).toBe("gravacoes-audio/abc_123.mp3");
     });
 
-    it("extrai chave de URL com path complexo", () => {
+    it("extrai chave de URL B2 com path complexo", () => {
       const url = "https://f005.backblazeb2.com/file/ipc-files/membros/fotos/m123_456.jpg";
       expect(extractKeyFromUrl(url)).toBe("membros/fotos/m123_456.jpg");
     });

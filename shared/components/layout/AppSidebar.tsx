@@ -58,6 +58,7 @@ const menuItems = [
 ];
 
 const adminItems = [
+  { label: "Gravacoes", href: "/admin/gravacoes", icon: Mic },
   { label: "Permissoes", href: "/admin/permissoes", icon: Shield },
 ];
 
@@ -83,8 +84,9 @@ export function AppSidebar() {
                 // Skip items user doesn't have permission for (except null = everyone)
                 if (item.permission && !can(item.permission)) return null;
                 const isActive =
-                  pathname === item.href ||
-                  (item.href !== "/" && pathname.startsWith(item.href));
+                  !pathname.startsWith("/admin") &&
+                  (pathname === item.href ||
+                  (item.href !== "/" && pathname.startsWith(item.href)));
                 return (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton asChild isActive={isActive}>

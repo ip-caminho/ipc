@@ -1,6 +1,7 @@
 import { AuthGuard } from "@shared/components/auth/AuthGuard";
 import { AppSidebar } from "@shared/components/layout/AppSidebar";
 import { Header } from "@shared/components/layout/Header";
+import { DevContext } from "@shared/components/layout/DevContext";
 import { SidebarInset, SidebarProvider } from "@/shared/components/ui/sidebar";
 
 export default function ReadyLayout({
@@ -18,6 +19,7 @@ export default function ReadyLayout({
             {children}
           </div>
         </SidebarInset>
+        <DevContext />
       </SidebarProvider>
     </AuthGuard>
   );

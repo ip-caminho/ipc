@@ -14,6 +14,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { TIPO_GRAVACAO_OPTIONS } from "../lib/constants";
 import { FileUpload } from "@/shared/files/components/FileUpload";
 
+function getLastSunday(): string {
+  const now = new Date();
+  const day = now.getDay(); // 0 = Sunday
+  const diff = day === 0 ? 0 : day;
+  const sunday = new Date(now);
+  sunday.setDate(now.getDate() - diff);
+  return sunday.toISOString().split("T")[0];
+}
+
 const gravacaoSchema = z.object({
   titulo: z.string().min(3, "Titulo deve ter pelo menos 3 caracteres"),
   tipo: z.enum(["SERMAO", "ESTUDO_BIBLICO", "PALESTRA", "TESTEMUNHO"]),
@@ -44,7 +53,7 @@ export function GravacaoForm({ defaultValues, onSubmit, isEditing, entityId }: G
     defaultValues: {
       titulo: "",
       tipo: "SERMAO",
-      data: new Date().toISOString().split("T")[0],
+      data: getLastSunday(),
       ...defaultValues,
     },
   });

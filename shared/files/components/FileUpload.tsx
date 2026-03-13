@@ -42,7 +42,8 @@ export function FileUpload({
   const isAudio = accept?.includes("audio");
 
   const handleFile = async (file: File) => {
-    if (file.size > maxSizeMB * 1024 * 1024) {
+    // For audio, validate size AFTER compression (raw files can be huge)
+    if (!isAudio && file.size > maxSizeMB * 1024 * 1024) {
       toast.error(`Arquivo muito grande (max ${maxSizeMB}MB)`);
       return;
     }
@@ -57,6 +58,11 @@ export function FileUpload({
         const compressedSize = (fileToUpload.size / 1024 / 1024).toFixed(1);
         if (fileToUpload !== file) {
           toast.info(`Audio comprimido: ${originalSize}MB → ${compressedSize}MB`);
+        }
+        // Validate after compression
+        if (fileToUpload.size > maxSizeMB * 1024 * 1024) {
+          toast.error(`Audio comprimido ainda muito grande (${compressedSize}MB, max ${maxSizeMB}MB)`);
+          return;
         }
       }
 

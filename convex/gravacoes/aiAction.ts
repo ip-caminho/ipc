@@ -3,7 +3,7 @@
 import { internalAction } from "../_generated/server";
 import { v } from "convex/values";
 import { DeepgramClient } from "@deepgram/sdk";
-import Anthropic from "@anthropic-ai/sdk";
+import { createLlmProvider } from "../_shared/llm";
 import { fetchB2File } from "../files/signing";
 
 const SERMON_ANALYSIS_PROMPT = `Você é um analista teológico especializado em sermões reformados/presbiterianos. Analise a transcrição do sermão abaixo e retorne um JSON estruturado com os seguintes campos:
@@ -13,13 +13,18 @@ const SERMON_ANALYSIS_PROMPT = `Você é um analista teológico especializado em
 3. **temaCentral**: objeto com "titulo" (tema central do sermão em até 10 palavras) e "passagemBiblica" (texto bíblico base, ex: "João 3:16-18")
 4. **pontosChave**: array com 3-5 pontos principais do sermão (frases curtas e objetivas)
 5. **aplicacaoPratica**: array com 2-4 aplicações práticas para a vida do ouvinte
-6. **momentoInteracao**: string com um momento marcante de interação com a congregação, ou null se não houver
+6. **momentoInteracao**: string com um momento marcante de interação com a congregação, ou null se não houver. Na maioria dos sermões há um momento de interação — procure bem antes de retornar null. Este momento deve estar DENTRO dos limites do sermão (entre inicioSermao e fimSermao).
 7. **fraseChave**: a frase mais impactante do sermão (citação direta)
 8. **resumo**: string com um resumo do sermão em 2-4 parágrafos, descrevendo o conteúdo abordado de forma clara e acessível.
 9. **descricao**: descrição curta do sermão em no máximo 2 frases. Objetiva, sem emojis.
 10. **frasesRedesSociais**: array com exatamente 14 frases marcantes do sermão para posts em redes sociais. Cada frase deve ser impactante, entre 100-280 caracteres, e funcionar isoladamente como post. Sem emojis.
 11. **descricoesInstagram**: array com exatamente 14 descrições para posts do Instagram. Cada descrição deve contextualizar a frase correspondente (mesmo índice de frasesRedesSociais), ter 2-4 linhas, incluir 3-5 hashtags relevantes e um call-to-action. Sem emojis.
 12. **tags**: array com 3-8 tags relevantes para categorização (ex: "graça", "salvação", "fé", "evangelho"). Palavras simples, sem hashtag.
+13. **inicioSermao**: número em segundos indicando o momento exato onde o sermão/pregação COMEÇA. O sermão começa com as PRIMEIRAS PALAVRAS DO PREGADOR — isso pode ser uma saudação ("boa noite, irmãos"), um convite para abrir a Bíblia ("vamos abrir em Romanos capítulo 8"), ou a leitura da passagem bíblica. INCLUA a saudação e a leitura bíblica, pois fazem parte do sermão. Use os timestamps [MM:SS] para identificar. Se o sermão começa logo no início, retorne 0.
+14. **fimSermao**: número em segundos indicando o momento exato onde o sermão/pregação TERMINA. O sermão termina quando o MOMENTO DE INTERAÇÃO finaliza (ex: após a oração de resposta, apelo, ou convite final feito pelo pregador). Inclua todo o momento de interação dentro do sermão. NÃO inclua avisos da igreja, bênção apostólica ou cânticos finais. Se o sermão vai até o final da gravação, retorne null.
+15. **inicioAvisos**: número em segundos indicando onde os avisos/informes da igreja COMEÇAM. Os avisos geralmente ficam no final do culto, após o sermão. Retorne null se não houver avisos na gravação.
+16. **fimAvisos**: número em segundos indicando onde os avisos/informes TERMINAM. Retorne null se não houver avisos.
+17. **avisos**: array de objetos com "titulo" (título curto do aviso, ex: "Retiro de jovens") e "descricao" (descrição resumida do aviso em 1-2 frases). Liste cada aviso mencionado separadamente. Retorne array vazio [] se não houver avisos.
 
 IMPORTANTE:
 - Retorne APENAS o JSON, sem markdown, sem code blocks, sem texto antes ou depois
@@ -27,9 +32,59 @@ IMPORTANTE:
 - NÃO use emojis em nenhum campo
 - As frases para redes sociais devem ser extraídas ou adaptadas diretamente do sermão
 - As descrições do Instagram devem complementar as frases, não repeti-las
+- Para inicioSermao: comece nas primeiras palavras do pregador (saudação, convite para leitura bíblica, etc). SEMPRE inclua a saudação inicial e a leitura da passagem.
+- Para fimSermao: termine APÓS o momento de interação (oração de resposta, apelo). O momento de interação faz parte do sermão. Só exclua avisos da igreja, bênção e cânticos finais.
+- Os timestamps estão no formato [MM:SS] no início de cada parágrafo.
+- Para avisos: identifique o trecho onde alguém faz comunicados, informes ou avisos para a congregação (eventos, reuniões, datas, etc). Separe cada aviso individual com título e descrição.
 
 TRANSCRIÇÃO:
 `;
+
+/** Format seconds as MM:SS */
+function formatTimestamp(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
+/**
+ * Build transcription text with paragraph-level timestamps from Deepgram.
+ * Each paragraph gets a [MM:SS] prefix so Claude can identify sermon boundaries.
+ */
+function buildTimestampedTranscription(deepgramResult: any): {
+  transcription: string;
+  timestampedTranscription: string;
+} {
+  const channels = deepgramResult?.results?.channels;
+  const firstAlt = channels?.[0]?.alternatives?.[0];
+
+  // Plain transcription (for storage)
+  const transcription =
+    firstAlt?.paragraphs?.transcript ||
+    firstAlt?.transcript ||
+    "";
+
+  // Try to build timestamped version from paragraph data
+  const paragraphs = firstAlt?.paragraphs?.paragraphs;
+  if (!paragraphs || !Array.isArray(paragraphs) || paragraphs.length === 0) {
+    return { transcription, timestampedTranscription: transcription };
+  }
+
+  const lines: string[] = [];
+  for (const p of paragraphs) {
+    const text = p.sentences
+      ?.map((s: any) => s.text)
+      .join(" ") || "";
+    if (text) {
+      lines.push(`[${formatTimestamp(p.start)}] ${text}`);
+    }
+  }
+
+  return {
+    transcription,
+    timestampedTranscription: lines.join("\n\n"),
+  };
+}
 
 // Lazy-load internal to avoid TS2589 "type instantiation excessively deep"
 function getUpdateRef() {
@@ -43,68 +98,67 @@ export const processSermon = internalAction({
     gravacaoId: v.id("gravacoes"),
     audioUrl: v.string(),
     membroId: v.id("membros"),
+    skipTranscription: v.optional(v.string()), // existing transcription to skip Deepgram
   },
-  handler: async (ctx, { gravacaoId, audioUrl, membroId }) => {
+  handler: async (ctx, { gravacaoId, audioUrl, membroId, skipTranscription }) => {
     const updateIaStatus = getUpdateRef();
 
     try {
-      // === Step 1: Transcription with Deepgram ===
-      await ctx.runMutation(updateIaStatus, {
-        id: gravacaoId,
-        iaStatus: "TRANSCREVENDO",
-      });
+      let timestampedTranscription: string;
 
-      // Download audio from B2 server-side, then send buffer to Deepgram
-      const audioBuffer = await fetchB2File(audioUrl);
-      if (!audioBuffer) {
-        throw new Error("Nao foi possivel baixar o audio do B2");
+      if (skipTranscription) {
+        // === Retry from analysis — reuse existing transcription ===
+        timestampedTranscription = skipTranscription;
+        await ctx.runMutation(updateIaStatus, {
+          id: gravacaoId,
+          iaStatus: "ANALISANDO",
+        });
+      } else {
+        // === Step 1: Transcription with Deepgram ===
+        await ctx.runMutation(updateIaStatus, {
+          id: gravacaoId,
+          iaStatus: "TRANSCREVENDO",
+        });
+
+        // Download audio from B2 server-side, then send buffer to Deepgram
+        const audioBuffer = await fetchB2File(audioUrl);
+        if (!audioBuffer) {
+          throw new Error("Nao foi possivel baixar o audio do B2");
+        }
+
+        const deepgram = new DeepgramClient({ apiKey: process.env.DEEPGRAM_API_KEY! });
+        const result = await deepgram.listen.v1.media.transcribeFile(audioBuffer, {
+          model: "nova-2",
+          language: "pt-BR",
+          smart_format: true,
+          punctuate: true,
+          paragraphs: true,
+        });
+
+        const built = buildTimestampedTranscription(result);
+
+        if (!built.transcription) {
+          throw new Error("Transcricao vazia — verifique o audio");
+        }
+
+        timestampedTranscription = built.timestampedTranscription;
+
+        // Save transcription immediately (even if LLM fails later)
+        await ctx.runMutation(updateIaStatus, {
+          id: gravacaoId,
+          iaStatus: "ANALISANDO",
+          iaTranscricao: built.transcription,
+        });
       }
 
-      const deepgram = new DeepgramClient({ apiKey: process.env.DEEPGRAM_API_KEY! });
-      const result = await deepgram.listen.v1.media.transcribeFile(audioBuffer, {
-        model: "nova-2",
-        language: "pt-BR",
-        smart_format: true,
-        punctuate: true,
-        paragraphs: true,
+      // === Step 2: Analysis with LLM ===
+      // Send timestamped version so LLM can identify sermon boundaries
+      const llm = createLlmProvider();
+
+      const responseText = await llm.complete({
+        prompt: SERMON_ANALYSIS_PROMPT + timestampedTranscription,
+        maxTokens: 16000,
       });
-
-      const channels = (result as any)?.results?.channels;
-      const firstAlt = channels?.[0]?.alternatives?.[0];
-      const transcription =
-        firstAlt?.paragraphs?.transcript ||
-        firstAlt?.transcript ||
-        "";
-
-      if (!transcription) {
-        throw new Error("Transcricao vazia — verifique o audio");
-      }
-
-      // Save transcription immediately (even if LLM fails later)
-      await ctx.runMutation(updateIaStatus, {
-        id: gravacaoId,
-        iaStatus: "ANALISANDO",
-        iaTranscricao: transcription,
-      });
-
-      // === Step 2: Analysis with Claude ===
-      const anthropic = new Anthropic({
-        apiKey: process.env.ANTHROPIC_API_KEY!,
-      });
-
-      const message = await anthropic.messages.create({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 8000,
-        messages: [
-          {
-            role: "user",
-            content: SERMON_ANALYSIS_PROMPT + transcription,
-          },
-        ],
-      });
-
-      const responseText =
-        message.content[0].type === "text" ? message.content[0].text : "";
 
       // Parse JSON response — handle possible markdown code blocks
       let cleanJson = responseText.trim();
@@ -112,7 +166,13 @@ export const processSermon = internalAction({
         cleanJson = cleanJson.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "");
       }
 
-      const iaResultado = JSON.parse(cleanJson);
+      let iaResultado: any;
+      try {
+        iaResultado = JSON.parse(cleanJson);
+      } catch (parseError) {
+        console.error("[IA] JSON parse failed. Response length:", responseText.length, "Last 100 chars:", responseText.slice(-100));
+        throw new Error("Resposta da IA veio truncada ou mal formatada. Tente novamente.");
+      }
 
       if (!iaResultado.temaCentral || !iaResultado.frasesRedesSociais) {
         throw new Error("Resultado da IA incompleto — campos obrigatorios ausentes");
@@ -138,6 +198,21 @@ export const processSermon = internalAction({
       }
       if (iaResultado.tags && Array.isArray(iaResultado.tags)) {
         autoFill.tags = iaResultado.tags;
+      }
+      if (typeof iaResultado.inicioSermao === "number") {
+        autoFill.inicioSermao = iaResultado.inicioSermao;
+      }
+      if (typeof iaResultado.fimSermao === "number") {
+        autoFill.fimSermao = iaResultado.fimSermao;
+      }
+      if (typeof iaResultado.inicioAvisos === "number") {
+        autoFill.inicioAvisos = iaResultado.inicioAvisos;
+      }
+      if (typeof iaResultado.fimAvisos === "number") {
+        autoFill.fimAvisos = iaResultado.fimAvisos;
+      }
+      if (Array.isArray(iaResultado.avisos) && iaResultado.avisos.length > 0) {
+        autoFill.iaAvisos = iaResultado.avisos;
       }
 
       await ctx.runMutation(updateIaStatus, {

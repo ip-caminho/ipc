@@ -87,6 +87,7 @@ describe("gravacoes cascade delete", () => {
     expect(before.escutas).toHaveLength(1);
 
     const asAdmin = t.withIdentity({ subject: `${ids.userId}|s` });
+    // @ts-ignore — TS2589 workaround for Convex generated API
     await asAdmin.mutation(api.gravacoes.mutations.remove, { id: ids.gravacaoId });
 
     // Everything deleted

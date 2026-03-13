@@ -47,6 +47,39 @@ types/            # TypeScript types
 - **Status check**: Membros TRANSFERIDO/DESLIGADO/INATIVO bloqueados no login
 - **Upload de arquivos**: Sempre usar o modulo `shared/files/` (componente `FileUpload` + hook `useFileUpload`). Upload via presigned URL direto para B2 — nunca via base64/Convex action (limite de 10MB). Backend em `convex/files/`
 
+## Pipeline de Audio (Gravacoes)
+
+```
+Selecao → Compressao (FFmpeg.wasm) → Validacao pos-compressao → Upload (B2) → IA (Deepgram + Claude)
+```
+
+1. **Selecao**: `FileUpload` com `accept="audio/*"` no `GravacaoForm`
+2. **Sem limite de tamanho na entrada**: audio aceita qualquer tamanho (WAV de 600MB ok). Limite so se aplica apos compressao. Para outros tipos de arquivo (fotos, PDFs), o limite (maxSizeMB) vale antes do upload.
+3. **Compressao client-side** (`useAudioCompressor`):
+   - FFmpeg.wasm single-threaded (core do jsDelivr CDN)
+   - Converte qualquer audio para **64kbps mono MP3** (`-vn -ac 1 -ab 64k -acodec libmp3lame`)
+   - Pula compressao se ja for MP3 < 5MB
+   - UI: "Comprimindo audio... X%" + toast com reducao de tamanho
+4. **Validacao pos-compressao**: Rejeita se comprimido ainda > maxSizeMB (100MB no GravacaoForm)
+5. **Upload**: Presigned URL (S3 SDK → B2), chave `gravacoes-audio/{entityId}_{timestamp}.mp3`
+6. **CDN**: URL publica via `https://cdn.yhc.com.br/` (Cloudflare + B2 Bandwidth Alliance)
+7. **Pipeline IA** (acionado por botao "Processar com IA"):
+   - Backend baixa audio do CDN → buffer
+   - **Deepgram** (nova-2, pt-BR, paragraphs:true) → transcricao com timestamps por paragrafo
+   - **Claude Sonnet** → analise teologica, deteccao de inicio/fim do sermao e avisos
+   - Salva: transcricao, resultado IA, `inicioSermao`/`fimSermao`, `inicioAvisos`/`fimAvisos`, `iaAvisos`
+8. **Playback**: Media Fragment URI (`#t=inicio,fim`) restringe seek ao trecho do sermao/avisos
+
+### Arquivos-chave
+
+- `shared/files/hooks/useAudioCompressor.ts` — FFmpeg.wasm hook
+- `shared/files/components/FileUpload.tsx` — componente de upload com compressao integrada
+- `shared/files/components/SecureAudioPlayer.tsx` — player com restricao de trecho via Media Fragment
+- `convex/gravacoes/aiAction.ts` — pipeline Deepgram + Claude (internalAction)
+- `convex/gravacoes/ai.ts` — mutations para iniciar processamento e salvar resultados
+- `convex/files/helpers.ts` — S3/B2 helpers, CDN URL, presigned upload
+- `features/gravacoes/components/AvisosSection.tsx` — exibicao dos avisos com player
+
 ## Comandos
 
 ```bash

@@ -9,6 +9,10 @@
  */
 
 import type * as _shared_auditHelpers from "../_shared/auditHelpers.js";
+import type * as _shared_llm_anthropic from "../_shared/llm/anthropic.js";
+import type * as _shared_llm_gemini from "../_shared/llm/gemini.js";
+import type * as _shared_llm_index from "../_shared/llm/index.js";
+import type * as _shared_llm_types from "../_shared/llm/types.js";
 import type * as audit_mutations from "../audit/mutations.js";
 import type * as audit_queries from "../audit/queries.js";
 import type * as auth from "../auth.js";
@@ -24,19 +28,23 @@ import type * as gravacoes_ai from "../gravacoes/ai.js";
 import type * as gravacoes_aiAction from "../gravacoes/aiAction.js";
 import type * as gravacoes_comentarios from "../gravacoes/comentarios.js";
 import type * as gravacoes_escutas from "../gravacoes/escutas.js";
+import type * as gravacoes_escutasHelpers from "../gravacoes/escutasHelpers.js";
 import type * as gravacoes_mutations from "../gravacoes/mutations.js";
 import type * as gravacoes_queries from "../gravacoes/queries.js";
 import type * as gravacoes_series from "../gravacoes/series.js";
+import type * as gravacoes_youtubeAction from "../gravacoes/youtubeAction.js";
 import type * as http from "../http.js";
 import type * as membros_bootstrap from "../membros/bootstrap.js";
 import type * as membros_convites from "../membros/convites.js";
 import type * as membros_mutations from "../membros/mutations.js";
 import type * as membros_queries from "../membros/queries.js";
 import type * as membros_selfService from "../membros/selfService.js";
+import type * as membros_selfServiceHelpers from "../membros/selfServiceHelpers.js";
 import type * as messaging_phoneUtils from "../messaging/phoneUtils.js";
 import type * as messaging_service from "../messaging/service.js";
 import type * as messaging_types from "../messaging/types.js";
 import type * as preferencias_rbac from "../preferencias/rbac.js";
+import type * as preferencias_rbacHelpers from "../preferencias/rbacHelpers.js";
 
 import type {
   ApiFromModules,
@@ -46,6 +54,10 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   "_shared/auditHelpers": typeof _shared_auditHelpers;
+  "_shared/llm/anthropic": typeof _shared_llm_anthropic;
+  "_shared/llm/gemini": typeof _shared_llm_gemini;
+  "_shared/llm/index": typeof _shared_llm_index;
+  "_shared/llm/types": typeof _shared_llm_types;
   "audit/mutations": typeof audit_mutations;
   "audit/queries": typeof audit_queries;
   auth: typeof auth;
@@ -61,19 +73,23 @@ declare const fullApi: ApiFromModules<{
   "gravacoes/aiAction": typeof gravacoes_aiAction;
   "gravacoes/comentarios": typeof gravacoes_comentarios;
   "gravacoes/escutas": typeof gravacoes_escutas;
+  "gravacoes/escutasHelpers": typeof gravacoes_escutasHelpers;
   "gravacoes/mutations": typeof gravacoes_mutations;
   "gravacoes/queries": typeof gravacoes_queries;
   "gravacoes/series": typeof gravacoes_series;
+  "gravacoes/youtubeAction": typeof gravacoes_youtubeAction;
   http: typeof http;
   "membros/bootstrap": typeof membros_bootstrap;
   "membros/convites": typeof membros_convites;
   "membros/mutations": typeof membros_mutations;
   "membros/queries": typeof membros_queries;
   "membros/selfService": typeof membros_selfService;
+  "membros/selfServiceHelpers": typeof membros_selfServiceHelpers;
   "messaging/phoneUtils": typeof messaging_phoneUtils;
   "messaging/service": typeof messaging_service;
   "messaging/types": typeof messaging_types;
   "preferencias/rbac": typeof preferencias_rbac;
+  "preferencias/rbacHelpers": typeof preferencias_rbacHelpers;
 }>;
 
 /**

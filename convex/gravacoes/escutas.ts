@@ -59,6 +59,21 @@ export const heartbeat = mutation({
   },
 });
 
+export const getMyProgress = query({
+  args: { gravacaoId: v.id("gravacoes") },
+  handler: async (ctx, { gravacaoId }) => {
+    const membroId = await getMembroId(ctx);
+    if (!membroId) return null;
+
+    return await ctx.db
+      .query("escutasGravacao")
+      .withIndex("by_gravacao_membro", (q) =>
+        q.eq("gravacaoId", gravacaoId).eq("membroId", membroId)
+      )
+      .first();
+  },
+});
+
 export const listByGravacao = query({
   args: { gravacaoId: v.id("gravacoes") },
   handler: async (ctx, { gravacaoId }) => {
