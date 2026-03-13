@@ -3,17 +3,14 @@
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useAuth } from "@shared/providers/PermissionsProvider";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/shared/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
-import { Users, Cake, Mic, Church } from "lucide-react";
+import { Church, Cake, Gift } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
+import { AvisosWidget } from "@features/gravacoes/components/AvisosWidget";
+import { FrasesCarrossel } from "@features/gravacoes/components/FrasesCarrossel";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useState } from "react";
@@ -107,12 +104,9 @@ function BootstrapForm() {
 
 export default function DashboardPage() {
   const { isAuthenticated } = useConvexAuth();
-  const { name, can, isLoading, role } = useAuth();
-  const membros = useQuery(api.membros.queries.list, {});
-  const aniversariantes = useQuery(api.membros.queries.birthdaysThisMonth, {});
-  const gravacoes = useQuery(api.gravacoes.queries.list, {
-    status: "PUBLICADO",
-  });
+  const { name, isLoading, role } = useAuth();
+  const aniversariantesSemana = useQuery(api.membros.queries.birthdaysThisWeek, {});
+  const aniversariantesMes = useQuery(api.membros.queries.birthdaysThisMonth, {});
 
   // If authenticated but no membro linked (role is null), show bootstrap form
   if (!isLoading && isAuthenticated && !role) {
@@ -125,66 +119,100 @@ export default function DashboardPage() {
         <h1 className="text-2xl font-bold">
           Bem-vindo, {name || "Usuario"}!
         </h1>
-        <p className="text-muted-foreground">Painel do sistema IPC</p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        {can("membros:read") && (
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Membros Ativos
-              </CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {membros?.length ?? "..."}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+      <FrasesCarrossel />
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Aniversariantes do Mes
-            </CardTitle>
-            <Cake className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {aniversariantes?.length ?? "..."}
-            </div>
-            <div className="mt-2 space-y-1">
-              {aniversariantes?.slice(0, 5).map((a: any) => (
-                <p key={a._id} className="text-xs text-muted-foreground">
-                  {a.entidade?.nomeCompleto} —{" "}
-                  {a.entidade?.dataNascimento
-                    ? format(parseISO(a.entidade.dataNascimento), "dd/MM", {
-                        locale: ptBR,
-                      })
-                    : ""}
-                </p>
+      <AvisosWidget />
+
+      {/* Aniversariantes da semana */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Gift className="h-4 w-4" />
+            Aniversariantes da semana
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {!aniversariantesSemana ? (
+            <p className="text-sm text-muted-foreground">Carregando...</p>
+          ) : aniversariantesSemana.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nenhum aniversariante esta semana</p>
+          ) : (
+            <ul className="space-y-3">
+              {aniversariantesSemana.map((a: any) => {
+                const isToday = a.entidade?.dataNascimento
+                  ? (() => {
+                      const [, m, d] = a.entidade.dataNascimento.split("-").map(Number);
+                      const now = new Date();
+                      return m === now.getMonth() + 1 && d === now.getDate();
+                    })()
+                  : false;
+                return (
+                  <li key={a._id} className="flex items-center gap-3">
+                    <Avatar className="h-9 w-9">
+                      <AvatarFallback className="text-sm">
+                        {a.entidade?.nomeCompleto?.charAt(0)?.toUpperCase() || "?"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{a.entidade?.nomeCompleto}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {a.entidade?.dataNascimento
+                          ? format(parseISO(a.entidade.dataNascimento), "EEEE, dd 'de' MMMM", { locale: ptBR })
+                          : ""}
+                        {isToday && <span className="ml-1.5 text-primary font-medium">— Hoje!</span>}
+                      </p>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Aniversariantes do mes */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Cake className="h-4 w-4" />
+            Aniversariantes do mes
+          </CardTitle>
+          {aniversariantesMes && aniversariantesMes.length > 0 && (
+            <span className="text-sm text-muted-foreground">
+              {aniversariantesMes.length}
+            </span>
+          )}
+        </CardHeader>
+        <CardContent>
+          {!aniversariantesMes ? (
+            <p className="text-sm text-muted-foreground">Carregando...</p>
+          ) : aniversariantesMes.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nenhum aniversariante este mes</p>
+          ) : (
+            <ul className="space-y-3">
+              {aniversariantesMes.map((a: any) => (
+                <li key={a._id} className="flex items-center gap-3">
+                  <Avatar className="h-9 w-9">
+                    <AvatarFallback className="text-sm">
+                      {a.entidade?.nomeCompleto?.charAt(0)?.toUpperCase() || "?"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{a.entidade?.nomeCompleto}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {a.entidade?.dataNascimento
+                        ? format(parseISO(a.entidade.dataNascimento), "dd 'de' MMMM", { locale: ptBR })
+                        : ""}
+                    </p>
+                  </div>
+                </li>
               ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {can("gravacoes:read") && (
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Gravacoes</CardTitle>
-              <Mic className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {gravacoes?.length ?? "..."}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+            </ul>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

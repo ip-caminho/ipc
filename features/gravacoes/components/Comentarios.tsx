@@ -171,15 +171,43 @@ function ComentarioItem({
   );
 }
 
-export function Comentarios({ gravacaoId }: ComentariosProps) {
+export function ComentarioInput({ gravacaoId, onCreated }: { gravacaoId: Id<"gravacoes">; onCreated?: (id: string) => void }) {
   const [newComment, setNewComment] = useState("");
-  const [highlightId, setHighlightId] = useState<string | null>(null);
-  const { membroId, isAdmin } = useAuth();
-  const comentarios = useQuery(api.gravacoes.comentarios.listByGravacao, { gravacaoId });
   const createComment = useMutation(api.gravacoes.comentarios.create);
 
+  const handleSubmit = async () => {
+    if (!newComment.trim()) return;
+    try {
+      const id = await createComment({ gravacaoId, texto: newComment });
+      setNewComment("");
+      onCreated?.(id);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro ao comentar");
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      <input
+        className="flex-1 text-sm rounded-md border border-input bg-background px-3 py-2 placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        placeholder="Escreva um comentario..."
+        value={newComment}
+        onChange={(e) => setNewComment(e.target.value)}
+        onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+      />
+      <Button size="sm" onClick={handleSubmit} disabled={!newComment.trim()}>
+        <Send className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+}
+
+export function ComentariosList({ gravacaoId, highlightId }: { gravacaoId: Id<"gravacoes">; highlightId: string | null }) {
+  const { membroId, isAdmin } = useAuth();
+  const comentarios = useQuery(api.gravacoes.comentarios.listByGravacao, { gravacaoId });
+
   const topLevel = (comentarios?.filter((c: any) => !c.parentId) ?? [])
-    .sort((a: any, b: any) => b.createdAt - a.createdAt);
+    .sort((a: any, b: any) => a.createdAt - b.createdAt);
   const repliesMap: Record<string, any[]> = {};
   for (const c of comentarios ?? []) {
     if (c.parentId) {
@@ -187,18 +215,6 @@ export function Comentarios({ gravacaoId }: ComentariosProps) {
       repliesMap[c.parentId].push(c);
     }
   }
-
-  const handleSubmit = async () => {
-    if (!newComment.trim()) return;
-    try {
-      const id = await createComment({ gravacaoId, texto: newComment });
-      setNewComment("");
-      setHighlightId(id);
-      setTimeout(() => setHighlightId(null), 2000);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao comentar");
-    }
-  };
 
   return (
     <div className="space-y-4">
@@ -209,21 +225,6 @@ export function Comentarios({ gravacaoId }: ComentariosProps) {
         </h3>
       </div>
 
-      {/* New comment input */}
-      <div className="flex items-center gap-2">
-        <input
-          className="flex-1 text-sm rounded-md border border-input bg-background px-3 py-2 placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-          placeholder="Escreva um comentario..."
-          value={newComment}
-          onChange={(e) => setNewComment(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-        />
-        <Button size="sm" onClick={handleSubmit} disabled={!newComment.trim()}>
-          <Send className="h-4 w-4" />
-        </Button>
-      </div>
-
-      {/* Comments list */}
       {topLevel.length > 0 && (
         <div className="space-y-4">
           {topLevel.map((c: any) => (
@@ -239,6 +240,24 @@ export function Comentarios({ gravacaoId }: ComentariosProps) {
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+/** @deprecated Use ComentarioInput + ComentariosList separately */
+export function Comentarios({ gravacaoId }: ComentariosProps) {
+  const [highlightId, setHighlightId] = useState<string | null>(null);
+
+  return (
+    <div className="space-y-4">
+      <ComentarioInput
+        gravacaoId={gravacaoId}
+        onCreated={(id) => {
+          setHighlightId(id);
+          setTimeout(() => setHighlightId(null), 2000);
+        }}
+      />
+      <ComentariosList gravacaoId={gravacaoId} highlightId={highlightId} />
     </div>
   );
 }

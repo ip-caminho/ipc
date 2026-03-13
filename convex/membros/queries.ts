@@ -99,6 +99,37 @@ export const birthdaysThisMonth = query({
   },
 });
 
+export const birthdaysThisWeek = query({
+  args: {},
+  handler: async (ctx) => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const endOfWeek = new Date(today);
+    endOfWeek.setDate(today.getDate() + 6);
+
+    const membros = await ctx.db.query("membros").collect();
+    const results = await Promise.all(
+      membros.map(async (m) => {
+        const entidade = await ctx.db.get(m.entidadeId);
+        return entidade ? { ...m, entidade } : null;
+      })
+    );
+
+    return results
+      .filter((r): r is NonNullable<typeof r> => {
+        if (!r || !r.entidade.dataNascimento || r.entidade.status !== "ATIVO") return false;
+        const [, month, day] = r.entidade.dataNascimento.split("-").map(Number);
+        const bday = new Date(now.getFullYear(), month - 1, day);
+        return bday >= today && bday <= endOfWeek;
+      })
+      .sort((a, b) => {
+        const [, mA, dA] = a.entidade.dataNascimento!.split("-").map(Number);
+        const [, mB, dB] = b.entidade.dataNascimento!.split("-").map(Number);
+        return new Date(now.getFullYear(), mA - 1, dA).getTime() - new Date(now.getFullYear(), mB - 1, dB).getTime();
+      });
+  },
+});
+
 export const getByUserId = query({
   args: {},
   handler: async (ctx) => {
