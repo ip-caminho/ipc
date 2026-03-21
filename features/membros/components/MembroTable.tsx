@@ -11,7 +11,7 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/components/ui/table";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
-import { Eye } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { STATUS_COLORS, CARGO_ECLESIASTICO_OPTIONS } from "../lib/constants";
 
 interface MembroRow {
@@ -78,7 +78,7 @@ const columns: ColumnDef<MembroRow>[] = [
           size="icon"
           onClick={() => router.push(`/membros/${row.original._id}`)}
         >
-          <Eye className="h-4 w-4" />
+          <Pencil className="h-4 w-4" />
         </Button>
       );
     },

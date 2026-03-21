@@ -60,12 +60,43 @@ export const getPublicProfile = query({
     if (!membro) return null;
     const entidade = await ctx.db.get(membro.entidadeId);
     if (!entidade || entidade.status !== "ATIVO") return null;
+
+    // Conjuge
+    let conjugeNome: string | null = null;
+    if (membro.conjugeId) {
+      const conjugeEntidade = await ctx.db.get(membro.conjugeId);
+      if (conjugeEntidade && conjugeEntidade.status === "ATIVO") {
+        conjugeNome = conjugeEntidade.nomeCompleto || null;
+      }
+    }
+
+    // Pequeno grupo
+    const pgMembros = await ctx.db
+      .query("pgMembros")
+      .withIndex("by_membro", (q) => q.eq("membroId", id))
+      .collect();
+    let pgNome: string | null = null;
+    if (pgMembros.length > 0) {
+      const pg = await ctx.db.get(pgMembros[0].pgId);
+      if (pg && pg.status === "ATIVO") {
+        pgNome = pg.nome;
+      }
+    }
+
     return {
       nome: entidade.nomeCompleto || entidade.nomeRazaoSocial || "",
+      apelido: entidade.apelido || null,
       foto: entidade.foto || null,
       whatsapp: entidade.whatsapp || null,
-      email: entidade.email || null,
       cargoEclesiastico: membro.cargoEclesiastico || null,
+      dataNascimento: entidade.dataNascimento || null,
+      profissao: entidade.profissao || null,
+      bairro: entidade.endereco?.bairro || null,
+      cidade: entidade.endereco?.cidade || null,
+      dataMembresia: membro.dataMembresia || null,
+      conjugeNome,
+      filhos: membro.filhos || null,
+      pgNome,
     };
   },
 });

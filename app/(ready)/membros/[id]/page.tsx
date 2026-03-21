@@ -33,6 +33,7 @@ export default function MembroDetailPage() {
   const defaultValues: Partial<MembroFormValues> = {
     foto: membro.entidade?.foto || "",
     nomeCompleto: membro.entidade?.nomeCompleto || "",
+    apelido: membro.entidade?.apelido || "",
     cpf: membro.entidade?.cpf || "",
     rg: membro.entidade?.rg || "",
     dataNascimento: membro.entidade?.dataNascimento || "",
@@ -61,6 +62,8 @@ export default function MembroDetailPage() {
     dataConversao: membro.dataConversao || "",
     dataBatismo: membro.dataBatismo || "",
     igrejaProcedencia: membro.igrejaProcedencia || "",
+    cbcm: membro.entidade?.cbcm as any,
+    atestadoAntecedentes: membro.entidade?.atestadoAntecedentes || "",
   };
 
   const handleSubmit = async (data: MembroFormValues) => {
@@ -82,6 +85,7 @@ export default function MembroDetailPage() {
         id: id as Id<"membros">,
         entidadeData: {
           nomeCompleto: data.nomeCompleto,
+          apelido: data.apelido || undefined,
           foto: data.foto || undefined,
           cpf: data.cpf || undefined,
           rg: data.rg || undefined,
@@ -97,6 +101,8 @@ export default function MembroDetailPage() {
           telefone: data.telefone || undefined,
           email: data.email || undefined,
           endereco,
+          cbcm: data.cbcm || undefined,
+          atestadoAntecedentes: data.atestadoAntecedentes || undefined,
         },
         membroData: {
           role: data.role,
