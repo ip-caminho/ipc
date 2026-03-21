@@ -98,3 +98,11 @@ npm test                 # Vitest
 - shadcn/ui obrigatorio para todos os componentes de UI
 - Feature-based organization, nao table-based
 - Convex mutations para writes, queries para reads
+
+## DevContext
+
+Ao criar ou modificar uma pagina, **sempre** atualizar o `CONTEXT_MAP` em `shared/components/layout/DevContext.tsx`:
+- Nova pagina → adicionar entrada com nome, pagina, arquivos, queries, mutations, componentes, notas
+- Pagina modificada (novos queries/mutations/componentes) → atualizar a entrada existente
+- Rota dinamica → adicionar pattern no `resolveRoute()`
+- O DevContext so e visivel para admins (double-click no canto inferior direito)
