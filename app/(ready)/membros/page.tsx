@@ -9,6 +9,7 @@ import { Plus, Search } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { PermissionGate } from "@shared/components/auth/PermissionGate";
+import { ModuloGuard } from "@shared/components/auth/ModuloGuard";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { useDebounce } from "@shared/hooks/useDebounce";
 
@@ -18,6 +19,7 @@ export default function MembrosPage() {
   const membros = useQuery(api.membros.queries.list, { search: debouncedSearch || undefined });
 
   return (
+    <ModuloGuard modulo="membros">
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Membros</h1>
@@ -53,5 +55,6 @@ export default function MembrosPage() {
         <MembroTable data={membros as any} />
       )}
     </div>
+    </ModuloGuard>
   );
 }

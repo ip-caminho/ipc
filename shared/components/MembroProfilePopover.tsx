@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avat
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/components/ui/popover";
 import { Badge } from "@/shared/components/ui/badge";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import { Phone, Mail } from "lucide-react";
+import { Phone } from "lucide-react";
 import type { Id } from "@/convex/_generated/dataModel";
 
 const CARGO_LABELS: Record<string, string> = {
@@ -70,20 +70,12 @@ function ProfileCard({ membroId }: { membroId: Id<"membros"> }) {
           )}
         </div>
       </div>
-      {(profile.whatsapp || profile.email) && (
+      {profile.whatsapp && (
         <div className="space-y-2 text-sm text-muted-foreground">
-          {profile.whatsapp && (
-            <div className="flex items-center gap-2">
-              <Phone className="h-3.5 w-3.5" />
-              <span>{profile.whatsapp}</span>
-            </div>
-          )}
-          {profile.email && (
-            <div className="flex items-center gap-2">
-              <Mail className="h-3.5 w-3.5" />
-              <span className="truncate">{profile.email}</span>
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            <Phone className="h-3.5 w-3.5" />
+            <span>{profile.whatsapp}</span>
+          </div>
         </div>
       )}
     </div>

@@ -12,7 +12,8 @@ import { ChevronDown } from "lucide-react";
 import { membroFormSchema, type MembroFormValues } from "../lib/validations";
 import {
   SEXO_OPTIONS, ESTADO_CIVIL_OPTIONS, FORMACAO_OPTIONS,
-  CARGO_ECLESIASTICO_OPTIONS, FORMA_ADMISSAO_OPTIONS, ROLE_OPTIONS
+  CARGO_ECLESIASTICO_OPTIONS, FORMA_ADMISSAO_OPTIONS, ROLE_OPTIONS,
+  CBCM_OPTIONS,
 } from "../lib/constants";
 import { useState, useRef } from "react";
 import { PhotoUpload } from "@/shared/files/components/PhotoUpload";
@@ -111,7 +112,10 @@ export function MembroForm({ defaultValues, onSubmit, isEditing, entityId }: Mem
                 fallback={form.watch("nomeCompleto")}
               />
             </div>
-            <Field name="nomeCompleto" label="Nome Completo *" />
+            <div className="sm:col-span-2">
+              <Field name="nomeCompleto" label="Nome Completo *" />
+            </div>
+            <Field name="apelido" label="Apelido" placeholder="Como e conhecido" />
             <Field name="cpf" label="CPF" placeholder="000.000.000-00" />
             <Field name="rg" label="RG" />
             <Field name="dataNascimento" label="Data de Nascimento" type="date" />
@@ -149,6 +153,7 @@ export function MembroForm({ defaultValues, onSubmit, isEditing, entityId }: Mem
             <Field name="dataConversao" label="Data de Conversao" type="date" />
             <Field name="dataBatismo" label="Data de Batismo" type="date" />
             <Field name="igrejaProcedencia" label="Igreja de Procedencia" />
+            <SelectField name="cbcm" label="CBCM" options={CBCM_OPTIONS} />
           </Section>
         </CardContent>
       </Card>

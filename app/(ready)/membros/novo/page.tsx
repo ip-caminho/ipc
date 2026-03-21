@@ -28,6 +28,7 @@ export default function NovoMembroPage() {
 
       await createMembro({
         nomeCompleto: data.nomeCompleto,
+        apelido: data.apelido || undefined,
         foto: data.foto || undefined,
         cpf: data.cpf || undefined,
         rg: data.rg || undefined,
@@ -51,6 +52,8 @@ export default function NovoMembroPage() {
         dataConversao: data.dataConversao || undefined,
         dataBatismo: data.dataBatismo || undefined,
         igrejaProcedencia: data.igrejaProcedencia || undefined,
+        cbcm: data.cbcm || undefined,
+        atestadoAntecedentes: data.atestadoAntecedentes || undefined,
       });
 
       toast.success("Membro criado com sucesso");

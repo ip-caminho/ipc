@@ -7,6 +7,7 @@ export const create = mutation({
   args: {
     // Entidade PF fields
     nomeCompleto: v.string(),
+    apelido: v.optional(v.string()),
     cpf: v.optional(v.string()),
     rg: v.optional(v.string()),
     dataNascimento: v.optional(v.string()),
@@ -23,6 +24,8 @@ export const create = mutation({
     telefone: v.optional(v.string()),
     email: v.optional(v.string()),
     endereco: v.optional(v.any()),
+    cbcm: v.optional(v.string()),
+    atestadoAntecedentes: v.optional(v.string()),
 
     // Membro fields
     role: v.optional(v.string()),
@@ -46,6 +49,7 @@ export const create = mutation({
       papeis: ["MEMBRO"],
       status: "ATIVO",
       nomeCompleto: args.nomeCompleto,
+      apelido: args.apelido,
       cpf: args.cpf,
       rg: args.rg,
       dataNascimento: args.dataNascimento,
@@ -62,6 +66,8 @@ export const create = mutation({
       telefone: args.telefone,
       email: args.email,
       endereco: args.endereco,
+      cbcm: args.cbcm as any,
+      atestadoAntecedentes: args.atestadoAntecedentes,
     });
 
     const membroId = await ctx.db.insert("membros", {

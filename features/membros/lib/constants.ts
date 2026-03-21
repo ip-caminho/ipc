@@ -57,6 +57,12 @@ export const ROLE_OPTIONS = [
   { value: "membro", label: "Membro" },
 ] as const;
 
+export const CBCM_OPTIONS = [
+  { value: "NAO_INICIADO", label: "Nao Iniciado" },
+  { value: "CURSANDO", label: "Cursando" },
+  { value: "CONCLUIDO", label: "Concluido" },
+] as const;
+
 export const STATUS_COLORS: Record<string, string> = {
   ATIVO: "bg-green-100 text-green-800",
   INATIVO: "bg-gray-100 text-gray-800",

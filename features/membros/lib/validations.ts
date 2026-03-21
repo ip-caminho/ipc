@@ -4,6 +4,7 @@ export const membroFormSchema = z.object({
   // Entidade PF fields
   foto: z.string().optional(),
   nomeCompleto: z.string().min(3, "Nome deve ter pelo menos 3 caracteres"),
+  apelido: z.string().optional(),
   cpf: z.string().optional(),
   rg: z.string().optional(),
   dataNascimento: z.string().optional(),
@@ -36,6 +37,10 @@ export const membroFormSchema = z.object({
   dataConversao: z.string().optional(),
   dataBatismo: z.string().optional(),
   igrejaProcedencia: z.string().optional(),
+
+  // Compliance (CBCM)
+  cbcm: z.enum(["NAO_INICIADO", "CURSANDO", "CONCLUIDO"]).optional(),
+  atestadoAntecedentes: z.string().optional(),
 });
 
 export type MembroFormValues = z.infer<typeof membroFormSchema>;
