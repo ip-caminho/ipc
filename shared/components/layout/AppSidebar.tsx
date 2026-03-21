@@ -14,58 +14,113 @@ import {
   SidebarMenuItem,
   SidebarFooter,
 } from "@/shared/components/ui/sidebar";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/shared/components/ui/tooltip";
 import { useAuth } from "@shared/providers/PermissionsProvider";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 import {
   Users,
   UserCircle,
   BookOpen,
   Mic,
+  CalendarDays,
+  CalendarCheck,
   Home,
   Shield,
   LogOut,
   Church,
+  FileText,
+  UsersRound,
+  Heart,
+  HandHeart,
+  LayoutGrid,
+  Baby,
 } from "lucide-react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
 import { Button } from "@/shared/components/ui/button";
 
-const menuItems = [
-  { label: "Inicio", href: "/", icon: Home, permission: null },
+type MenuItem = {
+  label: string;
+  href: string;
+  icon: any;
+  permission: string | null;
+  modulo?: string;
+  tooltip: string;
+};
+
+type MenuSection = {
+  label: string;
+  items: MenuItem[];
+};
+
+const menuSections: MenuSection[] = [
   {
-    label: "Membros",
-    href: "/membros",
-    icon: Users,
-    permission: "membros:read" as const,
+    label: "Comunidade",
+    items: [
+      { label: "Diretorio", href: "/diretorio", icon: BookOpen, permission: "diretorio:read", modulo: "diretorio", tooltip: "Contatos e aniversarios dos membros" },
+      { label: "Pequenos Grupos", href: "/pequenos-grupos", icon: UsersRound, permission: "pequenos_grupos:read", modulo: "pequenos-grupos", tooltip: "Grupos de estudo e comunhao" },
+      { label: "Pedidos de Oracao", href: "/pedidos-oracao", icon: HandHeart, permission: "pedidos_oracao:read", modulo: "pedidos-oracao", tooltip: "Compartilhe e ore pelos pedidos da igreja" },
+      { label: "Pastoreio", href: "/pastoreio", icon: Heart, permission: "pastoreio:read", modulo: "pastoreio", tooltip: "Visitas pastorais e acompanhamento" },
+    ],
   },
   {
-    label: "Diretorio",
-    href: "/diretorio",
-    icon: BookOpen,
-    permission: "diretorio:read" as const,
+    label: "Igreja",
+    items: [
+      { label: "Ministerios", href: "/ministerios", icon: Users, permission: "ministerios:read", modulo: "ministerios", tooltip: "Ministerios e equipes da igreja" },
+      { label: "Educacional", href: "/educacional", icon: Baby, permission: "educacional:read", modulo: "educacional", tooltip: "Turmas e criancas do educacional infantil" },
+      { label: "Calendario", href: "/calendario", icon: CalendarDays, permission: "calendario:read", modulo: "calendario", tooltip: "Eventos e calendario da igreja" },
+    ],
   },
   {
-    label: "Entidades",
-    href: "/entidades",
-    icon: UserCircle,
-    permission: "entidades:read" as const,
-  },
-  {
-    label: "Gravacoes",
-    href: "/gravacoes",
-    icon: Mic,
-    permission: "gravacoes:read" as const,
+    label: "Culto",
+    items: [
+      { label: "Equipes", href: "/escalas", icon: CalendarCheck, permission: null, modulo: "escalas", tooltip: "Gerencie equipes e disponibilidade para os cultos" },
+      { label: "Cultos", href: "/cultos", icon: CalendarDays, permission: "escalas:read", modulo: "escalas", tooltip: "Liturgia, escala e avisos de cada culto" },
+      { label: "Boletim", href: "/boletim", icon: FileText, permission: "escalas:read", modulo: "boletim", tooltip: "Boletim dominical para impressao" },
+      { label: "Gravacoes", href: "/gravacoes", icon: Mic, permission: "gravacoes:read", modulo: "gravacoes", tooltip: "Sermoes e estudos gravados" },
+    ],
   },
 ];
 
-const adminItems = [
-  { label: "Gravacoes", href: "/admin/gravacoes", icon: Mic },
-  { label: "Permissoes", href: "/admin/permissoes", icon: Shield },
+const adminItems: MenuItem[] = [
+  { label: "Membros", href: "/membros", icon: Users, permission: "membros:read", modulo: "membros", tooltip: "Cadastro e gestao da membresia" },
+  { label: "Entidades", href: "/entidades", icon: UserCircle, permission: "entidades:read", modulo: "entidades", tooltip: "Pessoas e organizacoes (PF/PJ)" },
+  { label: "Gravacoes", href: "/admin/gravacoes", icon: Mic, permission: null, tooltip: "Gerenciar gravacoes e processamento IA" },
+  { label: "Permissoes", href: "/admin/permissoes", icon: Shield, permission: null, tooltip: "Controle de acesso e convites" },
+  { label: "Modulos", href: "/admin/modulos", icon: LayoutGrid, permission: null, tooltip: "Ativar ou desativar funcionalidades" },
 ];
 
 export function AppSidebar() {
   const pathname = usePathname();
   const { can, isAdmin, name, role } = useAuth();
   const { signOut } = useAuthActions();
+  // @ts-ignore Convex TS2589
+  const modulosAtivos = useQuery(api.modulos.queries.listModulosAtivos);
+
+  const isItemVisible = (item: MenuItem) => {
+    if (item.modulo && modulosAtivos && !modulosAtivos.includes(item.modulo)) {
+      return false;
+    }
+    if (item.permission && !can(item.permission as any)) {
+      return false;
+    }
+    return true;
+  };
+
+  const isActive = (href: string) =>
+    !pathname.startsWith("/admin") &&
+    (pathname === href || (href !== "/" && pathname.startsWith(href)));
+
+  const isAdminActive = (href: string) =>
+    href.startsWith("/admin")
+      ? pathname.startsWith(href)
+      : pathname === href || (href !== "/" && pathname.startsWith(href));
 
   return (
     <Sidebar>
@@ -76,54 +131,84 @@ export function AppSidebar() {
         </div>
       </SidebarHeader>
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Menu</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {menuItems.map((item) => {
-                // Skip items user doesn't have permission for (except null = everyone)
-                if (item.permission && !can(item.permission)) return null;
-                const isActive =
-                  !pathname.startsWith("/admin") &&
-                  (pathname === item.href ||
-                  (item.href !== "/" && pathname.startsWith(item.href)));
-                return (
-                  <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton asChild isActive={isActive}>
-                      <Link href={item.href}>
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.label}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {isAdmin && (
+        <TooltipProvider delayDuration={400}>
+          {/* Inicio */}
           <SidebarGroup>
-            <SidebarGroupLabel>Admin</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {adminItems.map((item) => {
-                  const isActive = pathname.startsWith(item.href);
-                  return (
-                    <SidebarMenuItem key={item.href}>
-                      <SidebarMenuButton asChild isActive={isActive}>
-                        <Link href={item.href}>
-                          <item.icon className="h-4 w-4" />
-                          <span>{item.label}</span>
+                <SidebarMenuItem>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <SidebarMenuButton asChild isActive={pathname === "/"}>
+                        <Link href="/">
+                          <Home className="h-4 w-4" />
+                          <span>Inicio</span>
                         </Link>
                       </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  );
-                })}
+                    </TooltipTrigger>
+                    <TooltipContent side="right">Painel principal e avisos</TooltipContent>
+                  </Tooltip>
+                </SidebarMenuItem>
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
-        )}
+
+          {/* Secoes agrupadas */}
+          {menuSections.map((section) => {
+            const visibleItems = section.items.filter(isItemVisible);
+            if (visibleItems.length === 0) return null;
+            return (
+              <SidebarGroup key={section.label}>
+                <SidebarGroupLabel>{section.label}</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {visibleItems.map((item) => (
+                      <SidebarMenuItem key={item.href}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <SidebarMenuButton asChild isActive={isActive(item.href)}>
+                              <Link href={item.href}>
+                                <item.icon className="h-4 w-4" />
+                                <span>{item.label}</span>
+                              </Link>
+                            </SidebarMenuButton>
+                          </TooltipTrigger>
+                          <TooltipContent side="right">{item.tooltip}</TooltipContent>
+                        </Tooltip>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            );
+          })}
+
+          {/* Admin */}
+          {isAdmin && (
+            <SidebarGroup>
+              <SidebarGroupLabel>Admin</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {adminItems.filter(isItemVisible).map((item) => (
+                    <SidebarMenuItem key={item.href}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <SidebarMenuButton asChild isActive={isAdminActive(item.href)}>
+                            <Link href={item.href}>
+                              <item.icon className="h-4 w-4" />
+                              <span>{item.label}</span>
+                            </Link>
+                          </SidebarMenuButton>
+                        </TooltipTrigger>
+                        <TooltipContent side="right">{item.tooltip}</TooltipContent>
+                      </Tooltip>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          )}
+        </TooltipProvider>
       </SidebarContent>
       <SidebarFooter className="border-t p-4">
         <div className="flex items-center gap-3">
