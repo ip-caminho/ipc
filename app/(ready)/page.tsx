@@ -7,15 +7,23 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/sha
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
-import { Church, Cake, Gift } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
+import { Church, Cake, HandHeart, MessageCircle } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { AvisosWidget } from "@features/gravacoes/components/AvisosWidget";
 import { FrasesCarrossel } from "@features/gravacoes/components/FrasesCarrossel";
+import { EducacionalPaisWidget } from "@features/educacional/components/EducacionalPaisWidget";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useConvexAuth } from "convex/react";
+import Link from "next/link";
+
+function formatWhatsappLink(phone: string): string {
+  const digits = phone.replace(/\D/g, "");
+  const number = digits.startsWith("55") ? digits : `55${digits}`;
+  return `https://wa.me/${number}`;
+}
 
 function BootstrapForm() {
   // @ts-ignore Convex TS2589
@@ -104,8 +112,11 @@ function BootstrapForm() {
 
 export default function DashboardPage() {
   const { isAuthenticated } = useConvexAuth();
-  const { name, isLoading, role } = useAuth();
-  const aniversariantesSemana = useQuery(api.membros.queries.birthdaysThisWeek, {});
+  const { name, isLoading, role, can } = useAuth();
+  const meusPedidos = useQuery(
+    api.pastoreio.queries.listPedidosOracao,
+    can("pedidos_oracao:read") ? { status: "ATIVO" } : "skip"
+  );
   const aniversariantesMes = useQuery(api.membros.queries.birthdaysThisMonth, {});
 
   // If authenticated but no membro linked (role is null), show bootstrap form
@@ -121,98 +132,115 @@ export default function DashboardPage() {
         </h1>
       </div>
 
-      <FrasesCarrossel />
+      {/* Avisos + Aniversariantes lado a lado */}
+      <div className="grid gap-6 md:grid-cols-2">
+        <AvisosWidget />
 
-      <AvisosWidget />
+        <Card>
+          <CardHeader className="space-y-0 pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Cake className="h-4 w-4" />
+                Aniversariantes do mes
+              </CardTitle>
+              {aniversariantesMes && aniversariantesMes.length > 0 && (
+                <span className="text-sm text-muted-foreground">
+                  {aniversariantesMes.length}
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground flex items-center gap-1">
+              Clique no <MessageCircle className="h-3 w-3 inline text-green-600" /> para enviar uma mensagem
+            </p>
+          </CardHeader>
+          <CardContent>
+            {!aniversariantesMes ? (
+              <p className="text-sm text-muted-foreground">Carregando...</p>
+            ) : aniversariantesMes.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhum aniversariante este mes</p>
+            ) : (
+              <ul className="space-y-3">
+                {aniversariantesMes.map((a: any) => {
+                  const nome = a.entidade?.apelido || a.entidade?.nomeCompleto;
+                  return (
+                    <li key={a._id} className="flex items-center gap-3">
+                      <Avatar className="h-9 w-9">
+                        {a.entidade?.foto && <AvatarImage src={a.entidade.foto} />}
+                        <AvatarFallback className="text-sm">
+                          {nome?.charAt(0)?.toUpperCase() || "?"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-sm font-medium truncate">{nome}</span>
+                          {a.entidade?.whatsapp && (
+                            <a
+                              href={formatWhatsappLink(a.entidade.whatsapp)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-green-600 hover:text-green-700 dark:text-green-500 dark:hover:text-green-400 transition-colors shrink-0"
+                            >
+                              <MessageCircle className="h-3.5 w-3.5" />
+                            </a>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {a.entidade?.dataNascimento
+                            ? format(parseISO(a.entidade.dataNascimento), "dd 'de' MMMM", { locale: ptBR })
+                            : ""}
+                        </p>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
-      {/* Aniversariantes da semana */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Gift className="h-4 w-4" />
-            Aniversariantes da semana
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {!aniversariantesSemana ? (
-            <p className="text-sm text-muted-foreground">Carregando...</p>
-          ) : aniversariantesSemana.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nenhum aniversariante esta semana</p>
-          ) : (
-            <ul className="space-y-3">
-              {aniversariantesSemana.map((a: any) => {
-                const isToday = a.entidade?.dataNascimento
-                  ? (() => {
-                      const [, m, d] = a.entidade.dataNascimento.split("-").map(Number);
-                      const now = new Date();
-                      return m === now.getMonth() + 1 && d === now.getDate();
-                    })()
-                  : false;
-                return (
-                  <li key={a._id} className="flex items-center gap-3">
-                    <Avatar className="h-9 w-9">
-                      <AvatarFallback className="text-sm">
-                        {a.entidade?.nomeCompleto?.charAt(0)?.toUpperCase() || "?"}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{a.entidade?.nomeCompleto}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {a.entidade?.dataNascimento
-                          ? format(parseISO(a.entidade.dataNascimento), "EEEE, dd 'de' MMMM", { locale: ptBR })
-                          : ""}
-                        {isToday && <span className="ml-1.5 text-primary font-medium">— Hoje!</span>}
-                      </p>
-                    </div>
+      {/* Meus Pedidos de Oracao */}
+      {can("pedidos_oracao:read") && (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <HandHeart className="h-4 w-4" />
+              Meus Pedidos de Oracao
+            </CardTitle>
+            {meusPedidos && meusPedidos.length > 0 && (
+              <span className="text-sm text-muted-foreground">
+                {meusPedidos.length} ativo{meusPedidos.length !== 1 ? "s" : ""}
+              </span>
+            )}
+          </CardHeader>
+          <CardContent>
+            {!meusPedidos ? (
+              <p className="text-sm text-muted-foreground">Carregando...</p>
+            ) : meusPedidos.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Nenhum pedido ativo
+              </p>
+            ) : (
+              <ul className="space-y-2">
+                {meusPedidos.slice(0, 3).map((p: any) => (
+                  <li key={p._id} className="text-sm">
+                    {p.descricao}
                   </li>
-                );
-              })}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
+                ))}
+              </ul>
+            )}
+            <Button variant="link" className="px-0 mt-2" asChild>
+              <Link href="/pedidos-oracao">Ver todos</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
-      {/* Aniversariantes do mes */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Cake className="h-4 w-4" />
-            Aniversariantes do mes
-          </CardTitle>
-          {aniversariantesMes && aniversariantesMes.length > 0 && (
-            <span className="text-sm text-muted-foreground">
-              {aniversariantesMes.length}
-            </span>
-          )}
-        </CardHeader>
-        <CardContent>
-          {!aniversariantesMes ? (
-            <p className="text-sm text-muted-foreground">Carregando...</p>
-          ) : aniversariantesMes.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nenhum aniversariante este mes</p>
-          ) : (
-            <ul className="space-y-3">
-              {aniversariantesMes.map((a: any) => (
-                <li key={a._id} className="flex items-center gap-3">
-                  <Avatar className="h-9 w-9">
-                    <AvatarFallback className="text-sm">
-                      {a.entidade?.nomeCompleto?.charAt(0)?.toUpperCase() || "?"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{a.entidade?.nomeCompleto}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {a.entidade?.dataNascimento
-                        ? format(parseISO(a.entidade.dataNascimento), "dd 'de' MMMM", { locale: ptBR })
-                        : ""}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
+      {/* Widget educacional para pais */}
+      <EducacionalPaisWidget />
+
+      {/* Frases dos sermoes */}
+      <FrasesCarrossel />
     </div>
   );
 }

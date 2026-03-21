@@ -12,6 +12,7 @@ import { Skeleton } from "@/shared/components/ui/skeleton";
 import { Plus, Search, Building2, User } from "lucide-react";
 import Link from "next/link";
 import { PermissionGate } from "@shared/components/auth/PermissionGate";
+import { ModuloGuard } from "@shared/components/auth/ModuloGuard";
 import { PAPEL_OPTIONS, STATUS_COLORS } from "@features/membros/lib/constants";
 
 export default function EntidadesPage() {
@@ -20,6 +21,7 @@ export default function EntidadesPage() {
   const entidades = useQuery(api.entidades.queries.list, { search: debouncedSearch || undefined });
 
   return (
+    <ModuloGuard modulo="entidades">
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Entidades</h1>
@@ -88,5 +90,6 @@ export default function EntidadesPage() {
         </div>
       )}
     </div>
+    </ModuloGuard>
   );
 }
