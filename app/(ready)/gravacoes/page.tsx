@@ -12,6 +12,7 @@ import { Search, MessageCircle, Tag, X } from "lucide-react";
 import Link from "next/link";
 import { BibleBookFilter } from "@features/gravacoes/components/BibleBookFilter";
 import { extractBookName } from "@features/gravacoes/lib/bible";
+import { ModuloGuard } from "@shared/components/auth/ModuloGuard";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -171,6 +172,7 @@ export default function GravacoesPage() {
   }, [gravacoes, livroFilter]);
 
   return (
+    <ModuloGuard modulo="gravacoes">
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">Gravacoes</h1>
 
@@ -246,5 +248,6 @@ export default function GravacoesPage() {
         <GravacoesList gravacoes={visibleGravacoes} sortMode={sortMode} />
       )}
     </div>
+    </ModuloGuard>
   );
 }
