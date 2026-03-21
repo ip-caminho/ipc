@@ -53,6 +53,7 @@ export default defineSchema({
       v.literal("DOUTORADO")
     )),
     foto: v.optional(v.string()),
+    apelido: v.optional(v.string()),
 
     // PJ fields
     nomeRazaoSocial: v.optional(v.string()),
@@ -60,6 +61,14 @@ export default defineSchema({
     cnpj: v.optional(v.string()),
     inscricaoEstadual: v.optional(v.string()),
     responsavelNome: v.optional(v.string()),
+
+    // Compliance (CBCM)
+    cbcm: v.optional(v.union(
+      v.literal("NAO_INICIADO"),
+      v.literal("CURSANDO"),
+      v.literal("CONCLUIDO")
+    )),
+    atestadoAntecedentes: v.optional(v.string()),
 
     // Shared fields
     whatsapp: v.optional(v.string()),
@@ -252,6 +261,67 @@ export default defineSchema({
   })
     .index("by_chave", ["chave"]),
 
+  // ===== Escalas / Liturgia =====
+  cultos: defineTable({
+    data: v.string(), // YYYY-MM-DD
+    tipo: v.union(
+      v.literal("DOMINICAL"),
+      v.literal("ESPECIAL")
+    ),
+    titulo: v.optional(v.string()),
+    horario: v.optional(v.string()), // "09:00"
+    observacoes: v.optional(v.string()),
+    louvores: v.optional(v.array(v.string())), // Liturgia: lista de musicas
+    status: v.union(v.literal("RASCUNHO"), v.literal("PUBLICADO")),
+  })
+    .index("by_data", ["data"])
+    .index("by_status_data", ["status", "data"]),
+
+  cultoEscalas: defineTable({
+    cultoId: v.id("cultos"),
+    funcao: v.string(),
+    membroId: v.optional(v.id("membros")),
+    nomeCustom: v.optional(v.string()), // Para pregadores externos
+    passagemBiblica: v.optional(v.string()), // Liturgia: texto biblico
+  })
+    .index("by_culto", ["cultoId"])
+    .index("by_membro", ["membroId"])
+    .index("by_culto_funcao", ["cultoId", "funcao"]),
+
+  // ===== Equipes de Escalas =====
+  equipeMembros: defineTable({
+    funcao: v.string(),             // "LOUVOR", "SOM", "HOSPITALIDADE", etc.
+    membroId: v.id("membros"),
+    ativo: v.boolean(),
+    condutor: v.optional(v.boolean()), // Para LOUVOR: true = conduz o louvor
+    criadoEm: v.number(),
+  })
+    .index("by_funcao", ["funcao"])
+    .index("by_membro", ["membroId"])
+    .index("by_funcao_membro", ["funcao", "membroId"]),
+
+  indisponibilidades: defineTable({
+    membroId: v.id("membros"),
+    data: v.string(),               // YYYY-MM-DD
+    motivo: v.optional(v.string()),
+    criadoEm: v.number(),
+  })
+    .index("by_membro", ["membroId"])
+    .index("by_data", ["data"])
+    .index("by_membro_data", ["membroId", "data"]),
+
+  // ===== Avisos (boletim) =====
+  avisos: defineTable({
+    titulo: v.string(),
+    descricao: v.optional(v.string()),
+    dataInicio: v.string(), // YYYY-MM-DD
+    dataFim: v.optional(v.string()), // YYYY-MM-DD — se omitido, vale só dataInicio
+    criadoPor: v.optional(v.id("membros")),
+    criadoEm: v.number(),
+    atualizadoEm: v.optional(v.number()),
+  })
+    .index("by_dataInicio", ["dataInicio"]),
+
   sysNotifications: defineTable({
     titulo: v.string(),
     mensagem: v.string(),
@@ -275,4 +345,214 @@ export default defineSchema({
   })
     .index("by_membro", ["membroId"])
     .index("by_notification", ["notificationId"]),
+
+  // ===== Pequenos Grupos =====
+  pequenosGrupos: defineTable({
+    nome: v.string(),
+    descricao: v.optional(v.string()),
+    liderId: v.id("membros"),
+    coliderId: v.optional(v.id("membros")),
+    diaSemana: v.optional(v.string()), // "SEGUNDA", "TERCA", etc.
+    horario: v.optional(v.string()),   // "19:30"
+    local: v.optional(v.string()),
+    status: v.union(v.literal("ATIVO"), v.literal("INATIVO")),
+  })
+    .index("by_lider", ["liderId"])
+    .index("by_status", ["status"]),
+
+  pgMembros: defineTable({
+    pgId: v.id("pequenosGrupos"),
+    membroId: v.id("membros"),
+  })
+    .index("by_pg", ["pgId"])
+    .index("by_membro", ["membroId"]),
+
+  // ===== Pastoreio =====
+  visitasPastorais: defineTable({
+    membroId: v.id("membros"),
+    visitanteId: v.id("membros"),
+    data: v.string(), // YYYY-MM-DD
+    tipo: v.union(
+      v.literal("DOMICILIAR"),
+      v.literal("HOSPITALAR"),
+      v.literal("ACOLHIMENTO"),
+      v.literal("OUTRO"),
+    ),
+    observacoes: v.optional(v.string()),
+    criadoEm: v.number(),
+  })
+    .index("by_membro", ["membroId"])
+    .index("by_visitante", ["visitanteId"])
+    .index("by_data", ["data"]),
+
+  pedidosOracao: defineTable({
+    membroId: v.id("membros"),
+    descricao: v.string(),
+    status: v.union(
+      v.literal("ATIVO"),
+      v.literal("RESPONDIDO"),
+      v.literal("ARQUIVADO"),
+    ),
+    compartilhadoIgreja: v.optional(v.boolean()),
+    criadoEm: v.number(),
+    atualizadoEm: v.optional(v.number()),
+  })
+    .index("by_membro", ["membroId"])
+    .index("by_status", ["status"])
+    .index("by_criadoEm", ["criadoEm"]),
+
+  pedidoOracaoComentarios: defineTable({
+    pedidoId: v.id("pedidosOracao"),
+    membroId: v.id("membros"), // quem comentou
+    texto: v.string(),
+    tipo: v.optional(v.union(v.literal("COMENTARIO"), v.literal("ATUALIZACAO"))), // default COMENTARIO
+    criadoEm: v.number(),
+  })
+    .index("by_pedido", ["pedidoId"])
+    .index("by_membro", ["membroId"]),
+
+  pedidoOracaoIntercessores: defineTable({
+    pedidoId: v.id("pedidosOracao"),
+    membroId: v.id("membros"), // quem esta orando
+    criadoEm: v.number(),
+  })
+    .index("by_pedido", ["pedidoId"])
+    .index("by_pedido_membro", ["pedidoId", "membroId"]),
+
+  // ===== Funcoes (equipes e liturgia) =====
+  funcoes: defineTable({
+    slug: v.string(),
+    label: v.string(),
+    multiplo: v.boolean(),
+    temEquipe: v.boolean(),
+    temPassagem: v.boolean(),
+    views: v.array(v.string()),
+    qtdPorCulto: v.optional(v.number()),
+    ordem: v.number(),
+    ativo: v.boolean(),
+  })
+    .index("by_slug", ["slug"]),
+
+  // ===== Modulos (toggle de funcionalidades) =====
+  modulos: defineTable({
+    slug: v.string(),
+    label: v.string(),
+    descricao: v.string(),
+    ativo: v.boolean(),
+    ordem: v.number(),
+  })
+    .index("by_slug", ["slug"]),
+
+  anotacoesPastorais: defineTable({
+    membroId: v.id("membros"),
+    autorId: v.id("membros"),
+    texto: v.string(),
+    criadoEm: v.number(),
+    atualizadoEm: v.optional(v.number()),
+  })
+    .index("by_membro", ["membroId"])
+    .index("by_autor", ["autorId"]),
+
+  // ===== Ministerios =====
+  ministerios: defineTable({
+    nome: v.string(),
+    descricao: v.optional(v.string()),
+    icone: v.optional(v.string()),
+    cor: v.optional(v.string()),
+    papeis: v.array(v.string()),
+    subgrupos: v.optional(v.array(v.string())),
+    status: v.union(v.literal("ATIVO"), v.literal("INATIVO")),
+    criadoEm: v.number(),
+  })
+    .index("by_status", ["status"]),
+
+  ministerioMembros: defineTable({
+    ministerioId: v.id("ministerios"),
+    membroId: v.id("membros"),
+    papel: v.string(),
+    subgrupos: v.optional(v.array(v.string())),
+    status: v.union(v.literal("ATIVO"), v.literal("INATIVO")),
+    criadoEm: v.number(),
+    atualizadoEm: v.optional(v.number()),
+  })
+    .index("by_ministerio", ["ministerioId"])
+    .index("by_membro", ["membroId"])
+    .index("by_ministerio_membro", ["ministerioId", "membroId"]),
+
+  // ===== Educacional Infantil =====
+  criancaPerfil: defineTable({
+    entidadeId: v.id("entidades"),
+    turma: v.string(), // "0-2", "3-4", "5-6", "7-8", "9-10"
+    usoImagem: v.union(
+      v.literal("AUTORIZADO"),
+      v.literal("NAO_AUTORIZADO"),
+      v.literal("PENDENTE")
+    ),
+    observacoesMedicas: v.optional(v.string()),
+    observacoesFamilia: v.optional(v.string()),
+    ovelhinhaId: v.optional(v.id("membros")),
+    criadoEm: v.number(),
+    atualizadoEm: v.optional(v.number()),
+  })
+    .index("by_entidade", ["entidadeId"])
+    .index("by_turma", ["turma"]),
+
+  responsaveis: defineTable({
+    criancaEntidadeId: v.id("entidades"),
+    responsavelEntidadeId: v.id("entidades"),
+    tipo: v.union(
+      v.literal("MAE"), v.literal("PAI"),
+      v.literal("AVO"), v.literal("TUTOR"),
+      v.literal("RESPONSAVEL")
+    ),
+    principal: v.boolean(),
+    criadoEm: v.number(),
+  })
+    .index("by_crianca", ["criancaEntidadeId"])
+    .index("by_responsavel", ["responsavelEntidadeId"]),
+
+  eduRelatorios: defineTable({
+    turma: v.string(),
+    data: v.string(), // YYYY-MM-DD
+    professores: v.string(), // texto livre: "Ana, Bruno"
+    observacoes: v.optional(v.string()),
+    criadoEm: v.number(),
+  })
+    .index("by_turma", ["turma"])
+    .index("by_data", ["data"])
+    .index("by_turma_data", ["turma", "data"]),
+
+  eduPresencas: defineTable({
+    relatorioId: v.id("eduRelatorios"),
+    criancaEntidadeId: v.id("entidades"),
+  })
+    .index("by_relatorio", ["relatorioId"])
+    .index("by_crianca", ["criancaEntidadeId"]),
+
+  ministerioEscalas: defineTable({
+    ministerioId: v.id("ministerios"),
+    data: v.string(), // YYYY-MM-DD
+    subgrupo: v.optional(v.string()), // turma: "3-4"
+    membros: v.array(v.object({
+      membroId: v.id("membros"),
+      papel: v.optional(v.string()), // "Professor", "Auxiliar"
+    })),
+    observacoes: v.optional(v.string()),
+    criadoEm: v.number(),
+  })
+    .index("by_ministerio", ["ministerioId"])
+    .index("by_data", ["data"])
+    .index("by_ministerio_data", ["ministerioId", "data"]),
+
+  // ===== Calendario =====
+  calendarioEventos: defineTable({
+    titulo: v.string(),
+    data: v.string(), // YYYY-MM-DD
+    dataFim: v.optional(v.string()),
+    ministerioId: v.optional(v.id("ministerios")),
+    descricao: v.optional(v.string()),
+    criadoEm: v.number(),
+  })
+    .index("by_data", ["data"])
+    .index("by_ministerio", ["ministerioId"]),
 });

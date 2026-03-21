@@ -25,8 +25,41 @@ export const ALL_PERMISSIONS = [
   "gravacoes:update",
   "gravacoes:delete",
   "gravacoes:process_ai",
+  // Escalas (Liturgia)
+  "escalas:read",
+  "escalas:create",
+  "escalas:update",
+  "escalas:delete",
   // Auditoria
   "audit:read",
+  // Pastoreio
+  "pastoreio:read",
+  "pastoreio:create",
+  "pastoreio:update",
+  "pastoreio:delete",
+  // Pequenos Grupos
+  "pequenos_grupos:read",
+  "pequenos_grupos:create",
+  "pequenos_grupos:update",
+  "pequenos_grupos:delete",
+  // Pedidos de Oracao (membro)
+  "pedidos_oracao:create",
+  "pedidos_oracao:read",
+  // Ministerios
+  "ministerios:read",
+  "ministerios:create",
+  "ministerios:update",
+  "ministerios:delete",
+  // Calendario
+  "calendario:read",
+  "calendario:create",
+  "calendario:update",
+  "calendario:delete",
+  // Educacional Infantil
+  "criancas:read",
+  "criancas:manage",
+  "educacional:read",
+  "educacional:write",
 ] as const;
 
 function getPermissionLabel(perm: string): string {
@@ -46,7 +79,33 @@ function getPermissionLabel(perm: string): string {
     "gravacoes:update": "Editar Gravacoes",
     "gravacoes:delete": "Excluir Gravacoes",
     "gravacoes:process_ai": "Processar com IA",
+    "escalas:read": "Ver Escalas",
+    "escalas:create": "Criar Escalas",
+    "escalas:update": "Editar Escalas",
+    "escalas:delete": "Excluir Escalas",
     "audit:read": "Ver Auditoria",
+    "pastoreio:read": "Ver Pastoreio",
+    "pastoreio:create": "Criar Pastoreio",
+    "pastoreio:update": "Editar Pastoreio",
+    "pastoreio:delete": "Excluir Pastoreio",
+    "pequenos_grupos:read": "Ver Pequenos Grupos",
+    "pequenos_grupos:create": "Criar Pequenos Grupos",
+    "pequenos_grupos:update": "Editar Pequenos Grupos",
+    "pequenos_grupos:delete": "Excluir Pequenos Grupos",
+    "pedidos_oracao:create": "Criar Pedidos de Oracao",
+    "pedidos_oracao:read": "Ver Pedidos de Oracao",
+    "ministerios:read": "Ver Ministerios",
+    "ministerios:create": "Criar Ministerios",
+    "ministerios:update": "Editar Ministerios",
+    "ministerios:delete": "Excluir Ministerios",
+    "calendario:read": "Ver Calendario",
+    "calendario:create": "Criar Eventos",
+    "calendario:update": "Editar Eventos",
+    "calendario:delete": "Excluir Eventos",
+    "criancas:read": "Ver Criancas",
+    "criancas:manage": "Gerenciar Criancas",
+    "educacional:read": "Ver Educacional",
+    "educacional:write": "Editar Educacional",
   };
   return labels[perm] ?? perm;
 }
@@ -56,7 +115,15 @@ function getPermissionModule(perm: string): string {
   if (perm.startsWith("entidades:")) return "Entidades";
   if (perm.startsWith("diretorio:")) return "Diretorio";
   if (perm.startsWith("gravacoes:")) return "Gravacoes";
+  if (perm.startsWith("escalas:")) return "Escalas";
   if (perm.startsWith("audit:")) return "Auditoria";
+  if (perm.startsWith("pastoreio:")) return "Pastoreio";
+  if (perm.startsWith("pequenos_grupos:")) return "Pequenos Grupos";
+  if (perm.startsWith("pedidos_oracao:")) return "Pedidos de Oracao";
+  if (perm.startsWith("ministerios:")) return "Ministerios";
+  if (perm.startsWith("calendario:")) return "Calendario";
+  if (perm.startsWith("criancas:")) return "Educacional Infantil";
+  if (perm.startsWith("educacional:")) return "Educacional Infantil";
   return "Geral";
 }
 
@@ -77,7 +144,33 @@ function getPermissionDescription(perm: string): string {
     "gravacoes:update": "Editar gravacoes existentes",
     "gravacoes:delete": "Excluir gravacoes",
     "gravacoes:process_ai": "Processar gravacoes com inteligencia artificial (transcricao e analise)",
+    "escalas:read": "Ver escala de liturgia e cultos",
+    "escalas:create": "Criar cultos e escalas de liturgia",
+    "escalas:update": "Editar escalas e atribuicoes de liturgia",
+    "escalas:delete": "Excluir cultos e escalas",
     "audit:read": "Ver logs de auditoria do sistema",
+    "pastoreio:read": "Ver visitas pastorais e anotacoes",
+    "pastoreio:create": "Registrar visitas e anotacoes pastorais",
+    "pastoreio:update": "Editar visitas e anotacoes pastorais",
+    "pastoreio:delete": "Excluir visitas e anotacoes pastorais",
+    "pequenos_grupos:read": "Ver pequenos grupos e seus membros",
+    "pequenos_grupos:create": "Criar novos pequenos grupos",
+    "pequenos_grupos:update": "Editar pequenos grupos existentes",
+    "pequenos_grupos:delete": "Excluir pequenos grupos",
+    "pedidos_oracao:create": "Criar pedidos de oracao",
+    "pedidos_oracao:read": "Ver pedidos de oracao",
+    "ministerios:read": "Ver ministerios e seus membros",
+    "ministerios:create": "Criar novos ministerios",
+    "ministerios:update": "Editar ministerios e gerenciar membros",
+    "ministerios:delete": "Excluir ministerios",
+    "calendario:read": "Ver eventos do calendario",
+    "calendario:create": "Criar eventos no calendario",
+    "calendario:update": "Editar eventos do calendario",
+    "calendario:delete": "Excluir eventos do calendario",
+    "criancas:read": "Ver nome e turma das criancas",
+    "criancas:manage": "Gerenciar perfis completos (inclui obs medicas)",
+    "educacional:read": "Ver relatorios e escalas do educacional",
+    "educacional:write": "Criar/editar relatorios e escalas",
   };
   return descriptions[perm] ?? "";
 }
