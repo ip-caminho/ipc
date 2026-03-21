@@ -1,0 +1,213 @@
+import { query } from "../_generated/server";
+import { v } from "convex/values";
+import { getAuthUserId } from "@convex-dev/auth/server";
+
+function primeiroNome(nomeCompleto: string): string {
+  return nomeCompleto.split(" ")[0];
+}
+
+async function resolveEscalaNome(ctx: any, e: any): Promise<string> {
+  if (e.nomeCustom) return e.nomeCustom;
+  if (!e.membroId) return "";
+  const membro = await ctx.db.get(e.membroId);
+  if (!membro) return "";
+  const entidade = await ctx.db.get(membro.entidadeId);
+  return primeiroNome(entidade?.nomeCompleto || "");
+}
+
+async function resolveEscalaNomeCompleto(ctx: any, e: any): Promise<string> {
+  if (e.nomeCustom) return e.nomeCustom;
+  if (!e.membroId) return "";
+  const membro = await ctx.db.get(e.membroId);
+  if (!membro) return "";
+  const entidade = await ctx.db.get(membro.entidadeId);
+  return entidade?.nomeCompleto || "";
+}
+
+export const listCultos = query({
+  args: {
+    tipo: v.optional(v.string()),
+    status: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    let cultos = await ctx.db.query("cultos").order("desc").collect();
+
+    if (args.tipo) {
+      cultos = cultos.filter((c) => c.tipo === args.tipo);
+    }
+    if (args.status) {
+      cultos = cultos.filter((c) => c.status === args.status);
+    }
+
+    return Promise.all(
+      cultos.map(async (culto) => {
+        const escalas = await ctx.db
+          .query("cultoEscalas")
+          .withIndex("by_culto", (q) => q.eq("cultoId", culto._id))
+          .collect();
+
+        const escalasEnriched = await Promise.all(
+          escalas.map(async (e) => ({
+            ...e,
+            membroNome: await resolveEscalaNome(ctx, e),
+          }))
+        );
+
+        return { ...culto, escalas: escalasEnriched };
+      })
+    );
+  },
+});
+
+export const getCultoById = query({
+  args: { id: v.id("cultos") },
+  handler: async (ctx, { id }) => {
+    const culto = await ctx.db.get(id);
+    if (!culto) return null;
+
+    const escalas = await ctx.db
+      .query("cultoEscalas")
+      .withIndex("by_culto", (q) => q.eq("cultoId", id))
+      .collect();
+
+    const escalasEnriched = await Promise.all(
+      escalas.map(async (e) => ({
+        ...e,
+        membroNome: await resolveEscalaNome(ctx, e),
+      }))
+    );
+
+    return { ...culto, escalas: escalasEnriched };
+  },
+});
+
+export const minhasEscalas = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return [];
+
+    const membro = await ctx.db
+      .query("membros")
+      .withIndex("by_user_id", (q) => q.eq("userId", userId))
+      .first();
+    if (!membro) return [];
+
+    const escalas = await ctx.db
+      .query("cultoEscalas")
+      .withIndex("by_membro", (q) => q.eq("membroId", membro._id))
+      .collect();
+
+    const today = new Date().toISOString().split("T")[0];
+
+    const results = await Promise.all(
+      escalas.map(async (e) => {
+        const culto = await ctx.db.get(e.cultoId);
+        if (!culto || culto.data < today) return null;
+        return { ...e, culto };
+      })
+    );
+
+    return results
+      .filter((r): r is NonNullable<typeof r> => r !== null)
+      .sort((a, b) => a.culto.data.localeCompare(b.culto.data));
+  },
+});
+
+export const listProximosCultos = query({
+  args: { limit: v.optional(v.number()) },
+  handler: async (ctx, { limit = 3 }) => {
+    const today = new Date().toISOString().split("T")[0];
+
+    const cultos = await ctx.db
+      .query("cultos")
+      .order("asc")
+      .collect();
+
+    const upcoming = cultos
+      .filter((c) => c.data >= today)
+      .slice(0, limit);
+
+    return Promise.all(
+      upcoming.map(async (culto) => {
+        const escalas = await ctx.db
+          .query("cultoEscalas")
+          .withIndex("by_culto", (q) => q.eq("cultoId", culto._id))
+          .collect();
+
+        const escalasEnriched = await Promise.all(
+          escalas.map(async (e) => ({
+            funcao: e.funcao,
+            membroNome: await resolveEscalaNome(ctx, e),
+          }))
+        );
+
+        return { ...culto, escalas: escalasEnriched };
+      })
+    );
+  },
+});
+
+// Boletim dominical — proximo culto DOMINICAL com dados completos
+export const getBoletim = query({
+  args: { data: v.optional(v.string()) },
+  handler: async (ctx, { data }) => {
+    const today = new Date().toISOString().split("T")[0];
+
+    const cultos = await ctx.db
+      .query("cultos")
+      .order("asc")
+      .collect();
+
+    const dominicais = cultos
+      .filter((c) => c.tipo === "DOMINICAL")
+      .sort((a, b) => a.data.localeCompare(b.data));
+
+    // Culto selecionado por data ou proximo
+    let culto;
+    if (data) {
+      culto = dominicais.find((c) => c.data === data);
+    }
+    if (!culto) {
+      culto = dominicais.find((c) => c.data >= today);
+    }
+    if (!culto && dominicais.length > 0) {
+      culto = dominicais[dominicais.length - 1]; // ultimo se nao tem proximo
+    }
+    if (!culto) return null;
+
+    const escalas = await ctx.db
+      .query("cultoEscalas")
+      .withIndex("by_culto", (q) => q.eq("cultoId", culto._id))
+      .collect();
+
+    const escalasEnriched = await Promise.all(
+      escalas.map(async (e) => ({
+        ...e,
+        membroNome: await resolveEscalaNome(ctx, e),
+        membroNomeCompleto: await resolveEscalaNomeCompleto(ctx, e),
+      }))
+    );
+
+    // Datas para navegacao
+    const idx = dominicais.findIndex((c) => c._id === culto!._id);
+    const anterior = idx > 0 ? dominicais[idx - 1].data : null;
+    const proximo = idx < dominicais.length - 1 ? dominicais[idx + 1].data : null;
+
+    // Avisos validos para esta data
+    // dataInicio = domingo em que o aviso comeca a aparecer
+    // dataFim = ultimo domingo em que aparece (se omitido, aparece so no dataInicio)
+    const todosAvisos = await ctx.db.query("avisos").collect();
+    const avisos = todosAvisos.filter((a) => {
+      const fim = a.dataFim || a.dataInicio;
+      return a.dataInicio <= culto!.data && fim >= culto!.data;
+    });
+
+    return {
+      ...culto,
+      escalas: escalasEnriched,
+      avisos,
+      navegacao: { anterior, proximo },
+    };
+  },
+});
