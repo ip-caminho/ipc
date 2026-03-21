@@ -16,12 +16,12 @@ import { IaProcessarButton } from "@features/gravacoes/components/IaProcessarBut
 import { IaStatusBadge } from "@features/gravacoes/components/IaStatusBadge";
 import { IaProgressPanel } from "@features/gravacoes/components/IaProgressPanel";
 import { SegmentEditor } from "@features/gravacoes/components/SegmentEditor";
-import { SecureAudioPlayer } from "@/shared/files/components/SecureAudioPlayer";
+import { useAudioPlayer } from "@shared/audio/useAudioPlayer";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
 import { PermissionGate } from "@shared/components/auth/PermissionGate";
 import { useAuth } from "@shared/providers/PermissionsProvider";
 import { TIPO_GRAVACAO_OPTIONS } from "@features/gravacoes/lib/constants";
-import { ArrowLeft, Save, Plus, Trash2, Megaphone, Globe, GlobeLock } from "lucide-react";
+import { ArrowLeft, Save, Plus, Trash2, Megaphone, Globe, GlobeLock, Play, Pause } from "lucide-react";
 import type { Id } from "@/convex/_generated/dataModel";
 import Link from "next/link";
 
@@ -248,6 +248,7 @@ export default function GravacaoAdminPage() {
   const { can } = useAuth();
 
   const gravacao = useQuery(api.gravacoes.queries.getById, { id: id as Id<"gravacoes"> });
+  const globalPlayer = useAudioPlayer();
   const publishGravacao = useMutation(api.gravacoes.mutations.publish);
   // @ts-ignore Convex TS2589
   const unpublishGravacao = useMutation(api.gravacoes.mutations.update);
@@ -359,7 +360,7 @@ export default function GravacaoAdminPage() {
           <TabsTrigger value="dados">Dados</TabsTrigger>
           <TabsTrigger value="avisos">Avisos</TabsTrigger>
           <TabsTrigger value="resultado">Resultado IA</TabsTrigger>
-          <TabsTrigger value="segmentos">Segmentos</TabsTrigger>
+          <TabsTrigger value="segmentos">Trechos</TabsTrigger>
           {gravacao.audioUrl && (
             <TabsTrigger value="audio">Audio completo</TabsTrigger>
           )}
@@ -421,7 +422,36 @@ export default function GravacaoAdminPage() {
                 <CardTitle className="text-base">Audio completo</CardTitle>
               </CardHeader>
               <CardContent>
-                <SecureAudioPlayer url={gravacao.audioUrl} />
+                {(() => {
+                  const isFullTrack = globalPlayer.track?.gravacaoId === gravacao._id
+                    && globalPlayer.track?.inicioSermao == null
+                    && globalPlayer.track?.fimSermao == null;
+                  const isFullPlaying = isFullTrack && globalPlayer.isPlaying;
+
+                  return (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (isFullPlaying) {
+                          globalPlayer.pause();
+                        } else if (isFullTrack) {
+                          globalPlayer.resume();
+                        } else {
+                          globalPlayer.play({
+                            url: gravacao.audioUrl!,
+                            title: `${gravacao.titulo} (completo)`,
+                            artist: gravacao.pregadorNome || undefined,
+                            gravacaoId: gravacao._id,
+                          });
+                        }
+                      }}
+                    >
+                      {isFullPlaying ? <Pause className="h-4 w-4 mr-1.5" /> : <Play className="h-4 w-4 mr-1.5" />}
+                      {isFullPlaying ? "Pausar" : "Ouvir audio completo"}
+                    </Button>
+                  );
+                })()}
               </CardContent>
             </Card>
           </TabsContent>

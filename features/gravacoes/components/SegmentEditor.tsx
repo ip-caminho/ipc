@@ -11,6 +11,7 @@ import { Label } from "@/shared/components/ui/label";
 import { Slider } from "@/shared/components/ui/slider";
 import { Play, Pause, Save, Scissors, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
+import { useAudioPlayer } from "@shared/audio/useAudioPlayer";
 
 interface SegmentEditorProps {
   gravacaoId: Id<"gravacoes">;
@@ -29,35 +30,40 @@ function toCdnUrl(url: string): string {
   return url;
 }
 
-function secondsToMMSS(seconds: number | null | undefined): string {
+function secondsToHHMMSS(seconds: number | null | undefined): string {
   if (seconds == null || !isFinite(seconds)) return "";
-  const m = Math.floor(seconds / 60);
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
   const s = Math.floor(seconds % 60);
-  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
-function mmssToSeconds(value: string): number | null {
+function hhmmssToSeconds(value: string): number | null {
   const trimmed = value.trim();
   if (!trimmed) return null;
   const parts = trimmed.split(":");
+  if (parts.length === 3) {
+    const h = parseInt(parts[0], 10);
+    const m = parseInt(parts[1], 10);
+    const s = parseInt(parts[2], 10);
+    if (!isNaN(h) && !isNaN(m) && !isNaN(s)) return h * 3600 + m * 60 + s;
+  }
   if (parts.length === 2) {
     const m = parseInt(parts[0], 10);
     const s = parseInt(parts[1], 10);
     if (!isNaN(m) && !isNaN(s)) return m * 60 + s;
   }
-  // Try plain number (seconds)
   const num = parseFloat(trimmed);
   if (!isNaN(num)) return num;
   return null;
 }
 
 function formatTime(seconds: number): string {
-  if (!isFinite(seconds) || seconds < 0) return "00:00";
+  if (!isFinite(seconds) || seconds < 0) return "00:00:00";
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
   const s = Math.floor(seconds % 60);
-  if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
 export function SegmentEditor({
@@ -69,30 +75,31 @@ export function SegmentEditor({
   fimAvisos,
 }: SegmentEditorProps) {
   const updateGravacao = useMutation(api.gravacoes.mutations.update);
+  const globalPlayer = useAudioPlayer();
 
   const audioRef = useRef<HTMLAudioElement>(null);
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
 
-  const [iSermao, setISermao] = useState(secondsToMMSS(inicioSermao));
-  const [fSermao, setFSermao] = useState(secondsToMMSS(fimSermao));
-  const [iAvisos, setIAvisos] = useState(secondsToMMSS(inicioAvisos));
-  const [fAvisos, setFAvisos] = useState(secondsToMMSS(fimAvisos));
+  const [iSermao, setISermao] = useState(secondsToHHMMSS(inicioSermao));
+  const [fSermao, setFSermao] = useState(secondsToHHMMSS(fimSermao));
+  const [iAvisos, setIAvisos] = useState(secondsToHHMMSS(inicioAvisos));
+  const [fAvisos, setFAvisos] = useState(secondsToHHMMSS(fimAvisos));
   const [saving, setSaving] = useState(false);
-  const [open, setOpen] = useState(false);
 
   const togglePlay = useCallback(() => {
     const audio = audioRef.current;
     if (!audio) return;
     if (audio.paused) {
+      globalPlayer.pause();
       audio.play();
       setPlaying(true);
     } else {
       audio.pause();
       setPlaying(false);
     }
-  }, []);
+  }, [globalPlayer]);
 
   const handleSlider = useCallback(([v]: number[]) => {
     const audio = audioRef.current;
@@ -102,7 +109,7 @@ export function SegmentEditor({
   }, []);
 
   const captureTime = useCallback((setter: (v: string) => void) => {
-    setter(secondsToMMSS(currentTime));
+    setter(secondsToHHMMSS(currentTime));
   }, [currentTime]);
 
   const handleSave = async () => {
@@ -111,10 +118,10 @@ export function SegmentEditor({
       await updateGravacao({
         id: gravacaoId,
         data: {
-          inicioSermao: mmssToSeconds(iSermao) ?? undefined,
-          fimSermao: mmssToSeconds(fSermao) ?? undefined,
-          inicioAvisos: mmssToSeconds(iAvisos) ?? undefined,
-          fimAvisos: mmssToSeconds(fAvisos) ?? undefined,
+          inicioSermao: hhmmssToSeconds(iSermao) ?? undefined,
+          fimSermao: hhmmssToSeconds(fSermao) ?? undefined,
+          inicioAvisos: hhmmssToSeconds(iAvisos) ?? undefined,
+          fimAvisos: hhmmssToSeconds(fAvisos) ?? undefined,
         },
       });
       toast.success("Timestamps atualizados");
@@ -125,32 +132,13 @@ export function SegmentEditor({
     }
   };
 
-  if (!open) {
-    return (
-      <Button
-        variant="outline"
-        size="sm"
-        className="gap-1"
-        onClick={() => setOpen(true)}
-      >
-        <Scissors className="h-3 w-3" />
-        Ajustar trechos
-      </Button>
-    );
-  }
-
   return (
     <Card>
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Scissors className="h-4 w-4" />
-            Ajustar trechos do audio
-          </CardTitle>
-          <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>
-            Fechar
-          </Button>
-        </div>
+        <CardTitle className="text-base flex items-center gap-2">
+          <Scissors className="h-4 w-4" />
+          Ajustar trechos do audio
+        </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Full audio player for reference */}
@@ -203,7 +191,7 @@ export function SegmentEditor({
               <Input
                 value={iSermao}
                 onChange={(e) => setISermao(e.target.value)}
-                placeholder="MM:SS"
+                placeholder="HH:MM:SS"
                 className="font-mono text-sm"
               />
               <Button
@@ -225,7 +213,7 @@ export function SegmentEditor({
               <Input
                 value={fSermao}
                 onChange={(e) => setFSermao(e.target.value)}
-                placeholder="MM:SS"
+                placeholder="HH:MM:SS"
                 className="font-mono text-sm"
               />
               <Button
@@ -247,7 +235,7 @@ export function SegmentEditor({
               <Input
                 value={iAvisos}
                 onChange={(e) => setIAvisos(e.target.value)}
-                placeholder="MM:SS"
+                placeholder="HH:MM:SS"
                 className="font-mono text-sm"
               />
               <Button
@@ -269,7 +257,7 @@ export function SegmentEditor({
               <Input
                 value={fAvisos}
                 onChange={(e) => setFAvisos(e.target.value)}
-                placeholder="MM:SS"
+                placeholder="HH:MM:SS"
                 className="font-mono text-sm"
               />
               <Button
