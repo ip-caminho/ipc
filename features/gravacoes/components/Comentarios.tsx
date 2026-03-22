@@ -70,7 +70,7 @@ function ComentarioItem({
   };
 
   return (
-    <div className={`space-y-2 rounded-md px-2 py-1.5 -mx-2 transition-colors duration-1000 ${highlight ? "bg-yellow-200 dark:bg-yellow-800/40" : ""}`}>
+    <div className={`space-y-2 rounded-md px-2 py-1.5 -mx-2 transition-colors duration-1000 ${highlight ? "bg-blue-100 dark:bg-blue-900/30" : ""}`}>
       <div className="flex gap-3">
         <Avatar className="h-8 w-8 shrink-0">
           <AvatarFallback className="text-xs">
@@ -189,15 +189,20 @@ export function ComentarioInput({ gravacaoId, onCreated }: { gravacaoId: Id<"gra
   return (
     <div className="flex items-center gap-2">
       <input
-        className="flex-1 text-sm rounded-md border border-input bg-background px-3 py-2 placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        className="flex-1 text-sm rounded-xl border border-border bg-background px-4 py-3 placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
         placeholder="Escreva um comentario..."
         value={newComment}
         onChange={(e) => setNewComment(e.target.value)}
         onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
       />
-      <Button size="sm" onClick={handleSubmit} disabled={!newComment.trim()}>
+      <button
+        type="button"
+        onClick={handleSubmit}
+        disabled={!newComment.trim()}
+        className="text-muted-foreground hover:text-foreground transition-colors duration-150 disabled:opacity-30 p-2"
+      >
         <Send className="h-4 w-4" />
-      </Button>
+      </button>
     </div>
   );
 }
@@ -217,26 +222,20 @@ export function ComentariosList({ gravacaoId, highlightId }: { gravacaoId: Id<"g
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <MessageCircle className="h-4 w-4 text-muted-foreground" />
-        <h3 className="text-sm font-semibold">
-          Comentarios {topLevel.length > 0 && `(${topLevel.length})`}
-        </h3>
-      </div>
-
+    <div>
       {topLevel.length > 0 && (
-        <div className="space-y-4">
+        <div className="divide-y divide-border">
           {topLevel.map((c: any) => (
-            <ComentarioItem
-              key={c._id}
-              comentario={c}
-              replies={repliesMap[c._id] ?? []}
-              gravacaoId={gravacaoId}
-              currentMembroId={membroId}
-              isAdmin={isAdmin}
-              highlight={c._id === highlightId}
-            />
+            <div key={c._id} className="py-4 first:pt-0">
+              <ComentarioItem
+                comentario={c}
+                replies={repliesMap[c._id] ?? []}
+                gravacaoId={gravacaoId}
+                currentMembroId={membroId}
+                isAdmin={isAdmin}
+                highlight={c._id === highlightId}
+              />
+            </div>
           ))}
         </div>
       )}
