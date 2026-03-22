@@ -127,11 +127,6 @@ export function GlobalAudioPlayer() {
               onValueChange={([v]) => setVolume(v)}
               className="w-20 cursor-pointer"
             />
-            {volume > 1 && (
-              <span className="text-[10px] text-primary font-medium tabular-nums w-8">
-                {Math.round(volume * 100)}%
-              </span>
-            )}
           </div>
         </div>
 
