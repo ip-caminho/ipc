@@ -294,6 +294,107 @@ export const listEscalas = query({
   },
 });
 
+// ===== Queries para Diretorio =====
+
+export const listCriancasForDiretorio = query({
+  args: {
+    search: v.optional(v.string()),
+    turma: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const auth = await getAuthContext(ctx);
+    if (!auth || !auth.can("diretorio:read")) return [];
+
+    let perfis;
+    if (args.turma) {
+      perfis = await ctx.db
+        .query("criancaPerfil")
+        .withIndex("by_turma", (q) => q.eq("turma", args.turma!))
+        .collect();
+    } else {
+      perfis = await ctx.db.query("criancaPerfil").collect();
+    }
+
+    const results = await Promise.all(
+      perfis.map(async (perfil) => {
+        const entidade = await ctx.db.get(perfil.entidadeId);
+        if (!entidade || entidade.status !== "ATIVO") return null;
+
+        // Responsaveis
+        const resps = await ctx.db
+          .query("responsaveis")
+          .withIndex("by_crianca", (q) => q.eq("criancaEntidadeId", perfil.entidadeId))
+          .collect();
+        const responsaveis = await Promise.all(
+          resps.map(async (r) => {
+            const respEntidade = await ctx.db.get(r.responsavelEntidadeId);
+            return {
+              tipo: r.tipo,
+              nome: respEntidade?.nomeCompleto || "",
+              entidadeId: r.responsavelEntidadeId,
+            };
+          })
+        );
+
+        return {
+          entidadeId: perfil.entidadeId,
+          nome: entidade.nomeCompleto || "",
+          dataNascimento: entidade.dataNascimento,
+          sexo: entidade.sexo,
+          foto: entidade.foto,
+          turma: perfil.turma,
+          responsaveis,
+        };
+      })
+    );
+
+    let filtered = results.filter((r): r is NonNullable<typeof r> => r !== null);
+
+    if (args.search) {
+      const term = args.search.toLowerCase();
+      filtered = filtered.filter((r) => r.nome.toLowerCase().includes(term));
+    }
+
+    return filtered.sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+  },
+});
+
+export const listCriancasByResponsavel = query({
+  args: {
+    entidadeId: v.id("entidades"),
+  },
+  handler: async (ctx, args) => {
+    const auth = await getAuthContext(ctx);
+    if (!auth || !auth.can("diretorio:read")) return [];
+
+    const resps = await ctx.db
+      .query("responsaveis")
+      .withIndex("by_responsavel", (q) => q.eq("responsavelEntidadeId", args.entidadeId))
+      .collect();
+
+    const criancas = await Promise.all(
+      resps.map(async (r) => {
+        const entidade = await ctx.db.get(r.criancaEntidadeId);
+        if (!entidade || entidade.status !== "ATIVO") return null;
+
+        const perfil = await ctx.db
+          .query("criancaPerfil")
+          .withIndex("by_entidade", (q) => q.eq("entidadeId", r.criancaEntidadeId))
+          .first();
+
+        return {
+          entidadeId: r.criancaEntidadeId,
+          nome: entidade.nomeCompleto || "",
+          dataNascimento: entidade.dataNascimento,
+          turma: perfil?.turma || "",
+        };
+      })
+    );
+
+    return criancas.filter((c): c is NonNullable<typeof c> => c !== null);
+  },
+});
+
 export const dashboardPais = query({
   args: {},
   handler: async (ctx) => {

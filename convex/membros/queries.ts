@@ -84,6 +84,7 @@ export const getPublicProfile = query({
     }
 
     return {
+      entidadeId: membro.entidadeId,
       nome: entidade.nomeCompleto || entidade.nomeRazaoSocial || "",
       apelido: entidade.apelido || null,
       foto: entidade.foto || null,

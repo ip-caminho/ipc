@@ -59,38 +59,36 @@ type MenuSection = {
   items: MenuItem[];
 };
 
+const topItems: MenuItem[] = [
+  { label: "Sermoes", href: "/gravacoes", icon: Mic, permission: "gravacoes:read", modulo: "gravacoes", tooltip: "Ouca os sermoes e estudos da igreja" },
+  { label: "Boletim", href: "/boletim", icon: FileText, permission: "escalas:read", modulo: "boletim", tooltip: "Boletim do proximo culto dominical" },
+];
+
 const menuSections: MenuSection[] = [
   {
-    label: "Comunidade",
+    label: "Nossa Comunidade",
     items: [
       { label: "Diretorio", href: "/diretorio", icon: BookOpen, permission: "diretorio:read", modulo: "diretorio", tooltip: "Contatos e aniversarios dos membros" },
-      { label: "Pequenos Grupos", href: "/pequenos-grupos", icon: UsersRound, permission: "pequenos_grupos:read", modulo: "pequenos-grupos", tooltip: "Grupos de estudo e comunhao" },
       { label: "Pedidos de Oracao", href: "/pedidos-oracao", icon: HandHeart, permission: "pedidos_oracao:read", modulo: "pedidos-oracao", tooltip: "Compartilhe e ore pelos pedidos da igreja" },
-      { label: "Pastoreio", href: "/pastoreio", icon: Heart, permission: "pastoreio:read", modulo: "pastoreio", tooltip: "Visitas pastorais e acompanhamento" },
-    ],
-  },
-  {
-    label: "Igreja",
-    items: [
-      { label: "Ministerios", href: "/ministerios", icon: Users, permission: "ministerios:read", modulo: "ministerios", tooltip: "Ministerios e equipes da igreja" },
-      { label: "Educacional", href: "/educacional", icon: Baby, permission: "educacional:read", modulo: "educacional", tooltip: "Turmas e criancas do educacional infantil" },
       { label: "Calendario", href: "/calendario", icon: CalendarDays, permission: "calendario:read", modulo: "calendario", tooltip: "Eventos e calendario da igreja" },
+      { label: "Escalas", href: "/escalas", icon: CalendarCheck, permission: null, modulo: "escalas", tooltip: "Veja sua escala e marque disponibilidade" },
     ],
   },
   {
-    label: "Culto",
+    label: "Gestao",
     items: [
-      { label: "Equipes", href: "/escalas", icon: CalendarCheck, permission: null, modulo: "escalas", tooltip: "Gerencie equipes e disponibilidade para os cultos" },
-      { label: "Cultos", href: "/cultos", icon: CalendarDays, permission: "escalas:read", modulo: "escalas", tooltip: "Liturgia, escala e avisos de cada culto" },
-      { label: "Boletim", href: "/boletim", icon: FileText, permission: "escalas:read", modulo: "boletim", tooltip: "Boletim dominical para impressao" },
-      { label: "Gravacoes", href: "/gravacoes", icon: Mic, permission: "gravacoes:read", modulo: "gravacoes", tooltip: "Sermoes e estudos gravados" },
+      { label: "Cultos", href: "/cultos", icon: Church, permission: "escalas:read", modulo: "escalas", tooltip: "Liturgia, escalas e avisos do culto" },
+      { label: "Ministerios", href: "/ministerios", icon: Users, permission: "ministerios:read", modulo: "ministerios", tooltip: "Ministerios e equipes da igreja" },
+      { label: "Pequenos Grupos", href: "/pequenos-grupos", icon: UsersRound, permission: "pequenos_grupos:read", modulo: "pequenos-grupos", tooltip: "Grupos de estudo e comunhao" },
+      { label: "Pastoreio", href: "/pastoreio", icon: Heart, permission: "pastoreio:read", modulo: "pastoreio", tooltip: "Visitas pastorais e acompanhamento" },
+      { label: "Educacional", href: "/educacional", icon: Baby, permission: "educacional:read", modulo: "educacional", tooltip: "Turmas e criancas do educacional infantil" },
+      { label: "Membros", href: "/membros", icon: Users, permission: "membros:read", modulo: "membros", tooltip: "Cadastro e gestao da membresia" },
+      // { label: "Entidades", href: "/entidades", icon: UserCircle, permission: "entidades:read", modulo: "entidades", tooltip: "Pessoas e organizacoes (PF/PJ)" },
     ],
   },
 ];
 
 const adminItems: MenuItem[] = [
-  { label: "Membros", href: "/membros", icon: Users, permission: "membros:read", modulo: "membros", tooltip: "Cadastro e gestao da membresia" },
-  { label: "Entidades", href: "/entidades", icon: UserCircle, permission: "entidades:read", modulo: "entidades", tooltip: "Pessoas e organizacoes (PF/PJ)" },
   { label: "Gravacoes", href: "/admin/gravacoes", icon: Mic, permission: null, tooltip: "Gerenciar gravacoes e processamento IA" },
   { label: "Permissoes", href: "/admin/permissoes", icon: Shield, permission: null, tooltip: "Controle de acesso e convites" },
   { label: "Modulos", href: "/admin/modulos", icon: LayoutGrid, permission: null, tooltip: "Ativar ou desativar funcionalidades" },
@@ -132,7 +130,7 @@ export function AppSidebar() {
       </SidebarHeader>
       <SidebarContent>
         <TooltipProvider delayDuration={400}>
-          {/* Inicio */}
+          {/* Inicio + top items */}
           <SidebarGroup>
             <SidebarGroupContent>
               <SidebarMenu>
@@ -149,6 +147,21 @@ export function AppSidebar() {
                     <TooltipContent side="right">Painel principal e avisos</TooltipContent>
                   </Tooltip>
                 </SidebarMenuItem>
+                {topItems.filter(isItemVisible).map((item) => (
+                  <SidebarMenuItem key={item.href}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <SidebarMenuButton asChild isActive={isActive(item.href)}>
+                          <Link href={item.href}>
+                            <item.icon className="h-4 w-4" />
+                            <span>{item.label}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </TooltipTrigger>
+                      <TooltipContent side="right">{item.tooltip}</TooltipContent>
+                    </Tooltip>
+                  </SidebarMenuItem>
+                ))}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>

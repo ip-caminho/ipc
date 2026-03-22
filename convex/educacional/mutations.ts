@@ -35,7 +35,7 @@ export const createCrianca = mutation({
     // Criar entidade da crianca
     const entidadeId = await ctx.db.insert("entidades", {
       tipoEntidade: "PF",
-      papeis: ["MEMBRO"],
+      papeis: ["DEPENDENTE"],
       status: "ATIVO",
       nomeCompleto: args.nomeCompleto,
       dataNascimento: args.dataNascimento,
@@ -388,7 +388,7 @@ export const seedCriancas = mutation({
       // Criar entidade
       const entidadeId = await ctx.db.insert("entidades", {
         tipoEntidade: "PF" as const,
-        papeis: ["MEMBRO" as const],
+        papeis: ["DEPENDENTE" as const],
         status: "ATIVO" as const,
         nomeCompleto: c.nome,
         dataNascimento: c.dataNascimento,
@@ -407,5 +407,30 @@ export const seedCriancas = mutation({
     }
 
     return { inserted: count };
+  },
+});
+
+// ===== Migracao: MEMBRO → DEPENDENTE para criancas existentes =====
+
+export const migrateCriancasPapel = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const perfis = await ctx.db.query("criancaPerfil").collect();
+    let migrated = 0;
+
+    for (const perfil of perfis) {
+      const entidade = await ctx.db.get(perfil.entidadeId);
+      if (!entidade) continue;
+
+      if (entidade.papeis.includes("MEMBRO" as any)) {
+        const novosPapeis = entidade.papeis.map((p: string) =>
+          p === "MEMBRO" ? "DEPENDENTE" : p
+        );
+        await ctx.db.patch(perfil.entidadeId, { papeis: novosPapeis as any });
+        migrated++;
+      }
+    }
+
+    return { migrated };
   },
 });

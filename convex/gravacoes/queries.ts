@@ -110,22 +110,16 @@ export const getById = query({
 export const getLatestAvisos = query({
   args: {},
   handler: async (ctx) => {
-    // Find the last Sunday (YYYY-MM-DD)
-    const now = new Date();
-    const day = now.getUTCDay();
-    const diff = day === 0 ? 0 : day;
-    const sunday = new Date(now);
-    sunday.setUTCDate(now.getUTCDate() - diff);
-    const lastSunday = sunday.toISOString().split("T")[0];
+    // Busca a gravacao mais recente que tenha avisos processados pela IA
+    // Independente do status (RASCUNHO ou PUBLICADO) — basta ter sido processado
+    const gravacoes = await ctx.db
+      .query("gravacoes")
+      .withIndex("by_data")
+      .order("desc")
+      .collect();
 
-    // Get gravações from last Sunday with avisos
-    const gravacoes = await ctx.db.query("gravacoes").order("desc").collect();
-
-    // Avisos aparecem independente do status da gravação (RASCUNHO ou PUBLICADO)
-    // Basta ter sido processado pela IA
     const gravacao = gravacoes.find(
       (g) =>
-        g.data === lastSunday &&
         g.iaStatus === "CONCLUIDO" &&
         g.iaAvisos &&
         g.iaAvisos.length > 0
