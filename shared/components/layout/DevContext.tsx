@@ -24,12 +24,12 @@ interface PageContext {
 }
 
 const CONTEXT_MAP: Record<string, PageContext> = {
-  "/": {
+  "/dashboard": {
     nome: "Dashboard",
-    pagina: "app/(ready)/page.tsx",
+    pagina: "app/(ready)/dashboard/page.tsx",
     doc: "docs/modules/dashboard.md",
     arquivos: [
-      "app/(ready)/page.tsx",
+      "app/(ready)/dashboard/page.tsx",
       "features/gravacoes/components/AvisosWidget.tsx",
       "features/gravacoes/components/FrasesCarrossel.tsx",
       "features/escalas/components/MinhaEscalaWidget.tsx",
