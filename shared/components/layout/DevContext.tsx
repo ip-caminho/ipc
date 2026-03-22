@@ -20,12 +20,14 @@ interface PageContext {
   mutations?: string[];
   componentes?: string[];
   notas?: string[];
+  doc?: string;
 }
 
 const CONTEXT_MAP: Record<string, PageContext> = {
   "/": {
     nome: "Dashboard",
     pagina: "app/(ready)/page.tsx",
+    doc: "docs/modules/dashboard.md",
     arquivos: [
       "app/(ready)/page.tsx",
       "features/gravacoes/components/AvisosWidget.tsx",
@@ -44,6 +46,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
   "/membros": {
     nome: "Lista de Membros",
     pagina: "app/(ready)/membros/page.tsx",
+    doc: "docs/modules/membros.md",
     arquivos: [
       "app/(ready)/membros/page.tsx",
       "features/membros/components/MembroTable.tsx",
@@ -55,6 +58,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
   "/membros/novo": {
     nome: "Novo Membro",
     pagina: "app/(ready)/membros/novo/page.tsx",
+    doc: "docs/modules/membros.md",
     arquivos: [
       "app/(ready)/membros/novo/page.tsx",
       "features/membros/components/MembroForm.tsx",
@@ -67,6 +71,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
   "/membros/[id]": {
     nome: "Detalhe do Membro",
     pagina: "app/(ready)/membros/[id]/page.tsx",
+    doc: "docs/modules/membros.md",
     arquivos: [
       "app/(ready)/membros/[id]/page.tsx",
       "features/membros/components/MembroForm.tsx",
@@ -79,6 +84,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
   "/entidades": {
     nome: "Lista de Entidades",
     pagina: "app/(ready)/entidades/page.tsx",
+    doc: "docs/modules/entidades.md",
     arquivos: [
       "app/(ready)/entidades/page.tsx",
       "features/entidades/lib/constants.ts",
@@ -90,6 +96,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
   "/entidades/novo": {
     nome: "Nova Entidade",
     pagina: "app/(ready)/entidades/novo/page.tsx",
+    doc: "docs/modules/entidades.md",
     arquivos: ["app/(ready)/entidades/novo/page.tsx"],
     mutations: ["entidades.mutations.create"],
     notas: ["Permissao: entidades:create"],
@@ -97,6 +104,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
   "/diretorio": {
     nome: "Diretorio de Membros",
     pagina: "app/(ready)/diretorio/page.tsx",
+    doc: "docs/modules/diretorio.md",
     arquivos: ["app/(ready)/diretorio/page.tsx"],
     queries: [
       "membros.queries.list",
@@ -114,6 +122,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
   "/gravacoes": {
     nome: "Lista de Gravacoes (visao membro)",
     pagina: "app/(ready)/gravacoes/page.tsx",
+    doc: "docs/modules/gravacoes.md",
     arquivos: [
       "app/(ready)/gravacoes/page.tsx",
       "features/gravacoes/components/BibleBookFilter.tsx",
@@ -132,6 +141,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
   "/gravacoes/nova": {
     nome: "Nova Gravacao",
     pagina: "app/(ready)/gravacoes/nova/page.tsx",
+    doc: "docs/modules/gravacoes.md",
     arquivos: [
       "app/(ready)/gravacoes/nova/page.tsx",
       "features/gravacoes/components/GravacaoForm.tsx",
@@ -150,6 +160,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
   "/gravacoes/[id]": {
     nome: "Detalhe da Gravacao",
     pagina: "app/(ready)/gravacoes/[id]/page.tsx",
+    doc: "docs/modules/gravacoes.md",
     arquivos: [
       "app/(ready)/gravacoes/[id]/page.tsx",
       "shared/audio/AudioPlayerProvider.tsx",
@@ -183,6 +194,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
   "/gravacoes/[id]/admin": {
     nome: "Admin da Gravacao",
     pagina: "app/(ready)/gravacoes/[id]/admin/page.tsx",
+    doc: "docs/modules/gravacoes.md",
     arquivos: [
       "app/(ready)/gravacoes/[id]/admin/page.tsx",
       "shared/audio/useAudioPlayer.ts",
@@ -210,6 +222,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
   "/admin/permissoes": {
     nome: "Permissoes e Convites",
     pagina: "app/(ready)/admin/permissoes/page.tsx",
+    doc: "docs/modules/admin-permissoes.md",
     arquivos: [
       "app/(ready)/admin/permissoes/page.tsx",
       "features/preferencias/components/PermissionMatrix.tsx",
@@ -227,6 +240,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
   "/escalas": {
     nome: "Equipes e Escalas",
     pagina: "app/(ready)/escalas/page.tsx",
+    doc: "docs/modules/escalas.md",
     arquivos: [
       "app/(ready)/escalas/page.tsx",
       "features/escalas/components/EquipesTab.tsx",
@@ -246,6 +260,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
   "/cultos": {
     nome: "Gestao de Cultos",
     pagina: "app/(ready)/cultos/page.tsx",
+    doc: "docs/modules/cultos.md",
     arquivos: [
       "app/(ready)/cultos/page.tsx",
       "features/escalas/components/MembroCombobox.tsx",
@@ -271,6 +286,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
   "/boletim": {
     nome: "Boletim Dominical",
     pagina: "app/(ready)/boletim/page.tsx",
+    doc: "docs/modules/boletim.md",
     arquivos: ["app/(ready)/boletim/page.tsx"],
     queries: ["escalas.queries.getBoletim"],
     componentes: ["ModuloGuard"],
@@ -283,6 +299,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
   "/pequenos-grupos": {
     nome: "Pequenos Grupos",
     pagina: "app/(ready)/pequenos-grupos/page.tsx",
+    doc: "docs/modules/pequenos-grupos.md",
     arquivos: [
       "app/(ready)/pequenos-grupos/page.tsx",
       "features/pequenosGrupos/components/PGCard.tsx",
@@ -302,6 +319,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
   "/pedidos-oracao": {
     nome: "Pedidos de Oracao",
     pagina: "app/(ready)/pedidos-oracao/page.tsx",
+    doc: "docs/modules/pedidos-oracao.md",
     arquivos: [
       "app/(ready)/pedidos-oracao/page.tsx",
       "features/pedidosOracao/components/PedidoOracaoListCard.tsx",
@@ -318,6 +336,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
   "/pastoreio": {
     nome: "Pastoreio",
     pagina: "app/(ready)/pastoreio/page.tsx",
+    doc: "docs/modules/pastoreio.md",
     arquivos: [
       "app/(ready)/pastoreio/page.tsx",
       "features/pastoreio/components/VisitaForm.tsx",
@@ -359,6 +378,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
   "/ministerios": {
     nome: "Ministerios",
     pagina: "app/(ready)/ministerios/page.tsx",
+    doc: "docs/modules/ministerios.md",
     arquivos: [
       "app/(ready)/ministerios/page.tsx",
       "features/ministerios/components/MinisterioCard.tsx",
@@ -378,6 +398,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
   "/ministerios/[id]": {
     nome: "Detalhe do Ministerio",
     pagina: "app/(ready)/ministerios/[id]/page.tsx",
+    doc: "docs/modules/ministerios.md",
     arquivos: [
       "app/(ready)/ministerios/[id]/page.tsx",
       "features/ministerios/components/MinisterioDetalhe.tsx",
@@ -393,6 +414,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
   "/educacional": {
     nome: "Educacional Infantil",
     pagina: "app/(ready)/educacional/page.tsx",
+    doc: "docs/modules/educacional.md",
     arquivos: [
       "app/(ready)/educacional/page.tsx",
       "features/educacional/components/CriancaCard.tsx",
@@ -437,6 +459,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
   "/calendario": {
     nome: "Calendario",
     pagina: "app/(ready)/calendario/page.tsx",
+    doc: "docs/modules/calendario.md",
     arquivos: [
       "app/(ready)/calendario/page.tsx",
       "features/calendario/components/EventoForm.tsx",
@@ -455,6 +478,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
   "/admin/gravacoes": {
     nome: "Gerenciar Gravacoes (Admin)",
     pagina: "app/(ready)/admin/gravacoes/page.tsx",
+    doc: "docs/modules/admin-gravacoes.md",
     arquivos: [
       "app/(ready)/admin/gravacoes/page.tsx",
       "features/gravacoes/components/IaStatusBadge.tsx",
@@ -470,6 +494,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
   "/admin/modulos": {
     nome: "Gerenciar Modulos",
     pagina: "app/(ready)/admin/modulos/page.tsx",
+    doc: "docs/modules/admin-modulos.md",
     arquivos: [
       "app/(ready)/admin/modulos/page.tsx",
       "convex/modulos/queries.ts",
@@ -555,6 +580,12 @@ function buildMarkdown(pathname: string, ctx: PageContext): string {
   if (ctx.notas && ctx.notas.length > 0) {
     lines.push("### Notas");
     for (const n of ctx.notas) lines.push(`- ${n}`);
+    lines.push("");
+  }
+
+  if (ctx.doc) {
+    lines.push("### Documentacao detalhada");
+    lines.push(`- \`${ctx.doc}\``);
     lines.push("");
   }
 
