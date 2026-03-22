@@ -13,7 +13,7 @@ import { membroFormSchema, type MembroFormValues } from "../lib/validations";
 import {
   SEXO_OPTIONS, ESTADO_CIVIL_OPTIONS, FORMACAO_OPTIONS,
   CARGO_ECLESIASTICO_OPTIONS, FORMA_ADMISSAO_OPTIONS, ROLE_OPTIONS,
-  CBCM_OPTIONS,
+  CBCM_OPTIONS, TIPO_DOCUMENTO_OPTIONS,
 } from "../lib/constants";
 import { useState, useRef } from "react";
 import { PhotoUpload } from "@/shared/files/components/PhotoUpload";
@@ -117,7 +117,22 @@ export function MembroForm({ defaultValues, onSubmit, isEditing, entityId }: Mem
             </div>
             <Field name="apelido" label="Apelido" placeholder="Como e conhecido" />
             <Field name="cpf" label="CPF" placeholder="000.000.000-00" />
-            <Field name="rg" label="RG" />
+            <div className="space-y-1">
+              <Label>Documento</Label>
+              <div className="flex gap-2">
+                <Select value={form.watch("tipoDocumento") || ""} onValueChange={(v) => form.setValue("tipoDocumento", v as any)}>
+                  <SelectTrigger className="w-24 flex-shrink-0">
+                    <SelectValue placeholder="Tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TIPO_DOCUMENTO_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Input placeholder="Numero do documento" {...form.register("rg")} />
+              </div>
+            </div>
             <Field name="dataNascimento" label="Data de Nascimento" type="date" />
             <SelectField name="sexo" label="Sexo" options={SEXO_OPTIONS} />
             <SelectField name="estadoCivil" label="Estado Civil" options={ESTADO_CIVIL_OPTIONS} />

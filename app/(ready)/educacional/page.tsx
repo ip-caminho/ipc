@@ -47,7 +47,7 @@ export default function EducacionalPage() {
   const canWriteEdu = can("educacional:write");
 
   // State
-  const [turmaFilter, setTurmaFilter] = useState<string>("");
+  const [turmaFilter, setTurmaFilter] = useState<string>("all");
   const [selectedEntidadeId, setSelectedEntidadeId] = useState<Id<"entidades"> | null>(null);
   const [criancaFormOpen, setCriancaFormOpen] = useState(false);
   const [editingCrianca, setEditingCrianca] = useState<any>(null);
@@ -57,7 +57,7 @@ export default function EducacionalPage() {
   // Queries
   const criancas = useQuery(
     api.educacional.queries.listCriancas,
-    canRead ? { turma: turmaFilter || undefined } : "skip"
+    canRead ? { turma: turmaFilter === "all" ? undefined : turmaFilter } : "skip"
   );
   const relatorios = useQuery(
     api.educacional.queries.listRelatorios,
@@ -249,7 +249,7 @@ export default function EducacionalPage() {
                   <SelectValue placeholder="Todas as turmas" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todas as turmas</SelectItem>
+                  <SelectItem value="all">Todas as turmas</SelectItem>
                   {TURMA_OPTIONS.map((opt) => (
                     <SelectItem key={opt.value} value={opt.value}>
                       {opt.label}

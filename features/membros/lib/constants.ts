@@ -21,6 +21,12 @@ export const FORMA_ADMISSAO_OPTIONS = [
   { value: "JURISDICAO", label: "Jurisdicao" },
 ] as const;
 
+export const TIPO_DOCUMENTO_OPTIONS = [
+  { value: "RG", label: "RG" },
+  { value: "RNE", label: "RNE" },
+  { value: "RNM", label: "RNM" },
+] as const;
+
 export const SEXO_OPTIONS = [
   { value: "M", label: "Masculino" },
   { value: "F", label: "Feminino" },

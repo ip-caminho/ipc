@@ -31,6 +31,7 @@ export default function NovoMembroPage() {
         apelido: data.apelido || undefined,
         foto: data.foto || undefined,
         cpf: data.cpf || undefined,
+        tipoDocumento: data.tipoDocumento || undefined,
         rg: data.rg || undefined,
         dataNascimento: data.dataNascimento || undefined,
         sexo: data.sexo || undefined,
