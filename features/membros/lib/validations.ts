@@ -6,6 +6,7 @@ export const membroFormSchema = z.object({
   nomeCompleto: z.string().min(3, "Nome deve ter pelo menos 3 caracteres"),
   apelido: z.string().optional(),
   cpf: z.string().optional(),
+  tipoDocumento: z.enum(["RG", "RNE", "RNM"]).optional(),
   rg: z.string().optional(),
   dataNascimento: z.string().optional(),
   sexo: z.enum(["M", "F"]).optional(),
