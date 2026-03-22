@@ -12,7 +12,8 @@ export default defineSchema({
       v.literal("VISITANTE"),
       v.literal("CONTATO"),
       v.literal("FORNECEDOR"),
-      v.literal("IGREJA_PARCEIRA")
+      v.literal("IGREJA_PARCEIRA"),
+      v.literal("DEPENDENTE")
     )),
     status: v.union(
       v.literal("ATIVO"),

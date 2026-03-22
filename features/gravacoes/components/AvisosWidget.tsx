@@ -3,46 +3,37 @@
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useAudioPlayer } from "@shared/audio/useAudioPlayer";
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Megaphone, Play, Pause } from "lucide-react";
 import { format, parseISO } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import Link from "next/link";
+import { useState } from "react";
 
 export function AvisosWidget() {
   // @ts-ignore Convex TS2589
   const data = useQuery(api.gravacoes.queries.getLatestAvisos);
   const player = useAudioPlayer();
+  const [expanded, setExpanded] = useState(false);
 
   if (data === undefined) {
     return (
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Megaphone className="h-4 w-4" />
-            Avisos da semana
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">Carregando...</p>
-        </CardContent>
-      </Card>
+      <div className="bg-background border border-border rounded-xl p-4">
+        <div className="flex items-center gap-2 mb-3">
+          <Megaphone size={13} className="text-muted-foreground" />
+          <span className="text-sm font-medium text-foreground">Avisos</span>
+        </div>
+        <p className="text-xs text-muted-foreground">Carregando...</p>
+      </div>
     );
   }
 
   if (!data) {
     return (
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Megaphone className="h-4 w-4" />
-            Avisos da semana
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">Nenhum aviso recente</p>
-        </CardContent>
-      </Card>
+      <div className="bg-background border border-border rounded-xl p-4">
+        <div className="flex items-center gap-2 mb-3">
+          <Megaphone size={13} className="text-muted-foreground" />
+          <span className="text-sm font-medium text-foreground">Avisos</span>
+        </div>
+        <p className="text-xs text-muted-foreground">Nenhum aviso recente</p>
+      </div>
     );
   }
 
@@ -69,44 +60,46 @@ export function AvisosWidget() {
     }
   };
 
+  const avisosVisiveis = expanded ? avisos : avisos.slice(0, 2);
+  const temMais = avisos.length > 2 && !expanded;
+
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Megaphone className="h-4 w-4" />
-              Avisos da semana
-            </CardTitle>
-            {audioUrl && inicioAvisos != null && (
-              <button
-                type="button"
-                onClick={handlePlay}
-                className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 px-3 py-1 text-xs font-medium transition-colors"
-              >
-                {isThisPlaying ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
-                {isThisPlaying ? "Pausar" : "Ouvir avisos"}
-              </button>
-            )}
-          </div>
-          <Link
-            href={`/gravacoes/${gravacaoId}`}
-            className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
-          >
-            {format(parseISO(dataGravacao), "dd/MM/yyyy", { locale: ptBR })}
-          </Link>
+    <div className="bg-background border border-border rounded-xl p-4">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <Megaphone size={13} className="text-muted-foreground" />
+          <span className="text-sm font-medium text-foreground">
+            Avisos do dia {format(parseISO(dataGravacao), "dd/MM")}
+          </span>
         </div>
-      </CardHeader>
-      <CardContent>
-        <ul className="space-y-2">
-          {avisos.map((aviso: { titulo: string; descricao: string }, i: number) => (
-            <li key={i} className="space-y-0.5">
-              <p className="text-sm font-medium">{aviso.titulo}</p>
-              <p className="text-sm text-muted-foreground">{aviso.descricao}</p>
-            </li>
-          ))}
-        </ul>
-      </CardContent>
-    </Card>
+        {audioUrl && inicioAvisos != null && (
+          <button
+            type="button"
+            onClick={handlePlay}
+            className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors duration-150"
+          >
+            {isThisPlaying ? <Pause size={12} /> : <Play size={12} />}
+            {isThisPlaying ? "Pausar" : "Ouvir"}
+          </button>
+        )}
+      </div>
+      <div className="flex flex-col gap-2">
+        {avisosVisiveis.map((aviso: { titulo: string; descricao: string }, i: number) => (
+          <div key={i} className="bg-muted rounded-lg px-3 py-2">
+            <p className="text-xs font-medium text-foreground mb-0.5">{aviso.titulo}</p>
+            <p className="text-xs text-muted-foreground line-clamp-2">{aviso.descricao}</p>
+          </div>
+        ))}
+        {temMais && (
+          <button
+            type="button"
+            onClick={() => setExpanded(true)}
+            className="text-xs text-muted-foreground underline underline-offset-2 text-left mt-1 transition-colors duration-150 hover:text-foreground"
+          >
+            +{avisos.length - 2} avisos
+          </button>
+        )}
+      </div>
+    </div>
   );
 }

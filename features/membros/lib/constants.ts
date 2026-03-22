@@ -49,6 +49,7 @@ export const PAPEL_OPTIONS = [
   { value: "CONTATO", label: "Contato" },
   { value: "FORNECEDOR", label: "Fornecedor" },
   { value: "IGREJA_PARCEIRA", label: "Igreja Parceira" },
+  { value: "DEPENDENTE", label: "Dependente" },
 ] as const;
 
 export const ROLE_OPTIONS = [

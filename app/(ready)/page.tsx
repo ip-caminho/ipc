@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avat
 import { AvisosWidget } from "@features/gravacoes/components/AvisosWidget";
 import { FrasesCarrossel } from "@features/gravacoes/components/FrasesCarrossel";
 import { EducacionalPaisWidget } from "@features/educacional/components/EducacionalPaisWidget";
+import { MinhaEscalaWidget } from "@features/escalas/components/MinhaEscalaWidget";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useState } from "react";
@@ -124,123 +125,128 @@ export default function DashboardPage() {
     return <BootstrapForm />;
   }
 
+  const primeiroNome = name?.split(" ")[0] || "Usuario";
+  const dataHoje = format(new Date(), "dd 'de' MMMM", { locale: ptBR });
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">
-          Bem-vindo, {name || "Usuario"}!
+      {/* Saudacao */}
+      <div className="flex items-baseline gap-3">
+        <h1 className="text-2xl font-medium text-foreground">
+          Bem-vindo, {primeiroNome}
         </h1>
+        <span className="text-sm text-muted-foreground">&middot; {dataHoje}</span>
       </div>
 
-      {/* Avisos + Aniversariantes lado a lado */}
-      <div className="grid gap-6 md:grid-cols-2">
+      {/* Grid principal: Avisos + Aniversariantes */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <AvisosWidget />
 
-        <Card>
-          <CardHeader className="space-y-0 pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Cake className="h-4 w-4" />
-                Aniversariantes do mes
-              </CardTitle>
-              {aniversariantesMes && aniversariantesMes.length > 0 && (
-                <span className="text-sm text-muted-foreground">
-                  {aniversariantesMes.length}
-                </span>
-              )}
+        {/* Aniversariantes do mes */}
+        <div className="bg-background border border-border rounded-xl p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Cake size={13} className="text-muted-foreground" />
+              <span className="text-sm font-medium text-foreground">Aniversariantes do mes</span>
             </div>
-            <p className="text-xs text-muted-foreground flex items-center gap-1">
-              Clique no <MessageCircle className="h-3 w-3 inline text-green-600" /> para enviar uma mensagem
-            </p>
-          </CardHeader>
-          <CardContent>
-            {!aniversariantesMes ? (
-              <p className="text-sm text-muted-foreground">Carregando...</p>
-            ) : aniversariantesMes.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Nenhum aniversariante este mes</p>
-            ) : (
-              <ul className="space-y-3">
-                {aniversariantesMes.map((a: any) => {
-                  const nome = a.entidade?.apelido || a.entidade?.nomeCompleto;
-                  return (
-                    <li key={a._id} className="flex items-center gap-3">
-                      <Avatar className="h-9 w-9">
+            {aniversariantesMes && aniversariantesMes.length > 0 && (
+              <span className="text-xs text-muted-foreground">
+                {aniversariantesMes.length} este mes
+              </span>
+            )}
+          </div>
+          {!aniversariantesMes ? (
+            <p className="text-xs text-muted-foreground py-2">Carregando...</p>
+          ) : aniversariantesMes.length === 0 ? (
+            <p className="text-xs text-muted-foreground py-2">Nenhum aniversariante este mes.</p>
+          ) : (
+            <div className="flex flex-col gap-1">
+              {aniversariantesMes.map((a: any) => {
+                const nome = a.entidade?.apelido || a.entidade?.nomeCompleto;
+                return (
+                  <div key={a._id} className="flex items-center justify-between py-1">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="w-8 h-8 flex-shrink-0">
                         {a.entidade?.foto && <AvatarImage src={a.entidade.foto} />}
-                        <AvatarFallback className="text-sm">
+                        <AvatarFallback className="text-xs">
                           {nome?.charAt(0)?.toUpperCase() || "?"}
                         </AvatarFallback>
                       </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-sm font-medium truncate">{nome}</span>
-                          {a.entidade?.whatsapp && (
-                            <a
-                              href={formatWhatsappLink(a.entidade.whatsapp)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-green-600 hover:text-green-700 dark:text-green-500 dark:hover:text-green-400 transition-colors shrink-0"
-                            >
-                              <MessageCircle className="h-3.5 w-3.5" />
-                            </a>
-                          )}
-                        </div>
+                      <div>
+                        <p className="text-sm font-medium text-foreground">{nome}</p>
                         <p className="text-xs text-muted-foreground">
                           {a.entidade?.dataNascimento
                             ? format(parseISO(a.entidade.dataNascimento), "dd 'de' MMMM", { locale: ptBR })
                             : ""}
                         </p>
                       </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
+                    </div>
+                    {a.entidade?.whatsapp && (
+                      <a
+                        href={formatWhatsappLink(a.entidade.whatsapp)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs px-3 py-1 rounded-full border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-colors duration-150 flex-shrink-0"
+                      >
+                        Enviar mensagem
+                      </a>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Meus Pedidos de Oracao */}
-      {can("pedidos_oracao:read") && (
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-base flex items-center gap-2">
-              <HandHeart className="h-4 w-4" />
-              Meus Pedidos de Oracao
-            </CardTitle>
-            {meusPedidos && meusPedidos.length > 0 && (
-              <span className="text-sm text-muted-foreground">
-                {meusPedidos.length} ativo{meusPedidos.length !== 1 ? "s" : ""}
-              </span>
-            )}
-          </CardHeader>
-          <CardContent>
-            {!meusPedidos ? (
-              <p className="text-sm text-muted-foreground">Carregando...</p>
-            ) : meusPedidos.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                Nenhum pedido ativo
-              </p>
-            ) : (
-              <ul className="space-y-2">
-                {meusPedidos.slice(0, 3).map((p: any) => (
-                  <li key={p._id} className="text-sm">
-                    {p.descricao}
-                  </li>
-                ))}
-              </ul>
-            )}
-            <Button variant="link" className="px-0 mt-2" asChild>
-              <Link href="/pedidos-oracao">Ver todos</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Widget educacional para pais */}
-      <EducacionalPaisWidget />
-
-      {/* Frases dos sermoes */}
+      {/* Citacao do sermao */}
       <FrasesCarrossel />
+
+      {/* Grid secundario: Pedidos + Escala + Educacional */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Pedidos de Oracao */}
+        {can("pedidos_oracao:read") && (
+          <div className="bg-background border border-border rounded-xl p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <HandHeart size={13} className="text-muted-foreground" />
+                <span className="text-sm font-medium text-foreground">Pedidos de Oracao</span>
+              </div>
+              {meusPedidos && meusPedidos.length > 0 && (
+                <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-medium">
+                  {meusPedidos.length} ativo{meusPedidos.length !== 1 ? "s" : ""}
+                </span>
+              )}
+            </div>
+            {!meusPedidos ? (
+              <p className="text-xs text-muted-foreground py-2">Carregando...</p>
+            ) : meusPedidos.length === 0 ? (
+              <p className="text-xs text-muted-foreground py-2">Nenhum pedido ativo</p>
+            ) : (
+              <div>
+                {meusPedidos.slice(0, 3).map((p: any) => (
+                  <div key={p._id} className="flex items-center gap-2 py-2 border-b border-border last:border-0">
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
+                    <span className="text-sm text-foreground line-clamp-1">{p.descricao}</span>
+                  </div>
+                ))}
+                <Link
+                  href="/pedidos-oracao"
+                  className="text-xs text-muted-foreground underline underline-offset-2 mt-2 block transition-colors duration-150 hover:text-foreground"
+                >
+                  Ver todos
+                </Link>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Minha Escala */}
+        <MinhaEscalaWidget />
+      </div>
+
+      {/* Educacional (pais) */}
+      <EducacionalPaisWidget />
     </div>
   );
 }
