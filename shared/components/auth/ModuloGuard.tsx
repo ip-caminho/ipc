@@ -19,7 +19,7 @@ export function ModuloGuard({ modulo, children }: ModuloGuardProps) {
 
   useEffect(() => {
     if (!isLoading && !isAtivo) {
-      router.push("/");
+      router.push("/dashboard");
     }
   }, [isLoading, isAtivo, router]);
 

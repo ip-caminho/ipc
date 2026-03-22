@@ -7,7 +7,10 @@ import { NextResponse } from "next/server";
 
 const isSignInPage = createRouteMatcher(["/signin"]);
 const isPublicRoute = createRouteMatcher(["/signin", "/convite/(.*)"]);
-const isProtectedRoute = createRouteMatcher(["/"]);
+
+function isLandingPage(pathname: string) {
+  return pathname === "/";
+}
 
 function isLocalhost(host: string | null) {
   if (!host) return false;
@@ -34,6 +37,7 @@ export default convexAuthNextjsMiddleware(async (request, { convexAuth }) => {
   const expiry = Number.parseInt(expiryStr, 10) || 0;
 
   const authed = await convexAuth.isAuthenticated();
+  const pathname = request.nextUrl.pathname;
 
   // If app-level window expired, force reauth
   if (authed && expiry && expiry < now) {
@@ -48,10 +52,19 @@ export default convexAuthNextjsMiddleware(async (request, { convexAuth }) => {
     return resp;
   }
 
-  // Standard redirects
-  if (isSignInPage(request) && authed) {
-    return nextjsMiddlewareRedirect(request, "/");
+  // Authed user on landing or signin → redirect to dashboard
+  if (authed && (isLandingPage(pathname) || isSignInPage(request))) {
+    return nextjsMiddlewareRedirect(request, "/dashboard");
   }
+
+  // Landing page is public — allow without auth
+  if (isLandingPage(pathname)) {
+    return NextResponse.next({
+      request: { headers: request.headers },
+    });
+  }
+
+  // Standard redirects
   if (!isPublicRoute(request) && !authed) {
     return nextjsMiddlewareRedirect(request, "/signin");
   }
