@@ -26,6 +26,7 @@ export default defineSchema({
     // PF fields
     nomeCompleto: v.optional(v.string()),
     cpf: v.optional(v.string()),
+    tipoDocumento: v.optional(v.union(v.literal("RG"), v.literal("RNE"), v.literal("RNM"))),
     rg: v.optional(v.string()),
     dataNascimento: v.optional(v.string()),
     sexo: v.optional(v.union(v.literal("M"), v.literal("F"))),
