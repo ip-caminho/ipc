@@ -163,6 +163,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "Data padrao: ultimo domingo",
       "Audio comprimido client-side (FFmpeg.wasm → 64kbps MP3)",
       "Upload via presigned URL para B2",
+      "Pipeline IA extrai dataEvento dos avisos e cria eventos no calendario automaticamente (origem: aviso-ia)",
     ],
   },
   "/gravacoes/[id]": {

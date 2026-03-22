@@ -176,6 +176,7 @@ export default defineSchema({
     iaAvisos: v.optional(v.array(v.object({
       titulo: v.string(),
       descricao: v.string(),
+      dataEvento: v.optional(v.union(v.string(), v.null())),
     }))),
   })
     .index("by_tipo", ["tipo"])
@@ -552,6 +553,7 @@ export default defineSchema({
     dataFim: v.optional(v.string()),
     ministerioId: v.optional(v.id("ministerios")),
     descricao: v.optional(v.string()),
+    origem: v.optional(v.string()), // "aviso-ia" = criado automaticamente a partir de aviso
     criadoEm: v.number(),
   })
     .index("by_data", ["data"])

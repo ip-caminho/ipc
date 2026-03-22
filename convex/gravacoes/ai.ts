@@ -1,4 +1,4 @@
-import { internalMutation, mutation } from "../_generated/server";
+import { internalMutation, internalQuery, mutation } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 
@@ -14,6 +14,52 @@ function getDownloadYouTubeRef() {
   const { internal } = require("../_generated/api");
   return internal.gravacoes.youtubeAction.downloadYouTubeAudio;
 }
+
+// ===== INTERNAL QUERY: get gravacao data for action context =====
+
+export const getGravacaoData = internalQuery({
+  args: { id: v.id("gravacoes") },
+  handler: async (ctx, { id }) => {
+    const gravacao = await ctx.db.get(id);
+    return gravacao?.data || null;
+  },
+});
+
+// ===== INTERNAL MUTATION: create calendar events from avisos =====
+
+export const createEventosFromAvisos = internalMutation({
+  args: {
+    avisos: v.array(v.object({
+      titulo: v.string(),
+      descricao: v.string(),
+      dataEvento: v.optional(v.union(v.string(), v.null())),
+    })),
+  },
+  handler: async (ctx, { avisos }) => {
+    let created = 0;
+    for (const aviso of avisos) {
+      if (!aviso.dataEvento) continue;
+
+      // Dedup: verificar se ja existe evento com mesmo titulo e data
+      const existing = await ctx.db
+        .query("calendarioEventos")
+        .withIndex("by_data", (q) => q.eq("data", aviso.dataEvento!))
+        .collect();
+      const dup = existing.find((e) => e.titulo === aviso.titulo);
+      if (dup) continue;
+
+      await ctx.db.insert("calendarioEventos", {
+        titulo: aviso.titulo,
+        data: aviso.dataEvento,
+        descricao: aviso.descricao,
+        origem: "aviso-ia",
+        criadoEm: Date.now(),
+      });
+      created++;
+    }
+    return { created };
+  },
+});
 
 // ===== INTERNAL MUTATION: update IA status =====
 
@@ -41,6 +87,7 @@ export const updateIaStatus = internalMutation({
     iaAvisos: v.optional(v.array(v.object({
       titulo: v.string(),
       descricao: v.string(),
+      dataEvento: v.optional(v.union(v.string(), v.null())),
     }))),
   },
   handler: async (ctx, args) => {

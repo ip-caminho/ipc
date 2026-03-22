@@ -24,7 +24,7 @@ const SERMON_ANALYSIS_PROMPT = `Você é um analista teológico especializado em
 14. **fimSermao**: número em segundos indicando o momento exato onde o sermão/pregação TERMINA. O sermão termina quando o MOMENTO DE INTERAÇÃO finaliza (ex: após a oração de resposta, apelo, ou convite final feito pelo pregador). Inclua todo o momento de interação dentro do sermão. NÃO inclua avisos da igreja, bênção apostólica ou cânticos finais. Se o sermão vai até o final da gravação, retorne null.
 15. **inicioAvisos**: número em segundos indicando onde os avisos/informes da igreja COMEÇAM. Os avisos geralmente ficam no final do culto, após o sermão. Retorne null se não houver avisos na gravação.
 16. **fimAvisos**: número em segundos indicando onde os avisos/informes TERMINAM. Retorne null se não houver avisos.
-17. **avisos**: array de objetos com "titulo" (título curto do aviso, ex: "Retiro de jovens") e "descricao" (descrição resumida do aviso em 1-2 frases). Liste cada aviso mencionado separadamente. Retorne array vazio [] se não houver avisos.
+17. **avisos**: array de objetos com "titulo" (título curto do aviso, ex: "Retiro de jovens"), "descricao" (descrição resumida do aviso em 1-2 frases) e "dataEvento" (data do evento mencionado no aviso no formato YYYY-MM-DD, ou null se o aviso não mencionar uma data específica). Para converter datas relativas como "próximo sábado" ou "dia 15", use a data do culto como referência. Liste cada aviso mencionado separadamente. Retorne array vazio [] se não houver avisos.
 
 IMPORTANTE:
 - Retorne APENAS o JSON, sem markdown, sem code blocks, sem texto antes ou depois
@@ -35,7 +35,10 @@ IMPORTANTE:
 - Para inicioSermao: comece nas primeiras palavras do pregador (saudação, convite para leitura bíblica, etc). SEMPRE inclua a saudação inicial e a leitura da passagem.
 - Para fimSermao: termine APÓS o momento de interação (oração de resposta, apelo). O momento de interação faz parte do sermão. Só exclua avisos da igreja, bênção e cânticos finais.
 - Os timestamps estão no formato [MM:SS] no início de cada parágrafo.
-- Para avisos: identifique o trecho onde alguém faz comunicados, informes ou avisos para a congregação (eventos, reuniões, datas, etc). Separe cada aviso individual com título e descrição.
+- Para avisos: identifique o trecho onde alguém faz comunicados, informes ou avisos para a congregação (eventos, reuniões, datas, etc). Separe cada aviso individual com título, descrição e data do evento (se mencionada).
+- Para dataEvento nos avisos: a data do culto é informada abaixo. Use-a como referência para converter datas relativas ("próximo sábado", "dia 15", "semana que vem") em datas absolutas YYYY-MM-DD.
+
+DATA DO CULTO: {{DATA_CULTO}}
 
 TRANSCRIÇÃO:
 `;
@@ -91,6 +94,18 @@ function getUpdateRef() {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { internal } = require("../_generated/api");
   return internal.gravacoes.ai.updateIaStatus;
+}
+
+function getGravacaoDataRef() {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { internal } = require("../_generated/api");
+  return internal.gravacoes.ai.getGravacaoData;
+}
+
+function getCreateEventosRef() {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { internal } = require("../_generated/api");
+  return internal.gravacoes.ai.createEventosFromAvisos;
 }
 
 export const processSermon = internalAction({
@@ -155,8 +170,12 @@ export const processSermon = internalAction({
       // Send timestamped version so LLM can identify sermon boundaries
       const llm = createLlmProvider();
 
+      // Buscar data do culto para resolver datas relativas nos avisos
+      const dataCulto = await ctx.runQuery(getGravacaoDataRef(), { id: gravacaoId });
+      const promptWithDate = SERMON_ANALYSIS_PROMPT.replace("{{DATA_CULTO}}", dataCulto || "desconhecida");
+
       const responseText = await llm.complete({
-        prompt: SERMON_ANALYSIS_PROMPT + timestampedTranscription,
+        prompt: promptWithDate + timestampedTranscription,
         maxTokens: 16000,
       });
 
@@ -223,6 +242,18 @@ export const processSermon = internalAction({
         iaProcessadoPor: membroId,
         ...autoFill,
       });
+
+      // === Step 4: Create calendar events from avisos with dates ===
+      if (Array.isArray(iaResultado.avisos) && iaResultado.avisos.length > 0) {
+        const avisosComData = iaResultado.avisos.filter(
+          (a: any) => a.dataEvento && typeof a.dataEvento === "string"
+        );
+        if (avisosComData.length > 0) {
+          await ctx.runMutation(getCreateEventosRef(), {
+            avisos: avisosComData,
+          });
+        }
+      }
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : "Erro desconhecido";
       await ctx.runMutation(updateIaStatus, {
