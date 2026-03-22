@@ -86,7 +86,7 @@ export default function SignIn() {
                     /* silent */
                   }
 
-                  setTimeout(() => router.push("/"), 500);
+                  setTimeout(() => router.push("/dashboard"), 500);
                 } else {
                   formData.set("phone", normalizedPhone);
                   try {
@@ -164,7 +164,7 @@ export default function SignIn() {
                   /* silent */
                 }
 
-                setTimeout(() => router.push("/"), 500);
+                setTimeout(() => router.push("/dashboard"), 500);
               } catch (error: unknown) {
                 setError(
                   error instanceof Error ? error.message : "Erro desconhecido",

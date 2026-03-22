@@ -67,6 +67,8 @@ import type * as pedidosOracao_mutations from "../pedidosOracao/mutations.js";
 import type * as pedidosOracao_queries from "../pedidosOracao/queries.js";
 import type * as pequenosGrupos_mutations from "../pequenosGrupos/mutations.js";
 import type * as pequenosGrupos_queries from "../pequenosGrupos/queries.js";
+import type * as preferencias_mutations from "../preferencias/mutations.js";
+import type * as preferencias_queries from "../preferencias/queries.js";
 import type * as preferencias_rbac from "../preferencias/rbac.js";
 import type * as preferencias_rbacHelpers from "../preferencias/rbacHelpers.js";
 
@@ -136,6 +138,8 @@ declare const fullApi: ApiFromModules<{
   "pedidosOracao/queries": typeof pedidosOracao_queries;
   "pequenosGrupos/mutations": typeof pequenosGrupos_mutations;
   "pequenosGrupos/queries": typeof pequenosGrupos_queries;
+  "preferencias/mutations": typeof preferencias_mutations;
+  "preferencias/queries": typeof preferencias_queries;
   "preferencias/rbac": typeof preferencias_rbac;
   "preferencias/rbacHelpers": typeof preferencias_rbacHelpers;
 }>;

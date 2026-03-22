@@ -113,12 +113,12 @@ export function AppSidebar() {
 
   const isActive = (href: string) =>
     !pathname.startsWith("/admin") &&
-    (pathname === href || (href !== "/" && pathname.startsWith(href)));
+    (pathname === href || (href !== "/dashboard" && pathname.startsWith(href)));
 
   const isAdminActive = (href: string) =>
     href.startsWith("/admin")
       ? pathname.startsWith(href)
-      : pathname === href || (href !== "/" && pathname.startsWith(href));
+      : pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
 
   return (
     <Sidebar>
@@ -137,8 +137,8 @@ export function AppSidebar() {
                 <SidebarMenuItem>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <SidebarMenuButton asChild isActive={pathname === "/"}>
-                        <Link href="/">
+                      <SidebarMenuButton asChild isActive={pathname === "/dashboard"}>
+                        <Link href="/dashboard">
                           <Home className="h-4 w-4" />
                           <span>Inicio</span>
                         </Link>
