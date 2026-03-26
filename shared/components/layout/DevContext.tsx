@@ -155,9 +155,11 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "features/gravacoes/components/GravacaoForm.tsx",
       "shared/files/components/FileUpload.tsx",
       "shared/files/hooks/useAudioCompressor.ts",
+      "shared/bible/components/BiblePassageInput.tsx",
+      "shared/bible/hooks/useBibleLookup.ts",
     ],
     mutations: ["gravacoes.ai.createFromAudio"],
-    componentes: ["GravacaoForm", "FileUpload"],
+    componentes: ["GravacaoForm", "FileUpload", "BiblePassageInput"],
     notas: [
       "Permissao: gravacoes:create",
       "Data padrao: ultimo domingo",
@@ -274,6 +276,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "app/(ready)/cultos/page.tsx",
       "features/escalas/components/MembroCombobox.tsx",
       "features/avisos/components/AvisosSection.tsx",
+      "shared/bible/components/BiblePassageInput.tsx",
     ],
     queries: ["escalas.queries.listCultos", "membros.queries.list"],
     mutations: [
@@ -285,11 +288,12 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "escalas.mutations.createCulto",
       "escalas.mutations.deleteCulto",
     ],
-    componentes: ["MembroCombobox", "AvisosSection", "ModuloGuard"],
+    componentes: ["MembroCombobox", "AvisosSection", "ModuloGuard", "BiblePassageInput"],
     notas: [
       "Permissao: escalas:read, escalas:update, escalas:create, escalas:delete",
-      "3 views: Escala, Liturgia, Avisos",
-      "Edicao inline de escalas, passagens e louvores",
+      "2 views: Escala (unificada com liturgia), Avisos",
+      "Escala: membro + passagem biblica (temPassagem), louvores (LOUVOR), ou membro simples",
+      "Preview de passagens biblicas inline (NAA) via BiblePassageInput",
     ],
   },
   "/boletim": {
@@ -484,6 +488,52 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "Click no evento abre dialog de edicao",
     ],
   },
+  "/louvor": {
+    nome: "Repertorio de Louvor",
+    pagina: "app/(ready)/louvor/page.tsx",
+    arquivos: [
+      "app/(ready)/louvor/page.tsx",
+      "features/louvor/components/LouvorCard.tsx",
+      "features/louvor/components/LouvorForm.tsx",
+      "features/louvor/lib/constants.ts",
+      "features/louvor/lib/validations.ts",
+      "features/louvor/lib/chordpro.ts",
+    ],
+    queries: ["louvor.queries.list", "louvor.queries.listTags"],
+    mutations: ["louvor.mutations.create"],
+    componentes: ["LouvorCard", "LouvorForm", "PermissionGate", "ModuloGuard"],
+    notas: [
+      "Permissao: louvor:read, louvor:create",
+      "Grid de cards com titulo, artista, tom, tags",
+      "Filtros: busca texto, tag, tom",
+      "Criacao via dialog com preview da cifra em tempo real",
+      "Import via copy-paste do Cifra Club (converte para ChordPro)",
+    ],
+  },
+  "/louvor/[id]": {
+    nome: "Detalhe da Musica",
+    pagina: "app/(ready)/louvor/[id]/page.tsx",
+    arquivos: [
+      "app/(ready)/louvor/[id]/page.tsx",
+      "features/louvor/components/LouvorDetalhe.tsx",
+      "features/louvor/components/ChordSheet.tsx",
+      "features/louvor/components/YouTubeEmbed.tsx",
+      "features/louvor/components/LouvorForm.tsx",
+      "features/louvor/lib/chordpro.ts",
+      "features/louvor/lib/constants.ts",
+    ],
+    queries: ["louvor.queries.getById"],
+    mutations: ["louvor.mutations.update", "louvor.mutations.remove"],
+    componentes: ["LouvorDetalhe", "ChordSheet", "YouTubeEmbed", "LouvorForm", "ModuloGuard"],
+    notas: [
+      "Permissao: louvor:read, louvor:update, louvor:delete",
+      "Seletor de tom: Original / Homem / Mulher / Custom",
+      "Toggle cifras on/off (Switch)",
+      "Transposicao via ChordSheetJS",
+      "YouTube embed se URL presente",
+      "Observacoes visiveis para louvor:update",
+    ],
+  },
   "/admin/gravacoes": {
     nome: "Gerenciar Gravacoes (Admin)",
     pagina: "app/(ready)/admin/gravacoes/page.tsx",
@@ -543,6 +593,8 @@ function resolveRoute(pathname: string): PageContext | null {
   if (/^\/gravacoes\/[^/]+\/admin$/.test(pathname)) return CONTEXT_MAP["/gravacoes/[id]/admin"];
   // /gravacoes/[id]
   if (/^\/gravacoes\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/gravacoes/[id]"];
+  // /louvor/[id]
+  if (/^\/louvor\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/louvor/[id]"];
   // /ministerios/[id]
   if (/^\/ministerios\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/ministerios/[id]"];
   // /membros/[id]
@@ -614,8 +666,6 @@ export function DevContext() {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  if (!isAdmin) return null;
-
   const ctx = resolveRoute(pathname);
 
   const markdown = ctx
@@ -627,6 +677,8 @@ export function DevContext() {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }, [markdown]);
+
+  if (!isAdmin) return null;
 
   return (
     <>

@@ -547,6 +547,31 @@ export default defineSchema({
     .index("by_data", ["data"])
     .index("by_ministerio_data", ["ministerioId", "data"]),
 
+  // ===== Louvor =====
+  louvores: defineTable({
+    titulo: v.string(),
+    artista: v.optional(v.string()),
+    tom: v.optional(v.string()),
+    tomHomem: v.optional(v.string()),
+    tomMulher: v.optional(v.string()),
+    bpm: v.optional(v.number()),
+    tags: v.optional(v.array(v.string())),
+    conteudo: v.optional(v.string()),
+    youtubeUrl: v.optional(v.string()),
+    spotifyUrl: v.optional(v.string()),
+    observacoes: v.optional(v.string()),
+    estrutura: v.optional(v.string()),   // Ordem de secoes: "i v1 v2 pc r p r"
+    status: v.union(v.literal("ATIVO"), v.literal("INATIVO")),
+    criadoEm: v.number(),
+    atualizadoEm: v.optional(v.number()),
+  })
+    .index("by_status", ["status"])
+    .index("by_titulo", ["titulo"])
+    .searchIndex("search_louvores", {
+      searchField: "titulo",
+      filterFields: ["status"],
+    }),
+
   // ===== Calendario =====
   calendarioEventos: defineTable({
     titulo: v.string(),
