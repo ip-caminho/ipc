@@ -48,6 +48,8 @@ import type * as gravacoes_queries from "../gravacoes/queries.js";
 import type * as gravacoes_series from "../gravacoes/series.js";
 import type * as gravacoes_youtubeAction from "../gravacoes/youtubeAction.js";
 import type * as http from "../http.js";
+import type * as louvor_mutations from "../louvor/mutations.js";
+import type * as louvor_queries from "../louvor/queries.js";
 import type * as membros_bootstrap from "../membros/bootstrap.js";
 import type * as membros_convites from "../membros/convites.js";
 import type * as membros_import from "../membros/import.js";
@@ -121,6 +123,8 @@ declare const fullApi: ApiFromModules<{
   "gravacoes/series": typeof gravacoes_series;
   "gravacoes/youtubeAction": typeof gravacoes_youtubeAction;
   http: typeof http;
+  "louvor/mutations": typeof louvor_mutations;
+  "louvor/queries": typeof louvor_queries;
   "membros/bootstrap": typeof membros_bootstrap;
   "membros/convites": typeof membros_convites;
   "membros/import": typeof membros_import;

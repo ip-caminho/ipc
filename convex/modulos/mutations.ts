@@ -15,6 +15,7 @@ const MODULOS_INICIAIS = [
   { slug: "ministerios", label: "Ministerios", descricao: "Gestao de ministerios da igreja", ativo: false, ordem: 10 },
   { slug: "calendario", label: "Calendario", descricao: "Calendario de eventos da igreja", ativo: false, ordem: 11 },
   { slug: "educacional", label: "Educacional Infantil", descricao: "Gestao das turmas e criancas", ativo: false, ordem: 12 },
+  { slug: "louvor", label: "Louvor", descricao: "Repertorio de musicas com cifras e tons", ativo: false, ordem: 13 },
 ];
 
 export const seedModulos = mutation({

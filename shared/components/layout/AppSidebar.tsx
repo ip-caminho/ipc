@@ -40,6 +40,7 @@ import {
   HandHeart,
   LayoutGrid,
   Baby,
+  Music,
 } from "lucide-react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
@@ -62,6 +63,7 @@ type MenuSection = {
 const topItems: MenuItem[] = [
   { label: "Sermoes", href: "/gravacoes", icon: Mic, permission: "gravacoes:read", modulo: "gravacoes", tooltip: "Ouca os sermoes e estudos da igreja" },
   { label: "Boletim", href: "/boletim", icon: FileText, permission: "escalas:read", modulo: "boletim", tooltip: "Boletim do proximo culto dominical" },
+  { label: "Louvor", href: "/louvor", icon: Music, permission: "louvor:read", modulo: "louvor", tooltip: "Repertorio de musicas com cifras e tons" },
 ];
 
 const menuSections: MenuSection[] = [
