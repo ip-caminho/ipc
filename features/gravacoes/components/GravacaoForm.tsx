@@ -13,6 +13,7 @@ import { Label } from "@/shared/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
 import { TIPO_GRAVACAO_OPTIONS } from "../lib/constants";
 import { FileUpload } from "@/shared/files/components/FileUpload";
+import { BiblePassageInput } from "@/shared/bible/components/BiblePassageInput";
 
 function getLastSunday(): string {
   const now = new Date();
@@ -116,7 +117,12 @@ export function GravacaoForm({ defaultValues, onSubmit, isEditing, entityId }: G
 
             <div className="space-y-1">
               <Label htmlFor="textoBase">Texto Base (Referencia Biblica)</Label>
-              <Input id="textoBase" placeholder="Ex: Joao 3:16" {...form.register("textoBase")} />
+              <BiblePassageInput
+                id="textoBase"
+                variant="form"
+                value={form.watch("textoBase") || ""}
+                onChange={(v) => form.setValue("textoBase", v)}
+              />
             </div>
 
             <div className="space-y-1">

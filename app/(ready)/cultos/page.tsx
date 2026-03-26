@@ -8,19 +8,20 @@ import { Input } from "@/shared/components/ui/input";
 import { CommandItem } from "@/shared/components/ui/command";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
-import { Plus, Trash2, X, UserPlus } from "lucide-react";
-import { format, parseISO } from "date-fns";
+import { Check, ChevronDown, Plus, Trash2, X, UserPlus } from "lucide-react";
+import { format, parseISO, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { ModuloGuard } from "@shared/components/auth/ModuloGuard";
 import { useFuncoes } from "@features/escalas/hooks/useFuncoes";
 import { AvisosSection } from "@features/avisos/components/AvisosSection";
 import { MembroCombobox } from "@features/escalas/components/MembroCombobox";
 import { cn } from "@/shared/lib/utils/cn";
+import { BiblePassageInput } from "@/shared/bible/components/BiblePassageInput";
 import type { Id } from "@/convex/_generated/dataModel";
 
-type CultoViewMode = "escala" | "liturgia" | "avisos";
+type CultoViewMode = "escala" | "avisos";
 
 function SingleCell({
   cultoId,
@@ -67,91 +68,6 @@ function SingleCell({
           Remover
         </CommandItem>
       )}
-    </MembroCombobox>
-  );
-}
-
-function PregacaoCell({
-  cultoId,
-  assignment,
-  membros,
-}: {
-  cultoId: Id<"cultos">;
-  assignment?: { _id: Id<"cultoEscalas">; membroId?: string; membroNome: string; nomeCustom?: string };
-  membros: any[];
-}) {
-  // @ts-ignore Convex TS2589
-  const upsertEscala = useMutation(api.escalas.mutations.upsertEscala);
-  const removeEscala = useMutation(api.escalas.mutations.removeEscala);
-  const [showCustom, setShowCustom] = useState(false);
-  const [customName, setCustomName] = useState("");
-
-  const handleSelect = async (membroId: string) => {
-    try {
-      await upsertEscala({ cultoId, funcao: "PREGACAO", membroId: membroId as Id<"membros"> });
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Erro");
-    }
-  };
-
-  const handleRemove = async () => {
-    if (!assignment) return;
-    try {
-      await removeEscala({ id: assignment._id });
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Erro");
-    }
-  };
-
-  const handleCustomSubmit = async () => {
-    if (!customName.trim()) return;
-    try {
-      await upsertEscala({ cultoId, funcao: "PREGACAO", nomeCustom: customName.trim() });
-      setCustomName("");
-      setShowCustom(false);
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Erro");
-    }
-  };
-
-  if (showCustom) {
-    return (
-      <div className="flex items-center gap-1">
-        <Input
-          className="h-7 text-xs px-1.5"
-          placeholder="Nome do pregador"
-          value={customName}
-          onChange={(e) => setCustomName(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleCustomSubmit()}
-          autoFocus
-        />
-        <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" onClick={handleCustomSubmit}>
-          <Plus className="h-3 w-3" />
-        </Button>
-        <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" onClick={() => setShowCustom(false)}>
-          <X className="h-3 w-3" />
-        </Button>
-      </div>
-    );
-  }
-
-  return (
-    <MembroCombobox
-      membros={membros}
-      value={assignment?.membroId}
-      displayName={assignment?.membroNome}
-      onSelect={handleSelect}
-    >
-      {assignment && (
-        <CommandItem onSelect={handleRemove} className="text-destructive text-xs">
-          <X className="h-3.5 w-3.5 mr-2" />
-          Remover
-        </CommandItem>
-      )}
-      <CommandItem onSelect={() => setShowCustom(true)} className="text-xs font-medium">
-        <UserPlus className="h-3.5 w-3.5 mr-2" />
-        Pregador externo
-      </CommandItem>
     </MembroCombobox>
   );
 }
@@ -222,7 +138,6 @@ function PassagemCell({
   funcao: string;
   assignment?: { _id: Id<"cultoEscalas">; membroId?: string; membroNome: string; nomeCustom?: string; passagemBiblica?: string };
   membros: any[];
-  canEdit: boolean;
 }) {
   // @ts-ignore Convex TS2589
   const upsertEscala = useMutation(api.escalas.mutations.upsertEscala);
@@ -230,7 +145,10 @@ function PassagemCell({
   const removeEscala = useMutation(api.escalas.mutations.removeEscala);
   const [editingPassagem, setEditingPassagem] = useState(false);
   const [passagem, setPassagem] = useState(assignment?.passagemBiblica || "");
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [showCustom, setShowCustom] = useState(false);
+  const [customName, setCustomName] = useState("");
+
+  const isPregacao = funcao === "PREGACAO";
 
   const handleSelectMembro = async (membroId: string) => {
     try {
@@ -269,7 +187,40 @@ function PassagemCell({
     }
   };
 
-  const isPregacao = funcao === "PREGACAO";
+  const handleCustomSubmit = async () => {
+    if (!customName.trim()) return;
+    try {
+      await upsertEscala({ cultoId, funcao, nomeCustom: customName.trim() });
+      setCustomName("");
+      setShowCustom(false);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro");
+    }
+  };
+
+  if (showCustom) {
+    return (
+      <div className="flex items-center gap-1">
+        <Input
+          className="h-7 text-xs px-1.5"
+          placeholder="Nome do pregador"
+          value={customName}
+          onChange={(e) => setCustomName(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") handleCustomSubmit();
+            if (e.key === "Escape") setShowCustom(false);
+          }}
+          autoFocus
+        />
+        <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" onClick={handleCustomSubmit}>
+          <Check className="h-3 w-3" />
+        </Button>
+        <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" onClick={() => setShowCustom(false)}>
+          <X className="h-3 w-3" />
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-1">
@@ -288,7 +239,7 @@ function PassagemCell({
             </CommandItem>
           )}
           {isPregacao && (
-            <CommandItem className="text-xs font-medium">
+            <CommandItem onSelect={() => setShowCustom(true)} className="text-xs font-medium">
               <UserPlus className="h-3.5 w-3.5 mr-2" />
               Pregador externo
             </CommandItem>
@@ -296,19 +247,26 @@ function PassagemCell({
         </MembroCombobox>
       </div>
       {editingPassagem ? (
-        <Input
-          ref={inputRef}
-          className="h-6 text-[11px] px-1.5 italic"
-          placeholder="Ex: Salmo 23:1-6"
-          value={passagem}
-          onChange={(e) => setPassagem(e.target.value)}
-          onBlur={handleSavePassagem}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") handleSavePassagem();
-            if (e.key === "Escape") { setEditingPassagem(false); setPassagem(assignment?.passagemBiblica || ""); }
-          }}
-          autoFocus
-        />
+        <div className="flex items-center gap-0.5">
+          <BiblePassageInput
+            variant="inline"
+            className="h-6 text-[11px] px-1.5 italic flex-1"
+            placeholder="Ex: Sl 23; Rm 8:28"
+            value={passagem}
+            onChange={setPassagem}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleSavePassagem();
+              if (e.key === "Escape") { setEditingPassagem(false); setPassagem(assignment?.passagemBiblica || ""); }
+            }}
+            autoFocus
+          />
+          <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0 text-primary" onClick={handleSavePassagem}>
+            <Check className="h-3 w-3" />
+          </Button>
+          <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0" onClick={() => { setEditingPassagem(false); setPassagem(assignment?.passagemBiblica || ""); }}>
+            <X className="h-3 w-3" />
+          </Button>
+        </div>
       ) : (
         <button
           onClick={() => { setPassagem(assignment?.passagemBiblica || ""); setEditingPassagem(true); }}
@@ -318,69 +276,6 @@ function PassagemCell({
         </button>
       )}
     </div>
-  );
-}
-
-function LouvoresCell({
-  cultoId,
-  louvores,
-}: {
-  cultoId: Id<"cultos">;
-  louvores: string[];
-}) {
-  const updateLouvores = useMutation(api.escalas.mutations.updateLouvores);
-  const [editing, setEditing] = useState(false);
-  const [text, setText] = useState("");
-
-  const handleStartEdit = () => {
-    setText(louvores.join("\n"));
-    setEditing(true);
-  };
-
-  const handleSave = async () => {
-    setEditing(false);
-    const newLouvores = text.split("\n").map((l) => l.trim()).filter(Boolean);
-    const oldStr = louvores.join(",");
-    const newStr = newLouvores.join(",");
-    if (oldStr === newStr) return;
-    try {
-      await updateLouvores({ cultoId, louvores: newLouvores });
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Erro");
-    }
-  };
-
-  if (editing) {
-    return (
-      <textarea
-        className="w-full text-[11px] px-1.5 py-1 rounded border bg-background resize-none min-h-[60px] italic"
-        placeholder={"Um louvor por linha...\nEx:\nSanto, Santo, Santo\nGrande é o Senhor"}
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        onBlur={handleSave}
-        onKeyDown={(e) => {
-          if (e.key === "Escape") { setEditing(false); }
-        }}
-        autoFocus
-      />
-    );
-  }
-
-  return (
-    <button
-      onClick={handleStartEdit}
-      className="text-[11px] px-1.5 py-0.5 w-full text-left rounded hover:bg-accent/50 italic text-muted-foreground min-h-[28px]"
-    >
-      {louvores.length > 0 ? (
-        <div className="space-y-0.5">
-          {louvores.map((l, i) => (
-            <div key={i} className="text-foreground truncate">{l}</div>
-          ))}
-        </div>
-      ) : (
-        "Louvores..."
-      )}
-    </button>
   );
 }
 
@@ -406,13 +301,149 @@ function ReadonlyPassagemCell({ assignment }: { assignment?: { membroNome: strin
   );
 }
 
-function ReadonlyLouvoresCell({ louvores }: { louvores: string[] }) {
-  if (louvores.length === 0) return <span className="text-xs px-1.5 text-muted-foreground">—</span>;
+function CultosTable({
+  cultos,
+  funcoes,
+  membros,
+  canEdit,
+  canDelete,
+  onDeleteCulto,
+  getAssignments,
+  emptyMessage,
+}: {
+  cultos: any[];
+  funcoes: { value: string; label: string; multiplo: boolean; temPassagem: boolean; temEquipe: boolean }[];
+  membros: any[];
+  canEdit: boolean;
+  canDelete: boolean;
+  onDeleteCulto: (id: Id<"cultos">) => void;
+  getAssignments: (culto: any, funcao: string) => any[];
+  emptyMessage: string;
+}) {
   return (
-    <div className="text-[11px] px-1.5 space-y-0.5 italic">
-      {louvores.map((l, i) => (
-        <div key={i}>{l}</div>
-      ))}
+    <div className="overflow-x-auto border rounded-lg">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="border-b bg-muted/50">
+            <th className="text-left p-2 font-medium sticky left-0 bg-muted/50 min-w-[100px]">Data</th>
+            {funcoes.map((f) => (
+              <th key={f.value} className="text-left p-2 font-medium min-w-[130px] whitespace-nowrap">
+                {f.label}
+              </th>
+            ))}
+            {canDelete && <th className="w-10 p-2" />}
+          </tr>
+        </thead>
+        <tbody>
+          {cultos.length === 0 ? (
+            emptyMessage ? (
+              <tr>
+                <td colSpan={funcoes.length + (canDelete ? 2 : 1)} className="text-center py-8 text-muted-foreground">
+                  {emptyMessage}
+                </td>
+              </tr>
+            ) : null
+          ) : (
+            cultos.map((culto) => {
+              const parsedDate = parseISO(culto.data);
+              const isDomingo = parsedDate.getDay() === 0;
+              const dataFormatada = format(parsedDate, "dd/MM (EEE)", { locale: ptBR });
+              return (
+                <tr key={culto._id} className={cn("border-b hover:bg-accent/30", !isDomingo && "opacity-50")}>
+                  <td className="p-2 font-medium sticky left-0 bg-background capitalize whitespace-nowrap text-xs">
+                    {dataFormatada}
+                  </td>
+                  {funcoes.map((f) => {
+                    const assignments = getAssignments(culto, f.value);
+
+                    // Funcoes com equipe (Louvor, Hospitalidade, Som, Multimidia)
+                    if (f.temEquipe) {
+                      return (
+                        <td key={f.value} className="p-1 align-top">
+                          {canEdit ? (
+                            f.multiplo ? (
+                              <MultiCell
+                                cultoId={culto._id}
+                                funcao={f.value}
+                                assignments={assignments}
+                                membros={membros}
+                              />
+                            ) : (
+                              <SingleCell
+                                cultoId={culto._id}
+                                funcao={f.value}
+                                assignment={assignments[0]}
+                                membros={membros}
+                              />
+                            )
+                          ) : (
+                            <ReadonlyCell names={assignments.map((a: any) => a.membroNome)} />
+                          )}
+                        </td>
+                      );
+                    }
+
+                    // Funcoes com passagem biblica (Abertura, Confissao, Pregacao)
+                    if (f.temPassagem) {
+                      return (
+                        <td key={f.value} className="p-1 align-top">
+                          {canEdit ? (
+                            <PassagemCell
+                              cultoId={culto._id}
+                              funcao={f.value}
+                              assignment={assignments[0]}
+                              membros={membros}
+                            />
+                          ) : (
+                            <ReadonlyPassagemCell assignment={assignments[0]} />
+                          )}
+                        </td>
+                      );
+                    }
+
+                    // Fallback
+                    return (
+                      <td key={f.value} className="p-1 align-top">
+                        {canEdit ? (
+                          f.multiplo ? (
+                            <MultiCell
+                              cultoId={culto._id}
+                              funcao={f.value}
+                              assignments={assignments}
+                              membros={membros}
+                            />
+                          ) : (
+                            <SingleCell
+                              cultoId={culto._id}
+                              funcao={f.value}
+                              assignment={assignments[0]}
+                              membros={membros}
+                            />
+                          )
+                        ) : (
+                          <ReadonlyCell names={assignments.map((a: any) => a.membroNome)} />
+                        )}
+                      </td>
+                    );
+                  })}
+                  {canDelete && (
+                    <td className="p-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                        onClick={() => onDeleteCulto(culto._id)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </td>
+                  )}
+                </tr>
+              );
+            })
+          )}
+        </tbody>
+      </table>
     </div>
   );
 }
@@ -436,11 +467,15 @@ export default function CultosPage() {
     .filter((m: any) => m.entidade?.status === "ATIVO")
     .sort((a: any, b: any) => (a.entidade?.nomeCompleto || "").localeCompare(b.entidade?.nomeCompleto || ""));
 
+  const today = startOfDay(new Date()).toISOString().split("T")[0];
   const sortedCultos = [...(cultos || [])].sort((a, b) => a.data.localeCompare(b.data));
+  const proximosCultos = sortedCultos.filter((c) => c.data >= today);
+  const cultosPassados = sortedCultos.filter((c) => c.data < today).reverse();
+  const [showHistorico, setShowHistorico] = useState(false);
 
   const visibleFuncoes = (allFuncoes || []).filter((f: any) =>
     f.views.includes(viewMode)
-  ).map((f: any) => ({ value: f.slug, label: f.label, multiplo: f.multiplo, views: f.views, temPassagem: f.temPassagem }));
+  ).map((f: any) => ({ value: f.slug, label: f.label, multiplo: f.multiplo, views: f.views, temPassagem: f.temPassagem, temEquipe: f.temEquipe }));
 
   const handleAddCulto = async () => {
     if (!novaData) return;
@@ -487,7 +522,6 @@ export default function CultosPage() {
           <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as CultoViewMode)}>
             <TabsList className="h-8">
               <TabsTrigger value="escala" className="text-xs px-3 h-6">Escala</TabsTrigger>
-              <TabsTrigger value="liturgia" className="text-xs px-3 h-6">Liturgia</TabsTrigger>
               <TabsTrigger value="avisos" className="text-xs px-3 h-6">Avisos</TabsTrigger>
             </TabsList>
           </Tabs>
@@ -520,116 +554,43 @@ export default function CultosPage() {
       {viewMode === "avisos" ? (
         <AvisosSection showForm={showAvisoForm} setShowForm={setShowAvisoForm} />
       ) : (
-      <div className="overflow-x-auto border rounded-lg">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b bg-muted/50">
-              <th className="text-left p-2 font-medium sticky left-0 bg-muted/50 min-w-[100px]">Data</th>
-              {visibleFuncoes.map((f) => (
-                <th key={f.value} className="text-left p-2 font-medium min-w-[130px] whitespace-nowrap">
-                  {f.label}
-                </th>
-              ))}
-              {can("escalas:delete") && <th className="w-10 p-2" />}
-            </tr>
-          </thead>
-          <tbody>
-            {sortedCultos.length === 0 ? (
-              <tr>
-                <td colSpan={visibleFuncoes.length + (can("escalas:delete") ? 2 : 1)} className="text-center py-8 text-muted-foreground">
-                  Nenhum culto cadastrado
-                </td>
-              </tr>
-            ) : (
-              sortedCultos.map((culto) => {
-                const parsedDate = parseISO(culto.data);
-                const isDomingo = parsedDate.getDay() === 0;
-                const dataFormatada = format(parsedDate, "dd/MM (EEE)", { locale: ptBR });
-                return (
-                  <tr key={culto._id} className={cn("border-b hover:bg-accent/30", !isDomingo && "opacity-50")}>
-                    <td className="p-2 font-medium sticky left-0 bg-background capitalize whitespace-nowrap text-xs">
-                      {dataFormatada}
-                    </td>
-                    {visibleFuncoes.map((f) => {
-                      const assignments = getAssignments(culto, f.value);
+      <div className="space-y-6">
+        <CultosTable
+          cultos={proximosCultos}
+          funcoes={visibleFuncoes}
+          membros={activeMembros}
+          canEdit={canEdit}
+          canDelete={can("escalas:delete")}
+          onDeleteCulto={handleDeleteCulto}
+          getAssignments={getAssignments}
+          emptyMessage="Nenhum culto futuro cadastrado"
+        />
 
-                      if (viewMode === "liturgia") {
-                        if (f.value === "LOUVOR") {
-                          return (
-                            <td key={f.value} className="p-1 align-top">
-                              {canEdit ? (
-                                <LouvoresCell cultoId={culto._id} louvores={culto.louvores || []} />
-                              ) : (
-                                <ReadonlyLouvoresCell louvores={culto.louvores || []} />
-                              )}
-                            </td>
-                          );
-                        }
-                        return (
-                          <td key={f.value} className="p-1 align-top">
-                            {canEdit ? (
-                              <PassagemCell
-                                cultoId={culto._id}
-                                funcao={f.value}
-                                assignment={assignments[0]}
-                                membros={activeMembros}
-                                canEdit={canEdit}
-                              />
-                            ) : (
-                              <ReadonlyPassagemCell assignment={assignments[0]} />
-                            )}
-                          </td>
-                        );
-                      }
-
-                      return (
-                        <td key={f.value} className="p-1 align-top">
-                          {canEdit ? (
-                            f.value === "PREGACAO" ? (
-                              <PregacaoCell
-                                cultoId={culto._id}
-                                assignment={assignments[0]}
-                                membros={activeMembros}
-                              />
-                            ) : f.multiplo ? (
-                              <MultiCell
-                                cultoId={culto._id}
-                                funcao={f.value}
-                                assignments={assignments}
-                                membros={activeMembros}
-                              />
-                            ) : (
-                              <SingleCell
-                                cultoId={culto._id}
-                                funcao={f.value}
-                                assignment={assignments[0]}
-                                membros={activeMembros}
-                              />
-                            )
-                          ) : (
-                            <ReadonlyCell names={assignments.map((a: any) => a.membroNome)} />
-                          )}
-                        </td>
-                      );
-                    })}
-                    {can("escalas:delete") && (
-                      <td className="p-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                          onClick={() => handleDeleteCulto(culto._id)}
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </td>
-                    )}
-                  </tr>
-                );
-              })
+        {cultosPassados.length > 0 && (
+          <div>
+            <button
+              onClick={() => setShowHistorico(!showHistorico)}
+              className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <ChevronDown className={cn("h-4 w-4 transition-transform", !showHistorico && "-rotate-90")} />
+              Historico ({cultosPassados.length})
+            </button>
+            {showHistorico && (
+              <div className="mt-2">
+                <CultosTable
+                  cultos={cultosPassados}
+                  funcoes={visibleFuncoes}
+                  membros={activeMembros}
+                  canEdit={false}
+                  canDelete={false}
+                  onDeleteCulto={handleDeleteCulto}
+                  getAssignments={getAssignments}
+                  emptyMessage=""
+                />
+              </div>
             )}
-          </tbody>
-        </table>
+          </div>
+        )}
       </div>
       )}
     </div>
