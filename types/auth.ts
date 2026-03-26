@@ -11,6 +11,7 @@ export type Permission =
   | "oracoes:read" | "oracoes:create" | "oracoes:update" | "oracoes:delete"
   | "publicacoes:read" | "publicacoes:create" | "publicacoes:update" | "publicacoes:delete"
   | "musicas:read" | "musicas:create" | "musicas:update" | "musicas:delete"
+  | "louvor:read" | "louvor:create" | "louvor:update" | "louvor:delete"
   | "pastoreio:read" | "pastoreio:create" | "pastoreio:update" | "pastoreio:delete"
   | "pequenos_grupos:read" | "pequenos_grupos:create" | "pequenos_grupos:update" | "pequenos_grupos:delete"
   | "pedidos_oracao:create" | "pedidos_oracao:read"
