@@ -60,6 +60,11 @@ export const ALL_PERMISSIONS = [
   "criancas:manage",
   "educacional:read",
   "educacional:write",
+  // Louvor
+  "louvor:read",
+  "louvor:create",
+  "louvor:update",
+  "louvor:delete",
 ] as const;
 
 function getPermissionLabel(perm: string): string {
@@ -106,6 +111,10 @@ function getPermissionLabel(perm: string): string {
     "criancas:manage": "Gerenciar Criancas",
     "educacional:read": "Ver Educacional",
     "educacional:write": "Editar Educacional",
+    "louvor:read": "Ver Louvores",
+    "louvor:create": "Criar Louvores",
+    "louvor:update": "Editar Louvores",
+    "louvor:delete": "Excluir Louvores",
   };
   return labels[perm] ?? perm;
 }
@@ -124,6 +133,7 @@ function getPermissionModule(perm: string): string {
   if (perm.startsWith("calendario:")) return "Calendario";
   if (perm.startsWith("criancas:")) return "Educacional Infantil";
   if (perm.startsWith("educacional:")) return "Educacional Infantil";
+  if (perm.startsWith("louvor:")) return "Louvor";
   return "Geral";
 }
 
@@ -171,6 +181,10 @@ function getPermissionDescription(perm: string): string {
     "criancas:manage": "Gerenciar perfis completos (inclui obs medicas)",
     "educacional:read": "Ver relatorios e escalas do educacional",
     "educacional:write": "Criar/editar relatorios e escalas",
+    "louvor:read": "Ver repertorio de louvores e cifras",
+    "louvor:create": "Cadastrar novas musicas no repertorio",
+    "louvor:update": "Editar musicas existentes",
+    "louvor:delete": "Excluir musicas do repertorio",
   };
   return descriptions[perm] ?? "";
 }
