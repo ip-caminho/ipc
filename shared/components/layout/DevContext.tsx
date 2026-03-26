@@ -155,9 +155,11 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "features/gravacoes/components/GravacaoForm.tsx",
       "shared/files/components/FileUpload.tsx",
       "shared/files/hooks/useAudioCompressor.ts",
+      "shared/bible/components/BiblePassageInput.tsx",
+      "shared/bible/hooks/useBibleLookup.ts",
     ],
     mutations: ["gravacoes.ai.createFromAudio"],
-    componentes: ["GravacaoForm", "FileUpload"],
+    componentes: ["GravacaoForm", "FileUpload", "BiblePassageInput"],
     notas: [
       "Permissao: gravacoes:create",
       "Data padrao: ultimo domingo",
@@ -274,6 +276,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "app/(ready)/cultos/page.tsx",
       "features/escalas/components/MembroCombobox.tsx",
       "features/avisos/components/AvisosSection.tsx",
+      "shared/bible/components/BiblePassageInput.tsx",
     ],
     queries: ["escalas.queries.listCultos", "membros.queries.list"],
     mutations: [
@@ -285,11 +288,12 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "escalas.mutations.createCulto",
       "escalas.mutations.deleteCulto",
     ],
-    componentes: ["MembroCombobox", "AvisosSection", "ModuloGuard"],
+    componentes: ["MembroCombobox", "AvisosSection", "ModuloGuard", "BiblePassageInput"],
     notas: [
       "Permissao: escalas:read, escalas:update, escalas:create, escalas:delete",
-      "3 views: Escala, Liturgia, Avisos",
-      "Edicao inline de escalas, passagens e louvores",
+      "2 views: Escala (unificada com liturgia), Avisos",
+      "Escala: membro + passagem biblica (temPassagem), louvores (LOUVOR), ou membro simples",
+      "Preview de passagens biblicas inline (NAA) via BiblePassageInput",
     ],
   },
   "/boletim": {
@@ -614,8 +618,6 @@ export function DevContext() {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  if (!isAdmin) return null;
-
   const ctx = resolveRoute(pathname);
 
   const markdown = ctx
@@ -627,6 +629,8 @@ export function DevContext() {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }, [markdown]);
+
+  if (!isAdmin) return null;
 
   return (
     <>
