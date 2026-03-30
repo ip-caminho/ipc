@@ -7,7 +7,7 @@ import { Reacoes } from "@features/gravacoes/components/Reacoes";
 import { ComentarioInput, ComentariosList } from "@features/gravacoes/components/Comentarios";
 import { useParams } from "next/navigation";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import { Play, Pause } from "lucide-react";
+import { Headphones, Play, Pause, MessageCircle } from "lucide-react";
 import type { Id } from "@/convex/_generated/dataModel";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -20,6 +20,7 @@ export default function GravacaoDetailPage() {
   const id = params.id as string;
   // @ts-ignore Convex TS2589
   const gravacao = useQuery(api.gravacoes.queries.getById, { id: id as Id<"gravacoes"> });
+  const comentarios = useQuery(api.gravacoes.comentarios.listByGravacao, { gravacaoId: id as Id<"gravacoes"> });
   const { ultimoSegundo } = useEscutaTracker(id as Id<"gravacoes">);
   const globalPlayer = useAudioPlayer();
   const [highlightId, setHighlightId] = useState<string | null>(null);
@@ -29,7 +30,7 @@ export default function GravacaoDetailPage() {
     return <Skeleton className="h-96 w-full max-w-2xl mx-auto" />;
   }
   if (!gravacao) {
-    return <p className="text-muted-foreground text-center py-16">Gravacao nao encontrada</p>;
+    return <p className="text-muted-foreground text-center py-16">Gravação não encontrada</p>;
   }
 
   const isThisTrack = globalPlayer.track?.gravacaoId === gravacao._id
@@ -57,62 +58,47 @@ export default function GravacaoDetailPage() {
 
   const pregador = gravacao.pregadorNome || gravacao.pregadorInfo?.nome;
   const dataFormatada = format(parseISO(gravacao.data), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
+  const comentarioCount = comentarios?.filter((c: any) => !c.parentId).length ?? 0;
+  const hasAudio = gravacao.audioUrl && gravacao.iaStatus === "CONCLUIDO";
 
   return (
     <div className="flex flex-col -m-4 md:-m-6" style={{ height: "calc(100% + 2rem)", maxHeight: "calc(100% + 2rem)" }}>
-      {/* Fixed top */}
-      <div className="bg-background px-4 pb-5 pt-4 md:px-6 md:pt-6 shrink-0">
-        <div className="max-w-2xl mx-auto">
-          {/* Badge passagem */}
-          {gravacao.textoBase && (
-            <span className="inline-block text-xs px-2.5 py-1 rounded-full bg-muted text-foreground font-medium mb-3">
-              {gravacao.textoBase}
-            </span>
-          )}
-
-          {/* Titulo */}
-          <h1 className="text-2xl font-medium leading-snug text-foreground mb-2">
-            {gravacao.titulo}
-          </h1>
-
-          {/* Metadados */}
-          <p className="text-sm text-muted-foreground">
-            {pregador && <>{pregador} · </>}
-            {dataFormatada}
-          </p>
-
-          {/* Botao ouvir */}
-          {gravacao.audioUrl && gravacao.iaStatus === "CONCLUIDO" && (
-            <button
-              onClick={handlePlay}
-              className="flex items-center gap-2 mt-5 px-4 py-2 rounded-xl bg-foreground text-background text-sm font-medium hover:opacity-80 transition-opacity"
-            >
-              {isThisPlaying
-                ? <Pause size={14} fill="currentColor" strokeWidth={0} />
-                : <Play size={14} fill="currentColor" strokeWidth={0} />
-              }
-              {isThisPlaying ? "Pausar sermao" : "Ouvir sermao"}
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Scrollable middle */}
+      {/* Scrollable content */}
       <div className="flex-1 overflow-auto px-4 md:px-6">
-        <div className="max-w-2xl mx-auto py-4">
-          {/* Resumo */}
+        <div className="max-w-2xl mx-auto py-4 md:py-6 space-y-5">
+
+          {/* 1. Título + metadados */}
+          <div>
+            <h1 className="text-xl md:text-2xl font-bold leading-snug text-foreground">
+              {gravacao.titulo}
+            </h1>
+            {pregador && (
+              <p className="text-base text-foreground/80 mt-1">{pregador}</p>
+            )}
+            <p className="text-sm text-muted-foreground mt-0.5">
+              {dataFormatada}
+              {gravacao.textoBase && <> · {gravacao.textoBase}</>}
+            </p>
+          </div>
+
+          {/* 2. Descrição */}
           {gravacao.resumo && (
-            <div className="mt-2">
-              <p className={cn(
-                "text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap",
-                !resumoExpanded && "line-clamp-4",
-              )}>
-                {gravacao.resumo}
-              </p>
+            <div>
+              <div className="relative">
+                <p className={cn(
+                  "text-base md:text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap",
+                  !resumoExpanded && "line-clamp-4",
+                )}>
+                  {gravacao.resumo}
+                </p>
+                {!resumoExpanded && gravacao.resumo.length > 300 && (
+                  <div className="absolute bottom-0 inset-x-0 h-10 bg-gradient-to-t from-background to-transparent pointer-events-none" />
+                )}
+              </div>
               {gravacao.resumo.length > 300 && (
                 <button
                   onClick={() => setResumoExpanded(!resumoExpanded)}
-                  className="text-xs text-muted-foreground underline underline-offset-2 mt-1 hover:text-foreground transition-colors duration-150"
+                  className="text-sm text-muted-foreground underline underline-offset-2 mt-1.5 hover:text-foreground transition-colors min-h-[44px]"
                 >
                   {resumoExpanded ? "Ver menos" : "Ver mais"}
                 </button>
@@ -120,39 +106,54 @@ export default function GravacaoDetailPage() {
             </div>
           )}
 
-          {/* Tags */}
-          {gravacao.tags && gravacao.tags.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-4">
-              {gravacao.tags.map((tag: string) => (
-                <span
-                  key={tag}
-                  className="text-xs px-2.5 py-1 rounded-full font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
+          {/* Botão de áudio */}
+          {hasAudio && (
+            <button
+              onClick={handlePlay}
+              className={cn(
+                "w-full flex items-center justify-center gap-2.5 h-12 rounded-xl text-base font-medium transition-all min-h-[48px]",
+                isThisPlaying
+                  ? "bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300"
+                  : "bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500",
+              )}
+            >
+              <Headphones className="h-4.5 w-4.5" />
+              {isThisPlaying ? "Pausar pregação" : "Ouvir pregação"}
+              {isThisPlaying
+                ? <Pause size={16} fill="currentColor" strokeWidth={0} />
+                : <Play size={16} fill="currentColor" strokeWidth={0} />
+              }
+            </button>
           )}
 
-          {/* Reacoes */}
-          <div className="mt-6">
-            <Reacoes gravacaoId={gravacao._id} />
-          </div>
+          {/* 5. Reações */}
+          <Reacoes gravacaoId={gravacao._id} />
 
-          {/* Comentarios header */}
-          <div className="flex items-center gap-3 mt-8 mb-4">
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-widest whitespace-nowrap">
-              Comentarios
-            </span>
-            <div className="flex-1 h-px bg-border" />
-          </div>
+          {/* 6. Comentários */}
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <span className="text-sm font-medium text-foreground whitespace-nowrap">
+                Comentários {comentarioCount > 0 && `(${comentarioCount})`}
+              </span>
+              <div className="flex-1 h-px bg-border" />
+            </div>
 
-          <ComentariosList gravacaoId={gravacao._id} highlightId={highlightId} />
+            {comentarioCount === 0 && comentarios !== undefined ? (
+              <p className="text-sm text-muted-foreground/60 text-center py-6">
+                Nenhum comentário ainda. Seja o primeiro.
+              </p>
+            ) : (
+              <ComentariosList gravacaoId={gravacao._id} highlightId={highlightId} />
+            )}
+          </div>
         </div>
       </div>
 
       {/* Fixed bottom: comment input */}
-      <div className="bg-background px-4 pt-3 pb-4 md:px-6 md:pb-6 border-t shrink-0">
+      <div className={cn(
+        "bg-background px-4 pt-3 pb-4 md:px-6 md:pb-6 border-t shrink-0",
+        globalPlayer.isActive && "pb-16 md:pb-6",
+      )}>
         <div className="max-w-2xl mx-auto">
           <ComentarioInput
             gravacaoId={gravacao._id}

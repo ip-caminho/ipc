@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { useDebounce } from "@shared/hooks/useDebounce";
 import {
   Command,
   CommandEmpty,
@@ -21,6 +20,28 @@ import { Button } from "@/shared/components/ui/button";
 import { Music, ChevronsUpDown, Check } from "lucide-react";
 import { cn } from "@shared/lib/utils/cn";
 
+/** Extrai a primeira linha de letra (ignorando acordes, secoes e vazias) */
+function getFirstLyricLine(conteudo?: string): string {
+  if (!conteudo) return "";
+  const CHORD_RE = /^[A-G][#b]?(m|M|min|maj|dim|aug|sus[24]?|add|[0-9]+|\/[A-G][#b]?)*$/;
+  for (const line of conteudo.split("\n")) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    if (trimmed.startsWith("{") || trimmed.startsWith("---")) continue;
+    if (/^(verso|refrão|refrao|chorus|verse|bridge|intro|outro|pre-|pré-)/i.test(trimmed)) continue;
+    // Remover acordes ChordPro inline: [Am7]texto → texto
+    const withoutChordPro = trimmed.replace(/\[[^\]]*\]/g, "").trim();
+    if (!withoutChordPro) continue;
+    // Linha só de acordes (plain text)
+    const cleaned = withoutChordPro.replace(/[()]/g, "");
+    const tokens = cleaned.split(/\s+/).filter(Boolean);
+    if (tokens.every((t) => CHORD_RE.test(t))) continue;
+    const result = withoutChordPro.replace(/ {2,}/g, " ");
+    return result.length > 50 ? result.slice(0, 50) + "…" : result;
+  }
+  return "";
+}
+
 interface LouvorPickerProps {
   value?: string;
   onSelect: (id: string, titulo: string) => void;
@@ -30,19 +51,26 @@ interface LouvorPickerProps {
 export function LouvorPicker({ value, onSelect, placeholder = "Selecionar musica..." }: LouvorPickerProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const debouncedSearch = useDebounce(search, 200);
 
   // @ts-ignore Convex TS2589
-  const results = useQuery(
-    api.louvor.queries.search,
-    debouncedSearch.length >= 2 ? { query: debouncedSearch } : "skip"
-  );
+  const allLouvores = useQuery(api.louvor.queries.list, { status: "ATIVO" });
 
   // @ts-ignore Convex TS2589
   const selected = useQuery(
     api.louvor.queries.getById,
     value ? { id: value as any } : "skip"
   );
+
+  // Filtro local (sem debounce)
+  const filtered = (allLouvores || []).filter((l: any) => {
+    if (!search) return true;
+    const term = search.toLowerCase();
+    return (
+      l.titulo.toLowerCase().includes(term) ||
+      (l.artista || "").toLowerCase().includes(term) ||
+      (l.conteudo || "").toLowerCase().includes(term)
+    );
+  });
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -58,23 +86,22 @@ export function LouvorPicker({ value, onSelect, placeholder = "Selecionar musica
       <PopoverContent className="w-[320px] p-0">
         <Command shouldFilter={false}>
           <CommandInput
-            placeholder="Buscar por titulo..."
+            placeholder="Buscar..."
             value={search}
             onValueChange={setSearch}
           />
           <CommandList>
-            <CommandEmpty>
-              {search.length < 2 ? "Digite pelo menos 2 caracteres" : "Nenhuma musica encontrada"}
-            </CommandEmpty>
-            {results && results.length > 0 && (
+            <CommandEmpty>Nenhuma musica encontrada</CommandEmpty>
+            {filtered.length > 0 && (
               <CommandGroup>
-                {results.map((r) => (
+                {filtered.map((r: any) => (
                   <CommandItem
                     key={r._id}
                     value={r._id}
                     onSelect={() => {
                       onSelect(r._id, r.titulo);
                       setOpen(false);
+                      setSearch("");
                     }}
                   >
                     <Check
@@ -84,14 +111,11 @@ export function LouvorPicker({ value, onSelect, placeholder = "Selecionar musica
                       )}
                     />
                     <div className="flex-1 min-w-0">
-                      <span className="truncate">{r.titulo}</span>
-                      {r.artista && (
-                        <span className="text-xs text-muted-foreground ml-2">{r.artista}</span>
-                      )}
+                      <div className="truncate">{r.titulo}</div>
+                      <div className="text-xs text-muted-foreground truncate">
+                        {getFirstLyricLine(r.conteudo) || r.artista || ""}
+                      </div>
                     </div>
-                    {r.tom && (
-                      <span className="text-xs font-mono text-muted-foreground">{r.tom}</span>
-                    )}
                   </CommandItem>
                 ))}
               </CommandGroup>

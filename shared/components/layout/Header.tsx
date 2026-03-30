@@ -11,7 +11,7 @@ export function Header() {
   const { name } = useAuth();
 
   return (
-    <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
+    <header className="hidden md:flex h-14 shrink-0 items-center gap-2 border-b px-4">
       <SidebarTrigger className="-ml-1" />
       <Separator orientation="vertical" className="mr-2 h-4" />
       <div className="flex-1" />
@@ -22,7 +22,7 @@ export function Header() {
               {name?.charAt(0)?.toUpperCase() || "?"}
             </AvatarFallback>
           </Avatar>
-          <span className="text-sm hidden sm:inline">
+          <span className="text-sm">
             {name || "Meu Perfil"}
           </span>
         </Link>

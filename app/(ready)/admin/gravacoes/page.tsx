@@ -125,7 +125,7 @@ export default function AdminGravacoesPage() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">Gerenciar Gravacoes</h1>
+            <h1 className="text-2xl font-bold">Gerenciar Gravações</h1>
             {filtered && (
               <p className="text-sm text-muted-foreground">{filtered.length} gravacao(oes)</p>
             )}

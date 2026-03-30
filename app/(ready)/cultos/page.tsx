@@ -7,21 +7,20 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { CommandItem } from "@/shared/components/ui/command";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import { Tabs, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
 import { Check, ChevronDown, Plus, Trash2, X, UserPlus } from "lucide-react";
 import { format, parseISO, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { ModuloGuard } from "@shared/components/auth/ModuloGuard";
 import { useFuncoes } from "@features/escalas/hooks/useFuncoes";
-import { AvisosSection } from "@features/avisos/components/AvisosSection";
 import { MembroCombobox } from "@features/escalas/components/MembroCombobox";
+import { LouvorOrdemSection } from "@features/escalas/components/LouvorOrdemSection";
+import { CeiaCheckbox } from "@features/escalas/components/CeiaCheckbox";
 import { cn } from "@/shared/lib/utils/cn";
 import { BiblePassageInput } from "@/shared/bible/components/BiblePassageInput";
+import { CultosMobileView } from "@features/escalas/components/CultosMobileView";
 import type { Id } from "@/convex/_generated/dataModel";
-
-type CultoViewMode = "escala" | "avisos";
 
 function SingleCell({
   cultoId,
@@ -331,14 +330,14 @@ function CultosTable({
                 {f.label}
               </th>
             ))}
-            {canDelete && <th className="w-10 p-2" />}
+            <th className="text-left p-2 font-medium min-w-[120px] whitespace-nowrap" />
           </tr>
         </thead>
         <tbody>
           {cultos.length === 0 ? (
             emptyMessage ? (
               <tr>
-                <td colSpan={funcoes.length + (canDelete ? 2 : 1)} className="text-center py-8 text-muted-foreground">
+                <td colSpan={funcoes.length + 2} className="text-center py-8 text-muted-foreground">
                   {emptyMessage}
                 </td>
               </tr>
@@ -349,7 +348,8 @@ function CultosTable({
               const isDomingo = parsedDate.getDay() === 0;
               const dataFormatada = format(parsedDate, "dd/MM (EEE)", { locale: ptBR });
               return (
-                <tr key={culto._id} className={cn("border-b hover:bg-accent/30", !isDomingo && "opacity-50")}>
+                <Fragment key={culto._id}>
+                <tr className={cn("border-b hover:bg-accent/30", !isDomingo && "opacity-50")}>
                   <td className="p-2 font-medium sticky left-0 bg-background capitalize whitespace-nowrap text-xs">
                     {dataFormatada}
                   </td>
@@ -358,6 +358,7 @@ function CultosTable({
 
                     // Funcoes com equipe (Louvor, Hospitalidade, Som, Multimidia)
                     if (f.temEquipe) {
+                      const isLouvor = f.value === "LOUVOR";
                       return (
                         <td key={f.value} className="p-1 align-top">
                           {canEdit ? (
@@ -378,6 +379,15 @@ function CultosTable({
                             )
                           ) : (
                             <ReadonlyCell names={assignments.map((a: any) => a.membroNome)} />
+                          )}
+                          {isLouvor && (
+                            <LouvorOrdemSection
+                              cultoId={culto._id}
+                              louvores={culto.louvores || []}
+                              temCeia={culto.temCeia !== false}
+                              canEdit={canEdit}
+                              dataLabel={dataFormatada}
+                            />
                           )}
                         </td>
                       );
@@ -426,19 +436,32 @@ function CultosTable({
                       </td>
                     );
                   })}
-                  {canDelete && (
-                    <td className="p-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                        onClick={() => onDeleteCulto(culto._id)}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    </td>
-                  )}
+                  {/* Ceia + Delete */}
+                  <td className="p-1 align-middle">
+                    <div className="flex items-center gap-1">
+                      <CeiaCheckbox
+                        cultoId={culto._id}
+                        temCeia={culto.temCeia !== false}
+                        pregadorNome={(() => {
+                          const pregacao = getAssignments(culto, "PREGACAO")[0];
+                          return pregacao?.membroNome || pregacao?.nomeCustom || undefined;
+                        })()}
+                        canEdit={canEdit}
+                      />
+                      {canDelete && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-muted-foreground hover:text-destructive shrink-0"
+                          onClick={() => onDeleteCulto(culto._id)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
+                    </div>
+                  </td>
                 </tr>
+              </Fragment>
               );
             })
           )}
@@ -460,8 +483,6 @@ export default function CultosPage() {
   const allFuncoes = useFuncoes();
 
   const [novaData, setNovaData] = useState("");
-  const [viewMode, setViewMode] = useState<CultoViewMode>("escala");
-  const [showAvisoForm, setShowAvisoForm] = useState(false);
 
   const activeMembros = (membros || [])
     .filter((m: any) => m.entidade?.status === "ATIVO")
@@ -474,7 +495,7 @@ export default function CultosPage() {
   const [showHistorico, setShowHistorico] = useState(false);
 
   const visibleFuncoes = (allFuncoes || []).filter((f: any) =>
-    f.views.includes(viewMode)
+    f.views.includes("escala")
   ).map((f: any) => ({ value: f.slug, label: f.label, multiplo: f.multiplo, views: f.views, temPassagem: f.temPassagem, temEquipe: f.temEquipe }));
 
   const handleAddCulto = async () => {
@@ -517,44 +538,36 @@ export default function CultosPage() {
     <ModuloGuard modulo="escalas">
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <h1 className="text-2xl font-bold">Cultos</h1>
-          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as CultoViewMode)}>
-            <TabsList className="h-8">
-              <TabsTrigger value="escala" className="text-xs px-3 h-6">Escala</TabsTrigger>
-              <TabsTrigger value="avisos" className="text-xs px-3 h-6">Avisos</TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
-        {viewMode === "avisos" ? (
-          can("escalas:create") && !showAvisoForm && (
-            <Button size="sm" variant="outline" onClick={() => setShowAvisoForm(true)}>
+        <h1 className="text-2xl font-bold">Planejamento</h1>
+        {can("escalas:create") && (
+          <div className="flex items-center gap-2">
+            <Input
+              type="date"
+              value={novaData}
+              onChange={(e) => setNovaData(e.target.value)}
+              className="w-40 h-9"
+            />
+            <Button size="sm" onClick={handleAddCulto} disabled={!novaData}>
               <Plus className="h-4 w-4 mr-1" />
-              Novo aviso
+              Adicionar
             </Button>
-          )
-        ) : (
-          can("escalas:create") && (
-            <div className="flex items-center gap-2">
-              <Input
-                type="date"
-                value={novaData}
-                onChange={(e) => setNovaData(e.target.value)}
-                className="w-40 h-9"
-              />
-              <Button size="sm" onClick={handleAddCulto} disabled={!novaData}>
-                <Plus className="h-4 w-4 mr-1" />
-                Adicionar
-              </Button>
-            </div>
-          )
+          </div>
         )}
       </div>
 
-      {viewMode === "avisos" ? (
-        <AvisosSection showForm={showAvisoForm} setShowForm={setShowAvisoForm} />
-      ) : (
-      <div className="space-y-6">
+      {/* Mobile */}
+      <div className="md:hidden">
+        <CultosMobileView
+          cultos={proximosCultos}
+          funcoes={visibleFuncoes}
+          membros={activeMembros}
+          canEdit={canEdit}
+          getAssignments={getAssignments}
+        />
+      </div>
+
+      {/* Desktop */}
+      <div className="hidden md:block space-y-6">
         <CultosTable
           cultos={proximosCultos}
           funcoes={visibleFuncoes}
@@ -573,7 +586,7 @@ export default function CultosPage() {
               className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
               <ChevronDown className={cn("h-4 w-4 transition-transform", !showHistorico && "-rotate-90")} />
-              Historico ({cultosPassados.length})
+              Histórico ({cultosPassados.length})
             </button>
             {showHistorico && (
               <div className="mt-2">
@@ -592,7 +605,6 @@ export default function CultosPage() {
           </div>
         )}
       </div>
-      )}
     </div>
     </ModuloGuard>
   );

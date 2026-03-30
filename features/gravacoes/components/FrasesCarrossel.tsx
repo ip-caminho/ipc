@@ -17,14 +17,28 @@ export function FrasesCarrossel() {
   if (!frase) return null;
 
   return (
-    <div className="bg-muted border border-border rounded-xl p-4">
-      <p className="text-sm italic text-foreground leading-relaxed mb-3 line-clamp-3">
-        &ldquo;{frase.frase}&rdquo;
-      </p>
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-xs font-medium text-foreground">{frase.pregador}</p>
-          <p className="text-xs text-muted-foreground">{frase.titulo}</p>
+    <div className="relative overflow-hidden rounded-xl border border-border bg-muted/50 px-8 py-8 md:px-12 md:py-10">
+      {/* Aspas decorativas */}
+      <span className="pointer-events-none absolute top-4 left-5 text-6xl md:text-8xl font-serif leading-none text-foreground/[0.06] select-none">
+        &ldquo;
+      </span>
+      <span className="pointer-events-none absolute bottom-4 right-5 text-6xl md:text-8xl font-serif leading-none text-foreground/[0.06] select-none">
+        &rdquo;
+      </span>
+
+      <blockquote className="relative z-10 mb-5">
+        <p className="text-base md:text-lg font-serif italic text-foreground/90 leading-relaxed tracking-wide">
+          {frase.frase}
+        </p>
+      </blockquote>
+
+      <div className="relative z-10 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="h-px w-6 bg-foreground/20" />
+          <div>
+            <p className="text-sm font-medium text-foreground">{frase.pregador}</p>
+            <p className="text-xs text-muted-foreground">{frase.titulo}</p>
+          </div>
         </div>
         <Link
           href={`/gravacoes/${frase.gravacaoId}`}

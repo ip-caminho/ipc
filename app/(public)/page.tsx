@@ -99,12 +99,24 @@ export default function LandingPage() {
           )}
         </section>
 
-        {/* Horarios dos cultos */}
+        {/* Boletim dominical — apenas aos domingos */}
+        {new Date().getDay() === 0 && (
+          <section className="text-center">
+            <Button asChild size="lg" className="gap-2">
+              <Link href="/culto">
+                <Church className="h-4 w-4" />
+                Boletim do Culto Dominical
+              </Link>
+            </Button>
+          </section>
+        )}
+
+        {/* Horários dos cultos */}
         {horarios.length > 0 && (
           <section className="space-y-3">
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-muted-foreground" />
-              <h2 className="text-lg font-medium">Horarios dos cultos</h2>
+              <h2 className="text-lg font-medium">Horários dos cultos</h2>
             </div>
             <div className="border border-border rounded-xl overflow-hidden">
               <table className="w-full">
@@ -173,12 +185,12 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Endereco + Google Maps */}
+        {/* Endereço + Google Maps */}
         {endereco && (
           <section className="space-y-3">
             <div className="flex items-center gap-2">
               <MapPin className="h-4 w-4 text-muted-foreground" />
-              <h2 className="text-lg font-medium">Endereco</h2>
+              <h2 className="text-lg font-medium">Endereço</h2>
             </div>
             <p className="text-sm text-muted-foreground">{endereco}</p>
             {googleMapsEmbed && (

@@ -274,7 +274,8 @@ export default defineSchema({
     titulo: v.optional(v.string()),
     horario: v.optional(v.string()), // "09:00"
     observacoes: v.optional(v.string()),
-    louvores: v.optional(v.array(v.string())), // Liturgia: lista de musicas
+    louvores: v.optional(v.array(v.string())), // Liturgia: titulos das musicas em ordem
+    temCeia: v.optional(v.boolean()),         // Se tem ceia neste culto (default: true)
     status: v.union(v.literal("RASCUNHO"), v.literal("PUBLICADO")),
   })
     .index("by_data", ["data"])

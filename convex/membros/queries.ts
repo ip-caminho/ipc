@@ -106,28 +106,69 @@ export const birthdaysThisMonth = query({
   args: {},
   handler: async (ctx) => {
     const now = new Date();
-    const currentMonth = String(now.getMonth() + 1).padStart(2, "0");
+    const currentMonth = now.getMonth() + 1;
+    const currentDay = now.getDate();
+    const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
 
     const membros = await ctx.db.query("membros").collect();
-    const results = await Promise.all(
-      membros.map(async (m) => {
-        const entidade = await ctx.db.get(m.entidadeId);
-        return entidade ? { ...m, entidade } : null;
-      })
-    );
 
-    return results
-      .filter((r): r is NonNullable<typeof r> => {
-        if (!r || !r.entidade.dataNascimento || r.entidade.status !== "ATIVO") return false;
-        // dataNascimento format: YYYY-MM-DD
-        const month = r.entidade.dataNascimento.split("-")[1];
-        return month === currentMonth;
-      })
-      .sort((a, b) => {
-        const dayA = parseInt(a!.entidade.dataNascimento!.split("-")[2]);
-        const dayB = parseInt(b!.entidade.dataNascimento!.split("-")[2]);
-        return dayA - dayB;
-      });
+    const aniversariantes: Array<{
+      _id: string;
+      nome: string;
+      foto?: string;
+      whatsapp?: string;
+      dataNascimento: string;
+      dia: number;
+      mes: number;
+      jaPassou: boolean;
+    }> = [];
+
+    const seenEntidades = new Set<string>();
+
+    for (const m of membros) {
+      const entidadeIdStr = m.entidadeId.toString();
+      if (seenEntidades.has(entidadeIdStr)) continue;
+      seenEntidades.add(entidadeIdStr);
+
+      const entidade = await ctx.db.get(m.entidadeId);
+      if (!entidade || entidade.status !== "ATIVO" || !entidade.dataNascimento) continue;
+
+      const parts = entidade.dataNascimento.split("-");
+      if (parts.length < 3) continue;
+
+      const birthMonth = parseInt(parts[1], 10);
+      const birthDay = parseInt(parts[2], 10);
+
+      // Include current month + next month (7-day lookahead across month boundary)
+      if (birthMonth === currentMonth || birthMonth === nextMonth) {
+        aniversariantes.push({
+          _id: m._id,
+          nome: (entidade as any).apelido || entidade.nomeCompleto || "Sem nome",
+          foto: (entidade as any).foto || undefined,
+          whatsapp: (entidade as any).whatsapp || undefined,
+          dataNascimento: entidade.dataNascimento,
+          dia: birthDay,
+          mes: birthMonth,
+          jaPassou: birthMonth === currentMonth && birthDay < currentDay,
+        });
+      }
+    }
+
+    // Sort: today first, then upcoming by proximity, then past
+    aniversariantes.sort((a, b) => {
+      const aIsToday = a.mes === currentMonth && a.dia === currentDay;
+      const bIsToday = b.mes === currentMonth && b.dia === currentDay;
+      if (aIsToday !== bIsToday) return aIsToday ? -1 : 1;
+      if (a.jaPassou !== b.jaPassou) return a.jaPassou ? 1 : -1;
+      if (!a.jaPassou && !b.jaPassou) {
+        const aDays = a.mes === currentMonth ? a.dia - currentDay : a.dia + 31 - currentDay;
+        const bDays = b.mes === currentMonth ? b.dia - currentDay : b.dia + 31 - currentDay;
+        return aDays - bDays;
+      }
+      return a.dia - b.dia;
+    });
+
+    return aniversariantes;
   },
 });
 

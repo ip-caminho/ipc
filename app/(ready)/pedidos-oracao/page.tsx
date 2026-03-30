@@ -8,98 +8,97 @@ import { Button } from "@/shared/components/ui/button";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Label } from "@/shared/components/ui/label";
 import { Switch } from "@/shared/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
+import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/shared/components/ui/dialog";
-import { Plus, Church } from "lucide-react";
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/shared/components/ui/drawer";
+import { HandHeart, PlusCircle, Heart, Church, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { ModuloGuard } from "@shared/components/auth/ModuloGuard";
-
-import { PedidoOracaoListCard } from "@features/pedidosOracao/components/PedidoOracaoListCard";
 import { PedidoOracaoDetalhe } from "@features/pedidosOracao/components/PedidoOracaoDetalhe";
+import { OrarExperiencia } from "@features/pedidosOracao/components/OrarExperiencia";
+import { cn } from "@shared/lib/utils/cn";
 
-function PedidosList({
-  pedidos,
-  onSelect,
-  emptyMsg,
-  onCreateClick,
-}: {
-  pedidos: any[] | undefined;
-  onSelect: (id: Id<"pedidosOracao">) => void;
-  emptyMsg: string;
-  onCreateClick?: () => void;
-}) {
-  if (pedidos === undefined) {
-    return <p className="text-sm text-muted-foreground">Carregando...</p>;
-  }
-  if (pedidos.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-muted-foreground">{emptyMsg}</p>
-        {onCreateClick && (
-          <Button
-            variant="outline"
-            className="mt-3"
-            onClick={onCreateClick}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Criar pedido
-          </Button>
-        )}
-      </div>
-    );
-  }
+function PedidoCard({ pedido, onClick }: { pedido: any; onClick: () => void }) {
   return (
-    <div className="grid gap-3 sm:grid-cols-2">
-      {pedidos.map((p: any) => (
-        <PedidoOracaoListCard
-          key={p._id}
-          pedido={p}
-          onClick={() => onSelect(p._id)}
-        />
-      ))}
-    </div>
+    <button
+      onClick={onClick}
+      className="w-full text-left rounded-xl border border-border bg-card p-4 hover:bg-muted/30 active:bg-muted transition-colors min-h-[56px]"
+    >
+      <div className="flex items-start gap-3">
+        <Avatar className="h-9 w-9 shrink-0 mt-0.5">
+          {pedido.membroFoto && <AvatarImage src={pedido.membroFoto} />}
+          <AvatarFallback className="text-xs">
+            {pedido.membroNome?.charAt(0)?.toUpperCase() || "?"}
+          </AvatarFallback>
+        </Avatar>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-sm font-medium">{pedido.membroNome}</p>
+            <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+          </div>
+          <p className="text-sm text-muted-foreground mt-0.5 line-clamp-2">{pedido.descricao}</p>
+          <div className="flex items-center gap-3 mt-2">
+            {pedido.qtdIntercessores > 0 && (
+              <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Heart className="h-3 w-3" />
+                {pedido.qtdIntercessores} orando
+              </span>
+            )}
+            {pedido.compartilhadoIgreja && (
+              <Church className="h-3 w-3 text-muted-foreground" />
+            )}
+          </div>
+        </div>
+      </div>
+    </button>
   );
 }
 
 export default function PedidosOracaoPage() {
   // @ts-ignore Convex TS2589
-  const meusPedidos = useQuery(api.pedidosOracao.queries.listPublicos, {
-    filtro: "MEUS",
-  });
-  // @ts-ignore Convex TS2589
-  const pedidosPG = useQuery(api.pedidosOracao.queries.listPublicos, {
-    filtro: "MEU_PG",
-  });
-  // @ts-ignore Convex TS2589
   const todosPedidos = useQuery(api.pedidosOracao.queries.listPublicos, {
     filtro: "TODOS",
+  });
+  // @ts-ignore Convex TS2589
+  const meusPedidos = useQuery(api.pedidosOracao.queries.listPublicos, {
+    filtro: "MEUS",
   });
 
   const createPedido = useMutation(api.pedidosOracao.mutations.create);
 
-  const [selectedId, setSelectedId] = useState<Id<"pedidosOracao"> | null>(
-    null
-  );
+  const [selectedId, setSelectedId] = useState<Id<"pedidosOracao"> | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [orarMode, setOrarMode] = useState(false);
+  const [meusPedidosOpen, setMeusPedidosOpen] = useState(false);
   const [novaDescricao, setNovaDescricao] = useState("");
   const [compartilhar, setCompartilhar] = useState(false);
   const [creating, setCreating] = useState(false);
+
+  const pedidosAtivos = (todosPedidos || []).filter((p: any) => p.status === "ATIVO");
+
+  // Orar experience — full screen
+  if (orarMode) {
+    return (
+      <OrarExperiencia
+        pedidos={pedidosAtivos}
+        onClose={() => setOrarMode(false)}
+      />
+    );
+  }
 
   // Detail view
   if (selectedId) {
     return (
       <ModuloGuard modulo="pedidos-oracao">
-      <PedidoOracaoDetalhe
-        pedidoId={selectedId}
-        onBack={() => setSelectedId(null)}
-      />
+        <PedidoOracaoDetalhe
+          pedidoId={selectedId}
+          onBack={() => setSelectedId(null)}
+        />
       </ModuloGuard>
     );
   }
@@ -112,7 +111,7 @@ export default function PedidosOracaoPage() {
         descricao: novaDescricao.trim(),
         compartilhadoIgreja: compartilhar,
       });
-      toast.success("Pedido de oracao enviado");
+      toast.success("Pedido de oração enviado");
       setNovaDescricao("");
       setCompartilhar(false);
       setCreateOpen(false);
@@ -123,111 +122,132 @@ export default function PedidosOracaoPage() {
     }
   };
 
-  const count = (list: any[] | undefined) =>
-    list && list.length > 0 ? ` (${list.length})` : "";
+  const meusPedidosAtivos = (meusPedidos || []).filter((p: any) => p.status === "ATIVO");
 
   return (
     <ModuloGuard modulo="pedidos-oracao">
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Pedidos de Oracao</h1>
-        <Button onClick={() => setCreateOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Novo pedido
-        </Button>
-      </div>
+      <div className="flex flex-col h-full justify-between min-h-[calc(100dvh-10rem)]">
+        {/* Título no topo */}
+        <div>
+          <h1 className="text-2xl font-bold">Orar</h1>
+        </div>
 
-      <Tabs defaultValue="meus">
-        <TabsList>
-          <TabsTrigger value="meus">
-            Meus pedidos{count(meusPedidos)}
-          </TabsTrigger>
-          <TabsTrigger value="pg">
-            Meu PG{count(pedidosPG)}
-          </TabsTrigger>
-          <TabsTrigger value="todos">
-            Todos{count(todosPedidos)}
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="meus" className="space-y-3">
-          <PedidosList
-            pedidos={meusPedidos}
-            onSelect={setSelectedId}
-            emptyMsg="Voce ainda nao tem pedidos de oracao"
-            onCreateClick={() => setCreateOpen(true)}
-          />
-        </TabsContent>
-
-        <TabsContent value="pg" className="space-y-3">
-          <PedidosList
-            pedidos={pedidosPG}
-            onSelect={setSelectedId}
-            emptyMsg="Nenhum pedido no seu Pequeno Grupo"
-          />
-        </TabsContent>
-
-        <TabsContent value="todos" className="space-y-3">
-          <PedidosList
-            pedidos={todosPedidos}
-            onSelect={setSelectedId}
-            emptyMsg="Nenhum pedido de oracao"
-          />
-        </TabsContent>
-      </Tabs>
-
-      {/* Dialog: Novo pedido */}
-      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Novo Pedido de Oracao</DialogTitle>
-            <DialogDescription>
-              Compartilhe seu pedido para que outros orem por voce.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <Textarea
-              placeholder="Compartilhe seu pedido de oracao..."
-              value={novaDescricao}
-              onChange={(e) => setNovaDescricao(e.target.value)}
-              rows={4}
-            />
-            <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
-              <div className="flex items-center gap-2">
-                <Church className="h-4 w-4 text-muted-foreground" />
-                <Label
-                  htmlFor="compartilhar-igreja"
-                  className="text-sm cursor-pointer"
-                >
-                  Compartilhar com a igreja
-                </Label>
-              </div>
-              <Switch
-                id="compartilhar-igreja"
-                checked={compartilhar}
-                onCheckedChange={setCompartilhar}
-              />
-            </div>
-            {compartilhar && (
-              <p className="text-xs text-muted-foreground -mt-2 ml-1">
-                Este pedido sera apresentado no momento de oracao do culto.
-              </p>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setCreateOpen(false)}>
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleCreate}
-              disabled={!novaDescricao.trim() || creating}
+        {/* Botões na parte inferior — thumb zone */}
+        <div className="space-y-3 pb-4">
+          {/* Pedir oração */}
+          <Drawer open={createOpen} onOpenChange={setCreateOpen}>
+            <DrawerTrigger
+              onClick={() => setCreateOpen(true)}
+              className="w-full flex items-center gap-4 rounded-xl border-2 border-violet-200 dark:border-violet-800 bg-violet-50 dark:bg-violet-950/30 p-5 hover:bg-violet-100 dark:hover:bg-violet-950/50 active:bg-violet-200 transition-colors min-h-[72px]"
             >
-              {creating ? "Enviando..." : "Enviar pedido"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
+              <PlusCircle className="h-8 w-8 text-violet-600 dark:text-violet-400 shrink-0" />
+              <span className="text-base font-medium text-violet-700 dark:text-violet-300 text-left">Pedir oração</span>
+            </DrawerTrigger>
+            <DrawerContent>
+              <DrawerHeader>
+                <DrawerTitle className="text-base">Novo pedido de oração</DrawerTitle>
+              </DrawerHeader>
+              <div className="px-4 pb-6 space-y-4">
+                <Textarea
+                  placeholder="Compartilhe seu pedido de oração..."
+                  value={novaDescricao}
+                  onChange={(e) => setNovaDescricao(e.target.value)}
+                  rows={4}
+                  className="text-base min-h-[120px]"
+                />
+                <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
+                  <div className="flex items-center gap-2">
+                    <Church className="h-4 w-4 text-muted-foreground" />
+                    <Label htmlFor="compartilhar-igreja" className="text-sm cursor-pointer">
+                      Compartilhar com a igreja
+                    </Label>
+                  </div>
+                  <Switch
+                    id="compartilhar-igreja"
+                    checked={compartilhar}
+                    onCheckedChange={setCompartilhar}
+                  />
+                </div>
+                {compartilhar && (
+                  <p className="text-xs text-muted-foreground -mt-2 ml-1">
+                    Este pedido será apresentado no momento de oração do culto.
+                  </p>
+                )}
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    className="flex-1 min-h-[44px]"
+                    onClick={() => setCreateOpen(false)}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    className="flex-1 min-h-[44px]"
+                    onClick={handleCreate}
+                    disabled={!novaDescricao.trim() || creating}
+                  >
+                    {creating ? "Enviando..." : "Enviar pedido"}
+                  </Button>
+                </div>
+              </div>
+            </DrawerContent>
+          </Drawer>
+
+          {/* Meus pedidos */}
+          <Drawer open={meusPedidosOpen} onOpenChange={setMeusPedidosOpen}>
+            <DrawerTrigger
+              onClick={() => setMeusPedidosOpen(true)}
+              className="w-full flex items-center gap-4 rounded-xl border border-border bg-card p-5 hover:bg-muted/50 active:bg-muted transition-colors min-h-[72px]"
+            >
+              <Heart className="h-8 w-8 text-muted-foreground shrink-0" />
+              <div className="text-left">
+                <span className="text-base font-medium">Meus pedidos</span>
+                {meusPedidosAtivos.length > 0 && (
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {meusPedidosAtivos.length} ativo{meusPedidosAtivos.length !== 1 ? "s" : ""}
+                  </p>
+                )}
+              </div>
+            </DrawerTrigger>
+            <DrawerContent>
+              <DrawerHeader>
+                <DrawerTitle className="text-base">Meus pedidos</DrawerTitle>
+              </DrawerHeader>
+              <div className="px-4 pb-6 max-h-[70vh] overflow-y-auto space-y-2">
+                {!meusPedidos || meusPedidos.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-8">
+                    Você ainda não tem pedidos de oração
+                  </p>
+                ) : (
+                  meusPedidos.map((p: any) => (
+                    <PedidoCard
+                      key={p._id}
+                      pedido={p}
+                      onClick={() => { setMeusPedidosOpen(false); setSelectedId(p._id); }}
+                    />
+                  ))
+                )}
+              </div>
+            </DrawerContent>
+          </Drawer>
+
+          {/* Orar */}
+          <button
+            onClick={() => setOrarMode(true)}
+            className="w-full flex items-center gap-4 rounded-xl border-2 border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/30 p-5 hover:bg-blue-100 dark:hover:bg-blue-950/50 active:bg-blue-200 transition-colors min-h-[72px]"
+          >
+            <HandHeart className="h-8 w-8 text-blue-600 dark:text-blue-400 shrink-0" />
+            <div className="text-left">
+              <span className="text-base font-medium text-blue-700 dark:text-blue-300">Orar pelos pedidos</span>
+              {pedidosAtivos.length > 0 && (
+                <p className="text-xs text-blue-500 dark:text-blue-400 mt-0.5">
+                  {pedidosAtivos.length} pedido{pedidosAtivos.length !== 1 ? "s" : ""} ativo{pedidosAtivos.length !== 1 ? "s" : ""}
+                </p>
+              )}
+            </div>
+          </button>
+        </div>
+      </div>
     </ModuloGuard>
   );
 }

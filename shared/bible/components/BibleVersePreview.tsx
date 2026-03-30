@@ -8,6 +8,7 @@ interface BibleVersePreviewProps {
   results: BibleVerseResult[];
   error: string | null;
   maxHeight?: string;
+  fontSize?: number;
 }
 
 function VersesText({ verses }: { verses: { number: number; text: string }[] }) {
@@ -25,15 +26,15 @@ function VersesText({ verses }: { verses: { number: number; text: string }[] }) 
   );
 }
 
-function VerseBlock({ result }: { result: BibleVerseResult }) {
+function VerseBlock({ result, fontSize }: { result: BibleVerseResult; fontSize?: number }) {
   const hasCrossChapter = result.chapters && result.chapters.length > 1;
 
   return (
     <div>
-      <p className="text-sm font-semibold text-muted-foreground">
+      <p className="font-semibold text-muted-foreground" style={fontSize ? { fontSize: fontSize * 0.85 } : undefined}>
         {result.reference} (NAA)
       </p>
-      <div className="text-base leading-relaxed mt-1">
+      <div className="leading-relaxed mt-1 break-words" style={fontSize ? { fontSize } : undefined}>
         {hasCrossChapter ? (
           result.chapters!.map((ch) => (
             <div key={ch.chapter} className="mt-1 first:mt-0">
@@ -63,6 +64,7 @@ export function BibleVersePreview({
   results,
   error,
   maxHeight = "300px",
+  fontSize,
 }: BibleVersePreviewProps) {
   if (loading) {
     return (
@@ -85,7 +87,7 @@ export function BibleVersePreview({
   return (
     <div className="space-y-3 p-3 overflow-y-auto" style={{ maxHeight }}>
       {results.map((r, i) => (
-        <VerseBlock key={`${r.bookName}-${r.chapter}-${i}`} result={r} />
+        <VerseBlock key={`${r.bookName}-${r.chapter}-${i}`} result={r} fontSize={fontSize} />
       ))}
     </div>
   );
