@@ -81,6 +81,7 @@ export const updateCulto = mutation({
     titulo: v.optional(v.string()),
     horario: v.optional(v.string()),
     observacoes: v.optional(v.string()),
+    temCeia: v.optional(v.boolean()),
   },
   handler: async (ctx, { id, ...updates }) => {
     await requirePermission(ctx, "escalas:update");

@@ -7,10 +7,16 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/sha
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
-import { Church, Cake, HandHeart, MessageCircle } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
+import { Church, Megaphone, Cake, CalendarCheck } from "lucide-react";
 import { AvisosWidget } from "@features/gravacoes/components/AvisosWidget";
-import { FrasesCarrossel } from "@features/gravacoes/components/FrasesCarrossel";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/shared/components/ui/drawer";
+import { AniversariantesCard, AniversariantesHoje, AniversariantesMesLista } from "@features/dashboard/components/AniversariantesCard";
 import { EducacionalPaisWidget } from "@features/educacional/components/EducacionalPaisWidget";
 import { MinhaEscalaWidget } from "@features/escalas/components/MinhaEscalaWidget";
 import { format, parseISO } from "date-fns";
@@ -19,12 +25,6 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useConvexAuth } from "convex/react";
 import Link from "next/link";
-
-function formatWhatsappLink(phone: string): string {
-  const digits = phone.replace(/\D/g, "");
-  const number = digits.startsWith("55") ? digits : `55${digits}`;
-  return `https://wa.me/${number}`;
-}
 
 function BootstrapForm() {
   // @ts-ignore Convex TS2589
@@ -60,7 +60,7 @@ function BootstrapForm() {
           <div className="flex justify-center mb-2">
             <Church className="h-10 w-10" />
           </div>
-          <CardTitle>Configuracao Inicial</CardTitle>
+          <CardTitle>Configuração Inicial</CardTitle>
           <CardDescription>
             Crie o primeiro administrador do sistema
           </CardDescription>
@@ -114,139 +114,109 @@ function BootstrapForm() {
 export default function DashboardPage() {
   const { isAuthenticated } = useConvexAuth();
   const { name, isLoading, role, can } = useAuth();
-  const meusPedidos = useQuery(
-    api.pastoreio.queries.listPedidosOracao,
-    can("pedidos_oracao:read") ? { status: "ATIVO" } : "skip"
-  );
-  const aniversariantesMes = useQuery(api.membros.queries.birthdaysThisMonth, {});
-
   // If authenticated but no membro linked (role is null), show bootstrap form
   if (!isLoading && isAuthenticated && !role) {
     return <BootstrapForm />;
   }
 
-  const primeiroNome = name?.split(" ")[0] || "Usuario";
+  const primeiroNome = name?.split(" ")[0] || "Usuário";
   const dataHoje = format(new Date(), "dd 'de' MMMM", { locale: ptBR });
+  const mesAtual = format(new Date(), "MMMM", { locale: ptBR });
+  const hora = new Date().getHours();
+  const saudacao = hora < 12 ? "Bom dia" : hora < 18 ? "Boa tarde" : "Boa noite";
+
+  const [avisosOpen, setAvisosOpen] = useState(false);
+  // @ts-ignore Convex TS2589
+  const avisosData = useQuery(api.gravacoes.queries.getLatestAvisos);
+  const aniversariantes = useQuery(api.membros.queries.birthdaysThisMonth, {});
+  const aniversariantesCount = aniversariantes?.filter((a: any) => a.mes === new Date().getMonth() + 1).length ?? 0;
+  const avisosDataLabel = avisosData?.data ? format(parseISO(avisosData.data), "dd/MM") : "";
 
   return (
-    <div className="space-y-6">
-      {/* Saudacao */}
-      <div className="flex items-baseline gap-3">
-        <h1 className="text-2xl font-medium text-foreground">
-          Bem-vindo, {primeiroNome}
-        </h1>
-        <span className="text-sm text-muted-foreground">&middot; {dataHoje}</span>
-      </div>
+    <div className="flex flex-col md:block md:space-y-6">
+      {/* Topo: saudação + frase */}
+      {/* Topo: saudação + aniversariantes do dia/em breve */}
+      <div className="space-y-4">
+        <div className="flex items-baseline gap-3">
+          <h1 className="text-2xl font-medium text-foreground">
+            {saudacao}, {primeiroNome}
+          </h1>
+          <span className="text-sm text-muted-foreground">&middot; {dataHoje}</span>
+        </div>
 
-      {/* Grid principal: Avisos + Aniversariantes */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <AvisosWidget />
+        {/* Aniversariantes hoje ou em breve — inline */}
+        <AniversariantesHoje />
 
-        {/* Aniversariantes do mes */}
-        <div className="bg-background border border-border rounded-xl p-4">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <Cake size={13} className="text-muted-foreground" />
-              <span className="text-sm font-medium text-foreground">Aniversariantes do mes</span>
-            </div>
-            {aniversariantesMes && aniversariantesMes.length > 0 && (
-              <span className="text-xs text-muted-foreground">
-                {aniversariantesMes.length} este mes
-              </span>
-            )}
-          </div>
-          {!aniversariantesMes ? (
-            <p className="text-xs text-muted-foreground py-2">Carregando...</p>
-          ) : aniversariantesMes.length === 0 ? (
-            <p className="text-xs text-muted-foreground py-2">Nenhum aniversariante este mes.</p>
-          ) : (
-            <div className="flex flex-col gap-1">
-              {aniversariantesMes.map((a: any) => {
-                const nome = a.entidade?.apelido || a.entidade?.nomeCompleto;
-                return (
-                  <div key={a._id} className="flex items-center justify-between py-1">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="w-8 h-8 flex-shrink-0">
-                        {a.entidade?.foto && <AvatarImage src={a.entidade.foto} />}
-                        <AvatarFallback className="text-xs">
-                          {nome?.charAt(0)?.toUpperCase() || "?"}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="text-sm font-medium text-foreground">{nome}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {a.entidade?.dataNascimento
-                            ? format(parseISO(a.entidade.dataNascimento), "dd 'de' MMMM", { locale: ptBR })
-                            : ""}
-                        </p>
-                      </div>
-                    </div>
-                    {a.entidade?.whatsapp && (
-                      <a
-                        href={formatWhatsappLink(a.entidade.whatsapp)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs px-3 py-1 rounded-full border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-colors duration-150 flex-shrink-0"
-                      >
-                        Enviar mensagem
-                      </a>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
+        {/* Desktop: conteúdo direto */}
+        <div className="hidden md:block space-y-6">
+          <AvisosWidget />
+          <AniversariantesCard />
+          <EducacionalPaisWidget />
+          <MinhaEscalaWidget />
         </div>
       </div>
 
-      {/* Citacao do sermao */}
-      <FrasesCarrossel />
-
-      {/* Grid secundario: Pedidos + Escala + Educacional */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Pedidos de Oracao */}
-        {can("pedidos_oracao:read") && (
-          <div className="bg-background border border-border rounded-xl p-4">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <HandHeart size={13} className="text-muted-foreground" />
-                <span className="text-sm font-medium text-foreground">Pedidos de Oracao</span>
-              </div>
-              {meusPedidos && meusPedidos.length > 0 && (
-                <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-medium">
-                  {meusPedidos.length} ativo{meusPedidos.length !== 1 ? "s" : ""}
-                </span>
-              )}
+      {/* Mobile: botões */}
+      <div className="md:hidden space-y-3 pb-4 mt-6">
+        {/* Aniversariantes de {mesAtual} */}
+        <Drawer>
+          <DrawerTrigger
+            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors min-h-[44px]"
+          >
+            <Cake className="h-3.5 w-3.5" />
+            Ver aniversariantes de {mesAtual} ({aniversariantesCount})
+          </DrawerTrigger>
+          <DrawerContent>
+            <DrawerHeader>
+              <DrawerTitle className="text-base">Aniversariantes de {mesAtual}</DrawerTitle>
+            </DrawerHeader>
+            <div className="px-4 pb-6 max-h-[70vh] overflow-y-auto">
+              <AniversariantesMesLista />
             </div>
-            {!meusPedidos ? (
-              <p className="text-xs text-muted-foreground py-2">Carregando...</p>
-            ) : meusPedidos.length === 0 ? (
-              <p className="text-xs text-muted-foreground py-2">Nenhum pedido ativo</p>
-            ) : (
-              <div>
-                {meusPedidos.slice(0, 3).map((p: any) => (
-                  <div key={p._id} className="flex items-center gap-2 py-2 border-b border-border last:border-0">
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
-                    <span className="text-sm text-foreground line-clamp-1">{p.descricao}</span>
-                  </div>
-                ))}
-                <Link
-                  href="/pedidos-oracao"
-                  className="text-xs text-muted-foreground underline underline-offset-2 mt-2 block transition-colors duration-150 hover:text-foreground"
-                >
-                  Ver todos
-                </Link>
-              </div>
-            )}
-          </div>
-        )}
+          </DrawerContent>
+        </Drawer>
+
+        {/* Avisos */}
+        <Drawer open={avisosOpen} onOpenChange={setAvisosOpen}>
+          <DrawerTrigger
+            onClick={() => setAvisosOpen(true)}
+            className="w-full flex items-center gap-4 rounded-xl border-2 border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 p-5 hover:opacity-80 active:opacity-70 transition-opacity min-h-[72px]"
+          >
+            <Megaphone className="h-8 w-8 text-amber-600 dark:text-amber-400 shrink-0" />
+            <span className="text-base font-medium text-amber-700 dark:text-amber-300">
+              Avisos{avisosDataLabel ? ` do dia ${avisosDataLabel}` : ""}
+            </span>
+          </DrawerTrigger>
+          <DrawerContent>
+            <DrawerHeader>
+              <DrawerTitle className="text-base">
+                Avisos{avisosDataLabel ? ` do dia ${avisosDataLabel}` : ""}
+              </DrawerTitle>
+            </DrawerHeader>
+            <div className="px-4 pb-6 max-h-[70vh] overflow-y-auto">
+              <AvisosWidget variant="drawer" />
+            </div>
+          </DrawerContent>
+        </Drawer>
 
         {/* Minha Escala */}
-        <MinhaEscalaWidget />
+        <Drawer>
+          <DrawerTrigger
+            className="w-full flex items-center gap-4 rounded-xl border border-border bg-card p-5 hover:bg-muted/50 active:bg-muted transition-colors min-h-[72px]"
+          >
+            <CalendarCheck className="h-8 w-8 text-muted-foreground shrink-0" />
+            <span className="text-base font-medium">Minha escala</span>
+          </DrawerTrigger>
+          <DrawerContent>
+            <DrawerHeader>
+              <DrawerTitle className="text-base">Minha escala</DrawerTitle>
+            </DrawerHeader>
+            <div className="px-4 pb-6 max-h-[70vh] overflow-y-auto">
+              <MinhaEscalaWidget />
+            </div>
+          </DrawerContent>
+        </Drawer>
       </div>
-
-      {/* Educacional (pais) */}
-      <EducacionalPaisWidget />
     </div>
   );
 }

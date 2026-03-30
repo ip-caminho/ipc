@@ -102,7 +102,7 @@ export function BiblePassageInput({
         autoFocus={autoFocus}
       />
       {hasPreview && (
-        <div className="rounded-md border bg-muted/30">
+        <div className="rounded-md border bg-muted/30 overflow-hidden">
           <BibleVersePreview
             loading={loading}
             results={results}

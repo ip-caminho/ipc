@@ -12,6 +12,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
   SidebarFooter,
 } from "@/shared/components/ui/sidebar";
 import {
@@ -20,6 +23,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/shared/components/ui/tooltip";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/shared/components/ui/collapsible";
 import { useAuth } from "@shared/providers/PermissionsProvider";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -41,6 +49,9 @@ import {
   LayoutGrid,
   Baby,
   Music,
+  Megaphone,
+  ChevronRight,
+  Sun,
 } from "lucide-react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
@@ -61,9 +72,16 @@ type MenuSection = {
 };
 
 const topItems: MenuItem[] = [
-  { label: "Sermoes", href: "/gravacoes", icon: Mic, permission: "gravacoes:read", modulo: "gravacoes", tooltip: "Ouca os sermoes e estudos da igreja" },
+  { label: "Ouvir", href: "/gravacoes", icon: Mic, permission: "gravacoes:read", modulo: "gravacoes", tooltip: "Ouça os sermões e estudos da igreja" },
   { label: "Boletim", href: "/boletim", icon: FileText, permission: "escalas:read", modulo: "boletim", tooltip: "Boletim do proximo culto dominical" },
   { label: "Louvor", href: "/louvor", icon: Music, permission: "louvor:read", modulo: "louvor", tooltip: "Repertorio de musicas com cifras e tons" },
+];
+
+// Subitens de "Cultos"
+const cultoSubItems: MenuItem[] = [
+  { label: "Próximo Domingo", href: "/proximo-domingo", icon: Sun, permission: "escalas:read", modulo: "escalas", tooltip: "Visão completa do próximo culto" },
+  { label: "Planejamento", href: "/cultos", icon: CalendarCheck, permission: "escalas:read", modulo: "escalas", tooltip: "Planejamento de escalas e liturgia dos cultos" },
+  { label: "Avisos", href: "/avisos", icon: Megaphone, permission: "escalas:read", modulo: "escalas", tooltip: "Avisos e comunicados da igreja" },
 ];
 
 const menuSections: MenuSection[] = [
@@ -79,20 +97,18 @@ const menuSections: MenuSection[] = [
   {
     label: "Gestao",
     items: [
-      { label: "Cultos", href: "/cultos", icon: Church, permission: "escalas:read", modulo: "escalas", tooltip: "Liturgia, escalas e avisos do culto" },
       { label: "Ministerios", href: "/ministerios", icon: Users, permission: "ministerios:read", modulo: "ministerios", tooltip: "Ministerios e equipes da igreja" },
       { label: "Pequenos Grupos", href: "/pequenos-grupos", icon: UsersRound, permission: "pequenos_grupos:read", modulo: "pequenos-grupos", tooltip: "Grupos de estudo e comunhao" },
       { label: "Pastoreio", href: "/pastoreio", icon: Heart, permission: "pastoreio:read", modulo: "pastoreio", tooltip: "Visitas pastorais e acompanhamento" },
       { label: "Educacional", href: "/educacional", icon: Baby, permission: "educacional:read", modulo: "educacional", tooltip: "Turmas e criancas do educacional infantil" },
       { label: "Membros", href: "/membros", icon: Users, permission: "membros:read", modulo: "membros", tooltip: "Cadastro e gestao da membresia" },
-      // { label: "Entidades", href: "/entidades", icon: UserCircle, permission: "entidades:read", modulo: "entidades", tooltip: "Pessoas e organizacoes (PF/PJ)" },
     ],
   },
 ];
 
 const adminItems: MenuItem[] = [
-  { label: "Gravacoes", href: "/admin/gravacoes", icon: Mic, permission: null, tooltip: "Gerenciar gravacoes e processamento IA" },
-  { label: "Permissoes", href: "/admin/permissoes", icon: Shield, permission: null, tooltip: "Controle de acesso e convites" },
+  { label: "Gravações", href: "/admin/gravacoes", icon: Mic, permission: null, tooltip: "Gerenciar gravações e processamento IA" },
+  { label: "Permissões", href: "/admin/permissoes", icon: Shield, permission: null, tooltip: "Controle de acesso e convites" },
   { label: "Modulos", href: "/admin/modulos", icon: LayoutGrid, permission: null, tooltip: "Ativar ou desativar funcionalidades" },
 ];
 
@@ -122,6 +138,10 @@ export function AppSidebar() {
       ? pathname.startsWith(href)
       : pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
 
+  const isCultoActive = cultoSubItems.some((item) => isActive(item.href));
+  const visibleCultoSubItems = cultoSubItems.filter(isItemVisible);
+  const showCultoMenu = visibleCultoSubItems.length > 0;
+
   return (
     <Sidebar>
       <SidebarHeader className="border-b px-4 py-3">
@@ -142,7 +162,7 @@ export function AppSidebar() {
                       <SidebarMenuButton asChild isActive={pathname === "/dashboard"}>
                         <Link href="/dashboard">
                           <Home className="h-4 w-4" />
-                          <span>Inicio</span>
+                          <span>Início</span>
                         </Link>
                       </SidebarMenuButton>
                     </TooltipTrigger>
@@ -171,12 +191,42 @@ export function AppSidebar() {
           {/* Secoes agrupadas */}
           {menuSections.map((section) => {
             const visibleItems = section.items.filter(isItemVisible);
-            if (visibleItems.length === 0) return null;
+            // Na secao Gestao, inclui o menu Cultos se visivel
+            const isGestao = section.label === "Gestao";
+            if (visibleItems.length === 0 && !(isGestao && showCultoMenu)) return null;
             return (
               <SidebarGroup key={section.label}>
                 <SidebarGroupLabel>{section.label}</SidebarGroupLabel>
                 <SidebarGroupContent>
                   <SidebarMenu>
+                    {/* Menu Cultos com submenu (apenas na secao Gestao) */}
+                    {isGestao && showCultoMenu && (
+                      <Collapsible defaultOpen={isCultoActive} className="group/collapsible">
+                        <SidebarMenuItem>
+                          <CollapsibleTrigger asChild>
+                            <SidebarMenuButton isActive={isCultoActive}>
+                              <Church className="h-4 w-4" />
+                              <span>Cultos</span>
+                              <ChevronRight className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
+                            </SidebarMenuButton>
+                          </CollapsibleTrigger>
+                          <CollapsibleContent>
+                            <SidebarMenuSub>
+                              {visibleCultoSubItems.map((item) => (
+                                <SidebarMenuSubItem key={item.href}>
+                                  <SidebarMenuSubButton asChild isActive={isActive(item.href)}>
+                                    <Link href={item.href}>
+                                      <span>{item.label}</span>
+                                    </Link>
+                                  </SidebarMenuSubButton>
+                                </SidebarMenuSubItem>
+                              ))}
+                            </SidebarMenuSub>
+                          </CollapsibleContent>
+                        </SidebarMenuItem>
+                      </Collapsible>
+                    )}
+
                     {visibleItems.map((item) => (
                       <SidebarMenuItem key={item.href}>
                         <Tooltip>
@@ -233,7 +283,7 @@ export function AppSidebar() {
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">{name || "Usuario"}</p>
+            <p className="text-sm font-medium truncate">{name || "Usuário"}</p>
             <p className="text-xs text-muted-foreground truncate">
               {role || ""}
             </p>

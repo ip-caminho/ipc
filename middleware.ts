@@ -6,7 +6,7 @@ import {
 import { NextResponse } from "next/server";
 
 const isSignInPage = createRouteMatcher(["/signin"]);
-const isPublicRoute = createRouteMatcher(["/signin", "/convite/(.*)"]);
+const isPublicRoute = createRouteMatcher(["/signin", "/convite/(.*)", "/culto"]);
 
 function isLandingPage(pathname: string) {
   return pathname === "/";
@@ -55,6 +55,11 @@ export default convexAuthNextjsMiddleware(async (request, { convexAuth }) => {
   // Authed user on landing or signin → redirect to dashboard
   if (authed && (isLandingPage(pathname) || isSignInPage(request))) {
     return nextjsMiddlewareRedirect(request, "/dashboard");
+  }
+
+  // /culto só acessível aos domingos
+  if (pathname === "/culto" && new Date().getDay() !== 0) {
+    return nextjsMiddlewareRedirect(request, "/");
   }
 
   // Landing page is public — allow without auth

@@ -65,6 +65,23 @@ export const search = query({
   },
 });
 
+export const getByTitulos = query({
+  args: { titulos: v.array(v.string()) },
+  handler: async (ctx, { titulos }) => {
+    if (titulos.length === 0) return [];
+    const all = await ctx.db.query("louvores").collect();
+    const results: Array<{ titulo: string; conteudo?: string; tom?: string; artista?: string }> = [];
+    for (const titulo of titulos) {
+      const lower = titulo.toLowerCase();
+      const found = all.find((l) => l.titulo.toLowerCase() === lower);
+      if (found) {
+        results.push({ titulo, conteudo: found.conteudo, tom: found.tom, artista: found.artista });
+      }
+    }
+    return results;
+  },
+});
+
 export const listTags = query({
   args: {},
   handler: async (ctx) => {

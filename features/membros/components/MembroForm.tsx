@@ -149,9 +149,9 @@ export function MembroForm({ defaultValues, onSubmit, isEditing, entityId }: Mem
             <Field name="email" label="Email" type="email" />
           </Section>
 
-          <Section title="Endereco" defaultOpen={false}>
+          <Section title="Endereço" defaultOpen={false}>
             <Field name="logradouro" label="Logradouro" />
-            <Field name="numero" label="Numero" />
+            <Field name="numero" label="Número" />
             <Field name="complemento" label="Complemento" />
             <Field name="bairro" label="Bairro" />
             <Field name="cidade" label="Cidade" />

@@ -76,7 +76,7 @@ export function LouvorDetalhe({ louvorId, onBack }: LouvorDetalheProps) {
           <ArrowLeft className="h-4 w-4 mr-2" />
           Voltar
         </Button>
-        <p className="text-muted-foreground">Musica nao encontrada.</p>
+        <p className="text-muted-foreground">Música não encontrada.</p>
       </div>
     );
   }
@@ -98,7 +98,7 @@ export function LouvorDetalhe({ louvorId, onBack }: LouvorDetalheProps) {
         estrutura: data.estrutura || undefined,
       };
       await updateLouvor({ id: louvorId, data: updateData });
-      toast.success("Musica atualizada");
+      toast.success("Música atualizada");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao atualizar");
     }
@@ -108,7 +108,7 @@ export function LouvorDetalhe({ louvorId, onBack }: LouvorDetalheProps) {
     if (!confirm("Excluir esta musica?")) return;
     try {
       await removeLouvor({ id: louvorId });
-      toast.success("Musica excluida");
+      toast.success("Música excluída");
       onBack ? onBack() : router.push("/louvor");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao excluir");
@@ -131,129 +131,133 @@ export function LouvorDetalhe({ louvorId, onBack }: LouvorDetalheProps) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={() => onBack ? onBack() : router.push("/louvor")}>
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <h1 className="text-2xl font-medium">{louvor.titulo}</h1>
-          </div>
-          <div className="flex items-center gap-2 ml-10">
-            {louvor.artista && (
-              <span className="text-muted-foreground">{louvor.artista}</span>
-            )}
-            {louvor.tom && <Badge variant="secondary">{louvor.tom}</Badge>}
-            {louvor.bpm && (
-              <Badge variant="outline">{louvor.bpm} BPM</Badge>
-            )}
-          </div>
-          {louvor.tags && louvor.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 ml-10">
-              {louvor.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 font-medium"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-          )}
-          {louvor.estrutura && (
-            <p className="text-xs text-muted-foreground font-mono ml-10">
-              {louvor.estrutura}
-            </p>
-          )}
+      <div>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" className="min-h-[44px] min-w-[44px]" onClick={() => onBack ? onBack() : router.push("/louvor")}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <h1 className="text-xl md:text-2xl font-medium truncate">{louvor.titulo}</h1>
         </div>
+
+        <div className="flex items-center gap-2 flex-wrap mt-1 ml-12 md:ml-10">
+          {louvor.artista && (
+            <span className="text-sm text-muted-foreground">{louvor.artista}</span>
+          )}
+          {louvor.tom && <Badge variant="secondary">{louvor.tom}</Badge>}
+          {louvor.bpm && <Badge variant="outline">{louvor.bpm} BPM</Badge>}
+        </div>
+
+        {louvor.tags && louvor.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mt-2 ml-12 md:ml-10">
+            {louvor.tags.map((tag) => (
+              <span
+                key={tag}
+                className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 font-medium"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {louvor.estrutura && (
+          <p className="text-xs text-muted-foreground font-mono mt-1 ml-12 md:ml-10">
+            {louvor.estrutura}
+          </p>
+        )}
 
         {/* Actions */}
-        <div className="flex gap-2 shrink-0">
-          {can("louvor:update") && (
-            <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
-              <Pencil className="h-3.5 w-3.5 mr-1.5" />
-              Editar
-            </Button>
-          )}
-          {can("louvor:delete") && (
-            <Button variant="outline" size="sm" onClick={handleDelete}>
-              <Trash2 className="h-3.5 w-3.5 mr-1.5" />
-              Excluir
-            </Button>
-          )}
-        </div>
+        {(can("louvor:update") || can("louvor:delete")) && (
+          <div className="flex gap-2 mt-3 ml-12 md:ml-10">
+            {can("louvor:update") && (
+              <Button variant="outline" size="sm" className="min-h-[44px] md:min-h-0" onClick={() => setEditOpen(true)}>
+                <Pencil className="h-3.5 w-3.5 mr-1.5" />
+                Editar
+              </Button>
+            )}
+            {can("louvor:delete") && (
+              <Button variant="outline" size="sm" className="min-h-[44px] md:min-h-0" onClick={handleDelete}>
+                <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                Excluir
+              </Button>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* Controls: tom selector + chord toggle */}
+      {/* Controls */}
       {louvor.conteudo && (
-        <div className="flex items-center gap-4 flex-wrap border rounded-lg p-3 bg-muted/30">
-          {/* Tom selector */}
-          {louvor.tom && (
-            <div className="flex items-center gap-2">
-              <Label className="text-sm whitespace-nowrap">Tom:</Label>
-              <Select value={tomMode} onValueChange={(v) => setTomMode(v as TomMode)}>
-                <SelectTrigger className="w-[130px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="original">Original ({louvor.tom})</SelectItem>
-                  {louvor.tomHomem && (
-                    <SelectItem value="homem">Homem ({louvor.tomHomem})</SelectItem>
-                  )}
-                  {louvor.tomMulher && (
-                    <SelectItem value="mulher">Mulher ({louvor.tomMulher})</SelectItem>
-                  )}
-                  <SelectItem value="custom">Custom</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+        <div className="flex flex-col gap-3 border rounded-lg p-3 bg-muted/30">
+          <div className="flex items-center gap-3 flex-wrap">
+            {/* Tom selector */}
+            {louvor.tom && (
+              <div className="flex items-center gap-2">
+                <Label className="text-sm whitespace-nowrap">Tom:</Label>
+                <Select value={tomMode} onValueChange={(v) => setTomMode(v as TomMode)}>
+                  <SelectTrigger className="w-[140px] min-h-[44px] md:min-h-0">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="original">Original ({louvor.tom})</SelectItem>
+                    {louvor.tomHomem && (
+                      <SelectItem value="homem">Homem ({louvor.tomHomem})</SelectItem>
+                    )}
+                    {louvor.tomMulher && (
+                      <SelectItem value="mulher">Mulher ({louvor.tomMulher})</SelectItem>
+                    )}
+                    <SelectItem value="custom">Custom</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
-          {/* Custom transpose controls */}
-          {tomMode === "custom" && (
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => setCustomSemitones((s) => s - 1)}
-              >
-                <Minus className="h-3 w-3" />
-              </Button>
-              <span className="text-sm font-mono w-8 text-center">
-                {customSemitones > 0 ? `+${customSemitones}` : customSemitones}
-              </span>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => setCustomSemitones((s) => s + 1)}
-              >
-                <Plus className="h-3 w-3" />
-              </Button>
-            </div>
-          )}
+            {/* Custom transpose */}
+            {tomMode === "custom" && (
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 md:h-8 md:w-8"
+                  onClick={() => setCustomSemitones((s) => s - 1)}
+                >
+                  <Minus className="h-3 w-3" />
+                </Button>
+                <span className="text-sm font-mono w-8 text-center">
+                  {customSemitones > 0 ? `+${customSemitones}` : customSemitones}
+                </span>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 md:h-8 md:w-8"
+                  onClick={() => setCustomSemitones((s) => s + 1)}
+                >
+                  <Plus className="h-3 w-3" />
+                </Button>
+              </div>
+            )}
+          </div>
 
           {/* Font size + cifras toggle */}
-          <div className="flex items-center gap-3 ml-auto">
+          <div className="flex items-center gap-3 justify-between">
             <div className="flex items-center gap-1">
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7"
+                className="h-10 w-10 md:h-7 md:w-7"
                 onClick={() => setFontSize((s) => Math.max(12, s - 2))}
               >
-                <AArrowDown className="h-3.5 w-3.5" />
+                <AArrowDown className="h-4 w-4 md:h-3.5 md:w-3.5" />
               </Button>
+              <span className="text-xs text-muted-foreground w-6 text-center">{fontSize}</span>
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7"
+                className="h-10 w-10 md:h-7 md:w-7"
                 onClick={() => setFontSize((s) => Math.min(28, s + 2))}
               >
-                <AArrowUp className="h-3.5 w-3.5" />
+                <AArrowUp className="h-4 w-4 md:h-3.5 md:w-3.5" />
               </Button>
             </div>
             <div className="flex items-center gap-2">

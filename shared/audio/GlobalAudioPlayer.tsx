@@ -6,7 +6,8 @@ import { useMediaSession } from "./useMediaSession";
 import { formatTime } from "./utils";
 import { Slider } from "@/shared/components/ui/slider";
 import { Button } from "@/shared/components/ui/button";
-import { Play, Pause, X, Volume2, VolumeX, ChevronUp, ChevronDown, SkipBack, SkipForward } from "lucide-react";
+import { Play, Pause, X, Volume2, VolumeX, SkipBack, SkipForward, MessageCircle } from "lucide-react";
+import Link from "next/link";
 
 export function GlobalAudioPlayer() {
   const player = useAudioPlayer();
@@ -50,7 +51,7 @@ export function GlobalAudioPlayer() {
     >
       {/* Mobile progress bar on top (only when collapsed) */}
       {!expanded && (
-        <div className="block md:hidden h-0.5 bg-muted">
+        <div className="block md:hidden h-1 bg-muted">
           <div
             className="h-full bg-primary transition-[width] duration-200"
             style={{ width: `${progress * 100}%` }}
@@ -60,10 +61,22 @@ export function GlobalAudioPlayer() {
 
       {/* Compact bar */}
       <div className="flex items-center gap-2 px-3 py-2 md:px-4 md:py-2.5">
-        {/* Mobile: tap to expand */}
+        {/* Equalizer bars */}
+        <style>{`
+          @keyframes eq1 { 0%,100%{height:4px} 50%{height:14px} }
+          @keyframes eq2 { 0%,100%{height:10px} 50%{height:5px} }
+          @keyframes eq3 { 0%,100%{height:6px} 50%{height:16px} }
+        `}</style>
+        <div style={{ display: "flex", alignItems: "flex-end", gap: 3, height: 16, flexShrink: 0 }}>
+          <span style={{ width: 3, borderRadius: 9999, backgroundColor: "#3b82f6", opacity: isPlaying ? 1 : 0.3, height: isPlaying ? 4 : 4, animation: isPlaying ? "eq1 0.8s ease-in-out infinite" : "none" }} />
+          <span style={{ width: 3, borderRadius: 9999, backgroundColor: "#3b82f6", opacity: isPlaying ? 1 : 0.3, height: isPlaying ? 10 : 6, animation: isPlaying ? "eq2 0.6s ease-in-out infinite" : "none" }} />
+          <span style={{ width: 3, borderRadius: 9999, backgroundColor: "#3b82f6", opacity: isPlaying ? 1 : 0.3, height: isPlaying ? 6 : 4, animation: isPlaying ? "eq3 0.9s ease-in-out infinite" : "none" }} />
+        </div>
+
+        {/* Title area — tap to expand on mobile */}
         <button
           type="button"
-          className="min-w-0 flex-shrink mr-1 text-left md:pointer-events-none"
+          className="min-w-0 flex-1 mr-1 text-left md:pointer-events-none"
           onClick={() => setExpanded(!expanded)}
         >
           <p className="text-sm font-medium truncate">{track.title}</p>
@@ -72,21 +85,11 @@ export function GlobalAudioPlayer() {
           )}
         </button>
 
-        {/* Mobile expand toggle */}
+        {/* Play/Pause — desktop only in compact bar */}
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7 shrink-0 md:hidden text-muted-foreground"
-          onClick={() => setExpanded(!expanded)}
-        >
-          {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
-        </Button>
-
-        {/* Play/Pause */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 shrink-0"
+          className="h-8 w-8 shrink-0 hidden md:flex"
           onClick={togglePlayPause}
         >
           {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
@@ -196,6 +199,18 @@ export function GlobalAudioPlayer() {
               <SkipForward className="h-4 w-4" />
             </Button>
           </div>
+
+          {/* Link para pregação — não mostrar para avisos */}
+          {track.gravacaoId && !track.title.toLowerCase().includes("aviso") && (
+            <Link
+              href={`/gravacoes/${track.gravacaoId}`}
+              onClick={() => setExpanded(false)}
+              className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors min-h-[44px]"
+            >
+              <MessageCircle className="h-4 w-4" />
+              Ver pregação e comentários
+            </Link>
+          )}
         </div>
       </div>
     </div>

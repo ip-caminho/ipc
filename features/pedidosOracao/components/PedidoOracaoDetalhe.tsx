@@ -20,13 +20,10 @@ import {
 } from "@/shared/components/ui/tooltip";
 import {
   ArrowLeft,
-  HandHeart,
   Send,
   Trash2,
-  CheckCircle,
   Archive,
   RotateCcw,
-  Plus,
   MessageCircle,
   Megaphone,
 } from "lucide-react";
@@ -67,7 +64,7 @@ export function PedidoOracaoDetalhe({
   const updateStatus = useMutation(api.pedidosOracao.mutations.updateStatus);
 
   const [comentarioTexto, setComentarioTexto] = useState("");
-  const [atualizacaoTexto, setAtualizacaoTexto] = useState("");
+  const [atualizacaoTexto, setAtualizaçãoTexto] = useState("");
   const [sending, setSending] = useState(false);
   const [sendingUpdate, setSendingUpdate] = useState(false);
   const [highlightId, setHighlightId] = useState<string | null>(null);
@@ -78,7 +75,7 @@ export function PedidoOracaoDetalhe({
   }
   if (!pedido) {
     return (
-      <p className="text-sm text-muted-foreground">Pedido nao encontrado</p>
+      <p className="text-sm text-muted-foreground">Pedido não encontrado</p>
     );
   }
 
@@ -95,8 +92,8 @@ export function PedidoOracaoDetalhe({
       const result = await toggleOrando({ pedidoId });
       toast.success(
         result.orando
-          ? "Voce esta orando por este pedido"
-          : "Removido da lista de oracao"
+          ? "Você está orando por este pedido"
+          : "Removido da lista de oração"
       );
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro");
@@ -122,7 +119,7 @@ export function PedidoOracaoDetalhe({
     }
   };
 
-  const handleAddAtualizacao = async () => {
+  const handleAddAtualização = async () => {
     if (!atualizacaoTexto.trim()) return;
     setSendingUpdate(true);
     try {
@@ -131,7 +128,7 @@ export function PedidoOracaoDetalhe({
         texto: atualizacaoTexto.trim(),
         tipo: "ATUALIZACAO",
       });
-      setAtualizacaoTexto("");
+      setAtualizaçãoTexto("");
       setShowUpdateInput(false);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro");
@@ -143,7 +140,7 @@ export function PedidoOracaoDetalhe({
   const handleRemoveComentario = async (id: Id<"pedidoOracaoComentarios">) => {
     try {
       await removeComentario({ id });
-      toast.success("Excluido");
+      toast.success("Excluído");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro");
     }
@@ -182,7 +179,7 @@ export function PedidoOracaoDetalhe({
             <Button variant="ghost" size="icon" onClick={onBack}>
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <h2 className="text-xl font-bold flex-1">Pedido de Oracao</h2>
+            <h2 className="text-xl font-bold flex-1">Pedido de Oração</h2>
           </div>
 
           {/* Autor + descricao + atualizacoes */}
@@ -221,7 +218,7 @@ export function PedidoOracaoDetalhe({
                     <div className="flex items-center gap-2">
                       <Megaphone className="h-3 w-3 text-primary" />
                       <span className="text-xs font-medium text-primary">
-                        Atualizacao
+                        Atualização
                       </span>
                       <span className="text-xs text-muted-foreground">
                         {timeAgo(a.criadoEm)}
@@ -253,17 +250,17 @@ export function PedidoOracaoDetalhe({
                 <div className="flex items-center gap-2">
                   <input
                     className="flex-1 text-sm rounded-md border border-input bg-background px-3 py-2 placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                    placeholder="Compartilhe uma atualizacao..."
+                    placeholder="Compartilhe uma atualização..."
                     value={atualizacaoTexto}
-                    onChange={(e) => setAtualizacaoTexto(e.target.value)}
+                    onChange={(e) => setAtualizaçãoTexto(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && !e.shiftKey) {
                         e.preventDefault();
-                        handleAddAtualizacao();
+                        handleAddAtualização();
                       }
                       if (e.key === "Escape") {
                         setShowUpdateInput(false);
-                        setAtualizacaoTexto("");
+                        setAtualizaçãoTexto("");
                       }
                     }}
                     autoFocus
@@ -271,7 +268,7 @@ export function PedidoOracaoDetalhe({
                   <Button
                     size="sm"
                     disabled={!atualizacaoTexto.trim() || sendingUpdate}
-                    onClick={handleAddAtualizacao}
+                    onClick={handleAddAtualização}
                   >
                     <Send className="h-4 w-4" />
                   </Button>
@@ -280,8 +277,8 @@ export function PedidoOracaoDetalhe({
             )}
 
             {/* Orando avatars */}
-            <div className="flex items-center gap-1.5">
-              {pedido.intercessores.length > 0 && (
+            {pedido.intercessores.length > 0 && (
+              <div className="flex items-center gap-1.5">
                 <AvatarGroup className="h-8 -space-x-2">
                   {pedido.intercessores.map((i: any) => (
                     <Avatar
@@ -296,36 +293,13 @@ export function PedidoOracaoDetalhe({
                     </Avatar>
                   ))}
                 </AvatarGroup>
-              )}
+                <span className="text-sm text-muted-foreground">
+                  {pedido.intercessores.length} pessoa{pedido.intercessores.length !== 1 ? "s" : ""} orando
+                </span>
+              </div>
+            )}
 
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      onClick={handleToggleOrando}
-                      className={`flex items-center justify-center h-8 w-8 rounded-full border-2 transition-colors ${
-                        pedido.euOrando
-                          ? "bg-primary border-primary text-primary-foreground"
-                          : "border-dashed border-muted-foreground/40 text-muted-foreground hover:border-primary hover:text-primary"
-                      }`}
-                    >
-                      {pedido.euOrando ? (
-                        <HandHeart className="h-4 w-4" />
-                      ) : (
-                        <Plus className="h-4 w-4" />
-                      )}
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="text-xs">
-                    {pedido.euOrando
-                      ? "Parar de orar"
-                      : "Orar por este pedido"}
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-
-            {/* Acoes do dono */}
+            {/* Ações do dono */}
             {pedido.isOwner && (
               <div className="flex items-center gap-2 flex-wrap">
                 {pedido.status === "ATIVO" && (
@@ -333,22 +307,16 @@ export function PedidoOracaoDetalhe({
                     <Button
                       variant="outline"
                       size="sm"
+                      className="min-h-[44px]"
                       onClick={() => setShowUpdateInput(!showUpdateInput)}
                     >
                       <Megaphone className="h-4 w-4 mr-1.5" />
-                      Postar atualizacao
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleStatusChange("RESPONDIDO")}
-                    >
-                      <CheckCircle className="h-4 w-4 mr-1.5" />
-                      Respondido
+                      Postar atualização
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
+                      className="min-h-[44px]"
                       onClick={() => handleStatusChange("ARQUIVADO")}
                     >
                       <Archive className="h-4 w-4 mr-1.5" />
@@ -360,6 +328,7 @@ export function PedidoOracaoDetalhe({
                   <Button
                     variant="outline"
                     size="sm"
+                    className="min-h-[44px]"
                     onClick={() => handleStatusChange("ATIVO")}
                   >
                     <RotateCcw className="h-4 w-4 mr-1.5" />
@@ -378,14 +347,14 @@ export function PedidoOracaoDetalhe({
           <div className="flex items-center gap-2">
             <MessageCircle className="h-4 w-4 text-muted-foreground" />
             <h3 className="text-sm font-semibold">
-              Comentarios{" "}
+              Comentários{" "}
               {comentarios.length > 0 && `(${comentarios.length})`}
             </h3>
           </div>
 
           {comentarios.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              Nenhum comentario ainda
+              Nenhum comentário ainda
             </p>
           ) : (
             <div className="space-y-4">
@@ -439,7 +408,7 @@ export function PedidoOracaoDetalhe({
           <div className="flex items-center gap-2">
             <input
               className="flex-1 text-sm rounded-md border border-input bg-background px-3 py-2 placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              placeholder="Escreva um comentario..."
+              placeholder="Escreva um comentário..."
               value={comentarioTexto}
               onChange={(e) => setComentarioTexto(e.target.value)}
               onKeyDown={(e) => {

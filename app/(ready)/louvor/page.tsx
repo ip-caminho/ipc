@@ -8,10 +8,12 @@ import { useAuth } from "@shared/providers/PermissionsProvider";
 import { PermissionGate } from "@shared/components/auth/PermissionGate";
 import { ModuloGuard } from "@shared/components/auth/ModuloGuard";
 import { useDebounce } from "@shared/hooks/useDebounce";
+import { useIsMobile } from "@shared/hooks/use-mobile";
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { Plus, Search } from "lucide-react";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 import { LouvorCard } from "@features/louvor/components/LouvorCard";
 import { LouvorForm } from "@features/louvor/components/LouvorForm";
 import { LouvorDetalhe } from "@features/louvor/components/LouvorDetalhe";
@@ -34,7 +36,7 @@ function TagPill({
       type="button"
       onClick={onClick}
       className={cn(
-        "text-xs px-2.5 py-1 rounded-full font-medium transition-colors duration-150 cursor-pointer select-none",
+        "text-xs px-2.5 py-1 rounded-full font-medium transition-colors duration-150 cursor-pointer select-none min-h-[32px]",
         "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
         active && "border border-blue-400 ring-1 ring-emerald-400/30",
         !active && "border border-transparent",
@@ -47,6 +49,8 @@ function TagPill({
 
 export default function LouvorPage() {
   const { can } = useAuth();
+  const router = useRouter();
+  const isMobile = useIsMobile();
   const [search, setSearch] = useState("");
   const [tagFilter, setTagFilter] = useState<string | null>(null);
   const [tomFilter, setTomFilter] = useState<string | null>(null);
@@ -93,7 +97,7 @@ export default function LouvorPage() {
         observacoes: data.observacoes || undefined,
         estrutura: data.estrutura || undefined,
       });
-      toast.success("Musica criada");
+      toast.success("Música criada");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao criar musica");
     }
@@ -105,19 +109,29 @@ export default function LouvorPage() {
     setTomFilter(null);
   };
 
+  const handleSelect = (id: Id<"louvores">) => {
+    if (isMobile) {
+      router.push(`/louvor/${id}`);
+    } else {
+      setSelectedId(id);
+    }
+  };
+
   return (
     <ModuloGuard modulo="louvor">
-      <div className="flex gap-6 h-[calc(100vh-6rem)]">
+      <div className="flex gap-6 md:h-[calc(100vh-6rem)]">
         {/* Coluna esquerda: lista */}
         <div className={cn(
-          "flex flex-col gap-4 overflow-y-auto shrink-0",
-          selectedId ? "w-80" : "flex-1",
+          "flex flex-col gap-4 overflow-y-auto shrink-0 w-full",
+          selectedId && !isMobile && "w-80",
+          selectedId && !isMobile && "!w-80",
+          !selectedId && "md:flex-1",
         )}>
           {/* Header */}
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-medium">Louvor</h1>
             <PermissionGate permission="louvor:create">
-              <Button size="sm" onClick={() => setCreateOpen(true)}>
+              <Button size="sm" onClick={() => setCreateOpen(true)} className="min-h-[44px] md:min-h-0">
                 <Plus className="h-4 w-4 mr-1" />
                 Nova
               </Button>
@@ -126,18 +140,18 @@ export default function LouvorPage() {
 
           {/* Search */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input
               type="text"
               placeholder="Buscar..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full text-sm rounded-xl border border-border bg-background px-3 py-2 pl-9 placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              className="w-full text-base md:text-sm rounded-xl border border-border bg-background px-3 py-2.5 md:py-2 pl-10 placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             />
           </div>
 
-          {/* Filters (compact when detail open) */}
-          {!selectedId && (
+          {/* Filters */}
+          {(!selectedId || isMobile) && (
             <>
               {tomsDisponiveis.length > 0 && (
                 <div className="flex gap-1 bg-muted rounded-xl p-1 flex-wrap">
@@ -145,7 +159,7 @@ export default function LouvorPage() {
                     type="button"
                     onClick={() => setTomFilter(null)}
                     className={cn(
-                      "px-3 py-1 text-xs rounded-lg transition-colors",
+                      "px-3 py-1.5 text-xs rounded-lg transition-colors min-h-[32px]",
                       !tomFilter
                         ? "bg-background text-foreground font-medium shadow-sm"
                         : "text-muted-foreground hover:text-foreground",
@@ -159,7 +173,7 @@ export default function LouvorPage() {
                       type="button"
                       onClick={() => setTomFilter(tomFilter === tom ? null : tom)}
                       className={cn(
-                        "px-3 py-1 text-xs rounded-lg transition-colors",
+                        "px-3 py-1.5 text-xs rounded-lg transition-colors min-h-[32px]",
                         tomFilter === tom
                           ? "bg-background text-foreground font-medium shadow-sm"
                           : "text-muted-foreground hover:text-foreground",
@@ -186,7 +200,7 @@ export default function LouvorPage() {
                     <button
                       type="button"
                       onClick={() => setTagFilter(null)}
-                      className="text-xs text-muted-foreground hover:text-foreground transition-colors ml-1"
+                      className="text-xs text-muted-foreground hover:text-foreground transition-colors ml-1 min-h-[32px]"
                     >
                       Limpar
                     </button>
@@ -205,34 +219,34 @@ export default function LouvorPage() {
             </div>
           ) : louvores.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
-              <p className="text-sm text-muted-foreground">Nenhuma musica encontrada.</p>
+              <p className="text-base text-muted-foreground">Nenhuma musica encontrada.</p>
               <button
                 onClick={clearFilters}
-                className="mt-3 text-sm text-primary underline-offset-2 hover:underline"
+                className="mt-3 text-base text-primary underline-offset-2 hover:underline min-h-[44px]"
               >
                 Limpar filtros
               </button>
             </div>
           ) : (
             <div className={cn(
-              "space-y-3",
-              !selectedId && "grid gap-4 sm:grid-cols-2 lg:grid-cols-3 space-y-0",
+              "space-y-2",
+              !selectedId && "grid gap-3 sm:grid-cols-2 lg:grid-cols-3 space-y-0",
             )}>
               {louvores.map((l: any) => (
                 <LouvorCard
                   key={l._id}
                   louvor={l}
-                  onClick={() => setSelectedId(l._id)}
+                  onClick={() => handleSelect(l._id)}
                   active={selectedId === l._id}
-                  compact={!!selectedId}
+                  compact={!!selectedId && !isMobile}
                 />
               ))}
             </div>
           )}
         </div>
 
-        {/* Coluna direita: detalhe */}
-        {selectedId && (
+        {/* Coluna direita: detalhe (desktop only) */}
+        {selectedId && !isMobile && (
           <div className="flex-1 overflow-y-auto border-l pl-6">
             <LouvorDetalhe
               key={selectedId}

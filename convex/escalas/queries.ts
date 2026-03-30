@@ -24,6 +24,14 @@ async function resolveEscalaNomeCompleto(ctx: any, e: any): Promise<string> {
   return entidade?.nomeCompleto || "";
 }
 
+async function resolveEscalaFoto(ctx: any, e: any): Promise<string | undefined> {
+  if (!e.membroId) return undefined;
+  const membro = await ctx.db.get(e.membroId);
+  if (!membro) return undefined;
+  const entidade = await ctx.db.get(membro.entidadeId);
+  return entidade?.foto || undefined;
+}
+
 export const listCultos = query({
   args: {
     tipo: v.optional(v.string()),
@@ -148,6 +156,77 @@ export const listProximosCultos = query({
   },
 });
 
+// Proximo Domingo — dados completos para visualizacao
+export const getProximoDomingo = query({
+  args: { data: v.optional(v.string()) },
+  handler: async (ctx, { data }) => {
+    const today = new Date().toISOString().split("T")[0];
+
+    const cultos = await ctx.db.query("cultos").order("asc").collect();
+    const dominicais = cultos
+      .filter((c) => c.tipo === "DOMINICAL")
+      .sort((a, b) => a.data.localeCompare(b.data));
+
+    let culto;
+    if (data) culto = dominicais.find((c) => c.data === data);
+    if (!culto) culto = dominicais.find((c) => c.data >= today);
+    if (!culto && dominicais.length > 0) culto = dominicais[dominicais.length - 1];
+    if (!culto) return null;
+
+    // Escalas com nomes completos e passagens
+    const escalas = await ctx.db
+      .query("cultoEscalas")
+      .withIndex("by_culto", (q) => q.eq("cultoId", culto._id))
+      .collect();
+
+    const escalasEnriched = await Promise.all(
+      escalas.map(async (e) => ({
+        ...e,
+        membroNome: await resolveEscalaNome(ctx, e),
+        membroNomeCompleto: await resolveEscalaNomeCompleto(ctx, e),
+      }))
+    );
+
+    // Avisos validos para esta data
+    const todosAvisos = await ctx.db.query("avisos").collect();
+    const avisos = todosAvisos.filter((a) => {
+      const fim = a.dataFim || a.dataInicio;
+      return a.dataInicio <= culto!.data && fim >= culto!.data;
+    });
+
+    // Indisponibilidades
+    const indisps = await ctx.db
+      .query("indisponibilidades")
+      .withIndex("by_data", (q: any) => q.eq("data", culto!.data))
+      .collect();
+
+    const indispsEnriched = await Promise.all(
+      indisps.map(async (i) => {
+        const membro = await ctx.db.get(i.membroId);
+        const entidade = membro ? await ctx.db.get(membro.entidadeId) : null;
+        return { nome: entidade?.nomeCompleto || "", motivo: i.motivo };
+      })
+    );
+
+    // Datas disponiveis para seletor
+    const datasDisponiveis = dominicais.map((c) => c.data);
+
+    // Navegacao
+    const idx = dominicais.findIndex((c) => c._id === culto!._id);
+    const anterior = idx > 0 ? dominicais[idx - 1].data : null;
+    const proximo = idx < dominicais.length - 1 ? dominicais[idx + 1].data : null;
+
+    return {
+      ...culto,
+      escalas: escalasEnriched,
+      avisos,
+      indisponibilidades: indispsEnriched,
+      datasDisponiveis,
+      navegacao: { anterior, proximo },
+    };
+  },
+});
+
 // Boletim dominical — proximo culto DOMINICAL com dados completos
 export const getBoletim = query({
   args: { data: v.optional(v.string()) },
@@ -186,6 +265,7 @@ export const getBoletim = query({
         ...e,
         membroNome: await resolveEscalaNome(ctx, e),
         membroNomeCompleto: await resolveEscalaNomeCompleto(ctx, e),
+        membroFoto: await resolveEscalaFoto(ctx, e),
       }))
     );
 

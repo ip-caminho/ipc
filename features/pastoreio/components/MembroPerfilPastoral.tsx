@@ -448,7 +448,7 @@ export function MembroPerfilPastoral({
 
         {/* Escutas */}
         <Section
-          title="Gravacoes Escutadas"
+          title="Gravações Escutadas"
           icon={Headphones}
           count={perfil.totalEscutas}
         >

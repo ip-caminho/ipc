@@ -72,7 +72,7 @@ export function MinhaEscalaWidget() {
           <CalendarCheck size={13} className="text-muted-foreground" />
           <span className="text-sm font-medium text-foreground">Minha Escala</span>
         </div>
-        <span className="text-xs text-muted-foreground">proximas</span>
+        <span className="text-xs text-muted-foreground">Próximas</span>
       </div>
       <div className="flex flex-col gap-2">
         {diasVisiveis.map((dia) => {

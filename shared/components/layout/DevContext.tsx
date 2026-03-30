@@ -269,13 +269,12 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     ],
   },
   "/cultos": {
-    nome: "Gestao de Cultos",
+    nome: "Escala de Cultos",
     pagina: "app/(ready)/cultos/page.tsx",
     doc: "docs/modules/cultos.md",
     arquivos: [
       "app/(ready)/cultos/page.tsx",
       "features/escalas/components/MembroCombobox.tsx",
-      "features/avisos/components/AvisosSection.tsx",
       "shared/bible/components/BiblePassageInput.tsx",
     ],
     queries: ["escalas.queries.listCultos", "membros.queries.list"],
@@ -288,12 +287,44 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "escalas.mutations.createCulto",
       "escalas.mutations.deleteCulto",
     ],
-    componentes: ["MembroCombobox", "AvisosSection", "ModuloGuard", "BiblePassageInput"],
+    componentes: ["MembroCombobox", "ModuloGuard", "BiblePassageInput"],
     notas: [
       "Permissao: escalas:read, escalas:update, escalas:create, escalas:delete",
-      "2 views: Escala (unificada com liturgia), Avisos",
-      "Escala: membro + passagem biblica (temPassagem), louvores (LOUVOR), ou membro simples",
+      "Escala unificada com liturgia (membro + passagem biblica ou membro simples)",
       "Preview de passagens biblicas inline (NAA) via BiblePassageInput",
+    ],
+  },
+  "/avisos": {
+    nome: "Avisos",
+    pagina: "app/(ready)/avisos/page.tsx",
+    arquivos: [
+      "app/(ready)/avisos/page.tsx",
+      "features/avisos/components/AvisosSection.tsx",
+    ],
+    queries: ["avisos.queries.list"],
+    mutations: ["avisos.mutations.create", "avisos.mutations.update", "avisos.mutations.remove"],
+    componentes: ["AvisosSection", "ModuloGuard"],
+    notas: [
+      "Permissao: escalas:read, escalas:create, escalas:update, escalas:delete",
+      "Avisos ativos e expirados",
+      "Criacao e edicao inline",
+    ],
+  },
+  "/proximo-domingo": {
+    nome: "Proximo Domingo",
+    pagina: "app/(ready)/proximo-domingo/page.tsx",
+    arquivos: [
+      "app/(ready)/proximo-domingo/page.tsx",
+      "shared/bible/components/BibleVersePreview.tsx",
+      "shared/bible/hooks/useBibleLookup.ts",
+    ],
+    queries: ["escalas.queries.getProximoDomingo"],
+    componentes: ["BibleVersePreview", "ModuloGuard"],
+    notas: [
+      "Permissao: escalas:read",
+      "Seletor de domingo no topo com navegacao",
+      "Liturgia com texto biblico completo (NAA)",
+      "Louvor, equipe, avisos e indisponibilidades",
     ],
   },
   "/boletim": {

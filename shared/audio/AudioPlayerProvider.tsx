@@ -66,6 +66,7 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
   const pendingPlayRef = useRef(false);
   const lastHeartbeatRef = useRef(0);
   const currentTrackKeyRef = useRef<string>("");
+  const trackRef = useRef<AudioTrack | null>(null);
 
   // GainNode for volume boost (0-2x)
   const ctxRef = useRef<AudioContext | null>(null);
@@ -86,8 +87,10 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
   const initGain = useCallback(() => {
     const audio = audioRef.current;
     if (sourceRef.current || !audio) return;
+    // Skip GainNode on mobile — avoids CORS issues with CDN
+    const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+    if (isMobile) return;
     try {
-      // GainNode requires crossOrigin
       audio.crossOrigin = "anonymous";
       const ctx = new AudioContext();
       const source = ctx.createMediaElementSource(audio);
@@ -99,7 +102,6 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
       sourceRef.current = source;
       setGainReady(true);
     } catch {
-      // CORS or unsupported — fallback to native volume
       audio.crossOrigin = "";
     }
   }, []);
@@ -110,35 +112,49 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
 
   const handleLoadedMetadata = useCallback(() => {
     const audio = audioRef.current;
+    const t = trackRef.current;
     if (!audio) return;
     setDuration(audio.duration);
 
     const resume = pendingResumeRef.current;
-    const segStart = inicio;
-    const segEnd = audio.duration;
+    const segStart = t?.inicioSermao ?? 0;
+    const segEnd = t?.fimSermao ?? audio.duration;
+    const hasSeg = t?.inicioSermao != null;
 
-    if (resume != null && resume >= segStart && resume < segEnd) {
+    // Resume from last position, but if too close to the end (< 10s), restart from beginning
+    if (resume != null && resume >= segStart && resume < segEnd - 10) {
       audio.currentTime = resume;
-    } else if (hasSegment) {
+    } else if (hasSeg) {
       audio.currentTime = segStart;
     }
     pendingResumeRef.current = null;
-  }, [inicio, hasSegment]);
+  }, []);
 
   const handleCanPlay = useCallback(() => {
     const audio = audioRef.current;
     if (!audio || !pendingPlayRef.current) return;
     pendingPlayRef.current = false;
-    audio.play().catch(() => {});
+    audio.play().catch(() => {
+      setIsPlaying(false);
+    });
   }, []);
 
   const handleTimeUpdate = useCallback(() => {
     const audio = audioRef.current;
+    const t = trackRef.current;
     if (!audio) return;
 
-    const segEnd = track?.fimSermao ?? audio.duration;
-    const segStart = track?.inicioSermao ?? 0;
-    const hasSegs = track?.inicioSermao != null;
+    const segStart = t?.inicioSermao ?? 0;
+    const hasSegs = t?.inicioSermao != null;
+    const dur = audio.duration;
+
+    // Skip boundary checks if duration not yet available
+    if (!dur || !isFinite(dur)) {
+      setCurrentTime(audio.currentTime);
+      return;
+    }
+
+    const segEnd = t?.fimSermao ?? dur;
 
     if (hasSegs && audio.currentTime < segStart) {
       audio.currentTime = segStart;
@@ -153,18 +169,18 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
     setCurrentTime(audio.currentTime);
 
     // Heartbeat
-    if (track?.gravacaoId) {
+    if (t?.gravacaoId) {
       const now = Date.now();
       if (now - lastHeartbeatRef.current >= HEARTBEAT_INTERVAL) {
         lastHeartbeatRef.current = now;
         heartbeat({
-          gravacaoId: track.gravacaoId,
+          gravacaoId: t.gravacaoId,
           currentTime: Math.round(audio.currentTime),
           duration: Math.round(audio.duration),
         }).catch(() => {});
       }
     }
-  }, [track, heartbeat]);
+  }, [heartbeat]);
 
   const handleEnded = useCallback(() => {
     setIsPlaying(false);
@@ -185,25 +201,26 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
     }
 
     if (newKey === currentTrackKeyRef.current && audio.paused) {
-      audio.play();
+      audio.play().catch(() => {});
       setIsPlaying(true);
       return;
     }
 
-    // New track — load and play when ready
+    // New track — load and play
     currentTrackKeyRef.current = newKey;
     pendingResumeRef.current = newTrack.resumeFrom ?? null;
-    pendingPlayRef.current = true;
     lastHeartbeatRef.current = 0;
+    trackRef.current = newTrack;
     setTrack(newTrack);
     setCurrentTime(0);
     setDuration(0);
     setIsPlaying(true);
 
     const cdnUrl = toCdnUrl(newTrack.url);
+    audio.crossOrigin = "anonymous";
     audio.src = cdnUrl;
+    pendingPlayRef.current = true;
     audio.load();
-    // play() will be called by handleCanPlay
   }, [initGain]);
 
   const pause = useCallback(() => {
@@ -281,6 +298,7 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
       audio.removeAttribute("src");
       audio.load();
     }
+    trackRef.current = null;
     setTrack(null);
     setIsPlaying(false);
     setCurrentTime(0);
@@ -316,6 +334,7 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
         onLoadedMetadata={handleLoadedMetadata}
         onCanPlay={handleCanPlay}
         onTimeUpdate={handleTimeUpdate}
+        onPlay={() => setIsPlaying(true)}
         onEnded={handleEnded}
         style={{ display: "none" }}
       />

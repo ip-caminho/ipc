@@ -23,7 +23,7 @@ export function LouvorCard({ louvor, onClick, active, compact }: LouvorCardProps
         type="button"
         onClick={onClick}
         className={cn(
-          "w-full text-left px-3 py-2 rounded-lg text-sm transition-colors hover:bg-muted/50 truncate",
+          "w-full text-left px-3 py-2.5 rounded-lg text-sm transition-colors hover:bg-muted/50 truncate min-h-[44px]",
           active && "bg-muted font-medium",
         )}
       >
@@ -38,19 +38,19 @@ export function LouvorCard({ louvor, onClick, active, compact }: LouvorCardProps
   return (
     <div
       className={cn(
-        "cursor-pointer rounded-xl border p-4 transition-colors hover:bg-muted/50",
+        "cursor-pointer rounded-xl border p-4 transition-colors hover:bg-muted/50 min-h-[56px]",
         active && "ring-2 ring-primary bg-muted/50",
       )}
       onClick={onClick}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="text-sm font-medium truncate">{louvor.titulo}</span>
+        <span className="text-base md:text-sm font-medium truncate">{louvor.titulo}</span>
         {louvor.tom && (
           <span className="text-xs text-muted-foreground shrink-0">{louvor.tom}</span>
         )}
       </div>
       {louvor.artista && (
-        <p className="text-xs text-muted-foreground mt-0.5 truncate">{louvor.artista}</p>
+        <p className="text-sm md:text-xs text-muted-foreground mt-0.5 truncate">{louvor.artista}</p>
       )}
     </div>
   );

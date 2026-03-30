@@ -40,7 +40,7 @@ export default function PermissoesPage() {
 
         <Tabs defaultValue="permissoes">
           <TabsList>
-            <TabsTrigger value="permissoes">Roles e Permissoes</TabsTrigger>
+            <TabsTrigger value="permissoes">Roles e Permissões</TabsTrigger>
             <TabsTrigger value="convites">Convites</TabsTrigger>
           </TabsList>
 
