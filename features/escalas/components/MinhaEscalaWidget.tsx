@@ -6,16 +6,16 @@ import { CalendarCheck } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/shared/lib/utils/cn";
-import Link from "next/link";
+import { useMemo } from "react";
 
 const FUNCAO_LABELS: Record<string, string> = {
   ABERTURA: "Abertura",
-  CONFISSAO: "Confissao",
-  PREGACAO: "Pregacao",
+  CONFISSAO: "Confissão",
+  PREGACAO: "Pregação",
   LOUVOR: "Louvor",
   HOSPITALIDADE: "Hospitalidade",
   SOM: "Som",
-  MULTIMIDIA: "Multimidia",
+  MULTIMIDIA: "Multimídia",
 };
 
 const FUNCAO_COLORS: Record<string, string> = {
@@ -40,78 +40,109 @@ interface DiaEscala {
   funcoes: string[];
 }
 
-function agruparPorData(escalas: EscalaItem[]): DiaEscala[] {
-  const map = new Map<string, DiaEscala>();
-  for (const e of escalas) {
-    const key = e.culto.data;
-    if (!map.has(key)) {
-      map.set(key, { data: key, horario: e.culto.horario, funcoes: [] });
-    }
-    map.get(key)!.funcoes.push(e.funcao);
-  }
-  return Array.from(map.values());
+interface MesGroup {
+  label: string;
+  dias: DiaEscala[];
 }
 
-const MAX_DIAS = 4;
+function agruparPorMes(escalas: EscalaItem[]): MesGroup[] {
+  const limite = `${new Date().getFullYear()}-12-31`;
+
+  const diasMap = new Map<string, DiaEscala>();
+  for (const e of escalas) {
+    if (e.culto.data > limite) continue;
+    const key = e.culto.data;
+    if (!diasMap.has(key)) {
+      diasMap.set(key, { data: key, horario: e.culto.horario, funcoes: [] });
+    }
+    diasMap.get(key)!.funcoes.push(e.funcao);
+  }
+
+  const mesesMap = new Map<string, MesGroup>();
+  for (const dia of diasMap.values()) {
+    const parsed = parseISO(dia.data);
+    const mesKey = format(parsed, "yyyy-MM");
+    if (!mesesMap.has(mesKey)) {
+      mesesMap.set(mesKey, {
+        label: format(parsed, "MMMM", { locale: ptBR }),
+        dias: [],
+      });
+    }
+    mesesMap.get(mesKey)!.dias.push(dia);
+  }
+
+  return Array.from(mesesMap.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([, group]) => group);
+}
 
 export function MinhaEscalaWidget() {
   // @ts-ignore Convex TS2589
   const minhasEscalas = useQuery(api.escalas.queries.minhasEscalas);
 
-  // Nao renderiza se nao carregou ou nao tem escalas
-  if (minhasEscalas === undefined || minhasEscalas.length === 0) return null;
+  const meses = useMemo(() => {
+    if (!minhasEscalas || minhasEscalas.length === 0) return [];
+    return agruparPorMes(minhasEscalas);
+  }, [minhasEscalas]);
 
-  const dias = agruparPorData(minhasEscalas);
-  const diasVisiveis = dias.slice(0, MAX_DIAS);
-  const temMais = dias.length > MAX_DIAS;
+  if (minhasEscalas === undefined) return null;
+  if (meses.length === 0) {
+    return (
+      <p className="text-sm text-muted-foreground text-center py-4">
+        Nenhuma escala até o final do ano
+      </p>
+    );
+  }
 
   return (
-    <div className="bg-background border border-border rounded-xl p-4">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <CalendarCheck size={13} className="text-muted-foreground" />
-          <span className="text-sm font-medium text-foreground">Minha Escala</span>
+    <div className="space-y-4">
+      {meses.map((mes) => (
+        <div key={mes.label}>
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-widest capitalize">
+              {mes.label}
+            </span>
+            <div className="flex-1 h-px bg-border" />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            {mes.dias.map((dia) => {
+              const parsed = parseISO(dia.data);
+              const isProximo = dia.data === meses[0]?.dias[0]?.data;
+              return (
+                <div
+                  key={dia.data}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2 rounded-lg",
+                    isProximo ? "bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800" : "bg-muted",
+                  )}
+                >
+                  <div className="text-center min-w-[32px]">
+                    <span className="text-[9px] uppercase tracking-wide text-muted-foreground block">
+                      DIA
+                    </span>
+                    <span className="text-base font-medium leading-none block">
+                      {format(parsed, "dd")}
+                    </span>
+                  </div>
+                  <div className="flex-1 flex flex-wrap items-center gap-1">
+                    {dia.funcoes.map((funcao) => (
+                      <span
+                        key={funcao}
+                        className={cn(
+                          "text-xs px-2 py-0.5 rounded-full font-medium",
+                          FUNCAO_COLORS[funcao] || "bg-secondary text-secondary-foreground"
+                        )}
+                      >
+                        {FUNCAO_LABELS[funcao] || funcao}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
-        <span className="text-xs text-muted-foreground">Próximas</span>
-      </div>
-      <div className="flex flex-col gap-2">
-        {diasVisiveis.map((dia) => {
-          const parsed = parseISO(dia.data);
-          return (
-            <div key={dia.data} className="flex items-center gap-3 px-2 py-1.5 bg-muted rounded-lg">
-              <div className="text-center min-w-[28px]">
-                <span className="text-base font-medium leading-none block">
-                  {format(parsed, "dd")}
-                </span>
-                <span className="text-[9px] uppercase tracking-wide text-muted-foreground">
-                  {format(parsed, "EEE", { locale: ptBR })}
-                </span>
-              </div>
-              <div className="flex-1 flex flex-wrap items-center gap-1">
-                {dia.funcoes.map((funcao) => (
-                  <span
-                    key={funcao}
-                    className={cn(
-                      "text-xs px-2 py-0.5 rounded-full font-medium",
-                      FUNCAO_COLORS[funcao] || "bg-secondary text-secondary-foreground"
-                    )}
-                  >
-                    {FUNCAO_LABELS[funcao] || funcao}
-                  </span>
-                ))}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-      {temMais && (
-        <Link
-          href="/escalas"
-          className="text-xs text-muted-foreground underline underline-offset-2 mt-2 block transition-colors duration-150 hover:text-foreground"
-        >
-          Ver todas as escalas
-        </Link>
-      )}
+      ))}
     </div>
   );
 }

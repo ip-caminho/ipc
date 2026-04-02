@@ -19,6 +19,7 @@ import {
 import { AniversariantesCard, AniversariantesHoje, AniversariantesMesLista } from "@features/dashboard/components/AniversariantesCard";
 import { EducacionalPaisWidget } from "@features/educacional/components/EducacionalPaisWidget";
 import { MinhaEscalaWidget } from "@features/escalas/components/MinhaEscalaWidget";
+import { PushPermissionBanner } from "@shared/notifications/PushPermissionBanner";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useState } from "react";
@@ -144,8 +145,13 @@ export default function DashboardPage() {
           <span className="text-sm text-muted-foreground">&middot; {dataHoje}</span>
         </div>
 
-        {/* Aniversariantes hoje ou em breve — inline */}
-        <AniversariantesHoje />
+        {/* Banner de notificações */}
+        <PushPermissionBanner />
+
+        {/* Aniversariantes hoje ou em breve — mobile only */}
+        <div className="md:hidden">
+          <AniversariantesHoje />
+        </div>
 
         {/* Desktop: conteúdo direto */}
         <div className="hidden md:block space-y-6">
@@ -180,10 +186,10 @@ export default function DashboardPage() {
         <Drawer open={avisosOpen} onOpenChange={setAvisosOpen}>
           <DrawerTrigger
             onClick={() => setAvisosOpen(true)}
-            className="w-full flex items-center gap-4 rounded-xl border-2 border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 p-5 hover:opacity-80 active:opacity-70 transition-opacity min-h-[72px]"
+            className="w-full flex items-center gap-4 rounded-xl border border-border bg-card p-5 hover:bg-muted/50 active:bg-muted transition-colors min-h-[72px]"
           >
-            <Megaphone className="h-8 w-8 text-amber-600 dark:text-amber-400 shrink-0" />
-            <span className="text-base font-medium text-amber-700 dark:text-amber-300">
+            <Megaphone className="h-8 w-8 text-muted-foreground shrink-0" />
+            <span className="text-base font-medium">
               Avisos{avisosDataLabel ? ` do dia ${avisosDataLabel}` : ""}
             </span>
           </DrawerTrigger>
@@ -193,29 +199,20 @@ export default function DashboardPage() {
                 Avisos{avisosDataLabel ? ` do dia ${avisosDataLabel}` : ""}
               </DrawerTitle>
             </DrawerHeader>
-            <div className="px-4 pb-6 max-h-[70vh] overflow-y-auto">
+            <div className="px-4 pb-6 h-[60vh] flex flex-col">
               <AvisosWidget variant="drawer" />
             </div>
           </DrawerContent>
         </Drawer>
 
         {/* Minha Escala */}
-        <Drawer>
-          <DrawerTrigger
-            className="w-full flex items-center gap-4 rounded-xl border border-border bg-card p-5 hover:bg-muted/50 active:bg-muted transition-colors min-h-[72px]"
-          >
-            <CalendarCheck className="h-8 w-8 text-muted-foreground shrink-0" />
-            <span className="text-base font-medium">Minha escala</span>
-          </DrawerTrigger>
-          <DrawerContent>
-            <DrawerHeader>
-              <DrawerTitle className="text-base">Minha escala</DrawerTitle>
-            </DrawerHeader>
-            <div className="px-4 pb-6 max-h-[70vh] overflow-y-auto">
-              <MinhaEscalaWidget />
-            </div>
-          </DrawerContent>
-        </Drawer>
+        <Link
+          href="/escalas"
+          className="w-full flex items-center gap-4 rounded-xl border border-border bg-card p-5 hover:bg-muted/50 active:bg-muted transition-colors min-h-[72px]"
+        >
+          <CalendarCheck className="h-8 w-8 text-muted-foreground shrink-0" />
+          <span className="text-base font-medium">Minha escala</span>
+        </Link>
       </div>
     </div>
   );

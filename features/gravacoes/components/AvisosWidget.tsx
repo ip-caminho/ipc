@@ -70,38 +70,44 @@ export function AvisosWidget({ variant = "card" }: AvisosWidgetProps) {
 
   const dataFormatada = format(parseISO(dataGravacao), "dd/MM");
 
-  // Drawer variant — sem borda, botão largo, sem título duplicado
+  // Drawer variant — botão fixo, lista com fade e scroll
   if (variant === "drawer") {
     return (
-      <div className="space-y-4">
-        {/* Botão ouvir */}
+      <div className="flex flex-col flex-1 min-h-0">
+        {/* Botão ouvir — fixo no topo */}
         {audioUrl && inicioAvisos != null && (
-          <button
-            type="button"
-            onClick={handlePlay}
-            className={`w-full flex items-center justify-center gap-2.5 h-12 rounded-xl text-base font-medium transition-all min-h-[48px] ${
-              isThisPlaying
-                ? "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
-                : "bg-amber-600 text-white hover:bg-amber-700"
-            }`}
-          >
-            <Headphones className="h-4.5 w-4.5" />
-            {isThisPlaying ? "Pausar avisos" : "Ouvir avisos"}
-            {isThisPlaying
-              ? <Pause size={16} fill="currentColor" strokeWidth={0} />
-              : <Play size={16} fill="currentColor" strokeWidth={0} />
-            }
-          </button>
+          <div className="pb-3 shrink-0">
+            <button
+              type="button"
+              onClick={handlePlay}
+              className={`w-full flex items-center justify-center gap-2.5 h-12 rounded-xl text-base font-medium transition-all min-h-[48px] ${
+                isThisPlaying
+                  ? "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
+                  : "bg-amber-600 text-white hover:bg-amber-700"
+              }`}
+            >
+              <Headphones className="h-4.5 w-4.5" />
+              {isThisPlaying ? "Pausar avisos" : "Ouvir avisos"}
+              {isThisPlaying
+                ? <Pause size={16} fill="currentColor" strokeWidth={0} />
+                : <Play size={16} fill="currentColor" strokeWidth={0} />
+              }
+            </button>
+          </div>
         )}
 
-        {/* Lista de avisos */}
-        <div className="flex flex-col gap-2">
-          {avisos.map((aviso: { titulo: string; descricao: string }, i: number) => (
-            <div key={i} className="bg-muted rounded-lg px-3 py-2.5">
-              <p className="text-sm font-medium text-foreground mb-0.5">{aviso.titulo}</p>
-              <p className="text-sm text-muted-foreground">{aviso.descricao}</p>
-            </div>
-          ))}
+        {/* Lista de avisos com fade e scroll próprio */}
+        <div className="relative flex-1 min-h-0">
+          <div className="pointer-events-none absolute top-0 left-0 right-0 h-6 z-10 bg-gradient-to-b from-background to-transparent" />
+          <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-6 z-10 bg-gradient-to-t from-background to-transparent" />
+          <div className="flex flex-col gap-2 py-6 overflow-y-auto h-full">
+            {avisos.map((aviso: { titulo: string; descricao: string }, i: number) => (
+              <div key={i} className="bg-muted rounded-lg px-3 py-2.5">
+                <p className="text-sm font-medium text-foreground mb-0.5">{aviso.titulo}</p>
+                <p className="text-sm text-muted-foreground">{aviso.descricao}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     );

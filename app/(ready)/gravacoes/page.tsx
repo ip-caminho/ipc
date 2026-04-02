@@ -348,24 +348,83 @@ export default function GravacoesPage() {
   const activeFilterCount = (tagFilter ? 1 : 0) + (livroFilter ? 1 : 0);
   const [tagsDrawerOpen, setTagsDrawerOpen] = useState(false);
   const [desktopTagsOpen, setDesktopTagsOpen] = useState(false);
+  const [mobileDrawerTipo, setMobileDrawerTipo] = useState<string | null>(null);
+
+  const tipoLabel = TIPO_OPTIONS.find((t) => t.value === tipoFilter)?.label || "Gravações";
 
   // Tela de entrada — sem tipo selecionado
   if (!tipoFilter) {
     return (
       <ModuloGuard modulo="gravacoes">
-        <div className="flex flex-col h-full justify-between min-h-[calc(100dvh-10rem)]">
-          <div className="space-y-6">
+        {/* Mobile: tela de entrada com drawer */}
+        <div className="md:hidden flex flex-col justify-between" style={{ minHeight: "calc(100dvh - 10rem)" }}>
+          <div className="space-y-4">
             <h1 className="text-2xl font-bold">Ouvir</h1>
             <FrasesCarrossel />
           </div>
-          <div className="space-y-3 pb-4">
+          <div className="grid grid-cols-2 gap-3 pb-2">
+            {TIPO_OPTIONS.map((t) => (
+              <button
+                key={t.value}
+                onClick={() => setMobileDrawerTipo(t.value)}
+                className={`flex flex-col items-center justify-center gap-2 rounded-xl border-2 ${t.color} p-5 hover:opacity-80 active:opacity-70 transition-opacity min-h-[100px]`}
+              >
+                <t.icon className={`h-8 w-8 ${t.iconColor}`} />
+                <span className={`text-base font-medium ${t.textColor}`}>{t.label}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Drawer para lista filtrada */}
+          <Drawer open={!!mobileDrawerTipo} onOpenChange={(open) => { if (!open) { setMobileDrawerTipo(null); setSearch(""); } }}>
+            <DrawerContent className="max-h-[85vh]">
+              <DrawerHeader>
+                <DrawerTitle className="text-base">
+                  {TIPO_OPTIONS.find((t) => t.value === mobileDrawerTipo)?.label || ""}
+                </DrawerTitle>
+              </DrawerHeader>
+              <div className="px-4 pb-6 overflow-y-auto">
+                <div className="relative mb-3">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Buscar..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="w-full text-base rounded-xl border border-border bg-background px-3 py-2.5 pl-10 placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  />
+                </div>
+                {(() => {
+                  if (!gravacoes) return <p className="text-sm text-muted-foreground text-center py-8">Carregando...</p>;
+                  const filtered = gravacoes
+                    .filter((g: any) => g.status === "PUBLICADO" && g.tipo === mobileDrawerTipo)
+                    .filter((g: any) => !debouncedSearch || g.titulo.toLowerCase().includes(debouncedSearch.toLowerCase()) || (g.pregadorNome || "").toLowerCase().includes(debouncedSearch.toLowerCase()));
+                  if (filtered.length === 0) return <p className="text-sm text-muted-foreground text-center py-8">Nenhuma gravação encontrada</p>;
+                  return (
+                    <div className="space-y-1">
+                      {filtered.map((g: any, i: number) => (
+                        <GravacaoCardMobile key={g._id} g={g} index={i} />
+                      ))}
+                    </div>
+                  );
+                })()}
+              </div>
+            </DrawerContent>
+          </Drawer>
+        </div>
+
+        {/* Desktop: set filter directly */}
+        <div className="hidden md:block space-y-4">
+          <h1 className="text-2xl font-bold">Ouvir</h1>
+          <FrasesCarrossel />
+          <div className="grid grid-cols-4 gap-3">
             {TIPO_OPTIONS.map((t) => (
               <button
                 key={t.value}
                 onClick={() => setTipoFilter(t.value)}
-                className={`w-full flex items-center gap-4 rounded-xl border-2 ${t.color} p-5 hover:opacity-80 active:opacity-70 transition-opacity min-h-[72px]`}
+                className={`flex flex-col items-center justify-center gap-2 rounded-xl border-2 ${t.color} p-5 hover:opacity-80 active:opacity-70 transition-opacity min-h-[100px]`}
               >
-                <t.icon className={`h-8 w-8 ${t.iconColor} shrink-0`} />
+                <t.icon className={`h-8 w-8 ${t.iconColor}`} />
                 <span className={`text-base font-medium ${t.textColor}`}>{t.label}</span>
               </button>
             ))}
@@ -374,8 +433,6 @@ export default function GravacoesPage() {
       </ModuloGuard>
     );
   }
-
-  const tipoLabel = TIPO_OPTIONS.find((t) => t.value === tipoFilter)?.label || "Gravações";
 
   return (
     <ModuloGuard modulo="gravacoes">

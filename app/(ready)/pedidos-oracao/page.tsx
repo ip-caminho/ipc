@@ -126,23 +126,61 @@ export default function PedidosOracaoPage() {
 
   return (
     <ModuloGuard modulo="pedidos-oracao">
-      <div className="flex flex-col h-full justify-between min-h-[calc(100dvh-10rem)]">
+      <div className="flex flex-col justify-between" style={{ height: "calc(100dvh - 10rem)" }}>
         {/* Título no topo */}
         <div>
           <h1 className="text-2xl font-bold">Orar</h1>
         </div>
 
         {/* Botões na parte inferior — thumb zone */}
-        <div className="space-y-3 pb-4">
-          {/* Pedir oração */}
-          <Drawer open={createOpen} onOpenChange={setCreateOpen}>
-            <DrawerTrigger
-              onClick={() => setCreateOpen(true)}
-              className="w-full flex items-center gap-4 rounded-xl border-2 border-violet-200 dark:border-violet-800 bg-violet-50 dark:bg-violet-950/30 p-5 hover:bg-violet-100 dark:hover:bg-violet-950/50 active:bg-violet-200 transition-colors min-h-[72px]"
-            >
-              <PlusCircle className="h-8 w-8 text-violet-600 dark:text-violet-400 shrink-0" />
-              <span className="text-base font-medium text-violet-700 dark:text-violet-300 text-left">Pedir oração</span>
-            </DrawerTrigger>
+        <div className="space-y-3 pb-2">
+          {/* Linha 1: Meus pedidos + Pedir oração */}
+          <div className="grid grid-cols-2 gap-3">
+            {/* Meus pedidos */}
+            <Drawer open={meusPedidosOpen} onOpenChange={setMeusPedidosOpen}>
+              <DrawerTrigger
+                onClick={() => setMeusPedidosOpen(true)}
+                className="flex flex-col items-center justify-center gap-2 rounded-xl border border-border bg-card p-5 hover:bg-muted/50 active:bg-muted transition-colors min-h-[100px]"
+              >
+                <Heart className="h-8 w-8 text-muted-foreground" />
+                <span className="text-base font-medium">Meus pedidos</span>
+                {meusPedidosAtivos.length > 0 && (
+                  <span className="text-xs text-muted-foreground">
+                    {meusPedidosAtivos.length} ativo{meusPedidosAtivos.length !== 1 ? "s" : ""}
+                  </span>
+                )}
+              </DrawerTrigger>
+              <DrawerContent>
+                <DrawerHeader>
+                  <DrawerTitle className="text-base">Meus pedidos</DrawerTitle>
+                </DrawerHeader>
+                <div className="px-4 pb-6 max-h-[70vh] overflow-y-auto space-y-2">
+                  {!meusPedidos || meusPedidos.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-8">
+                      Você ainda não tem pedidos de oração
+                    </p>
+                  ) : (
+                    meusPedidos.map((p: any) => (
+                      <PedidoCard
+                        key={p._id}
+                        pedido={p}
+                        onClick={() => { setMeusPedidosOpen(false); setSelectedId(p._id); }}
+                      />
+                    ))
+                  )}
+                </div>
+              </DrawerContent>
+            </Drawer>
+
+            {/* Pedir oração */}
+            <Drawer open={createOpen} onOpenChange={setCreateOpen}>
+              <DrawerTrigger
+                onClick={() => setCreateOpen(true)}
+                className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-violet-200 dark:border-violet-800 bg-violet-50 dark:bg-violet-950/30 p-5 hover:bg-violet-100 dark:hover:bg-violet-950/50 active:bg-violet-200 transition-colors min-h-[100px]"
+              >
+                <PlusCircle className="h-8 w-8 text-violet-600 dark:text-violet-400" />
+                <span className="text-base font-medium text-violet-700 dark:text-violet-300">Pedir oração</span>
+              </DrawerTrigger>
             <DrawerContent>
               <DrawerHeader>
                 <DrawerTitle className="text-base">Novo pedido de oração</DrawerTitle>
@@ -192,59 +230,15 @@ export default function PedidosOracaoPage() {
               </div>
             </DrawerContent>
           </Drawer>
+          </div>
 
-          {/* Meus pedidos */}
-          <Drawer open={meusPedidosOpen} onOpenChange={setMeusPedidosOpen}>
-            <DrawerTrigger
-              onClick={() => setMeusPedidosOpen(true)}
-              className="w-full flex items-center gap-4 rounded-xl border border-border bg-card p-5 hover:bg-muted/50 active:bg-muted transition-colors min-h-[72px]"
-            >
-              <Heart className="h-8 w-8 text-muted-foreground shrink-0" />
-              <div className="text-left">
-                <span className="text-base font-medium">Meus pedidos</span>
-                {meusPedidosAtivos.length > 0 && (
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {meusPedidosAtivos.length} ativo{meusPedidosAtivos.length !== 1 ? "s" : ""}
-                  </p>
-                )}
-              </div>
-            </DrawerTrigger>
-            <DrawerContent>
-              <DrawerHeader>
-                <DrawerTitle className="text-base">Meus pedidos</DrawerTitle>
-              </DrawerHeader>
-              <div className="px-4 pb-6 max-h-[70vh] overflow-y-auto space-y-2">
-                {!meusPedidos || meusPedidos.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-8">
-                    Você ainda não tem pedidos de oração
-                  </p>
-                ) : (
-                  meusPedidos.map((p: any) => (
-                    <PedidoCard
-                      key={p._id}
-                      pedido={p}
-                      onClick={() => { setMeusPedidosOpen(false); setSelectedId(p._id); }}
-                    />
-                  ))
-                )}
-              </div>
-            </DrawerContent>
-          </Drawer>
-
-          {/* Orar */}
+          {/* Linha 2: Iniciar oração */}
           <button
             onClick={() => setOrarMode(true)}
-            className="w-full flex items-center gap-4 rounded-xl border-2 border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/30 p-5 hover:bg-blue-100 dark:hover:bg-blue-950/50 active:bg-blue-200 transition-colors min-h-[72px]"
+            className="w-full flex items-center justify-center gap-3 rounded-xl border-2 border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/30 p-5 hover:bg-blue-100 dark:hover:bg-blue-950/50 active:bg-blue-200 transition-colors min-h-[72px]"
           >
             <HandHeart className="h-8 w-8 text-blue-600 dark:text-blue-400 shrink-0" />
-            <div className="text-left">
-              <span className="text-base font-medium text-blue-700 dark:text-blue-300">Orar pelos pedidos</span>
-              {pedidosAtivos.length > 0 && (
-                <p className="text-xs text-blue-500 dark:text-blue-400 mt-0.5">
-                  {pedidosAtivos.length} pedido{pedidosAtivos.length !== 1 ? "s" : ""} ativo{pedidosAtivos.length !== 1 ? "s" : ""}
-                </p>
-              )}
-            </div>
+            <span className="text-base font-medium text-blue-700 dark:text-blue-300">Iniciar oração</span>
           </button>
         </div>
       </div>

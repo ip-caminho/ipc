@@ -83,7 +83,7 @@ export function MobileTabBar() {
   const isMoreActive = [...visibleDrawerItems, ...visibleAdminItems].some((item) => isActive(item.href));
 
   return (
-    <div className="fixed bottom-0 inset-x-0 z-50 border-t bg-background md:hidden">
+    <div className="fixed bottom-0 inset-x-0 z-[56] border-t bg-background md:hidden">
       <nav className="flex items-stretch">
         {tabs.map((tab) => {
           const active = isActive(tab.href);
@@ -91,11 +91,11 @@ export function MobileTabBar() {
             <Link
               key={tab.href}
               href={tab.href}
-              className={`flex flex-1 flex-col items-center justify-center gap-0.5 py-2 min-h-[56px] transition-colors ${
+              className={`flex flex-1 flex-col items-center justify-center gap-1 py-3 min-h-[68px] transition-colors ${
                 active ? "text-primary" : "text-muted-foreground"
               }`}
             >
-              <tab.icon className="h-5 w-5" />
+              <tab.icon className="h-6 w-6" />
               <span className="text-[10px] font-medium">{tab.label}</span>
             </Link>
           );

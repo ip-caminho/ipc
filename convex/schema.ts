@@ -350,6 +350,17 @@ export default defineSchema({
     .index("by_membro", ["membroId"])
     .index("by_notification", ["notificationId"]),
 
+  // ===== Push Subscriptions =====
+  pushSubscriptions: defineTable({
+    membroId: v.id("membros"),
+    endpoint: v.string(),
+    p256dh: v.string(),
+    auth: v.string(),
+    criadoEm: v.number(),
+  })
+    .index("by_membro", ["membroId"])
+    .index("by_endpoint", ["endpoint"]),
+
   // ===== Pequenos Grupos =====
   pequenosGrupos: defineTable({
     nome: v.string(),
