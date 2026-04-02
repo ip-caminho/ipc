@@ -3,37 +3,12 @@
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Badge } from "@/shared/components/ui/badge";
-import { Card, CardContent } from "@/shared/components/ui/card";
 import { Skeleton } from "@/shared/components/ui/skeleton";
+import { Calendar } from "@/shared/components/ui/calendar";
 import { Check, X, Lock } from "lucide-react";
-import { format, parseISO, addDays, nextSunday, endOfYear } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { cn } from "@/shared/lib/utils/cn";
-
-function getDomingosAteFinDoAno(): string[] {
-  const datas: string[] = [];
-  const hoje = new Date();
-  const fim = endOfYear(hoje);
-  let proximo = hoje.getDay() === 0 ? hoje : nextSunday(hoje);
-
-  while (proximo <= fim) {
-    datas.push(format(proximo, "yyyy-MM-dd"));
-    proximo = addDays(proximo, 7);
-  }
-
-  return datas;
-}
-
-function agruparPorMes(datas: string[]): Map<string, string[]> {
-  const grupos = new Map<string, string[]>();
-  for (const data of datas) {
-    const mes = data.slice(0, 7); // YYYY-MM
-    if (!grupos.has(mes)) grupos.set(mes, []);
-    grupos.get(mes)!.push(data);
-  }
-  return grupos;
-}
 
 const FUNCAO_LABELS: Record<string, string> = {
   LOUVOR: "Louvor",
@@ -52,18 +27,21 @@ export function DisponibilidadeTab() {
   // @ts-ignore Convex TS2589
   const toggleIndisp = useMutation(api.escalas.disponibilidade.toggleIndisponibilidade);
 
-  const domingos = getDomingosAteFinDoAno();
-  const porMes = agruparPorMes(domingos);
   const indispDatas = new Set((indisponibilidades || []).map((i: any) => i.data));
   const escaladaDatas = new Set(datasEscaladas || []);
 
-  const handleToggle = async (data: string) => {
-    if (escaladaDatas.has(data)) {
+  const handleDayClick = async (date: Date) => {
+    // Só domingos
+    if (date.getDay() !== 0) return;
+
+    const dataStr = date.toISOString().split("T")[0];
+
+    if (escaladaDatas.has(dataStr)) {
       toast.error("Você já está escalado nesta data. Solicite ao coordenador para alterar.");
       return;
     }
     try {
-      const result = await toggleIndisp({ data });
+      const result = await toggleIndisp({ data: dataStr });
       if (result.action === "added") {
         toast.success("Marcado como indisponível");
       } else {
@@ -77,6 +55,13 @@ export function DisponibilidadeTab() {
   if (minhasEquipes === undefined || indisponibilidades === undefined || datasEscaladas === undefined) {
     return <Skeleton className="h-64" />;
   }
+
+  // Dias indisponíveis como Date objects
+  const indispDates = Array.from(indispDatas).map((d) => new Date(d + "T12:00:00"));
+  const escaladoDates = Array.from(escaladaDatas).map((d: string) => new Date(d + "T12:00:00"));
+
+  // Desabilitar todos os dias que não são domingo
+  const isNotSunday = (date: Date) => date.getDay() !== 0;
 
   return (
     <div className="space-y-4">
@@ -96,63 +81,39 @@ export function DisponibilidadeTab() {
         </p>
       )}
 
-      <p className="text-sm text-muted-foreground">
-        Você é considerado <strong>disponível</strong> por padrão. Marque apenas os domingos em que <strong>não pode</strong> servir.
+      <p className="text-xs text-muted-foreground">
+        Toque no domingo para alternar disponibilidade. <span className="text-green-600">Verde</span> = disponível, <span className="text-destructive">Vermelho</span> = indisponível, <span className="text-blue-600">Azul</span> = escalado.
       </p>
 
-      <div className="space-y-6">
-        {Array.from(porMes.entries()).map(([mes, datas]) => {
-          const mesLabel = format(parseISO(`${mes}-01`), "MMMM", { locale: ptBR });
-          return (
-            <div key={mes}>
-              <h3 className="text-sm font-semibold capitalize mb-2">{mesLabel}</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-2">
-                {datas.map((data) => {
-                  const indisponivel = indispDatas.has(data);
-                  const escalado = escaladaDatas.has(data);
-                  const parsed = parseISO(data);
-                  return (
-                    <Card
-                      key={data}
-                      className={cn(
-                        "transition-colors",
-                        escalado
-                          ? "border-blue-500/50 bg-blue-500/5 cursor-not-allowed"
-                          : "cursor-pointer",
-                        !escalado && indisponivel
-                          ? "border-destructive/50 bg-destructive/5"
-                          : "",
-                        !escalado && !indisponivel
-                          ? "border-green-500/30 bg-green-500/5"
-                          : ""
-                      )}
-                      onClick={() => handleToggle(data)}
-                    >
-                      <CardContent className="p-2 text-center">
-                        <p className="text-sm font-bold">
-                          {format(parsed, "dd", { locale: ptBR })}
-                        </p>
-                        <div className="mt-1 flex justify-center">
-                          {escalado ? (
-                            <Lock className="h-3.5 w-3.5 text-blue-600" />
-                          ) : indisponivel ? (
-                            <X className="h-3.5 w-3.5 text-destructive" />
-                          ) : (
-                            <Check className="h-3.5 w-3.5 text-green-600" />
-                          )}
-                        </div>
-                        {escalado && (
-                          <p className="text-[9px] text-blue-600 mt-0.5">Escalado</p>
-                        )}
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      <Calendar
+        locale={ptBR}
+        mode="multiple"
+        selected={indispDates}
+        onDayClick={handleDayClick}
+        disabled={isNotSunday}
+        fromDate={new Date()}
+        toDate={new Date(new Date().getFullYear(), 11, 31)}
+        className="w-full"
+        classNames={{
+          day: cn(
+            "group/day relative aspect-square h-full w-full p-0 text-center select-none",
+          ),
+        }}
+        modifiers={{
+          indisponivel: indispDates,
+          escalado: escaladoDates,
+          disponivel: (date: Date) => {
+            if (date.getDay() !== 0) return false;
+            const dataStr = date.toISOString().split("T")[0];
+            return !indispDatas.has(dataStr) && !escaladaDatas.has(dataStr);
+          },
+        }}
+        modifiersClassNames={{
+          indisponivel: "[&_button]:bg-destructive/10 [&_button]:text-destructive [&_button]:font-bold",
+          escalado: "[&_button]:bg-blue-100 [&_button]:text-blue-700 [&_button]:font-bold dark:[&_button]:bg-blue-950/40 dark:[&_button]:text-blue-300",
+          disponivel: "[&_button]:bg-green-50 [&_button]:text-green-700 dark:[&_button]:bg-green-950/30 dark:[&_button]:text-green-300",
+        }}
+      />
     </div>
   );
 }

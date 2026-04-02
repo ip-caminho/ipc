@@ -17,7 +17,7 @@ export function FrasesCarrossel() {
   if (!frase) return null;
 
   return (
-    <div className="relative overflow-hidden rounded-xl border border-border bg-muted/50 px-8 py-8 md:px-12 md:py-10">
+    <div className="relative overflow-hidden px-4 py-6 md:px-12 md:py-10">
       {/* Aspas decorativas */}
       <span className="pointer-events-none absolute top-4 left-5 text-6xl md:text-8xl font-serif leading-none text-foreground/[0.06] select-none">
         &ldquo;

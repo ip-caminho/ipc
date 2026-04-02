@@ -19,9 +19,18 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "IPC - Sistema de Gestao",
-  description: "Sistema de gestao para a Igreja Presbiteriana",
-  icons: { icon: "/favicon.svg" },
+  title: "IPC",
+  description: "Igreja Presbiteriana do Caminho",
+  manifest: "/manifest.json",
+  icons: {
+    icon: "/icons/icon-192.png",
+    apple: "/icons/apple-touch-icon.png",
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "IPC",
+  },
 };
 
 export const viewport = {
@@ -29,6 +38,7 @@ export const viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  themeColor: "#1a1a1a",
 };
 
 export default function RootLayout({
