@@ -24,7 +24,15 @@ const SERMON_ANALYSIS_PROMPT = `Você é um analista teológico especializado em
 14. **fimSermao**: número em segundos indicando o momento exato onde o sermão/pregação TERMINA. O sermão termina quando o MOMENTO DE INTERAÇÃO finaliza (ex: após a oração de resposta, apelo, ou convite final feito pelo pregador). Inclua todo o momento de interação dentro do sermão. NÃO inclua avisos da igreja, bênção apostólica ou cânticos finais. Se o sermão vai até o final da gravação, retorne null.
 15. **inicioAvisos**: número em segundos indicando onde os avisos/informes da igreja COMEÇAM. Os avisos geralmente ficam no final do culto, após o sermão. Retorne null se não houver avisos na gravação.
 16. **fimAvisos**: número em segundos indicando onde os avisos/informes TERMINAM. Retorne null se não houver avisos.
-17. **avisos**: array de objetos com "titulo" (título curto do aviso, ex: "Retiro de jovens"), "descricao" (descrição resumida do aviso em 1-2 frases) e "dataEvento" (data do evento mencionado no aviso no formato YYYY-MM-DD, ou null se o aviso não mencionar uma data específica). Para converter datas relativas como "próximo sábado" ou "dia 15", use a data do culto como referência. Liste cada aviso mencionado separadamente. Retorne array vazio [] se não houver avisos.
+17. **avisos**: array de objetos com os seguintes campos para cada aviso:
+   - "titulo": título curto e claro do aviso (ex: "Retiro de jovens")
+   - "descricao": descrição resumida em 1-2 frases, com informações essenciais
+   - "dataEvento": data do evento no formato YYYY-MM-DD, ou null se não mencionada. Use a data do culto para converter datas relativas ("próximo sábado", "dia 15")
+   - "quando": dia e horário do evento se mencionado (ex: "Sábado, 10h", "Quarta-feira às 19h30"), ou null
+   - "onde": local do evento se mencionado (ex: "Sala 2", "Salão da igreja", "Sítio do João"), ou null
+   - "contatoNome": nome da pessoa de contato/responsável mencionada para aquele aviso (ex: "Leandro", "Leandrão", "Maria"), ou null se ninguém for mencionado. Capture o nome EXATAMENTE como falado na gravação, incluindo apelidos.
+   - "contatoWhatsapp": null (será preenchido manualmente depois)
+   Liste cada aviso mencionado separadamente. Retorne array vazio [] se não houver avisos. Seja claro e objetivo — o membro precisa entender O QUE é, QUANDO é, ONDE é e COM QUEM FALAR sobre cada aviso.
 
 IMPORTANTE:
 - Retorne APENAS o JSON, sem markdown, sem code blocks, sem texto antes ou depois
@@ -35,8 +43,10 @@ IMPORTANTE:
 - Para inicioSermao: comece nas primeiras palavras do pregador (saudação, convite para leitura bíblica, etc). SEMPRE inclua a saudação inicial e a leitura da passagem.
 - Para fimSermao: termine APÓS o momento de interação (oração de resposta, apelo). O momento de interação faz parte do sermão. Só exclua avisos da igreja, bênção e cânticos finais.
 - Os timestamps estão no formato [MM:SS] no início de cada parágrafo.
-- Para avisos: identifique o trecho onde alguém faz comunicados, informes ou avisos para a congregação (eventos, reuniões, datas, etc). Separe cada aviso individual com título, descrição e data do evento (se mencionada).
+- Para avisos: identifique o trecho onde alguém faz comunicados, informes ou avisos para a congregação (eventos, reuniões, datas, etc). Separe cada aviso individual.
 - Para dataEvento nos avisos: a data do culto é informada abaixo. Use-a como referência para converter datas relativas ("próximo sábado", "dia 15", "semana que vem") em datas absolutas YYYY-MM-DD.
+- Para contatoNome: capture exatamente o apelido/nome falado (ex: "Leandrão", "Irmã Maria"). Isso será usado para vincular ao contato correto depois.
+- Cada aviso deve ser autocontido — quem ler precisa entender o que é, quando, onde e com quem falar, sem ouvir o áudio.
 
 DATA DO CULTO: {{DATA_CULTO}}
 
@@ -231,7 +241,22 @@ export const processSermon = internalAction({
         autoFill.fimAvisos = iaResultado.fimAvisos;
       }
       if (Array.isArray(iaResultado.avisos) && iaResultado.avisos.length > 0) {
-        autoFill.iaAvisos = iaResultado.avisos;
+        // Tentar resolver contatos conhecidos por apelido
+        const CONTATOS_CONHECIDOS: Record<string, { nome: string; whatsapp: string }> = {
+          "leandrão": { nome: "Leandro Luiz Novaes", whatsapp: "21999999999" },
+          "leandro": { nome: "Leandro Luiz Novaes", whatsapp: "21999999999" },
+        };
+
+        autoFill.iaAvisos = iaResultado.avisos.map((aviso: any) => {
+          if (aviso.contatoNome && !aviso.contatoWhatsapp) {
+            const key = aviso.contatoNome.toLowerCase().trim();
+            const match = CONTATOS_CONHECIDOS[key];
+            if (match) {
+              return { ...aviso, contatoNome: match.nome, contatoWhatsapp: match.whatsapp };
+            }
+          }
+          return aviso;
+        });
       }
 
       await ctx.runMutation(updateIaStatus, {

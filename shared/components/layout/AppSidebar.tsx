@@ -51,6 +51,7 @@ import {
   Music,
   Megaphone,
   ChevronRight,
+  DoorOpen,
   Sun,
 } from "lucide-react";
 import { useAuthActions } from "@convex-dev/auth/react";
@@ -92,6 +93,7 @@ const menuSections: MenuSection[] = [
       { label: "Pedidos de Oracao", href: "/pedidos-oracao", icon: HandHeart, permission: "pedidos_oracao:read", modulo: "pedidos-oracao", tooltip: "Compartilhe e ore pelos pedidos da igreja" },
       { label: "Calendario", href: "/calendario", icon: CalendarDays, permission: "calendario:read", modulo: "calendario", tooltip: "Eventos e calendario da igreja" },
       { label: "Escalas", href: "/escalas", icon: CalendarCheck, permission: null, modulo: "escalas", tooltip: "Veja sua escala e marque disponibilidade" },
+      { label: "Salas", href: "/salas", icon: DoorOpen, permission: "salas:read", modulo: "salas", tooltip: "Reserve salas da igreja" },
     ],
   },
   {

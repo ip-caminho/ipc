@@ -7,9 +7,19 @@ import { cn } from "@/shared/lib/utils/cn"
 
 function Drawer({
   modal = false,
+  open,
+  onOpenChange,
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Root>) {
-  return <DrawerPrimitive.Root data-slot="drawer" modal={modal} {...props} />
+  // Lock body scroll when non-modal drawer is open
+  React.useEffect(() => {
+    if (!modal) {
+      document.body.style.overflow = open ? "hidden" : "";
+      return () => { document.body.style.overflow = ""; };
+    }
+  }, [modal, open]);
+
+  return <DrawerPrimitive.Root data-slot="drawer" modal={modal} open={open} onOpenChange={onOpenChange} {...props} />
 }
 
 function DrawerTrigger({
@@ -38,7 +48,7 @@ function DrawerOverlay({
     <DrawerPrimitive.Overlay
       data-slot="drawer-overlay"
       className={cn(
-        "fixed inset-0 bottom-17 md:bottom-0 z-50 bg-black/50 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0",
+        "fixed inset-0 bottom-17 md:bottom-0 z-50 bg-white/60 backdrop-blur-sm data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0",
         className
       )}
       {...props}

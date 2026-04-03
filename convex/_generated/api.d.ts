@@ -78,6 +78,8 @@ import type * as preferencias_mutations from "../preferencias/mutations.js";
 import type * as preferencias_queries from "../preferencias/queries.js";
 import type * as preferencias_rbac from "../preferencias/rbac.js";
 import type * as preferencias_rbacHelpers from "../preferencias/rbacHelpers.js";
+import type * as salas_mutations from "../salas/mutations.js";
+import type * as salas_queries from "../salas/queries.js";
 
 import type {
   ApiFromModules,
@@ -156,6 +158,8 @@ declare const fullApi: ApiFromModules<{
   "preferencias/queries": typeof preferencias_queries;
   "preferencias/rbac": typeof preferencias_rbac;
   "preferencias/rbacHelpers": typeof preferencias_rbacHelpers;
+  "salas/mutations": typeof salas_mutations;
+  "salas/queries": typeof salas_queries;
 }>;
 
 /**

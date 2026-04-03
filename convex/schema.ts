@@ -178,6 +178,10 @@ export default defineSchema({
       titulo: v.string(),
       descricao: v.string(),
       dataEvento: v.optional(v.union(v.string(), v.null())),
+      quando: v.optional(v.union(v.string(), v.null())),
+      onde: v.optional(v.union(v.string(), v.null())),
+      contatoNome: v.optional(v.union(v.string(), v.null())),
+      contatoWhatsapp: v.optional(v.union(v.string(), v.null())),
     }))),
   })
     .index("by_tipo", ["tipo"])
@@ -596,4 +600,27 @@ export default defineSchema({
   })
     .index("by_data", ["data"])
     .index("by_ministerio", ["ministerioId"]),
+
+  // ===== Salas =====
+  salas: defineTable({
+    nome: v.string(),
+    descricao: v.optional(v.string()),
+    status: v.union(v.literal("ATIVO"), v.literal("INATIVO")),
+    criadoEm: v.number(),
+  })
+    .index("by_status", ["status"]),
+
+  reservas: defineTable({
+    salaId: v.id("salas"),
+    data: v.string(),
+    horaInicio: v.string(),
+    horaFim: v.string(),
+    membroId: v.id("membros"),
+    motivo: v.string(),
+    status: v.union(v.literal("ATIVA"), v.literal("CANCELADA")),
+    criadoEm: v.number(),
+  })
+    .index("by_sala_data", ["salaId", "data"])
+    .index("by_membro", ["membroId"])
+    .index("by_data", ["data"]),
 });

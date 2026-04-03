@@ -1,0 +1,208 @@
+"use client";
+
+import { useQuery, useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { ModuloGuard } from "@shared/components/auth/ModuloGuard";
+import { Skeleton } from "@/shared/components/ui/skeleton";
+import { Button } from "@/shared/components/ui/button";
+import { format, addDays, isSaturday, isSunday, nextSaturday, startOfDay } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
+import { cn } from "@/shared/lib/utils/cn";
+import { X, Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import { ReservaForm } from "@features/salas/components/ReservaForm";
+import type { Id } from "@/convex/_generated/dataModel";
+
+function getWeekendStart(date: Date): Date {
+  if (isSaturday(date)) return date;
+  if (isSunday(date)) return addDays(date, -1);
+  return nextSaturday(date);
+}
+
+export default function SalasPage() {
+  // @ts-ignore Convex TS2589
+  const meuMembroId = useQuery(api.salas.queries.meuMembroId);
+  // @ts-ignore Convex TS2589
+  const salas = useQuery(api.salas.queries.listSalas);
+
+  const hoje = useMemo(() => startOfDay(new Date()), []);
+  const [weekendStart, setWeekendStart] = useState(() => getWeekendStart(hoje));
+
+  const sabado = format(weekendStart, "yyyy-MM-dd");
+  const domingo = format(addDays(weekendStart, 1), "yyyy-MM-dd");
+  const [selectedDay, setSelectedDay] = useState<"sab" | "dom">(
+    isSunday(hoje) ? "dom" : "sab"
+  );
+  const selectedDate = selectedDay === "sab" ? sabado : domingo;
+
+  // @ts-ignore Convex TS2589
+  const reservas = useQuery(api.salas.queries.listReservas, { data: selectedDate });
+  const cancelReserva = useMutation(api.salas.mutations.cancelReserva);
+
+  const [formOpen, setFormOpen] = useState(false);
+  const [formSalaId, setFormSalaId] = useState<Id<"salas"> | null>(null);
+
+  const prevWeekend = () => setWeekendStart((d) => addDays(d, -7));
+  const nextWeekend = () => setWeekendStart((d) => addDays(d, 7));
+
+  const canGoPrev = weekendStart > hoje || (isSaturday(hoje) || isSunday(hoje));
+
+  const handleReservar = (salaId: Id<"salas">) => {
+    setFormSalaId(salaId);
+    setFormOpen(true);
+  };
+
+  const handleCancel = async (id: string) => {
+    if (!confirm("Cancelar esta reserva?")) return;
+    try {
+      await cancelReserva({ id: id as Id<"reservas"> });
+      toast.success("Reserva cancelada");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro");
+    }
+  };
+
+  const formSalaNome = salas?.find((s) => s._id === formSalaId)?.nome ?? "";
+
+  const sabLabel = format(weekendStart, "dd", { locale: ptBR });
+  const domLabel = format(addDays(weekendStart, 1), "dd", { locale: ptBR });
+  const mesLabel = format(weekendStart, "MMMM", { locale: ptBR });
+
+  if (salas === undefined) {
+    return (
+      <ModuloGuard modulo="salas">
+        <div className="space-y-4">
+          <h1 className="text-2xl font-bold">Salas</h1>
+          <Skeleton className="h-64" />
+        </div>
+      </ModuloGuard>
+    );
+  }
+
+  return (
+    <ModuloGuard modulo="salas">
+      <div className="space-y-5">
+        <h1 className="text-2xl font-bold">Salas</h1>
+
+        {/* Weekend navigator */}
+        <div className="flex items-center justify-between">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="min-h-[44px] min-w-[44px]"
+            disabled={!canGoPrev}
+            onClick={prevWeekend}
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </Button>
+          <span className="text-sm text-muted-foreground capitalize">{mesLabel}</span>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="min-h-[44px] min-w-[44px]"
+            onClick={nextWeekend}
+          >
+            <ChevronRight className="h-5 w-5" />
+          </Button>
+        </div>
+
+        {/* Sab / Dom toggle */}
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => setSelectedDay("sab")}
+            className={cn(
+              "rounded-xl py-3 text-center transition-colors",
+              selectedDay === "sab"
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground"
+            )}
+          >
+            <span className="text-2xl font-bold block">{sabLabel}</span>
+            <span className="text-xs">Sábado</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelectedDay("dom")}
+            className={cn(
+              "rounded-xl py-3 text-center transition-colors",
+              selectedDay === "dom"
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground"
+            )}
+          >
+            <span className="text-2xl font-bold block">{domLabel}</span>
+            <span className="text-xs">Domingo</span>
+          </button>
+        </div>
+
+        {/* Salas */}
+        {reservas === undefined ? (
+          <Skeleton className="h-48" />
+        ) : (
+          <div className="space-y-3">
+            {salas.map((sala) => {
+              const salaReservas = reservas.filter((r: any) => r.salaId === sala._id);
+              const livre = salaReservas.length === 0;
+
+              return (
+                <div
+                  key={sala._id}
+                  className="rounded-xl border border-border p-4 space-y-3"
+                >
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-base font-semibold">{sala.nome}</h3>
+                    <button
+                      type="button"
+                      onClick={() => handleReservar(sala._id)}
+                      className="flex items-center gap-1 text-sm text-primary font-medium min-h-[36px]"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      Reservar
+                    </button>
+                  </div>
+
+                  {livre ? (
+                    <p className="text-sm text-green-600 dark:text-green-400">Disponível o dia todo</p>
+                  ) : (
+                    <div className="divide-y divide-border">
+                      {salaReservas.map((r: any) => (
+                        <div key={r._id} className="flex items-center gap-3 py-2 first:pt-0 last:pb-0">
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium">{r.horaInicio} – {r.horaFim}</p>
+                            <p className="text-xs text-muted-foreground truncate">{r.membroNome} · {r.motivo}</p>
+                          </div>
+                          {r.membroId === meuMembroId && (
+                            <button
+                              type="button"
+                              onClick={() => handleCancel(r._id)}
+                              className="text-muted-foreground hover:text-destructive shrink-0 min-h-[36px] min-w-[36px] flex items-center justify-center"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Form drawer */}
+      {formSalaId && (
+        <ReservaForm
+          open={formOpen}
+          onOpenChange={setFormOpen}
+          salaId={formSalaId}
+          salaNome={formSalaNome}
+          defaultData={selectedDate}
+        />
+      )}
+    </ModuloGuard>
+  );
+}

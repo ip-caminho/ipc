@@ -7,7 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/sha
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
-import { Church, Megaphone, Cake, CalendarCheck } from "lucide-react";
+import { Church, Megaphone, Cake, CalendarCheck, HeartHandshake, FileText } from "lucide-react";
+import Link from "next/link";
 import { AvisosWidget } from "@features/gravacoes/components/AvisosWidget";
 import {
   Drawer,
@@ -19,13 +20,14 @@ import {
 import { AniversariantesCard, AniversariantesHoje, AniversariantesMesLista } from "@features/dashboard/components/AniversariantesCard";
 import { EducacionalPaisWidget } from "@features/educacional/components/EducacionalPaisWidget";
 import { MinhaEscalaWidget } from "@features/escalas/components/MinhaEscalaWidget";
+import { MinhaEscalaUnificada } from "@features/escalas/components/MinhaEscalaUnificada";
 import { PushPermissionBanner } from "@shared/notifications/PushPermissionBanner";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useConvexAuth } from "convex/react";
-import Link from "next/link";
+
 
 function BootstrapForm() {
   // @ts-ignore Convex TS2589
@@ -206,13 +208,51 @@ export default function DashboardPage() {
         </Drawer>
 
         {/* Minha Escala */}
-        <Link
-          href="/escalas"
-          className="w-full flex items-center gap-4 rounded-xl border border-border bg-card p-5 hover:bg-muted/50 active:bg-muted transition-colors min-h-[72px]"
-        >
-          <CalendarCheck className="h-8 w-8 text-muted-foreground shrink-0" />
-          <span className="text-base font-medium">Minha escala</span>
-        </Link>
+        <Drawer>
+          <DrawerTrigger className="w-full flex items-center gap-4 rounded-xl border border-border bg-card p-5 hover:bg-muted/50 active:bg-muted transition-colors min-h-[72px]">
+            <HeartHandshake className="h-8 w-8 text-muted-foreground shrink-0" />
+            <span className="text-base font-medium">Minha escala</span>
+          </DrawerTrigger>
+          <DrawerContent>
+            <DrawerHeader>
+              <DrawerTitle className="text-base">Minha Escala</DrawerTitle>
+            </DrawerHeader>
+            <div className="px-4 pb-6 max-h-[70vh] overflow-y-auto">
+              <MinhaEscalaUnificada />
+            </div>
+          </DrawerContent>
+        </Drawer>
+
+        {/* Boletim Dominical */}
+        {(() => {
+          const isDomingo = new Date().getDay() === 0;
+          return (
+            <Link
+              href="/boletim"
+              className={`w-full flex items-center gap-4 rounded-xl border p-5 active:opacity-80 transition-colors min-h-[72px] ${
+                isDomingo
+                  ? "border-transparent bg-zinc-900 dark:bg-zinc-50"
+                  : "border-border bg-card hover:bg-muted/50 active:bg-muted"
+              }`}
+            >
+              <div className="relative shrink-0">
+                <FileText className={`h-8 w-8 ${isDomingo ? "text-white dark:text-zinc-900" : "text-muted-foreground"}`} />
+                {isDomingo && (
+                  <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500" />
+                  </span>
+                )}
+              </div>
+              <div>
+                <span className={`text-base font-medium ${isDomingo ? "text-white dark:text-zinc-900" : ""}`}>Boletim dominical</span>
+                {isDomingo && (
+                  <p className="text-xs text-red-400 dark:text-red-500 font-medium">Ao vivo</p>
+                )}
+              </div>
+            </Link>
+          );
+        })()}
       </div>
     </div>
   );

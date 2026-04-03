@@ -16,6 +16,7 @@ const MODULOS_INICIAIS = [
   { slug: "calendario", label: "Calendario", descricao: "Calendario de eventos da igreja", ativo: false, ordem: 11 },
   { slug: "educacional", label: "Educacional Infantil", descricao: "Gestao das turmas e criancas", ativo: false, ordem: 12 },
   { slug: "louvor", label: "Louvor", descricao: "Repertorio de musicas com cifras e tons", ativo: false, ordem: 13 },
+  { slug: "salas", label: "Salas", descricao: "Reserva de salas da igreja", ativo: false, ordem: 14 },
 ];
 
 export const seedModulos = mutation({

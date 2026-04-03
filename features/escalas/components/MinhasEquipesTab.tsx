@@ -13,6 +13,8 @@ const FUNCAO_LABELS: Record<string, string> = {
   ABERTURA: "Abertura",
   CONFISSAO: "Confissão",
   PREGACAO: "Pregação",
+  ORACAO: "Oração",
+  AVISOS: "Avisos",
   LOUVOR: "Louvor",
   HOSPITALIDADE: "Hospitalidade",
   SOM: "Som",
@@ -27,6 +29,8 @@ const FUNCAO_COLORS: Record<string, string> = {
   ABERTURA: "bg-slate-100 text-slate-800 dark:bg-slate-900 dark:text-slate-200",
   CONFISSAO: "bg-slate-100 text-slate-800 dark:bg-slate-900 dark:text-slate-200",
   PREGACAO: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
+  ORACAO: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200",
+  AVISOS: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
 };
 
 interface EscalaItem {

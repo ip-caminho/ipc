@@ -11,6 +11,11 @@ import { toast } from "sonner";
 import { cn } from "@/shared/lib/utils/cn";
 
 const FUNCAO_LABELS: Record<string, string> = {
+  ABERTURA: "Abertura",
+  CONFISSAO: "Confissão",
+  PREGACAO: "Pregação",
+  ORACAO: "Oração",
+  AVISOS: "Avisos",
   LOUVOR: "Louvor",
   HOSPITALIDADE: "Hospitalidade",
   SOM: "Som",

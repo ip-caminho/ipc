@@ -21,12 +21,14 @@ import {
   DrawerTrigger,
 } from "@/shared/components/ui/drawer";
 
-const EQUIPE_ORDER = ["PREGACAO", "ABERTURA", "CONFISSAO", "LOUVOR", "HOSPITALIDADE", "SOM", "MULTIMIDIA"] as const;
+const EQUIPE_ORDER = ["PREGACAO", "ABERTURA", "CONFISSAO", "ORACAO", "AVISOS", "LOUVOR", "HOSPITALIDADE", "SOM", "MULTIMIDIA"] as const;
 
 const FUNCAO_LABELS: Record<string, string> = {
   PREGACAO: "Palavra",
   ABERTURA: "Abertura",
   CONFISSAO: "Confissão",
+  ORACAO: "Oração",
+  AVISOS: "Avisos",
   LOUVOR: "Louvor",
   HOSPITALIDADE: "Hospitalidade",
   SOM: "Som",
@@ -52,20 +54,6 @@ function CopyPix() {
   );
 }
 
-const SECTION_COLORS: Record<string, { border: string; bg: string; text: string }> = {
-  louvor:    { border: "border-l-blue-400",   bg: "bg-blue-50 dark:bg-blue-950/30",     text: "text-blue-700 dark:text-blue-300" },
-  palavra:   { border: "border-l-violet-400", bg: "bg-violet-50 dark:bg-violet-950/30", text: "text-violet-700 dark:text-violet-300" },
-  abertura:  { border: "border-l-sky-400",    bg: "bg-sky-50 dark:bg-sky-950/30",       text: "text-sky-700 dark:text-sky-300" },
-  confissao: { border: "border-l-teal-400",   bg: "bg-teal-50 dark:bg-teal-950/30",     text: "text-teal-700 dark:text-teal-300" },
-  default:   { border: "border-l-gray-300",   bg: "bg-muted/30",                        text: "text-muted-foreground" },
-};
-
-function getSectionColor(label: string) {
-  const key = label.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  if (key.includes("abertura")) return SECTION_COLORS.abertura;
-  if (key.includes("confiss")) return SECTION_COLORS.confissao;
-  return SECTION_COLORS.default;
-}
 
 function FontSizeControls({ fontSize, setFontSize }: { fontSize: number; setFontSize: (fn: (s: number) => number) => void }) {
   return (
@@ -102,11 +90,10 @@ function PalavraDrawer({ referencia }: { referencia: string }) {
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1.5 text-base text-amber-900 dark:text-amber-200 bg-amber-50 dark:bg-amber-950/40 rounded-full px-3 py-1.5 hover:bg-amber-100 dark:hover:bg-amber-950/60 active:bg-amber-200 transition-colors min-h-[44px]"
+        className="w-full flex items-center gap-2 text-sm text-amber-700 dark:text-amber-300 bg-amber-50/60 dark:bg-amber-950/20 px-6 py-2.5 min-h-[44px] hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors"
       >
-        <BookOpen className="h-4 w-4 shrink-0" />
-        <span className="underline underline-offset-2 decoration-amber-400 dark:decoration-amber-600">{nomeCompleto}</span>
-        <span className="text-xs text-amber-500 dark:text-amber-500">Ler</span>
+        <BookOpen className="h-3.5 w-3.5 shrink-0" />
+        {nomeCompleto}
       </DrawerTrigger>
       <DrawerContent>
         <DrawerHeader>
@@ -127,7 +114,11 @@ function LouvorDrawer({ titulo, louvoresData }: { titulo: string; louvoresData: 
   const data = louvoresData?.find((l) => l.titulo === titulo);
 
   if (!data?.conteudo) {
-    return <p className="text-base text-blue-600/70 dark:text-blue-400/70 italic">♪ {titulo}</p>;
+    return (
+      <p className="text-sm text-blue-600/60 dark:text-blue-400/60 italic px-6 py-2.5 bg-blue-50/40 dark:bg-blue-950/10">
+        ♪ {titulo}
+      </p>
+    );
   }
 
   const lines = renderLines(data.conteudo, false);
@@ -136,10 +127,9 @@ function LouvorDrawer({ titulo, louvoresData }: { titulo: string; louvoresData: 
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1.5 text-base text-blue-700 dark:text-blue-300 italic bg-blue-50 dark:bg-blue-950/40 rounded-full px-3 py-1.5 hover:bg-blue-100 dark:hover:bg-blue-950/60 active:bg-blue-200 transition-colors min-h-[44px]"
+        className="w-full flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 italic px-6 py-2.5 min-h-[44px] bg-blue-50/60 dark:bg-blue-950/20 hover:bg-blue-50 dark:hover:bg-blue-950/30 transition-colors"
       >
         ♪ {titulo}
-        <span className="text-xs not-italic text-blue-400 dark:text-blue-500">Letra</span>
       </DrawerTrigger>
       <DrawerContent>
         <DrawerHeader>
@@ -202,40 +192,10 @@ export function BoletimContent() {
     boletim.escalas.filter((e: any) => e.funcao === funcao);
 
   return (
-    <div className="flex flex-col items-center gap-4 pb-8">
-      {/* Navegacao */}
-      <div className="flex items-center gap-4 w-full max-w-lg print:hidden">
-        <Button
-          variant="ghost"
-          size="icon"
-          disabled={!boletim.navegacao.anterior}
-          onClick={() => setDataSelecionada(boletim.navegacao.anterior!)}
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </Button>
-        <div className="flex-1" />
-        <Button
-          variant="ghost"
-          size="sm"
-          className="text-xs gap-1.5"
-          onClick={() => window.print()}
-        >
-          <Printer className="h-3.5 w-3.5" />
-          Imprimir
-        </Button>
-        <div className="flex-1" />
-        <Button
-          variant="ghost"
-          size="icon"
-          disabled={!boletim.navegacao.proximo}
-          onClick={() => setDataSelecionada(boletim.navegacao.proximo!)}
-        >
-          <ChevronRight className="h-5 w-5" />
-        </Button>
-      </div>
+    <div className="flex flex-col items-center gap-4 pb-8 -mx-4 -mt-4 md:mx-0 md:mt-0">
 
       {/* Boletim */}
-      <div className="w-full max-w-lg border rounded-xl bg-card shadow-sm print:shadow-none print:border-0 overflow-hidden">
+      <div className="w-full max-w-lg overflow-hidden">
         {/* Cabecalho com gradiente */}
         <div className="text-center py-8 px-6 bg-gradient-to-b from-blue-50 to-transparent dark:from-blue-950/30 dark:to-transparent border-b">
           <Church className="h-10 w-10 mx-auto mb-3 text-blue-600 dark:text-blue-400" />
@@ -252,8 +212,8 @@ export function BoletimContent() {
         </div>
 
         {/* Liturgia */}
-        <div className="px-6 py-6 space-y-5 text-center">
-          <h2 className="text-sm font-semibold uppercase tracking-widest text-blue-600/70 dark:text-blue-400/70">
+        <div className="py-6 space-y-5 text-center">
+          <h2 className="text-sm font-semibold uppercase tracking-widest text-blue-600/70 dark:text-blue-400/70 px-6">
             Ordem do Culto
           </h2>
           <p className="text-xs text-muted-foreground/40">Toque nos itens destacados para ler o texto completo</p>
@@ -276,11 +236,10 @@ export function BoletimContent() {
                 if (!pregacaoInserida && (label === "Ceia" || label === "Oferta")) {
                   const pregacao = getEscala("PREGACAO")[0];
                   if (pregacao) {
-                    const c = SECTION_COLORS.palavra;
                     items.push(
-                      <div key="pregacao" className={`border-l-4 ${c.border} ${c.bg} rounded-r-lg px-4 py-3`}>
+                      <div key="pregacao" className="py-3 px-6 border-b border-border">
                         <div className="flex items-center justify-between">
-                          <h3 className={`text-base font-semibold ${c.text}`}>Palavra</h3>
+                          <h3 className="text-base font-semibold text-foreground">Palavra</h3>
                           <p className="text-sm text-muted-foreground">{pregacao.membroNomeCompleto || pregacao.membroNome}</p>
                         </div>
                         {pregacao.passagemBiblica && (
@@ -298,11 +257,10 @@ export function BoletimContent() {
                 if (escala) {
                   const e = getEscala(escala.funcao)[0];
                   if (e) {
-                    const c = getSectionColor(label);
                     items.push(
-                      <div key={`sep-${i}`} className={`border-l-4 ${c.border} ${c.bg} rounded-r-lg px-4 py-3`}>
+                      <div key={`sep-${i}`} className="py-3 px-6 border-b border-border">
                         <div className="flex items-center justify-between">
-                          <h3 className={`text-base font-semibold ${c.text}`}>{escala.label}</h3>
+                          <h3 className="text-base font-semibold text-foreground">{escala.label}</h3>
                           <p className="text-sm text-muted-foreground">{e.membroNomeCompleto || e.membroNome}</p>
                         </div>
                         {e.passagemBiblica && (
@@ -317,11 +275,10 @@ export function BoletimContent() {
                 }
 
                 // Separador simples (Ceia, Oferta, etc.)
-                const c = getSectionColor(label);
                 if (label === "Oferta") {
                   items.push(
-                    <div key={`sep-${i}`} className={`border-l-4 ${c.border} ${c.bg} rounded-r-lg px-4 py-3 text-left`}>
-                      <h3 className={`text-base font-semibold ${c.text}`}>{label}</h3>
+                    <div key={`sep-${i}`} className="py-3 px-6 border-b border-border text-left">
+                      <h3 className="text-base font-semibold text-foreground">{label}</h3>
                       <div className="mt-2 text-xs text-muted-foreground space-y-0.5">
                         <CopyPix />
                         <p>Igreja Presbiteriana do Caminho</p>
@@ -331,8 +288,8 @@ export function BoletimContent() {
                   );
                 } else {
                   items.push(
-                    <div key={`sep-${i}`} className={`border-l-4 ${c.border} ${c.bg} rounded-r-lg px-4 py-2.5`}>
-                      <h3 className={`text-base font-semibold ${c.text}`}>{label}</h3>
+                    <div key={`sep-${i}`} className="py-3 px-6 border-b border-border">
+                      <h3 className="text-base font-semibold text-foreground">{label}</h3>
                     </div>
                   );
                 }
@@ -349,8 +306,8 @@ export function BoletimContent() {
                   i = j - 1;
 
                   items.push(
-                    <div key="liturgia-avisos" className="border-l-4 border-l-gray-300 bg-muted/30 rounded-r-lg px-4 py-3 text-left space-y-2">
-                      <h3 className="text-base font-semibold text-muted-foreground">Avisos</h3>
+                    <div key="liturgia-avisos" className="py-3 px-6 border-b border-border text-left space-y-2">
+                      <h3 className="text-base font-semibold text-foreground">Avisos</h3>
                       {boletim.avisos && boletim.avisos.length > 0 && (
                         boletim.avisos.map((aviso: any) => (
                           <p key={aviso._id} className="text-sm text-muted-foreground">• {aviso.titulo}</p>
@@ -359,8 +316,8 @@ export function BoletimContent() {
                     </div>
                   );
                   items.push(
-                    <div key="bencao" className="border-l-4 border-l-gray-300 bg-muted/30 rounded-r-lg px-4 py-2.5 text-left">
-                      <h3 className="text-base font-semibold text-muted-foreground">Bênção Final</h3>
+                    <div key="bencao" className="py-3 px-6">
+                      <h3 className="text-base font-semibold text-foreground">Bênção Final</h3>
                     </div>
                   );
                 }
@@ -374,11 +331,10 @@ export function BoletimContent() {
             if (!pregacaoInserida) {
               const pregacao = getEscala("PREGACAO")[0];
               if (pregacao) {
-                const c = SECTION_COLORS.palavra;
                 items.push(
-                  <div key="pregacao" className={`border-l-4 ${c.border} ${c.bg} rounded-r-lg px-4 py-3`}>
+                  <div key="pregacao" className="py-3 px-6 border-b border-border">
                     <div className="flex items-center justify-between">
-                      <h3 className={`text-base font-semibold ${c.text}`}>Palavra</h3>
+                      <h3 className="text-base font-semibold text-foreground">Palavra</h3>
                       <p className="text-sm text-muted-foreground">{pregacao.membroNomeCompleto || pregacao.membroNome}</p>
                     </div>
                     {pregacao.passagemBiblica && (

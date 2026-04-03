@@ -126,9 +126,8 @@ function GravacaoCardMobile({ g, index }: { g: any; index: number }) {
         <span className="text-[10px] uppercase tracking-wide text-muted-foreground mt-0.5">{mes}</span>
       </div>
       <div className="flex-1 min-w-0">
-        <h3 className="text-base font-medium leading-snug">{g.titulo}</h3>
+        {g.textoBase && <p className="text-sm font-medium leading-snug">{g.textoBase}</p>}
         {pregador && <p className="text-sm text-muted-foreground mt-0.5">{pregador}</p>}
-        {g.textoBase && <p className="text-sm text-muted-foreground/70 italic">{g.textoBase}</p>}
       </div>
       {g.comentarioCount > 0 && (
         <div className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
@@ -378,12 +377,7 @@ export default function GravacoesPage() {
           {/* Drawer para lista filtrada */}
           <Drawer open={!!mobileDrawerTipo} onOpenChange={(open) => { if (!open) { setMobileDrawerTipo(null); setSearch(""); } }}>
             <DrawerContent className="max-h-[85vh]">
-              <DrawerHeader>
-                <DrawerTitle className="text-base">
-                  {TIPO_OPTIONS.find((t) => t.value === mobileDrawerTipo)?.label || ""}
-                </DrawerTitle>
-              </DrawerHeader>
-              <div className="px-4 pb-6 overflow-y-auto">
+              <div className="px-4 pb-6 pt-2 overflow-y-auto">
                 <div className="relative mb-3">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <input

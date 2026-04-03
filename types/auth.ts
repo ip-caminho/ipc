@@ -23,6 +23,7 @@ export type Permission =
   | "documentos:read" | "documentos:create" | "documentos:update" | "documentos:delete"
   | "admin:read" | "admin:create" | "admin:update" | "admin:delete"
   | "aprovacoes:read" | "aprovacoes:create" | "aprovacoes:update"
+  | "salas:read" | "salas:create" | "salas:update" | "salas:delete"
   | "audit:read"
   | "*";
 

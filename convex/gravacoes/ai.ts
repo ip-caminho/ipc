@@ -33,6 +33,10 @@ export const createEventosFromAvisos = internalMutation({
       titulo: v.string(),
       descricao: v.string(),
       dataEvento: v.optional(v.union(v.string(), v.null())),
+      quando: v.optional(v.union(v.string(), v.null())),
+      onde: v.optional(v.union(v.string(), v.null())),
+      contatoNome: v.optional(v.union(v.string(), v.null())),
+      contatoWhatsapp: v.optional(v.union(v.string(), v.null())),
     })),
   },
   handler: async (ctx, { avisos }) => {
@@ -88,6 +92,10 @@ export const updateIaStatus = internalMutation({
       titulo: v.string(),
       descricao: v.string(),
       dataEvento: v.optional(v.union(v.string(), v.null())),
+      quando: v.optional(v.union(v.string(), v.null())),
+      onde: v.optional(v.union(v.string(), v.null())),
+      contatoNome: v.optional(v.union(v.string(), v.null())),
+      contatoWhatsapp: v.optional(v.union(v.string(), v.null())),
     }))),
   },
   handler: async (ctx, args) => {
