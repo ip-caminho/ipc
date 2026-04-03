@@ -65,6 +65,11 @@ export const ALL_PERMISSIONS = [
   "louvor:create",
   "louvor:update",
   "louvor:delete",
+  // Salas
+  "salas:read",
+  "salas:create",
+  "salas:update",
+  "salas:delete",
 ] as const;
 
 function getPermissionLabel(perm: string): string {
@@ -115,6 +120,10 @@ function getPermissionLabel(perm: string): string {
     "louvor:create": "Criar Louvores",
     "louvor:update": "Editar Louvores",
     "louvor:delete": "Excluir Louvores",
+    "salas:read": "Ver Salas",
+    "salas:create": "Reservar Salas",
+    "salas:update": "Editar Reservas",
+    "salas:delete": "Excluir Reservas",
   };
   return labels[perm] ?? perm;
 }
@@ -134,6 +143,7 @@ function getPermissionModule(perm: string): string {
   if (perm.startsWith("criancas:")) return "Educacional Infantil";
   if (perm.startsWith("educacional:")) return "Educacional Infantil";
   if (perm.startsWith("louvor:")) return "Louvor";
+  if (perm.startsWith("salas:")) return "Salas";
   return "Geral";
 }
 
@@ -185,6 +195,10 @@ function getPermissionDescription(perm: string): string {
     "louvor:create": "Cadastrar novas musicas no repertorio",
     "louvor:update": "Editar musicas existentes",
     "louvor:delete": "Excluir musicas do repertorio",
+    "salas:read": "Ver salas e reservas existentes",
+    "salas:create": "Criar novas reservas de sala",
+    "salas:update": "Editar reservas de salas",
+    "salas:delete": "Cancelar/excluir reservas de salas",
   };
   return descriptions[perm] ?? "";
 }

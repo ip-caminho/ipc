@@ -7,7 +7,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { CommandItem } from "@/shared/components/ui/command";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import { Check, ChevronDown, Plus, Trash2, X, UserPlus } from "lucide-react";
+import { Check, ChevronDown, Trash2, X, UserPlus } from "lucide-react";
 import { format, parseISO, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
@@ -303,6 +303,7 @@ function ReadonlyPassagemCell({ assignment }: { assignment?: { membroNome: strin
 function CultosTable({
   cultos,
   funcoes,
+  grupos,
   membros,
   canEdit,
   canDelete,
@@ -312,6 +313,7 @@ function CultosTable({
 }: {
   cultos: any[];
   funcoes: { value: string; label: string; multiplo: boolean; temPassagem: boolean; temEquipe: boolean }[];
+  grupos?: { titulo: string; funcoes: typeof funcoes }[];
   membros: any[];
   canEdit: boolean;
   canDelete: boolean;
@@ -323,6 +325,21 @@ function CultosTable({
     <div className="overflow-x-auto border rounded-lg">
       <table className="w-full text-sm">
         <thead>
+          {grupos && (
+            <tr className="border-b bg-muted/30">
+              <th className="sticky left-0 bg-muted/30" />
+              {grupos.map((g) => (
+                <th
+                  key={g.titulo}
+                  colSpan={g.funcoes.length}
+                  className="text-center p-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-widest border-l"
+                >
+                  {g.titulo}
+                </th>
+              ))}
+              <th />
+            </tr>
+          )}
           <tr className="border-b bg-muted/50">
             <th className="text-left p-2 font-medium sticky left-0 bg-muted/50 min-w-[100px]">Data</th>
             {funcoes.map((f) => (
@@ -345,11 +362,10 @@ function CultosTable({
           ) : (
             cultos.map((culto) => {
               const parsedDate = parseISO(culto.data);
-              const isDomingo = parsedDate.getDay() === 0;
-              const dataFormatada = format(parsedDate, "dd/MM (EEE)", { locale: ptBR });
+              const dataFormatada = format(parsedDate, "dd/MM", { locale: ptBR });
               return (
                 <Fragment key={culto._id}>
-                <tr className={cn("border-b hover:bg-accent/30", !isDomingo && "opacity-50")}>
+                <tr className="border-b hover:bg-accent/30">
                   <td className="p-2 font-medium sticky left-0 bg-background capitalize whitespace-nowrap text-xs">
                     {dataFormatada}
                   </td>
@@ -442,10 +458,6 @@ function CultosTable({
                       <CeiaCheckbox
                         cultoId={culto._id}
                         temCeia={culto.temCeia !== false}
-                        pregadorNome={(() => {
-                          const pregacao = getAssignments(culto, "PREGACAO")[0];
-                          return pregacao?.membroNome || pregacao?.nomeCustom || undefined;
-                        })()}
                         canEdit={canEdit}
                       />
                       {canDelete && (
@@ -477,12 +489,8 @@ export default function CultosPage() {
   // @ts-ignore Convex TS2589
   const cultos = useQuery(api.escalas.queries.listCultos, {});
   const membros = useQuery(api.membros.queries.list, {});
-  // @ts-ignore Convex TS2589
-  const createCulto = useMutation(api.escalas.mutations.createCulto);
   const deleteCulto = useMutation(api.escalas.mutations.deleteCulto);
   const allFuncoes = useFuncoes();
-
-  const [novaData, setNovaData] = useState("");
 
   const activeMembros = (membros || [])
     .filter((m: any) => m.entidade?.status === "ATIVO")
@@ -494,20 +502,20 @@ export default function CultosPage() {
   const cultosPassados = sortedCultos.filter((c) => c.data < today).reverse();
   const [showHistorico, setShowHistorico] = useState(false);
 
-  const visibleFuncoes = (allFuncoes || []).filter((f: any) =>
+  const CULTO_ORDER = ["ABERTURA", "CONFISSAO", "ORACAO", "PREGACAO", "AVISOS"];
+  const EQUIPE_ORDER = ["LOUVOR", "SOM", "MULTIMIDIA"];
+
+  const allVisible = (allFuncoes || []).filter((f: any) =>
     f.views.includes("escala")
   ).map((f: any) => ({ value: f.slug, label: f.label, multiplo: f.multiplo, views: f.views, temPassagem: f.temPassagem, temEquipe: f.temEquipe }));
 
-  const handleAddCulto = async () => {
-    if (!novaData) return;
-    try {
-      await createCulto({ data: novaData, tipo: "DOMINICAL" as any });
-      setNovaData("");
-      toast.success("Culto adicionado");
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Erro ao criar");
-    }
-  };
+  const cultoFuncoes = CULTO_ORDER
+    .map((slug) => allVisible.find((f) => f.value === slug))
+    .filter(Boolean) as typeof allVisible;
+  const equipeFuncoes = EQUIPE_ORDER
+    .map((slug) => allVisible.find((f) => f.value === slug))
+    .filter(Boolean) as typeof allVisible;
+  const visibleFuncoes = [...cultoFuncoes, ...equipeFuncoes];
 
   const handleDeleteCulto = async (id: Id<"cultos">) => {
     if (!confirm("Excluir este culto e toda sua escala?")) return;
@@ -537,29 +545,17 @@ export default function CultosPage() {
   return (
     <ModuloGuard modulo="escalas">
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Planejamento</h1>
-        {can("escalas:create") && (
-          <div className="flex items-center gap-2">
-            <Input
-              type="date"
-              value={novaData}
-              onChange={(e) => setNovaData(e.target.value)}
-              className="w-40 h-9"
-            />
-            <Button size="sm" onClick={handleAddCulto} disabled={!novaData}>
-              <Plus className="h-4 w-4 mr-1" />
-              Adicionar
-            </Button>
-          </div>
-        )}
-      </div>
+      <h1 className="text-2xl font-bold">Planejamento</h1>
 
       {/* Mobile */}
       <div className="md:hidden">
         <CultosMobileView
           cultos={proximosCultos}
           funcoes={visibleFuncoes}
+          grupos={[
+            { titulo: "Culto", funcoes: cultoFuncoes },
+            { titulo: "Equipe", funcoes: equipeFuncoes },
+          ]}
           membros={activeMembros}
           canEdit={canEdit}
           getAssignments={getAssignments}
@@ -571,6 +567,10 @@ export default function CultosPage() {
         <CultosTable
           cultos={proximosCultos}
           funcoes={visibleFuncoes}
+          grupos={[
+            { titulo: "Culto", funcoes: cultoFuncoes },
+            { titulo: "Equipe", funcoes: equipeFuncoes },
+          ]}
           membros={activeMembros}
           canEdit={canEdit}
           canDelete={can("escalas:delete")}

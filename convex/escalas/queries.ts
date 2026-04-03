@@ -242,16 +242,25 @@ export const getBoletim = query({
       .filter((c) => c.tipo === "DOMINICAL")
       .sort((a, b) => a.data.localeCompare(b.data));
 
-    // Culto selecionado por data ou proximo
+    // Culto selecionado por data, ou ultimo domingo (no domingo mostra o de hoje)
     let culto;
     if (data) {
       culto = dominicais.find((c) => c.data === data);
     }
     if (!culto) {
-      culto = dominicais.find((c) => c.data >= today);
+      const isDomingo = new Date().getDay() === 0;
+      if (isDomingo) {
+        // No domingo, mostra o culto de hoje
+        culto = dominicais.find((c) => c.data === today);
+      }
+      if (!culto) {
+        // De segunda a sábado, mostra o último domingo passado
+        const passados = dominicais.filter((c) => c.data <= today);
+        culto = passados.length > 0 ? passados[passados.length - 1] : undefined;
+      }
     }
     if (!culto && dominicais.length > 0) {
-      culto = dominicais[dominicais.length - 1]; // ultimo se nao tem proximo
+      culto = dominicais[0]; // primeiro disponível como fallback
     }
     if (!culto) return null;
 

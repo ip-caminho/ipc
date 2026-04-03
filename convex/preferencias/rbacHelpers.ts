@@ -20,6 +20,7 @@ export const INITIAL_ROLE_PERMISSIONS: Record<string, string[]> = {
     "criancas:read", "criancas:manage",
     "educacional:read", "educacional:write",
     "louvor:read", "louvor:create", "louvor:update",
+    "salas:read", "salas:create", "salas:update", "salas:delete",
   ],
   membro: [
     "membros:self_service",
@@ -32,6 +33,7 @@ export const INITIAL_ROLE_PERMISSIONS: Record<string, string[]> = {
     "calendario:read",
     "educacional:read",
     "louvor:read",
+    "salas:read", "salas:create",
   ],
 };
 

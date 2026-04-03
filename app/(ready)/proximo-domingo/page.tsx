@@ -26,6 +26,8 @@ const FUNCAO_LABELS: Record<string, string> = {
   ABERTURA: "Abertura",
   CONFISSAO: "Confissão de Fé",
   PREGACAO: "Pregação",
+  ORACAO: "Oração",
+  AVISOS: "Avisos",
   LOUVOR: "Louvor",
   HOSPITALIDADE: "Hospitalidade",
   SOM: "Som",

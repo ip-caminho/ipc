@@ -6,10 +6,12 @@ const FUNCOES_INICIAIS = [
   { slug: "ABERTURA", label: "Abertura", multiplo: false, temEquipe: false, temPassagem: true, views: ["escala", "liturgia"], qtdPorCulto: 1, ordem: 1 },
   { slug: "CONFISSAO", label: "Confissao", multiplo: false, temEquipe: false, temPassagem: true, views: ["escala", "liturgia"], qtdPorCulto: 1, ordem: 2 },
   { slug: "PREGACAO", label: "Pregacao", multiplo: false, temEquipe: false, temPassagem: true, views: ["escala", "liturgia"], qtdPorCulto: 1, ordem: 3 },
-  { slug: "LOUVOR", label: "Louvor", multiplo: true, temEquipe: true, temPassagem: false, views: ["escala", "liturgia"], qtdPorCulto: 3, ordem: 4 },
-  { slug: "HOSPITALIDADE", label: "Hospitalidade", multiplo: true, temEquipe: true, temPassagem: false, views: ["escala"], qtdPorCulto: 3, ordem: 5 },
-  { slug: "SOM", label: "Som", multiplo: false, temEquipe: true, temPassagem: false, views: ["escala"], qtdPorCulto: 1, ordem: 6 },
-  { slug: "MULTIMIDIA", label: "Multimidia", multiplo: false, temEquipe: true, temPassagem: false, views: ["escala"], qtdPorCulto: 1, ordem: 7 },
+  { slug: "ORACAO", label: "Oração", multiplo: false, temEquipe: false, temPassagem: false, views: ["escala", "liturgia"], qtdPorCulto: 1, ordem: 4 },
+  { slug: "AVISOS", label: "Avisos", multiplo: false, temEquipe: false, temPassagem: false, views: ["escala", "liturgia"], qtdPorCulto: 1, ordem: 5 },
+  { slug: "LOUVOR", label: "Louvor", multiplo: true, temEquipe: true, temPassagem: false, views: ["escala", "liturgia"], qtdPorCulto: 3, ordem: 6 },
+  { slug: "HOSPITALIDADE", label: "Hospitalidade", multiplo: true, temEquipe: true, temPassagem: false, views: ["escala"], qtdPorCulto: 3, ordem: 7 },
+  { slug: "SOM", label: "Som", multiplo: false, temEquipe: true, temPassagem: false, views: ["escala"], qtdPorCulto: 1, ordem: 8 },
+  { slug: "MULTIMIDIA", label: "Multimidia", multiplo: false, temEquipe: true, temPassagem: false, views: ["escala"], qtdPorCulto: 1, ordem: 9 },
 ];
 
 export const list = query({

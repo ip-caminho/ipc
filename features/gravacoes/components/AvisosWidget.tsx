@@ -3,7 +3,7 @@
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useAudioPlayer } from "@shared/audio/useAudioPlayer";
-import { Megaphone, Play, Pause, Headphones } from "lucide-react";
+import { Megaphone, Play, Pause, Headphones, Calendar, MapPin, MessageCircle } from "lucide-react";
 import { format, parseISO } from "date-fns";
 
 interface AvisosWidgetProps {
@@ -101,10 +101,40 @@ export function AvisosWidget({ variant = "card" }: AvisosWidgetProps) {
           <div className="pointer-events-none absolute top-0 left-0 right-0 h-6 z-10 bg-gradient-to-b from-background to-transparent" />
           <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-6 z-10 bg-gradient-to-t from-background to-transparent" />
           <div className="flex flex-col gap-2 py-6 overflow-y-auto h-full">
-            {avisos.map((aviso: { titulo: string; descricao: string }, i: number) => (
-              <div key={i} className="bg-muted rounded-lg px-3 py-2.5">
-                <p className="text-sm font-medium text-foreground mb-0.5">{aviso.titulo}</p>
+            {avisos.map((aviso: any, i: number) => (
+              <div key={i} className="bg-muted rounded-lg px-3 py-2.5 space-y-1">
+                <p className="text-sm font-medium text-foreground">{aviso.titulo}</p>
                 <p className="text-sm text-muted-foreground">{aviso.descricao}</p>
+                {(aviso.quando || aviso.onde || aviso.contatoNome) && (
+                  <div className="flex flex-wrap gap-x-3 gap-y-1 pt-0.5">
+                    {aviso.quando && (
+                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <Calendar className="h-3 w-3" />{aviso.quando}
+                      </span>
+                    )}
+                    {aviso.onde && (
+                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <MapPin className="h-3 w-3" />{aviso.onde}
+                      </span>
+                    )}
+                    {aviso.contatoNome && (
+                      aviso.contatoWhatsapp ? (
+                        <a
+                          href={`https://wa.me/55${aviso.contatoWhatsapp.replace(/\D/g, "")}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400"
+                        >
+                          <MessageCircle className="h-3 w-3" />Falar com {aviso.contatoNome}
+                        </a>
+                      ) : (
+                        <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <MessageCircle className="h-3 w-3" />Falar com {aviso.contatoNome}
+                        </span>
+                      )
+                    )}
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -135,10 +165,15 @@ export function AvisosWidget({ variant = "card" }: AvisosWidgetProps) {
         )}
       </div>
       <div className="flex flex-col gap-2">
-        {avisos.map((aviso: { titulo: string; descricao: string }, i: number) => (
-          <div key={i} className="bg-muted rounded-lg px-3 py-2">
-            <p className="text-xs font-medium text-foreground mb-0.5">{aviso.titulo}</p>
+        {avisos.map((aviso: any, i: number) => (
+          <div key={i} className="bg-muted rounded-lg px-3 py-2 space-y-0.5">
+            <p className="text-xs font-medium text-foreground">{aviso.titulo}</p>
             <p className="text-xs text-muted-foreground">{aviso.descricao}</p>
+            {(aviso.quando || aviso.onde) && (
+              <p className="text-[10px] text-muted-foreground">
+                {[aviso.quando, aviso.onde].filter(Boolean).join(" · ")}
+              </p>
+            )}
           </div>
         ))}
       </div>

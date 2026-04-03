@@ -5,13 +5,10 @@ import { requirePermission } from "../_shared/requirePermission";
 
 // Garante que existem cultos dominicais para os próximos N meses
 export const garantirCultosFuturos = mutation({
-  args: { meses: v.optional(v.number()) },
-  handler: async (ctx, { meses = 3 }) => {
-    await requirePermission(ctx, "escalas:create");
-
+  args: {},
+  handler: async (ctx) => {
     const hoje = new Date();
-    const limite = new Date(hoje);
-    limite.setMonth(limite.getMonth() + meses);
+    const limite = new Date(hoje.getFullYear(), 11, 31);
     const limiteStr = limite.toISOString().split("T")[0];
 
     // Buscar cultos existentes
@@ -156,18 +153,15 @@ export const upsertEscala = mutation({
     const culto = await ctx.db.get(cultoId);
     if (!culto) throw new Error("Culto nao encontrado");
 
-    // Verificar se membro já está em outra função neste culto
+    let outrasFuncoes: string[] = [];
     if (membroId) {
       const todasEscalas = await ctx.db
         .query("cultoEscalas")
         .withIndex("by_culto_funcao", (q: any) => q.eq("cultoId", cultoId))
         .collect();
-      const outraFuncao = todasEscalas.find(
-        (e) => e.membroId === membroId && e.funcao !== funcao
-      );
-      if (outraFuncao) {
-        throw new Error(`Membro já está escalado como ${outraFuncao.funcao} neste culto`);
-      }
+      outrasFuncoes = todasEscalas
+        .filter((e) => e.membroId === membroId && e.funcao !== funcao)
+        .map((e) => e.funcao);
     }
 
     const existing = await ctx.db
@@ -180,16 +174,19 @@ export const upsertEscala = mutation({
     if (nomeCustom !== undefined) data.nomeCustom = nomeCustom || undefined;
     if (passagemBiblica !== undefined) data.passagemBiblica = passagemBiblica || undefined;
 
+    let id;
     if (existing) {
       await ctx.db.patch(existing._id, data);
-      return existing._id;
+      id = existing._id;
+    } else {
+      id = await ctx.db.insert("cultoEscalas", {
+        cultoId,
+        funcao,
+        ...data,
+      });
     }
 
-    return await ctx.db.insert("cultoEscalas", {
-      cultoId,
-      funcao,
-      ...data,
-    });
+    return { id, outrasFuncoes };
   },
 });
 
@@ -239,21 +236,20 @@ export const addEscala = mutation({
       .query("cultoEscalas")
       .withIndex("by_culto_funcao", (q: any) => q.eq("cultoId", cultoId))
       .collect();
-    const outraFuncao = todasEscalas.find(
-      (e) => e.membroId === membroId && e.funcao !== funcao
-    );
-    if (outraFuncao) {
-      throw new Error(`Membro já está escalado como ${outraFuncao.funcao} neste culto`);
-    }
-
     const existing = todasEscalas.filter((e) => e.funcao === funcao);
     if (existing.some((e) => e.membroId === membroId)) return;
 
-    return await ctx.db.insert("cultoEscalas", {
+    const outrasFuncoes = todasEscalas
+      .filter((e) => e.membroId === membroId && e.funcao !== funcao)
+      .map((e) => e.funcao);
+
+    const id = await ctx.db.insert("cultoEscalas", {
       cultoId,
       funcao,
       membroId,
     });
+
+    return { id, outrasFuncoes };
   },
 });
 
