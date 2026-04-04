@@ -13,8 +13,9 @@ import { FileUpload } from "@/shared/files/components/FileUpload";
 import { TIPO_GRAVACAO_OPTIONS } from "@features/gravacoes/lib/constants";
 import {
   Mic, BookOpen, Presentation, FileAudio,
-  ArrowRight, ArrowLeft, Check, Sparkles, Upload,
+  ArrowRight, ArrowLeft, Check, Sparkles, Upload, Layers,
 } from "lucide-react";
+import Link from "next/link";
 
 const TIPO_ICONS: Record<string, typeof Mic> = {
   SERMAO: Mic,
@@ -74,6 +75,16 @@ export default function NovaGravacaoPage() {
 
   return (
     <div className="max-w-lg mx-auto space-y-4">
+      {/* Link lote */}
+      <div className="flex justify-end">
+        <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" asChild>
+          <Link href="/gravacoes/lote">
+            <Layers className="h-3.5 w-3.5 mr-1" />
+            Upload em lote
+          </Link>
+        </Button>
+      </div>
+
       {/* Progresso */}
       <div className="flex items-center gap-2 px-1">
         {[1, 2, 3].map((n) => (
