@@ -44,7 +44,7 @@ function getFirstLyricLine(conteudo?: string): string {
 
 interface LouvorPickerProps {
   value?: string;
-  onSelect: (id: string, titulo: string) => void;
+  onSelect: (id: string, titulo: string, tom?: string) => void;
   placeholder?: string;
 }
 
@@ -99,7 +99,7 @@ export function LouvorPicker({ value, onSelect, placeholder = "Selecionar musica
                     key={r._id}
                     value={r._id}
                     onSelect={() => {
-                      onSelect(r._id, r.titulo);
+                      onSelect(r._id, r.titulo, r.tom);
                       setOpen(false);
                       setSearch("");
                     }}

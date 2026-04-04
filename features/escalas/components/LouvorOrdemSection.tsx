@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { LouvorPicker } from "@/shared/louvor/components/LouvorPicker";
 import { Button } from "@/shared/components/ui/button";
@@ -11,10 +11,11 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/shared/components/ui/sheet";
-import { GripVertical, Trash2, Music, Plus } from "lucide-react";
+import { GripVertical, Trash2, Music } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@shared/lib/utils/cn";
 import type { Id } from "@/convex/_generated/dataModel";
+import { TomSelector } from "./TomSelector";
 
 const SEPARATOR_PREFIX = "---";
 
@@ -25,41 +26,70 @@ const FIXED_SECTIONS = [
   "Oferta",
 ] as const;
 
-function isSeparator(item: string) {
-  return item.startsWith(SEPARATOR_PREFIX);
-}
-
-function separatorLabel(item: string) {
-  return item.slice(SEPARATOR_PREFIX.length);
+/** Item interno para manipulação */
+interface OrderItem {
+  type: "separator" | "song";
+  louvorId?: Id<"louvores">;
+  titulo: string;
+  tom?: string;
+  secao?: string;
 }
 
 interface LouvorOrdemSectionProps {
   cultoId: Id<"cultos">;
-  louvores: string[];
+  louvores: string[]; // legado — usado como fallback
   temCeia: boolean;
   canEdit: boolean;
   dataLabel: string;
 }
 
 export function LouvorOrdemSection({ cultoId, louvores, temCeia, canEdit, dataLabel }: LouvorOrdemSectionProps) {
-  const updateLouvores = useMutation(api.escalas.mutations.updateLouvores);
+  const setCultoLouvores = useMutation(api.escalas.cultoLouvores.setCultoLouvores);
+  const updateLouvoresLegacy = useMutation(api.escalas.mutations.updateLouvores);
+  // @ts-ignore Convex TS2589
+  const enrichedData = useQuery(api.escalas.cultoLouvores.getCultoLouvoresEnriched, { cultoId });
+
   const [open, setOpen] = useState(false);
-  const [localItems, setLocalItems] = useState<string[]>([]);
+  const [localItems, setLocalItems] = useState<OrderItem[]>([]);
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   const [overIdx, setOverIdx] = useState<number | null>(null);
 
-  // Garantir que as seções fixas existem no array, na ordem correta
-  const ensureSections = (items: string[]): string[] => {
+  /** Converter string[] legado para OrderItem[] */
+  function legacyToItems(legacy: string[]): OrderItem[] {
+    return legacy.map((s) => {
+      if (s.startsWith(SEPARATOR_PREFIX)) {
+        return { type: "separator" as const, titulo: "", secao: s.slice(SEPARATOR_PREFIX.length) };
+      }
+      return { type: "song" as const, titulo: s };
+    });
+  }
+
+  /** Converter enrichedData para OrderItem[] */
+  function enrichedToItems(data: NonNullable<typeof enrichedData>): OrderItem[] {
+    return data.map((d) => {
+      if (d.secao && !d.louvorId) {
+        return { type: "separator" as const, titulo: "", secao: d.secao };
+      }
+      return {
+        type: "song" as const,
+        louvorId: d.louvorId || undefined,
+        titulo: d.titulo,
+        tom: d.tomEscolhido || d.tomOriginal || undefined,
+      };
+    });
+  }
+
+  /** Garantir que as seções fixas existem */
+  function ensureSections(items: OrderItem[]): OrderItem[] {
     const activeSections = temCeia ? FIXED_SECTIONS : FIXED_SECTIONS.filter((s) => s !== "Ceia");
 
-    // Extrair músicas de cada seção existente
-    const sectionMusicas: Record<string, string[]> = {};
+    const sectionMusicas: Record<string, OrderItem[]> = {};
     let currentLabel: string | null = null;
-    const orphans: string[] = [];
+    const orphans: OrderItem[] = [];
 
     for (const item of items) {
-      if (isSeparator(item)) {
-        currentLabel = separatorLabel(item);
+      if (item.type === "separator") {
+        currentLabel = item.secao || "";
         if (!sectionMusicas[currentLabel]) sectionMusicas[currentLabel] = [];
       } else if (currentLabel) {
         sectionMusicas[currentLabel].push(item);
@@ -68,12 +98,11 @@ export function LouvorOrdemSection({ cultoId, louvores, temCeia, canEdit, dataLa
       }
     }
 
-    // Reconstruir na ordem correta
-    const result: string[] = [];
-    for (const section of activeSections) {
-      result.push(`${SEPARATOR_PREFIX}${section}`);
-      // Primeira seção recebe as orfãs
-      if (result.length === 1 && orphans.length > 0) {
+    const result: OrderItem[] = [];
+    for (let i = 0; i < activeSections.length; i++) {
+      const section = activeSections[i];
+      result.push({ type: "separator", titulo: "", secao: section });
+      if (i === 0 && orphans.length > 0) {
         result.push(...orphans);
       }
       if (sectionMusicas[section]) {
@@ -82,56 +111,60 @@ export function LouvorOrdemSection({ cultoId, louvores, temCeia, canEdit, dataLa
     }
 
     return result;
-  };
+  }
 
-  // Ao abrir, sincronizar estado local
   const handleOpen = () => {
-    setLocalItems(ensureSections(louvores));
+    // Preferir dados enriquecidos, fallback para legado
+    const source = enrichedData && enrichedData.length > 0
+      ? enrichedToItems(enrichedData)
+      : legacyToItems(louvores);
+    setLocalItems(ensureSections(source));
     setOpen(true);
   };
 
-  const save = async (next: string[]) => {
-    setLocalItems(next); // atualizar local imediatamente
+  /** Salvar: dual-write via nova mutation */
+  const save = async (next: OrderItem[]) => {
+    setLocalItems(next);
     try {
-      await updateLouvores({ cultoId, louvores: next });
+      const items = next.map((item) => {
+        if (item.type === "separator") {
+          return { secao: item.secao };
+        }
+        return {
+          louvorId: item.louvorId,
+          tituloLegado: item.titulo,
+          tom: item.tom,
+        };
+      });
+      await setCultoLouvores({ cultoId, items });
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Erro ao salvar");
+      // Fallback: tentar salvar no formato legado
+      try {
+        const legacy = next.map((item) =>
+          item.type === "separator" ? `${SEPARATOR_PREFIX}${item.secao}` : item.titulo
+        );
+        await updateLouvoresLegacy({ cultoId, louvores: legacy });
+      } catch {
+        toast.error(e instanceof Error ? e.message : "Erro ao salvar");
+      }
     }
   };
 
-  // Agrupa itens por seção
   const sections = groupBySection(localItems);
 
-  const handleAddToSection = (sectionIdx: number, _id: string, titulo: string) => {
-    const items = localItems;
-    // Encontrar a posição do próximo separador após este
-    let insertAt = items.length;
-    let currentSection = -1;
-    for (let i = 0; i < items.length; i++) {
-      if (isSeparator(items[i])) {
-        currentSection++;
-        if (currentSection === sectionIdx + 1) {
-          insertAt = i;
-          break;
-        }
-      }
-    }
-    const next = [...items];
-    next.splice(insertAt, 0, titulo);
+  const handleRemove = (flatIndex: number) => {
+    if (localItems[flatIndex].type === "separator") return;
+    save(localItems.filter((_, i) => i !== flatIndex));
+  };
+
+  const handleUpdateTom = (flatIndex: number, tom: string) => {
+    const next = [...localItems];
+    next[flatIndex] = { ...next[flatIndex], tom };
     save(next);
   };
 
-  const handleRemove = (flatIndex: number) => {
-    const items = localItems;
-    // Não permitir remover separadores fixos
-    if (isSeparator(items[flatIndex])) return;
-    save(items.filter((_, i) => i !== flatIndex));
-  };
-
   const handleDragStart = (e: React.DragEvent, flatIndex: number) => {
-    // Não arrastar separadores
-    const items = localItems;
-    if (isSeparator(items[flatIndex])) return;
+    if (localItems[flatIndex].type === "separator") return;
     setDragIdx(flatIndex);
     e.dataTransfer.effectAllowed = "move";
   };
@@ -149,8 +182,7 @@ export function LouvorOrdemSection({ cultoId, louvores, temCeia, canEdit, dataLa
       setOverIdx(null);
       return;
     }
-    const items = localItems;
-    const next = [...items];
+    const next = [...localItems];
     const [moved] = next.splice(dragIdx, 1);
     next.splice(flatIndex, 0, moved);
     save(next);
@@ -163,7 +195,7 @@ export function LouvorOrdemSection({ cultoId, louvores, temCeia, canEdit, dataLa
     setOverIdx(null);
   };
 
-  const musicCount = louvores.filter((l) => !isSeparator(l)).length;
+  const musicCount = louvores.filter((l) => !l.startsWith(SEPARATOR_PREFIX)).length;
 
   return (
     <>
@@ -184,15 +216,20 @@ export function LouvorOrdemSection({ cultoId, louvores, temCeia, canEdit, dataLa
           </SheetHeader>
 
           <div className="mt-6 px-3 space-y-2">
-            {/* Adicionar musica — no topo */}
+            {/* Adicionar musica */}
             {canEdit && (
               <div className="space-y-1.5 pb-4 border-b">
                 <p className="text-xs font-medium text-muted-foreground">Adicionar musica</p>
                 <LouvorPicker
-                  onSelect={(_id, titulo) => {
+                  onSelect={(id, titulo, tom) => {
                     const insertAt = findNextInsertPosition(localItems, temCeia);
                     const next = [...localItems];
-                    next.splice(insertAt, 0, titulo);
+                    next.splice(insertAt, 0, {
+                      type: "song",
+                      louvorId: id as Id<"louvores">,
+                      titulo,
+                      tom,
+                    });
                     save(next);
                   }}
                   placeholder="Selecionar do repertorio..."
@@ -209,7 +246,6 @@ export function LouvorOrdemSection({ cultoId, louvores, temCeia, canEdit, dataLa
             {/* Seções */}
             {sections.filter((s) => temCeia || s.label !== "Ceia").map((section) => (
               <div key={section.label} className="pt-2">
-                {/* Separador fixo */}
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
                     {section.label}
@@ -217,7 +253,6 @@ export function LouvorOrdemSection({ cultoId, louvores, temCeia, canEdit, dataLa
                   <div className="flex-1 h-px bg-border" />
                 </div>
 
-                {/* Músicas desta seção */}
                 {section.musicas.length === 0 && (
                   <div
                     onDragOver={(e) => { e.preventDefault(); setOverIdx(section.sepFlatIndex + 1); }}
@@ -241,7 +276,7 @@ export function LouvorOrdemSection({ cultoId, louvores, temCeia, canEdit, dataLa
                       onDrop={(e) => handleDrop(e, musica.flatIndex)}
                       onDragEnd={handleDragEnd}
                       className={cn(
-                        "flex items-center gap-3 rounded-lg border px-4 py-3 bg-card transition-all",
+                        "flex items-center gap-2 rounded-lg border px-3 py-2.5 bg-card transition-all",
                         canEdit && "cursor-grab active:cursor-grabbing",
                         dragIdx === musica.flatIndex && "opacity-40",
                         overIdx === musica.flatIndex && dragIdx !== musica.flatIndex && "ring-2 ring-primary bg-primary/5",
@@ -251,6 +286,15 @@ export function LouvorOrdemSection({ cultoId, louvores, temCeia, canEdit, dataLa
                         <GripVertical className="h-4 w-4 text-muted-foreground/50 shrink-0" />
                       )}
                       <span className="text-sm flex-1 truncate">{musica.titulo}</span>
+                      {/* Tom */}
+                      {canEdit ? (
+                        <TomSelector
+                          value={musica.tom}
+                          onChange={(tom) => handleUpdateTom(musica.flatIndex, tom)}
+                        />
+                      ) : musica.tom ? (
+                        <span className="text-xs text-muted-foreground font-mono shrink-0">{musica.tom}</span>
+                      ) : null}
                       {canEdit && (
                         <Button
                           variant="ghost"
@@ -276,22 +320,22 @@ export function LouvorOrdemSection({ cultoId, louvores, temCeia, canEdit, dataLa
 type SectionGroup = {
   label: string;
   sepFlatIndex: number;
-  musicas: { titulo: string; flatIndex: number }[];
+  musicas: { titulo: string; tom?: string; flatIndex: number }[];
 };
 
-function groupBySection(items: string[]): SectionGroup[] {
+function groupBySection(items: OrderItem[]): SectionGroup[] {
   const sections: SectionGroup[] = [];
   let current: SectionGroup | null = null;
 
   for (let i = 0; i < items.length; i++) {
-    if (isSeparator(items[i])) {
-      current = { label: separatorLabel(items[i]), sepFlatIndex: i, musicas: [] };
+    const item = items[i];
+    if (item.type === "separator") {
+      current = { label: item.secao || "", sepFlatIndex: i, musicas: [] };
       sections.push(current);
     } else if (current) {
-      current.musicas.push({ titulo: items[i], flatIndex: i });
+      current.musicas.push({ titulo: item.titulo, tom: item.tom, flatIndex: i });
     } else {
-      // Músicas antes de qualquer seção — criar seção implícita
-      current = { label: "Inicio", sepFlatIndex: -1, musicas: [{ titulo: items[i], flatIndex: i }] };
+      current = { label: "Inicio", sepFlatIndex: -1, musicas: [{ titulo: item.titulo, tom: item.tom, flatIndex: i }] };
       sections.push(current);
     }
   }
@@ -299,7 +343,6 @@ function groupBySection(items: string[]): SectionGroup[] {
   return sections;
 }
 
-/** Capacidade padrão de cada seção */
 const SECTION_CAPACITY: Record<string, number> = {
   "Abertura": 1,
   "Confissão": 3,
@@ -307,12 +350,7 @@ const SECTION_CAPACITY: Record<string, number> = {
   "Oferta": 1,
 };
 
-/**
- * Encontra a posição para inserir a próxima música,
- * preenchendo seções na ordem até atingir a capacidade padrão.
- * Se todas estão cheias, insere no final da última seção.
- */
-function findNextInsertPosition(items: string[], temCeia: boolean): number {
+function findNextInsertPosition(items: OrderItem[], temCeia: boolean): number {
   const sections = groupBySection(items);
   const activeSections = temCeia ? FIXED_SECTIONS : FIXED_SECTIONS.filter((s) => s !== "Ceia");
 
@@ -321,7 +359,6 @@ function findNextInsertPosition(items: string[], temCeia: boolean): number {
     if (!section) continue;
     const capacity = SECTION_CAPACITY[sectionName] ?? 1;
     if (section.musicas.length < capacity) {
-      // Inserir após a última música desta seção, ou após o separador se vazia
       if (section.musicas.length > 0) {
         return section.musicas[section.musicas.length - 1].flatIndex + 1;
       }
@@ -329,6 +366,5 @@ function findNextInsertPosition(items: string[], temCeia: boolean): number {
     }
   }
 
-  // Todas cheias — inserir no final
   return items.length;
 }

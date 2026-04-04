@@ -133,6 +133,15 @@ export const deleteCulto = mutation({
       await ctx.db.delete(e._id);
     }
 
+    // Cascade delete cultoLouvores
+    const louvoresItems = await ctx.db
+      .query("cultoLouvores")
+      .withIndex("by_culto", (q) => q.eq("cultoId", id))
+      .collect();
+    for (const l of louvoresItems) {
+      await ctx.db.delete(l._id);
+    }
+
     await ctx.db.delete(id);
     await createActionAuditLog(ctx, "DELETE", "cultos", id);
   },

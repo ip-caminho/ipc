@@ -285,6 +285,17 @@ export default defineSchema({
     .index("by_data", ["data"])
     .index("by_status_data", ["status", "data"]),
 
+  cultoLouvores: defineTable({
+    cultoId: v.id("cultos"),
+    louvorId: v.optional(v.id("louvores")),
+    tituloLegado: v.optional(v.string()),
+    ordem: v.number(),
+    tom: v.optional(v.string()),
+    secao: v.optional(v.string()),
+  })
+    .index("by_culto", ["cultoId"])
+    .index("by_louvor", ["louvorId"]),
+
   cultoEscalas: defineTable({
     cultoId: v.id("cultos"),
     funcao: v.string(),
