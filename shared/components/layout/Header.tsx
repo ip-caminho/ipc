@@ -4,11 +4,11 @@ import { SidebarTrigger } from "@/shared/components/ui/sidebar";
 import { Separator } from "@/shared/components/ui/separator";
 import Link from "next/link";
 import { useAuth } from "@shared/providers/PermissionsProvider";
-import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { Button } from "@/shared/components/ui/button";
 
 export function Header() {
-  const { name } = useAuth();
+  const { name, foto } = useAuth();
 
   return (
     <header className="hidden md:flex h-14 shrink-0 items-center gap-2 border-b px-4">
@@ -18,6 +18,7 @@ export function Header() {
       <Button variant="ghost" size="sm" asChild>
         <Link href="/meu-perfil" className="flex items-center gap-2">
           <Avatar className="h-7 w-7">
+            {foto && <AvatarImage src={foto} alt={name || "Meu Perfil"} />}
             <AvatarFallback className="text-xs">
               {name?.charAt(0)?.toUpperCase() || "?"}
             </AvatarFallback>

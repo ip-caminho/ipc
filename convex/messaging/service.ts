@@ -1,4 +1,5 @@
 import type { IMessagingProvider } from "./types";
+import wuzapiProvider from "./wuzapiProvider";
 
 const bypassProvider: IMessagingProvider = {
   name: "bypass",
@@ -9,7 +10,10 @@ const bypassProvider: IMessagingProvider = {
   },
 };
 
-let activeProvider: IMessagingProvider = bypassProvider;
+// Auto-detecta: WuzAPI se configurado, senão bypass
+let activeProvider: IMessagingProvider = wuzapiProvider.isConfigured()
+  ? wuzapiProvider
+  : bypassProvider;
 
 export function setProvider(provider: IMessagingProvider) {
   activeProvider = provider;

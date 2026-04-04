@@ -61,6 +61,7 @@ import type * as membros_updatePhotos from "../membros/updatePhotos.js";
 import type * as messaging_phoneUtils from "../messaging/phoneUtils.js";
 import type * as messaging_service from "../messaging/service.js";
 import type * as messaging_types from "../messaging/types.js";
+import type * as messaging_wuzapiProvider from "../messaging/wuzapiProvider.js";
 import type * as ministerios_mutations from "../ministerios/mutations.js";
 import type * as ministerios_queries from "../ministerios/queries.js";
 import type * as modulos_mutations from "../modulos/mutations.js";
@@ -141,6 +142,7 @@ declare const fullApi: ApiFromModules<{
   "messaging/phoneUtils": typeof messaging_phoneUtils;
   "messaging/service": typeof messaging_service;
   "messaging/types": typeof messaging_types;
+  "messaging/wuzapiProvider": typeof messaging_wuzapiProvider;
   "ministerios/mutations": typeof ministerios_mutations;
   "ministerios/queries": typeof ministerios_queries;
   "modulos/mutations": typeof modulos_mutations;
