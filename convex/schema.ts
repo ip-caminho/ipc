@@ -140,7 +140,7 @@ export default defineSchema({
       v.literal("SERMAO"),
       v.literal("ESTUDO_BIBLICO"),
       v.literal("PALESTRA"),
-      v.literal("TESTEMUNHO")
+      v.literal("OUTRO")
     ),
     serieId: v.optional(v.id("serieGravacoes")),
     pregadorId: v.optional(v.id("membros")),

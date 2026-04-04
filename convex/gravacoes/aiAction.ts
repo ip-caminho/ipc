@@ -6,6 +6,28 @@ import { DeepgramClient } from "@deepgram/sdk";
 import { createLlmProvider } from "../_shared/llm";
 import { fetchB2File } from "../files/signing";
 
+const GENERIC_ANALYSIS_PROMPT = `Você é um analista de conteúdo cristão reformado/presbiteriano. Analise a transcrição abaixo e retorne um JSON estruturado com os seguintes campos:
+
+1. **tituloSugerido**: string com um título conciso e descritivo (máximo 80 caracteres). Deve funcionar como título de um podcast.
+2. **pregadorIdentificado**: string com o nome do ministrante/professor, se for possível identificá-lo. Retorne null se não for possível.
+3. **temaCentral**: objeto com "titulo" (tema central em até 10 palavras) e "passagemBiblica" (texto bíblico base, ex: "João 3:16-18", ou null se não houver)
+4. **pontosChave**: array com 3-5 pontos principais (frases curtas e objetivas)
+5. **aplicacaoPratica**: array com 2-4 aplicações práticas para o ouvinte
+6. **fraseChave**: a frase mais impactante (citação direta)
+7. **resumo**: string com um resumo em 2-4 parágrafos.
+8. **descricao**: descrição curta em no máximo 2 frases. Sem emojis.
+9. **frasesRedesSociais**: array com exatamente 14 frases marcantes para posts em redes sociais. Cada frase entre 100-280 caracteres, sem emojis.
+10. **descricoesInstagram**: array com exatamente 14 descrições para posts do Instagram. Cada descrição com 2-4 linhas, 3-5 hashtags e um call-to-action. Sem emojis.
+11. **tags**: array com 3-8 tags relevantes (ex: "graça", "estudo", "oração"). Palavras simples, sem hashtag.
+
+IMPORTANTE:
+- Retorne APENAS o JSON, sem markdown, sem code blocks
+- NÃO inclua campos inicioSermao, fimSermao, inicioAvisos, fimAvisos ou avisos — este conteúdo NÃO é uma gravação de culto completo
+- NÃO use emojis
+
+TRANSCRIÇÃO:
+`;
+
 const SERMON_ANALYSIS_PROMPT = `Você é um analista teológico especializado em sermões reformados/presbiterianos. Analise a transcrição do sermão abaixo e retorne um JSON estruturado com os seguintes campos:
 
 1. **tituloSugerido**: string com um título conciso e descritivo para a gravação (máximo 80 caracteres). Deve funcionar como título de um podcast.
@@ -128,9 +150,11 @@ export const processSermon = internalAction({
     gravacaoId: v.id("gravacoes"),
     audioUrl: v.string(),
     membroId: v.id("membros"),
+    tipo: v.optional(v.string()),
     skipTranscription: v.optional(v.string()), // existing transcription to skip Deepgram
   },
-  handler: async (ctx, { gravacaoId, audioUrl, membroId, skipTranscription }) => {
+  handler: async (ctx, { gravacaoId, audioUrl, membroId, tipo, skipTranscription }) => {
+    const isSermon = !tipo || tipo === "SERMAO";
     const updateIaStatus = getUpdateRef();
 
     try {
@@ -185,12 +209,17 @@ export const processSermon = internalAction({
       // Send timestamped version so LLM can identify sermon boundaries
       const llm = createLlmProvider();
 
-      // Buscar data do culto para resolver datas relativas nos avisos
-      const dataCulto = await ctx.runQuery(getGravacaoDataRef(), { id: gravacaoId });
-      const promptWithDate = SERMON_ANALYSIS_PROMPT.replace("{{DATA_CULTO}}", dataCulto || "desconhecida");
+      // Escolher prompt baseado no tipo
+      let prompt: string;
+      if (isSermon) {
+        const dataCulto = await ctx.runQuery(getGravacaoDataRef(), { id: gravacaoId });
+        prompt = SERMON_ANALYSIS_PROMPT.replace("{{DATA_CULTO}}", dataCulto || "desconhecida");
+      } else {
+        prompt = GENERIC_ANALYSIS_PROMPT;
+      }
 
       const responseText = await llm.complete({
-        prompt: promptWithDate + timestampedTranscription,
+        prompt: prompt + timestampedTranscription,
         maxTokens: 16000,
       });
 
@@ -254,35 +283,37 @@ export const processSermon = internalAction({
       if (iaResultado.tags && Array.isArray(iaResultado.tags)) {
         autoFill.tags = iaResultado.tags;
       }
-      if (typeof iaResultado.inicioSermao === "number") {
-        autoFill.inicioSermao = iaResultado.inicioSermao;
-      }
-      if (typeof iaResultado.fimSermao === "number") {
-        autoFill.fimSermao = iaResultado.fimSermao;
-      }
-      if (typeof iaResultado.inicioAvisos === "number") {
-        autoFill.inicioAvisos = iaResultado.inicioAvisos;
-      }
-      if (typeof iaResultado.fimAvisos === "number") {
-        autoFill.fimAvisos = iaResultado.fimAvisos;
-      }
-      if (Array.isArray(iaResultado.avisos) && iaResultado.avisos.length > 0) {
-        // Tentar resolver contatos conhecidos por apelido
-        const CONTATOS_CONHECIDOS: Record<string, { nome: string; whatsapp: string }> = {
-          "leandrão": { nome: "Leandro Luiz Novaes", whatsapp: "21999999999" },
-          "leandro": { nome: "Leandro Luiz Novaes", whatsapp: "21999999999" },
-        };
+      // Campos exclusivos de sermão (gravação de culto completo)
+      if (isSermon) {
+        if (typeof iaResultado.inicioSermao === "number") {
+          autoFill.inicioSermao = iaResultado.inicioSermao;
+        }
+        if (typeof iaResultado.fimSermao === "number") {
+          autoFill.fimSermao = iaResultado.fimSermao;
+        }
+        if (typeof iaResultado.inicioAvisos === "number") {
+          autoFill.inicioAvisos = iaResultado.inicioAvisos;
+        }
+        if (typeof iaResultado.fimAvisos === "number") {
+          autoFill.fimAvisos = iaResultado.fimAvisos;
+        }
+        if (Array.isArray(iaResultado.avisos) && iaResultado.avisos.length > 0) {
+          const CONTATOS_CONHECIDOS: Record<string, { nome: string; whatsapp: string }> = {
+            "leandrão": { nome: "Leandro Luiz Novaes", whatsapp: "21999999999" },
+            "leandro": { nome: "Leandro Luiz Novaes", whatsapp: "21999999999" },
+          };
 
-        autoFill.iaAvisos = iaResultado.avisos.map((aviso: any) => {
-          if (aviso.contatoNome && !aviso.contatoWhatsapp) {
-            const key = aviso.contatoNome.toLowerCase().trim();
-            const match = CONTATOS_CONHECIDOS[key];
-            if (match) {
-              return { ...aviso, contatoNome: match.nome, contatoWhatsapp: match.whatsapp };
+          autoFill.iaAvisos = iaResultado.avisos.map((aviso: any) => {
+            if (aviso.contatoNome && !aviso.contatoWhatsapp) {
+              const key = aviso.contatoNome.toLowerCase().trim();
+              const match = CONTATOS_CONHECIDOS[key];
+              if (match) {
+                return { ...aviso, contatoNome: match.nome, contatoWhatsapp: match.whatsapp };
+              }
             }
-          }
-          return aviso;
-        });
+            return aviso;
+          });
+        }
       }
 
       await ctx.runMutation(updateIaStatus, {
@@ -294,8 +325,8 @@ export const processSermon = internalAction({
         ...autoFill,
       });
 
-      // === Step 4: Create calendar events from avisos with dates ===
-      if (Array.isArray(iaResultado.avisos) && iaResultado.avisos.length > 0) {
+      // === Step 4: Create calendar events from avisos with dates (só sermão) ===
+      if (isSermon && Array.isArray(iaResultado.avisos) && iaResultado.avisos.length > 0) {
         const avisosComData = iaResultado.avisos.filter(
           (a: any) => a.dataEvento && typeof a.dataEvento === "string"
         );

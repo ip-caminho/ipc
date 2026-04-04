@@ -300,7 +300,7 @@ const TIPO_OPTIONS = [
   { value: "SERMAO", label: "Pregações", icon: Mic, color: "border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/30", textColor: "text-blue-700 dark:text-blue-300", iconColor: "text-blue-600 dark:text-blue-400" },
   { value: "ESTUDO_BIBLICO", label: "Estudos", icon: BookOpenIcon, color: "border-violet-200 dark:border-violet-800 bg-violet-50 dark:bg-violet-950/30", textColor: "text-violet-700 dark:text-violet-300", iconColor: "text-violet-600 dark:text-violet-400" },
   { value: "PALESTRA", label: "Palestras", icon: Presentation, color: "border-teal-200 dark:border-teal-800 bg-teal-50 dark:bg-teal-950/30", textColor: "text-teal-700 dark:text-teal-300", iconColor: "text-teal-600 dark:text-teal-400" },
-  { value: "TESTEMUNHO", label: "Outros", icon: Users2, color: "border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30", textColor: "text-amber-700 dark:text-amber-300", iconColor: "text-amber-600 dark:text-amber-400" },
+  { value: "OUTRO", label: "Outros", icon: Users2, color: "border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30", textColor: "text-amber-700 dark:text-amber-300", iconColor: "text-amber-600 dark:text-amber-400" },
 ] as const;
 
 export default function GravacoesPage() {

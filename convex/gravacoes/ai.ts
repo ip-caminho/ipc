@@ -119,7 +119,7 @@ export const createFromAudio = mutation({
       v.literal("SERMAO"),
       v.literal("ESTUDO_BIBLICO"),
       v.literal("PALESTRA"),
-      v.literal("TESTEMUNHO")
+      v.literal("OUTRO")
     )),
     data: v.optional(v.string()),
   },
@@ -147,6 +147,7 @@ export const createFromAudio = mutation({
       gravacaoId: id,
       audioUrl: args.audioUrl,
       membroId: membro._id,
+      tipo: args.tipo || "SERMAO",
     });
 
     return id;
@@ -162,7 +163,7 @@ export const createFromYouTube = mutation({
       v.literal("SERMAO"),
       v.literal("ESTUDO_BIBLICO"),
       v.literal("PALESTRA"),
-      v.literal("TESTEMUNHO")
+      v.literal("OUTRO")
     )),
     data: v.optional(v.string()),
   },
@@ -272,6 +273,7 @@ export const startProcessing = mutation({
       gravacaoId: id,
       audioUrl: gravacao.audioUrl,
       membroId: membro._id,
+      tipo: gravacao.tipo,
       skipTranscription,
     });
 
