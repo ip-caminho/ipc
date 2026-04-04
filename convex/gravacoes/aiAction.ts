@@ -198,9 +198,30 @@ export const processSermon = internalAction({
       let iaResultado: any;
       try {
         iaResultado = JSON.parse(cleanJson);
-      } catch (parseError) {
-        console.error("[IA] JSON parse failed. Response length:", responseText.length, "Last 100 chars:", responseText.slice(-100));
-        throw new Error("Resposta da IA veio truncada ou mal formatada. Tente novamente.");
+      } catch {
+        // A IA pode retornar newlines literais dentro de strings JSON.
+        // Sanitizar: remover newlines entre aspas que não estejam escaped.
+        try {
+          let inString = false;
+          let escaped = false;
+          let sanitized = "";
+          for (const ch of cleanJson) {
+            if (escaped) { sanitized += ch; escaped = false; continue; }
+            if (ch === "\\") { sanitized += ch; escaped = true; continue; }
+            if (ch === '"') { inString = !inString; sanitized += ch; continue; }
+            if (inString && ch === "\n") { sanitized += "\\n"; continue; }
+            if (inString && ch === "\r") { sanitized += "\\r"; continue; }
+            sanitized += ch;
+          }
+          iaResultado = JSON.parse(sanitized);
+        } catch (parseError) {
+          const errMsg = parseError instanceof Error ? parseError.message : String(parseError);
+          console.error("[IA] JSON parse failed. Error:", errMsg);
+          console.error("[IA] Response length:", responseText.length);
+          console.error("[IA] First 500 chars:", responseText.slice(0, 500));
+          console.error("[IA] Last 200 chars:", responseText.slice(-200));
+          throw new Error("Resposta da IA veio truncada ou mal formatada. Tente novamente.");
+        }
       }
 
       if (!iaResultado.temaCentral || !iaResultado.frasesRedesSociais) {
