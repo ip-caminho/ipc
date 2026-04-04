@@ -9,7 +9,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Slider } from "@/shared/components/ui/slider";
-import { Play, Pause, Save, Scissors, RotateCcw } from "lucide-react";
+import { Play, Pause, Save, Scissors, RotateCcw, Volume2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAudioPlayer } from "@shared/audio/useAudioPlayer";
 
@@ -87,6 +87,37 @@ export function SegmentEditor({
   const [iAvisos, setIAvisos] = useState(secondsToHHMMSS(inicioAvisos));
   const [fAvisos, setFAvisos] = useState(secondsToHHMMSS(fimAvisos));
   const [saving, setSaving] = useState(false);
+  const [previewLabel, setPreviewLabel] = useState<string | null>(null);
+  const previewTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Toca um preview de ~5 segundos a partir de um ponto
+  const playPreview = useCallback((startSec: number, label: string) => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    globalPlayer.pause();
+    if (previewTimeoutRef.current) clearTimeout(previewTimeoutRef.current);
+
+    audio.currentTime = startSec;
+    audio.play();
+    setPlaying(true);
+    setPreviewLabel(label);
+
+    previewTimeoutRef.current = setTimeout(() => {
+      audio.pause();
+      setPlaying(false);
+      setPreviewLabel(null);
+    }, 5000);
+  }, [globalPlayer]);
+
+  // Para o preview se estiver rodando
+  const stopPreview = useCallback(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.pause();
+    setPlaying(false);
+    setPreviewLabel(null);
+    if (previewTimeoutRef.current) clearTimeout(previewTimeoutRef.current);
+  }, []);
 
   const togglePlay = useCallback(() => {
     const audio = audioRef.current;
@@ -183,93 +214,189 @@ export function SegmentEditor({
           </p>
         </div>
 
-        {/* Timestamp fields */}
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label className="text-xs">Inicio do sermao</Label>
-            <div className="flex gap-1.5">
-              <Input
-                value={iSermao}
-                onChange={(e) => setISermao(e.target.value)}
-                placeholder="HH:MM:SS"
-                className="font-mono text-sm"
-              />
+        {/* Preview indicator */}
+        {previewLabel && (
+          <div className="flex items-center justify-between p-2 bg-primary/10 rounded-md text-sm">
+            <span className="flex items-center gap-2">
+              <Volume2 className="h-3.5 w-3.5 animate-pulse" />
+              Ouvindo: {previewLabel}
+            </span>
+            <Button type="button" variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={stopPreview}>
+              Parar
+            </Button>
+          </div>
+        )}
+
+        {/* Sermao */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">Sermao</span>
+            {hhmmssToSeconds(iSermao) != null && hhmmssToSeconds(fSermao) != null && (
               <Button
                 type="button"
                 variant="outline"
-                size="icon"
-                className="shrink-0"
-                title="Usar posicao atual"
-                onClick={() => captureTime(setISermao)}
+                size="sm"
+                className="h-7 text-xs gap-1"
+                onClick={() => playPreview(hhmmssToSeconds(iSermao)!, "Sermao (inicio)")}
               >
-                <RotateCcw className="h-3 w-3" />
+                <Play className="h-3 w-3" /> Ouvir trecho
               </Button>
+            )}
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label className="text-xs">Inicio</Label>
+              <div className="flex gap-1.5">
+                <Input
+                  value={iSermao}
+                  onChange={(e) => setISermao(e.target.value)}
+                  placeholder="HH:MM:SS"
+                  className="font-mono text-sm"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="shrink-0"
+                  title="Usar posicao atual"
+                  onClick={() => captureTime(setISermao)}
+                >
+                  <RotateCcw className="h-3 w-3" />
+                </Button>
+                {hhmmssToSeconds(iSermao) != null && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="shrink-0"
+                    title="Ouvir 5s a partir deste ponto"
+                    onClick={() => playPreview(hhmmssToSeconds(iSermao)!, "Inicio sermao")}
+                  >
+                    <Volume2 className="h-3 w-3" />
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs">Fim</Label>
+              <div className="flex gap-1.5">
+                <Input
+                  value={fSermao}
+                  onChange={(e) => setFSermao(e.target.value)}
+                  placeholder="HH:MM:SS"
+                  className="font-mono text-sm"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="shrink-0"
+                  title="Usar posicao atual"
+                  onClick={() => captureTime(setFSermao)}
+                >
+                  <RotateCcw className="h-3 w-3" />
+                </Button>
+                {hhmmssToSeconds(fSermao) != null && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="shrink-0"
+                    title="Ouvir 5s antes deste ponto"
+                    onClick={() => playPreview(Math.max(0, hhmmssToSeconds(fSermao)! - 5), "Fim sermao")}
+                  >
+                    <Volume2 className="h-3 w-3" />
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
+        </div>
 
-          <div className="space-y-1.5">
-            <Label className="text-xs">Fim do sermao</Label>
-            <div className="flex gap-1.5">
-              <Input
-                value={fSermao}
-                onChange={(e) => setFSermao(e.target.value)}
-                placeholder="HH:MM:SS"
-                className="font-mono text-sm"
-              />
+        {/* Avisos */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">Avisos</span>
+            {hhmmssToSeconds(iAvisos) != null && hhmmssToSeconds(fAvisos) != null && (
               <Button
                 type="button"
                 variant="outline"
-                size="icon"
-                className="shrink-0"
-                title="Usar posicao atual"
-                onClick={() => captureTime(setFSermao)}
+                size="sm"
+                className="h-7 text-xs gap-1"
+                onClick={() => playPreview(hhmmssToSeconds(iAvisos)!, "Avisos (inicio)")}
               >
-                <RotateCcw className="h-3 w-3" />
+                <Play className="h-3 w-3" /> Ouvir trecho
               </Button>
-            </div>
+            )}
           </div>
-
-          <div className="space-y-1.5">
-            <Label className="text-xs">Inicio dos avisos</Label>
-            <div className="flex gap-1.5">
-              <Input
-                value={iAvisos}
-                onChange={(e) => setIAvisos(e.target.value)}
-                placeholder="HH:MM:SS"
-                className="font-mono text-sm"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                className="shrink-0"
-                title="Usar posicao atual"
-                onClick={() => captureTime(setIAvisos)}
-              >
-                <RotateCcw className="h-3 w-3" />
-              </Button>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label className="text-xs">Inicio</Label>
+              <div className="flex gap-1.5">
+                <Input
+                  value={iAvisos}
+                  onChange={(e) => setIAvisos(e.target.value)}
+                  placeholder="HH:MM:SS"
+                  className="font-mono text-sm"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="shrink-0"
+                  title="Usar posicao atual"
+                  onClick={() => captureTime(setIAvisos)}
+                >
+                  <RotateCcw className="h-3 w-3" />
+                </Button>
+                {hhmmssToSeconds(iAvisos) != null && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="shrink-0"
+                    title="Ouvir 5s a partir deste ponto"
+                    onClick={() => playPreview(hhmmssToSeconds(iAvisos)!, "Inicio avisos")}
+                  >
+                    <Volume2 className="h-3 w-3" />
+                  </Button>
+                )}
+              </div>
             </div>
-          </div>
 
-          <div className="space-y-1.5">
-            <Label className="text-xs">Fim dos avisos</Label>
-            <div className="flex gap-1.5">
-              <Input
-                value={fAvisos}
-                onChange={(e) => setFAvisos(e.target.value)}
-                placeholder="HH:MM:SS"
-                className="font-mono text-sm"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                className="shrink-0"
-                title="Usar posicao atual"
-                onClick={() => captureTime(setFAvisos)}
-              >
-                <RotateCcw className="h-3 w-3" />
-              </Button>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Fim</Label>
+              <div className="flex gap-1.5">
+                <Input
+                  value={fAvisos}
+                  onChange={(e) => setFAvisos(e.target.value)}
+                  placeholder="HH:MM:SS"
+                  className="font-mono text-sm"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="shrink-0"
+                  title="Usar posicao atual"
+                  onClick={() => captureTime(setFAvisos)}
+                >
+                  <RotateCcw className="h-3 w-3" />
+                </Button>
+                {hhmmssToSeconds(fAvisos) != null && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="shrink-0"
+                    title="Ouvir 5s antes deste ponto"
+                    onClick={() => playPreview(Math.max(0, hhmmssToSeconds(fAvisos)! - 5), "Fim avisos")}
+                  >
+                    <Volume2 className="h-3 w-3" />
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         </div>
