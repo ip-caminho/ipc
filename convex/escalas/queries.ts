@@ -6,6 +6,46 @@ function primeiroNome(nomeCompleto: string): string {
   return nomeCompleto.split(" ")[0];
 }
 
+/** Helper: buscar cultoLouvores enriquecidos para um culto */
+async function enrichCultoLouvores(ctx: any, cultoId: any) {
+  const items = await ctx.db
+    .query("cultoLouvores")
+    .withIndex("by_culto", (q: any) => q.eq("cultoId", cultoId))
+    .collect();
+
+  if (items.length === 0) return null; // Sem dados na nova tabela
+
+  items.sort((a: any, b: any) => a.ordem - b.ordem);
+
+  const enriched = [];
+  for (const item of items) {
+    let titulo = item.tituloLegado || "";
+    let artista: string | undefined;
+    let tomOriginal: string | undefined;
+
+    if (item.louvorId) {
+      const louvor = await ctx.db.get(item.louvorId);
+      if (louvor) {
+        titulo = louvor.titulo;
+        artista = louvor.artista;
+        tomOriginal = louvor.tom;
+      }
+    }
+
+    enriched.push({
+      _id: item._id,
+      louvorId: item.louvorId || null,
+      titulo,
+      artista: artista || null,
+      tomOriginal: tomOriginal || null,
+      tomEscolhido: item.tom || null,
+      secao: item.secao || null,
+      ordem: item.ordem,
+    });
+  }
+  return enriched;
+}
+
 async function resolveEscalaNome(ctx: any, e: any): Promise<string> {
   if (e.nomeCustom) return e.nomeCustom;
   if (!e.membroId) return "";
@@ -85,7 +125,8 @@ export const getCultoById = query({
       }))
     );
 
-    return { ...culto, escalas: escalasEnriched };
+    const louvoresDetalhados = await enrichCultoLouvores(ctx, id);
+    return { ...culto, escalas: escalasEnriched, louvoresDetalhados };
   },
 });
 
@@ -216,6 +257,7 @@ export const getProximoDomingo = query({
     const anterior = idx > 0 ? dominicais[idx - 1].data : null;
     const proximo = idx < dominicais.length - 1 ? dominicais[idx + 1].data : null;
 
+    const louvoresDetalhados = await enrichCultoLouvores(ctx, culto!._id);
     return {
       ...culto,
       escalas: escalasEnriched,
@@ -223,6 +265,7 @@ export const getProximoDomingo = query({
       indisponibilidades: indispsEnriched,
       datasDisponiveis,
       navegacao: { anterior, proximo },
+      louvoresDetalhados,
     };
   },
 });
@@ -292,11 +335,13 @@ export const getBoletim = query({
       return a.dataInicio <= culto!.data && fim >= culto!.data;
     });
 
+    const louvoresDetalhados = await enrichCultoLouvores(ctx, culto!._id);
     return {
       ...culto,
       escalas: escalasEnriched,
       avisos,
       navegacao: { anterior, proximo },
+      louvoresDetalhados,
     };
   },
 });
