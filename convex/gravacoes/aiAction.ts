@@ -42,7 +42,7 @@ IMPORTANTE:
 - As descrições do Instagram devem complementar as frases, não repeti-las
 - Para inicioSermao: comece nas primeiras palavras do pregador (saudação, convite para leitura bíblica, etc). SEMPRE inclua a saudação inicial e a leitura da passagem.
 - Para fimSermao: termine APÓS o momento de interação (oração de resposta, apelo). O momento de interação faz parte do sermão. Só exclua avisos da igreja, bênção e cânticos finais.
-- Os timestamps estão no formato [MM:SS] no início de cada parágrafo.
+- Os timestamps estão no formato [MM:SS (Xs)] ou [HH:MM:SS (Xs)] no início de cada parágrafo, onde X é o valor em segundos. Use diretamente o valor em segundos entre parênteses para preencher inicioSermao, fimSermao, inicioAvisos e fimAvisos. Exemplo: se o sermão começa no parágrafo com [03:45 (225s)], então inicioSermao = 225.
 - Para avisos: identifique o trecho onde alguém faz comunicados, informes ou avisos para a congregação (eventos, reuniões, datas, etc). Separe cada aviso individual.
 - Para dataEvento nos avisos: a data do culto é informada abaixo. Use-a como referência para converter datas relativas ("próximo sábado", "dia 15", "semana que vem") em datas absolutas YYYY-MM-DD.
 - Para contatoNome: capture exatamente o apelido/nome falado (ex: "Leandrão", "Irmã Maria"). Isso será usado para vincular ao contato correto depois.
@@ -53,11 +53,16 @@ DATA DO CULTO: {{DATA_CULTO}}
 TRANSCRIÇÃO:
 `;
 
-/** Format seconds as MM:SS */
+/** Format seconds as MM:SS or HH:MM:SS, with total seconds in parentheses */
 function formatTimestamp(seconds: number): string {
-  const m = Math.floor(seconds / 60);
-  const s = Math.floor(seconds % 60);
-  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  const totalSec = Math.floor(seconds);
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  const time = h > 0
+    ? `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
+    : `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  return `${time} (${totalSec}s)`;
 }
 
 /**
