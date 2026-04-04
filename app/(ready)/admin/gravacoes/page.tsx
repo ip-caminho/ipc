@@ -4,26 +4,37 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useState, useMemo } from "react";
 import { useDebounce } from "@shared/hooks/useDebounce";
-import { Card, CardContent } from "@/shared/components/ui/card";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { AdminGate } from "@shared/components/auth/RoleGate";
 import { IaStatusBadge } from "@features/gravacoes/components/IaStatusBadge";
-import { Search, ExternalLink, Plus, Globe, GlobeLock } from "lucide-react";
+import {
+  Search, ExternalLink, Plus, Globe, GlobeLock,
+  Mic, BookOpen, Presentation, FileAudio,
+} from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import Link from "next/link";
 
-function GravacaoAdminCard({ g }: { g: any }) {
+const TIPO_CONFIG: Record<string, { label: string; icon: typeof Mic; color: string }> = {
+  SERMAO: { label: "Sermao", icon: Mic, color: "text-blue-600 dark:text-blue-400" },
+  ESTUDO_BIBLICO: { label: "Estudo", icon: BookOpen, color: "text-violet-600 dark:text-violet-400" },
+  PALESTRA: { label: "Palestra", icon: Presentation, color: "text-teal-600 dark:text-teal-400" },
+  OUTRO: { label: "Outro", icon: FileAudio, color: "text-amber-600 dark:text-amber-400" },
+};
+
+function GravacaoRow({ g }: { g: any }) {
   // @ts-ignore Convex TS2589
   const publishGravacao = useMutation(api.gravacoes.mutations.publish);
   // @ts-ignore Convex TS2589
   const unpublishGravacao = useMutation(api.gravacoes.mutations.update);
   const pregador = g.pregadorNome || g.pregadorInfo?.nome;
   const isPublished = g.status === "PUBLICADO";
+  const tipo = TIPO_CONFIG[g.tipo] || TIPO_CONFIG.OUTRO;
+  const TipoIcon = tipo.icon;
 
   const toggleStatus = async () => {
     try {
@@ -40,59 +51,69 @@ function GravacaoAdminCard({ g }: { g: any }) {
   };
 
   return (
-    <Card className="hover:bg-accent/50 transition-colors">
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex-1 space-y-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <h3 className="font-medium leading-tight truncate">{g.titulo}</h3>
-              <Badge
-                variant={isPublished ? "default" : "secondary"}
-                className="text-xs shrink-0 cursor-pointer"
-                onClick={toggleStatus}
-              >
-                {isPublished ? (
-                  <><Globe className="h-3 w-3 mr-1" />Publicado</>
-                ) : (
-                  <><GlobeLock className="h-3 w-3 mr-1" />Rascunho</>
-                )}
-              </Badge>
-              <IaStatusBadge iaStatus={g.iaStatus} iaErro={g.iaErro} />
-            </div>
-            <div className="flex items-center gap-3 text-sm text-muted-foreground">
-              <span>{format(parseISO(g.data), "dd/MM/yyyy", { locale: ptBR })}</span>
-              {pregador && <span>{pregador}</span>}
-              {g.textoBase && <span className="truncate">{g.textoBase}</span>}
-            </div>
-            <div className="flex items-center gap-3 text-xs text-muted-foreground">
-              {g.audioUrl ? (
-                <span className="text-green-600">Audio enviado</span>
-              ) : (
-                <span className="text-orange-500">Sem audio</span>
-              )}
-              {g.iaAvisos && g.iaAvisos.length > 0 && (
-                <span>{g.iaAvisos.length} aviso(s)</span>
-              )}
-              {g.tags && g.tags.length > 0 && (
-                <span>{g.tags.length} tag(s)</span>
-              )}
-            </div>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <Button variant="outline" size="sm" asChild>
-              <Link href={`/gravacoes/${g._id}/admin`}>
-                Gerenciar
-              </Link>
-            </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-              <Link href={`/gravacoes/${g._id}`}>
-                <ExternalLink className="h-3.5 w-3.5" />
-              </Link>
-            </Button>
-          </div>
+    <tr className="border-b hover:bg-accent/50 transition-colors group">
+      {/* Tipo */}
+      <td className="py-2 px-3 w-8">
+        <TipoIcon className={`h-4 w-4 ${tipo.color}`} title={tipo.label} />
+      </td>
+      {/* Titulo + info */}
+      <td className="py-2 px-3">
+        <Link href={`/gravacoes/${g._id}/admin`} className="block group-hover:underline">
+          <span className="font-medium text-sm leading-tight line-clamp-1">{g.titulo}</span>
+        </Link>
+        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+          {pregador && <span>{pregador}</span>}
+          {g.textoBase && <span className="truncate max-w-[200px]">{g.textoBase}</span>}
         </div>
-      </CardContent>
-    </Card>
+      </td>
+      {/* Data */}
+      <td className="py-2 px-3 text-sm text-muted-foreground whitespace-nowrap hidden sm:table-cell">
+        {format(parseISO(g.data), "dd/MM/yy", { locale: ptBR })}
+      </td>
+      {/* Status */}
+      <td className="py-2 px-3 hidden md:table-cell">
+        <Badge
+          variant={isPublished ? "default" : "secondary"}
+          className="text-[10px] cursor-pointer"
+          onClick={toggleStatus}
+        >
+          {isPublished ? (
+            <><Globe className="h-3 w-3 mr-0.5" />Pub</>
+          ) : (
+            <><GlobeLock className="h-3 w-3 mr-0.5" />Rasc</>
+          )}
+        </Badge>
+      </td>
+      {/* IA Status */}
+      <td className="py-2 px-3 hidden md:table-cell">
+        <IaStatusBadge iaStatus={g.iaStatus} iaErro={g.iaErro} />
+      </td>
+      {/* Ações */}
+      <td className="py-2 px-3 text-right whitespace-nowrap">
+        <div className="flex items-center gap-1 justify-end">
+          {/* Mobile: badges inline */}
+          <span className="md:hidden flex items-center gap-1">
+            <Badge
+              variant={isPublished ? "default" : "secondary"}
+              className="text-[10px] cursor-pointer"
+              onClick={toggleStatus}
+            >
+              {isPublished ? "Pub" : "Rasc"}
+            </Badge>
+          </span>
+          <Button variant="outline" size="sm" className="h-7 text-xs" asChild>
+            <Link href={`/gravacoes/${g._id}/admin`}>
+              Gerenciar
+            </Link>
+          </Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
+            <Link href={`/gravacoes/${g._id}`}>
+              <ExternalLink className="h-3 w-3" />
+            </Link>
+          </Button>
+        </div>
+      </td>
+    </tr>
   );
 }
 
@@ -100,6 +121,7 @@ export default function AdminGravacoesPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [iaFilter, setIaFilter] = useState<string>("ALL");
+  const [tipoFilter, setTipoFilter] = useState<string>("ALL");
   const debouncedSearch = useDebounce(search, 300);
 
   // @ts-ignore Convex TS2589
@@ -110,22 +132,26 @@ export default function AdminGravacoesPage() {
 
   const filtered = useMemo(() => {
     if (!gravacoes) return undefined;
-    if (iaFilter === "ALL") return gravacoes;
-    return gravacoes.filter((g: any) => {
+    let result = gravacoes;
+    if (tipoFilter !== "ALL") {
+      result = result.filter((g: any) => g.tipo === tipoFilter);
+    }
+    if (iaFilter === "ALL") return result;
+    return result.filter((g: any) => {
       if (iaFilter === "CONCLUIDO") return g.iaStatus === "CONCLUIDO";
       if (iaFilter === "PENDENTE") return !g.iaStatus || g.iaStatus === "PENDENTE";
       if (iaFilter === "ERRO") return g.iaStatus === "ERRO";
       if (iaFilter === "PROCESSANDO") return g.iaStatus === "TRANSCREVENDO" || g.iaStatus === "ANALISANDO";
       return true;
     });
-  }, [gravacoes, iaFilter]);
+  }, [gravacoes, iaFilter, tipoFilter]);
 
   return (
     <AdminGate fallback={<p className="text-muted-foreground">Acesso restrito a administradores</p>}>
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">Gerenciar Gravações</h1>
+            <h1 className="text-2xl font-bold">Gerenciar Gravacoes</h1>
             {filtered && (
               <p className="text-sm text-muted-foreground">{filtered.length} gravacao(oes)</p>
             )}
@@ -133,19 +159,20 @@ export default function AdminGravacoesPage() {
           <Button asChild>
             <Link href="/gravacoes/nova">
               <Plus className="h-4 w-4 mr-2" />
-              Nova Gravacao
+              Nova
             </Link>
           </Button>
         </div>
 
+        {/* Filtros */}
         <div className="flex items-center gap-2 flex-wrap">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar por titulo, pregador..."
+              placeholder="Buscar..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-8"
+              className="pl-8 h-8"
             />
           </div>
           <div className="flex items-center gap-1">
@@ -154,11 +181,28 @@ export default function AdminGravacoesPage() {
                 key={s}
                 variant={statusFilter === s ? "default" : "outline"}
                 size="sm"
+                className="h-7 text-xs"
                 onClick={() => setStatusFilter(s)}
               >
-                {s === "ALL" ? "Todos" : s === "PUBLICADO" ? "Publicado" : "Rascunho"}
+                {s === "ALL" ? "Todos" : s === "PUBLICADO" ? "Pub" : "Rasc"}
               </Button>
             ))}
+          </div>
+          <div className="flex items-center gap-1">
+            {(["ALL", "SERMAO", "ESTUDO_BIBLICO", "PALESTRA", "OUTRO"] as const).map((t) => {
+              const cfg = TIPO_CONFIG[t];
+              return (
+                <Button
+                  key={t}
+                  variant={tipoFilter === t ? "default" : "outline"}
+                  size="sm"
+                  className="h-7 text-xs"
+                  onClick={() => setTipoFilter(t)}
+                >
+                  {t === "ALL" ? "Tipo: Todos" : cfg?.label || t}
+                </Button>
+              );
+            })}
           </div>
           <div className="flex items-center gap-1">
             {(["ALL", "CONCLUIDO", "PROCESSANDO", "PENDENTE", "ERRO"] as const).map((s) => (
@@ -166,27 +210,33 @@ export default function AdminGravacoesPage() {
                 key={s}
                 variant={iaFilter === s ? "default" : "outline"}
                 size="sm"
+                className="h-7 text-xs"
                 onClick={() => setIaFilter(s)}
               >
-                {s === "ALL" ? "IA: Todos" : s === "CONCLUIDO" ? "IA: OK" : s === "PROCESSANDO" ? "IA: Processando" : s === "PENDENTE" ? "IA: Pendente" : "IA: Erro"}
+                {s === "ALL" ? "IA: Todos" : s === "CONCLUIDO" ? "IA: OK" : s === "PROCESSANDO" ? "Proc." : s === "PENDENTE" ? "Pend." : "Erro"}
               </Button>
             ))}
           </div>
         </div>
 
+        {/* Tabela */}
         {filtered === undefined ? (
-          <div className="space-y-2">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} className="h-20" />
+          <div className="space-y-1">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <Skeleton key={i} className="h-10" />
             ))}
           </div>
         ) : filtered.length === 0 ? (
           <p className="text-muted-foreground text-center py-8">Nenhuma gravacao encontrada</p>
         ) : (
-          <div className="space-y-2">
-            {filtered.map((g: any) => (
-              <GravacaoAdminCard key={g._id} g={g} />
-            ))}
+          <div className="border rounded-md overflow-hidden">
+            <table className="w-full">
+              <tbody>
+                {filtered.map((g: any) => (
+                  <GravacaoRow key={g._id} g={g} />
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
