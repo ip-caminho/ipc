@@ -110,8 +110,7 @@ export const getById = query({
 export const getLatestAvisos = query({
   args: {},
   handler: async (ctx) => {
-    // Busca a gravacao mais recente que tenha avisos processados pela IA
-    // Independente do status (RASCUNHO ou PUBLICADO) — basta ter sido processado
+    // Busca a gravacao tipo SERMAO mais recente (por data) que tenha avisos
     const gravacoes = await ctx.db
       .query("gravacoes")
       .withIndex("by_data")
@@ -120,6 +119,7 @@ export const getLatestAvisos = query({
 
     const gravacao = gravacoes.find(
       (g) =>
+        g.tipo === "SERMAO" &&
         g.iaStatus === "CONCLUIDO" &&
         g.iaAvisos &&
         g.iaAvisos.length > 0
