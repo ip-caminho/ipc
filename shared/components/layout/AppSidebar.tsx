@@ -55,7 +55,7 @@ import {
   Sun,
 } from "lucide-react";
 import { useAuthActions } from "@convex-dev/auth/react";
-import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { Button } from "@/shared/components/ui/button";
 
 type MenuItem = {
@@ -116,7 +116,7 @@ const adminItems: MenuItem[] = [
 
 export function AppSidebar() {
   const pathname = usePathname();
-  const { can, isAdmin, name, role } = useAuth();
+  const { can, isAdmin, name, role, foto } = useAuth();
   const { signOut } = useAuthActions();
   // @ts-ignore Convex TS2589
   const modulosAtivos = useQuery(api.modulos.queries.listModulosAtivos);
@@ -280,6 +280,7 @@ export function AppSidebar() {
       <SidebarFooter className="border-t p-4">
         <div className="flex items-center gap-3">
           <Avatar className="h-8 w-8">
+            {foto && <AvatarImage src={foto} alt={name || "Usuário"} />}
             <AvatarFallback>
               {name?.charAt(0)?.toUpperCase() || "?"}
             </AvatarFallback>
