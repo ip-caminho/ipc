@@ -10,7 +10,7 @@ import { Input } from "@/shared/components/ui/input";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { AdminGate } from "@shared/components/auth/RoleGate";
 import { IaStatusBadge } from "@features/gravacoes/components/IaStatusBadge";
-import { useIsMobile } from "@shared/hooks/useIsMobile";
+import { useIsMobile } from "@shared/hooks/use-mobile";
 import {
   Search, ExternalLink, Plus, Globe, GlobeLock,
   Mic, BookOpen, Presentation, FileAudio,
