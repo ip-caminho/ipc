@@ -26,7 +26,7 @@ function getLastSunday(): string {
 
 const gravacaoSchema = z.object({
   titulo: z.string().min(3, "Titulo deve ter pelo menos 3 caracteres"),
-  tipo: z.enum(["SERMAO", "ESTUDO_BIBLICO", "PALESTRA", "TESTEMUNHO"]),
+  tipo: z.enum(["SERMAO", "ESTUDO_BIBLICO", "PALESTRA", "OUTRO"]),
   serieId: z.string().optional(),
   pregadorNome: z.string().optional(),
   data: z.string().min(1, "Data e obrigatoria"),

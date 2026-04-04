@@ -10,7 +10,7 @@ export const create = mutation({
       v.literal("SERMAO"),
       v.literal("ESTUDO_BIBLICO"),
       v.literal("PALESTRA"),
-      v.literal("TESTEMUNHO")
+      v.literal("OUTRO")
     ),
     pregadorId: v.optional(v.id("membros")),
     pregadorNome: v.optional(v.string()),
