@@ -49,6 +49,7 @@ export function useAudioCompressor() {
           "-i", inputName,
           "-vn",               // strip album art
           "-ac", "1",          // mono
+          "-af", "dynaudnorm=f=150:g=15", // normalizar volume dinâmico
           "-ab", "64k",        // 64kbps
           "-acodec", "libmp3lame",
           "output.mp3",
