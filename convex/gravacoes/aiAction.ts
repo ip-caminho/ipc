@@ -4,7 +4,7 @@ import { internalAction } from "../_generated/server";
 import { v } from "convex/values";
 import { DeepgramClient } from "@deepgram/sdk";
 import { createLlmProvider } from "../_shared/llm";
-import { fetchB2File } from "../files/signing";
+import { toCdnUrl } from "../files/helpers";
 
 const GENERIC_ANALYSIS_PROMPT = `Você é um analista de conteúdo cristão reformado/presbiteriano. Analise a transcrição abaixo e retorne um JSON estruturado com os seguintes campos:
 
@@ -174,14 +174,11 @@ export const processSermon = internalAction({
           iaStatus: "TRANSCREVENDO",
         });
 
-        // Download audio from B2 server-side, then send buffer to Deepgram
-        const audioBuffer = await fetchB2File(audioUrl);
-        if (!audioBuffer) {
-          throw new Error("Nao foi possivel baixar o audio do B2");
-        }
-
+        // Enviar URL do CDN diretamente pro Deepgram (sem baixar no backend)
+        const cdnUrl = toCdnUrl(audioUrl);
         const deepgram = new DeepgramClient({ apiKey: process.env.DEEPGRAM_API_KEY! });
-        const result = await deepgram.listen.v1.media.transcribeFile(audioBuffer, {
+        const result = await deepgram.listen.v1.media.transcribeUrl({
+          url: cdnUrl,
           model: "nova-2",
           language: "pt-BR",
           smart_format: true,
