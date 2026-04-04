@@ -90,7 +90,7 @@ export function SegmentEditor({
   const [fAvisos, setFAvisos] = useState(secondsToHHMMSS(fimAvisos));
   const [saving, setSaving] = useState(false);
   const cdnUrl = toCdnUrl(audioUrl);
-  const { peaks, loading: waveformLoading } = useWaveformPeaks(cdnUrl);
+  const { peaks, loading: waveformLoading, progress: waveformProgress, error: waveformError } = useWaveformPeaks(cdnUrl);
 
   const regions = useMemo<WaveformRegion[]>(() => {
     const r: WaveformRegion[] = [];
@@ -213,9 +213,14 @@ export function SegmentEditor({
 
           {/* Waveform ou fallback slider */}
           {waveformLoading ? (
-            <div className="flex items-center justify-center h-20 text-xs text-muted-foreground gap-2">
+            <div className="flex flex-col items-center justify-center h-24 text-xs text-muted-foreground gap-2">
               <Loader2 className="h-4 w-4 animate-spin" />
-              Carregando forma de onda...
+              <span>Carregando forma de onda... {waveformProgress > 0 ? `${waveformProgress}%` : ""}</span>
+              {waveformProgress > 0 && (
+                <div className="w-48 h-1 bg-muted-foreground/20 rounded-full overflow-hidden">
+                  <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${waveformProgress}%` }} />
+                </div>
+              )}
             </div>
           ) : peaks ? (
             <WaveformCanvas
@@ -224,16 +229,21 @@ export function SegmentEditor({
               currentTime={currentTime}
               regions={regions}
               onSeek={handleSeek}
-              className="h-20 rounded"
+              className="h-24 rounded"
             />
           ) : (
-            <Slider
-              min={0}
-              max={duration || 1}
-              step={0.5}
-              value={[currentTime]}
-              onValueChange={handleSlider}
-            />
+            <div className="space-y-2">
+              {waveformError && (
+                <p className="text-[10px] text-muted-foreground">Waveform indisponivel: {waveformError}</p>
+              )}
+              <Slider
+                min={0}
+                max={duration || 1}
+                step={0.5}
+                value={[currentTime]}
+                onValueChange={handleSlider}
+              />
+            </div>
           )}
 
           {/* Controles */}
