@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useMemo } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -9,9 +9,11 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Slider } from "@/shared/components/ui/slider";
-import { Play, Pause, Save, Scissors, RotateCcw, Volume2 } from "lucide-react";
+import { Play, Pause, Save, Scissors, RotateCcw, Volume2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAudioPlayer } from "@shared/audio/useAudioPlayer";
+import { useWaveformPeaks } from "../hooks/useWaveformPeaks";
+import { WaveformCanvas, type WaveformRegion } from "./WaveformCanvas";
 
 interface SegmentEditorProps {
   gravacaoId: Id<"gravacoes">;
@@ -87,6 +89,24 @@ export function SegmentEditor({
   const [iAvisos, setIAvisos] = useState(secondsToHHMMSS(inicioAvisos));
   const [fAvisos, setFAvisos] = useState(secondsToHHMMSS(fimAvisos));
   const [saving, setSaving] = useState(false);
+  const cdnUrl = toCdnUrl(audioUrl);
+  const { peaks, loading: waveformLoading } = useWaveformPeaks(cdnUrl);
+
+  const regions = useMemo<WaveformRegion[]>(() => {
+    const r: WaveformRegion[] = [];
+    const is = hhmmssToSeconds(iSermao);
+    const fs = hhmmssToSeconds(fSermao);
+    const ia = hhmmssToSeconds(iAvisos);
+    const fa = hhmmssToSeconds(fAvisos);
+    if (is != null && fs != null) {
+      r.push({ start: is, end: fs, color: "hsla(210, 80%, 55%, 0.15)", label: "Sermao" });
+    }
+    if (ia != null && fa != null) {
+      r.push({ start: ia, end: fa, color: "hsla(40, 90%, 55%, 0.2)", label: "Avisos" });
+    }
+    return r;
+  }, [iSermao, fSermao, iAvisos, fAvisos]);
+
   const [previewLabel, setPreviewLabel] = useState<string | null>(null);
   const previewTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -132,12 +152,16 @@ export function SegmentEditor({
     }
   }, [globalPlayer]);
 
-  const handleSlider = useCallback(([v]: number[]) => {
+  const handleSeek = useCallback((time: number) => {
     const audio = audioRef.current;
     if (!audio) return;
-    audio.currentTime = v;
-    setCurrentTime(v);
+    audio.currentTime = time;
+    setCurrentTime(time);
   }, []);
+
+  const handleSlider = useCallback(([v]: number[]) => {
+    handleSeek(v);
+  }, [handleSeek]);
 
   const captureTime = useCallback((setter: (v: string) => void) => {
     setter(secondsToHHMMSS(currentTime));
@@ -172,11 +196,11 @@ export function SegmentEditor({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Full audio player for reference */}
+        {/* Audio player com waveform */}
         <div className="space-y-2 p-3 bg-muted rounded-md">
           <audio
             ref={audioRef}
-            src={toCdnUrl(audioUrl)}
+            src={cdnUrl}
             preload="metadata"
             onLoadedMetadata={() => {
               if (audioRef.current) setDuration(audioRef.current.duration);
@@ -186,6 +210,33 @@ export function SegmentEditor({
             }}
             onEnded={() => setPlaying(false)}
           />
+
+          {/* Waveform ou fallback slider */}
+          {waveformLoading ? (
+            <div className="flex items-center justify-center h-20 text-xs text-muted-foreground gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Carregando forma de onda...
+            </div>
+          ) : peaks ? (
+            <WaveformCanvas
+              peaks={peaks}
+              duration={duration}
+              currentTime={currentTime}
+              regions={regions}
+              onSeek={handleSeek}
+              className="h-20 rounded"
+            />
+          ) : (
+            <Slider
+              min={0}
+              max={duration || 1}
+              step={0.5}
+              value={[currentTime]}
+              onValueChange={handleSlider}
+            />
+          )}
+
+          {/* Controles */}
           <div className="flex items-center gap-3">
             <Button
               type="button"
@@ -196,22 +247,27 @@ export function SegmentEditor({
             >
               {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
             </Button>
-            <div className="flex-1">
-              <Slider
-                min={0}
-                max={duration || 1}
-                step={0.5}
-                value={[currentTime]}
-                onValueChange={handleSlider}
-              />
+            <div className="flex-1 text-[10px] text-muted-foreground">
+              Clique na forma de onda para navegar
             </div>
             <span className="text-xs text-muted-foreground tabular-nums shrink-0">
               {formatTime(currentTime)} / {formatTime(duration)}
             </span>
           </div>
-          <p className="text-[10px] text-muted-foreground">
-            Audio completo — use para encontrar os pontos corretos
-          </p>
+
+          {/* Legenda das regioes */}
+          {regions.length > 0 && (
+            <div className="flex items-center gap-4 text-[10px] text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <span className="inline-block w-3 h-3 rounded-sm" style={{ background: "hsla(210, 80%, 55%, 0.3)" }} />
+                Sermao
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="inline-block w-3 h-3 rounded-sm" style={{ background: "hsla(40, 90%, 55%, 0.4)" }} />
+                Avisos
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Preview indicator */}
