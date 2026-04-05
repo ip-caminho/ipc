@@ -3,38 +3,163 @@
  * Used by rbac.ts queries — no Convex runtime dependency.
  */
 
+// === Permissões padrão por role ===
+// Role = nível hierárquico. Permissões extras = voluntários (via membro.permissions[])
+
 export const INITIAL_ROLE_PERMISSIONS: Record<string, string[]> = {
   admin: ["*"],
-  secretaria: [
+
+  pastor: [
+    // Membros e entidades
     "membros:read", "membros:create", "membros:update",
+    "entidades:read", "entidades:create", "entidades:update",
+    "diretorio:read",
+    // Pastoreio completo
+    "pastoreio:read", "pastoreio:create", "pastoreio:update", "pastoreio:delete",
+    // Pequenos Grupos
+    "pequenos_grupos:read", "pequenos_grupos:create", "pequenos_grupos:update", "pequenos_grupos:delete",
+    "pequenos_grupos:organizador",
+    // Pedidos de oração
+    "pedidos_oracao:create", "pedidos_oracao:read",
+    // Gravações
+    "gravacoes:read", "gravacoes:create", "gravacoes:update", "gravacoes:process_ai",
+    // Escalas
+    "escalas:read", "escalas:create", "escalas:update",
+    // Louvor
+    "louvor:read", "louvor:create", "louvor:update",
+    // Ministerios
+    "ministerios:read", "ministerios:create", "ministerios:update",
+    // Calendario
+    "calendario:read", "calendario:create", "calendario:update",
+    // Educacional
+    "criancas:read", "educacional:read",
+    // Biblioteca
+    "biblioteca:read",
+    // Salas
+    "salas:read", "salas:create", "salas:update",
+    // Auditoria
+    "audit:read",
+  ],
+
+  presbitero: [
+    // Diretório
+    "diretorio:read",
+    // Pastoreio (próprias visitas e anotações)
+    "pastoreio:read", "pastoreio:create", "pastoreio:update",
+    // Pequenos Grupos
+    "pequenos_grupos:read", "pequenos_grupos:create", "pequenos_grupos:update",
+    // Pedidos de oração
+    "pedidos_oracao:create", "pedidos_oracao:read",
+    // Visualização
+    "membros:read", "membros:self_service",
+    "gravacoes:read",
+    "escalas:read",
+    "louvor:read",
+    "ministerios:read",
+    "calendario:read",
+    "educacional:read",
+    "biblioteca:read",
+    "salas:read", "salas:create",
+  ],
+
+  secretaria: [
+    // Membros e entidades — CRUD completo
+    "membros:read", "membros:create", "membros:update", "membros:delete",
     "entidades:read", "entidades:create", "entidades:update", "entidades:delete",
     "diretorio:read",
+    // Gravações
     "gravacoes:read", "gravacoes:create", "gravacoes:update", "gravacoes:delete", "gravacoes:process_ai",
+    // Escalas
     "escalas:read", "escalas:create", "escalas:update", "escalas:delete",
-    "audit:read",
-    "pastoreio:read",
-    "pequenos_grupos:read",
-    "pedidos_oracao:read",
+    // Louvor
+    "louvor:read", "louvor:create", "louvor:update",
+    // Ministerios
     "ministerios:read", "ministerios:create", "ministerios:update",
+    // Calendario
     "calendario:read", "calendario:create", "calendario:update",
+    // Educacional
     "criancas:read", "criancas:manage",
     "educacional:read", "educacional:write",
-    "louvor:read", "louvor:create", "louvor:update",
+    // Salas
     "salas:read", "salas:create", "salas:update", "salas:delete",
+    // Pastoreio (visualização)
+    "pastoreio:read",
+    // Pequenos Grupos
+    "pequenos_grupos:read",
+    // Pedidos de oração
+    "pedidos_oracao:read",
+    // Biblioteca
+    "biblioteca:read",
+    // Auditoria
+    "audit:read",
   ],
+
   membro: [
     "membros:self_service",
     "diretorio:read",
     "gravacoes:read",
     "escalas:read",
-    "pedidos_oracao:create",
-    "pedidos_oracao:read",
+    "louvor:read",
+    "pedidos_oracao:create", "pedidos_oracao:read",
     "ministerios:read",
     "calendario:read",
     "educacional:read",
-    "louvor:read",
+    "biblioteca:read",
     "salas:read", "salas:create",
   ],
+};
+
+// === Permissões extras para voluntários ===
+// Adicionadas ao membro.permissions[] pelo admin
+
+export const VOLUNTEER_PERMISSION_SETS: Record<string, { label: string; permissions: string[] }> = {
+  voluntario_louvor: {
+    label: "Voluntario Louvor",
+    permissions: [
+      "louvor:create", "louvor:update", "louvor:metricas",
+      "escalas:update", // editar setlist
+    ],
+  },
+  voluntario_educacional: {
+    label: "Voluntario Educacional",
+    permissions: [
+      "criancas:read",
+      "educacional:read", "educacional:write",
+    ],
+  },
+  voluntario_multimidia: {
+    label: "Voluntario Multimidia",
+    permissions: [
+      "gravacoes:create", "gravacoes:update", "gravacoes:process_ai",
+      "multimidia:read", "multimidia:create", "multimidia:update",
+    ],
+  },
+  voluntario_biblioteca: {
+    label: "Voluntario Biblioteca",
+    permissions: [
+      "biblioteca:read", "biblioteca:create", "biblioteca:update",
+    ],
+  },
+  lider_biblioteca: {
+    label: "Lider Biblioteca",
+    permissions: [
+      "biblioteca:read", "biblioteca:create", "biblioteca:update", "biblioteca:delete",
+    ],
+  },
+  facilitador_pg: {
+    label: "Facilitador PG",
+    permissions: [
+      "pequenos_grupos:read", "pequenos_grupos:update",
+      "pequenos_grupos:facilitador",
+    ],
+  },
+  organizador_pg: {
+    label: "Organizador PG",
+    permissions: [
+      "pequenos_grupos:read", "pequenos_grupos:create", "pequenos_grupos:update", "pequenos_grupos:delete",
+      "pequenos_grupos:organizador",
+    ],
+  },
 };
 
 /**
@@ -54,10 +179,21 @@ export function resolvePermissions(
 
 /**
  * Check if a permission set grants a specific permission.
- * Supports wildcard "*" (admin has all permissions).
+ * Supports:
+ *  - Wildcard "*" (admin has all)
+ *  - Module wildcard "louvor:*" matches "louvor:read", "louvor:create", etc.
  */
 export function hasPermission(permissions: string[], permission: string): boolean {
-  return permissions.includes("*") || permissions.includes(permission);
+  if (permissions.includes("*")) return true;
+  if (permissions.includes(permission)) return true;
+
+  // Wildcard: "louvor:*" matches "louvor:read"
+  for (const perm of permissions) {
+    if (perm.endsWith(":*") && permission.startsWith(perm.slice(0, -1))) {
+      return true;
+    }
+  }
+  return false;
 }
 
 /**

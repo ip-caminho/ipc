@@ -1,75 +1,45 @@
 import { query, mutation } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { INITIAL_ROLE_PERMISSIONS as ROLE_DEFAULTS, resolvePermissions } from "./rbacHelpers";
+import { internalMutation } from "../_generated/server";
+import { INITIAL_ROLE_PERMISSIONS as ROLE_DEFAULTS, resolvePermissions, VOLUNTEER_PERMISSION_SETS } from "./rbacHelpers";
 
 // ===== PERMISSION DEFINITIONS =====
 
 export const ALL_PERMISSIONS = [
   // Membros
-  "membros:read",
-  "membros:create",
-  "membros:update",
-  "membros:delete",
-  "membros:self_service",
+  "membros:read", "membros:create", "membros:update", "membros:delete", "membros:self_service",
   // Entidades
-  "entidades:read",
-  "entidades:create",
-  "entidades:update",
-  "entidades:delete",
+  "entidades:read", "entidades:create", "entidades:update", "entidades:delete",
   // Diretorio
   "diretorio:read",
   // Gravacoes
-  "gravacoes:read",
-  "gravacoes:create",
-  "gravacoes:update",
-  "gravacoes:delete",
-  "gravacoes:process_ai",
-  // Escalas (Liturgia)
-  "escalas:read",
-  "escalas:create",
-  "escalas:update",
-  "escalas:delete",
+  "gravacoes:read", "gravacoes:create", "gravacoes:update", "gravacoes:delete", "gravacoes:process_ai",
+  // Escalas
+  "escalas:read", "escalas:create", "escalas:update", "escalas:delete",
+  // Louvor
+  "louvor:read", "louvor:create", "louvor:update", "louvor:delete", "louvor:metricas",
+  // Pastoreio
+  "pastoreio:read", "pastoreio:create", "pastoreio:update", "pastoreio:delete",
+  // Pequenos Grupos
+  "pequenos_grupos:read", "pequenos_grupos:create", "pequenos_grupos:update", "pequenos_grupos:delete",
+  "pequenos_grupos:facilitador", "pequenos_grupos:organizador",
+  // Pedidos de Oracao
+  "pedidos_oracao:create", "pedidos_oracao:read",
+  // Ministerios
+  "ministerios:read", "ministerios:create", "ministerios:update", "ministerios:delete",
+  // Calendario
+  "calendario:read", "calendario:create", "calendario:update", "calendario:delete",
+  // Educacional
+  "criancas:read", "criancas:manage", "educacional:read", "educacional:write",
+  // Biblioteca
+  "biblioteca:read", "biblioteca:create", "biblioteca:update", "biblioteca:delete",
+  // Multimidia
+  "multimidia:read", "multimidia:create", "multimidia:update",
+  // Salas
+  "salas:read", "salas:create", "salas:update", "salas:delete",
   // Auditoria
   "audit:read",
-  // Pastoreio
-  "pastoreio:read",
-  "pastoreio:create",
-  "pastoreio:update",
-  "pastoreio:delete",
-  // Pequenos Grupos
-  "pequenos_grupos:read",
-  "pequenos_grupos:create",
-  "pequenos_grupos:update",
-  "pequenos_grupos:delete",
-  // Pedidos de Oracao (membro)
-  "pedidos_oracao:create",
-  "pedidos_oracao:read",
-  // Ministerios
-  "ministerios:read",
-  "ministerios:create",
-  "ministerios:update",
-  "ministerios:delete",
-  // Calendario
-  "calendario:read",
-  "calendario:create",
-  "calendario:update",
-  "calendario:delete",
-  // Educacional Infantil
-  "criancas:read",
-  "criancas:manage",
-  "educacional:read",
-  "educacional:write",
-  // Louvor
-  "louvor:read",
-  "louvor:create",
-  "louvor:update",
-  "louvor:delete",
-  // Salas
-  "salas:read",
-  "salas:create",
-  "salas:update",
-  "salas:delete",
 ] as const;
 
 function getPermissionLabel(perm: string): string {
@@ -120,6 +90,16 @@ function getPermissionLabel(perm: string): string {
     "louvor:create": "Criar Louvores",
     "louvor:update": "Editar Louvores",
     "louvor:delete": "Excluir Louvores",
+    "louvor:metricas": "Ver Metricas do Louvor",
+    "pequenos_grupos:facilitador": "Facilitador de PG (gerenciar seu grupo)",
+    "pequenos_grupos:organizador": "Organizador de PGs (gerenciar todos)",
+    "biblioteca:read": "Ver Biblioteca",
+    "biblioteca:create": "Cadastrar Livros",
+    "biblioteca:update": "Editar Biblioteca",
+    "biblioteca:delete": "Excluir da Biblioteca",
+    "multimidia:read": "Ver Multimidia",
+    "multimidia:create": "Criar Conteudo Multimidia",
+    "multimidia:update": "Editar Multimidia",
     "salas:read": "Ver Salas",
     "salas:create": "Reservar Salas",
     "salas:update": "Editar Reservas",
@@ -143,6 +123,8 @@ function getPermissionModule(perm: string): string {
   if (perm.startsWith("criancas:")) return "Educacional Infantil";
   if (perm.startsWith("educacional:")) return "Educacional Infantil";
   if (perm.startsWith("louvor:")) return "Louvor";
+  if (perm.startsWith("biblioteca:")) return "Biblioteca";
+  if (perm.startsWith("multimidia:")) return "Multimidia";
   if (perm.startsWith("salas:")) return "Salas";
   return "Geral";
 }
@@ -195,6 +177,16 @@ function getPermissionDescription(perm: string): string {
     "louvor:create": "Cadastrar novas musicas no repertorio",
     "louvor:update": "Editar musicas existentes",
     "louvor:delete": "Excluir musicas do repertorio",
+    "louvor:metricas": "Ver metricas de frequencia e uso de louvores",
+    "pequenos_grupos:facilitador": "Gerenciar o proprio pequeno grupo (membros, encontros)",
+    "pequenos_grupos:organizador": "Gerenciar todos os pequenos grupos da igreja",
+    "biblioteca:read": "Ver acervo e emprestimos da biblioteca",
+    "biblioteca:create": "Cadastrar livros e registrar emprestimos",
+    "biblioteca:update": "Editar livros e emprestimos",
+    "biblioteca:delete": "Excluir livros da biblioteca",
+    "multimidia:read": "Ver conteudo de multimidia",
+    "multimidia:create": "Criar conteudo de multimidia (slides, etc)",
+    "multimidia:update": "Editar conteudo de multimidia",
     "salas:read": "Ver salas e reservas existentes",
     "salas:create": "Criar novas reservas de sala",
     "salas:update": "Editar reservas de salas",
@@ -204,7 +196,7 @@ function getPermissionDescription(perm: string): string {
 }
 
 // Visible roles in matrix (exclude admin — has wildcard *)
-const VISIBLE_ROLES = ["secretaria", "membro"];
+const VISIBLE_ROLES = ["pastor", "presbitero", "secretaria", "membro"];
 
 // ===== HELPER =====
 
@@ -449,6 +441,114 @@ export const setMembroPermission = mutation({
       currentPerms.push(permission);
     } else if (!hasPermission) {
       currentPerms = currentPerms.filter((p) => p !== permission);
+    }
+
+    await ctx.db.patch(membroId, { permissions: currentPerms });
+  },
+});
+
+/**
+ * Sincronizar rolePermissions com o código.
+ * Usar quando mudar INITIAL_ROLE_PERMISSIONS no rbacHelpers.ts.
+ * npx convex run preferencias/rbac:syncRolePermissionsFromCode
+ */
+export const syncRolePermissionsFromCode = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const roles = Object.keys(ROLE_DEFAULTS) as string[];
+    let updated = 0;
+
+    for (const role of roles) {
+      const existing = await ctx.db
+        .query("rolePermissions")
+        .withIndex("by_role", (q) => q.eq("role", role))
+        .first();
+
+      if (existing) {
+        await ctx.db.patch(existing._id, {
+          permissions: ROLE_DEFAULTS[role],
+          updatedAt: Date.now(),
+        });
+      } else {
+        await ctx.db.insert("rolePermissions", {
+          role,
+          permissions: ROLE_DEFAULTS[role],
+          updatedAt: Date.now(),
+        });
+      }
+      updated++;
+    }
+
+    return { updated };
+  },
+});
+
+/** Query para listar conjuntos de permissões de voluntários */
+export const getVolunteerPermissionSets = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return [];
+
+    const callerMembro = await ctx.db
+      .query("membros")
+      .withIndex("by_user_id", (q: any) => q.eq("userId", userId))
+      .first();
+
+    if (!callerMembro || callerMembro.role !== "admin") return [];
+
+    return Object.entries(VOLUNTEER_PERMISSION_SETS).map(([key, value]) => ({
+      key,
+      label: value.label,
+      permissions: value.permissions,
+    }));
+  },
+});
+
+/** Aplicar um conjunto de permissões de voluntário a um membro */
+export const applyVolunteerSet = mutation({
+  args: {
+    membroId: v.id("membros"),
+    setKey: v.string(),
+    apply: v.boolean(),
+  },
+  handler: async (ctx, { membroId, setKey, apply }) => {
+    await requireAdmin(ctx);
+
+    const membro = await ctx.db.get(membroId);
+    if (!membro) throw new Error("Membro nao encontrado");
+    if (membro.role === "admin") throw new Error("Admin ja tem todas as permissoes");
+
+    const volSet = VOLUNTEER_PERMISSION_SETS[setKey];
+    if (!volSet) throw new Error("Conjunto de permissoes invalido");
+
+    // Pegar permissões atuais (ou do role)
+    let currentPerms: string[];
+    if (membro.permissions && membro.permissions.length > 0) {
+      currentPerms = [...membro.permissions];
+    } else {
+      const rolePerms = await ctx.db
+        .query("rolePermissions")
+        .withIndex("by_role", (q) => q.eq("role", membro.role))
+        .first();
+      currentPerms = [...(rolePerms?.permissions ?? ROLE_DEFAULTS[membro.role] ?? [])];
+    }
+
+    if (apply) {
+      // Adicionar permissões do set que não existem
+      for (const perm of volSet.permissions) {
+        if (!currentPerms.includes(perm)) {
+          currentPerms.push(perm);
+        }
+      }
+    } else {
+      // Remover permissões do set (exceto as que são do role padrão)
+      const roleDefaults = ROLE_DEFAULTS[membro.role] ?? [];
+      for (const perm of volSet.permissions) {
+        if (!roleDefaults.includes(perm)) {
+          currentPerms = currentPerms.filter((p) => p !== perm);
+        }
+      }
     }
 
     await ctx.db.patch(membroId, { permissions: currentPerms });

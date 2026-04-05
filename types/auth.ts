@@ -1,30 +1,46 @@
-export type Role = "admin" | "secretaria" | "membro" | "lider" | "diacono" | "presbitero" | "tesoureiro" | "pastor";
+export type Role =
+  | "admin"
+  | "pastor"
+  | "presbitero"
+  | "secretaria"
+  | "membro";
 
 export type Permission =
+  // Membros
   | "membros:read" | "membros:create" | "membros:update" | "membros:delete" | "membros:self_service"
+  // Entidades
   | "entidades:read" | "entidades:create" | "entidades:update" | "entidades:delete"
+  // Diretorio
   | "diretorio:read"
-  | "grupos:read" | "grupos:create" | "grupos:update" | "grupos:delete"
-  | "escalas:read" | "escalas:create" | "escalas:update" | "escalas:delete"
-  | "atividades:read" | "atividades:create" | "atividades:update" | "atividades:delete"
+  // Gravacoes
   | "gravacoes:read" | "gravacoes:create" | "gravacoes:update" | "gravacoes:delete" | "gravacoes:process_ai"
-  | "oracoes:read" | "oracoes:create" | "oracoes:update" | "oracoes:delete"
-  | "publicacoes:read" | "publicacoes:create" | "publicacoes:update" | "publicacoes:delete"
-  | "musicas:read" | "musicas:create" | "musicas:update" | "musicas:delete"
-  | "louvor:read" | "louvor:create" | "louvor:update" | "louvor:delete"
+  // Escalas
+  | "escalas:read" | "escalas:create" | "escalas:update" | "escalas:delete"
+  // Louvor
+  | "louvor:read" | "louvor:create" | "louvor:update" | "louvor:delete" | "louvor:metricas"
+  // Pastoreio
   | "pastoreio:read" | "pastoreio:create" | "pastoreio:update" | "pastoreio:delete"
+  // Pequenos Grupos
   | "pequenos_grupos:read" | "pequenos_grupos:create" | "pequenos_grupos:update" | "pequenos_grupos:delete"
+  | "pequenos_grupos:facilitador" | "pequenos_grupos:organizador"
+  // Pedidos de Oracao
   | "pedidos_oracao:create" | "pedidos_oracao:read"
+  // Ministerios
   | "ministerios:read" | "ministerios:create" | "ministerios:update" | "ministerios:delete"
+  // Calendario
   | "calendario:read" | "calendario:create" | "calendario:update" | "calendario:delete"
+  // Educacional
   | "criancas:read" | "criancas:manage"
   | "educacional:read" | "educacional:write"
-  | "financeiro:read" | "financeiro:create" | "financeiro:update" | "financeiro:delete"
-  | "documentos:read" | "documentos:create" | "documentos:update" | "documentos:delete"
-  | "admin:read" | "admin:create" | "admin:update" | "admin:delete"
-  | "aprovacoes:read" | "aprovacoes:create" | "aprovacoes:update"
+  // Biblioteca
+  | "biblioteca:read" | "biblioteca:create" | "biblioteca:update" | "biblioteca:delete"
+  // Multimidia
+  | "multimidia:read" | "multimidia:create" | "multimidia:update"
+  // Salas
   | "salas:read" | "salas:create" | "salas:update" | "salas:delete"
+  // Auditoria
   | "audit:read"
+  // Wildcards
   | "*";
 
 export interface AuthContext {
