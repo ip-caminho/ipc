@@ -253,6 +253,7 @@ export const getUserPermissionContext = query({
       foto: entidade.foto ?? null,
       phone: entidade.whatsapp ?? null,
       entidadeId: entidade._id,
+      onboardingCompleto: membro.onboardingCompleto ?? false,
     };
   },
 });
