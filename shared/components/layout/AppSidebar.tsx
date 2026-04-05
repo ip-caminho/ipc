@@ -104,13 +104,13 @@ const menuSections: MenuSection[] = [
       { label: "Pastoreio", href: "/pastoreio", icon: Heart, permission: "pastoreio:read", modulo: "pastoreio", tooltip: "Visitas pastorais e acompanhamento" },
       { label: "Educacional", href: "/educacional", icon: Baby, permission: "educacional:read", modulo: "educacional", tooltip: "Turmas e criancas do educacional infantil" },
       { label: "Membros", href: "/membros", icon: Users, permission: "membros:read", modulo: "membros", tooltip: "Cadastro e gestao da membresia" },
+      { label: "Equipes e Escalas", href: "/admin/escalas", icon: CalendarCheck, permission: "escalas:update", modulo: "escalas", tooltip: "Gerenciar equipes e gerar escalas" },
     ],
   },
 ];
 
 const adminItems: MenuItem[] = [
   { label: "Gravações", href: "/admin/gravacoes", icon: Mic, permission: null, tooltip: "Gerenciar gravações e processamento IA" },
-  { label: "Equipes e Escalas", href: "/admin/escalas", icon: CalendarCheck, permission: null, modulo: "escalas", tooltip: "Gerenciar equipes e gerar escalas" },
   { label: "Permissões", href: "/admin/permissoes", icon: Shield, permission: null, tooltip: "Controle de acesso e convites" },
   { label: "Modulos", href: "/admin/modulos", icon: LayoutGrid, permission: null, tooltip: "Ativar ou desativar funcionalidades" },
 ];
