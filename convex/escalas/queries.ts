@@ -153,7 +153,31 @@ export const minhasEscalas = query({
       escalas.map(async (e) => {
         const culto = await ctx.db.get(e.cultoId);
         if (!culto || culto.data < today) return null;
-        return { ...e, culto };
+
+        // Se escalado para LOUVOR, buscar colegas de louvor do mesmo culto
+        let colegasLouvor: string[] | undefined;
+        if (e.funcao === "LOUVOR") {
+          const todasEscalasCulto = await ctx.db
+            .query("cultoEscalas")
+            .withIndex("by_culto_funcao", (q: any) =>
+              q.eq("cultoId", e.cultoId).eq("funcao", "LOUVOR")
+            )
+            .collect();
+          const nomes = await Promise.all(
+            todasEscalasCulto
+              .filter((ec) => ec.membroId && ec.membroId !== membro._id)
+              .map(async (ec) => {
+                if (!ec.membroId) return null;
+                const m = await ctx.db.get(ec.membroId);
+                if (!m) return null;
+                const ent = await ctx.db.get(m.entidadeId);
+                return ent ? primeiroNome(ent.apelido || ent.nomeCompleto || "") : null;
+              })
+          );
+          colegasLouvor = nomes.filter((n): n is string => !!n);
+        }
+
+        return { ...e, culto, colegasLouvor };
       })
     );
 

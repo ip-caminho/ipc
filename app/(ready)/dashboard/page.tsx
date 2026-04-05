@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/sha
 import { Button } from "@shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
-import { Church, Megaphone, Cake, CalendarCheck, HeartHandshake, FileText } from "lucide-react";
+import { Church, Megaphone, Cake, HeartHandshake, FileText } from "lucide-react";
 import Link from "next/link";
 import { AvisosWidget } from "@features/gravacoes/components/AvisosWidget";
 import {
@@ -175,22 +175,6 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <AniversariantesCard />
-            </CardContent>
-          </Card>
-
-          <Card className="md:col-span-2">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm flex items-center gap-1.5">
-                  <CalendarCheck className="h-4 w-4" /> Minha Escala
-                </CardTitle>
-                <Button variant="ghost" size="sm" className="text-xs h-7" asChild>
-                  <Link href="/escalas">Ver escala completa</Link>
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <MinhaEscalaUnificada />
             </CardContent>
           </Card>
 

@@ -59,6 +59,7 @@ function gerarDomingosFuturos(): string[] {
 interface DomingoData {
   data: string;
   funcoes: string[];
+  colegasLouvor?: string[];
   indisponivel: boolean;
   escalado: boolean;
 }
@@ -81,10 +82,14 @@ export function MinhaEscalaUnificada() {
     if (minhasEscalas === undefined || indisponibilidades === undefined) return null;
 
     const escalasMap = new Map<string, string[]>();
+    const colegasMap = new Map<string, string[]>();
     for (const e of minhasEscalas) {
       const key = e.culto.data;
       if (!escalasMap.has(key)) escalasMap.set(key, []);
       escalasMap.get(key)!.push(e.funcao);
+      if (e.colegasLouvor && e.colegasLouvor.length > 0) {
+        colegasMap.set(key, e.colegasLouvor);
+      }
     }
 
     const indispSet = new Set((indisponibilidades || []).map((i: any) => i.data));
@@ -94,6 +99,7 @@ export function MinhaEscalaUnificada() {
       return {
         data,
         funcoes,
+        colegasLouvor: colegasMap.get(data),
         escalado: funcoes.length > 0,
         indisponivel: indispSet.has(data),
       };
@@ -188,22 +194,29 @@ export function MinhaEscalaUnificada() {
                       </div>
 
                       {/* Conteúdo */}
-                      <div className="flex-1 flex flex-wrap items-center gap-1">
-                        {dia.escalado ? (
-                          dia.funcoes.map((funcao) => (
-                            <span
-                              key={funcao}
-                              className={cn(
-                                "text-xs px-2 py-0.5 rounded-full font-medium",
-                                FUNCAO_COLORS[funcao] || "bg-secondary text-secondary-foreground"
-                              )}
-                            >
-                              {FUNCAO_LABELS[funcao] || funcao}
-                            </span>
-                          ))
-                        ) : dia.indisponivel ? (
-                          <span className="text-xs text-muted-foreground">Indisponível</span>
-                        ) : null}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-1">
+                          {dia.escalado ? (
+                            dia.funcoes.map((funcao) => (
+                              <span
+                                key={funcao}
+                                className={cn(
+                                  "text-xs px-2 py-0.5 rounded-full font-medium",
+                                  FUNCAO_COLORS[funcao] || "bg-secondary text-secondary-foreground"
+                                )}
+                              >
+                                {FUNCAO_LABELS[funcao] || funcao}
+                              </span>
+                            ))
+                          ) : dia.indisponivel ? (
+                            <span className="text-xs text-muted-foreground">Indisponível</span>
+                          ) : null}
+                        </div>
+                        {dia.colegasLouvor && dia.colegasLouvor.length > 0 && (
+                          <p className="text-[10px] text-muted-foreground mt-0.5">
+                            com {dia.colegasLouvor.join(", ")}
+                          </p>
+                        )}
                       </div>
 
                       {/* Toggle / Lock */}
