@@ -20,7 +20,6 @@ import {
 } from "@/shared/components/ui/dialog";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
 import { X, UserPlus, Mic, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
@@ -161,7 +160,7 @@ function EquipeCard({
     membroId: string;
     ativo: boolean;
     condutor?: boolean;
-    instrumento?: string;
+    instrumentos?: string[];
     nomeCompleto: string;
     foto?: string;
   }>;
@@ -177,7 +176,7 @@ function EquipeCard({
   // @ts-ignore Convex TS2589
   const toggleCondutor = useMutation(api.escalas.equipes.toggleCondutor);
   // @ts-ignore Convex TS2589
-  const updateInstrumento = useMutation(api.escalas.equipes.updateInstrumento);
+  const updateInstrumentos = useMutation(api.escalas.equipes.updateInstrumentos);
   const [adding, setAdding] = useState(false);
 
   const equipeIds = new Set(membrosEquipe.map((m) => m.membroId));
@@ -218,9 +217,12 @@ function EquipeCard({
 
   const isLouvor = funcao === "LOUVOR";
 
-  const handleInstrumento = async (id: string, instrumento: string) => {
+  const handleToggleInstrumento = async (id: string, instrumento: string, current: string[]) => {
+    const next = current.includes(instrumento)
+      ? current.filter((i) => i !== instrumento)
+      : [...current, instrumento];
     try {
-      await updateInstrumento({ id: id as Id<"equipeMembros">, instrumento });
+      await updateInstrumentos({ id: id as Id<"equipeMembros">, instrumentos: next });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro");
     }
@@ -251,25 +253,27 @@ function EquipeCard({
               </AvatarFallback>
             </Avatar>
             <span className="text-sm flex-1 truncate">{m.nomeCompleto}</span>
-            {isLouvor && canEdit ? (
-              <Select
-                value={m.instrumento || ""}
-                onValueChange={(v) => handleInstrumento(m._id, v)}
-              >
-                <SelectTrigger className="w-[90px] h-6 text-[10px]">
-                  <SelectValue placeholder="Instr." />
-                </SelectTrigger>
-                <SelectContent>
-                  {INSTRUMENTOS.map((i) => (
-                    <SelectItem key={i.value} value={i.value} className="text-xs">{i.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            ) : isLouvor && m.instrumento ? (
-              <Badge variant="outline" className="text-[10px]">
-                {INSTRUMENTOS.find((i) => i.value === m.instrumento)?.label || m.instrumento}
-              </Badge>
-            ) : null}
+            {isLouvor && (
+              <div className="flex flex-wrap gap-0.5">
+                {INSTRUMENTOS.map((inst) => {
+                  const active = (m.instrumentos || []).includes(inst.value);
+                  return canEdit ? (
+                    <Badge
+                      key={inst.value}
+                      variant={active ? "default" : "outline"}
+                      className="text-[10px] cursor-pointer"
+                      onClick={() => handleToggleInstrumento(m._id, inst.value, m.instrumentos || [])}
+                    >
+                      {inst.label}
+                    </Badge>
+                  ) : active ? (
+                    <Badge key={inst.value} variant="secondary" className="text-[10px]">
+                      {inst.label}
+                    </Badge>
+                  ) : null;
+                })}
+              </div>
+            )}
             {isLouvor && (
               <Badge
                 variant={m.condutor ? "default" : "outline"}
