@@ -31,6 +31,7 @@ export function ReservaForm({
   const [data, setData] = useState(defaultData || new Date().toISOString().split("T")[0]);
   const [selectedSlots, setSelectedSlots] = useState<Set<string>>(new Set());
   const [motivo, setMotivo] = useState("");
+  const [showMotivo, setShowMotivo] = useState(false);
 
   // @ts-ignore Convex TS2589
   const reservas = useQuery(api.salas.queries.listReservas, { data });
@@ -53,6 +54,7 @@ export function ReservaForm({
 
   const toggleSlot = (slot: string) => {
     if (occupiedSlots.has(slot)) return;
+    setShowMotivo(false);
     setSelectedSlots((prev) => {
       const next = new Set(prev);
       if (next.has(slot)) {
@@ -147,8 +149,15 @@ export function ReservaForm({
         </div>
       </div>
 
+      {/* Botão continuar */}
+      {selectedSlots.size > 0 && !showMotivo && (
+        <Button className="w-full" onClick={() => setShowMotivo(true)}>
+          Continuar — {range?.inicio} ate {range?.fim}
+        </Button>
+      )}
+
       {/* Motivo + confirmar */}
-      {selectedSlots.size > 0 && (
+      {showMotivo && (
         <div className="space-y-3 pb-24 md:pb-4">
           <div className="space-y-1">
             <Label>Motivo</Label>
