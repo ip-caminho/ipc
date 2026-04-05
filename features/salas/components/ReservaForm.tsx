@@ -40,6 +40,12 @@ export function ReservaForm({
     [reservas, salaId]
   );
 
+  // Slots ocupados ou passados
+  const hoje = new Date().toISOString().split("T")[0];
+  const horaAtual = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", hour12: false });
+  const isHoje = data === hoje;
+  const isPast = data < hoje;
+
   const occupiedSlots = useMemo(() => {
     const occupied = new Set<string>();
     for (const r of salaReservas) {
@@ -52,8 +58,15 @@ export function ReservaForm({
     return occupied;
   }, [salaReservas]);
 
+  const isSlotDisabled = (slot: string) => {
+    if (isPast) return true;
+    if (isHoje && slot <= horaAtual) return true;
+    if (occupiedSlots.has(slot)) return true;
+    return false;
+  };
+
   const toggleSlot = (slot: string) => {
-    if (occupiedSlots.has(slot)) return;
+    if (isSlotDisabled(slot)) return;
     setShowMotivo(false);
     setSelectedSlots((prev) => {
       const next = new Set(prev);
@@ -117,7 +130,8 @@ export function ReservaForm({
         <Input
           type="date"
           value={data}
-          onChange={(e) => { setData(e.target.value); setSelectedSlots(new Set()); }}
+          min={hoje}
+          onChange={(e) => { setData(e.target.value); setSelectedSlots(new Set()); setShowMotivo(false); }}
           className="text-base"
         />
       </div>
@@ -127,19 +141,21 @@ export function ReservaForm({
         <Label>Selecione os horarios</Label>
         <div className="grid grid-cols-5 gap-1.5">
           {TIME_OPTIONS.map((t) => {
+            const disabled = isSlotDisabled(t);
             const isOccupied = occupiedSlots.has(t);
             const isSelected = selectedSlots.has(t);
             return (
               <button
                 key={t}
                 type="button"
-                disabled={isOccupied}
+                disabled={disabled}
                 onClick={() => toggleSlot(t)}
                 className={cn(
                   "h-10 text-sm rounded-md font-medium transition-colors",
                   isOccupied && "bg-red-100 dark:bg-red-900/30 text-red-400 cursor-not-allowed line-through",
-                  isSelected && !isOccupied && "bg-primary text-primary-foreground",
-                  !isSelected && !isOccupied && "bg-muted hover:bg-accent",
+                  !isOccupied && disabled && "bg-muted/50 text-muted-foreground/30 cursor-not-allowed",
+                  isSelected && !disabled && "bg-primary text-primary-foreground",
+                  !isSelected && !disabled && "bg-muted hover:bg-accent",
                 )}
               >
                 {t}
