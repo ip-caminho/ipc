@@ -110,7 +110,7 @@ export function ReservaForm({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 overflow-x-hidden">
       {/* Header */}
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" className="shrink-0" onClick={onBack}>
@@ -167,9 +167,11 @@ export function ReservaForm({
 
       {/* Botão continuar */}
       {selectedSlots.size > 0 && !showMotivo && (
-        <Button className="w-full" onClick={() => setShowMotivo(true)}>
-          Continuar — {range?.inicio} ate {range?.fim}
-        </Button>
+        <div className="pb-24 md:pb-4">
+          <Button className="w-full" onClick={() => setShowMotivo(true)}>
+            Continuar — {range?.inicio} ate {range?.fim}
+          </Button>
+        </div>
       )}
 
       {/* Motivo + confirmar */}
