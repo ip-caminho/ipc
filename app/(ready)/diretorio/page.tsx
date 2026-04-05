@@ -18,6 +18,12 @@ import {
   SheetTitle,
 } from "@/shared/components/ui/sheet";
 import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/shared/components/ui/drawer";
+import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -193,30 +199,25 @@ function MembroFicha({ membroId, onClose }: { membroId: Id<"membros">; onClose: 
 
   if (perfil === undefined) {
     return (
-      <Sheet open onOpenChange={onClose}>
-        <SheetContent>
-          <SheetHeader>
-            <SheetTitle>Carregando...</SheetTitle>
-          </SheetHeader>
-          <div className="space-y-4 mt-6">
-            <Skeleton className="h-20 w-20 rounded-full mx-auto" />
+      <Drawer open onOpenChange={onClose}>
+        <DrawerContent>
+          <DrawerHeader><DrawerTitle>Carregando...</DrawerTitle></DrawerHeader>
+          <div className="space-y-4 p-6">
+            <Skeleton className="h-32 w-32 rounded-full mx-auto" />
             <Skeleton className="h-4 w-48 mx-auto" />
-            <Skeleton className="h-4 w-32 mx-auto" />
           </div>
-        </SheetContent>
-      </Sheet>
+        </DrawerContent>
+      </Drawer>
     );
   }
 
   if (!perfil) {
     return (
-      <Sheet open onOpenChange={onClose}>
-        <SheetContent>
-          <SheetHeader>
-            <SheetTitle>Membro nao encontrado</SheetTitle>
-          </SheetHeader>
-        </SheetContent>
-      </Sheet>
+      <Drawer open onOpenChange={onClose}>
+        <DrawerContent>
+          <DrawerHeader><DrawerTitle>Membro nao encontrado</DrawerTitle></DrawerHeader>
+        </DrawerContent>
+      </Drawer>
     );
   }
 
@@ -325,18 +326,18 @@ function MembroFicha({ membroId, onClose }: { membroId: Id<"membros">; onClose: 
   ].filter(Boolean) as Array<{ key: string; icon: any; iconClass?: string; content: React.ReactNode; alignTop?: boolean }>;
 
   return (
-    <Sheet open onOpenChange={onClose}>
-      <SheetContent className="overflow-y-auto">
-        <SheetHeader className="p-0">
-          <SheetTitle className="sr-only">{perfil.nome}</SheetTitle>
-        </SheetHeader>
+    <Drawer open onOpenChange={onClose}>
+      <DrawerContent>
+        <DrawerHeader className="sr-only">
+          <DrawerTitle>{perfil.nome}</DrawerTitle>
+        </DrawerHeader>
 
-        <div className="px-6 pb-6 pt-2 space-y-6">
+        <div className="px-4 pb-6 max-h-[80vh] overflow-y-auto space-y-6">
           {/* Header */}
           <div className="flex flex-col items-center text-center gap-4">
-            <Avatar className="h-24 w-24 ring-2 ring-border">
+            <Avatar className="h-32 w-32 ring-2 ring-border">
               {perfil.foto && <AvatarImage src={perfil.foto} />}
-              <AvatarFallback className="text-3xl">{perfil.nome?.charAt(0) || "?"}</AvatarFallback>
+              <AvatarFallback className="text-4xl">{perfil.nome?.charAt(0) || "?"}</AvatarFallback>
             </Avatar>
             <div className="space-y-1.5">
               <h2 className="text-xl font-semibold leading-tight">
@@ -374,8 +375,8 @@ function MembroFicha({ membroId, onClose }: { membroId: Id<"membros">; onClose: 
             </div>
           )}
         </div>
-      </SheetContent>
-    </Sheet>
+      </DrawerContent>
+    </Drawer>
   );
 }
 
