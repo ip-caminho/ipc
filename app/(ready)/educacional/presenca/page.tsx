@@ -185,7 +185,7 @@ export default function PresencaPage() {
         ) : sortedCriancas.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">Nenhuma crianca nesta turma</p>
         ) : (
-          <div className="space-y-1">
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
             {sortedCriancas.map((c: any) => {
               const isPresente = presentes.has(c.entidadeId);
               return (
@@ -194,25 +194,25 @@ export default function PresencaPage() {
                   type="button"
                   onClick={() => togglePresente(c.entidadeId)}
                   className={cn(
-                    "w-full flex items-center gap-3 p-3 rounded-lg transition-colors text-left",
+                    "flex flex-col items-center gap-2 p-3 rounded-xl transition-colors",
                     isPresente
-                      ? "bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800"
-                      : "bg-muted/50 border border-transparent"
+                      ? "bg-green-50 dark:bg-green-950/30 border-2 border-green-400 dark:border-green-700"
+                      : "bg-muted/50 border-2 border-transparent"
                   )}
                 >
-                  <div className="relative shrink-0">
-                    <Avatar className="h-16 w-16">
+                  <div className="relative">
+                    <Avatar className="h-20 w-20">
                       {c.foto && <AvatarImage src={c.foto} alt={c.nome} />}
-                      <AvatarFallback className="text-xl">{c.nome?.charAt(0)}</AvatarFallback>
+                      <AvatarFallback className="text-2xl">{c.nome?.charAt(0)}</AvatarFallback>
                     </Avatar>
                     {isPresente && (
-                      <div className="absolute -bottom-0.5 -right-0.5 h-6 w-6 rounded-full bg-green-500 flex items-center justify-center ring-2 ring-background">
-                        <Check className="h-3.5 w-3.5 text-white" />
+                      <div className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full bg-green-500 flex items-center justify-center ring-2 ring-background">
+                        <Check className="h-4 w-4 text-white" />
                       </div>
                     )}
                   </div>
                   <span className={cn(
-                    "text-sm font-medium",
+                    "text-xs font-medium text-center leading-tight line-clamp-2",
                     isPresente ? "text-green-800 dark:text-green-200" : ""
                   )}>
                     {c.nome}
