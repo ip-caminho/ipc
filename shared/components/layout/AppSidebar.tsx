@@ -92,7 +92,7 @@ const menuSections: MenuSection[] = [
       { label: "Diretorio", href: "/diretorio", icon: BookOpen, permission: "diretorio:read", modulo: "diretorio", tooltip: "Contatos e aniversarios dos membros" },
       { label: "Pedidos de Oracao", href: "/pedidos-oracao", icon: HandHeart, permission: "pedidos_oracao:read", modulo: "pedidos-oracao", tooltip: "Compartilhe e ore pelos pedidos da igreja" },
       { label: "Calendario", href: "/calendario", icon: CalendarDays, permission: "calendario:read", modulo: "calendario", tooltip: "Eventos e calendario da igreja" },
-      { label: "Escalas", href: "/escalas", icon: CalendarCheck, permission: null, modulo: "escalas", tooltip: "Veja sua escala e marque disponibilidade" },
+      { label: "Minha Escala", href: "/escalas", icon: CalendarCheck, permission: null, modulo: "escalas", tooltip: "Veja sua escala e marque disponibilidade" },
       { label: "Salas", href: "/salas", icon: DoorOpen, permission: "salas:read", modulo: "salas", tooltip: "Reserve salas da igreja" },
     ],
   },
@@ -110,6 +110,8 @@ const menuSections: MenuSection[] = [
 
 const adminItems: MenuItem[] = [
   { label: "Gravações", href: "/admin/gravacoes", icon: Mic, permission: null, tooltip: "Gerenciar gravações e processamento IA" },
+  { label: "Gerar Escalas", href: "/admin/escalas/gerar", icon: CalendarCheck, permission: null, modulo: "escalas", tooltip: "Gerar escalas automaticamente" },
+  { label: "Equipes", href: "/admin/escalas/equipes", icon: Users, permission: null, modulo: "escalas", tooltip: "Gerenciar equipes de servico" },
   { label: "Permissões", href: "/admin/permissoes", icon: Shield, permission: null, tooltip: "Controle de acesso e convites" },
   { label: "Modulos", href: "/admin/modulos", icon: LayoutGrid, permission: null, tooltip: "Ativar ou desativar funcionalidades" },
 ];

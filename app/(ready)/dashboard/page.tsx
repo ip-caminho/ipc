@@ -185,7 +185,7 @@ export default function DashboardPage() {
                   <CalendarCheck className="h-4 w-4" /> Minha Escala
                 </CardTitle>
                 <Button variant="ghost" size="sm" className="text-xs h-7" asChild>
-                  <Link href="/escalas/disponibilidade">Marcar indisponibilidade</Link>
+                  <Link href="/escalas">Ver escala completa</Link>
                 </Button>
               </div>
             </CardHeader>
