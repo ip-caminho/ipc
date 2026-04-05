@@ -23,6 +23,7 @@ export const getOnboardingData = query({
       membroId: membro._id,
       entidadeId: entidade._id,
       nomeCompleto: entidade.nomeCompleto || "",
+      apelido: entidade.apelido || "",
       foto: entidade.foto || null,
       whatsapp: entidade.whatsapp || "",
       email: entidade.email || "",
@@ -38,6 +39,7 @@ export const getOnboardingData = query({
 export const completeOnboarding = mutation({
   args: {
     foto: v.optional(v.string()),
+    apelido: v.optional(v.string()),
     email: v.optional(v.string()),
     whatsapp: v.optional(v.string()),
     profissao: v.optional(v.string()),
@@ -56,6 +58,7 @@ export const completeOnboarding = mutation({
     // Atualizar dados opcionais na entidade
     const updates: Record<string, string | undefined> = {};
     if (args.foto !== undefined) updates.foto = args.foto;
+    if (args.apelido !== undefined) updates.apelido = args.apelido;
     if (args.email !== undefined) updates.email = args.email;
     if (args.whatsapp !== undefined) updates.whatsapp = args.whatsapp;
     if (args.profissao !== undefined) updates.profissao = args.profissao;
