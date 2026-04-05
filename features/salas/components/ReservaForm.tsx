@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
@@ -12,7 +12,7 @@ import {
   DrawerTitle,
 } from "@/shared/components/ui/drawer";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { TIME_OPTIONS } from "../lib/validations";
 import { cn } from "@/shared/lib/utils/cn";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -23,7 +23,6 @@ interface ReservaFormProps {
   salaId: Id<"salas">;
   salaNome: string;
   defaultData?: string;
-  defaultHoraInicio?: string;
 }
 
 export function ReservaForm({
@@ -32,27 +31,74 @@ export function ReservaForm({
   salaId,
   salaNome,
   defaultData,
-  defaultHoraInicio,
 }: ReservaFormProps) {
   // @ts-ignore Convex TS2589
   const createReserva = useMutation(api.salas.mutations.createReserva);
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState(defaultData || new Date().toISOString().split("T")[0]);
-  const [horaInicio, setHoraInicio] = useState(defaultHoraInicio || "");
-  const [horaFim, setHoraFim] = useState("");
+  const [selectedSlots, setSelectedSlots] = useState<Set<string>>(new Set());
   const [motivo, setMotivo] = useState("");
 
-  const endOptions = TIME_OPTIONS.filter((t) => t > horaInicio);
+  // Buscar reservas existentes pra esta sala e data
+  // @ts-ignore Convex TS2589
+  const reservas = useQuery(api.salas.queries.listReservas, { data });
+  const salaReservas = useMemo(() =>
+    (reservas || []).filter((r: any) => r.salaId === salaId),
+    [reservas, salaId]
+  );
+
+  // Slots ocupados
+  const occupiedSlots = useMemo(() => {
+    const occupied = new Set<string>();
+    for (const r of salaReservas) {
+      for (const t of TIME_OPTIONS) {
+        if (t >= r.horaInicio && t < r.horaFim) {
+          occupied.add(t);
+        }
+      }
+    }
+    return occupied;
+  }, [salaReservas]);
+
+  const toggleSlot = (slot: string) => {
+    if (occupiedSlots.has(slot)) return;
+    setSelectedSlots((prev) => {
+      const next = new Set(prev);
+      if (next.has(slot)) {
+        next.delete(slot);
+      } else {
+        next.add(slot);
+      }
+      return next;
+    });
+  };
+
+  // Calcular range contínuo dos slots selecionados
+  const range = useMemo(() => {
+    if (selectedSlots.size === 0) return null;
+    const sorted = TIME_OPTIONS.filter((t) => selectedSlots.has(t));
+    const inicio = sorted[0];
+    const ultimoSlot = sorted[sorted.length - 1];
+    // Fim = próximo slot após o último selecionado
+    const ultimoIdx = TIME_OPTIONS.indexOf(ultimoSlot);
+    const fim = ultimoIdx < TIME_OPTIONS.length - 1 ? TIME_OPTIONS[ultimoIdx + 1] : "22:30";
+    return { inicio, fim };
+  }, [selectedSlots]);
 
   const handleSubmit = async () => {
-    if (!data || !horaInicio || !horaFim || !motivo.trim()) return;
+    if (!range || !motivo.trim()) return;
     setLoading(true);
     try {
-      await createReserva({ salaId, data, horaInicio, horaFim, motivo: motivo.trim() });
+      await createReserva({
+        salaId,
+        data,
+        horaInicio: range.inicio,
+        horaFim: range.fim,
+        motivo: motivo.trim(),
+      });
       toast.success("Sala reservada");
       onOpenChange(false);
-      setHoraInicio("");
-      setHoraFim("");
+      setSelectedSlots(new Set());
       setMotivo("");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao reservar");
@@ -60,8 +106,6 @@ export function ReservaForm({
       setLoading(false);
     }
   };
-
-  const step = !horaInicio ? "inicio" : !horaFim ? "fim" : "motivo";
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
@@ -76,78 +120,54 @@ export function ReservaForm({
             <Input
               type="date"
               value={data}
-              onChange={(e) => setData(e.target.value)}
+              onChange={(e) => { setData(e.target.value); setSelectedSlots(new Set()); }}
               className="text-base min-h-[44px]"
             />
           </div>
 
-          {/* Hora início */}
+          {/* Grid de horários */}
           <div className="space-y-2">
-            <Label>{step === "inicio" ? "Selecione o horário de início" : `Início: ${horaInicio}`}</Label>
-            {step === "inicio" && (
-              <div className="grid grid-cols-5 gap-1.5 max-h-[30vh] overflow-y-auto">
-                {TIME_OPTIONS.map((t) => (
+            <Label>
+              Selecione os horarios
+              {range && (
+                <span className="text-muted-foreground font-normal ml-1">
+                  — {range.inicio} ate {range.fim}
+                </span>
+              )}
+            </Label>
+            <div className="grid grid-cols-5 gap-1.5 max-h-[35vh] overflow-y-auto">
+              {TIME_OPTIONS.map((t) => {
+                const isOccupied = occupiedSlots.has(t);
+                const isSelected = selectedSlots.has(t);
+                return (
                   <button
                     key={t}
                     type="button"
-                    onClick={() => setHoraInicio(t)}
-                    className="h-10 text-sm rounded-md bg-muted hover:bg-accent transition-colors font-medium"
+                    disabled={isOccupied}
+                    onClick={() => toggleSlot(t)}
+                    className={cn(
+                      "h-10 text-sm rounded-md font-medium transition-colors",
+                      isOccupied && "bg-red-100 dark:bg-red-900/30 text-red-400 cursor-not-allowed line-through",
+                      isSelected && !isOccupied && "bg-primary text-primary-foreground",
+                      !isSelected && !isOccupied && "bg-muted hover:bg-accent",
+                    )}
                   >
                     {t}
                   </button>
-                ))}
-              </div>
-            )}
-            {step !== "inicio" && (
-              <button
-                type="button"
-                onClick={() => { setHoraInicio(""); setHoraFim(""); }}
-                className="text-xs text-primary"
-              >
-                Alterar
-              </button>
-            )}
+                );
+              })}
+            </div>
           </div>
 
-          {/* Hora fim */}
-          {horaInicio && (
-            <div className="space-y-2">
-              <Label>{step === "fim" ? "Selecione o horário de término" : `Término: ${horaFim}`}</Label>
-              {step === "fim" && (
-                <div className="grid grid-cols-5 gap-1.5 max-h-[30vh] overflow-y-auto">
-                  {endOptions.map((t) => (
-                    <button
-                      key={t}
-                      type="button"
-                      onClick={() => setHoraFim(t)}
-                      className="h-10 text-sm rounded-md bg-muted hover:bg-accent transition-colors font-medium"
-                    >
-                      {t}
-                    </button>
-                  ))}
-                </div>
-              )}
-              {step === "motivo" && (
-                <button
-                  type="button"
-                  onClick={() => setHoraFim("")}
-                  className="text-xs text-primary"
-                >
-                  Alterar
-                </button>
-              )}
-            </div>
-          )}
-
           {/* Motivo + confirmar */}
-          {step === "motivo" && (
+          {selectedSlots.size > 0 && (
             <>
               <div className="space-y-1">
                 <Label>Motivo</Label>
                 <Input
                   value={motivo}
                   onChange={(e) => setMotivo(e.target.value)}
-                  placeholder="Ex: Ensaio, reunião, aula..."
+                  placeholder="Ex: Ensaio, reuniao, aula..."
                   className="text-base min-h-[44px]"
                   autoFocus
                 />
@@ -157,7 +177,7 @@ export function ReservaForm({
                 disabled={loading || !motivo.trim()}
                 onClick={handleSubmit}
               >
-                {loading ? "Reservando..." : "Confirmar reserva"}
+                {loading ? "Reservando..." : `Reservar ${range?.inicio} — ${range?.fim}`}
               </Button>
             </>
           )}
