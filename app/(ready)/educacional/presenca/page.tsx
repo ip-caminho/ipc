@@ -201,13 +201,13 @@ export default function PresencaPage() {
                   )}
                 >
                   <div className="relative shrink-0">
-                    <Avatar className="h-10 w-10">
+                    <Avatar className="h-16 w-16">
                       {c.foto && <AvatarImage src={c.foto} alt={c.nome} />}
-                      <AvatarFallback className="text-sm">{c.nome?.charAt(0)}</AvatarFallback>
+                      <AvatarFallback className="text-xl">{c.nome?.charAt(0)}</AvatarFallback>
                     </Avatar>
                     {isPresente && (
-                      <div className="absolute -bottom-0.5 -right-0.5 h-5 w-5 rounded-full bg-green-500 flex items-center justify-center ring-2 ring-background">
-                        <Check className="h-3 w-3 text-white" />
+                      <div className="absolute -bottom-0.5 -right-0.5 h-6 w-6 rounded-full bg-green-500 flex items-center justify-center ring-2 ring-background">
+                        <Check className="h-3.5 w-3.5 text-white" />
                       </div>
                     )}
                   </div>
