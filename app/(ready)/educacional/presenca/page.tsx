@@ -7,6 +7,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Badge } from "@/shared/components/ui/badge";
 import { Skeleton } from "@/shared/components/ui/skeleton";
+import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { PermissionGate } from "@shared/components/auth/PermissionGate";
 import { TURMA_OPTIONS, TURMA_COLORS } from "@features/educacional/lib/constants";
 import { Check, ArrowLeft } from "lucide-react";
@@ -199,14 +200,15 @@ export default function PresencaPage() {
                       : "bg-muted/50 border border-transparent"
                   )}
                 >
-                  <div className={cn(
-                    "h-8 w-8 rounded-full flex items-center justify-center shrink-0 transition-colors",
-                    isPresente ? "bg-green-500 text-white" : "bg-muted"
-                  )}>
-                    {isPresente ? (
-                      <Check className="h-4 w-4" />
-                    ) : (
-                      <span className="text-xs text-muted-foreground">{c.nome?.charAt(0)}</span>
+                  <div className="relative shrink-0">
+                    <Avatar className="h-10 w-10">
+                      {c.foto && <AvatarImage src={c.foto} alt={c.nome} />}
+                      <AvatarFallback className="text-sm">{c.nome?.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    {isPresente && (
+                      <div className="absolute -bottom-0.5 -right-0.5 h-5 w-5 rounded-full bg-green-500 flex items-center justify-center ring-2 ring-background">
+                        <Check className="h-3 w-3 text-white" />
+                      </div>
                     )}
                   </div>
                   <span className={cn(
