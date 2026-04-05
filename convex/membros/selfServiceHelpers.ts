@@ -4,6 +4,7 @@
  */
 
 export const SELF_SERVICE_FIELDS = new Set([
+  "apelido",
   "telefone",
   "email",
   "endereco",
