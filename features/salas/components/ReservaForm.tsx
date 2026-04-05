@@ -79,28 +79,53 @@ export function ReservaForm({
     });
   };
 
-  const range = useMemo(() => {
-    if (selectedSlots.size === 0) return null;
+  // Agrupar slots selecionados em ranges contíguos
+  const ranges = useMemo(() => {
+    if (selectedSlots.size === 0) return [];
     const sorted = TIME_OPTIONS.filter((t) => selectedSlots.has(t));
-    const inicio = sorted[0];
-    const ultimoSlot = sorted[sorted.length - 1];
-    const ultimoIdx = TIME_OPTIONS.indexOf(ultimoSlot);
-    const fim = ultimoIdx < TIME_OPTIONS.length - 1 ? TIME_OPTIONS[ultimoIdx + 1] : "22:30";
-    return { inicio, fim };
+    const groups: { inicio: string; fim: string }[] = [];
+    let groupStart = sorted[0];
+    let prevIdx = TIME_OPTIONS.indexOf(sorted[0]);
+
+    for (let i = 1; i < sorted.length; i++) {
+      const curIdx = TIME_OPTIONS.indexOf(sorted[i]);
+      if (curIdx !== prevIdx + 1) {
+        // Gap — fechar grupo anterior
+        const fimIdx = prevIdx + 1;
+        groups.push({
+          inicio: groupStart,
+          fim: fimIdx < TIME_OPTIONS.length ? TIME_OPTIONS[fimIdx] : "22:30",
+        });
+        groupStart = sorted[i];
+      }
+      prevIdx = curIdx;
+    }
+    // Último grupo
+    const fimIdx = prevIdx + 1;
+    groups.push({
+      inicio: groupStart,
+      fim: fimIdx < TIME_OPTIONS.length ? TIME_OPTIONS[fimIdx] : "22:30",
+    });
+
+    return groups;
   }, [selectedSlots]);
 
+  const rangeLabel = ranges.map((r) => `${r.inicio}–${r.fim}`).join(", ");
+
   const handleSubmit = async () => {
-    if (!range || !motivo.trim()) return;
+    if (ranges.length === 0 || !motivo.trim()) return;
     setLoading(true);
     try {
-      await createReserva({
-        salaId,
-        data,
-        horaInicio: range.inicio,
-        horaFim: range.fim,
-        motivo: motivo.trim(),
-      });
-      toast.success("Sala reservada");
+      for (const r of ranges) {
+        await createReserva({
+          salaId,
+          data,
+          horaInicio: r.inicio,
+          horaFim: r.fim,
+          motivo: motivo.trim(),
+        });
+      }
+      toast.success(ranges.length > 1 ? `${ranges.length} reservas criadas` : "Sala reservada");
       onBack();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao reservar");
@@ -118,8 +143,8 @@ export function ReservaForm({
         </Button>
         <div>
           <h2 className="text-lg font-semibold">Reservar {salaNome}</h2>
-          {range && (
-            <p className="text-sm text-muted-foreground">{range.inicio} — {range.fim}</p>
+          {ranges.length > 0 && (
+            <p className="text-sm text-muted-foreground">{rangeLabel}</p>
           )}
         </div>
       </div>
@@ -169,7 +194,7 @@ export function ReservaForm({
       {selectedSlots.size > 0 && !showMotivo && (
         <div className="pb-24 md:pb-4">
           <Button className="w-full" onClick={() => setShowMotivo(true)}>
-            Continuar — {range?.inicio} ate {range?.fim}
+            Continuar — {rangeLabel}
           </Button>
         </div>
       )}
@@ -192,7 +217,7 @@ export function ReservaForm({
             disabled={loading || !motivo.trim()}
             onClick={handleSubmit}
           >
-            {loading ? "Reservando..." : `Reservar ${range?.inicio} — ${range?.fim}`}
+            {loading ? "Reservando..." : ranges.length > 1 ? `Reservar ${ranges.length} horarios` : `Reservar ${rangeLabel}`}
           </Button>
         </div>
       )}
