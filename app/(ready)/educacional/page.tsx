@@ -9,6 +9,7 @@ import { PermissionGate } from "@shared/components/auth/PermissionGate";
 import { ModuloGuard } from "@shared/components/auth/ModuloGuard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
+import Link from "next/link";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
 import { Badge } from "@/shared/components/ui/badge";
 import {
@@ -216,7 +217,17 @@ export default function EducacionalPage() {
   return (
     <ModuloGuard modulo="educacional">
       <div className="space-y-4">
-        <h1 className="text-2xl font-bold">Educacional Infantil</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">Educacional Infantil</h1>
+          {canWriteEdu && (
+            <Button asChild>
+              <Link href="/educacional/presenca">
+                <ClipboardList className="h-4 w-4 mr-1" />
+                Presenca
+              </Link>
+            </Button>
+          )}
+        </div>
 
         <Tabs defaultValue="turmas">
           <TabsList>
