@@ -2,17 +2,16 @@
 
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { Badge } from "@/shared/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
-import { useFileUpload } from "@/shared/files/hooks/useFileUpload";
+import { PhotoUpload } from "@/shared/files/components/PhotoUpload";
 import { toast } from "sonner";
-import { Camera, Loader2, MapPin, User, Phone, Save } from "lucide-react";
+import { MapPin, User, Phone, Save } from "lucide-react";
 import { CARGO_ECLESIASTICO_OPTIONS, STATUS_COLORS } from "@features/membros/lib/constants";
 
 type Endereco = {
@@ -28,8 +27,6 @@ type Endereco = {
 export default function MeuPerfilPage() {
   const profile = useQuery(api.membros.selfService.getMyProfile);
   const updateProfile = useMutation(api.membros.selfService.updateMyProfile);
-  const { upload, isUploading } = useFileUpload();
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [saving, setSaving] = useState(false);
@@ -76,18 +73,13 @@ export default function MeuPerfilPage() {
   const cargoLabel = CARGO_ECLESIASTICO_OPTIONS.find((o) => o.value === profile.cargoEclesiastico)?.label;
   const firstName = ent?.apelido || ent?.nomeCompleto?.split(" ")[0] || "";
 
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !ent?._id) return;
-
+  const handlePhotoChange = async (url: string | null) => {
     try {
-      const url = await upload(file, "membros/fotos", ent._id);
-      await updateProfile({ data: { foto: url } });
-      toast.success("Foto atualizada");
+      await updateProfile({ data: { foto: url || "" } });
+      toast.success(url ? "Foto atualizada" : "Foto removida");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao enviar foto");
+      toast.error(error instanceof Error ? error.message : "Erro ao atualizar foto");
     }
-    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleSave = async () => {
@@ -136,33 +128,13 @@ export default function MeuPerfilPage() {
       <Card>
         <CardContent className="pt-6">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
-            {/* Avatar com botão de camera */}
-            <div className="relative group">
-              <Avatar className="h-20 w-20 border-2 border-border" key={ent?.foto || "no-foto"}>
-                {ent?.foto && <AvatarImage src={ent.foto} alt={ent.nomeCompleto} />}
-                <AvatarFallback className="text-2xl">
-                  {firstName.charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isUploading}
-                className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-              >
-                {isUploading ? (
-                  <Loader2 className="h-5 w-5 text-white animate-spin" />
-                ) : (
-                  <Camera className="h-5 w-5 text-white" />
-                )}
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handlePhotoUpload}
-              />
-            </div>
+            <PhotoUpload
+              folder="membros/fotos"
+              entityId={ent?._id || ""}
+              value={ent?.foto}
+              onChange={handlePhotoChange}
+              fallback={firstName}
+            />
 
             <div className="flex-1 text-center sm:text-left">
               <h1 className="text-xl font-bold">{ent?.nomeCompleto}</h1>
