@@ -10,7 +10,7 @@ import { ptBR } from "date-fns/locale";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { cn } from "@/shared/lib/utils/cn";
-import { X, Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { ReservaForm } from "@features/salas/components/ReservaForm";
 import type { Id } from "@/convex/_generated/dataModel";
 
@@ -21,8 +21,6 @@ function getWeekendStart(date: Date): Date {
 }
 
 export default function SalasPage() {
-  // @ts-ignore Convex TS2589
-  const meuMembroId = useQuery(api.salas.queries.meuMembroId);
   // @ts-ignore Convex TS2589
   const salas = useQuery(api.salas.queries.listSalas);
 
@@ -51,16 +49,6 @@ export default function SalasPage() {
 
   const handleReservar = (salaId: Id<"salas">) => {
     setFormSalaId(salaId);
-  };
-
-  const handleCancel = async (id: string) => {
-    if (!confirm("Cancelar esta reserva?")) return;
-    try {
-      await cancelReserva({ id: id as Id<"reservas"> });
-      toast.success("Reserva cancelada");
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Erro");
-    }
   };
 
   const formSalaNome = salas?.find((s) => s._id === formSalaId)?.nome ?? "";
@@ -155,46 +143,29 @@ export default function SalasPage() {
               const livre = salaReservas.length === 0;
 
               return (
-                <div
+                <button
                   key={sala._id}
-                  className="rounded-xl border border-border p-4 space-y-3"
+                  type="button"
+                  onClick={() => handleReservar(sala._id)}
+                  className="w-full rounded-xl border border-border p-4 space-y-2 text-left hover:bg-accent/50 active:bg-accent transition-colors"
                 >
                   <div className="flex items-center justify-between">
                     <h3 className="text-base font-semibold">{sala.nome}</h3>
-                    <button
-                      type="button"
-                      onClick={() => handleReservar(sala._id)}
-                      className="flex items-center gap-1 text-sm text-primary font-medium min-h-[36px]"
-                    >
-                      <Plus className="h-3.5 w-3.5" />
-                      Reservar
-                    </button>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground/50 shrink-0" />
                   </div>
 
                   {livre ? (
-                    <p className="text-sm text-green-600 dark:text-green-400">Disponível o dia todo</p>
+                    <p className="text-sm text-green-600 dark:text-green-400">Disponivel o dia todo</p>
                   ) : (
-                    <div className="divide-y divide-border">
+                    <div className="space-y-1">
                       {salaReservas.map((r: any) => (
-                        <div key={r._id} className="flex items-center gap-3 py-2 first:pt-0 last:pb-0">
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium">{r.horaInicio} – {r.horaFim}</p>
-                            <p className="text-xs text-muted-foreground truncate">{r.membroNome} · {r.motivo}</p>
-                          </div>
-                          {r.membroId === meuMembroId && (
-                            <button
-                              type="button"
-                              onClick={() => handleCancel(r._id)}
-                              className="text-muted-foreground hover:text-destructive shrink-0 min-h-[36px] min-w-[36px] flex items-center justify-center"
-                            >
-                              <X className="h-3.5 w-3.5" />
-                            </button>
-                          )}
-                        </div>
+                        <p key={r._id} className="text-xs text-muted-foreground">
+                          {r.horaInicio} – {r.horaFim} · {r.membroNome}
+                        </p>
                       ))}
                     </div>
                   )}
-                </div>
+                </button>
               );
             })}
           </div>
