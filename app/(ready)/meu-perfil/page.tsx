@@ -271,9 +271,9 @@ export default function MeuPerfilPage() {
         </CardContent>
       </Card>
 
-      {/* Botão salvar fixo */}
-      <div className="sticky bottom-20 md:bottom-4 z-10">
-        <Button onClick={handleSave} disabled={saving} className="w-full shadow-lg">
+      {/* Botão salvar */}
+      <div className="pb-24 md:pb-4">
+        <Button onClick={handleSave} disabled={saving} className="w-full">
           <Save className="h-4 w-4 mr-1" />
           {saving ? "Salvando..." : "Salvar alteracoes"}
         </Button>
