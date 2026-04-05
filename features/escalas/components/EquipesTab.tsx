@@ -20,10 +20,20 @@ import {
 } from "@/shared/components/ui/dialog";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
 import { X, UserPlus, Mic, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 import type { Id } from "@/convex/_generated/dataModel";
+
+const INSTRUMENTOS = [
+  { value: "voz", label: "Voz" },
+  { value: "teclado", label: "Teclado" },
+  { value: "violao", label: "Violao" },
+  { value: "guitarra", label: "Guitarra" },
+  { value: "baixo", label: "Baixo" },
+  { value: "bateria", label: "Bateria" },
+] as const;
 
 export function EquipesTab() {
   const { can } = useAuth();
@@ -151,6 +161,7 @@ function EquipeCard({
     membroId: string;
     ativo: boolean;
     condutor?: boolean;
+    instrumento?: string;
     nomeCompleto: string;
     foto?: string;
   }>;
@@ -165,6 +176,8 @@ function EquipeCard({
   const toggleAtivo = useMutation(api.escalas.equipes.toggleAtivo);
   // @ts-ignore Convex TS2589
   const toggleCondutor = useMutation(api.escalas.equipes.toggleCondutor);
+  // @ts-ignore Convex TS2589
+  const updateInstrumento = useMutation(api.escalas.equipes.updateInstrumento);
   const [adding, setAdding] = useState(false);
 
   const equipeIds = new Set(membrosEquipe.map((m) => m.membroId));
@@ -203,7 +216,15 @@ function EquipeCard({
     }
   };
 
-  const mostrarCondutor = funcao === "LOUVOR";
+  const isLouvor = funcao === "LOUVOR";
+
+  const handleInstrumento = async (id: string, instrumento: string) => {
+    try {
+      await updateInstrumento({ id: id as Id<"equipeMembros">, instrumento });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro");
+    }
+  };
 
   return (
     <Card>
@@ -230,7 +251,26 @@ function EquipeCard({
               </AvatarFallback>
             </Avatar>
             <span className="text-sm flex-1 truncate">{m.nomeCompleto}</span>
-            {mostrarCondutor && (
+            {isLouvor && canEdit ? (
+              <Select
+                value={m.instrumento || ""}
+                onValueChange={(v) => handleInstrumento(m._id, v)}
+              >
+                <SelectTrigger className="w-[90px] h-6 text-[10px]">
+                  <SelectValue placeholder="Instr." />
+                </SelectTrigger>
+                <SelectContent>
+                  {INSTRUMENTOS.map((i) => (
+                    <SelectItem key={i.value} value={i.value} className="text-xs">{i.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : isLouvor && m.instrumento ? (
+              <Badge variant="outline" className="text-[10px]">
+                {INSTRUMENTOS.find((i) => i.value === m.instrumento)?.label || m.instrumento}
+              </Badge>
+            ) : null}
+            {isLouvor && (
               <Badge
                 variant={m.condutor ? "default" : "outline"}
                 className={`text-[10px] ${canEdit ? "cursor-pointer" : ""} ${m.condutor ? "bg-amber-600 hover:bg-amber-700" : ""}`}

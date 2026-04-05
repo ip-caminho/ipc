@@ -21,6 +21,7 @@ export const listEquipes = query({
       membroId: string;
       ativo: boolean;
       condutor?: boolean;
+      instrumento?: string;
       nomeCompleto: string;
       foto?: string;
     }>> = {};
@@ -35,6 +36,7 @@ export const listEquipes = query({
             membroId: em.membroId,
             ativo: em.ativo,
             condutor: em.condutor,
+            instrumento: em.instrumento,
             nomeCompleto: entidade?.nomeCompleto || "",
             foto: entidade?.foto,
           };
@@ -196,5 +198,18 @@ export const toggleCondutor = mutation({
     const em = await ctx.db.get(id);
     if (!em) throw new Error("Registro nao encontrado");
     await ctx.db.patch(id, { condutor: !em.condutor });
+  },
+});
+
+export const updateInstrumento = mutation({
+  args: {
+    id: v.id("equipeMembros"),
+    instrumento: v.optional(v.string()),
+  },
+  handler: async (ctx, { id, instrumento }) => {
+    await requirePermission(ctx, "escalas:update");
+    const em = await ctx.db.get(id);
+    if (!em) throw new Error("Registro nao encontrado");
+    await ctx.db.patch(id, { instrumento: instrumento || undefined });
   },
 });
