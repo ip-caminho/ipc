@@ -556,6 +556,26 @@ export const applyVolunteerSet = mutation({
   },
 });
 
+/** Trocar o role de um membro */
+export const updateMembroRole = mutation({
+  args: {
+    membroId: v.id("membros"),
+    role: v.string(),
+  },
+  handler: async (ctx, { membroId, role }) => {
+    await requireAdmin(ctx);
+
+    const membro = await ctx.db.get(membroId);
+    if (!membro) throw new Error("Membro nao encontrado");
+    if (membro.role === "admin" && role !== "admin") {
+      throw new Error("Nao e possivel rebaixar admin por aqui");
+    }
+
+    // Ao trocar role, limpar permissões customizadas (volta pro padrão do novo role)
+    await ctx.db.patch(membroId, { role, permissions: [] });
+  },
+});
+
 export const syncMembroWithRole = mutation({
   args: {
     membroId: v.id("membros"),
