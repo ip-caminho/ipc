@@ -66,8 +66,7 @@ const drawerSections: DrawerSection[] = [
     titulo: "Gestão",
     items: [
       { label: "Cultos", href: "/cultos", icon: CalendarCheck, permission: "escalas:read", modulo: "escalas" },
-      { label: "Equipes", href: "/admin/escalas/equipes", icon: Users, permission: "escalas:update", modulo: "escalas" },
-      { label: "Gerar Escalas", href: "/admin/escalas/gerar", icon: CalendarCheck, permission: "escalas:update", modulo: "escalas" },
+      { label: "Equipes e Escalas", href: "/admin/escalas", icon: CalendarCheck, permission: "escalas:update", modulo: "escalas" },
       { label: "Avisos", href: "/avisos", icon: Megaphone, permission: "escalas:read", modulo: "escalas" },
       { label: "Membros", href: "/membros", icon: Users, permission: "membros:read", modulo: "membros" },
     ],

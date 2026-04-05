@@ -110,8 +110,7 @@ const menuSections: MenuSection[] = [
 
 const adminItems: MenuItem[] = [
   { label: "Gravações", href: "/admin/gravacoes", icon: Mic, permission: null, tooltip: "Gerenciar gravações e processamento IA" },
-  { label: "Gerar Escalas", href: "/admin/escalas/gerar", icon: CalendarCheck, permission: null, modulo: "escalas", tooltip: "Gerar escalas automaticamente" },
-  { label: "Equipes", href: "/admin/escalas/equipes", icon: Users, permission: null, modulo: "escalas", tooltip: "Gerenciar equipes de servico" },
+  { label: "Equipes e Escalas", href: "/admin/escalas", icon: CalendarCheck, permission: null, modulo: "escalas", tooltip: "Gerenciar equipes e gerar escalas" },
   { label: "Permissões", href: "/admin/permissoes", icon: Shield, permission: null, tooltip: "Controle de acesso e convites" },
   { label: "Modulos", href: "/admin/modulos", icon: LayoutGrid, permission: null, tooltip: "Ativar ou desativar funcionalidades" },
 ];
