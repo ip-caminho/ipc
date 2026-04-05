@@ -56,6 +56,14 @@ export const cancelReserva = mutation({
     if (!reserva) throw new Error("Reserva nao encontrada");
     if (reserva.status !== "ATIVA") throw new Error("Reserva ja cancelada");
 
+    // Não permitir cancelar reservas passadas
+    const agora = new Date();
+    const hoje = agora.toISOString().split("T")[0];
+    const horaAtual = agora.toTimeString().slice(0, 5);
+    if (reserva.data < hoje || (reserva.data === hoje && reserva.horaFim <= horaAtual)) {
+      throw new Error("Nao e possivel cancelar uma reserva que ja passou");
+    }
+
     // Owner or salas:delete permission
     if (reserva.membroId !== membro._id) {
       await requirePermission(ctx, "salas:delete");
