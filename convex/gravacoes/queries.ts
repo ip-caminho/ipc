@@ -147,6 +147,8 @@ export const listFrases = query({
 
     for (const g of gravacoes) {
       if (g.status !== "PUBLICADO" || g.iaStatus !== "CONCLUIDO") continue;
+      // Frases apenas de sermões e palestras
+      if (g.tipo !== "SERMAO" && g.tipo !== "PALESTRA") continue;
       const resultado = g.iaResultado as any;
       if (!resultado) continue;
 
