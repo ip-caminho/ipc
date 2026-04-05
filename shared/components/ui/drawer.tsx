@@ -6,7 +6,7 @@ import { Drawer as DrawerPrimitive } from "vaul"
 import { cn } from "@/shared/lib/utils/cn"
 
 function Drawer({
-  modal = false,
+  modal = true,
   open,
   onOpenChange,
   ...props
