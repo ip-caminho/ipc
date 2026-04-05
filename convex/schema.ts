@@ -314,6 +314,7 @@ export default defineSchema({
     membroId: v.id("membros"),
     ativo: v.boolean(),
     condutor: v.optional(v.boolean()), // Para LOUVOR: true = conduz o louvor
+    instrumento: v.optional(v.string()), // Para LOUVOR: "teclado", "violao", "guitarra", "voz", "baixo"
     criadoEm: v.number(),
   })
     .index("by_funcao", ["funcao"])
