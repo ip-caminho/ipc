@@ -139,7 +139,7 @@ export function ReservaForm({
       {/* Grid de horários */}
       <div className="space-y-2">
         <Label>Selecione os horarios</Label>
-        <div className="grid grid-cols-5 gap-1.5">
+        <div className="grid grid-cols-4 gap-2">
           {TIME_OPTIONS.map((t) => {
             const disabled = isSlotDisabled(t);
             const isOccupied = occupiedSlots.has(t);
@@ -151,7 +151,7 @@ export function ReservaForm({
                 disabled={disabled}
                 onClick={() => toggleSlot(t)}
                 className={cn(
-                  "h-10 text-sm rounded-md font-medium transition-colors",
+                  "h-12 text-base rounded-lg font-medium transition-colors",
                   isOccupied && "bg-red-100 dark:bg-red-900/30 text-red-400 cursor-not-allowed line-through",
                   !isOccupied && disabled && "bg-muted/50 text-muted-foreground/30 cursor-not-allowed",
                   isSelected && !disabled && "bg-primary text-primary-foreground",
