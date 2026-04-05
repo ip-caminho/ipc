@@ -45,7 +45,7 @@ const ROLE_COLORS: Record<string, string> = {
   membro: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
 };
 
-const VISIBLE_ROLES = ["pastor", "presbitero", "secretaria", "membro"];
+const VISIBLE_ROLES = ["membro", "secretaria", "presbitero", "pastor"];
 
 type PermissionOption = {
   key: string;
