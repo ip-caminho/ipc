@@ -89,6 +89,7 @@ export const updateCrianca = mutation({
     observacoesMedicas: v.optional(v.string()),
     observacoesFamilia: v.optional(v.string()),
     ovelhinhaId: v.optional(v.id("membros")),
+    foto: v.optional(v.string()),
   },
   handler: async (ctx, { entidadeId, ...updates }) => {
     await requirePermission(ctx, "criancas:manage");
@@ -104,6 +105,7 @@ export const updateCrianca = mutation({
     if (updates.nomeCompleto !== undefined) entidadeUpdates.nomeCompleto = updates.nomeCompleto;
     if (updates.dataNascimento !== undefined) entidadeUpdates.dataNascimento = updates.dataNascimento;
     if (updates.sexo !== undefined) entidadeUpdates.sexo = updates.sexo;
+    if (updates.foto !== undefined) entidadeUpdates.foto = updates.foto;
     if (Object.keys(entidadeUpdates).length > 0) {
       await ctx.db.patch(entidadeId, entidadeUpdates);
     }

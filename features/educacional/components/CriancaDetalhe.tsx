@@ -1,12 +1,14 @@
 "use client";
 
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { toast } from "sonner";
 import type { Id } from "@/convex/_generated/dataModel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Separator } from "@/shared/components/ui/separator";
+import { PhotoUpload } from "@/shared/files/components/PhotoUpload";
 import { ArrowLeft, Trash2, Edit, Users, ClipboardList } from "lucide-react";
 import { useAuth } from "@shared/providers/PermissionsProvider";
 import { TURMA_COLORS, USO_IMAGEM_COLORS, TIPO_RESPONSAVEL_LABELS } from "../lib/constants";
@@ -37,6 +39,7 @@ export function CriancaDetalhe({ entidadeId, onBack, onEdit, onDelete }: Crianca
   const canManage = can("criancas:manage");
 
   const crianca = useQuery(api.educacional.queries.getCrianca, { entidadeId });
+  const updateCrianca = useMutation(api.educacional.mutations.updateCrianca);
 
   if (crianca === undefined) {
     return <p className="text-sm text-muted-foreground">Carregando...</p>;
@@ -72,12 +75,28 @@ export function CriancaDetalhe({ entidadeId, onBack, onEdit, onDelete }: Crianca
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            {crianca.nome}
-            <Badge variant="secondary" className={turmaColor}>
-              Turma {crianca.turma}
-            </Badge>
-          </CardTitle>
+          <div className="flex items-center gap-4">
+            <PhotoUpload
+              folder="educacional/fotos"
+              entityId={entidadeId}
+              value={crianca.foto}
+              onChange={async (url) => {
+                try {
+                  await updateCrianca({ entidadeId, foto: url || "" });
+                  toast.success(url ? "Foto atualizada" : "Foto removida");
+                } catch (e) {
+                  toast.error(e instanceof Error ? e.message : "Erro");
+                }
+              }}
+              fallback={crianca.nome}
+            />
+            <div>
+              <CardTitle>{crianca.nome}</CardTitle>
+              <Badge variant="secondary" className={`mt-1 ${turmaColor}`}>
+                Turma {crianca.turma}
+              </Badge>
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4 text-sm">

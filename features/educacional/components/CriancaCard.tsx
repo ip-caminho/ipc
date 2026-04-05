@@ -2,6 +2,7 @@
 
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { Badge } from "@/shared/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { TURMA_COLORS, USO_IMAGEM_COLORS, TIPO_RESPONSAVEL_LABELS } from "../lib/constants";
 
 interface CriancaCardProps {
@@ -9,6 +10,7 @@ interface CriancaCardProps {
     _id: string;
     entidadeId: string;
     nome: string;
+    foto?: string | null;
     dataNascimento?: string;
     turma: string;
     usoImagem: string;
@@ -39,7 +41,11 @@ export function CriancaCard({ crianca, onClick }: CriancaCardProps) {
       onClick={onClick}
     >
       <CardContent className="py-3">
-        <div className="flex items-start justify-between gap-2">
+        <div className="flex items-start gap-3">
+          <Avatar className="h-10 w-10 shrink-0">
+            {crianca.foto && <AvatarImage src={crianca.foto} alt={crianca.nome} />}
+            <AvatarFallback className="text-sm">{crianca.nome?.charAt(0)}</AvatarFallback>
+          </Avatar>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium truncate">{crianca.nome}</p>
             <div className="flex items-center gap-1.5 mt-1">
