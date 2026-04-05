@@ -4,7 +4,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useAuth } from "@shared/providers/PermissionsProvider";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/shared/components/ui/card";
-import { Button } from "@/shared/components/ui/button";
+import { Button } from "@shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Church, Megaphone, Cake, CalendarCheck, HeartHandshake, FileText } from "lucide-react";
@@ -19,7 +19,6 @@ import {
 } from "@/shared/components/ui/drawer";
 import { AniversariantesCard, AniversariantesHoje, AniversariantesMesLista } from "@features/dashboard/components/AniversariantesCard";
 import { EducacionalPaisWidget } from "@features/educacional/components/EducacionalPaisWidget";
-import { MinhaEscalaWidget } from "@features/escalas/components/MinhaEscalaWidget";
 import { MinhaEscalaUnificada } from "@features/escalas/components/MinhaEscalaUnificada";
 import { PushPermissionBanner } from "@shared/notifications/PushPermissionBanner";
 import { format, parseISO } from "date-fns";
@@ -155,12 +154,49 @@ export default function DashboardPage() {
           <AniversariantesHoje />
         </div>
 
-        {/* Desktop: conteúdo direto */}
-        <div className="hidden md:block space-y-6">
-          <AvisosWidget />
-          <AniversariantesCard />
-          <EducacionalPaisWidget />
-          <MinhaEscalaWidget />
+        {/* Desktop: layout em grid */}
+        <div className="hidden md:grid md:grid-cols-2 gap-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-1.5">
+                <Megaphone className="h-4 w-4" /> Avisos
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <AvisosWidget />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-1.5">
+                <Cake className="h-4 w-4" /> Aniversariantes
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <AniversariantesCard />
+            </CardContent>
+          </Card>
+
+          <Card className="md:col-span-2">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm flex items-center gap-1.5">
+                  <CalendarCheck className="h-4 w-4" /> Minha Escala
+                </CardTitle>
+                <Button variant="ghost" size="sm" className="text-xs h-7" asChild>
+                  <Link href="/escalas/disponibilidade">Marcar indisponibilidade</Link>
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <MinhaEscalaUnificada />
+            </CardContent>
+          </Card>
+
+          <div className="md:col-span-2">
+            <EducacionalPaisWidget />
+          </div>
         </div>
       </div>
 
