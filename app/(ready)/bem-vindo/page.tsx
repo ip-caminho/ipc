@@ -21,6 +21,7 @@ export default function BemVindoPage() {
 
   const [step, setStep] = useState<"foto" | "dados" | "done">("foto");
   const [foto, setFoto] = useState<string | undefined>(undefined);
+  const [apelido, setApelido] = useState("");
   const [email, setEmail] = useState("");
   const [profissao, setProfissao] = useState("");
   const [saving, setSaving] = useState(false);
@@ -29,6 +30,7 @@ export default function BemVindoPage() {
   const initialized = useState(false);
   if (data && !initialized[0]) {
     if (data.foto) setFoto(data.foto);
+    if (data.apelido) setApelido(data.apelido);
     if (data.email) setEmail(data.email);
     if (data.profissao) setProfissao(data.profissao);
     initialized[1](true);
@@ -57,6 +59,7 @@ export default function BemVindoPage() {
     try {
       await completeOnboarding({
         foto,
+        apelido: apelido || undefined,
         email: email || undefined,
         profissao: profissao || undefined,
       });
@@ -147,6 +150,17 @@ export default function BemVindoPage() {
 
               {/* Dados editáveis */}
               <div className="space-y-3 pt-2 border-t">
+                <div className="space-y-1">
+                  <Label htmlFor="apelido" className="text-xs">Como prefere ser chamado?</Label>
+                  <Input
+                    id="apelido"
+                    value={apelido}
+                    onChange={(e) => setApelido(e.target.value)}
+                    placeholder={data.nomeCompleto.split(" ")[0]}
+                  />
+                  <p className="text-[10px] text-muted-foreground">Apelido ou nome curto que usam no dia a dia</p>
+                </div>
+
                 <div className="space-y-1">
                   <Label htmlFor="email" className="text-xs">Email</Label>
                   <Input
