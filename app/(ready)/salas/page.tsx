@@ -38,6 +38,8 @@ export default function SalasPage() {
 
   // @ts-ignore Convex TS2589
   const reservas = useQuery(api.salas.queries.listReservas, { data: selectedDate });
+  // @ts-ignore Convex TS2589
+  const minhasReservas = useQuery(api.salas.queries.minhasReservas);
   const cancelReserva = useMutation(api.salas.mutations.cancelReserva);
 
   const [formSalaId, setFormSalaId] = useState<Id<"salas"> | null>(null);
@@ -195,6 +197,42 @@ export default function SalasPage() {
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {/* Minhas Reservas */}
+        {minhasReservas && minhasReservas.length > 0 && (
+          <div className="space-y-3 pt-2 border-t">
+            <h2 className="text-sm font-semibold text-muted-foreground">Minhas reservas</h2>
+            <div className="space-y-2">
+              {minhasReservas.map((r: any) => (
+                <div key={r._id} className="flex items-center gap-3 rounded-lg border p-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium">{r.salaNome}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {r.data.split("-").reverse().join("/")} · {r.horaInicio} – {r.horaFim}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">{r.motivo}</p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs text-destructive hover:text-destructive shrink-0"
+                    onClick={async () => {
+                      if (!confirm("Cancelar esta reserva?")) return;
+                      try {
+                        await cancelReserva({ id: r._id });
+                        toast.success("Reserva cancelada");
+                      } catch (e: any) {
+                        toast.error(e?.message || "Erro");
+                      }
+                    }}
+                  >
+                    Cancelar
+                  </Button>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>
