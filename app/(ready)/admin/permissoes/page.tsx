@@ -15,6 +15,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/shared/components/ui/popover";
+import { Checkbox } from "@/shared/components/ui/checkbox";
 import { AdminGate } from "@shared/components/auth/RoleGate";
 import { PermissionMatrix } from "@features/preferencias/components/PermissionMatrix";
 import { toast } from "sonner";
@@ -44,7 +50,7 @@ function MembrosTab() {
   const membros = useQuery(api.preferencias.rbac.getAllMembrosWithPermissions);
   const volunteerSets = useQuery(api.preferencias.rbac.getVolunteerPermissionSets);
   const updateRole = useMutation(api.preferencias.rbac.updateMembroRole);
-  const applyVolunteer = useMutation(api.preferencias.rbac.applyVolunteerSet);
+  const setPermission = useMutation(api.preferencias.rbac.setMembroPermission);
   const syncWithRole = useMutation(api.preferencias.rbac.syncMembroWithRole);
 
   if (!membros) return <Skeleton className="h-64" />;
@@ -58,14 +64,9 @@ function MembrosTab() {
     }
   };
 
-  const handleToggleVolunteer = async (membroId: string, setKey: string, currentPerms: string[]) => {
-    const volSet = volunteerSets?.find((v: any) => v.key === setKey);
-    if (!volSet) return;
-    // Se já tem alguma permissão do set, remover
-    const hasAny = volSet.permissions.some((p: string) => currentPerms.includes(p));
+  const handleTogglePermission = async (membroId: string, permission: string, grant: boolean) => {
     try {
-      await applyVolunteer({ membroId: membroId as Id<"membros">, setKey, apply: !hasAny });
-      toast.success(hasAny ? "Removido" : "Aplicado");
+      await setPermission({ membroId: membroId as Id<"membros">, permission, hasPermission: grant });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro");
     }
@@ -124,20 +125,53 @@ function MembrosTab() {
                 </Select>
               )}
 
-              {/* Voluntário badges */}
+              {/* Voluntário badges com popover */}
               {!isAdmin && volunteerSets && (
                 <div className="hidden md:flex flex-wrap gap-0.5">
                   {volunteerSets.map((vs: any) => {
-                    const hasAny = vs.permissions.some((p: string) => m.permissions.includes(p));
+                    const permsInSet = vs.permissions as string[];
+                    const activeCount = permsInSet.filter((p: string) => m.permissions.includes(p)).length;
+                    const hasAny = activeCount > 0;
+                    const hasAll = activeCount === permsInSet.length;
+                    const shortLabel = vs.label
+                      .replace("Voluntario ", "")
+                      .replace("Lider ", "L.")
+                      .replace("Facilitador ", "F.")
+                      .replace("Organizador ", "O.");
                     return (
-                      <Badge
-                        key={vs.key}
-                        variant={hasAny ? "default" : "outline"}
-                        className="text-[10px] cursor-pointer"
-                        onClick={() => handleToggleVolunteer(m._id, vs.key, m.permissions)}
-                      >
-                        {vs.label.replace("Voluntario ", "").replace("Lider ", "L.").replace("Facilitador ", "F.").replace("Organizador ", "O.")}
-                      </Badge>
+                      <Popover key={vs.key}>
+                        <PopoverTrigger asChild>
+                          <Badge
+                            variant={hasAll ? "default" : hasAny ? "secondary" : "outline"}
+                            className="text-[10px] cursor-pointer"
+                          >
+                            {shortLabel}
+                            {hasAny && !hasAll && ` (${activeCount}/${permsInSet.length})`}
+                          </Badge>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-56 p-2" align="end">
+                          <p className="text-xs font-medium mb-2">{vs.label}</p>
+                          <div className="space-y-1.5">
+                            {permsInSet.map((perm: string) => {
+                              const checked = m.permissions.includes(perm);
+                              return (
+                                <label
+                                  key={perm}
+                                  className="flex items-center gap-2 cursor-pointer"
+                                >
+                                  <Checkbox
+                                    checked={checked}
+                                    onCheckedChange={(v) =>
+                                      handleTogglePermission(m._id, perm, !!v)
+                                    }
+                                  />
+                                  <span className="text-xs">{perm}</span>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        </PopoverContent>
+                      </Popover>
                     );
                   })}
                 </div>
