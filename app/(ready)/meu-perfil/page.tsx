@@ -30,10 +30,11 @@ export default function MeuPerfilPage() {
 
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [saving, setSaving] = useState(false);
-  const [initialized, setInitialized] = useState(false);
+  const [initializedFor, setInitializedFor] = useState<string | null>(null);
 
-  // Inicializar form quando dados carregam
-  if (profile?.entidade && !initialized) {
+  // Inicializar form quando dados carregam (ou mudam)
+  const entId = profile?.entidade?._id;
+  if (profile?.entidade && initializedFor !== entId) {
     const ent = profile.entidade;
     const end = ent.endereco as Endereco | undefined;
     setFormData({
@@ -49,7 +50,7 @@ export default function MeuPerfilPage() {
       estado: end?.estado || "",
       cep: end?.cep || "",
     });
-    setInitialized(true);
+    setInitializedFor(entId || null);
   }
 
   if (profile === undefined) {
