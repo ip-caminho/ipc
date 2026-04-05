@@ -40,7 +40,6 @@ export default function SalasPage() {
   const reservas = useQuery(api.salas.queries.listReservas, { data: selectedDate });
   const cancelReserva = useMutation(api.salas.mutations.cancelReserva);
 
-  const [formOpen, setFormOpen] = useState(false);
   const [formSalaId, setFormSalaId] = useState<Id<"salas"> | null>(null);
 
   const prevWeekend = () => setWeekendStart((d) => addDays(d, -7));
@@ -50,7 +49,6 @@ export default function SalasPage() {
 
   const handleReservar = (salaId: Id<"salas">) => {
     setFormSalaId(salaId);
-    setFormOpen(true);
   };
 
   const handleCancel = async (id: string) => {
@@ -82,6 +80,14 @@ export default function SalasPage() {
 
   return (
     <ModuloGuard modulo="salas">
+      {formSalaId ? (
+        <ReservaForm
+          salaId={formSalaId}
+          salaNome={formSalaNome}
+          defaultData={selectedDate}
+          onBack={() => setFormSalaId(null)}
+        />
+      ) : (
       <div className="space-y-5">
         <h1 className="text-2xl font-bold">Salas</h1>
 
@@ -192,16 +198,6 @@ export default function SalasPage() {
           </div>
         )}
       </div>
-
-      {/* Form drawer */}
-      {formSalaId && (
-        <ReservaForm
-          open={formOpen}
-          onOpenChange={setFormOpen}
-          salaId={formSalaId}
-          salaNome={formSalaNome}
-          defaultData={selectedDate}
-        />
       )}
     </ModuloGuard>
   );
