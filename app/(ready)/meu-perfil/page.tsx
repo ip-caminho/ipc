@@ -138,7 +138,7 @@ export default function MeuPerfilPage() {
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
             {/* Avatar com botão de camera */}
             <div className="relative group">
-              <Avatar className="h-20 w-20 border-2 border-border">
+              <Avatar className="h-20 w-20 border-2 border-border" key={ent?.foto || "no-foto"}>
                 {ent?.foto && <AvatarImage src={ent.foto} alt={ent.nomeCompleto} />}
                 <AvatarFallback className="text-2xl">
                   {firstName.charAt(0).toUpperCase()}
