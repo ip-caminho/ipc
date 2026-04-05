@@ -492,7 +492,7 @@ export default function DiretorioPage() {
 
   return (
     <ModuloGuard modulo="diretorio">
-    <div className="space-y-6">
+    <div className="space-y-6 overflow-x-hidden">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Diretorio</h1>
@@ -520,7 +520,7 @@ export default function DiretorioPage() {
           />
         </div>
         <TooltipProvider delayDuration={300}>
-          <div className="flex gap-1.5 flex-wrap">
+          <div className="flex gap-1.5 overflow-x-auto scrollbar-none pb-1 sm:flex-wrap sm:overflow-visible">
             {CARGO_FILTERS.map((f) => (
               <Tooltip key={f.value}>
                 <TooltipTrigger asChild>
@@ -531,7 +531,7 @@ export default function DiretorioPage() {
                       setCargoFilter(f.value);
                       if (f.value !== "criancas") setTurmaFilter(null);
                     }}
-                    className="text-xs"
+                    className="text-xs shrink-0"
                   >
                     {f.value === "criancas" && <Baby className="h-3 w-3 mr-1" />}
                     {f.label}
