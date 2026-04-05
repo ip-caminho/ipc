@@ -1,7 +1,8 @@
 "use client";
 
-import { createContext, useContext, useMemo } from "react";
-import { useQuery } from "convex/react";
+import { createContext, useContext, useMemo, useEffect, useRef } from "react";
+import { useQuery, useMutation } from "convex/react";
+import { useConvexAuth } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { AuthContext, Permission, Role } from "@/types/auth";
 
@@ -12,7 +13,26 @@ export function PermissionsProvider({
 }: {
   children: React.ReactNode;
 }) {
+  const { isAuthenticated: isConvexAuthenticated } = useConvexAuth();
   const data = useQuery(api.preferencias.rbac.getUserPermissionContext);
+  const autoLink = useMutation(api.membros.autoLink.autoLinkByPhone);
+  const autoLinkAttempted = useRef(false);
+
+  // Auto-vincular pelo telefone se logado mas sem membro
+  useEffect(() => {
+    if (
+      isConvexAuthenticated &&
+      data === null && // logado mas sem membro
+      !autoLinkAttempted.current
+    ) {
+      autoLinkAttempted.current = true;
+      autoLink().catch(() => {}); // silencioso — se falhar, não faz nada
+    }
+    // Reset se deslogar
+    if (!isConvexAuthenticated) {
+      autoLinkAttempted.current = false;
+    }
+  }, [isConvexAuthenticated, data, autoLink]);
 
   const value = useMemo<AuthContext>(() => {
     const isLoading = data === undefined;
