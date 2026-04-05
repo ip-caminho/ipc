@@ -3,6 +3,7 @@
 import { createContext, useContext, useMemo, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { useConvexAuth } from "convex/react";
+import { usePathname, useRouter } from "next/navigation";
 import { api } from "@/convex/_generated/api";
 import type { AuthContext, Permission, Role } from "@/types/auth";
 
@@ -18,6 +19,9 @@ export function PermissionsProvider({
   const autoLink = useMutation(api.membros.autoLink.autoLinkByPhone);
   const autoLinkAttempted = useRef(false);
 
+  const pathname = usePathname();
+  const router = useRouter();
+
   // Auto-vincular pelo telefone se logado mas sem membro
   useEffect(() => {
     if (
@@ -26,13 +30,24 @@ export function PermissionsProvider({
       !autoLinkAttempted.current
     ) {
       autoLinkAttempted.current = true;
-      autoLink().catch(() => {}); // silencioso — se falhar, não faz nada
+      autoLink().catch(() => {});
     }
-    // Reset se deslogar
     if (!isConvexAuthenticated) {
       autoLinkAttempted.current = false;
     }
   }, [isConvexAuthenticated, data, autoLink]);
+
+  // Redirecionar para onboarding se primeiro acesso
+  useEffect(() => {
+    if (
+      data &&
+      data.onboardingCompleto === false &&
+      data.role !== "admin" && // admin pula onboarding
+      pathname !== "/bem-vindo"
+    ) {
+      router.replace("/bem-vindo");
+    }
+  }, [data, pathname, router]);
 
   const value = useMemo<AuthContext>(() => {
     const isLoading = data === undefined;

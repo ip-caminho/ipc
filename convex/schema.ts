@@ -97,6 +97,7 @@ export default defineSchema({
     userId: v.optional(v.id("users")),
     role: v.string(),
     permissions: v.optional(v.array(v.string())),
+    onboardingCompleto: v.optional(v.boolean()),
 
     // Church-specific fields
     rol: v.optional(v.string()),
