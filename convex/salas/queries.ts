@@ -79,13 +79,20 @@ export const minhasReservas = query({
       .first();
     if (!membro) return [];
 
-    const hoje = new Date().toISOString().split("T")[0];
+    const agora = new Date();
+    const hoje = agora.toISOString().split("T")[0];
+    const horaAtual = agora.toTimeString().slice(0, 5); // "HH:MM"
     const reservas = await ctx.db
       .query("reservas")
       .withIndex("by_membro", (q) => q.eq("membroId", membro._id))
       .collect();
 
-    const futuras = reservas.filter((r) => r.data >= hoje && r.status === "ATIVA");
+    const futuras = reservas.filter((r) => {
+      if (r.status !== "ATIVA") return false;
+      if (r.data > hoje) return true;
+      if (r.data === hoje && r.horaFim > horaAtual) return true;
+      return false;
+    });
 
     return Promise.all(
       futuras
