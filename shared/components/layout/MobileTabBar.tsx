@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Home, Mic, CalendarCheck, DoorOpen, HandHeart, Menu, BookOpen, Music, Users, Heart, Baby, Shield, LogOut, CalendarDays, UsersRound, FileText, Church, Megaphone, LayoutGrid, UserCircle, Ear, HeartHandshake, Loader2 } from "lucide-react";
+import { Home, Mic, CalendarCheck, DoorOpen, HandHeart, Menu, BookOpen, Music, Users, Heart, Baby, Shield, LogOut, CalendarDays, UsersRound, FileText, Church, Megaphone, LayoutGrid, UserCircle, Ear, HeartHandshake } from "lucide-react";
 import { useAuth } from "@shared/providers/PermissionsProvider";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useQuery } from "convex/react";
@@ -127,11 +127,7 @@ export function MobileTabBar() {
                 active || loading ? "text-primary" : "text-muted-foreground"
               }`}
             >
-              {loading ? (
-                <Loader2 className="h-6 w-6 animate-spin" />
-              ) : (
-                <tab.icon className="h-6 w-6" />
-              )}
+              <tab.icon className="h-6 w-6" />
               <span className="text-[10px] font-medium">{tab.label}</span>
             </Link>
           );
