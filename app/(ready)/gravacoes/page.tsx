@@ -392,7 +392,8 @@ export default function GravacoesPage() {
                   if (!gravacoes) return <p className="text-sm text-muted-foreground text-center py-8">Carregando...</p>;
                   const filtered = gravacoes
                     .filter((g: any) => g.status === "PUBLICADO" && g.tipo === mobileDrawerTipo)
-                    .filter((g: any) => !debouncedSearch || g.titulo.toLowerCase().includes(debouncedSearch.toLowerCase()) || (g.pregadorNome || "").toLowerCase().includes(debouncedSearch.toLowerCase()));
+                    .filter((g: any) => !debouncedSearch || g.titulo.toLowerCase().includes(debouncedSearch.toLowerCase()) || (g.pregadorNome || "").toLowerCase().includes(debouncedSearch.toLowerCase()))
+                    .sort((a: any, b: any) => b.data.localeCompare(a.data));
                   if (filtered.length === 0) return <p className="text-sm text-muted-foreground text-center py-8">Nenhuma gravação encontrada</p>;
                   return (
                     <div className="space-y-1">
