@@ -1,10 +1,11 @@
 "use client";
 
-import { createContext, useContext, useMemo, useEffect, useRef } from "react";
+import { createContext, useContext, useMemo, useEffect, useRef, useState, useCallback } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { useConvexAuth } from "convex/react";
 import { usePathname, useRouter } from "next/navigation";
 import { api } from "@/convex/_generated/api";
+import { INITIAL_ROLE_PERMISSIONS } from "@convex/preferencias/rbacHelpers";
 import type { AuthContext, Permission, Role } from "@/types/auth";
 
 const PermissionsContext = createContext<AuthContext | null>(null);
@@ -21,6 +22,10 @@ export function PermissionsProvider({
 
   const pathname = usePathname();
   const router = useRouter();
+  const [impersonatedRole, setImpersonatedRole] = useState<Role | null>(null);
+
+  const impersonate = useCallback((role: Role) => setImpersonatedRole(role), []);
+  const stopImpersonating = useCallback(() => setImpersonatedRole(null), []);
 
   // Auto-vincular pelo telefone se logado mas sem membro
   useEffect(() => {
@@ -52,8 +57,14 @@ export function PermissionsProvider({
   const value = useMemo<AuthContext>(() => {
     const isLoading = data === undefined;
     const isAuthenticated = data !== null && data !== undefined;
-    const role = (data?.role as Role) ?? null;
-    const permissions = new Set(data?.permissions ?? []);
+    const realRole = (data?.role as Role) ?? null;
+    const isRealAdmin = realRole === "admin";
+    const isImpersonating = isRealAdmin && impersonatedRole !== null;
+
+    const role = isImpersonating ? impersonatedRole : realRole;
+    const permissions = isImpersonating
+      ? new Set(INITIAL_ROLE_PERMISSIONS[impersonatedRole] ?? [])
+      : new Set(data?.permissions ?? []);
 
     return {
       isLoading,
@@ -64,13 +75,12 @@ export function PermissionsProvider({
       name: data?.name ?? null,
       foto: data?.foto ?? null,
       phone: data?.phone ?? null,
-      isAdmin: role === "admin",
+      isAdmin: isImpersonating ? false : isRealAdmin,
 
       can: (permission: Permission) => {
         if (!role || !isAuthenticated) return false;
         if (permissions.has("*")) return true;
         if (permissions.has(permission)) return true;
-        // Wildcard match: "membros:*" matches "membros:read"
         for (const perm of permissions) {
           if (perm.endsWith(":*") && permission.startsWith(perm.slice(0, -1))) {
             return true;
@@ -81,8 +91,12 @@ export function PermissionsProvider({
 
       hasRole: (r: Role) => role === r,
       hasAnyRole: (roles: Role[]) => !!role && roles.includes(role),
+
+      isImpersonating,
+      impersonate,
+      stopImpersonating,
     };
-  }, [data]);
+  }, [data, impersonatedRole, impersonate, stopImpersonating]);
 
   return (
     <PermissionsContext.Provider value={value}>

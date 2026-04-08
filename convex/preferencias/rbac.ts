@@ -196,7 +196,7 @@ function getPermissionDescription(perm: string): string {
 }
 
 // Visible roles in matrix (exclude admin — has wildcard *)
-const VISIBLE_ROLES = ["membro", "secretaria", "presbitero", "pastor"];
+const VISIBLE_ROLES = ["membro", "obreiro", "secretaria", "presbitero", "pastor"];
 
 // ===== HELPER =====
 
@@ -326,7 +326,7 @@ export const getAllMembrosWithPermissions = query({
     for (const m of membros) {
       if (m.role === "admin") continue; // admin has wildcard, skip
       const entidade = await ctx.db.get(m.entidadeId);
-      if (!entidade || entidade.status !== "ATIVO") continue;
+      if (!entidade) continue;
 
       // Effective permissions: membro-level if set, else role-level
       const rolePerms = await ctx.db
@@ -339,6 +339,7 @@ export const getAllMembrosWithPermissions = query({
         _id: m._id,
         name: entidade.nomeCompleto ?? "",
         role: m.role,
+        status: entidade.status,
         permissions,
         hasCustomPermissions: !!(m.permissions && m.permissions.length > 0),
       });

@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
@@ -23,16 +23,20 @@ import {
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { AdminGate } from "@shared/components/auth/RoleGate";
 import { PermissionMatrix } from "@features/preferencias/components/PermissionMatrix";
+import { useAuth } from "@shared/providers/PermissionsProvider";
 import { toast } from "sonner";
-import { Copy, Link as LinkIcon, Users, Settings, UserPlus } from "lucide-react";
+import { Input } from "@/shared/components/ui/input";
+import { Copy, Link as LinkIcon, Users, Settings, UserPlus, Search, Eye } from "lucide-react";
 import type { Id } from "@/convex/_generated/dataModel";
+import type { Role } from "@/types/auth";
 
-const AVAILABLE_ROLES = ["membro", "secretaria", "presbitero", "pastor"] as const;
+const AVAILABLE_ROLES = ["membro", "obreiro", "secretaria", "presbitero", "pastor", "admin"] as const;
 
 const ROLE_LABELS: Record<string, string> = {
   admin: "Admin",
   pastor: "Pastor",
   presbitero: "Presbitero",
+  obreiro: "Obreiro",
   secretaria: "Secretaria",
   membro: "Membro",
 };
@@ -41,9 +45,19 @@ const ROLE_COLORS: Record<string, string> = {
   admin: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
   pastor: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
   presbitero: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300",
+  obreiro: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
   secretaria: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
   membro: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
 };
+
+const STATUS_FILTERS = [
+  { value: "TODOS", label: "Todos" },
+  { value: "ATIVO", label: "Ativo" },
+  { value: "INATIVO", label: "Inativo" },
+  { value: "TRANSFERIDO", label: "Transferido" },
+  { value: "DESLIGADO", label: "Desligado" },
+  { value: "FALECIDO", label: "Falecido" },
+] as const;
 
 function MembrosTab() {
   // @ts-ignore Convex TS2589
@@ -52,6 +66,19 @@ function MembrosTab() {
   const updateRole = useMutation(api.preferencias.rbac.updateMembroRole);
   const setPermission = useMutation(api.preferencias.rbac.setMembroPermission);
   const syncWithRole = useMutation(api.preferencias.rbac.syncMembroWithRole);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ATIVO");
+
+  const filtered = useMemo(() => {
+    if (!membros) return undefined;
+    return membros
+      .filter((m: any) => {
+        if (statusFilter !== "TODOS" && m.status !== statusFilter) return false;
+        if (search && !m.name.toLowerCase().includes(search.toLowerCase())) return false;
+        return true;
+      })
+      .sort((a: any, b: any) => a.name.localeCompare(b.name));
+  }, [membros, search, statusFilter]);
 
   if (!membros) return <Skeleton className="h-64" />;
 
@@ -74,12 +101,37 @@ function MembrosTab() {
 
   return (
     <div className="space-y-3">
-      <p className="text-sm text-muted-foreground">
-        Atribua papeis e conjuntos de permissoes de voluntario a cada membro.
-      </p>
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar membro..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-8 h-9"
+          />
+        </div>
+      </div>
 
+      <div className="flex items-center gap-1 overflow-x-auto pb-1 scrollbar-none">
+        {STATUS_FILTERS.map((s) => (
+          <Button
+            key={s.value}
+            variant={statusFilter === s.value ? "default" : "outline"}
+            size="sm"
+            className="h-7 text-xs shrink-0"
+            onClick={() => setStatusFilter(s.value)}
+          >
+            {s.label}
+          </Button>
+        ))}
+      </div>
+
+      {filtered && filtered.length === 0 ? (
+        <p className="text-sm text-muted-foreground text-center py-8">Nenhum membro encontrado</p>
+      ) : (
       <div className="border rounded-md divide-y">
-        {membros.map((m: any) => {
+        {(filtered || []).map((m: any) => {
           const isAdmin = m.role === "admin";
           return (
             <div key={m._id} className="flex items-center gap-3 p-3">
@@ -180,6 +232,7 @@ function MembrosTab() {
           );
         })}
       </div>
+      )}
     </div>
   );
 }
@@ -233,11 +286,35 @@ function ConvitesTab() {
   );
 }
 
+function SimularSelect() {
+  const { impersonate } = useAuth();
+  return (
+    <Select onValueChange={(v) => impersonate(v as Role)}>
+      <SelectTrigger className="w-[180px] h-8 text-xs">
+        <div className="flex items-center gap-1.5">
+          <Eye className="h-3.5 w-3.5" />
+          <SelectValue placeholder="Simular como..." />
+        </div>
+      </SelectTrigger>
+      <SelectContent>
+        {AVAILABLE_ROLES.filter((r) => r !== "admin").map((r) => (
+          <SelectItem key={r} value={r} className="text-xs">
+            {ROLE_LABELS[r]}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
 export default function PermissoesPage() {
   return (
     <AdminGate fallback={<p className="text-muted-foreground">Acesso restrito a administradores</p>}>
       <div className="space-y-4">
-        <h1 className="text-xl font-bold">Permissoes</h1>
+        <div className="flex items-center justify-between gap-2">
+          <h1 className="text-xl font-bold">Permissoes</h1>
+          <SimularSelect />
+        </div>
 
         <Tabs defaultValue="membros">
           <TabsList>

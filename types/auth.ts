@@ -2,6 +2,7 @@ export type Role =
   | "admin"
   | "pastor"
   | "presbitero"
+  | "obreiro"
   | "secretaria"
   | "membro";
 
@@ -56,4 +57,8 @@ export interface AuthContext {
   can: (permission: Permission) => boolean;
   hasRole: (role: Role) => boolean;
   hasAnyRole: (roles: Role[]) => boolean;
+  // Simulacao de role (admin only)
+  isImpersonating: boolean;
+  impersonate: (role: Role) => void;
+  stopImpersonating: () => void;
 }
