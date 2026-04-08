@@ -105,7 +105,7 @@ export function MobileTabBar() {
   const isMoreActive = allDrawerItems.some((item) => isActive(item.href));
 
   return (
-    <div className="fixed bottom-0 inset-x-0 z-[56] border-t bg-background md:hidden">
+    <div className="fixed bottom-0 inset-x-0 z-[56] border-t bg-background md:hidden pb-[env(safe-area-inset-bottom)]">
       <nav className="flex items-stretch">
         {tabs.map((tab) => {
           const active = isActive(tab.href);
