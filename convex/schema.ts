@@ -399,6 +399,23 @@ export default defineSchema({
     .index("by_pg", ["pgId"])
     .index("by_membro", ["membroId"]),
 
+  pgEncontros: defineTable({
+    pgId: v.id("pequenosGrupos"),
+    data: v.string(), // YYYY-MM-DD
+    tema: v.optional(v.string()),
+    observacoes: v.optional(v.string()),
+    criadoEm: v.number(),
+  })
+    .index("by_pg", ["pgId"])
+    .index("by_pg_data", ["pgId", "data"]),
+
+  pgPresencas: defineTable({
+    encontroId: v.id("pgEncontros"),
+    membroId: v.id("membros"),
+  })
+    .index("by_encontro", ["encontroId"])
+    .index("by_membro", ["membroId"]),
+
   // ===== Pastoreio =====
   visitasPastorais: defineTable({
     membroId: v.id("membros"),

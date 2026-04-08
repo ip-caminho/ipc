@@ -134,6 +134,111 @@ export const listAllWithMembros = query({
   },
 });
 
+export const listEncontros = query({
+  args: { pgId: v.id("pequenosGrupos") },
+  handler: async (ctx, { pgId }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return [];
+
+    const encontros = await ctx.db
+      .query("pgEncontros")
+      .withIndex("by_pg", (q) => q.eq("pgId", pgId))
+      .collect();
+
+    const enriched = await Promise.all(
+      encontros.map(async (e) => {
+        const presencas = await ctx.db
+          .query("pgPresencas")
+          .withIndex("by_encontro", (q) => q.eq("encontroId", e._id))
+          .collect();
+        return { ...e, totalPresentes: presencas.length };
+      })
+    );
+
+    return enriched.sort((a, b) => b.data.localeCompare(a.data));
+  },
+});
+
+export const getEncontroPresencas = query({
+  args: { encontroId: v.id("pgEncontros") },
+  handler: async (ctx, { encontroId }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return null;
+
+    const encontro = await ctx.db.get(encontroId);
+    if (!encontro) return null;
+
+    const presencas = await ctx.db
+      .query("pgPresencas")
+      .withIndex("by_encontro", (q) => q.eq("encontroId", encontroId))
+      .collect();
+
+    const presenteIds = new Set(presencas.map((p) => p.membroId));
+
+    // Busca todos os membros do PG
+    const pgMembros = await ctx.db
+      .query("pgMembros")
+      .withIndex("by_pg", (q) => q.eq("pgId", encontro.pgId))
+      .collect();
+
+    const membros = await Promise.all(
+      pgMembros.map(async (pm) => ({
+        membroId: pm.membroId,
+        nome: await resolveMembroNome(ctx, pm.membroId),
+        presente: presenteIds.has(pm.membroId),
+      }))
+    );
+
+    return { ...encontro, membros };
+  },
+});
+
+export const getFrequenciaResumo = query({
+  args: { pgId: v.id("pequenosGrupos") },
+  handler: async (ctx, { pgId }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return null;
+
+    const encontros = await ctx.db
+      .query("pgEncontros")
+      .withIndex("by_pg", (q) => q.eq("pgId", pgId))
+      .collect();
+
+    if (encontros.length === 0) return { membros: [], totalEncontros: 0 };
+
+    const pgMembros = await ctx.db
+      .query("pgMembros")
+      .withIndex("by_pg", (q) => q.eq("pgId", pgId))
+      .collect();
+
+    // Conta presencas por membro
+    const presencasPorMembro: Record<string, number> = {};
+    for (const e of encontros) {
+      const presencas = await ctx.db
+        .query("pgPresencas")
+        .withIndex("by_encontro", (q) => q.eq("encontroId", e._id))
+        .collect();
+      for (const p of presencas) {
+        presencasPorMembro[p.membroId] = (presencasPorMembro[p.membroId] || 0) + 1;
+      }
+    }
+
+    const membros = await Promise.all(
+      pgMembros.map(async (pm) => ({
+        membroId: pm.membroId,
+        nome: await resolveMembroNome(ctx, pm.membroId),
+        presencas: presencasPorMembro[pm.membroId] || 0,
+        percentual: Math.round(((presencasPorMembro[pm.membroId] || 0) / encontros.length) * 100),
+      }))
+    );
+
+    return {
+      membros: membros.sort((a, b) => b.percentual - a.percentual),
+      totalEncontros: encontros.length,
+    };
+  },
+});
+
 export const listByMembro = query({
   args: { membroId: v.id("membros") },
   handler: async (ctx, { membroId }) => {

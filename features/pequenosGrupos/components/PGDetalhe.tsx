@@ -22,11 +22,14 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/shared/components/ui/dialog";
-import { ArrowLeft, Plus, Trash2, MapPin, Clock, Users } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
+import { ArrowLeft, Plus, Trash2, MapPin, Clock, Users, CalendarCheck, BarChart3 } from "lucide-react";
 import { toast } from "sonner";
 import { PG_STATUS_COLORS, DIA_SEMANA_LABELS } from "../lib/constants";
 import { MembrosPGList } from "./MembrosPGList";
 import { PGForm } from "./PGForm";
+import { PGEncontros } from "./PGEncontros";
+import { PGFrequencia } from "./PGFrequencia";
 import type { PGFormValues } from "../lib/validations";
 
 interface PGDetalheProps {
@@ -164,31 +167,55 @@ export function PGDetalhe({ pgId, onBack }: PGDetalheProps) {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Users className="h-4 w-4" />
+      <Tabs defaultValue="membros">
+        <TabsList className="w-full justify-start overflow-x-auto scrollbar-none">
+          <TabsTrigger value="membros" className="shrink-0 gap-1.5">
+            <Users className="h-3.5 w-3.5" />
             Membros ({pg.membros.length})
-          </CardTitle>
-          {can("pequenos_grupos:update") && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setAddMembroOpen(true)}
-            >
-              <Plus className="h-4 w-4 mr-1" />
-              Adicionar
-            </Button>
-          )}
-        </CardHeader>
-        <CardContent>
-          <MembrosPGList
-            membros={pg.membros}
-            canRemove={can("pequenos_grupos:update")}
-            onRemove={handleRemoveMembro}
-          />
-        </CardContent>
-      </Card>
+          </TabsTrigger>
+          <TabsTrigger value="encontros" className="shrink-0 gap-1.5">
+            <CalendarCheck className="h-3.5 w-3.5" />
+            Encontros
+          </TabsTrigger>
+          <TabsTrigger value="frequencia" className="shrink-0 gap-1.5">
+            <BarChart3 className="h-3.5 w-3.5" />
+            Frequencia
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="membros" className="mt-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-base">Membros</CardTitle>
+              {can("pequenos_grupos:update") && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setAddMembroOpen(true)}
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Adicionar
+                </Button>
+              )}
+            </CardHeader>
+            <CardContent>
+              <MembrosPGList
+                membros={pg.membros}
+                canRemove={can("pequenos_grupos:update")}
+                onRemove={handleRemoveMembro}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="encontros" className="mt-4">
+          <PGEncontros pgId={pgId} membros={pg.membros} canEdit={can("pequenos_grupos:update")} />
+        </TabsContent>
+
+        <TabsContent value="frequencia" className="mt-4">
+          <PGFrequencia pgId={pgId} />
+        </TabsContent>
+      </Tabs>
 
       {/* Dialog: Editar PG */}
       <PGForm
