@@ -124,10 +124,10 @@ export function MobileTabBar() {
               href={tab.href}
               onClick={() => { if (!active) setPendingHref(tab.href); }}
               className={`flex flex-1 flex-col items-center justify-center gap-1 py-3 min-h-[68px] transition-colors ${
-                active || loading ? "text-primary" : "text-muted-foreground"
+                active ? "text-primary" : loading ? "text-primary bg-primary/10 rounded-lg" : "text-muted-foreground"
               }`}
             >
-              <tab.icon className="h-6 w-6" />
+              <tab.icon className={`h-6 w-6 ${loading ? "animate-pulse" : ""}`} />
               <span className="text-[10px] font-medium">{tab.label}</span>
             </Link>
           );

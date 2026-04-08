@@ -126,8 +126,17 @@ function GravacaoCardMobile({ g, index }: { g: any; index: number }) {
         <span className="text-[10px] uppercase tracking-wide text-muted-foreground mt-0.5">{mes}</span>
       </div>
       <div className="flex-1 min-w-0">
-        {g.textoBase && <p className="text-sm font-medium leading-snug">{g.textoBase}</p>}
-        {pregador && <p className="text-sm text-muted-foreground mt-0.5">{pregador}</p>}
+        {g.tipo === "SERMAO" ? (
+          <>
+            {g.textoBase && <p className="text-sm font-medium leading-snug">{g.textoBase}</p>}
+            {pregador && <p className="text-sm text-muted-foreground mt-0.5">{pregador}</p>}
+          </>
+        ) : (
+          <>
+            <p className="text-sm font-medium leading-snug">{g.titulo}</p>
+            {pregador && <p className="text-sm text-muted-foreground mt-0.5">{pregador}</p>}
+          </>
+        )}
       </div>
       {g.comentarioCount > 0 && (
         <div className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
