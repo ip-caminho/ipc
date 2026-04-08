@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
-import { Home, Mic, CalendarCheck, DoorOpen, HandHeart, Menu, BookOpen, Music, Users, Heart, Baby, Shield, LogOut, CalendarDays, UsersRound, FileText, Church, Megaphone, LayoutGrid, UserCircle, Ear, HeartHandshake } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Home, Mic, CalendarCheck, DoorOpen, HandHeart, Menu, BookOpen, Music, Users, Heart, Baby, Shield, LogOut, CalendarDays, UsersRound, FileText, Church, Megaphone, LayoutGrid, UserCircle, Ear, HeartHandshake, Loader2 } from "lucide-react";
 import { useAuth } from "@shared/providers/PermissionsProvider";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useQuery } from "convex/react";
@@ -86,6 +86,14 @@ export function MobileTabBar() {
   // @ts-ignore Convex TS2589
   const modulosAtivos = useQuery(api.modulos.queries.listModulosAtivos);
   const [open, setOpen] = useState(false);
+  const [pendingHref, setPendingHref] = useState<string | null>(null);
+
+  // Limpa estado otimista quando a navegacao completa
+  useEffect(() => {
+    if (pendingHref && (pathname === pendingHref || (pendingHref !== "/dashboard" && pathname.startsWith(pendingHref)))) {
+      setPendingHref(null);
+    }
+  }, [pathname, pendingHref]);
 
   const isActive = (href: string) =>
     pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
@@ -109,15 +117,21 @@ export function MobileTabBar() {
       <nav className="flex items-stretch">
         {tabs.map((tab) => {
           const active = isActive(tab.href);
+          const loading = pendingHref === tab.href && !active;
           return (
             <Link
               key={tab.href}
               href={tab.href}
+              onClick={() => { if (!active) setPendingHref(tab.href); }}
               className={`flex flex-1 flex-col items-center justify-center gap-1 py-3 min-h-[68px] transition-colors ${
-                active ? "text-primary" : "text-muted-foreground"
+                active || loading ? "text-primary" : "text-muted-foreground"
               }`}
             >
-              <tab.icon className="h-6 w-6" />
+              {loading ? (
+                <Loader2 className="h-6 w-6 animate-spin" />
+              ) : (
+                <tab.icon className="h-6 w-6" />
+              )}
               <span className="text-[10px] font-medium">{tab.label}</span>
             </Link>
           );
