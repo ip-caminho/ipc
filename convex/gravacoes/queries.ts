@@ -110,32 +110,32 @@ export const getById = query({
 export const getLatestAvisos = query({
   args: {},
   handler: async (ctx) => {
-    // Busca a gravacao tipo SERMAO mais recente (por data) que tenha avisos
-    const gravacoes = await ctx.db
+    // Itera pelo index desc ate achar o primeiro sermao com avisos
+    const iter = ctx.db
       .query("gravacoes")
       .withIndex("by_data")
-      .order("desc")
-      .collect();
+      .order("desc");
 
-    const gravacao = gravacoes.find(
-      (g) =>
+    for await (const g of iter) {
+      if (
         g.tipo === "SERMAO" &&
         g.iaStatus === "CONCLUIDO" &&
         g.iaAvisos &&
         g.iaAvisos.length > 0
-    );
+      ) {
+        return {
+          gravacaoId: g._id,
+          titulo: g.titulo,
+          data: g.data,
+          audioUrl: g.audioUrl || null,
+          inicioAvisos: g.inicioAvisos ?? null,
+          fimAvisos: g.fimAvisos ?? null,
+          avisos: g.iaAvisos,
+        };
+      }
+    }
 
-    if (!gravacao) return null;
-
-    return {
-      gravacaoId: gravacao._id,
-      titulo: gravacao.titulo,
-      data: gravacao.data,
-      audioUrl: gravacao.audioUrl || null,
-      inicioAvisos: gravacao.inicioAvisos ?? null,
-      fimAvisos: gravacao.fimAvisos ?? null,
-      avisos: gravacao.iaAvisos!,
-    };
+    return null;
   },
 });
 
