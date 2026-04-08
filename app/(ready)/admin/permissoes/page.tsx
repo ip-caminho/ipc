@@ -50,15 +50,6 @@ const ROLE_COLORS: Record<string, string> = {
   membro: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
 };
 
-const STATUS_FILTERS = [
-  { value: "TODOS", label: "Todos" },
-  { value: "ATIVO", label: "Ativo" },
-  { value: "INATIVO", label: "Inativo" },
-  { value: "TRANSFERIDO", label: "Transferido" },
-  { value: "DESLIGADO", label: "Desligado" },
-  { value: "FALECIDO", label: "Falecido" },
-] as const;
-
 function MembrosTab() {
   // @ts-ignore Convex TS2589
   const membros = useQuery(api.preferencias.rbac.getAllMembrosWithPermissions);
@@ -67,18 +58,16 @@ function MembrosTab() {
   const setPermission = useMutation(api.preferencias.rbac.setMembroPermission);
   const syncWithRole = useMutation(api.preferencias.rbac.syncMembroWithRole);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("ATIVO");
 
   const filtered = useMemo(() => {
     if (!membros) return undefined;
     return membros
       .filter((m: any) => {
-        if (statusFilter !== "TODOS" && m.status !== statusFilter) return false;
         if (search && !m.name.toLowerCase().includes(search.toLowerCase())) return false;
         return true;
       })
       .sort((a: any, b: any) => a.name.localeCompare(b.name));
-  }, [membros, search, statusFilter]);
+  }, [membros, search]);
 
   if (!membros) return <Skeleton className="h-64" />;
 
@@ -111,20 +100,6 @@ function MembrosTab() {
             className="pl-8 h-9"
           />
         </div>
-      </div>
-
-      <div className="flex items-center gap-1 overflow-x-auto pb-1 scrollbar-none">
-        {STATUS_FILTERS.map((s) => (
-          <Button
-            key={s.value}
-            variant={statusFilter === s.value ? "default" : "outline"}
-            size="sm"
-            className="h-7 text-xs shrink-0"
-            onClick={() => setStatusFilter(s.value)}
-          >
-            {s.label}
-          </Button>
-        ))}
       </div>
 
       {filtered && filtered.length === 0 ? (
