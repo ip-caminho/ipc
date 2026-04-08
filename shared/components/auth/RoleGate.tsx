@@ -3,8 +3,9 @@
 import { useAuth } from "@shared/providers/PermissionsProvider";
 
 export function AdminGate({ children, fallback = null }: { children: React.ReactNode; fallback?: React.ReactNode }) {
-  const { isAdmin, isLoading } = useAuth();
+  const { isAdmin, isLoading, isImpersonating } = useAuth();
   if (isLoading) return null;
-  if (!isAdmin) return <>{fallback}</>;
+  // Admin simulando outro role ainda pode acessar areas admin
+  if (!isAdmin && !isImpersonating) return <>{fallback}</>;
   return <>{children}</>;
 }
