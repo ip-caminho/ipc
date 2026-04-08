@@ -153,3 +153,100 @@ export const removeMembro = mutation({
     await ctx.db.delete(id);
   },
 });
+
+// ===== Encontros e Presenca =====
+
+export const createEncontro = mutation({
+  args: {
+    pgId: v.id("pequenosGrupos"),
+    data: v.string(),
+    tema: v.optional(v.string()),
+    observacoes: v.optional(v.string()),
+    presentes: v.array(v.id("membros")),
+  },
+  handler: async (ctx, { pgId, data, tema, observacoes, presentes }) => {
+    await requirePermission(ctx, "pequenos_grupos:update");
+
+    const pg = await ctx.db.get(pgId);
+    if (!pg) throw new Error("Pequeno grupo nao encontrado");
+
+    // Valida unicidade pgId+data
+    const existing = await ctx.db
+      .query("pgEncontros")
+      .withIndex("by_pg_data", (q) => q.eq("pgId", pgId).eq("data", data))
+      .first();
+    if (existing) throw new Error("Ja existe um encontro nesta data para este PG");
+
+    const encontroId = await ctx.db.insert("pgEncontros", {
+      pgId,
+      data,
+      tema: tema || undefined,
+      observacoes: observacoes || undefined,
+      criadoEm: Date.now(),
+    });
+
+    for (const membroId of presentes) {
+      await ctx.db.insert("pgPresencas", { encontroId, membroId });
+    }
+
+    return encontroId;
+  },
+});
+
+export const updateEncontroPresencas = mutation({
+  args: {
+    encontroId: v.id("pgEncontros"),
+    data: v.optional(v.string()),
+    tema: v.optional(v.string()),
+    observacoes: v.optional(v.string()),
+    presentes: v.array(v.id("membros")),
+  },
+  handler: async (ctx, { encontroId, data, tema, observacoes, presentes }) => {
+    await requirePermission(ctx, "pequenos_grupos:update");
+
+    const encontro = await ctx.db.get(encontroId);
+    if (!encontro) throw new Error("Encontro nao encontrado");
+
+    // Atualiza dados do encontro
+    const updates: Record<string, any> = {};
+    if (data !== undefined) updates.data = data;
+    if (tema !== undefined) updates.tema = tema || undefined;
+    if (observacoes !== undefined) updates.observacoes = observacoes || undefined;
+    if (Object.keys(updates).length > 0) {
+      await ctx.db.patch(encontroId, updates);
+    }
+
+    // Recria presencas
+    const existingPresencas = await ctx.db
+      .query("pgPresencas")
+      .withIndex("by_encontro", (q) => q.eq("encontroId", encontroId))
+      .collect();
+    for (const p of existingPresencas) {
+      await ctx.db.delete(p._id);
+    }
+    for (const membroId of presentes) {
+      await ctx.db.insert("pgPresencas", { encontroId, membroId });
+    }
+  },
+});
+
+export const removeEncontro = mutation({
+  args: { encontroId: v.id("pgEncontros") },
+  handler: async (ctx, { encontroId }) => {
+    await requirePermission(ctx, "pequenos_grupos:update");
+
+    const encontro = await ctx.db.get(encontroId);
+    if (!encontro) throw new Error("Encontro nao encontrado");
+
+    // Cascade: remove presencas
+    const presencas = await ctx.db
+      .query("pgPresencas")
+      .withIndex("by_encontro", (q) => q.eq("encontroId", encontroId))
+      .collect();
+    for (const p of presencas) {
+      await ctx.db.delete(p._id);
+    }
+
+    await ctx.db.delete(encontroId);
+  },
+});
