@@ -21,9 +21,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { PermissionGate } from "@shared/components/auth/PermissionGate";
 import { useAuth } from "@shared/providers/PermissionsProvider";
 import { TIPO_GRAVACAO_OPTIONS } from "@features/gravacoes/lib/constants";
-import { ArrowLeft, Save, Plus, Trash2, Megaphone, Globe, GlobeLock, Play, Pause } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/shared/components/ui/dropdown-menu";
+import { ArrowLeft, Save, Plus, Trash2, Megaphone, Globe, GlobeLock, Play, Pause, MoreVertical } from "lucide-react";
 import type { Id } from "@/convex/_generated/dataModel";
 import Link from "next/link";
+import { useIsMobile } from "@shared/hooks/use-mobile";
 
 function DadosEditor({ gravacao }: { gravacao: any }) {
   // @ts-ignore Convex TS2589
@@ -246,6 +248,7 @@ export default function GravacaoAdminPage() {
   const router = useRouter();
   const id = params.id as string;
   const { can } = useAuth();
+  const isMobile = useIsMobile();
 
   const gravacao = useQuery(api.gravacoes.queries.getById, { id: id as Id<"gravacoes"> });
   const globalPlayer = useAudioPlayer();
@@ -266,84 +269,120 @@ export default function GravacaoAdminPage() {
     return <p className="text-muted-foreground">Sem permissao</p>;
   }
 
+  const handlePublish = async () => {
+    try {
+      await publishGravacao({ id: gravacao._id });
+      toast.success("Gravacao publicada");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao publicar");
+    }
+  };
+
+  const handleUnpublish = async () => {
+    try {
+      await unpublishGravacao({ id: gravacao._id, data: { status: "RASCUNHO" } });
+      toast.success("Gravacao despublicada");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao despublicar");
+    }
+  };
+
+  const handleRemove = async () => {
+    if (!confirm("Tem certeza que deseja excluir esta gravacao? Esta acao nao pode ser desfeita.")) return;
+    try {
+      await removeGravacao({ id: gravacao._id });
+      toast.success("Gravacao excluida");
+      router.push("/admin/gravacoes");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao excluir");
+    }
+  };
+
   return (
     <div className="max-w-4xl space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" asChild>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-3 min-w-0">
+          <Button variant="ghost" size="icon" className="shrink-0" asChild>
             <Link href={`/gravacoes/${id}`}>
               <ArrowLeft className="h-4 w-4" />
             </Link>
           </Button>
-          <div>
-            <h1 className="text-lg font-bold">{gravacao.titulo}</h1>
-            <p className="text-xs text-muted-foreground">Administracao da gravacao</p>
+          <div className="min-w-0">
+            <h1 className="text-lg font-bold truncate">{gravacao.titulo}</h1>
+            <div className="flex items-center gap-2">
+              <p className="text-xs text-muted-foreground">Administracao</p>
+              <IaStatusBadge iaStatus={gravacao.iaStatus} iaErro={gravacao.iaErro} />
+            </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <IaStatusBadge iaStatus={gravacao.iaStatus} iaErro={gravacao.iaErro} />
-          <PermissionGate permission="gravacoes:process_ai">
-            <IaProcessarButton
-              gravacaoId={gravacao._id}
-              iaStatus={gravacao.iaStatus}
-              hasAudio={!!gravacao.audioUrl}
-            />
-          </PermissionGate>
-          <PermissionGate permission="gravacoes:update">
-            {gravacao.status === "RASCUNHO" ? (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={async () => {
-                  try {
-                    await publishGravacao({ id: gravacao._id });
-                    toast.success("Gravacao publicada");
-                  } catch (e) {
-                    toast.error(e instanceof Error ? e.message : "Erro ao publicar");
-                  }
-                }}
-              >
-                <Globe className="h-3.5 w-3.5 mr-1.5" />
-                Publicar
+
+        {isMobile ? (
+          <div className="flex items-center gap-1.5 shrink-0">
+            <PermissionGate permission="gravacoes:process_ai">
+              <IaProcessarButton
+                gravacaoId={gravacao._id}
+                iaStatus={gravacao.iaStatus}
+                hasAudio={!!gravacao.audioUrl}
+              />
+            </PermissionGate>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {can("gravacoes:update") && (
+                  <DropdownMenuItem onClick={gravacao.status === "RASCUNHO" ? handlePublish : handleUnpublish}>
+                    {gravacao.status === "RASCUNHO" ? (
+                      <><Globe className="h-4 w-4" />Publicar</>
+                    ) : (
+                      <><GlobeLock className="h-4 w-4" />Despublicar</>
+                    )}
+                  </DropdownMenuItem>
+                )}
+                {can("gravacoes:delete") && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem variant="destructive" onClick={handleRemove}>
+                      <Trash2 className="h-4 w-4" />
+                      Excluir
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            <PermissionGate permission="gravacoes:process_ai">
+              <IaProcessarButton
+                gravacaoId={gravacao._id}
+                iaStatus={gravacao.iaStatus}
+                hasAudio={!!gravacao.audioUrl}
+              />
+            </PermissionGate>
+            <PermissionGate permission="gravacoes:update">
+              {gravacao.status === "RASCUNHO" ? (
+                <Button variant="outline" size="sm" onClick={handlePublish}>
+                  <Globe className="h-3.5 w-3.5 mr-1.5" />
+                  Publicar
+                </Button>
+              ) : (
+                <Button variant="outline" size="sm" onClick={handleUnpublish}>
+                  <GlobeLock className="h-3.5 w-3.5 mr-1.5" />
+                  Despublicar
+                </Button>
+              )}
+            </PermissionGate>
+            <PermissionGate permission="gravacoes:delete">
+              <Button variant="destructive" size="sm" onClick={handleRemove}>
+                <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                Excluir
               </Button>
-            ) : (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={async () => {
-                  try {
-                    await unpublishGravacao({ id: gravacao._id, data: { status: "RASCUNHO" } });
-                    toast.success("Gravacao despublicada");
-                  } catch (e) {
-                    toast.error(e instanceof Error ? e.message : "Erro ao despublicar");
-                  }
-                }}
-              >
-                <GlobeLock className="h-3.5 w-3.5 mr-1.5" />
-                Despublicar
-              </Button>
-            )}
-          </PermissionGate>
-          <PermissionGate permission="gravacoes:delete">
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={async () => {
-                if (!confirm("Tem certeza que deseja excluir esta gravacao? Esta acao nao pode ser desfeita.")) return;
-                try {
-                  await removeGravacao({ id: gravacao._id });
-                  toast.success("Gravacao excluida");
-                  router.push("/admin/gravacoes");
-                } catch (e) {
-                  toast.error(e instanceof Error ? e.message : "Erro ao excluir");
-                }
-              }}
-            >
-              <Trash2 className="h-3.5 w-3.5 mr-1.5" />
-              Excluir
-            </Button>
-          </PermissionGate>
-        </div>
+            </PermissionGate>
+          </div>
+        )}
       </div>
 
       <IaProgressPanel
@@ -356,13 +395,13 @@ export default function GravacaoAdminPage() {
       />
 
       <Tabs defaultValue="dados">
-        <TabsList>
-          <TabsTrigger value="dados">Dados</TabsTrigger>
-          <TabsTrigger value="avisos">Avisos</TabsTrigger>
-          <TabsTrigger value="resultado">Resultado IA</TabsTrigger>
-          <TabsTrigger value="segmentos">Trechos</TabsTrigger>
+        <TabsList className="w-full justify-start overflow-x-auto scrollbar-none">
+          <TabsTrigger value="dados" className="shrink-0">Dados</TabsTrigger>
+          <TabsTrigger value="avisos" className="shrink-0">Avisos</TabsTrigger>
+          <TabsTrigger value="resultado" className="shrink-0">Resultado IA</TabsTrigger>
+          <TabsTrigger value="segmentos" className="shrink-0">Trechos</TabsTrigger>
           {gravacao.audioUrl && (
-            <TabsTrigger value="audio">Audio completo</TabsTrigger>
+            <TabsTrigger value="audio" className="shrink-0">Audio</TabsTrigger>
           )}
         </TabsList>
 
