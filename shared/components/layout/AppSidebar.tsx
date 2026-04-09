@@ -53,6 +53,10 @@ import {
   ChevronRight,
   DoorOpen,
   Sun,
+  ListTodo,
+  GraduationCap,
+  Library,
+  Monitor,
 } from "lucide-react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
@@ -94,6 +98,9 @@ const menuSections: MenuSection[] = [
       { label: "Calendario", href: "/calendario", icon: CalendarDays, permission: "calendario:read", modulo: "calendario", tooltip: "Eventos e calendario da igreja" },
       { label: "Minha Escala", href: "/escalas", icon: CalendarCheck, permission: null, modulo: "escalas", tooltip: "Veja sua escala e marque disponibilidade" },
       { label: "Salas", href: "/salas", icon: DoorOpen, permission: "salas:read", modulo: "salas", tooltip: "Reserve salas da igreja" },
+      { label: "Turmas", href: "/turmas", icon: GraduationCap, permission: "turmas:read", modulo: "turmas", tooltip: "Turmas e cursos da igreja" },
+      { label: "Biblioteca", href: "/biblioteca", icon: Library, permission: "biblioteca:read", modulo: "biblioteca", tooltip: "Acervo de livros da igreja" },
+      { label: "Multimídia", href: "/multimidia", icon: Monitor, permission: "multimidia:read", modulo: "multimidia", tooltip: "Painel de multimidia para cultos" },
     ],
   },
   {
@@ -103,6 +110,7 @@ const menuSections: MenuSection[] = [
       { label: "Pequenos Grupos", href: "/pequenos-grupos", icon: UsersRound, permission: "pequenos_grupos:read", modulo: "pequenos-grupos", tooltip: "Grupos de estudo e comunhao" },
       { label: "Pastoreio", href: "/pastoreio", icon: Heart, permission: "pastoreio:read", modulo: "pastoreio", tooltip: "Visitas pastorais e acompanhamento" },
       { label: "Educacional", href: "/educacional", icon: Baby, permission: "educacional:read", modulo: "educacional", tooltip: "Turmas e criancas do educacional infantil" },
+      { label: "Tarefas", href: "/tarefas", icon: ListTodo, permission: "tarefas:read", modulo: "tarefas", tooltip: "Gestao de tarefas e atividades" },
       { label: "Membros", href: "/membros", icon: Users, permission: "membros:read", modulo: "membros", tooltip: "Cadastro e gestao da membresia" },
       { label: "Equipes e Escalas", href: "/admin/escalas", icon: CalendarCheck, permission: "escalas:update", modulo: "escalas", tooltip: "Gerenciar equipes e gerar escalas" },
     ],

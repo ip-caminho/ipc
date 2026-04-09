@@ -259,7 +259,6 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "features/escalas/components/MinhasEquipesTab.tsx",
       "features/escalas/components/GerarEscalasTab.tsx",
     ],
-    mutations: ["escalas.mutations.garantirCultosFuturos"],
     mutations: ["escalas.mutations.garantirCultosFuturos", "escalas.funcoes.create"],
     componentes: ["EquipesTab", "DisponibilidadeTab", "MinhasEquipesTab", "GerarEscalasTab", "NovaEquipeDialog", "ModuloGuard"],
     notas: [
@@ -607,6 +606,92 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     mutations: ["membros.selfService.updateMyProfile"],
     notas: ["Self-service: membro edita seus proprios dados"],
   },
+  "/multimidia": {
+    nome: "Multimidia",
+    pagina: "app/(ready)/multimidia/page.tsx",
+    arquivos: ["app/(ready)/multimidia/page.tsx"],
+    queries: ["multimidia.queries.getPainelCulto", "escalas.queries.listCultos"],
+    mutations: ["multimidia.mutations.toggleChecklistItem", "multimidia.mutations.criarNota", "multimidia.mutations.initChecklist"],
+    componentes: ["ModuloGuard"],
+    notas: [
+      "Permissao: multimidia:read/create/update",
+      "Painel centrado no culto com navegacao por data",
+      "Liturgia, arquivos, avisos, checklist, anotacoes",
+    ],
+  },
+  "/biblioteca": {
+    nome: "Biblioteca",
+    pagina: "app/(ready)/biblioteca/page.tsx",
+    arquivos: [
+      "app/(ready)/biblioteca/page.tsx",
+      "features/biblioteca/components/LivroCard.tsx",
+    ],
+    queries: ["biblioteca.queries.list", "biblioteca.queries.listCategorias"],
+    componentes: ["LivroCard", "PermissionGate", "ModuloGuard"],
+    notas: ["Permissao: biblioteca:read/create", "Busca com debounce, filtro por categoria"],
+  },
+  "/biblioteca/[id]": {
+    nome: "Detalhe do Livro",
+    pagina: "app/(ready)/biblioteca/[id]/page.tsx",
+    arquivos: ["app/(ready)/biblioteca/[id]/page.tsx"],
+    queries: ["biblioteca.queries.getById", "biblioteca.queries.listEmprestimos"],
+    mutations: ["biblioteca.mutations.devolver", "biblioteca.mutations.addExemplar"],
+    notas: ["Exemplares com status", "Emprestimos ativos com botao devolver"],
+  },
+  "/turmas": {
+    nome: "Turmas",
+    pagina: "app/(ready)/turmas/page.tsx",
+    arquivos: [
+      "app/(ready)/turmas/page.tsx",
+      "features/turmas/components/TurmaCard.tsx",
+      "features/turmas/components/TurmaFormDialog.tsx",
+    ],
+    queries: ["turmas.queries.listTurmas"],
+    mutations: ["turmas.mutations.create"],
+    componentes: ["TurmaCard", "TurmaFormDialog", "PermissionGate", "ModuloGuard"],
+    notas: ["Permissao: turmas:read/create", "Filtro por status via tabs"],
+  },
+  "/turmas/[id]": {
+    nome: "Detalhe da Turma",
+    pagina: "app/(ready)/turmas/[id]/page.tsx",
+    arquivos: ["app/(ready)/turmas/[id]/page.tsx"],
+    queries: ["turmas.queries.getById", "turmas.queries.listInscricoes", "turmas.queries.listEncontros"],
+    mutations: ["turmas.mutations.updateStatus", "turmas.mutations.cancelarInscricao"],
+    notas: ["Tabs: Inscricoes, Presenca", "Link de inscricao copiavel"],
+  },
+  "/tarefas": {
+    nome: "Tarefas",
+    pagina: "app/(ready)/tarefas/page.tsx",
+    arquivos: [
+      "app/(ready)/tarefas/page.tsx",
+      "features/tarefas/components/TarefaCard.tsx",
+      "features/tarefas/components/TarefaForm.tsx",
+    ],
+    queries: ["tarefas.queries.list"],
+    mutations: ["tarefas.mutations.create"],
+    componentes: ["TarefaCard", "TarefaForm", "PermissionGate", "ModuloGuard"],
+    notas: [
+      "Permissao: tarefas:read/create/update/delete",
+      "3 tabs: Minhas, Criadas por mim, Todas (se tarefas:read)",
+      "Filtro por status",
+    ],
+  },
+  "/tarefas/[id]": {
+    nome: "Detalhe da Tarefa",
+    pagina: "app/(ready)/tarefas/[id]/page.tsx",
+    arquivos: [
+      "app/(ready)/tarefas/[id]/page.tsx",
+      "features/tarefas/components/TarefaForm.tsx",
+      "shared/components/ComentariosThread.tsx",
+    ],
+    queries: ["tarefas.queries.getById"],
+    mutations: ["tarefas.mutations.updateStatus", "tarefas.mutations.update", "tarefas.mutations.remove"],
+    componentes: ["TarefaForm", "ComentariosThread", "ModuloGuard"],
+    notas: [
+      "Owner/responsavel pode mudar status",
+      "Comentarios unificados com threading",
+    ],
+  },
   "/signin": {
     nome: "Login",
     pagina: "app/(auth)/signin/page.tsx",
@@ -630,6 +715,12 @@ function resolveRoute(pathname: string): PageContext | null {
   if (/^\/ministerios\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/ministerios/[id]"];
   // /membros/[id]
   if (/^\/membros\/[^/]+$/.test(pathname) && pathname !== "/membros/novo") return CONTEXT_MAP["/membros/[id]"];
+  // /biblioteca/[id]
+  if (/^\/biblioteca\/[^/]+$/.test(pathname) && pathname !== "/biblioteca/novo") return CONTEXT_MAP["/biblioteca/[id]"];
+  // /turmas/[id]
+  if (/^\/turmas\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/turmas/[id]"];
+  // /tarefas/[id]
+  if (/^\/tarefas\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/tarefas/[id]"];
   // /convite/[token]
   if (/^\/convite\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/signin"];
 

@@ -32,8 +32,10 @@ async function enrichPedido(ctx: any, pedido: any, membroId: any) {
   const euOrando = intercessores.some((i: any) => i.membroId === membroId);
 
   const comentarios = await ctx.db
-    .query("pedidoOracaoComentarios")
-    .withIndex("by_pedido", (q: any) => q.eq("pedidoId", pedido._id))
+    .query("comentarios")
+    .withIndex("by_entidade", (q: any) =>
+      q.eq("entidadeTipo", "pedidos-oracao").eq("entidadeId", pedido._id)
+    )
     .collect();
 
   const intercessoresResumo = await Promise.all(
@@ -151,10 +153,12 @@ export const getById = query({
     // Autor
     const autor = await resolveMembroResumo(ctx, pedido.membroId);
 
-    // Comentarios
+    // Comentarios (tabela unificada)
     const comentarios = await ctx.db
-      .query("pedidoOracaoComentarios")
-      .withIndex("by_pedido", (q) => q.eq("pedidoId", id))
+      .query("comentarios")
+      .withIndex("by_entidade", (q) =>
+        q.eq("entidadeTipo", "pedidos-oracao").eq("entidadeId", id)
+      )
       .collect();
     const comentariosEnriched = await Promise.all(
       comentarios

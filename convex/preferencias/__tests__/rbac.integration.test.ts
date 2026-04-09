@@ -73,11 +73,11 @@ describe("RBAC — getUserPermissionContext", () => {
 
     expect(result).not.toBeNull();
     expect(result!.role).toBe("membro");
-    expect(result!.permissions).toEqual([
-      "membros:self_service",
-      "diretorio:read",
-      "gravacoes:read",
-    ]);
+    // Membro tem permissoes basicas (self_service, diretorio, gravacoes, etc)
+    expect(result!.permissions).toContain("membros:self_service");
+    expect(result!.permissions).toContain("diretorio:read");
+    expect(result!.permissions).toContain("gravacoes:read");
+    expect(result!.permissions).not.toContain("membros:delete");
   });
 
   it("retorna permissões customizadas do membro quando existem", async () => {

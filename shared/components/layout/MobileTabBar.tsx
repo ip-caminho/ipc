@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Home, Mic, CalendarCheck, DoorOpen, HandHeart, Menu, BookOpen, Music, Users, Heart, Baby, Shield, LogOut, CalendarDays, UsersRound, FileText, Church, Megaphone, LayoutGrid, UserCircle, Ear, HeartHandshake } from "lucide-react";
+import { Home, Mic, CalendarCheck, DoorOpen, HandHeart, Menu, BookOpen, Music, Users, Heart, Baby, Shield, LogOut, CalendarDays, UsersRound, FileText, Church, Megaphone, LayoutGrid, UserCircle, Ear, HeartHandshake, ListTodo, GraduationCap, Library, Monitor } from "lucide-react";
 import { useAuth } from "@shared/providers/PermissionsProvider";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useQuery } from "convex/react";
@@ -60,6 +60,10 @@ const drawerSections: DrawerSection[] = [
       { label: "Pequenos Grupos", href: "/pequenos-grupos", icon: UsersRound, permission: "pequenos_grupos:read", modulo: "pequenos-grupos" },
       { label: "Pastoreio", href: "/pastoreio", icon: Heart, permission: "pastoreio:read", modulo: "pastoreio" },
       { label: "Educacional", href: "/educacional", icon: Baby, permission: "educacional:read", modulo: "educacional" },
+      { label: "Tarefas", href: "/tarefas", icon: ListTodo, permission: "tarefas:read", modulo: "tarefas" },
+      { label: "Turmas", href: "/turmas", icon: GraduationCap, permission: "turmas:read", modulo: "turmas" },
+      { label: "Biblioteca", href: "/biblioteca", icon: Library, permission: "biblioteca:read", modulo: "biblioteca" },
+      { label: "Multimídia", href: "/multimidia", icon: Monitor, permission: "multimidia:read", modulo: "multimidia" },
     ],
   },
   {

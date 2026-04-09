@@ -1,6 +1,7 @@
 import { mutation } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { createActionAuditLog } from "../_shared/auditHelpers";
 
 const MODULOS_INICIAIS = [
   { slug: "membros", label: "Membros", descricao: "Cadastro e gestao de membros", ativo: true, ordem: 1 },
@@ -17,6 +18,10 @@ const MODULOS_INICIAIS = [
   { slug: "educacional", label: "Educacional Infantil", descricao: "Gestao das turmas e criancas", ativo: false, ordem: 12 },
   { slug: "louvor", label: "Louvor", descricao: "Repertorio de musicas com cifras e tons", ativo: false, ordem: 13 },
   { slug: "salas", label: "Salas", descricao: "Reserva de salas da igreja", ativo: false, ordem: 14 },
+  { slug: "tarefas", label: "Tarefas", descricao: "Gestao de tarefas e atividades", ativo: false, ordem: 15 },
+  { slug: "turmas", label: "Turmas", descricao: "Turmas e cursos", ativo: false, ordem: 16 },
+  { slug: "biblioteca", label: "Biblioteca", descricao: "Acervo de livros e emprestimos", ativo: false, ordem: 17 },
+  { slug: "multimidia", label: "Multimidia", descricao: "Painel de multimidia para cultos", ativo: false, ordem: 18 },
 ];
 
 export const seedModulos = mutation({
@@ -59,5 +64,6 @@ export const toggleModulo = mutation({
     if (!modulo) throw new Error("Modulo nao encontrado");
 
     await ctx.db.patch(modulo._id, { ativo: !modulo.ativo });
+    await createActionAuditLog(ctx, "TOGGLE", "modulos", modulo._id as string);
   },
 });

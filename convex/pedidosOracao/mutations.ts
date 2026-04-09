@@ -1,6 +1,7 @@
 import { mutation } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { createActionAuditLog, createFieldAuditLogs } from "../_shared/auditHelpers";
 
 async function requireAuth(ctx: any) {
   const userId = await getAuthUserId(ctx);
@@ -31,6 +32,7 @@ export const create = mutation({
       criadoEm: Date.now(),
     });
 
+    await createActionAuditLog(ctx, "CREATE", "pedidosOracao", id as string);
     return id;
   },
 });
@@ -65,7 +67,10 @@ export const updateStatus = mutation({
       }
     }
 
+    const old = { ...pedido };
     await ctx.db.patch(id, { status, atualizadoEm: Date.now() });
+    const updated = await ctx.db.get(id);
+    await createFieldAuditLogs(ctx, old, updated, "pedidosOracao");
   },
 });
 
@@ -86,8 +91,9 @@ export const addComentario = mutation({
       throw new Error("Apenas o autor pode postar atualizacoes");
     }
 
-    const id = await ctx.db.insert("pedidoOracaoComentarios", {
-      pedidoId,
+    const id = await ctx.db.insert("comentarios", {
+      entidadeTipo: "pedidos-oracao",
+      entidadeId: pedidoId,
       membroId: membro._id,
       texto,
       tipo: tipo ?? "COMENTARIO",
@@ -102,7 +108,7 @@ export const addComentario = mutation({
 });
 
 export const removeComentario = mutation({
-  args: { id: v.id("pedidoOracaoComentarios") },
+  args: { id: v.id("comentarios") },
   handler: async (ctx, { id }) => {
     const { membro } = await requireAuth(ctx);
 

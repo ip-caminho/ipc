@@ -33,11 +33,15 @@ export const ALL_PERMISSIONS = [
   // Educacional
   "criancas:read", "criancas:manage", "educacional:read", "educacional:write",
   // Biblioteca
-  "biblioteca:read", "biblioteca:create", "biblioteca:update", "biblioteca:delete",
+  "biblioteca:read", "biblioteca:create", "biblioteca:update", "biblioteca:delete", "biblioteca:emprestar",
   // Multimidia
   "multimidia:read", "multimidia:create", "multimidia:update",
   // Salas
   "salas:read", "salas:create", "salas:update", "salas:delete",
+  // Tarefas
+  "tarefas:read", "tarefas:create", "tarefas:update", "tarefas:delete",
+  // Turmas
+  "turmas:read", "turmas:create", "turmas:update", "turmas:delete", "turmas:manage_inscricoes",
   // Auditoria
   "audit:read",
 ] as const;
@@ -97,6 +101,7 @@ function getPermissionLabel(perm: string): string {
     "biblioteca:create": "Cadastrar Livros",
     "biblioteca:update": "Editar Biblioteca",
     "biblioteca:delete": "Excluir da Biblioteca",
+    "biblioteca:emprestar": "Registrar Emprestimos",
     "multimidia:read": "Ver Multimidia",
     "multimidia:create": "Criar Conteudo Multimidia",
     "multimidia:update": "Editar Multimidia",
@@ -104,6 +109,15 @@ function getPermissionLabel(perm: string): string {
     "salas:create": "Reservar Salas",
     "salas:update": "Editar Reservas",
     "salas:delete": "Excluir Reservas",
+    "tarefas:read": "Ver Tarefas",
+    "tarefas:create": "Criar Tarefas",
+    "tarefas:update": "Editar Tarefas",
+    "tarefas:delete": "Excluir Tarefas",
+    "turmas:read": "Ver Turmas",
+    "turmas:create": "Criar Turmas",
+    "turmas:update": "Editar Turmas",
+    "turmas:delete": "Excluir Turmas",
+    "turmas:manage_inscricoes": "Gerenciar Inscricoes",
   };
   return labels[perm] ?? perm;
 }
@@ -126,6 +140,8 @@ function getPermissionModule(perm: string): string {
   if (perm.startsWith("biblioteca:")) return "Biblioteca";
   if (perm.startsWith("multimidia:")) return "Multimidia";
   if (perm.startsWith("salas:")) return "Salas";
+  if (perm.startsWith("tarefas:")) return "Tarefas";
+  if (perm.startsWith("turmas:")) return "Turmas";
   return "Geral";
 }
 
@@ -184,6 +200,7 @@ function getPermissionDescription(perm: string): string {
     "biblioteca:create": "Cadastrar livros e registrar emprestimos",
     "biblioteca:update": "Editar livros e emprestimos",
     "biblioteca:delete": "Excluir livros da biblioteca",
+    "biblioteca:emprestar": "Registrar emprestimos e devolucoes de livros",
     "multimidia:read": "Ver conteudo de multimidia",
     "multimidia:create": "Criar conteudo de multimidia (slides, etc)",
     "multimidia:update": "Editar conteudo de multimidia",
@@ -191,6 +208,15 @@ function getPermissionDescription(perm: string): string {
     "salas:create": "Criar novas reservas de sala",
     "salas:update": "Editar reservas de salas",
     "salas:delete": "Cancelar/excluir reservas de salas",
+    "tarefas:read": "Ver todas as tarefas do sistema",
+    "tarefas:create": "Criar novas tarefas e atribuir responsaveis",
+    "tarefas:update": "Editar tarefas de outros membros",
+    "tarefas:delete": "Excluir tarefas do sistema",
+    "turmas:read": "Ver turmas e cursos disponiveis",
+    "turmas:create": "Criar novas turmas e cursos",
+    "turmas:update": "Editar turmas existentes",
+    "turmas:delete": "Excluir turmas",
+    "turmas:manage_inscricoes": "Gerenciar inscricoes de alunos",
   };
   return descriptions[perm] ?? "";
 }

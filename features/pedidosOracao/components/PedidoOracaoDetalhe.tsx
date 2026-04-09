@@ -137,7 +137,7 @@ export function PedidoOracaoDetalhe({
     }
   };
 
-  const handleRemoveComentario = async (id: Id<"pedidoOracaoComentarios">) => {
+  const handleRemoveComentario = async (id: Id<"comentarios">) => {
     try {
       await removeComentario({ id });
       toast.success("Excluído");

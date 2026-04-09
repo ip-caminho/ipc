@@ -68,10 +68,12 @@ export const list = query({
           reacoesSummary.push({ tipo, count });
         }
 
-        // Comment count
+        // Comment count (tabela unificada)
         const comentarios = await ctx.db
-          .query("comentariosGravacao")
-          .withIndex("by_gravacao", (q) => q.eq("gravacaoId", g._id))
+          .query("comentarios")
+          .withIndex("by_entidade", (q) =>
+            q.eq("entidadeTipo", "gravacoes").eq("entidadeId", g._id)
+          )
           .collect();
 
         return { ...g, pregadorInfo, serieInfo, reacoesSummary, comentarioCount: comentarios.length };

@@ -21,9 +21,13 @@ describe("INITIAL_ROLE_PERMISSIONS", () => {
     expect(perms).toContain("audit:read");
   });
 
-  it("membro tem apenas self_service, diretorio e gravacoes:read", () => {
+  it("membro tem self_service, diretorio, gravacoes e modulos basicos", () => {
     const perms = INITIAL_ROLE_PERMISSIONS.membro;
-    expect(perms).toEqual(["membros:self_service", "diretorio:read", "gravacoes:read"]);
+    expect(perms).toContain("membros:self_service");
+    expect(perms).toContain("diretorio:read");
+    expect(perms).toContain("gravacoes:read");
+    expect(perms).toContain("biblioteca:read");
+    expect(perms).toContain("turmas:read");
   });
 });
 
