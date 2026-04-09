@@ -1,6 +1,6 @@
 import { mutation } from "../_generated/server";
 import { v } from "convex/values";
-import { createActionAuditLog } from "../_shared/auditHelpers";
+import { createActionAuditLog, createFieldAuditLogs } from "../_shared/auditHelpers";
 import { requirePermission } from "../_shared/requirePermission";
 
 export const create = mutation({
@@ -45,6 +45,9 @@ export const update = mutation({
     }
 
     await ctx.db.patch(id, cleanUpdates);
+
+    const updated = await ctx.db.get(id);
+    await createFieldAuditLogs(ctx, evento, updated, "calendarioEventos");
     return id;
   },
 });
