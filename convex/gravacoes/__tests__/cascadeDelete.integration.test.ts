@@ -28,18 +28,20 @@ describe("gravacoes cascade delete", () => {
         status: "PUBLICADO",
       });
 
-      const comentarioId = await ctx.db.insert("comentariosGravacao", {
-        gravacaoId,
+      const comentarioId = await ctx.db.insert("comentarios", {
+        entidadeTipo: "gravacoes",
+        entidadeId: gravacaoId,
         membroId,
         texto: "Excelente sermão!",
-        createdAt: Date.now(),
+        criadoEm: Date.now(),
       });
-      await ctx.db.insert("comentariosGravacao", {
-        gravacaoId,
+      await ctx.db.insert("comentarios", {
+        entidadeTipo: "gravacoes",
+        entidadeId: gravacaoId,
         membroId,
         texto: "Concordo!",
         parentId: comentarioId,
-        createdAt: Date.now(),
+        criadoEm: Date.now(),
       });
       await ctx.db.insert("reacoesGravacao", {
         gravacaoId,
@@ -69,8 +71,10 @@ describe("gravacoes cascade delete", () => {
     // Verify records exist
     const before = await t.run(async (ctx) => ({
       comentarios: await ctx.db
-        .query("comentariosGravacao")
-        .withIndex("by_gravacao", (q) => q.eq("gravacaoId", ids.gravacaoId))
+        .query("comentarios")
+        .withIndex("by_entidade", (q) =>
+          q.eq("entidadeTipo", "gravacoes").eq("entidadeId", ids.gravacaoId)
+        )
         .collect(),
       reacoes: await ctx.db
         .query("reacoesGravacao")
@@ -94,8 +98,10 @@ describe("gravacoes cascade delete", () => {
     const after = await t.run(async (ctx) => ({
       gravacao: await ctx.db.get(ids.gravacaoId),
       comentarios: await ctx.db
-        .query("comentariosGravacao")
-        .withIndex("by_gravacao", (q) => q.eq("gravacaoId", ids.gravacaoId))
+        .query("comentarios")
+        .withIndex("by_entidade", (q) =>
+          q.eq("entidadeTipo", "gravacoes").eq("entidadeId", ids.gravacaoId)
+        )
         .collect(),
       reacoes: await ctx.db
         .query("reacoesGravacao")

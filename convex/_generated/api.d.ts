@@ -21,8 +21,12 @@ import type * as auth_auth from "../auth/auth.js";
 import type * as auth_phoneOTP from "../auth/phoneOTP.js";
 import type * as avisos_mutations from "../avisos/mutations.js";
 import type * as avisos_queries from "../avisos/queries.js";
+import type * as biblioteca_mutations from "../biblioteca/mutations.js";
+import type * as biblioteca_queries from "../biblioteca/queries.js";
 import type * as calendario_mutations from "../calendario/mutations.js";
 import type * as calendario_queries from "../calendario/queries.js";
+import type * as comentarios_mutations from "../comentarios/mutations.js";
+import type * as comentarios_queries from "../comentarios/queries.js";
 import type * as debug from "../debug.js";
 import type * as educacional_mutations from "../educacional/mutations.js";
 import type * as educacional_queries from "../educacional/queries.js";
@@ -75,6 +79,8 @@ import type * as ministerios_mutations from "../ministerios/mutations.js";
 import type * as ministerios_queries from "../ministerios/queries.js";
 import type * as modulos_mutations from "../modulos/mutations.js";
 import type * as modulos_queries from "../modulos/queries.js";
+import type * as multimidia_mutations from "../multimidia/mutations.js";
+import type * as multimidia_queries from "../multimidia/queries.js";
 import type * as notifications_actions from "../notifications/actions.js";
 import type * as notifications_mutations from "../notifications/mutations.js";
 import type * as notifications_queries from "../notifications/queries.js";
@@ -90,6 +96,10 @@ import type * as preferencias_rbac from "../preferencias/rbac.js";
 import type * as preferencias_rbacHelpers from "../preferencias/rbacHelpers.js";
 import type * as salas_mutations from "../salas/mutations.js";
 import type * as salas_queries from "../salas/queries.js";
+import type * as tarefas_mutations from "../tarefas/mutations.js";
+import type * as tarefas_queries from "../tarefas/queries.js";
+import type * as turmas_mutations from "../turmas/mutations.js";
+import type * as turmas_queries from "../turmas/queries.js";
 
 import type {
   ApiFromModules,
@@ -111,8 +121,12 @@ declare const fullApi: ApiFromModules<{
   "auth/phoneOTP": typeof auth_phoneOTP;
   "avisos/mutations": typeof avisos_mutations;
   "avisos/queries": typeof avisos_queries;
+  "biblioteca/mutations": typeof biblioteca_mutations;
+  "biblioteca/queries": typeof biblioteca_queries;
   "calendario/mutations": typeof calendario_mutations;
   "calendario/queries": typeof calendario_queries;
+  "comentarios/mutations": typeof comentarios_mutations;
+  "comentarios/queries": typeof comentarios_queries;
   debug: typeof debug;
   "educacional/mutations": typeof educacional_mutations;
   "educacional/queries": typeof educacional_queries;
@@ -165,6 +179,8 @@ declare const fullApi: ApiFromModules<{
   "ministerios/queries": typeof ministerios_queries;
   "modulos/mutations": typeof modulos_mutations;
   "modulos/queries": typeof modulos_queries;
+  "multimidia/mutations": typeof multimidia_mutations;
+  "multimidia/queries": typeof multimidia_queries;
   "notifications/actions": typeof notifications_actions;
   "notifications/mutations": typeof notifications_mutations;
   "notifications/queries": typeof notifications_queries;
@@ -180,6 +196,10 @@ declare const fullApi: ApiFromModules<{
   "preferencias/rbacHelpers": typeof preferencias_rbacHelpers;
   "salas/mutations": typeof salas_mutations;
   "salas/queries": typeof salas_queries;
+  "tarefas/mutations": typeof tarefas_mutations;
+  "tarefas/queries": typeof tarefas_queries;
+  "turmas/mutations": typeof turmas_mutations;
+  "turmas/queries": typeof turmas_queries;
 }>;
 
 /**

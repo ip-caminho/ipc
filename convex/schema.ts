@@ -191,16 +191,6 @@ export default defineSchema({
     .index("by_pregador", ["pregadorId"])
     .index("by_serie", ["serieId"]),
 
-  comentariosGravacao: defineTable({
-    gravacaoId: v.id("gravacoes"),
-    membroId: v.id("membros"),
-    texto: v.string(),
-    parentId: v.optional(v.id("comentariosGravacao")),
-    createdAt: v.number(),
-  })
-    .index("by_gravacao", ["gravacaoId", "createdAt"])
-    .index("by_parent", ["parentId"]),
-
   reacoesGravacao: defineTable({
     gravacaoId: v.id("gravacoes"),
     membroId: v.id("membros"),
@@ -450,16 +440,6 @@ export default defineSchema({
     .index("by_status", ["status"])
     .index("by_criadoEm", ["criadoEm"]),
 
-  pedidoOracaoComentarios: defineTable({
-    pedidoId: v.id("pedidosOracao"),
-    membroId: v.id("membros"), // quem comentou
-    texto: v.string(),
-    tipo: v.optional(v.union(v.literal("COMENTARIO"), v.literal("ATUALIZACAO"))), // default COMENTARIO
-    criadoEm: v.number(),
-  })
-    .index("by_pedido", ["pedidoId"])
-    .index("by_membro", ["membroId"]),
-
   pedidoOracaoIntercessores: defineTable({
     pedidoId: v.id("pedidosOracao"),
     membroId: v.id("membros"), // quem esta orando
@@ -653,4 +633,282 @@ export default defineSchema({
     .index("by_sala_data", ["salaId", "data"])
     .index("by_membro", ["membroId"])
     .index("by_data", ["data"]),
+
+  // ===== Tarefas =====
+  tarefas: defineTable({
+    titulo: v.string(),
+    descricao: v.optional(v.string()),
+    status: v.union(
+      v.literal("ABERTA"),
+      v.literal("EM_ANDAMENTO"),
+      v.literal("CONCLUIDA"),
+      v.literal("CANCELADA")
+    ),
+    prioridade: v.union(
+      v.literal("BAIXA"),
+      v.literal("MEDIA"),
+      v.literal("ALTA"),
+      v.literal("URGENTE")
+    ),
+    criadoPor: v.id("membros"),
+    responsavelId: v.id("membros"),
+    dataVencimento: v.optional(v.string()), // YYYY-MM-DD
+    // Referencia polimorfica a outro modulo
+    moduloRelacionado: v.optional(v.union(
+      v.literal("ministerios"),
+      v.literal("escalas"),
+      v.literal("calendario"),
+      v.literal("pequenos-grupos"),
+      v.literal("pastoreio"),
+      v.literal("gravacoes"),
+      v.literal("pedidos-oracao")
+    )),
+    referenciaId: v.optional(v.string()),
+    referenciaTitulo: v.optional(v.string()),
+    // Conclusao
+    concluidaEm: v.optional(v.number()),
+    concluidaPor: v.optional(v.id("membros")),
+    // Timestamps
+    criadoEm: v.number(),
+    atualizadoEm: v.optional(v.number()),
+  })
+    .index("by_responsavel", ["responsavelId"])
+    .index("by_criador", ["criadoPor"])
+    .index("by_status", ["status"])
+    .index("by_vencimento", ["dataVencimento"])
+    .index("by_modulo", ["moduloRelacionado", "referenciaId"]),
+
+  // ===== Comentarios Unificados =====
+  comentarios: defineTable({
+    entidadeTipo: v.union(
+      v.literal("tarefas"),
+      v.literal("gravacoes"),
+      v.literal("pedidos-oracao")
+    ),
+    entidadeId: v.string(),
+    membroId: v.id("membros"),
+    texto: v.string(),
+    parentId: v.optional(v.id("comentarios")),
+    tipo: v.optional(v.union(
+      v.literal("COMENTARIO"),
+      v.literal("ATUALIZACAO")
+    )),
+    criadoEm: v.number(),
+  })
+    .index("by_entidade", ["entidadeTipo", "entidadeId", "criadoEm"])
+    .index("by_parent", ["parentId"])
+    .index("by_membro", ["membroId"]),
+
+  // ===== Turmas =====
+  tiposTurma: defineTable({
+    nome: v.string(),
+    descricao: v.optional(v.string()),
+    status: v.union(v.literal("ATIVO"), v.literal("INATIVO")),
+    criadoEm: v.number(),
+  })
+    .index("by_status", ["status"]),
+
+  turmas: defineTable({
+    nome: v.string(),
+    tipoTurmaId: v.id("tiposTurma"),
+    instrutorId: v.optional(v.id("membros")),
+    instrutorNome: v.optional(v.string()),
+    descricao: v.optional(v.string()),
+    dataInicio: v.string(), // YYYY-MM-DD
+    dataFim: v.optional(v.string()),
+    diaSemana: v.optional(v.string()),
+    horario: v.optional(v.string()),
+    local: v.optional(v.string()),
+    vagas: v.optional(v.number()), // null = ilimitado
+    vagasOcupadas: v.number(), // contador atomico
+    status: v.union(
+      v.literal("ABERTA"),
+      v.literal("EM_ANDAMENTO"),
+      v.literal("ENCERRADA"),
+      v.literal("CANCELADA")
+    ),
+    // Formulario
+    camposSistema: v.array(v.string()),
+    perguntasExtras: v.optional(v.array(v.object({
+      id: v.string(),
+      label: v.string(),
+      obrigatorio: v.boolean(),
+    }))),
+    token: v.optional(v.string()),
+    criadoPor: v.optional(v.id("membros")),
+    criadoEm: v.number(),
+  })
+    .index("by_tipo", ["tipoTurmaId"])
+    .index("by_status", ["status"])
+    .index("by_token", ["token"]),
+
+  inscricoes: defineTable({
+    turmaId: v.id("turmas"),
+    membroId: v.optional(v.id("membros")),
+    dadosSistema: v.object({
+      nomeCompleto: v.string(),
+      whatsapp: v.optional(v.string()),
+      email: v.optional(v.string()),
+      dataNascimento: v.optional(v.string()),
+      sexo: v.optional(v.string()),
+    }),
+    respostasExtras: v.optional(v.array(v.object({
+      perguntaId: v.string(),
+      valor: v.string(),
+    }))),
+    status: v.union(
+      v.literal("CONFIRMADA"),
+      v.literal("CANCELADA"),
+      v.literal("LISTA_ESPERA")
+    ),
+    lgpdConsentimento: v.boolean(),
+    criadoEm: v.number(),
+    canceladoEm: v.optional(v.number()),
+  })
+    .index("by_turma", ["turmaId"])
+    .index("by_membro", ["membroId"])
+    .index("by_turma_status", ["turmaId", "status"]),
+
+  turmaEncontros: defineTable({
+    turmaId: v.id("turmas"),
+    data: v.string(), // YYYY-MM-DD
+    titulo: v.optional(v.string()),
+    observacoes: v.optional(v.string()),
+    criadoPor: v.optional(v.id("membros")),
+    criadoEm: v.number(),
+  })
+    .index("by_turma", ["turmaId"]),
+
+  // ===== Biblioteca =====
+  livros: defineTable({
+    titulo: v.string(),
+    autores: v.array(v.string()),
+    editora: v.optional(v.string()),
+    isbn: v.optional(v.string()),
+    ano: v.optional(v.number()),
+    categorias: v.array(v.string()),
+    edicao: v.optional(v.string()),
+    idioma: v.optional(v.string()),
+    capaUrl: v.optional(v.string()),
+    descricao: v.optional(v.string()),
+    paginas: v.optional(v.number()),
+    observacoes: v.optional(v.string()),
+    criadoEm: v.number(),
+  })
+    .index("by_isbn", ["isbn"])
+    .searchIndex("search_livros", {
+      searchField: "titulo",
+    }),
+
+  exemplares: defineTable({
+    livroId: v.id("livros"),
+    codigo: v.string(), // BIB-0001
+    condicao: v.union(
+      v.literal("NOVO"),
+      v.literal("BOM"),
+      v.literal("REGULAR"),
+      v.literal("RUIM")
+    ),
+    status: v.union(
+      v.literal("DISPONIVEL"),
+      v.literal("EMPRESTADO"),
+      v.literal("PERDIDO"),
+      v.literal("DANIFICADO")
+    ),
+    dataAquisicao: v.string(), // YYYY-MM-DD
+    doadorId: v.optional(v.id("entidades")),
+    doadorNome: v.optional(v.string()),
+    observacoes: v.optional(v.string()),
+  })
+    .index("by_livro", ["livroId"])
+    .index("by_status", ["status"])
+    .index("by_codigo", ["codigo"]),
+
+  emprestimos: defineTable({
+    exemplarId: v.id("exemplares"),
+    livroId: v.id("livros"), // denormalizado
+    membroId: v.id("membros"),
+    dataEmprestimo: v.string(), // YYYY-MM-DD
+    dataPrevistaDevolucao: v.string(), // YYYY-MM-DD
+    dataDevolucao: v.optional(v.string()),
+    status: v.union(v.literal("ATIVO"), v.literal("DEVOLVIDO")),
+    selfService: v.optional(v.boolean()),
+    observacoes: v.optional(v.string()),
+    registradoPor: v.optional(v.id("membros")),
+  })
+    .index("by_exemplar", ["exemplarId"])
+    .index("by_livro", ["livroId"])
+    .index("by_membro", ["membroId"])
+    .index("by_status", ["status"]),
+
+  livroEventos: defineTable({
+    exemplarId: v.id("exemplares"),
+    livroId: v.id("livros"), // denormalizado
+    tipo: v.string(), // CADASTRO, EMPRESTIMO, DEVOLUCAO, CONDICAO, PERDA, DOACAO, OBSERVACAO
+    data: v.string(), // YYYY-MM-DD
+    descricao: v.string(),
+    membroId: v.optional(v.id("membros")),
+    registradoPor: v.optional(v.id("membros")),
+  })
+    .index("by_exemplar", ["exemplarId"])
+    .index("by_livro", ["livroId"]),
+
+  turmaPresencas: defineTable({
+    encontroId: v.id("turmaEncontros"),
+    inscricaoId: v.id("inscricoes"),
+    presente: v.boolean(),
+    observacoes: v.optional(v.string()),
+    registradoPor: v.optional(v.id("membros")),
+  })
+    .index("by_encontro", ["encontroId"])
+    .index("by_inscricao", ["inscricaoId"]),
+
+  // ===== Multimidia =====
+  multimidiaArquivos: defineTable({
+    cultoId: v.id("cultos"),
+    enviadoPor: v.id("membros"),
+    tipo: v.union(
+      v.literal("APRESENTACAO"),
+      v.literal("VIDEO"),
+      v.literal("IMAGEM"),
+      v.literal("OUTRO")
+    ),
+    nomeArquivo: v.string(),
+    url: v.string(),
+    mimeType: v.string(),
+    descricao: v.optional(v.string()),
+    status: v.union(
+      v.literal("RECEBIDO"),
+      v.literal("REVISADO"),
+      v.literal("APROVADO")
+    ),
+    revisadoPor: v.optional(v.id("membros")),
+  })
+    .index("by_culto", ["cultoId"])
+    .index("by_enviadoPor", ["enviadoPor"])
+    .index("by_status", ["status"]),
+
+  multimidiaChecklist: defineTable({
+    cultoId: v.id("cultos"),
+    item: v.string(),
+    ordem: v.number(),
+    concluido: v.boolean(),
+    concluidoPor: v.optional(v.id("membros")),
+    concluidoEm: v.optional(v.number()),
+  })
+    .index("by_culto", ["cultoId"]),
+
+  multimidiaNotas: defineTable({
+    cultoId: v.id("cultos"),
+    membroId: v.id("membros"),
+    texto: v.string(),
+    criadoEm: v.number(),
+  })
+    .index("by_culto", ["cultoId"]),
+
+  multimidiaChecklistTemplate: defineTable({
+    item: v.string(),
+    ordem: v.number(),
+    ativo: v.boolean(),
+  }),
 });

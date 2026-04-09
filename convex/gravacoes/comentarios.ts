@@ -13,17 +13,18 @@ async function getMembroId(ctx: any) {
   return membro._id;
 }
 
-// ===== COMENTARIOS =====
+// ===== COMENTARIOS (usa tabela unificada 'comentarios') =====
 
 export const listByGravacao = query({
   args: { gravacaoId: v.id("gravacoes") },
   handler: async (ctx, { gravacaoId }) => {
     const comentarios = await ctx.db
-      .query("comentariosGravacao")
-      .withIndex("by_gravacao", (q) => q.eq("gravacaoId", gravacaoId))
+      .query("comentarios")
+      .withIndex("by_entidade", (q) =>
+        q.eq("entidadeTipo", "gravacoes").eq("entidadeId", gravacaoId)
+      )
       .collect();
 
-    // Enrich with membro/entidade info
     return Promise.all(
       comentarios.map(async (c) => {
         const membro = await ctx.db.get(c.membroId);
@@ -32,7 +33,12 @@ export const listByGravacao = query({
           const entidade = await ctx.db.get(membro.entidadeId);
           autorNome = entidade?.nomeCompleto || entidade?.nomeRazaoSocial || "Usuario";
         }
-        return { ...c, autorNome };
+        return {
+          ...c,
+          autorNome,
+          // Manter compatibilidade com o frontend existente
+          createdAt: c.criadoEm,
+        };
       })
     );
   },
@@ -42,28 +48,29 @@ export const create = mutation({
   args: {
     gravacaoId: v.id("gravacoes"),
     texto: v.string(),
-    parentId: v.optional(v.id("comentariosGravacao")),
+    parentId: v.optional(v.id("comentarios")),
   },
   handler: async (ctx, { gravacaoId, texto, parentId }) => {
     const membroId = await getMembroId(ctx);
-    return await ctx.db.insert("comentariosGravacao", {
-      gravacaoId,
+    return await ctx.db.insert("comentarios", {
+      entidadeTipo: "gravacoes",
+      entidadeId: gravacaoId,
       membroId,
       texto: texto.trim(),
       parentId,
-      createdAt: Date.now(),
+      tipo: "COMENTARIO",
+      criadoEm: Date.now(),
     });
   },
 });
 
 export const remove = mutation({
-  args: { id: v.id("comentariosGravacao") },
+  args: { id: v.id("comentarios") },
   handler: async (ctx, { id }) => {
     const membroId = await getMembroId(ctx);
     const comentario = await ctx.db.get(id);
     if (!comentario) throw new Error("Comentario nao encontrado");
 
-    // Apenas o autor ou admin pode excluir
     if (comentario.membroId !== membroId) {
       const userId = await getAuthUserId(ctx);
       const membro = await ctx.db
@@ -75,9 +82,9 @@ export const remove = mutation({
       }
     }
 
-    // Remove replies too
+    // Remove replies
     const replies = await ctx.db
-      .query("comentariosGravacao")
+      .query("comentarios")
       .withIndex("by_parent", (q) => q.eq("parentId", id))
       .collect();
     for (const reply of replies) {
@@ -88,7 +95,7 @@ export const remove = mutation({
   },
 });
 
-// ===== REACOES =====
+// ===== REACOES (mantidas na tabela original) =====
 
 export const listReacoes = query({
   args: { gravacaoId: v.id("gravacoes") },
@@ -108,7 +115,6 @@ export const listReacoes = query({
       .withIndex("by_gravacao", (q) => q.eq("gravacaoId", gravacaoId))
       .collect();
 
-    // Agrupa por tipo e marca quais sao do usuario
     const map: Record<string, { count: number; mine: boolean }> = {};
     for (const r of reacoes) {
       if (!map[r.tipo]) map[r.tipo] = { count: 0, mine: false };
@@ -127,7 +133,6 @@ export const toggleReacao = mutation({
   handler: async (ctx, { gravacaoId, tipo }) => {
     const membroId = await getMembroId(ctx);
 
-    // Check if already reacted with this type
     const existing = await ctx.db
       .query("reacoesGravacao")
       .withIndex("by_gravacao_membro", (q) =>

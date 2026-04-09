@@ -37,6 +37,10 @@ export const INITIAL_ROLE_PERMISSIONS: Record<string, string[]> = {
     "biblioteca:read",
     // Salas
     "salas:read", "salas:create", "salas:update",
+    // Tarefas
+    "tarefas:read", "tarefas:create", "tarefas:update", "tarefas:delete",
+    // Turmas
+    "turmas:read", "turmas:create", "turmas:update",
     // Auditoria
     "audit:read",
   ],
@@ -60,6 +64,10 @@ export const INITIAL_ROLE_PERMISSIONS: Record<string, string[]> = {
     "educacional:read",
     "biblioteca:read",
     "salas:read", "salas:create",
+    // Tarefas
+    "tarefas:read", "tarefas:create", "tarefas:update",
+    // Turmas
+    "turmas:read",
   ],
 
   obreiro: [
@@ -74,11 +82,15 @@ export const INITIAL_ROLE_PERMISSIONS: Record<string, string[]> = {
     "educacional:read",
     "biblioteca:read",
     "salas:read", "salas:create",
+    // Tarefas
+    "tarefas:read", "tarefas:create", "tarefas:update",
+    // Turmas
+    "turmas:read",
   ],
 
   secretaria: [
-    // Membros e entidades — CRUD completo
-    "membros:read", "membros:create", "membros:update", "membros:delete",
+    // Membros e entidades — CRUD (delete apenas admin)
+    "membros:read", "membros:create", "membros:update",
     "entidades:read", "entidades:create", "entidades:update", "entidades:delete",
     "diretorio:read",
     // Gravações
@@ -103,7 +115,11 @@ export const INITIAL_ROLE_PERMISSIONS: Record<string, string[]> = {
     // Pedidos de oração
     "pedidos_oracao:read",
     // Biblioteca
-    "biblioteca:read",
+    "biblioteca:read", "biblioteca:create", "biblioteca:update", "biblioteca:emprestar",
+    // Tarefas
+    "tarefas:read", "tarefas:create", "tarefas:update", "tarefas:delete",
+    // Turmas
+    "turmas:read", "turmas:create", "turmas:update", "turmas:manage_inscricoes",
     // Auditoria
     "audit:read",
   ],
@@ -120,6 +136,8 @@ export const INITIAL_ROLE_PERMISSIONS: Record<string, string[]> = {
     "educacional:read",
     "biblioteca:read",
     "salas:read", "salas:create",
+    // Turmas
+    "turmas:read",
   ],
 };
 
@@ -151,13 +169,13 @@ export const VOLUNTEER_PERMISSION_SETS: Record<string, { label: string; permissi
   voluntario_biblioteca: {
     label: "Voluntario Biblioteca",
     permissions: [
-      "biblioteca:read", "biblioteca:create", "biblioteca:update",
+      "biblioteca:read", "biblioteca:create", "biblioteca:update", "biblioteca:emprestar",
     ],
   },
   lider_biblioteca: {
     label: "Lider Biblioteca",
     permissions: [
-      "biblioteca:read", "biblioteca:create", "biblioteca:update", "biblioteca:delete",
+      "biblioteca:read", "biblioteca:create", "biblioteca:update", "biblioteca:delete", "biblioteca:emprestar",
     ],
   },
   facilitador_pg: {

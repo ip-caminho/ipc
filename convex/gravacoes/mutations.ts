@@ -92,10 +92,12 @@ export const remove = mutation({
       });
     }
 
-    // Delete comentarios
+    // Delete comentarios (tabela unificada)
     const comentarios = await ctx.db
-      .query("comentariosGravacao")
-      .withIndex("by_gravacao", (q: any) => q.eq("gravacaoId", id))
+      .query("comentarios")
+      .withIndex("by_entidade", (q: any) =>
+        q.eq("entidadeTipo", "gravacoes").eq("entidadeId", id)
+      )
       .collect();
     for (const c of comentarios) {
       await ctx.db.delete(c._id);

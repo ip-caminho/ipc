@@ -34,11 +34,15 @@ export type Permission =
   | "criancas:read" | "criancas:manage"
   | "educacional:read" | "educacional:write"
   // Biblioteca
-  | "biblioteca:read" | "biblioteca:create" | "biblioteca:update" | "biblioteca:delete"
+  | "biblioteca:read" | "biblioteca:create" | "biblioteca:update" | "biblioteca:delete" | "biblioteca:emprestar"
   // Multimidia
   | "multimidia:read" | "multimidia:create" | "multimidia:update"
   // Salas
   | "salas:read" | "salas:create" | "salas:update" | "salas:delete"
+  // Tarefas
+  | "tarefas:read" | "tarefas:create" | "tarefas:update" | "tarefas:delete"
+  // Turmas
+  | "turmas:read" | "turmas:create" | "turmas:update" | "turmas:delete" | "turmas:manage_inscricoes"
   // Auditoria
   | "audit:read"
   // Wildcards
