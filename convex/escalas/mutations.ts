@@ -1,6 +1,6 @@
 import { mutation } from "../_generated/server";
 import { v } from "convex/values";
-import { createActionAuditLog } from "../_shared/auditHelpers";
+import { createActionAuditLog, createFieldAuditLogs } from "../_shared/auditHelpers";
 import { requirePermission } from "../_shared/requirePermission";
 
 // Garante que existem cultos dominicais para os próximos N meses
@@ -103,6 +103,8 @@ export const publishCulto = mutation({
     const culto = await ctx.db.get(id);
     if (!culto) throw new Error("Culto nao encontrado");
     await ctx.db.patch(id, { status: "PUBLICADO" });
+    const updated = await ctx.db.get(id);
+    await createFieldAuditLogs(ctx, culto, updated, "cultos");
   },
 });
 
@@ -113,6 +115,8 @@ export const unpublishCulto = mutation({
     const culto = await ctx.db.get(id);
     if (!culto) throw new Error("Culto nao encontrado");
     await ctx.db.patch(id, { status: "RASCUNHO" });
+    const updated = await ctx.db.get(id);
+    await createFieldAuditLogs(ctx, culto, updated, "cultos");
   },
 });
 
@@ -195,6 +199,7 @@ export const upsertEscala = mutation({
       });
     }
 
+    await createActionAuditLog(ctx, "UPSERT", "cultoEscalas", id as string);
     return { id, outrasFuncoes };
   },
 });

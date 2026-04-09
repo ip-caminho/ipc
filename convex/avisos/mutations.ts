@@ -1,6 +1,7 @@
 import { mutation } from "../_generated/server";
 import { v } from "convex/values";
 import { requirePermission } from "../_shared/requirePermission";
+import { createActionAuditLog, createFieldAuditLogs } from "../_shared/auditHelpers";
 
 export const create = mutation({
   args: {
@@ -12,11 +13,14 @@ export const create = mutation({
   handler: async (ctx, args) => {
     const { membro } = await requirePermission(ctx, "escalas:create");
 
-    return await ctx.db.insert("avisos", {
+    const id = await ctx.db.insert("avisos", {
       ...args,
       criadoPor: membro._id,
       criadoEm: Date.now(),
     });
+
+    await createActionAuditLog(ctx, "CREATE", "avisos", id as string);
+    return id;
   },
 });
 
@@ -41,6 +45,9 @@ export const update = mutation({
 
     cleanUpdates.atualizadoEm = Date.now();
     await ctx.db.patch(id, cleanUpdates);
+
+    const updated = await ctx.db.get(id);
+    await createFieldAuditLogs(ctx, aviso, updated, "avisos");
   },
 });
 
@@ -53,5 +60,6 @@ export const remove = mutation({
     if (!aviso) throw new Error("Aviso nao encontrado");
 
     await ctx.db.delete(id);
+    await createActionAuditLog(ctx, "DELETE", "avisos", id as string);
   },
 });

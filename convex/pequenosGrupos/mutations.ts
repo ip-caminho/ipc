@@ -1,6 +1,6 @@
 import { mutation } from "../_generated/server";
 import { v } from "convex/values";
-import { createActionAuditLog } from "../_shared/auditHelpers";
+import { createActionAuditLog, createFieldAuditLogs } from "../_shared/auditHelpers";
 import { requirePermission } from "../_shared/requirePermission";
 
 export const create = mutation({
@@ -50,6 +50,9 @@ export const update = mutation({
     }
 
     await ctx.db.patch(id, cleanUpdates);
+
+    const updated = await ctx.db.get(id);
+    await createFieldAuditLogs(ctx, pg, updated, "pequenosGrupos");
     return id;
   },
 });
@@ -97,7 +100,9 @@ export const addMembro = mutation({
       throw new Error("Membro ja esta neste PG");
     }
 
-    return await ctx.db.insert("pgMembros", { pgId, membroId });
+    const id = await ctx.db.insert("pgMembros", { pgId, membroId });
+    await createActionAuditLog(ctx, "ADD_MEMBRO", "pgMembros", id as string);
+    return id;
   },
 });
 
@@ -151,6 +156,7 @@ export const removeMembro = mutation({
     if (!pgMembro) throw new Error("Registro nao encontrado");
 
     await ctx.db.delete(id);
+    await createActionAuditLog(ctx, "REMOVE_MEMBRO", "pgMembros", id as string);
   },
 });
 
