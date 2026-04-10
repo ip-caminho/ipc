@@ -2,7 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { toast } from "sonner";
 import {
@@ -25,7 +25,6 @@ import {
 import { turmaFormSchema, type TurmaFormValues } from "../lib/validations";
 import { DIA_SEMANA_OPTIONS, DIA_SEMANA_LABELS, CAMPOS_SISTEMA_OPTIONS } from "../lib/constants";
 import { Checkbox } from "@/shared/components/ui/checkbox";
-import type { Id } from "@/convex/_generated/dataModel";
 
 interface Props {
   open: boolean;
@@ -34,13 +33,11 @@ interface Props {
 
 export function TurmaFormDialog({ open, onOpenChange }: Props) {
   const createTurma = useMutation(api.turmas.mutations.create);
-  const tipos = useQuery(api.turmas.queries.listTipos, { status: "ATIVO" });
 
   const form = useForm<TurmaFormValues>({
     resolver: zodResolver(turmaFormSchema),
     defaultValues: {
       nome: "",
-      tipoTurmaId: "",
       dataInicio: "",
       camposSistema: ["nomeCompleto"],
       perguntasExtras: [],
@@ -51,7 +48,6 @@ export function TurmaFormDialog({ open, onOpenChange }: Props) {
     try {
       await createTurma({
         nome: values.nome,
-        tipoTurmaId: values.tipoTurmaId as Id<"tiposTurma">,
         instrutorNome: values.instrutorNome || undefined,
         descricao: values.descricao || undefined,
         dataInicio: values.dataInicio,
@@ -83,24 +79,9 @@ export function TurmaFormDialog({ open, onOpenChange }: Props) {
             <Input id="nome" {...form.register("nome")} placeholder="Ex: Novos Membros - Turma 1/2026" />
           </div>
 
-          <div>
-            <Label>Tipo</Label>
-            <Select
-              value={form.watch("tipoTurmaId")}
-              onValueChange={(v) => form.setValue("tipoTurmaId", v)}
-            >
-              <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
-              <SelectContent>
-                {tipos?.map((t) => (
-                  <SelectItem key={t._id} value={t._id}>{t.nome}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="dataInicio">Início</Label>
+              <Label htmlFor="dataInicio">Inicio</Label>
               <Input id="dataInicio" type="date" {...form.register("dataInicio")} />
             </div>
             <div>
@@ -113,11 +94,12 @@ export function TurmaFormDialog({ open, onOpenChange }: Props) {
             <div>
               <Label>Dia</Label>
               <Select
-                value={form.watch("diaSemana") || ""}
-                onValueChange={(v) => form.setValue("diaSemana", v)}
+                value={form.watch("diaSemana") || "__none__"}
+                onValueChange={(v) => form.setValue("diaSemana", v === "__none__" ? "" : v)}
               >
                 <SelectTrigger><SelectValue placeholder="-" /></SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="__none__">-</SelectItem>
                   {DIA_SEMANA_OPTIONS.map((d) => (
                     <SelectItem key={d} value={d}>{DIA_SEMANA_LABELS[d]}</SelectItem>
                   ))}
@@ -125,7 +107,7 @@ export function TurmaFormDialog({ open, onOpenChange }: Props) {
               </Select>
             </div>
             <div>
-              <Label htmlFor="horario">Horário</Label>
+              <Label htmlFor="horario">Horario</Label>
               <Input id="horario" {...form.register("horario")} placeholder="19:30" />
             </div>
             <div>
@@ -145,12 +127,12 @@ export function TurmaFormDialog({ open, onOpenChange }: Props) {
           </div>
 
           <div>
-            <Label htmlFor="descricao">Descrição</Label>
+            <Label htmlFor="descricao">Descricao</Label>
             <Textarea id="descricao" {...form.register("descricao")} rows={2} />
           </div>
 
           <div>
-            <Label>Campos do formulário de inscrição</Label>
+            <Label>Campos do formulario de inscricao</Label>
             <div className="space-y-2 mt-1">
               {CAMPOS_SISTEMA_OPTIONS.map((campo) => (
                 <label key={campo.value} className="flex items-center gap-2 text-sm">

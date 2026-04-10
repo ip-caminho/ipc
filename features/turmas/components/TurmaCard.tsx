@@ -10,7 +10,6 @@ interface TurmaCardProps {
   turma: {
     _id: string;
     nome: string;
-    tipoNome: string;
     status: string;
     dataInicio: string;
     diaSemana?: string;
@@ -34,10 +33,7 @@ export function TurmaCard({ turma }: TurmaCardProps) {
       <Card className="hover:bg-accent/50 transition-colors">
         <CardContent className="p-4 space-y-2">
           <div className="flex items-start justify-between gap-2">
-            <div>
-              <h3 className="font-medium text-sm leading-tight">{turma.nome}</h3>
-              <p className="text-xs text-muted-foreground">{turma.tipoNome}</p>
-            </div>
+            <h3 className="font-medium text-sm leading-tight">{turma.nome}</h3>
             <Badge variant="outline" className={statusOpt?.color ?? ""}>
               {statusOpt?.label ?? turma.status}
             </Badge>

@@ -99,7 +99,6 @@ export default function InscricaoPublicPage() {
       <Card className="max-w-lg w-full">
         <CardHeader>
           <CardTitle className="text-xl">{turma.nome}</CardTitle>
-          <p className="text-sm text-muted-foreground">{turma.tipoNome}</p>
           <div className="flex items-center gap-3 text-xs text-muted-foreground mt-2 flex-wrap">
             <span className="flex items-center gap-1">
               <Calendar className="h-3 w-3" />

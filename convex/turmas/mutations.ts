@@ -20,48 +20,11 @@ function generateToken(): string {
   return Array.from(array, (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-// ===== Tipos de Turma =====
-
-export const createTipo = mutation({
-  args: { nome: v.string(), descricao: v.optional(v.string()) },
-  handler: async (ctx, { nome, descricao }) => {
-    await requireAuth(ctx);
-    const id = await ctx.db.insert("tiposTurma", {
-      nome: nome.trim(),
-      descricao: descricao?.trim(),
-      status: "ATIVO",
-      criadoEm: Date.now(),
-    });
-    await createActionAuditLog(ctx, "CREATE", "tiposTurma", id as string);
-    return id;
-  },
-});
-
-export const updateTipo = mutation({
-  args: { id: v.id("tiposTurma"), nome: v.optional(v.string()), descricao: v.optional(v.string()) },
-  handler: async (ctx, { id, nome, descricao }) => {
-    await requireAuth(ctx);
-    const patch: Record<string, unknown> = {};
-    if (nome !== undefined) patch.nome = nome.trim();
-    if (descricao !== undefined) patch.descricao = descricao.trim();
-    await ctx.db.patch(id, patch);
-  },
-});
-
-export const removeTipo = mutation({
-  args: { id: v.id("tiposTurma") },
-  handler: async (ctx, { id }) => {
-    await requireAuth(ctx);
-    await ctx.db.patch(id, { status: "INATIVO" });
-  },
-});
-
 // ===== Turmas =====
 
 export const create = mutation({
   args: {
     nome: v.string(),
-    tipoTurmaId: v.id("tiposTurma"),
     instrutorId: v.optional(v.id("membros")),
     instrutorNome: v.optional(v.string()),
     descricao: v.optional(v.string()),
@@ -164,7 +127,6 @@ export const duplicar = mutation({
 
     const newId = await ctx.db.insert("turmas", {
       nome: nome.trim(),
-      tipoTurmaId: original.tipoTurmaId,
       instrutorId: original.instrutorId,
       instrutorNome: original.instrutorNome,
       descricao: original.descricao,
