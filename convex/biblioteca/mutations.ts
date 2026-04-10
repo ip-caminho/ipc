@@ -134,6 +134,63 @@ export const update = mutation({
   },
 });
 
+// Cadastro em lote (doacoes)
+export const createBatch = mutation({
+  args: {
+    doadorNome: v.optional(v.string()),
+    livros: v.array(v.object({
+      titulo: v.string(),
+      autores: v.array(v.string()),
+      editora: v.optional(v.string()),
+      isbn: v.optional(v.string()),
+      ano: v.optional(v.number()),
+      categorias: v.array(v.string()),
+      descricao: v.optional(v.string()),
+      capaUrl: v.optional(v.string()),
+      paginas: v.optional(v.number()),
+      condicao: v.union(v.literal("NOVO"), v.literal("BOM"), v.literal("REGULAR"), v.literal("RUIM")),
+    })),
+  },
+  handler: async (ctx, { doadorNome, livros }) => {
+    const { membro } = await requireAuth(ctx);
+    let count = 0;
+
+    for (const l of livros) {
+      const livroId = await ctx.db.insert("livros", {
+        titulo: l.titulo.trim(),
+        autores: l.autores,
+        editora: l.editora?.trim(),
+        isbn: l.isbn?.trim(),
+        ano: l.ano,
+        categorias: l.categorias,
+        idioma: "Portugues",
+        capaUrl: l.capaUrl,
+        descricao: l.descricao?.trim(),
+        paginas: l.paginas,
+        criadoEm: Date.now(),
+      });
+
+      const codigo = await gerarCodigo(ctx);
+      const exemplarId = await ctx.db.insert("exemplares", {
+        livroId,
+        codigo,
+        condicao: l.condicao,
+        status: "DISPONIVEL",
+        dataAquisicao: new Date().toISOString().split("T")[0],
+        doadorNome: doadorNome?.trim(),
+      });
+      await registrarEvento(ctx, exemplarId, livroId, "CADASTRO", `Exemplar ${codigo} cadastrado`, undefined, membro._id);
+      if (doadorNome) {
+        await registrarEvento(ctx, exemplarId, livroId, "DOACAO", `Doado por ${doadorNome}`, undefined, membro._id);
+      }
+      await createActionAuditLog(ctx, "CREATE", "livros", livroId as string);
+      count++;
+    }
+
+    return { criados: count };
+  },
+});
+
 export const addExemplar = mutation({
   args: {
     livroId: v.id("livros"),
@@ -216,6 +273,109 @@ export const emprestar = mutation({
 
     await createActionAuditLog(ctx, "CREATE", "emprestimos", empId as string);
     return empId;
+  },
+});
+
+// ===== Self-service =====
+
+export const emprestimoSelfService = mutation({
+  args: { codigo: v.string() },
+  handler: async (ctx, { codigo }) => {
+    const { membro } = await requireAuth(ctx);
+
+    const exemplar = await ctx.db
+      .query("exemplares")
+      .withIndex("by_codigo", (q) => q.eq("codigo", codigo))
+      .first();
+    if (!exemplar) throw new Error("Exemplar nao encontrado");
+
+    // Se o exemplar escaneado nao esta disponivel, tenta outro do mesmo livro
+    let exemplarParaEmprestar = exemplar;
+    if (exemplar.status !== "DISPONIVEL") {
+      const outros = await ctx.db
+        .query("exemplares")
+        .withIndex("by_livro", (q) => q.eq("livroId", exemplar.livroId))
+        .collect();
+      const disponivel = outros.find((e) => e.status === "DISPONIVEL");
+      if (!disponivel) throw new Error("Nenhum exemplar disponivel");
+      exemplarParaEmprestar = disponivel;
+    }
+
+    // Verificar limite
+    const ativos = await ctx.db
+      .query("emprestimos")
+      .withIndex("by_membro", (q) => q.eq("membroId", membro._id))
+      .collect();
+    if (ativos.filter((e) => e.status === "ATIVO").length >= LIMITE_EMPRESTIMOS) {
+      throw new Error(`Limite de ${LIMITE_EMPRESTIMOS} emprestimos simultaneos`);
+    }
+
+    const hoje = new Date().toISOString().split("T")[0];
+    const devolucao = new Date();
+    devolucao.setDate(devolucao.getDate() + PERIODO_PADRAO_DIAS);
+    const dataDevolucao = devolucao.toISOString().split("T")[0];
+
+    const empId = await ctx.db.insert("emprestimos", {
+      exemplarId: exemplarParaEmprestar._id,
+      livroId: exemplarParaEmprestar.livroId,
+      membroId: membro._id,
+      dataEmprestimo: hoje,
+      dataPrevistaDevolucao: dataDevolucao,
+      status: "ATIVO",
+      selfService: true,
+      registradoPor: membro._id,
+    });
+
+    await ctx.db.patch(exemplarParaEmprestar._id, { status: "EMPRESTADO" });
+
+    const entidade: any = await ctx.db.get(membro.entidadeId);
+    const nome = entidade?.nomeCompleto || "membro";
+
+    await registrarEvento(
+      ctx, exemplarParaEmprestar._id, exemplarParaEmprestar.livroId,
+      "EMPRESTIMO", `Self-service: ${nome}`,
+      membro._id, membro._id
+    );
+
+    await createActionAuditLog(ctx, "EMPRESTIMO_SELF_SERVICE", "emprestimos", empId as string);
+    return empId;
+  },
+});
+
+export const devolverSelfService = mutation({
+  args: { codigo: v.string() },
+  handler: async (ctx, { codigo }) => {
+    const { membro } = await requireAuth(ctx);
+
+    const exemplar = await ctx.db
+      .query("exemplares")
+      .withIndex("by_codigo", (q) => q.eq("codigo", codigo))
+      .first();
+    if (!exemplar) throw new Error("Exemplar nao encontrado");
+
+    // Buscar emprestimo ativo do membro para este livro
+    const emprestimos = await ctx.db
+      .query("emprestimos")
+      .withIndex("by_membro", (q) => q.eq("membroId", membro._id))
+      .collect();
+
+    const ativo = emprestimos.find(
+      (e) => e.status === "ATIVO" && e.livroId === exemplar.livroId
+    );
+
+    if (!ativo) throw new Error("Voce nao tem emprestimo ativo deste livro");
+
+    const hoje = new Date().toISOString().split("T")[0];
+    await ctx.db.patch(ativo._id, { status: "DEVOLVIDO", dataDevolucao: hoje });
+    await ctx.db.patch(ativo.exemplarId, { status: "DISPONIVEL" });
+
+    await registrarEvento(
+      ctx, ativo.exemplarId, ativo.livroId,
+      "DEVOLUCAO", "Self-service",
+      membro._id, membro._id
+    );
+
+    await createActionAuditLog(ctx, "DEVOLVER_SELF_SERVICE", "emprestimos", ativo._id as string);
   },
 });
 

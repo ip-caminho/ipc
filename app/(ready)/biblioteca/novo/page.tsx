@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "convex/react";
+import { useMutation, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { toast } from "sonner";
 import { Button } from "@/shared/components/ui/button";
@@ -23,10 +23,41 @@ import { ArrowLeft } from "lucide-react";
 import { livroFormSchema, type LivroFormValues } from "@features/biblioteca/lib/validations";
 import { CATEGORIAS_PADRAO, CONDICOES } from "@features/biblioteca/lib/constants";
 import { ModuloGuard } from "@/shared/components/auth/ModuloGuard";
+import { BookSearch, type BookData } from "@features/biblioteca/components/BookSearch";
+import { FileUpload } from "@/shared/files/components/FileUpload";
+import { Camera, Loader2 } from "lucide-react";
+import { useState } from "react";
 
 export default function NovoLivroPage() {
   const router = useRouter();
   const createLivro = useMutation(api.biblioteca.mutations.create);
+  const extractBookData = useAction(api.biblioteca.ocrAction.extractBookData);
+  const [step, setStep] = useState<"search" | "form">("search");
+  const [ocrLoading, setOcrLoading] = useState(false);
+
+  async function handleOcr(url: string | undefined) {
+    if (!url) return;
+    setOcrLoading(true);
+    try {
+      const data = await extractBookData({ imageUrl: url });
+      form.reset({
+        titulo: data.titulo || "",
+        autores: (data.autores || []).join(", "),
+        editora: data.editora || "",
+        isbn: data.isbn || "",
+        ano: data.ano || undefined,
+        descricao: "",
+        capaUrl: url,
+        categorias: [],
+        condicao: "BOM",
+      });
+      setStep("form");
+      toast.success("Dados extraidos da capa");
+    } catch (err: unknown) {
+      toast.error((err as Error).message || "Erro no OCR");
+    }
+    setOcrLoading(false);
+  }
 
   const form = useForm<LivroFormValues>({
     resolver: zodResolver(livroFormSchema),
@@ -37,6 +68,33 @@ export default function NovoLivroPage() {
       condicao: "BOM",
     },
   });
+
+  function handleSelectBook(book: BookData) {
+    // Mapear categorias do Google para nossas categorias padrao se possivel
+    const categoriasMapped: string[] = [];
+    if (book.categorias) {
+      for (const cat of book.categorias) {
+        const lower = cat.toLowerCase();
+        if (lower.includes("religion") || lower.includes("theol")) categoriasMapped.push("Teologia");
+        else if (lower.includes("biograph")) categoriasMapped.push("Biografias");
+        else if (lower.includes("famil")) categoriasMapped.push("Familia");
+      }
+    }
+
+    form.reset({
+      titulo: book.titulo,
+      autores: book.autores.join(", "),
+      editora: book.editora || "",
+      isbn: book.isbn || "",
+      ano: book.ano,
+      paginas: book.paginas,
+      descricao: book.descricao || "",
+      capaUrl: book.capaUrl || "",
+      categorias: categoriasMapped,
+      condicao: "BOM",
+    });
+    setStep("form");
+  }
 
   async function onSubmit(values: LivroFormValues) {
     try {
@@ -67,12 +125,65 @@ export default function NovoLivroPage() {
           <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
         </Button>
 
+        {step === "search" && (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Novo Livro</CardTitle>
+                <Button variant="outline" size="sm" onClick={() => setStep("form")}>
+                  Cadastrar manualmente
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-3">
+                Busque por ISBN ou titulo no Google Books — os dados serao preenchidos automaticamente.
+              </p>
+              <BookSearch onSelect={handleSelectBook} />
+
+              <div className="border-t mt-6 pt-4">
+                <p className="text-sm font-medium mb-2 flex items-center gap-2">
+                  <Camera className="h-4 w-4" /> Ou tire foto da capa
+                </p>
+                <FileUpload
+                  folder="biblioteca-capas"
+                  entityId="ocr"
+                  accept="image/*"
+                  maxSizeMB={10}
+                  onChange={handleOcr}
+                  label="Selecionar foto"
+                />
+                {ocrLoading && (
+                  <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+                    <Loader2 className="h-3 w-3 animate-spin" /> Analisando imagem com IA...
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {step === "form" && (
         <Card>
           <CardHeader>
-            <CardTitle>Novo Livro</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle>Novo Livro</CardTitle>
+              <Button variant="ghost" size="sm" onClick={() => setStep("search")}>
+                Buscar novamente
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              {form.watch("capaUrl") && (
+                <div className="flex justify-center">
+                  <img
+                    src={form.watch("capaUrl")}
+                    alt="Capa"
+                    className="w-24 h-32 object-cover rounded"
+                  />
+                </div>
+              )}
               <div>
                 <Label htmlFor="titulo">Titulo *</Label>
                 <Input id="titulo" {...form.register("titulo")} />
@@ -166,6 +277,7 @@ export default function NovoLivroPage() {
             </form>
           </CardContent>
         </Card>
+        )}
       </div>
     </ModuloGuard>
   );

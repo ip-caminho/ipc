@@ -6,7 +6,7 @@ import {
 import { NextResponse } from "next/server";
 
 const isSignInPage = createRouteMatcher(["/signin"]);
-const isPublicRoute = createRouteMatcher(["/signin", "/convite/(.*)", "/culto", "/inscricao/(.*)"]);
+const isPublicRoute = createRouteMatcher(["/signin", "/convite/(.*)", "/culto", "/inscricao/(.*)", "/livro/(.*)"]);
 
 function isLandingPage(pathname: string) {
   return pathname === "/";

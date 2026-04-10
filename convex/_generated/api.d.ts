@@ -22,6 +22,7 @@ import type * as auth_phoneOTP from "../auth/phoneOTP.js";
 import type * as avisos_mutations from "../avisos/mutations.js";
 import type * as avisos_queries from "../avisos/queries.js";
 import type * as biblioteca_mutations from "../biblioteca/mutations.js";
+import type * as biblioteca_ocrAction from "../biblioteca/ocrAction.js";
 import type * as biblioteca_queries from "../biblioteca/queries.js";
 import type * as calendario_mutations from "../calendario/mutations.js";
 import type * as calendario_queries from "../calendario/queries.js";
@@ -122,6 +123,7 @@ declare const fullApi: ApiFromModules<{
   "avisos/mutations": typeof avisos_mutations;
   "avisos/queries": typeof avisos_queries;
   "biblioteca/mutations": typeof biblioteca_mutations;
+  "biblioteca/ocrAction": typeof biblioteca_ocrAction;
   "biblioteca/queries": typeof biblioteca_queries;
   "calendario/mutations": typeof calendario_mutations;
   "calendario/queries": typeof calendario_queries;
