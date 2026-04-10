@@ -147,11 +147,13 @@ export const listAtrasados = query({
     return Promise.all(
       atrasados.map(async (e) => {
         const livro = await ctx.db.get(e.livroId);
-        const membroNome = await resolveMembroNome(ctx, e.membroId);
+        const membro = await ctx.db.get(e.membroId);
+        const entidade = membro ? await ctx.db.get(membro.entidadeId) : null;
         return {
           ...e,
           livroTitulo: livro?.titulo || "",
-          membroNome,
+          membroNome: entidade?.nomeCompleto || "",
+          membroWhatsapp: entidade?.whatsapp,
           diasAtraso: Math.floor(
             (new Date(hoje).getTime() - new Date(e.dataPrevistaDevolucao).getTime()) / 86400000
           ),
@@ -183,6 +185,76 @@ export const listEventos = query({
       .query("livroEventos")
       .withIndex("by_exemplar", (q) => q.eq("exemplarId", exemplarId))
       .collect();
+  },
+});
+
+// Verificar se o membro logado tem emprestimo ativo deste livro
+export const meuEmprestimoAtivoByCodigo = query({
+  args: { codigo: v.string() },
+  handler: async (ctx, { codigo }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return null;
+
+    const membro = await ctx.db
+      .query("membros")
+      .withIndex("by_user_id", (q) => q.eq("userId", userId))
+      .first();
+    if (!membro) return null;
+
+    const exemplar = await ctx.db
+      .query("exemplares")
+      .withIndex("by_codigo", (q) => q.eq("codigo", codigo))
+      .first();
+    if (!exemplar) return null;
+
+    // Buscar emprestimos ativos do mesmo livro do membro logado
+    const emprestimos = await ctx.db
+      .query("emprestimos")
+      .withIndex("by_membro", (q) => q.eq("membroId", membro._id))
+      .collect();
+
+    return (
+      emprestimos.find(
+        (e) => e.status === "ATIVO" && e.livroId === exemplar.livroId
+      ) ?? null
+    );
+  },
+});
+
+// Lista emprestimos ativos do membro logado
+export const meusEmprestimos = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return [];
+
+    const membro = await ctx.db
+      .query("membros")
+      .withIndex("by_user_id", (q) => q.eq("userId", userId))
+      .first();
+    if (!membro) return [];
+
+    const emprestimos = await ctx.db
+      .query("emprestimos")
+      .withIndex("by_membro", (q) => q.eq("membroId", membro._id))
+      .collect();
+
+    const ativos = emprestimos.filter((e) => e.status === "ATIVO");
+    const hoje = new Date().toISOString().split("T")[0];
+
+    return Promise.all(
+      ativos.map(async (e) => {
+        const livro = await ctx.db.get(e.livroId);
+        const exemplar = await ctx.db.get(e.exemplarId);
+        return {
+          ...e,
+          livroTitulo: livro?.titulo || "",
+          livroCapaUrl: livro?.capaUrl,
+          exemplarCodigo: exemplar?.codigo || "",
+          atrasado: e.dataPrevistaDevolucao < hoje,
+        };
+      })
+    );
   },
 });
 

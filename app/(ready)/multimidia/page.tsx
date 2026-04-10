@@ -22,9 +22,9 @@ function formatDate(d: string) {
 
 export default function MultimidiaPage() {
   const { can } = useAuth();
-  // Buscar proximo culto
+  // Buscar cultos
   // @ts-expect-error Convex TS2589
-  const cultos = useQuery(api.escalas.queries.listCultos, { limit: 10 });
+  const cultos = useQuery(api.escalas.queries.listCultos, {});
   const [cultoIndex, setCultoIndex] = useState(0);
 
   // Encontrar proximo culto futuro

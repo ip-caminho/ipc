@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, AlertCircle, BookMarked } from "lucide-react";
 import { LivroCard } from "@features/biblioteca/components/LivroCard";
 import { PermissionGate } from "@/shared/components/auth/PermissionGate";
 import { ModuloGuard } from "@/shared/components/auth/ModuloGuard";
@@ -31,20 +31,45 @@ export default function BibliotecaPage() {
     categoria: categoria || undefined,
   });
   const categorias = useQuery(api.biblioteca.queries.listCategorias);
+  const atrasados = useQuery(api.biblioteca.queries.listAtrasados);
+  const meusEmprestimos = useQuery(api.biblioteca.queries.meusEmprestimos);
 
   return (
     <ModuloGuard modulo="biblioteca">
       <div className="container max-w-4xl py-6 space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <h1 className="text-2xl font-bold">Biblioteca</h1>
-          <PermissionGate permission="biblioteca:create">
-            <Link href="/biblioteca/novo">
-              <Button size="sm">
-                <Plus className="h-4 w-4 mr-1" />
-                Novo Livro
-              </Button>
-            </Link>
-          </PermissionGate>
+          <div className="flex items-center gap-2">
+            {meusEmprestimos && meusEmprestimos.length > 0 && (
+              <Link href="/biblioteca/meus-emprestimos">
+                <Button variant="outline" size="sm">
+                  <BookMarked className="h-4 w-4 mr-1" />
+                  Meus empréstimos ({meusEmprestimos.length})
+                </Button>
+              </Link>
+            )}
+            {can("biblioteca:emprestar") && atrasados && atrasados.length > 0 && (
+              <Link href="/biblioteca/atrasados">
+                <Button variant="outline" size="sm" className="border-red-300 text-red-600 hover:text-red-700">
+                  <AlertCircle className="h-4 w-4 mr-1" />
+                  {atrasados.length} atrasado{atrasados.length !== 1 ? "s" : ""}
+                </Button>
+              </Link>
+            )}
+            <PermissionGate permission="biblioteca:create">
+              <Link href="/biblioteca/lote">
+                <Button variant="outline" size="sm">
+                  Lote
+                </Button>
+              </Link>
+              <Link href="/biblioteca/novo">
+                <Button size="sm">
+                  <Plus className="h-4 w-4 mr-1" />
+                  Novo Livro
+                </Button>
+              </Link>
+            </PermissionGate>
+          </div>
         </div>
 
         <div className="flex gap-2">
