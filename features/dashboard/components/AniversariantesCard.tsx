@@ -214,11 +214,36 @@ export function AniversariantesMesLista() {
       dia: a.dia,
       mes: a.mes,
       jaPassou: a.jaPassou,
-    }));
+    }))
+    .sort((a, b) => a.dia - b.dia);
+
+  const passados = aniversariantes.filter((p) => p.dia < hoje);
+  const hojeList = aniversariantes.filter((p) => p.dia === hoje);
+  const futuros = aniversariantes.filter((p) => p.dia > hoje);
 
   return (
     <div className="flex flex-col">
-      {aniversariantes.map((p) => (
+      {passados.map((p) => (
+        <div key={p.id} className="opacity-50">
+          <PersonRow p={p} showDate />
+        </div>
+      ))}
+
+      {hojeList.length > 0 && passados.length > 0 && (
+        <div className="border-t border-dashed my-2" />
+      )}
+
+      {hojeList.map((p) => (
+        <div key={p.id} className="bg-violet-50 dark:bg-violet-950/30 -mx-2 px-2 rounded-lg">
+          <PersonRow p={p} showDate />
+        </div>
+      ))}
+
+      {futuros.length > 0 && (passados.length > 0 || hojeList.length > 0) && (
+        <div className="border-t border-dashed my-2" />
+      )}
+
+      {futuros.map((p) => (
         <PersonRow key={p.id} p={p} showDate />
       ))}
     </div>
