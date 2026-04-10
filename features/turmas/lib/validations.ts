@@ -2,6 +2,7 @@ import { z } from "zod/v4";
 
 export const turmaFormSchema = z.object({
   nome: z.string().min(1, "Nome obrigatorio"),
+  tipo: z.enum(["NOVOS_MEMBROS", "CATACUMENOS", "OUTRO"]).optional(),
   instrutorId: z.string().optional(),
   instrutorId: z.string().optional(),
   instrutorNome: z.string().optional(),

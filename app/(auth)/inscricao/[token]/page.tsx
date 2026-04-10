@@ -118,7 +118,7 @@ export default function InscricaoPublicPage() {
           {turma.descricao && <p className="text-sm mt-2">{turma.descricao}</p>}
         </CardHeader>
         <CardContent>
-          {!isAuthenticated && (
+          {!isAuthenticated && turma.tipo !== "NOVOS_MEMBROS" && turma.tipo !== "CATACUMENOS" && (
             <div className="bg-blue-50 text-blue-800 rounded-lg p-3 text-sm mb-4">
               Ja tem cadastro no sistema?{" "}
               <Link href={`/signin?returnUrl=/inscricao/${token}`} className="underline font-medium">

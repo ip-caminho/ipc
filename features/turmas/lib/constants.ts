@@ -25,3 +25,23 @@ export const CAMPOS_SISTEMA_OPTIONS = [
   { value: "dataNascimento", label: "Data de nascimento" },
   { value: "sexo", label: "Sexo" },
 ] as const;
+
+export const TIPOS_TURMA = [
+  {
+    value: "NOVOS_MEMBROS",
+    label: "Novos membros",
+    descricaoTemplate: "Template Novos membros",
+  },
+  {
+    value: "CATACUMENOS",
+    label: "Catacúmenos",
+    descricaoTemplate: "Template Catacúmenos",
+  },
+  {
+    value: "OUTRO",
+    label: "Outro",
+    descricaoTemplate: "",
+  },
+] as const;
+
+export type TipoTurma = (typeof TIPOS_TURMA)[number]["value"];
