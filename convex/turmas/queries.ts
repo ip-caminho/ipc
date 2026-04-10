@@ -10,21 +10,8 @@ async function resolveMembroNome(ctx: any, membroId: any): Promise<string> {
   return entidade?.nomeCompleto || "";
 }
 
-export const listTipos = query({
-  args: { status: v.optional(v.string()) },
-  handler: async (ctx, { status }) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) return [];
-
-    let tipos = await ctx.db.query("tiposTurma").collect();
-    if (status) tipos = tipos.filter((t) => t.status === status);
-    return tipos;
-  },
-});
-
 export const listTurmas = query({
   args: {
-    tipoId: v.optional(v.id("tiposTurma")),
     status: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
@@ -32,20 +19,17 @@ export const listTurmas = query({
     if (!userId) return [];
 
     let turmas = await ctx.db.query("turmas").collect();
-    if (args.tipoId) turmas = turmas.filter((t) => t.tipoTurmaId === args.tipoId);
     if (args.status) turmas = turmas.filter((t) => t.status === args.status);
 
     return Promise.all(
       turmas
         .sort((a, b) => b.criadoEm - a.criadoEm)
         .map(async (t) => {
-          const tipo = await ctx.db.get(t.tipoTurmaId);
           const instrutorNome = t.instrutorId
             ? await resolveMembroNome(ctx, t.instrutorId)
             : t.instrutorNome || "";
           return {
             ...t,
-            tipoNome: tipo?.nome || "",
             instrutorNomeResolved: instrutorNome,
             vagasRestantes: t.vagas ? Math.max(0, t.vagas - t.vagasOcupadas) : null,
           };
@@ -63,12 +47,10 @@ export const getById = query({
     const turma = await ctx.db.get(id);
     if (!turma) return null;
 
-    const tipo = await ctx.db.get(turma.tipoTurmaId);
     const instrutorNome = turma.instrutorId
       ? await resolveMembroNome(ctx, turma.instrutorId)
       : turma.instrutorNome || "";
 
-    // Contar inscricoes
     const inscricoes = await ctx.db
       .query("inscricoes")
       .withIndex("by_turma", (q) => q.eq("turmaId", id))
@@ -76,7 +58,6 @@ export const getById = query({
 
     return {
       ...turma,
-      tipoNome: tipo?.nome || "",
       instrutorNomeResolved: instrutorNome,
       vagasRestantes: turma.vagas ? Math.max(0, turma.vagas - turma.vagasOcupadas) : null,
       totalInscritos: inscricoes.filter((i) => i.status === "CONFIRMADA").length,
@@ -95,12 +76,9 @@ export const getByToken = query({
       .first();
     if (!turma) return null;
 
-    const tipo = await ctx.db.get(turma.tipoTurmaId);
-
     return {
       _id: turma._id,
       nome: turma.nome,
-      tipoNome: tipo?.nome || "",
       descricao: turma.descricao,
       dataInicio: turma.dataInicio,
       dataFim: turma.dataFim,
@@ -201,7 +179,6 @@ export const getPresencas = query({
     const encontro = await ctx.db.get(encontroId);
     if (!encontro) return [];
 
-    // Buscar inscritos confirmados da turma
     const inscricoes = await ctx.db
       .query("inscricoes")
       .withIndex("by_turma_status", (q) =>

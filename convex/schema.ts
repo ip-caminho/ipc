@@ -700,17 +700,8 @@ export default defineSchema({
     .index("by_membro", ["membroId"]),
 
   // ===== Turmas =====
-  tiposTurma: defineTable({
-    nome: v.string(),
-    descricao: v.optional(v.string()),
-    status: v.union(v.literal("ATIVO"), v.literal("INATIVO")),
-    criadoEm: v.number(),
-  })
-    .index("by_status", ["status"]),
-
   turmas: defineTable({
     nome: v.string(),
-    tipoTurmaId: v.id("tiposTurma"),
     instrutorId: v.optional(v.id("membros")),
     instrutorNome: v.optional(v.string()),
     descricao: v.optional(v.string()),
@@ -738,7 +729,6 @@ export default defineSchema({
     criadoPor: v.optional(v.id("membros")),
     criadoEm: v.number(),
   })
-    .index("by_tipo", ["tipoTurmaId"])
     .index("by_status", ["status"])
     .index("by_token", ["token"]),
 

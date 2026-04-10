@@ -67,10 +67,7 @@ export default function TurmaDetalhePage() {
         <Card>
           <CardHeader>
             <div className="flex items-start justify-between gap-4">
-              <div>
-                <CardTitle className="text-xl">{turma.nome}</CardTitle>
-                <p className="text-sm text-muted-foreground">{turma.tipoNome}</p>
-              </div>
+              <CardTitle className="text-xl">{turma.nome}</CardTitle>
               <Badge variant="outline" className={statusOpt?.color ?? ""}>
                 {statusOpt?.label ?? turma.status}
               </Badge>
