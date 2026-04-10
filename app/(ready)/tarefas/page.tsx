@@ -52,12 +52,12 @@ export default function TarefasPage() {
               {can("tarefas:read") && <TabsTrigger value="TODAS">Todas</TabsTrigger>}
             </TabsList>
 
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <Select value={statusFilter || "__all__"} onValueChange={(v) => setStatusFilter(v === "__all__" ? "" : v)}>
               <SelectTrigger className="w-[160px]">
                 <SelectValue placeholder="Todos os status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value="__all__">Todos</SelectItem>
                 <SelectItem value="ABERTA">Aberta</SelectItem>
                 <SelectItem value="EM_ANDAMENTO">Em andamento</SelectItem>
                 <SelectItem value="CONCLUIDA">Concluída</SelectItem>
