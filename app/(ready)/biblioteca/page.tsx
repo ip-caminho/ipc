@@ -57,12 +57,12 @@ export default function BibliotecaPage() {
               className="pl-9"
             />
           </div>
-          <Select value={categoria} onValueChange={setCategoria}>
+          <Select value={categoria || "__all__"} onValueChange={(v) => setCategoria(v === "__all__" ? "" : v)}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Categoria" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todas</SelectItem>
+              <SelectItem value="__all__">Todas</SelectItem>
               {categorias?.map((c) => (
                 <SelectItem key={c} value={c}>{c}</SelectItem>
               ))}
