@@ -27,6 +27,11 @@ function formatDate(d: string) {
   return `${day}/${m}/${y}`;
 }
 
+function formatDateShort(d: string) {
+  const [, m, day] = d.split("-");
+  return `${day}/${m}`;
+}
+
 const DIA_LABELS: Record<string, string> = {
   DOMINGO: "Domingo",
   SEGUNDA: "Segunda",
@@ -36,6 +41,41 @@ const DIA_LABELS: Record<string, string> = {
   SEXTA: "Sexta",
   SABADO: "Sábado",
 };
+
+const DIA_SEMANA_TO_INDEX: Record<string, number> = {
+  DOMINGO: 0,
+  SEGUNDA: 1,
+  TERCA: 2,
+  QUARTA: 3,
+  QUINTA: 4,
+  SEXTA: 5,
+  SABADO: 6,
+};
+
+// Calcula as datas previstas dos encontros entre dataInicio e dataFim no diaSemana
+function calcularEncontros(dataInicio: string, dataFim?: string, diaSemana?: string): string[] {
+  if (!diaSemana || !dataFim) return [];
+  const targetDay = DIA_SEMANA_TO_INDEX[diaSemana];
+  if (targetDay === undefined) return [];
+
+  const inicio = new Date(dataInicio + "T12:00:00");
+  const fim = new Date(dataFim + "T12:00:00");
+  if (isNaN(inicio.getTime()) || isNaN(fim.getTime())) return [];
+
+  // Avancar ate o primeiro diaSemana >= inicio
+  const primeiro = new Date(inicio);
+  while (primeiro.getDay() !== targetDay) {
+    primeiro.setDate(primeiro.getDate() + 1);
+  }
+
+  const datas: string[] = [];
+  const atual = new Date(primeiro);
+  while (atual <= fim) {
+    datas.push(atual.toISOString().split("T")[0]);
+    atual.setDate(atual.getDate() + 7);
+  }
+  return datas;
+}
 
 export default function LandingPage() {
   // @ts-ignore Convex TS2589
@@ -168,29 +208,83 @@ export default function LandingPage() {
               <BookOpen className="h-4 w-4 text-muted-foreground" />
               <h2 className="text-lg font-medium">Cursos abertos</h2>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-              {turmas.map((t: any) => (
-                <div key={t._id} className="border border-border rounded-xl p-4 space-y-3 flex flex-col">
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">{t.nome}</p>
-                    {t.descricao && (
-                      <p className="text-xs text-muted-foreground mt-1 line-clamp-3">{t.descricao}</p>
-                    )}
-                    <div className="flex flex-col gap-1 mt-2 text-xs text-muted-foreground">
-                      <span>📅 {formatDate(t.dataInicio)}{t.diaSemana && ` · ${DIA_LABELS[t.diaSemana]}`}{t.horario && ` ${t.horario}`}</span>
-                      {t.local && <span>📍 {t.local}</span>}
-                      {t.vagasRestantes !== null && t.vagasRestantes > 0 && t.vagasRestantes < 5 && (
-                        <span className="text-yellow-600 dark:text-yellow-500 font-medium">⚠ {t.vagasRestantes} vagas restantes</span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {turmas.map((t: any) => {
+                const encontros = calcularEncontros(t.dataInicio, t.dataFim, t.diaSemana);
+                return (
+                  <div key={t._id} className="border border-border rounded-xl p-5 space-y-4 flex flex-col">
+                    <div className="flex-1 space-y-3">
+                      <div>
+                        <h3 className="text-base font-medium">{t.nome}</h3>
+                        {t.descricao && (
+                          <p className="text-sm text-muted-foreground mt-1">{t.descricao}</p>
+                        )}
+                      </div>
+
+                      <div className="space-y-1.5 text-sm">
+                        <div className="flex items-start gap-2">
+                          <Clock className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                          <div className="text-muted-foreground">
+                            <div>
+                              <span className="font-medium text-foreground">Início:</span>{" "}
+                              {formatDate(t.dataInicio)}
+                              {t.dataFim && ` · Fim: ${formatDate(t.dataFim)}`}
+                            </div>
+                            {t.diaSemana && (
+                              <div>
+                                {DIA_LABELS[t.diaSemana]}{t.horario && `s às ${t.horario}`}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {t.local && (
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <MapPin className="h-4 w-4 shrink-0" />
+                            <span>{t.local}</span>
+                          </div>
+                        )}
+
+                        {t.instrutorNome && (
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <GraduationCap className="h-4 w-4 shrink-0" />
+                            <span>{t.instrutorNome}</span>
+                          </div>
+                        )}
+
+                        {t.vagasRestantes !== null && t.vagasRestantes > 0 && t.vagasRestantes < 5 && (
+                          <div className="text-yellow-600 dark:text-yellow-500 font-medium text-xs">
+                            ⚠ Apenas {t.vagasRestantes} vagas restantes
+                          </div>
+                        )}
+                      </div>
+
+                      {encontros.length > 0 && (
+                        <div className="border-t border-border pt-3">
+                          <p className="text-xs font-medium text-muted-foreground mb-2">
+                            Encontros previstos ({encontros.length})
+                          </p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {encontros.map((data) => (
+                              <span
+                                key={data}
+                                className="text-xs px-2 py-1 rounded-md bg-muted text-muted-foreground"
+                              >
+                                {formatDateShort(data)}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
                       )}
                     </div>
+                    {t.token && (
+                      <Button asChild size="sm" className="w-full">
+                        <Link href={`/inscricao/${t.token}`}>Inscreva-se</Link>
+                      </Button>
+                    )}
                   </div>
-                  {t.token && (
-                    <Button asChild size="sm" className="text-xs w-full">
-                      <Link href={`/inscricao/${t.token}`}>Inscreva-se</Link>
-                    </Button>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
           </section>
         )}

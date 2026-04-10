@@ -173,21 +173,32 @@ export const listTurmasAbertas = query({
   args: {},
   handler: async (ctx) => {
     const turmas = await ctx.db.query("turmas").collect();
-    return turmas
+    const abertas = turmas
       .filter((t) => t.status === "ABERTA")
-      .sort((a, b) => a.dataInicio.localeCompare(b.dataInicio))
-      .map((t) => ({
-        _id: t._id,
-        nome: t.nome,
-        tipo: t.tipo,
-        descricao: t.descricao,
-        dataInicio: t.dataInicio,
-        diaSemana: t.diaSemana,
-        horario: t.horario,
-        local: t.local,
-        token: t.token,
-        vagasRestantes: t.vagas ? Math.max(0, t.vagas - t.vagasOcupadas) : null,
-      }));
+      .sort((a, b) => a.dataInicio.localeCompare(b.dataInicio));
+
+    return Promise.all(
+      abertas.map(async (t) => {
+        const instrutorNome = t.instrutorId
+          ? await resolveMembroNome(ctx, t.instrutorId)
+          : t.instrutorNome || "";
+
+        return {
+          _id: t._id,
+          nome: t.nome,
+          tipo: t.tipo,
+          descricao: t.descricao,
+          dataInicio: t.dataInicio,
+          dataFim: t.dataFim,
+          diaSemana: t.diaSemana,
+          horario: t.horario,
+          local: t.local,
+          token: t.token,
+          instrutorNome,
+          vagasRestantes: t.vagas ? Math.max(0, t.vagas - t.vagasOcupadas) : null,
+        };
+      })
+    );
   },
 });
 
