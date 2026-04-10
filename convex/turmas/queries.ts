@@ -10,6 +10,61 @@ async function resolveMembroNome(ctx: any, membroId: any): Promise<string> {
   return entidade?.nomeCompleto || "";
 }
 
+// Turmas onde o membro logado e instrutor, com info de chamada do dia
+export const minhasTurmasInstrutor = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return [];
+
+    const membro = await ctx.db
+      .query("membros")
+      .withIndex("by_user_id", (q) => q.eq("userId", userId))
+      .first();
+    if (!membro) return [];
+
+    const turmas = await ctx.db.query("turmas").collect();
+    const minhas = turmas.filter(
+      (t) => t.instrutorId === membro._id && (t.status === "ABERTA" || t.status === "EM_ANDAMENTO")
+    );
+
+    const hoje = new Date().toISOString().split("T")[0];
+    const diaSemanaHoje = ["DOMINGO", "SEGUNDA", "TERCA", "QUARTA", "QUINTA", "SEXTA", "SABADO"][new Date().getDay()];
+
+    return Promise.all(
+      minhas.map(async (t) => {
+        // Verificar se tem encontro hoje
+        const encontros = await ctx.db
+          .query("turmaEncontros")
+          .withIndex("by_turma", (q) => q.eq("turmaId", t._id))
+          .collect();
+        const encontroHoje = encontros.find((e) => e.data === hoje);
+
+        // Verificar se e dia de aula
+        const isDiaDeAula = t.diaSemana === diaSemanaHoje;
+
+        // Contar inscritos confirmados
+        const inscricoes = await ctx.db
+          .query("inscricoes")
+          .withIndex("by_turma_status", (q) =>
+            q.eq("turmaId", t._id).eq("status", "CONFIRMADA")
+          )
+          .collect();
+
+        return {
+          _id: t._id,
+          nome: t.nome,
+          diaSemana: t.diaSemana,
+          horario: t.horario,
+          totalInscritos: inscricoes.length,
+          isDiaDeAula,
+          encontroHojeId: encontroHoje?._id || null,
+        };
+      })
+    );
+  },
+});
+
 export const listTurmas = query({
   args: {
     status: v.optional(v.string()),

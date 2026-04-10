@@ -2,7 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { toast } from "sonner";
 import {
@@ -33,6 +33,8 @@ interface Props {
 
 export function TurmaFormDialog({ open, onOpenChange }: Props) {
   const createTurma = useMutation(api.turmas.mutations.create);
+  // @ts-expect-error Convex TS2589
+  const membros = useQuery(api.membros.queries.list);
 
   const form = useForm<TurmaFormValues>({
     resolver: zodResolver(turmaFormSchema),
@@ -48,6 +50,7 @@ export function TurmaFormDialog({ open, onOpenChange }: Props) {
     try {
       await createTurma({
         nome: values.nome,
+        instrutorId: values.instrutorId ? values.instrutorId as any : undefined,
         instrutorNome: values.instrutorNome || undefined,
         descricao: values.descricao || undefined,
         dataInicio: values.dataInicio,
@@ -122,8 +125,21 @@ export function TurmaFormDialog({ open, onOpenChange }: Props) {
           </div>
 
           <div>
-            <Label htmlFor="instrutorNome">Instrutor</Label>
-            <Input id="instrutorNome" {...form.register("instrutorNome")} placeholder="Nome do instrutor" />
+            <Label>Instrutor</Label>
+            <Select
+              value={form.watch("instrutorId") || "__none__"}
+              onValueChange={(v) => form.setValue("instrutorId", v === "__none__" ? "" : v)}
+            >
+              <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">Nenhum</SelectItem>
+                {membros?.map((m: any) => (
+                  <SelectItem key={m._id} value={m._id}>
+                    {m.entidade?.nomeCompleto || m._id}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div>
