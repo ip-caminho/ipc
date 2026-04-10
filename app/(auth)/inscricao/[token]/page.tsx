@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
-import { useConvexAuth } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,7 +16,6 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Calendar, MapPin, Users, CheckCircle } from "lucide-react";
 import { inscricaoPublicSchema } from "@features/turmas/lib/validations";
 import { DIA_SEMANA_LABELS } from "@features/turmas/lib/constants";
-import Link from "next/link";
 
 function formatDate(d: string) {
   const [y, m, day] = d.split("-");
@@ -26,7 +24,6 @@ function formatDate(d: string) {
 
 export default function InscricaoPublicPage() {
   const { token } = useParams<{ token: string }>();
-  const { isAuthenticated } = useConvexAuth();
   const turma = useQuery(api.turmas.queries.getByToken, { token });
   const registrar = useMutation(api.turmas.mutations.registrar);
   const [success, setSuccess] = useState(false);
@@ -65,6 +62,9 @@ export default function InscricaoPublicPage() {
                 Voce esta na lista de espera. Entraremos em contato quando houver vaga.
               </p>
             )}
+            <Button asChild className="w-full">
+              <a href="/">Voltar para o site</a>
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -118,16 +118,6 @@ export default function InscricaoPublicPage() {
           {turma.descricao && <p className="text-sm mt-2">{turma.descricao}</p>}
         </CardHeader>
         <CardContent>
-          {!isAuthenticated && turma.tipo !== "NOVOS_MEMBROS" && turma.tipo !== "CATACUMENOS" && (
-            <div className="bg-blue-50 text-blue-800 rounded-lg p-3 text-sm mb-4">
-              Ja tem cadastro no sistema?{" "}
-              <Link href={`/signin?returnUrl=/inscricao/${token}`} className="underline font-medium">
-                Fazer login
-              </Link>{" "}
-              para preencher automaticamente.
-            </div>
-          )}
-
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div>
               <Label htmlFor="nomeCompleto">Nome completo *</Label>
