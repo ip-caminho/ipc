@@ -21,6 +21,7 @@ import { AniversariantesCard, AniversariantesHoje, AniversariantesMesLista } fro
 import { EducacionalPaisWidget } from "@features/educacional/components/EducacionalPaisWidget";
 import { MinhaEscalaUnificada } from "@features/escalas/components/MinhaEscalaUnificada";
 import { PushPermissionBanner } from "@shared/notifications/PushPermissionBanner";
+import { ChamadaWidget } from "@features/turmas/components/ChamadaWidget";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useState } from "react";
@@ -148,6 +149,9 @@ export default function DashboardPage() {
 
         {/* Banner de notificações */}
         <PushPermissionBanner />
+
+        {/* Chamada de turmas do instrutor */}
+        <ChamadaWidget />
 
         {/* Aniversariantes hoje ou em breve — mobile only */}
         <div className="md:hidden">
