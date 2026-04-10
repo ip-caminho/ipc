@@ -91,12 +91,6 @@ export const update = mutation({
   },
 });
 
-const STATUS_TRANSITIONS: Record<string, string[]> = {
-  ABERTA: ["EM_ANDAMENTO", "CANCELADA"],
-  EM_ANDAMENTO: ["ENCERRADA", "CANCELADA"],
-  CANCELADA: ["ABERTA"],
-};
-
 export const updateStatus = mutation({
   args: {
     id: v.id("turmas"),
@@ -112,10 +106,8 @@ export const updateStatus = mutation({
     const turma = await ctx.db.get(id);
     if (!turma) throw new Error("Turma nao encontrada");
 
-    const allowed = STATUS_TRANSITIONS[turma.status];
-    if (!allowed?.includes(status)) {
-      throw new Error(`Transicao invalida: ${turma.status} → ${status}`);
-    }
+    if (turma.status === status) return; // sem mudanca
+
     const oldRecord = await ctx.db.get(id);
     await ctx.db.patch(id, { status });
     const newRecord = await ctx.db.get(id);
