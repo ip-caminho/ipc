@@ -150,9 +150,6 @@ export default function DashboardPage() {
         {/* Banner de notificações */}
         <PushPermissionBanner />
 
-        {/* Chamada de turmas do instrutor */}
-        <ChamadaWidget />
-
         {/* Aniversariantes hoje ou em breve — mobile only */}
         <div className="md:hidden">
           <AniversariantesHoje />
@@ -277,6 +274,11 @@ export default function DashboardPage() {
             </Link>
           );
         })()}
+      </div>
+
+      {/* Chamada de turmas do instrutor (sempre no final) */}
+      <div className="mt-6">
+        <ChamadaWidget />
       </div>
     </div>
   );

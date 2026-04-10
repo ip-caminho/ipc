@@ -25,6 +25,11 @@ function generateToken(): string {
 export const create = mutation({
   args: {
     nome: v.string(),
+    tipo: v.optional(v.union(
+      v.literal("NOVOS_MEMBROS"),
+      v.literal("CATACUMENOS"),
+      v.literal("OUTRO")
+    )),
     instrutorId: v.optional(v.id("membros")),
     instrutorNome: v.optional(v.string()),
     descricao: v.optional(v.string()),

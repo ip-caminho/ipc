@@ -702,6 +702,11 @@ export default defineSchema({
   // ===== Turmas =====
   turmas: defineTable({
     nome: v.string(),
+    tipo: v.optional(v.union(
+      v.literal("NOVOS_MEMBROS"),
+      v.literal("CATACUMENOS"),
+      v.literal("OUTRO")
+    )),
     instrutorId: v.optional(v.id("membros")),
     instrutorNome: v.optional(v.string()),
     descricao: v.optional(v.string()),

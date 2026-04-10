@@ -23,7 +23,7 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import { turmaFormSchema, type TurmaFormValues } from "../lib/validations";
-import { DIA_SEMANA_OPTIONS, DIA_SEMANA_LABELS, CAMPOS_SISTEMA_OPTIONS } from "../lib/constants";
+import { DIA_SEMANA_OPTIONS, DIA_SEMANA_LABELS, CAMPOS_SISTEMA_OPTIONS, TIPOS_TURMA, type TipoTurma } from "../lib/constants";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 
 interface Props {
@@ -50,6 +50,7 @@ export function TurmaFormDialog({ open, onOpenChange }: Props) {
     try {
       await createTurma({
         nome: values.nome,
+        tipo: values.tipo,
         instrutorId: values.instrutorId ? values.instrutorId as any : undefined,
         instrutorNome: values.instrutorNome || undefined,
         descricao: values.descricao || undefined,
@@ -80,6 +81,33 @@ export function TurmaFormDialog({ open, onOpenChange }: Props) {
           <div>
             <Label htmlFor="nome">Nome</Label>
             <Input id="nome" {...form.register("nome")} placeholder="Ex: Novos Membros - Turma 1/2026" />
+          </div>
+
+          <div>
+            <Label>Tipo</Label>
+            <Select
+              value={form.watch("tipo") || "__none__"}
+              onValueChange={(v) => {
+                if (v === "__none__") {
+                  form.setValue("tipo", undefined);
+                  return;
+                }
+                form.setValue("tipo", v as TipoTurma);
+                // Auto-preencher descricao com template
+                const tipo = TIPOS_TURMA.find((t) => t.value === v);
+                if (tipo && tipo.descricaoTemplate && !form.getValues("descricao")) {
+                  form.setValue("descricao", tipo.descricaoTemplate);
+                }
+              }}
+            >
+              <SelectTrigger><SelectValue placeholder="Selecione o tipo" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">Selecione...</SelectItem>
+                {TIPOS_TURMA.map((t) => (
+                  <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

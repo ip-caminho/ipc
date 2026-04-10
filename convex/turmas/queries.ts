@@ -10,7 +10,10 @@ async function resolveMembroNome(ctx: any, membroId: any): Promise<string> {
   return entidade?.nomeCompleto || "";
 }
 
-// Turmas onde o membro logado e instrutor, com info de chamada do dia
+// Turmas onde o membro logado e instrutor, com info de chamada
+// Mostra:
+// 1. Turmas com aula hoje (criar encontro se nao existe)
+// 2. Encontros criados nas ultimas 48h sem presenca marcada (janela para preencher)
 export const minhasTurmasInstrutor = query({
   args: {},
   handler: async (ctx) => {
@@ -30,38 +33,82 @@ export const minhasTurmasInstrutor = query({
 
     const hoje = new Date().toISOString().split("T")[0];
     const diaSemanaHoje = ["DOMINGO", "SEGUNDA", "TERCA", "QUARTA", "QUINTA", "SEXTA", "SABADO"][new Date().getDay()];
+    const agora = Date.now();
+    const limite48h = agora - 48 * 60 * 60 * 1000;
 
-    return Promise.all(
-      minhas.map(async (t) => {
-        // Verificar se tem encontro hoje
-        const encontros = await ctx.db
-          .query("turmaEncontros")
-          .withIndex("by_turma", (q) => q.eq("turmaId", t._id))
-          .collect();
-        const encontroHoje = encontros.find((e) => e.data === hoje);
+    const resultados: Array<{
+      _id: string;
+      nome: string;
+      diaSemana?: string;
+      horario?: string;
+      totalInscritos: number;
+      isDiaDeAula: boolean;
+      encontroId: string | null;
+      encontroData: string;
+      criadoEm: number;
+      expiraEm: number; // timestamp do limite (criadoEm + 48h)
+    }> = [];
 
-        // Verificar se e dia de aula
-        const isDiaDeAula = t.diaSemana === diaSemanaHoje;
+    for (const t of minhas) {
+      const encontros = await ctx.db
+        .query("turmaEncontros")
+        .withIndex("by_turma", (q) => q.eq("turmaId", t._id))
+        .collect();
 
-        // Contar inscritos confirmados
-        const inscricoes = await ctx.db
-          .query("inscricoes")
-          .withIndex("by_turma_status", (q) =>
-            q.eq("turmaId", t._id).eq("status", "CONFIRMADA")
-          )
-          .collect();
+      const inscricoes = await ctx.db
+        .query("inscricoes")
+        .withIndex("by_turma_status", (q) =>
+          q.eq("turmaId", t._id).eq("status", "CONFIRMADA")
+        )
+        .collect();
 
-        return {
+      const isDiaDeAula = t.diaSemana === diaSemanaHoje;
+      const encontroHoje = encontros.find((e) => e.data === hoje);
+
+      // Caso 1: e dia de aula hoje
+      if (isDiaDeAula) {
+        resultados.push({
           _id: t._id,
           nome: t.nome,
           diaSemana: t.diaSemana,
           horario: t.horario,
           totalInscritos: inscricoes.length,
-          isDiaDeAula,
-          encontroHojeId: encontroHoje?._id || null,
-        };
-      })
-    );
+          isDiaDeAula: true,
+          encontroId: encontroHoje?._id || null,
+          encontroData: hoje,
+          criadoEm: encontroHoje?.criadoEm || agora,
+          expiraEm: (encontroHoje?.criadoEm || agora) + 48 * 60 * 60 * 1000,
+        });
+      }
+
+      // Caso 2: encontros pendentes (criados nas ultimas 48h, nao foi hoje)
+      for (const e of encontros) {
+        if (e.data === hoje) continue; // ja tratado acima
+        if (e.criadoEm < limite48h) continue; // ja passou da janela
+
+        // Verificar se ja tem presencas marcadas
+        const presencas = await ctx.db
+          .query("turmaPresencas")
+          .withIndex("by_encontro", (q) => q.eq("encontroId", e._id))
+          .collect();
+        if (presencas.length > 0) continue; // ja preencheu
+
+        resultados.push({
+          _id: t._id,
+          nome: t.nome,
+          diaSemana: t.diaSemana,
+          horario: t.horario,
+          totalInscritos: inscricoes.length,
+          isDiaDeAula: false,
+          encontroId: e._id,
+          encontroData: e.data,
+          criadoEm: e.criadoEm,
+          expiraEm: e.criadoEm + 48 * 60 * 60 * 1000,
+        });
+      }
+    }
+
+    return resultados;
   },
 });
 
@@ -121,6 +168,29 @@ export const getById = query({
   },
 });
 
+// Query publica (sem auth) — lista turmas abertas para landing page
+export const listTurmasAbertas = query({
+  args: {},
+  handler: async (ctx) => {
+    const turmas = await ctx.db.query("turmas").collect();
+    return turmas
+      .filter((t) => t.status === "ABERTA")
+      .sort((a, b) => a.dataInicio.localeCompare(b.dataInicio))
+      .map((t) => ({
+        _id: t._id,
+        nome: t.nome,
+        tipo: t.tipo,
+        descricao: t.descricao,
+        dataInicio: t.dataInicio,
+        diaSemana: t.diaSemana,
+        horario: t.horario,
+        local: t.local,
+        token: t.token,
+        vagasRestantes: t.vagas ? Math.max(0, t.vagas - t.vagasOcupadas) : null,
+      }));
+  },
+});
+
 // Query publica (sem auth) — para pagina de inscricao
 export const getByToken = query({
   args: { token: v.string() },
@@ -134,6 +204,7 @@ export const getByToken = query({
     return {
       _id: turma._id,
       nome: turma.nome,
+      tipo: turma.tipo,
       descricao: turma.descricao,
       dataInicio: turma.dataInicio,
       dataFim: turma.dataFim,

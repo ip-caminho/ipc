@@ -22,24 +22,26 @@ function formatWhatsappLink(phone: string): string {
   return `https://wa.me/${number}`;
 }
 
-const cursosMockados = [
-  {
-    titulo: "Curso de Membros",
-    descricao: "Conheca a historia, doutrina e governo da Igreja Presbiteriana.",
-  },
-  {
-    titulo: "Escola de Lideres",
-    descricao: "Formacao para obreiros e lideres de ministerios.",
-  },
-  {
-    titulo: "Aconselhamento Biblico",
-    descricao: "Principios biblicos aplicados ao cuidado pastoral.",
-  },
-];
+function formatDate(d: string) {
+  const [y, m, day] = d.split("-");
+  return `${day}/${m}/${y}`;
+}
+
+const DIA_LABELS: Record<string, string> = {
+  DOMINGO: "Domingo",
+  SEGUNDA: "Segunda",
+  TERCA: "Terça",
+  QUARTA: "Quarta",
+  QUINTA: "Quinta",
+  SEXTA: "Sexta",
+  SABADO: "Sábado",
+};
 
 export default function LandingPage() {
   // @ts-ignore Convex TS2589
   const info = useQuery(api.preferencias.queries.getIgrejaInfo);
+  // @ts-ignore Convex TS2589
+  const turmas = useQuery(api.turmas.queries.listTurmasAbertas);
 
   if (info === undefined) {
     return (
@@ -159,31 +161,39 @@ export default function LandingPage() {
           </section>
         )}
 
-        {/* Inscricoes para cursos */}
-        <section className="space-y-3">
-          <div className="flex items-center gap-2">
-            <BookOpen className="h-4 w-4 text-muted-foreground" />
-            <h2 className="text-lg font-medium">Cursos</h2>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-            {cursosMockados.map((curso, i) => (
-              <div key={i} className="border border-border rounded-xl p-4 space-y-3">
-                <div>
-                  <p className="text-sm font-medium">{curso.titulo}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{curso.descricao}</p>
+        {/* Turmas e cursos abertos */}
+        {turmas && turmas.length > 0 && (
+          <section className="space-y-3">
+            <div className="flex items-center gap-2">
+              <BookOpen className="h-4 w-4 text-muted-foreground" />
+              <h2 className="text-lg font-medium">Cursos abertos</h2>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+              {turmas.map((t: any) => (
+                <div key={t._id} className="border border-border rounded-xl p-4 space-y-3 flex flex-col">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">{t.nome}</p>
+                    {t.descricao && (
+                      <p className="text-xs text-muted-foreground mt-1 line-clamp-3">{t.descricao}</p>
+                    )}
+                    <div className="flex flex-col gap-1 mt-2 text-xs text-muted-foreground">
+                      <span>📅 {formatDate(t.dataInicio)}{t.diaSemana && ` · ${DIA_LABELS[t.diaSemana]}`}{t.horario && ` ${t.horario}`}</span>
+                      {t.local && <span>📍 {t.local}</span>}
+                      {t.vagasRestantes !== null && t.vagasRestantes > 0 && t.vagasRestantes < 5 && (
+                        <span className="text-yellow-600 dark:text-yellow-500 font-medium">⚠ {t.vagasRestantes} vagas restantes</span>
+                      )}
+                    </div>
+                  </div>
+                  {t.token && (
+                    <Button asChild size="sm" className="text-xs w-full">
+                      <Link href={`/inscricao/${t.token}`}>Inscreva-se</Link>
+                    </Button>
+                  )}
                 </div>
-                <div className="flex items-center gap-2">
-                  <Button size="sm" disabled className="text-xs">
-                    Inscreva-se
-                  </Button>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
-                    Em breve
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Endereço + Google Maps */}
         {endereco && (
