@@ -1,3 +1,5 @@
+"use client";
+
 import { NavSectionList } from "@features/navigation/components/NavSectionList";
 import { COMUNIDADE_SECTIONS } from "@shared/constants/navigation";
 
