@@ -699,6 +699,74 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     mutations: ["audit.mutations.logLogin"],
     notas: ["WhatsApp OTP (bypass em dev)", "Valida status do membro no login"],
   },
+  "/comunidade": {
+    nome: "Comunidade (aggregator)",
+    pagina: "app/(ready)/comunidade/page.tsx",
+    arquivos: [
+      "app/(ready)/comunidade/page.tsx",
+      "shared/constants/navigation.ts",
+      "features/navigation/components/NavSectionList.tsx",
+    ],
+    queries: ["modulos.queries.listModulosAtivos"],
+    componentes: ["NavSectionList"],
+    notas: [
+      "Aggregator — lista de secoes apontando para rotas existentes",
+      "Secoes: Conteudo (Ouvir, Repertorio, Boletim) + Pessoas e espacos (Diretorio, Calendario, Biblioteca, Salas)",
+      "Fonte dos itens: COMUNIDADE_SECTIONS em shared/constants/navigation.ts",
+    ],
+  },
+  "/gestao": {
+    nome: "Gestão (aggregator)",
+    pagina: "app/(ready)/gestao/page.tsx",
+    arquivos: [
+      "app/(ready)/gestao/page.tsx",
+      "shared/constants/navigation.ts",
+      "features/navigation/components/NavSectionList.tsx",
+    ],
+    queries: ["modulos.queries.listModulosAtivos"],
+    componentes: ["NavSectionList"],
+    notas: [
+      "Visivel apenas para roles elevados (admin, secretaria, pastor, presbitero)",
+      "Redireciona para /dashboard se usuario nao tiver role elevada",
+      "5 secoes: Culto, Pessoas, Educacional, Operacao, Admin",
+      "Fonte dos itens: GESTAO_SECTIONS em shared/constants/navigation.ts",
+    ],
+  },
+  "/educacional/turma/[id]": {
+    nome: "Turma do Professor (Educacional)",
+    pagina: "app/(ready)/educacional/turma/[id]/page.tsx",
+    arquivos: [
+      "app/(ready)/educacional/turma/[id]/page.tsx",
+      "features/educacional/hooks/useProfessorTurmas.ts",
+    ],
+    queries: ["educacional.queries.listCriancas", "ministerios.queries.list", "educacional.queries.listEscalas"],
+    mutations: ["educacional.mutations.createRelatorio"],
+    componentes: ["useProfessorTurmas hook"],
+    notas: [
+      "View do professor para marcar presenca da sua turma",
+      "Tap unico alterna Presente → Ausente → Pendente",
+      "Botao 'Enviar relatorio' aparece fixo no bottom quando todas marcadas",
+      "Acesso: professor escalado (ministerioEscalas com papel=Professor) OU educacional:write",
+      "Requer educacional:write para enviar o relatorio",
+    ],
+  },
+  "/admin/auditoria": {
+    nome: "Auditoria (Admin)",
+    pagina: "app/(ready)/admin/auditoria/page.tsx",
+    arquivos: [
+      "app/(ready)/admin/auditoria/page.tsx",
+      "convex/audit/queries.ts",
+    ],
+    queries: ["audit.queries.listFiltered", "audit.queries.listTabelas"],
+    componentes: ["PermissionGate (audit:read)", "Sheet de detalhe"],
+    notas: [
+      "Permissao: audit:read (admin, secretaria, pastor)",
+      "Filtros via nuqs URL state: tabela, acao, de, ate",
+      "Paginacao por 'Carregar mais' (limit incremental)",
+      "Click na linha abre Sheet com payload completo de from/to",
+      "CPF/RG ja mascarados pelo auditHelpers do _shared",
+    ],
+  },
 };
 
 function resolveRoute(pathname: string): PageContext | null {
@@ -723,6 +791,8 @@ function resolveRoute(pathname: string): PageContext | null {
   if (/^\/tarefas\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/tarefas/[id]"];
   // /convite/[token]
   if (/^\/convite\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/signin"];
+  // /educacional/turma/[id]
+  if (/^\/educacional\/turma\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/educacional/turma/[id]"];
 
   return null;
 }
