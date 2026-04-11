@@ -1,5 +1,10 @@
 "use client";
 
+// IMPORTANTE: paginas que consomem este componente devem ser Client Components
+// (ter "use client" no topo). As constantes NavSection contem referencias a
+// componentes LucideIcon, que nao sao serializaveis atraves da fronteira RSC.
+// Sem "use client" na pagina, acessar a rota lanca server-side exception.
+
 import Link from "next/link";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
