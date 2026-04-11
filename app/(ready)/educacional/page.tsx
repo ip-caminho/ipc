@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useAuth } from "@shared/providers/PermissionsProvider";
 import { PermissionGate } from "@shared/components/auth/PermissionGate";
 import { ModuloGuard } from "@shared/components/auth/ModuloGuard";
+import { useProfessorTurmas } from "@features/educacional/hooks/useProfessorTurmas";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import Link from "next/link";
@@ -24,6 +26,7 @@ import {
   Users,
   CalendarDays,
   ClipboardList,
+  Baby,
 } from "lucide-react";
 import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
@@ -42,10 +45,24 @@ import { TURMA_OPTIONS, TURMA_COLORS } from "@features/educacional/lib/constants
 
 export default function EducacionalPage() {
   const { can } = useAuth();
+  const router = useRouter();
   const canRead = can("criancas:read");
   const canManage = can("criancas:manage");
   const canReadEdu = can("educacional:read");
   const canWriteEdu = can("educacional:write");
+  const isCoordenador = canManage || canWriteEdu;
+
+  // Deteccao de persona: professor escalado em turma
+  const { turmas: minhasTurmas, isLoading: loadingTurmas } = useProfessorTurmas();
+
+  // Redireciona para a turma unica quando professor tem apenas 1
+  useEffect(() => {
+    if (loadingTurmas) return;
+    if (isCoordenador) return; // coordenador ve view completa
+    if (minhasTurmas.length === 1) {
+      router.replace(`/educacional/turma/${minhasTurmas[0]}`);
+    }
+  }, [loadingTurmas, isCoordenador, minhasTurmas, router]);
 
   // State
   const [turmaFilter, setTurmaFilter] = useState<string>("all");
@@ -177,6 +194,59 @@ export default function EducacionalPage() {
       toast.error(error instanceof Error ? error.message : "Erro");
     }
   };
+
+  // --- Professor com 2+ turmas: seletor ---
+  if (!isCoordenador && !loadingTurmas && minhasTurmas.length > 1) {
+    return (
+      <ModuloGuard modulo="educacional">
+        <div className="max-w-xl mx-auto space-y-6">
+          <div>
+            <h1 className="text-2xl font-medium">Educacional</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Selecione sua turma para marcar presença
+            </p>
+          </div>
+          <div className="space-y-2">
+            {minhasTurmas.map((turma) => {
+              const label = TURMA_OPTIONS.find((t) => t.value === turma)?.label || `Turma ${turma}`;
+              return (
+                <Link
+                  key={turma}
+                  href={`/educacional/turma/${turma}`}
+                  className="flex items-center gap-4 rounded-xl border bg-card p-4 min-h-[64px] hover:bg-muted/50 active:bg-muted transition-colors"
+                >
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
+                    <Users className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-base font-medium">{label}</div>
+                    <div className="text-sm text-muted-foreground">Marcar presença</div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </ModuloGuard>
+    );
+  }
+
+  // --- Sem turma atribuida e sem permissao de coordenador ---
+  if (!isCoordenador && !loadingTurmas && minhasTurmas.length === 0) {
+    return (
+      <ModuloGuard modulo="educacional">
+        <div className="max-w-md mx-auto text-center pt-12">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted mx-auto mb-4">
+            <Baby className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <h1 className="text-xl font-medium">Educacional Infantil</h1>
+          <p className="text-sm text-muted-foreground mt-2">
+            Você não está escalado como professor em nenhuma turma.
+          </p>
+        </div>
+      </ModuloGuard>
+    );
+  }
 
   // --- Detalhe de crianca ---
   if (selectedEntidadeId) {
