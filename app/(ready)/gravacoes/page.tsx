@@ -15,7 +15,6 @@ import {
 } from "@/shared/components/ui/drawer";
 import Link from "next/link";
 import { BibleBookFilter } from "@features/gravacoes/components/BibleBookFilter";
-import { FrasesCarrossel } from "@features/gravacoes/components/FrasesCarrossel";
 import { extractBookName } from "@features/gravacoes/lib/bible";
 import { ModuloGuard } from "@shared/components/auth/ModuloGuard";
 import { cn } from "@shared/lib/utils/cn";
@@ -303,6 +302,39 @@ function GravacoesList({
   );
 }
 
+// --- Ultima gravacao publicada (card de destaque) ---
+
+function UltimaGravacaoCard({ gravacoes }: { gravacoes: any[] | undefined }) {
+  if (!gravacoes) {
+    return (
+      <div className="h-20 rounded-xl border border-border bg-muted/30 animate-pulse" />
+    );
+  }
+  const ultima = gravacoes
+    .filter((g: any) => g.status === "PUBLICADO")
+    .sort((a: any, b: any) => b.data.localeCompare(a.data))[0];
+  if (!ultima) return null;
+  const pregador = ultima.pregadorNome || ultima.pregadorInfo?.nome;
+  const data = parseISO(ultima.data);
+  const dataLabel = format(data, "dd 'de' MMMM", { locale: ptBR });
+  return (
+    <Link
+      href={`/gravacoes/${ultima._id}`}
+      className="block rounded-xl border border-border bg-card hover:bg-muted/40 active:bg-muted transition-colors p-4"
+    >
+      <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+        Última publicada
+      </p>
+      <h2 className="text-lg font-medium leading-snug mt-1">{ultima.titulo}</h2>
+      <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+        {pregador && <span>{pregador}</span>}
+        {pregador && <span>&middot;</span>}
+        <span>{dataLabel}</span>
+      </div>
+    </Link>
+  );
+}
+
 // --- Page ---
 
 const TIPO_OPTIONS = [
@@ -367,8 +399,8 @@ export default function GravacoesPage() {
         {/* Mobile: tela de entrada com drawer */}
         <div className="md:hidden flex flex-col justify-between" style={{ minHeight: "calc(100dvh - 10rem)" }}>
           <div className="space-y-4">
-            <h1 className="text-2xl font-bold">Ouvir</h1>
-            <FrasesCarrossel />
+            <h1 className="text-2xl font-medium">Ouvir</h1>
+            <UltimaGravacaoCard gravacoes={gravacoes} />
           </div>
           <div className="grid grid-cols-2 gap-3 pb-2">
             {TIPO_OPTIONS.map((t) => (
@@ -419,8 +451,8 @@ export default function GravacoesPage() {
 
         {/* Desktop: set filter directly */}
         <div className="hidden md:block space-y-4">
-          <h1 className="text-2xl font-bold">Ouvir</h1>
-          <FrasesCarrossel />
+          <h1 className="text-2xl font-medium">Ouvir</h1>
+          <UltimaGravacaoCard gravacoes={gravacoes} />
           <div className="grid grid-cols-4 gap-3">
             {TIPO_OPTIONS.map((t) => (
               <button
