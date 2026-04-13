@@ -10,51 +10,83 @@ function isRetryableError(error: unknown): boolean {
       msg.includes("429") ||
       msg.includes("Service Unavailable") ||
       msg.includes("overloaded") ||
-      msg.includes("high demand")
+      msg.includes("high demand") ||
+      msg.includes("credit balance") ||
+      msg.includes("rate limit")
     );
   }
   return false;
 }
 
+async function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function withRetry(
+  provider: LlmProvider,
+  params: { prompt: string; maxTokens?: number },
+  maxRetries: number = 2
+): Promise<string> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await provider.complete(params);
+    } catch (error) {
+      lastError = error;
+      if (attempt < maxRetries && isRetryableError(error)) {
+        const delay = 1000 * 2 ** attempt; // 1s, 2s
+        console.warn(
+          `[LLM] Tentativa ${attempt + 1} falhou, retry em ${delay}ms. Erro: ${error}`
+        );
+        await sleep(delay);
+        continue;
+      }
+      break;
+    }
+  }
+  throw lastError;
+}
+
 /**
  * Factory — escolhe o provider baseado nas env vars disponíveis.
- * Prioridade: Gemini (mais barato) > Anthropic.
- * Se ambos estiverem configurados, tenta Gemini com fallback para Anthropic em erros transientes.
+ * Prioridade: Gemini (gratuito) > Groq (gratuito) > Anthropic.
+ * Retry com backoff no primário + fallback em cadeia para erros transientes.
  */
 export function createLlmProvider(): LlmProvider {
-  const hasGemini = !!process.env.GOOGLE_API_KEY;
-  const hasAnthropic = !!process.env.ANTHROPIC_API_KEY;
+  const providers: LlmProvider[] = [];
 
-  if (!hasGemini && !hasAnthropic) {
+  if (process.env.GOOGLE_API_KEY) {
+    providers.push(require("./gemini").createGeminiProvider());
+  }
+  if (process.env.GROQ_API_KEY) {
+    providers.push(require("./groq").createGroqProvider());
+  }
+  if (process.env.ANTHROPIC_API_KEY) {
+    providers.push(require("./anthropic").createAnthropicProvider());
+  }
+
+  if (providers.length === 0) {
     throw new Error(
-      "Nenhum provider LLM configurado. Configure GOOGLE_API_KEY ou ANTHROPIC_API_KEY nas env vars do Convex."
+      "Nenhum provider LLM configurado. Configure GOOGLE_API_KEY, GROQ_API_KEY ou ANTHROPIC_API_KEY nas env vars do Convex."
     );
   }
 
-  const primary = hasGemini
-    ? require("./gemini").createGeminiProvider()
-    : require("./anthropic").createAnthropicProvider();
-
-  const fallback =
-    hasGemini && hasAnthropic
-      ? require("./anthropic").createAnthropicProvider()
-      : null;
-
-  if (!fallback) return primary;
+  if (providers.length === 1) return providers[0];
 
   return {
     async complete(params) {
-      try {
-        return await primary.complete(params);
-      } catch (error) {
-        if (isRetryableError(error)) {
+      for (let i = 0; i < providers.length; i++) {
+        try {
+          return await withRetry(providers[i], params);
+        } catch (error) {
+          const isLast = i === providers.length - 1;
+          if (isLast || !isRetryableError(error)) throw error;
           console.warn(
-            `[LLM] Provider primário falhou com erro transiente, usando fallback. Erro: ${error}`
+            `[LLM] Provider ${i + 1}/${providers.length} falhou, tentando próximo. Erro: ${error}`
           );
-          return fallback.complete(params);
         }
-        throw error;
       }
+      throw new Error("[LLM] Todos os providers falharam");
     },
   };
 }
