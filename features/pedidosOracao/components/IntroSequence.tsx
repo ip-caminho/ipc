@@ -5,59 +5,28 @@ import { AnimatePresence, motion } from "motion/react";
 import { haptic } from "@shared/lib/haptic";
 import { getDailyVerse } from "@shared/lib/daily-verses";
 
-type Phase = "radial" | "verse";
-
-interface Origin {
-  x: number;
-  y: number;
-}
+type Phase = "entry" | "verse";
 
 interface Props {
-  origin: Origin;
   onComplete: () => void;
 }
 
 const IOS_EASE = [0.32, 0.72, 0, 1] as const;
 
-function RadialOpening({
-  origin,
-  onComplete,
-}: {
-  origin: Origin;
-  onComplete: () => void;
-}) {
+function SheetEntry({ onComplete }: { onComplete: () => void }) {
   useEffect(() => {
-    const timer = setTimeout(onComplete, 800);
+    const timer = setTimeout(onComplete, 500);
     return () => clearTimeout(timer);
   }, [onComplete]);
 
   return (
-    <div className="absolute inset-0 overflow-hidden bg-black">
-      <div
-        style={{
-          position: "absolute",
-          left: origin.x,
-          top: origin.y,
-          width: "300vmax",
-          height: "300vmax",
-          transform: "translate(-50%, -50%)",
-          pointerEvents: "none",
-        }}
-      >
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ duration: 0.8, ease: IOS_EASE }}
-          style={{
-            width: "100%",
-            height: "100%",
-            borderRadius: "50%",
-            backgroundColor: "#fafaf5",
-            willChange: "transform",
-          }}
-        />
-      </div>
-    </div>
+    <motion.div
+      initial={{ y: "100%" }}
+      animate={{ y: "0%" }}
+      transition={{ duration: 0.5, ease: IOS_EASE }}
+      className="absolute inset-0"
+      style={{ backgroundColor: "#fafaf5" }}
+    />
   );
 }
 
@@ -99,19 +68,19 @@ function DailyVerseCard({ onComplete }: { onComplete: () => void }) {
   );
 }
 
-export function IntroSequence({ origin, onComplete }: Props) {
-  const [phase, setPhase] = useState<Phase>("radial");
+export function IntroSequence({ onComplete }: Props) {
+  const [phase, setPhase] = useState<Phase>("entry");
 
   return (
     <AnimatePresence mode="wait">
-      {phase === "radial" && (
+      {phase === "entry" && (
         <motion.div
-          key="radial"
+          key="entry"
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
           className="absolute inset-0"
         >
-          <RadialOpening origin={origin} onComplete={() => setPhase("verse")} />
+          <SheetEntry onComplete={() => setPhase("verse")} />
         </motion.div>
       )}
       {phase === "verse" && (
