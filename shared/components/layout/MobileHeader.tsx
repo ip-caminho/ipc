@@ -23,7 +23,7 @@ export function MobileHeader() {
   const isDark = theme === "dark";
 
   return (
-    <header className="md:hidden flex items-center gap-3 border-b bg-background px-4 h-14 pt-safe">
+    <header className="md:hidden sticky top-0 z-40 flex items-center gap-3 border-b bg-background px-4 h-14 pt-safe">
       <Link href="/dashboard" className="flex items-center gap-2 min-h-11">
         <Church className="h-5 w-5" aria-hidden />
         <span className="font-bold text-base">IPC</span>

@@ -147,9 +147,9 @@ export default function GravacaoDetailPage() {
   const hasAudio = gravacao.audioUrl && gravacao.iaStatus === "CONCLUIDO";
 
   return (
-    <div className="flex flex-col -m-4 md:-m-6" style={{ height: "calc(100% + 2rem)", maxHeight: "calc(100% + 2rem)" }}>
-      {/* Scrollable content */}
-      <div className="flex-1 overflow-auto px-4 md:px-6">
+    <div className="-m-4 md:-m-6 flex flex-col">
+      {/* Conteúdo principal — scroll do documento */}
+      <div className="flex-1 px-4 md:px-6">
         <div className="max-w-2xl mx-auto py-4 md:py-6 space-y-5">
 
           {/* 1. Título + metadados */}
@@ -246,11 +246,8 @@ export default function GravacaoDetailPage() {
         </div>
       </div>
 
-      {/* Fixed bottom: comment input */}
-      <div className={cn(
-        "bg-background px-4 pt-3 pb-4 md:px-6 md:pb-6 border-t shrink-0",
-        globalPlayer.isActive && "pb-16 md:pb-6",
-      )}>
+      {/* Input de comentário no final do fluxo */}
+      <div className="bg-background px-4 pt-3 pb-4 md:px-6 md:pb-6 border-t">
         <div className="max-w-2xl mx-auto">
           <ComentarioInput
             gravacaoId={gravacao._id}

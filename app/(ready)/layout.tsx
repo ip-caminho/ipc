@@ -17,16 +17,16 @@ export default function ReadyLayout({
 }) {
   return (
     <AuthGuard>
-      <SidebarProvider className="h-dvh !min-h-0">
+      <SidebarProvider>
         <AudioPlayerProvider>
           <AppSidebar />
-          <SidebarInset className="min-h-0 overflow-hidden">
+          <SidebarInset>
             <MobileHeader />
             <Header />
             <PlayerAwareMain>
               {children}
             </PlayerAwareMain>
-            <div className="hidden md:block">
+            <div className="hidden md:block sticky bottom-0 z-30">
               <GlobalAudioPlayer />
             </div>
           </SidebarInset>
