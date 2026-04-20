@@ -11,6 +11,7 @@
 import type * as _shared_auditHelpers from "../_shared/auditHelpers.js";
 import type * as _shared_llm_anthropic from "../_shared/llm/anthropic.js";
 import type * as _shared_llm_gemini from "../_shared/llm/gemini.js";
+import type * as _shared_llm_groq from "../_shared/llm/groq.js";
 import type * as _shared_llm_index from "../_shared/llm/index.js";
 import type * as _shared_llm_types from "../_shared/llm/types.js";
 import type * as _shared_requirePermission from "../_shared/requirePermission.js";
@@ -24,6 +25,7 @@ import type * as avisos_queries from "../avisos/queries.js";
 import type * as biblioteca_mutations from "../biblioteca/mutations.js";
 import type * as biblioteca_ocrAction from "../biblioteca/ocrAction.js";
 import type * as biblioteca_queries from "../biblioteca/queries.js";
+import type * as boletim_queries from "../boletim/queries.js";
 import type * as calendario_mutations from "../calendario/mutations.js";
 import type * as calendario_queries from "../calendario/queries.js";
 import type * as comentarios_mutations from "../comentarios/mutations.js";
@@ -49,6 +51,7 @@ import type * as files_signing from "../files/signing.js";
 import type * as files_upload from "../files/upload.js";
 import type * as gravacoes_ai from "../gravacoes/ai.js";
 import type * as gravacoes_aiAction from "../gravacoes/aiAction.js";
+import type * as gravacoes_avisosLeituras from "../gravacoes/avisosLeituras.js";
 import type * as gravacoes_comentarios from "../gravacoes/comentarios.js";
 import type * as gravacoes_escutas from "../gravacoes/escutas.js";
 import type * as gravacoes_escutasHelpers from "../gravacoes/escutasHelpers.js";
@@ -112,6 +115,7 @@ declare const fullApi: ApiFromModules<{
   "_shared/auditHelpers": typeof _shared_auditHelpers;
   "_shared/llm/anthropic": typeof _shared_llm_anthropic;
   "_shared/llm/gemini": typeof _shared_llm_gemini;
+  "_shared/llm/groq": typeof _shared_llm_groq;
   "_shared/llm/index": typeof _shared_llm_index;
   "_shared/llm/types": typeof _shared_llm_types;
   "_shared/requirePermission": typeof _shared_requirePermission;
@@ -125,6 +129,7 @@ declare const fullApi: ApiFromModules<{
   "biblioteca/mutations": typeof biblioteca_mutations;
   "biblioteca/ocrAction": typeof biblioteca_ocrAction;
   "biblioteca/queries": typeof biblioteca_queries;
+  "boletim/queries": typeof boletim_queries;
   "calendario/mutations": typeof calendario_mutations;
   "calendario/queries": typeof calendario_queries;
   "comentarios/mutations": typeof comentarios_mutations;
@@ -150,6 +155,7 @@ declare const fullApi: ApiFromModules<{
   "files/upload": typeof files_upload;
   "gravacoes/ai": typeof gravacoes_ai;
   "gravacoes/aiAction": typeof gravacoes_aiAction;
+  "gravacoes/avisosLeituras": typeof gravacoes_avisosLeituras;
   "gravacoes/comentarios": typeof gravacoes_comentarios;
   "gravacoes/escutas": typeof gravacoes_escutas;
   "gravacoes/escutasHelpers": typeof gravacoes_escutasHelpers;

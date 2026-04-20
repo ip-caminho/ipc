@@ -200,6 +200,14 @@ export default defineSchema({
     .index("by_gravacao", ["gravacaoId"])
     .index("by_gravacao_membro", ["gravacaoId", "membroId"]),
 
+  avisosLeituras: defineTable({
+    gravacaoId: v.id("gravacoes"),
+    membroId: v.id("membros"),
+    lidoEm: v.number(),
+  })
+    .index("by_membro", ["membroId"])
+    .index("by_membro_gravacao", ["membroId", "gravacaoId"]),
+
   escutasGravacao: defineTable({
     gravacaoId: v.id("gravacoes"),
     membroId: v.id("membros"),
