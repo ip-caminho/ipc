@@ -369,3 +369,54 @@ export const getBoletim = query({
     };
   },
 });
+
+/** Próxima escala do membro autenticado + contagem de futuras */
+export const minhaProximaEscala = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return { proxima: null, totalFuturas: 0 };
+
+    const membro = await ctx.db
+      .query("membros")
+      .withIndex("by_user_id", (q) => q.eq("userId", userId))
+      .first();
+    if (!membro) return { proxima: null, totalFuturas: 0 };
+
+    const escalas = await ctx.db
+      .query("cultoEscalas")
+      .withIndex("by_membro", (q) => q.eq("membroId", membro._id))
+      .collect();
+
+    const today = new Date().toISOString().split("T")[0];
+
+    const escalasComCulto = await Promise.all(
+      escalas.map(async (e) => {
+        const culto = await ctx.db.get(e.cultoId);
+        if (!culto || culto.data < today) return null;
+        return { escala: e, culto };
+      })
+    );
+
+    const futuras = escalasComCulto
+      .filter((r): r is NonNullable<typeof r> => r !== null)
+      .sort((a, b) => a.culto.data.localeCompare(b.culto.data));
+
+    if (futuras.length === 0) {
+      return { proxima: null, totalFuturas: 0 };
+    }
+
+    const { escala, culto } = futuras[0];
+    return {
+      proxima: {
+        _id: escala._id,
+        funcao: escala.funcao,
+        cultoId: culto._id,
+        data: culto.data,
+        horario: culto.horario ?? null,
+        titulo: culto.titulo ?? null,
+      },
+      totalFuturas: futuras.length,
+    };
+  },
+});
