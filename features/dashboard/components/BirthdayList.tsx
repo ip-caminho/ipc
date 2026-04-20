@@ -37,24 +37,40 @@ function daysUntil(dia: number, mes: number): number {
   return Math.ceil((birthday.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 }
 
-function relativeLabel(p: Person): string {
-  if (p.jaPassou) {
-    return `dia ${String(p.dia).padStart(2, "0")}`;
-  }
-  const days = daysUntil(p.dia, p.mes);
-  if (days === 0) return "hoje";
-  if (days === 1) return "amanhã";
-  return `em ${days} dias`;
+interface RelativeLabel {
+  text: string;
+  isToday: boolean;
 }
 
-function BirthdayAvatar({ p, neutral }: { p: Person; neutral?: boolean }) {
+function relativeLabel(p: Person): RelativeLabel {
+  if (p.jaPassou) {
+    return { text: `dia ${p.dia}`, isToday: false };
+  }
+  const days = daysUntil(p.dia, p.mes);
+  if (days === 0) return { text: "hoje", isToday: true };
+  if (days === 1) return { text: "falta 1 dia", isToday: false };
+  return { text: `faltam ${days} dias`, isToday: false };
+}
+
+function BirthdayAvatar({
+  p,
+  neutral,
+  highlight,
+}: {
+  p: Person;
+  neutral?: boolean;
+  highlight?: boolean;
+}) {
   const initial = p.primeiroNome.charAt(0).toUpperCase() || "?";
+  const ring = highlight
+    ? "ring-2 ring-blue-500 ring-offset-2 ring-offset-background"
+    : "";
   if (p.foto) {
     return (
       <img
         src={p.foto}
         alt={p.nome}
-        className="h-11 w-11 rounded-full object-cover"
+        className={cn("h-11 w-11 rounded-full object-cover", ring)}
       />
     );
   }
@@ -66,6 +82,7 @@ function BirthdayAvatar({ p, neutral }: { p: Person; neutral?: boolean }) {
         neutral
           ? "bg-secondary text-secondary-foreground"
           : "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
+        ring,
       )}
     >
       {initial}
@@ -114,13 +131,12 @@ export function BirthdayList() {
         action={
           <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
             <DrawerTrigger className="text-[11px] font-medium text-blue-600 dark:text-blue-400 hover:underline">
-              Ver <span className="capitalize">{mesAtualLabel}</span> ({total})
+              Ver {mesAtualLabel} ({total})
             </DrawerTrigger>
             <DrawerContent>
               <DrawerHeader>
                 <DrawerTitle className="text-base">
-                  Aniversariantes de{" "}
-                  <span className="capitalize">{mesAtualLabel}</span>
+                  Aniversariantes de {mesAtualLabel}
                 </DrawerTitle>
               </DrawerHeader>
               <div className="px-4 pb-6 max-h-[70vh] overflow-y-auto">
@@ -133,21 +149,35 @@ export function BirthdayList() {
         Aniversariantes
       </SectionLabel>
 
-      <ul className="flex gap-2.5 overflow-x-auto scrollbar-none -mx-4 px-4 pb-1">
-        {aniversariantes.map((p) => (
-          <li
-            key={p.id}
-            className="flex flex-col items-center gap-1 shrink-0 w-[58px]"
-          >
-            <BirthdayAvatar p={p} neutral={p.jaPassou} />
-            <span className="text-[10px] font-medium leading-tight text-center line-clamp-1 max-w-full">
-              {p.primeiroNome}
-            </span>
-            <span className="text-[10px] text-muted-foreground leading-none">
-              {relativeLabel(p)}
-            </span>
-          </li>
-        ))}
+      <ul className="flex gap-2.5 overflow-x-auto scrollbar-none mask-fade-right -mx-4 pl-4 pr-8 pb-1 pt-1">
+        {aniversariantes.map((p) => {
+          const { text, isToday } = relativeLabel(p);
+          return (
+            <li
+              key={p.id}
+              className="flex flex-col items-center gap-1 shrink-0 w-[58px]"
+            >
+              <BirthdayAvatar
+                p={p}
+                neutral={p.jaPassou}
+                highlight={isToday}
+              />
+              <span className="text-[10px] font-medium leading-tight text-center line-clamp-1 max-w-full">
+                {p.primeiroNome}
+              </span>
+              <span
+                className={cn(
+                  "text-[10px] leading-none",
+                  isToday
+                    ? "text-blue-600 dark:text-blue-400 font-semibold"
+                    : "text-muted-foreground",
+                )}
+              >
+                {text}
+              </span>
+            </li>
+          );
+        })}
         <li className="flex flex-col items-center gap-1 shrink-0 w-[58px]">
           <button
             type="button"
