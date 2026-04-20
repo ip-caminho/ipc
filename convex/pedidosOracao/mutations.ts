@@ -307,6 +307,10 @@ export const addUpdate = mutation({
     };
     if (tipo === "TESTEMUNHO") {
       patch.status = "RESPONDIDO";
+    } else if (tipo === "ATUALIZACAO" || tipo === "REFORCO") {
+      // Se o pedido estava respondido mas continua precisando de oracao,
+      // volta para ativo
+      patch.status = "ATIVO";
     }
     await ctx.db.patch(pedidoId, patch);
 
