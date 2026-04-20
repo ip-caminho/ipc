@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "convex/react";
@@ -18,13 +18,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
+import { ResponsiveSelect } from "@/shared/components/ui/responsive-select";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/shared/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogBody,
+  ResponsiveDialogFooter,
+} from "@/shared/components/ui/responsive-dialog";
 
 interface PGFormProps {
   open: boolean;
@@ -58,6 +60,20 @@ export function PGForm({
     },
   });
 
+  const liderOptions = useMemo(
+    () =>
+      (membros ?? []).map((m: any) => ({
+        value: m._id as string,
+        label: (m.entidade?.nomeCompleto as string) || "—",
+      })),
+    [membros],
+  );
+
+  const coliderOptions = useMemo(
+    () => [{ value: "", label: "Nenhum" }, ...liderOptions],
+    [liderOptions],
+  );
+
   const handleSubmit = async (data: PGFormValues) => {
     setLoading(true);
     try {
@@ -70,114 +86,100 @@ export function PGForm({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
+      <ResponsiveDialogContent>
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle>
             {isEditing ? "Editar" : "Novo"} Pequeno Grupo
-          </DialogTitle>
-        </DialogHeader>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-          <div className="space-y-1">
-            <Label htmlFor="nome">Nome *</Label>
-            <Input id="nome" {...form.register("nome")} />
-            {form.formState.errors.nome && (
-              <p className="text-xs text-destructive">
-                {form.formState.errors.nome.message}
-              </p>
-            )}
-          </div>
-
-          <div className="space-y-1">
-            <Label htmlFor="descricao">Descricao</Label>
-            <Textarea id="descricao" {...form.register("descricao")} />
-          </div>
-
-          <div className="space-y-1">
-            <Label>Lider *</Label>
-            <Select
-              value={form.watch("liderId")}
-              onValueChange={(val) => form.setValue("liderId", val)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione o lider" />
-              </SelectTrigger>
-              <SelectContent>
-                {membros?.map((m: any) => (
-                  <SelectItem key={m._id} value={m._id}>
-                    {m.entidade?.nomeCompleto || "—"}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {form.formState.errors.liderId && (
-              <p className="text-xs text-destructive">
-                {form.formState.errors.liderId.message}
-              </p>
-            )}
-          </div>
-
-          <div className="space-y-1">
-            <Label>Co-lider</Label>
-            <Select
-              value={form.watch("coliderId") || ""}
-              onValueChange={(val) =>
-                form.setValue("coliderId", val === "__none__" ? "" : val)
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione (opcional)" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__none__">Nenhum</SelectItem>
-                {membros?.map((m: any) => (
-                  <SelectItem key={m._id} value={m._id}>
-                    {m.entidade?.nomeCompleto || "—"}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
+          </ResponsiveDialogTitle>
+        </ResponsiveDialogHeader>
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="contents">
+          <ResponsiveDialogBody className="space-y-4">
             <div className="space-y-1">
-              <Label>Dia da semana</Label>
-              <Select
-                value={form.watch("diaSemana") || ""}
-                onValueChange={(val) =>
-                  form.setValue("diaSemana", val === "__none__" ? "" : val)
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__none__">—</SelectItem>
-                  {DIA_SEMANA_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="nome">Nome *</Label>
+              <Input id="nome" {...form.register("nome")} />
+              {form.formState.errors.nome && (
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.nome.message}
+                </p>
+              )}
             </div>
 
             <div className="space-y-1">
-              <Label htmlFor="horario">Horario</Label>
-              <Input
-                id="horario"
-                placeholder="19:30"
-                {...form.register("horario")}
+              <Label htmlFor="descricao">Descricao</Label>
+              <Textarea id="descricao" {...form.register("descricao")} />
+            </div>
+
+            <div className="space-y-1">
+              <Label>Lider *</Label>
+              <ResponsiveSelect
+                options={liderOptions}
+                value={form.watch("liderId")}
+                onValueChange={(v) => form.setValue("liderId", v)}
+                placeholder="Selecione o lider"
+                searchPlaceholder="Buscar membro..."
+                emptyMessage="Nenhum membro encontrado"
+                title="Selecionar líder"
+              />
+              {form.formState.errors.liderId && (
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.liderId.message}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-1">
+              <Label>Co-lider</Label>
+              <ResponsiveSelect
+                options={coliderOptions}
+                value={form.watch("coliderId") || ""}
+                onValueChange={(v) => form.setValue("coliderId", v)}
+                placeholder="Selecione (opcional)"
+                searchPlaceholder="Buscar membro..."
+                emptyMessage="Nenhum membro encontrado"
+                title="Selecionar co-líder"
               />
             </div>
-          </div>
 
-          <div className="space-y-1">
-            <Label htmlFor="local">Local</Label>
-            <Input id="local" {...form.register("local")} />
-          </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label>Dia da semana</Label>
+                <Select
+                  value={form.watch("diaSemana") || ""}
+                  onValueChange={(val) =>
+                    form.setValue("diaSemana", val === "__none__" ? "" : val)
+                  }
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">—</SelectItem>
+                    {DIA_SEMANA_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-          <DialogFooter>
+              <div className="space-y-1">
+                <Label htmlFor="horario">Horario</Label>
+                <Input
+                  id="horario"
+                  placeholder="19:30"
+                  {...form.register("horario")}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <Label htmlFor="local">Local</Label>
+              <Input id="local" {...form.register("local")} />
+            </div>
+          </ResponsiveDialogBody>
+          <ResponsiveDialogFooter>
             <Button
               type="button"
               variant="outline"
@@ -188,9 +190,9 @@ export function PGForm({
             <Button type="submit" disabled={loading}>
               {loading ? "Salvando..." : isEditing ? "Salvar" : "Criar"}
             </Button>
-          </DialogFooter>
+          </ResponsiveDialogFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }

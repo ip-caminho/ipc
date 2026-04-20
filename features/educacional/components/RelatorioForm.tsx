@@ -5,12 +5,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/shared/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogBody,
+  ResponsiveDialogFooter,
+} from "@/shared/components/ui/responsive-dialog";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
@@ -76,12 +77,13 @@ export function RelatorioForm({ open, onOpenChange, onSubmit }: RelatorioFormPro
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Novo Relatorio</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
+      <ResponsiveDialogContent>
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle>Novo Relatorio</ResponsiveDialogTitle>
+        </ResponsiveDialogHeader>
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="contents">
+        <ResponsiveDialogBody className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label>Turma *</Label>
@@ -156,16 +158,17 @@ export function RelatorioForm({ open, onOpenChange, onSubmit }: RelatorioFormPro
             </div>
           )}
 
-          <DialogFooter>
-            <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? "Salvando..." : "Criar"}
-            </Button>
-          </DialogFooter>
+        </ResponsiveDialogBody>
+        <ResponsiveDialogFooter>
+          <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>
+            Cancelar
+          </Button>
+          <Button type="submit" disabled={loading}>
+            {loading ? "Salvando..." : "Criar"}
+          </Button>
+        </ResponsiveDialogFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }
