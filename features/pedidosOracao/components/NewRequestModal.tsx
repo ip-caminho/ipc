@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -272,6 +272,8 @@ function MobileFlow({ open, onOpenChange, onCreated }: Props) {
     membroId ? { membroId: membroId as Id<"membros"> } : "skip",
   );
 
+  const textoRef = useRef<HTMLTextAreaElement>(null);
+
   useEffect(() => {
     if (!open) {
       setStep("texto");
@@ -282,6 +284,14 @@ function MobileFlow({ open, onOpenChange, onCreated }: Props) {
       setSubmitting(false);
     }
   }, [open]);
+
+  useEffect(() => {
+    if (step !== "texto") return;
+    const el = textoRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [texto, step]);
 
   const steps: Step[] = (() => {
     const list: Step[] = ["texto", "scope"];
@@ -384,24 +394,26 @@ function MobileFlow({ open, onOpenChange, onCreated }: Props) {
 
       <div className="flex-1 overflow-y-auto px-6 pt-2 pb-4">
         {step === "texto" && (
-          <div className="flex flex-col gap-3">
-            <h2 className="text-[22px] font-medium leading-tight">
+          <div className="flex flex-col gap-6 pt-2">
+            <h2 className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
               O que pesa no seu coração?
             </h2>
-            <p className="text-sm text-muted-foreground">
-              Escreva o pedido — a comunidade estará com você.
-            </p>
             <textarea
+              ref={textoRef}
               value={texto}
-              onChange={(e) => setTexto(e.target.value.slice(0, MAX_CHARS))}
-              placeholder="Ex: Peço oração pela saúde da minha mãe..."
-              className="mt-2 w-full text-base rounded-lg border bg-background px-3.5 py-3 placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none min-h-[180px]"
-              rows={8}
+              onChange={(e) =>
+                setTexto(e.target.value.slice(0, MAX_CHARS))
+              }
+              placeholder="Escreva aqui…"
+              rows={1}
+              className="w-full bg-transparent border-0 outline-none resize-none p-0 font-serif italic text-[20px] leading-[1.6] text-foreground placeholder:text-muted-foreground/50 placeholder:italic"
             />
-            <div className="flex justify-between text-[11px] text-muted-foreground">
+            <div className="flex justify-between text-[10px] text-muted-foreground/60 tabular-nums">
               <span>
-                {trimmedLen < MIN_CHARS
-                  ? `Mínimo ${MIN_CHARS} caracteres`
+                {trimmedLen < MIN_CHARS && trimmedLen > 0
+                  ? `mais ${MIN_CHARS - trimmedLen} ${
+                      MIN_CHARS - trimmedLen === 1 ? "caractere" : "caracteres"
+                    }`
                   : " "}
               </span>
               {trimmedLen > WARN_CHARS && (
