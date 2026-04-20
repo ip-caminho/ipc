@@ -314,6 +314,38 @@ export const listMuralRequests = query({
           ? null
           : await resolveMembroResumo(ctx, pedido.membroId);
 
+        const atualNovas = await ctx.db
+          .query("pedidoOracaoAtualizacoes")
+          .withIndex("by_pedido", (q) => q.eq("pedidoId", pedido._id))
+          .collect();
+
+        const comentariosLegado = await ctx.db
+          .query("comentarios")
+          .withIndex("by_entidade", (q) =>
+            q
+              .eq("entidadeTipo", "pedidos-oracao")
+              .eq("entidadeId", pedido._id),
+          )
+          .collect();
+        const atualLegado = comentariosLegado.filter(
+          (c) => c.tipo === "ATUALIZACAO",
+        );
+
+        const atualizacoes = [
+          ...atualNovas.map((a) => ({
+            _id: a._id as string,
+            texto: a.texto,
+            tipo: a.tipo as "ATUALIZACAO" | "REFORCO" | "TESTEMUNHO",
+            criadoEm: a.criadoEm,
+          })),
+          ...atualLegado.map((c) => ({
+            _id: c._id as string,
+            texto: c.texto,
+            tipo: "ATUALIZACAO" as const,
+            criadoEm: c.criadoEm,
+          })),
+        ].sort((a, b) => a.criadoEm - b.criadoEm);
+
         return {
           _id: pedido._id,
           descricao: pedido.descricao,
@@ -328,6 +360,7 @@ export const listMuralRequests = query({
           qtdOrando: intercessores.length,
           euOrando,
           primeirosOrantes: primeiros,
+          atualizacoes,
         };
       }),
     );

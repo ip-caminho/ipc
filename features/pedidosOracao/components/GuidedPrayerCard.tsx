@@ -18,7 +18,25 @@ export interface GuidedCardData {
   qtdOrando: number;
   euOrando: boolean;
   primeirosOrantes: { nome: string; foto: string | null }[];
+  atualizacoes: {
+    _id: string;
+    texto: string;
+    tipo: "ATUALIZACAO" | "REFORCO" | "TESTEMUNHO";
+    criadoEm: number;
+  }[];
 }
+
+const TIPO_DOT: Record<GuidedCardData["atualizacoes"][number]["tipo"], string> = {
+  ATUALIZACAO: "bg-blue-500",
+  REFORCO: "bg-amber-500",
+  TESTEMUNHO: "bg-emerald-500",
+};
+
+const TIPO_LABEL: Record<GuidedCardData["atualizacoes"][number]["tipo"], string> = {
+  ATUALIZACAO: "Atualização",
+  REFORCO: "Pedido continua",
+  TESTEMUNHO: "Testemunho",
+};
 
 interface Props {
   pedido: GuidedCardData;
@@ -112,10 +130,35 @@ export function GuidedPrayerCard({
         </p>
       </div>
 
-      <div className="flex-1 flex items-center justify-center my-5 overflow-y-auto">
-        <p className="text-[16px] leading-[1.55] text-center whitespace-pre-wrap text-foreground">
-          {pedido.descricao}
-        </p>
+      <div className="flex-1 my-5 overflow-y-auto">
+        <div className="min-h-full flex flex-col justify-center gap-4">
+          <p className="text-[16px] leading-[1.55] text-center whitespace-pre-wrap text-foreground">
+            {pedido.descricao}
+          </p>
+          {pedido.atualizacoes.length > 0 && (
+            <div className="border-t pt-4 flex flex-col gap-3">
+              {pedido.atualizacoes.map((a) => (
+                <div key={a._id} className="flex gap-2.5">
+                  <span
+                    className={cn(
+                      "h-2 w-2 rounded-full mt-1.5 shrink-0",
+                      TIPO_DOT[a.tipo],
+                    )}
+                    aria-hidden
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                      {TIPO_LABEL[a.tipo]}
+                    </p>
+                    <p className="text-[13px] leading-relaxed text-foreground/85 whitespace-pre-wrap mt-0.5">
+                      {a.texto}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="flex flex-col gap-3">
