@@ -80,10 +80,14 @@ export function GuidedPrayerCard({
       dragConstraints={{ left: 0, right: 0 }}
       dragElastic={0.9}
       onDragEnd={handleDragEnd}
-      initial={{ x: `${direction * 100}%`, opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
+      initial={
+        direction === 1
+          ? { x: 0, opacity: 1, scale: 0.96 }
+          : { x: "-100%", opacity: 0, scale: 1 }
+      }
+      animate={{ x: 0, opacity: 1, scale: 1 }}
       exit={{ x: `${-exitDir * 100}%`, opacity: 0 }}
-      transition={{ duration: 0.4, ease: IOS_EASE }}
+      transition={{ duration: 0.35, ease: IOS_EASE }}
       style={{ touchAction: "pan-x", willChange: "transform" }}
       className="guided-prayer-card absolute inset-0 flex flex-col bg-background rounded-2xl border shadow-sm p-6"
     >
