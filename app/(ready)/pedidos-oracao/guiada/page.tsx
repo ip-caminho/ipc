@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { ModuloGuard } from "@shared/components/auth/ModuloGuard";
@@ -9,6 +10,17 @@ import type { GuidedCardData } from "@features/pedidosOracao/components/GuidedPr
 export default function GuidedPrayerPage() {
   // @ts-ignore Convex TS2589
   const mural = useQuery(api.pedidosOracao.queries.listMuralRequests, {});
+
+  useEffect(() => {
+    const prevOverflow = document.body.style.overflow;
+    const prevOverscroll = document.body.style.overscrollBehavior;
+    document.body.style.overflow = "hidden";
+    document.body.style.overscrollBehavior = "none";
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      document.body.style.overscrollBehavior = prevOverscroll;
+    };
+  }, []);
 
   const pedidos: GuidedCardData[] = (mural ?? [])
     .filter((p: any) => p.status === "ATIVO")
@@ -24,7 +36,15 @@ export default function GuidedPrayerPage() {
 
   return (
     <ModuloGuard modulo="pedidos-oracao">
-      <GuidedPrayerDeck pedidos={pedidos} />
+      <div
+        className="h-dvh flex flex-col"
+        style={{
+          paddingTop: "env(safe-area-inset-top)",
+          paddingBottom: "env(safe-area-inset-bottom)",
+        }}
+      >
+        <GuidedPrayerDeck pedidos={pedidos} />
+      </div>
     </ModuloGuard>
   );
 }
