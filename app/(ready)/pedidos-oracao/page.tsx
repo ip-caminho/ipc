@@ -6,7 +6,6 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Plus, Play } from "lucide-react";
 import { ModuloGuard } from "@shared/components/auth/ModuloGuard";
-import { OrarExperiencia } from "@features/pedidosOracao/components/OrarExperiencia";
 import { MuralView } from "@features/pedidosOracao/components/MuralView";
 import { MyRequestsView } from "@features/pedidosOracao/components/MyRequestsView";
 import { NewRequestModal } from "@features/pedidosOracao/components/NewRequestModal";
@@ -17,31 +16,11 @@ type Tab = "mural" | "meus";
 export default function PedidosOracaoPage() {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("mural");
-  const [orarMode, setOrarMode] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
 
   // @ts-ignore Convex TS2589
   const mural = useQuery(api.pedidosOracao.queries.listMuralRequests, {});
   const qtdAtivos = (mural ?? []).filter((p: any) => p.status === "ATIVO").length;
-
-  // Oracao guiada — full screen (Fase 5 vira rota dedicada com Motion)
-  if (orarMode) {
-    const pedidosGuiada = (mural ?? []).filter((p: any) => p.status === "ATIVO");
-    return (
-      <OrarExperiencia
-        pedidos={pedidosGuiada.map((p: any) => ({
-          _id: p._id,
-          membroNome: p.autor?.nome || (p.anonimo ? "Pedido anônimo" : ""),
-          membroFoto: p.autor?.foto ?? null,
-          descricao: p.descricao,
-          qtdIntercessores: p.qtdOrando,
-          euOrando: p.euOrando,
-          intercessoresResumo: p.primeirosOrantes,
-        }))}
-        onClose={() => setOrarMode(false)}
-      />
-    );
-  }
 
   const goToPedido = (id: string) => router.push(`/pedidos-oracao/${id}`);
 
@@ -86,7 +65,7 @@ export default function PedidosOracaoPage() {
               {/* Card: iniciar oracao guiada */}
               <button
                 type="button"
-                onClick={() => setOrarMode(true)}
+                onClick={() => router.push("/pedidos-oracao/guiada")}
                 disabled={qtdAtivos === 0}
                 className="flex items-center gap-3 rounded-xl p-3.5 text-left disabled:opacity-50 disabled:cursor-not-allowed active:opacity-90 transition-opacity"
                 style={{ backgroundColor: "#1a1a1a" }}
