@@ -157,7 +157,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "Busca com debounce 300ms, filtra titulo/pregador/textoBase/tags no servidor",
       "Filtro livro biblico e client-side (parseia textoBase via extractBookName)",
       "Pagina de 20 itens com botao 'Carregar mais'",
-      "Duracao derivada de fimSermao-inicioSermao quando disponivel (sermoes processados pela IA). Campo duracaoSegundos para outros tipos fica como divida tecnica",
+      "Duracao derivada de fim-inicioConteudo (generico para todos os tipos), com fallback em fim-inicioSermao para registros legacy",
     ],
   },
   "/gravacoes/nova": {

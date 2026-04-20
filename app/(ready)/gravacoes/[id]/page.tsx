@@ -70,9 +70,14 @@ export default function GravacaoDetailPage() {
     return <p className="text-muted-foreground text-center py-16">Gravação não encontrada</p>;
   }
 
+  // Boundaries do conteudo: preferir inicio/fimConteudo (universal),
+  // cair para inicio/fimSermao em registros legacy (SERMAO pre-migracao).
+  const segInicio = gravacao.inicioConteudo ?? gravacao.inicioSermao ?? null;
+  const segFim = gravacao.fimConteudo ?? gravacao.fimSermao ?? null;
+
   const isThisTrack = globalPlayer.track?.gravacaoId === gravacao._id
-    && globalPlayer.track?.inicioSermao === gravacao.inicioSermao
-    && globalPlayer.track?.fimSermao === gravacao.fimSermao;
+    && globalPlayer.track?.inicioSermao === segInicio
+    && globalPlayer.track?.fimSermao === segFim;
   const isThisPlaying = isThisTrack && globalPlayer.isPlaying;
 
   const handlePlay = () => {
@@ -86,8 +91,8 @@ export default function GravacaoDetailPage() {
         title: gravacao.titulo,
         artist: gravacao.pregadorNome || gravacao.pregadorInfo?.nome || undefined,
         gravacaoId: gravacao._id,
-        inicioSermao: gravacao.inicioSermao,
-        fimSermao: gravacao.fimSermao,
+        inicioSermao: segInicio,
+        fimSermao: segFim,
         resumeFrom: ultimoSegundo,
       });
     }

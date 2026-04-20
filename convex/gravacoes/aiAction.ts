@@ -6,7 +6,7 @@ import { DeepgramClient } from "@deepgram/sdk";
 import { createLlmProvider } from "../_shared/llm";
 import { toCdnUrl } from "../files/helpers";
 
-const GENERIC_ANALYSIS_PROMPT = `Você é um analista de conteúdo cristão reformado/presbiteriano. Analise a transcrição abaixo e retorne um JSON estruturado com os seguintes campos:
+const GENERIC_ANALYSIS_PROMPT = `Você é um analista de conteúdo cristão reformado/presbiteriano. Analise a transcrição abaixo (de um estudo bíblico, palestra ou conteúdo similar — NÃO é culto completo) e retorne um JSON estruturado com os seguintes campos:
 
 1. **tituloSugerido**: string com um título conciso e descritivo (máximo 80 caracteres). Deve funcionar como título de um podcast.
 2. **pregadorIdentificado**: string com o nome do ministrante/professor, se for possível identificá-lo. Retorne null se não for possível.
@@ -19,11 +19,14 @@ const GENERIC_ANALYSIS_PROMPT = `Você é um analista de conteúdo cristão refo
 9. **frasesRedesSociais**: array com exatamente 14 frases marcantes para posts em redes sociais. Cada frase entre 100-280 caracteres, sem emojis.
 10. **descricoesInstagram**: array com exatamente 14 descrições para posts do Instagram. Cada descrição com 2-4 linhas, 3-5 hashtags e um call-to-action. Sem emojis.
 11. **tags**: array com 3-8 tags relevantes (ex: "graça", "estudo", "oração"). Palavras simples, sem hashtag.
+12. **inicioConteudo**: número em segundos indicando onde o conteúdo efetivo COMEÇA. Inclua saudação, apresentação do tema e leitura bíblica como parte do conteúdo — eles fazem parte do estudo/palestra. Pule apenas silêncio, verificação de microfone, conversas paralelas antes de começar, ou qualquer fala que não pertença ao estudo/palestra. Se começa logo no início, retorne 0. Use os timestamps [MM:SS (Xs)] no início de cada parágrafo — use o valor em segundos entre parênteses.
+13. **fimConteudo**: número em segundos indicando onde o conteúdo efetivo TERMINA. Inclua conclusões, oração final dentro do conteúdo e agradecimentos relacionados. Exclua apenas silêncio final, despedidas triviais, conversas paralelas depois do encerramento. Se o conteúdo vai até o final da gravação, retorne null.
 
 IMPORTANTE:
 - Retorne APENAS o JSON, sem markdown, sem code blocks
-- NÃO inclua campos inicioSermao, fimSermao, inicioAvisos, fimAvisos ou avisos — este conteúdo NÃO é uma gravação de culto completo
+- NÃO inclua campos inicioSermao, fimSermao, inicioAvisos, fimAvisos ou avisos — este conteúdo NÃO é culto completo, NÃO há avisos da igreja
 - NÃO use emojis
+- Para inicioConteudo/fimConteudo: use o valor em segundos entre parênteses no timestamp [MM:SS (Xs)]. Exemplo: se o estudo começa no parágrafo com [01:12 (72s)], então inicioConteudo = 72.
 
 TRANSCRIÇÃO:
 `;
@@ -284,9 +287,12 @@ export const processSermon = internalAction({
       if (isSermon) {
         if (typeof iaResultado.inicioSermao === "number") {
           autoFill.inicioSermao = iaResultado.inicioSermao;
+          // Para SERMAO, o "conteudo" do player e' o proprio trecho do sermao
+          autoFill.inicioConteudo = iaResultado.inicioSermao;
         }
         if (typeof iaResultado.fimSermao === "number") {
           autoFill.fimSermao = iaResultado.fimSermao;
+          autoFill.fimConteudo = iaResultado.fimSermao;
         }
         if (typeof iaResultado.inicioAvisos === "number") {
           autoFill.inicioAvisos = iaResultado.inicioAvisos;
@@ -310,6 +316,14 @@ export const processSermon = internalAction({
             }
             return aviso;
           });
+        }
+      } else {
+        // Estudo/palestra/outro — so boundaries de conteudo
+        if (typeof iaResultado.inicioConteudo === "number") {
+          autoFill.inicioConteudo = iaResultado.inicioConteudo;
+        }
+        if (typeof iaResultado.fimConteudo === "number") {
+          autoFill.fimConteudo = iaResultado.fimConteudo;
         }
       }
 
