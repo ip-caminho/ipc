@@ -117,7 +117,7 @@ export function GuidedPrayerDeck({ pedidos }: Props) {
                 className="h-full bg-foreground"
                 initial={false}
                 animate={{
-                  width: i < index ? "100%" : i === index ? "60%" : "0%",
+                  width: i < index ? "100%" : "0%",
                 }}
                 transition={{ duration: 0.2, ease: "easeOut" }}
               />
