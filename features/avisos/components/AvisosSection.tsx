@@ -173,21 +173,23 @@ function AvisoCard({
         {canEdit && (
           <Button
             variant="ghost"
-            size="icon"
-            className="h-7 w-7 text-muted-foreground hover:text-foreground"
+            size="icon-tap"
+            className="text-muted-foreground hover:text-foreground"
             onClick={() => setEditing(true)}
+            aria-label="Editar aviso"
           >
-            <Pencil className="h-3.5 w-3.5" />
+            <Pencil className="h-4 w-4" />
           </Button>
         )}
         {canDelete && (
           <Button
             variant="ghost"
-            size="icon"
-            className="h-7 w-7 text-muted-foreground hover:text-destructive"
+            size="icon-tap"
+            className="text-muted-foreground hover:text-destructive"
             onClick={handleRemove}
+            aria-label="Excluir aviso"
           >
-            <Trash2 className="h-3.5 w-3.5" />
+            <Trash2 className="h-4 w-4" />
           </Button>
         )}
       </div>

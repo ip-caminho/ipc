@@ -225,8 +225,9 @@ export function PedidoOracaoDetalhe({
                       </span>
                       {a.isOwner && (
                         <button
-                          className="text-xs text-muted-foreground hover:text-destructive ml-auto"
+                          className="text-xs text-muted-foreground hover:text-destructive ml-auto inline-flex items-center justify-center min-h-11 min-w-11 md:min-h-0 md:min-w-0 -m-2 md:m-0"
                           onClick={() => handleRemoveComentario(a._id)}
+                          aria-label="Excluir atualização"
                         >
                           <Trash2 className="h-3 w-3" />
                         </button>

@@ -298,11 +298,12 @@ export function LouvorOrdemSection({ cultoId, louvores, temCeia, canEdit, dataLa
                       {canEdit && (
                         <Button
                           variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
+                          size="icon-tap"
+                          className="shrink-0 text-muted-foreground hover:text-destructive"
                           onClick={() => handleRemove(musica.flatIndex)}
+                          aria-label="Remover música"
                         >
-                          <Trash2 className="h-3.5 w-3.5" />
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       )}
                     </div>

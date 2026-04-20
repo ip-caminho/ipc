@@ -37,11 +37,12 @@ export function AnotacaoCard({
           {canDelete && onDelete && (
             <Button
               variant="ghost"
-              size="icon"
-              className="h-7 w-7 text-destructive"
+              size="icon-tap"
+              className="text-destructive"
               onClick={onDelete}
+              aria-label="Excluir anotação"
             >
-              <Trash2 className="h-3.5 w-3.5" />
+              <Trash2 className="h-4 w-4" />
             </Button>
           )}
         </div>
