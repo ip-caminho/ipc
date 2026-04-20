@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { X } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { cn } from "@shared/lib/utils/cn";
 import { GuidedPrayerCard, type GuidedCardData } from "./GuidedPrayerCard";
 import { GuidedPrayerComplete } from "./GuidedPrayerComplete";
@@ -12,10 +13,45 @@ interface Props {
   pedidos: GuidedCardData[];
 }
 
+/** Card do proximo pedido, renderizado atras do atual. Visivel durante o drag. */
+function NextCardPreview({ pedido }: { pedido: GuidedCardData }) {
+  const nome = pedido.anonimo ? "Pedido anônimo" : pedido.autor?.nome || "Usuário";
+  const foto = pedido.anonimo ? null : pedido.autor?.foto ?? null;
+
+  return (
+    <motion.div
+      aria-hidden
+      initial={false}
+      animate={{ y: 0, scale: 0.96, opacity: 1 }}
+      transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
+      className="absolute inset-0 flex flex-col bg-background rounded-2xl border shadow-sm p-6 overflow-hidden"
+      style={{ zIndex: -1, pointerEvents: "none" }}
+    >
+      <div className="flex flex-col items-center gap-2">
+        <Avatar className="h-[54px] w-[54px]">
+          {foto && <AvatarImage src={foto} alt={nome} />}
+          <AvatarFallback className={cn("text-lg", pedido.anonimo && "bg-secondary")}>
+            {pedido.anonimo ? "🙏" : nome.charAt(0).toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
+        <p className={cn("text-sm font-medium", pedido.anonimo && "italic text-muted-foreground")}>
+          {nome}
+        </p>
+      </div>
+      <div className="flex-1 flex items-center justify-center my-5 overflow-hidden">
+        <p className="text-[16px] leading-[1.55] text-center whitespace-pre-wrap text-foreground line-clamp-6">
+          {pedido.descricao}
+        </p>
+      </div>
+    </motion.div>
+  );
+}
+
+/** Card "vazio" mais atras ainda, so para dar profundidade visual. */
 function StackLayer({ depth }: { depth: number }) {
-  const translateY = depth * 8;
-  const scale = 1 - depth * 0.06;
-  const opacity = depth === 1 ? 0.5 : 0.2;
+  const translateY = depth * 6;
+  const scale = 1 - depth * 0.04;
+  const opacity = 0.3;
   return (
     <motion.div
       aria-hidden
@@ -144,9 +180,15 @@ export function GuidedPrayerDeck({ pedidos }: Props) {
             </div>
           ) : (
             <div className="relative w-full max-w-md h-full mx-auto">
-              {pedidos.slice(index + 1, index + 3).map((p, i) => (
-                <StackLayer key={`${p._id}-${i}`} depth={i + 1} />
-              ))}
+              {pedidos[index + 2] && (
+                <StackLayer key={`stack-${pedidos[index + 2]._id}`} depth={2} />
+              )}
+              {pedidos[index + 1] && (
+                <NextCardPreview
+                  key={`preview-${pedidos[index + 1]._id}`}
+                  pedido={pedidos[index + 1]}
+                />
+              )}
 
               <AnimatePresence initial={false} mode="popLayout" custom={direction}>
                 <GuidedPrayerCard
