@@ -94,11 +94,11 @@ export default function PedidosOracaoPage() {
                 </div>
               </button>
 
-              {/* Botao: compartilhar um pedido */}
+              {/* Botao: compartilhar um pedido (desktop inline; mobile usa FAB) */}
               <button
                 type="button"
                 onClick={() => setCreateOpen(true)}
-                className="flex items-center gap-2 bg-secondary rounded-md px-3 h-11 text-sm text-muted-foreground active:opacity-80 transition-opacity border"
+                className="hidden md:flex items-center gap-2 bg-secondary rounded-md px-3 h-11 text-sm text-muted-foreground active:opacity-80 transition-opacity border"
               >
                 <Plus className="h-4 w-4" aria-hidden />
                 <span>Compartilhar um pedido</span>
@@ -115,6 +115,20 @@ export default function PedidosOracaoPage() {
           )}
         </div>
       </div>
+
+      {/* FAB mobile: compartilhar pedido */}
+      <button
+        type="button"
+        onClick={() => {
+          haptic(20);
+          setCreateOpen(true);
+        }}
+        aria-label="Compartilhar um pedido"
+        className="md:hidden fixed right-4 z-[55] h-14 w-14 rounded-full bg-foreground text-background flex items-center justify-center shadow-lg active:opacity-90"
+        style={{ bottom: "calc(env(safe-area-inset-bottom) + 5rem)" }}
+      >
+        <Plus className="h-6 w-6" aria-hidden />
+      </button>
 
       <NewRequestModal
         open={createOpen}
