@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { Megaphone } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { Badge } from "@/shared/components/ui/badge";
 import { cn } from "@shared/lib/utils/cn";
@@ -7,6 +9,7 @@ import { formatDistanceToNow, fromUnixTime } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { PrayerAvatarStack } from "./PrayerAvatarStack";
 import { PrayerActionButton } from "./PrayerActionButton";
+import { AddUpdateModal } from "./AddUpdateModal";
 import type { Id } from "@/convex/_generated/dataModel";
 
 export interface PrayerRequestCardData {
@@ -17,6 +20,7 @@ export interface PrayerRequestCardData {
   anonimo: boolean;
   ultimaAtividadeEm: number;
   autor: { _id: string; nome: string; foto: string | null } | null;
+  isOwner: boolean;
   qtdOrando: number;
   euOrando: boolean;
   primeirosOrantes: { nome: string; foto: string | null }[];
@@ -49,6 +53,13 @@ export function PrayerRequestCard({ pedido, onClick }: Props) {
   const respondido = pedido.status === "RESPONDIDO";
   const nome = pedido.anonimo ? "Pedido anônimo" : pedido.autor?.nome || "Usuário";
   const foto = pedido.anonimo ? null : pedido.autor?.foto ?? null;
+  const [addOpen, setAddOpen] = useState(false);
+
+  const openAddUpdate = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setAddOpen(true);
+  };
 
   return (
     <button
@@ -100,8 +111,27 @@ export function PrayerRequestCard({ pedido, onClick }: Props) {
           total={pedido.qtdOrando}
           euOrando={pedido.euOrando}
         />
-        <PrayerActionButton pedidoId={pedido._id} euOrando={pedido.euOrando} />
+        {pedido.isOwner ? (
+          <button
+            type="button"
+            onClick={openAddUpdate}
+            className="shrink-0 inline-flex items-center gap-1.5 rounded-full border h-8 px-3 text-xs font-medium text-foreground active:opacity-80"
+          >
+            <Megaphone className="h-3.5 w-3.5" aria-hidden />
+            Atualizar
+          </button>
+        ) : (
+          <PrayerActionButton pedidoId={pedido._id} euOrando={pedido.euOrando} />
+        )}
       </div>
+
+      {pedido.isOwner && (
+        <AddUpdateModal
+          pedidoId={pedido._id}
+          open={addOpen}
+          onOpenChange={setAddOpen}
+        />
+      )}
     </button>
   );
 }
