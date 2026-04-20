@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FileText } from "lucide-react";
 import { format, isSunday, nextSunday, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -10,13 +10,38 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { cn } from "@/shared/lib/utils/cn";
 
+/**
+ * Filtra o estado "ao vivo" do backend por janela horária.
+ *
+ * Janela válida: 08:00 → 00:30 do dia seguinte. Fora disso, mesmo que
+ * o backend retorne isLive=true (ex: flag manual não resetada), o card
+ * renderiza estado neutro.
+ *
+ * TODO (dívida técnica): adicionar scheduled function no Convex para
+ * resetar automaticamente `boletim.isLive` após 00:30. Este helper é
+ * salvaguarda, não a solução definitiva.
+ */
+function isBoletimLiveNow(backendIsLive: boolean, now: Date = new Date()): boolean {
+  if (!backendIsLive) return false;
+  const hour = now.getHours();
+  const minute = now.getMinutes();
+  return hour >= 8 || (hour === 0 && minute <= 30);
+}
+
 export function BoletimCard() {
   // @ts-ignore Convex TS2589
   const status = useQuery(api.boletim.queries.getLiveStatus);
 
+  // Recalcula a cada minuto para respeitar a janela sem recarregar a página.
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(id);
+  }, []);
+
   const fallbackLabel = useMemo(() => {
-    const now = new Date();
-    const proximo = isSunday(now) ? now : nextSunday(now);
+    const reference = new Date();
+    const proximo = isSunday(reference) ? reference : nextSunday(reference);
     return format(proximo, "EEEE',' HH'h'", { locale: ptBR });
   }, []);
 
@@ -30,7 +55,7 @@ export function BoletimCard() {
     return format(data, "EEEE',' HH'h'", { locale: ptBR });
   }, [status?.proximoCulto, fallbackLabel]);
 
-  const isLive = status?.isLive ?? false;
+  const isLive = isBoletimLiveNow(status?.isLive ?? false, now);
 
   if (isLive) {
     return (
@@ -66,7 +91,7 @@ export function BoletimCard() {
       <FileText className="h-6 w-6 shrink-0 text-muted-foreground" aria-hidden />
       <div className="flex-1 min-w-0">
         <p className="text-[15px] font-medium">Próximo culto</p>
-        <p className="mt-0.5 text-[11px] text-muted-foreground capitalize">
+        <p className="mt-0.5 text-[11px] text-muted-foreground">
           {proximoCultoLabel}
         </p>
       </div>
