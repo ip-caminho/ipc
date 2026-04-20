@@ -97,7 +97,7 @@ export function NewRequestModal({ open, onOpenChange, onCreated }: Props) {
 
   return (
     <ResponsiveDialog open={open} onOpenChange={handleClose}>
-      <ResponsiveDialogContent className="min-h-[85dvh] md:min-h-0">
+      <ResponsiveDialogContent className="min-h-[70dvh] md:min-h-0">
         <ResponsiveDialogHeader>
           <ResponsiveDialogTitle>Novo pedido de oração</ResponsiveDialogTitle>
         </ResponsiveDialogHeader>
@@ -105,7 +105,6 @@ export function NewRequestModal({ open, onOpenChange, onCreated }: Props) {
         <ResponsiveDialogBody className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
             <textarea
-              autoFocus
               value={texto}
               onChange={(e) => setTexto(e.target.value.slice(0, MAX_CHARS))}
               placeholder="Compartilhe seu pedido de oração..."
