@@ -46,6 +46,7 @@ export default function GuidedPrayerPage() {
       qtdOrando: p.qtdOrando,
       euOrando: p.euOrando,
       primeirosOrantes: p.primeirosOrantes ?? [],
+      atualizacoes: p.atualizacoes ?? [],
     }));
 
   return (
