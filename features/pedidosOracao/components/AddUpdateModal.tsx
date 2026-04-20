@@ -79,7 +79,7 @@ export function AddUpdateModal({ pedidoId, open, onOpenChange }: Props) {
 
   return (
     <ResponsiveDialog open={open} onOpenChange={handleClose}>
-      <ResponsiveDialogContent className="min-h-[75dvh] md:min-h-0">
+      <ResponsiveDialogContent className="min-h-[65dvh] md:min-h-0">
         <ResponsiveDialogHeader>
           <ResponsiveDialogTitle>Adicionar atualização</ResponsiveDialogTitle>
         </ResponsiveDialogHeader>
