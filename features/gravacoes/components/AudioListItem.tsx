@@ -16,6 +16,8 @@ export interface AudioListItemData {
   tipo: string;
   pregadorNome?: string | null;
   pregadorInfo?: { nome: string } | null;
+  inicioConteudo?: number | null;
+  fimConteudo?: number | null;
   inicioSermao?: number | null;
   fimSermao?: number | null;
 }
@@ -38,7 +40,10 @@ export function AudioListItem({ audio }: { audio: AudioListItemData }) {
   const pregador = audio.pregadorInfo?.nome || audio.pregadorNome || null;
   const gradient = getCategoryGradient(audio.tipo);
   const categoria = getTipoLabel(audio.tipo);
-  const duracao = formatDurationFromBoundaries(audio.inicioSermao, audio.fimSermao);
+  const duracao = formatDurationFromBoundaries(
+    audio.inicioConteudo ?? audio.inicioSermao,
+    audio.fimConteudo ?? audio.fimSermao,
+  );
 
   let dataCurta = "";
   try {
