@@ -10,6 +10,7 @@ import { MuralView } from "@features/pedidosOracao/components/MuralView";
 import { MyRequestsView } from "@features/pedidosOracao/components/MyRequestsView";
 import { NewRequestModal } from "@features/pedidosOracao/components/NewRequestModal";
 import { cn } from "@shared/lib/utils/cn";
+import { haptic } from "@shared/lib/haptic";
 
 type Tab = "mural" | "meus";
 
@@ -65,7 +66,17 @@ export default function PedidosOracaoPage() {
               {/* Card: iniciar oracao guiada */}
               <button
                 type="button"
-                onClick={() => router.push("/pedidos-oracao/guiada")}
+                onClick={(e) => {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const x = rect.left + rect.width / 2;
+                  const y = rect.top + rect.height / 2;
+                  sessionStorage.setItem(
+                    "prayer-intro-origin",
+                    JSON.stringify({ x, y }),
+                  );
+                  haptic(30);
+                  router.push("/pedidos-oracao/guiada");
+                }}
                 disabled={qtdAtivos === 0}
                 className="flex items-center gap-3 rounded-xl p-3.5 text-left disabled:opacity-50 disabled:cursor-not-allowed active:opacity-90 transition-opacity"
                 style={{ backgroundColor: "#1a1a1a" }}

@@ -6,6 +6,7 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { HandHeart } from "lucide-react";
 import { cn } from "@shared/lib/utils/cn";
+import { haptic } from "@shared/lib/haptic";
 
 interface PrayerActionButtonProps {
   pedidoId: Id<"pedidosOracao">;
@@ -32,6 +33,7 @@ export function PrayerActionButton({
     e.preventDefault();
     e.stopPropagation();
     if (pending) return;
+    haptic(20);
     setPending(true);
     setOptimistic(!current);
     try {

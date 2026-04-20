@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect } from "react";
 import { motion } from "motion/react";
 import Link from "next/link";
+import { haptic } from "@shared/lib/haptic";
 
 interface Props {
   total: number;
@@ -14,6 +16,10 @@ const VERSICULO = {
 };
 
 export function GuidedPrayerComplete({ total, onRestart }: Props) {
+  useEffect(() => {
+    haptic([40, 60, 40]);
+  }, []);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
