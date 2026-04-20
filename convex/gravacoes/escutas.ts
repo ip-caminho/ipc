@@ -117,3 +117,54 @@ export const listByMembro = query({
     );
   },
 });
+
+/**
+ * Último sermão em progresso do usuário atual.
+ * Filtra por: sermão publicado, progresso entre 5% e 95%, não completado.
+ * Ordena por atualizadoEm desc e retorna o primeiro.
+ */
+export const continuarOuvindo = query({
+  args: {},
+  handler: async (ctx) => {
+    const membroId = await getMembroId(ctx);
+    if (!membroId) return null;
+
+    const escutas = await ctx.db
+      .query("escutasGravacao")
+      .withIndex("by_membro", (q) => q.eq("membroId", membroId))
+      .collect();
+
+    const candidatas = escutas
+      .filter((e) => !e.completou && e.progresso > 0.05 && e.progresso < 0.95)
+      .sort((a, b) => b.atualizadoEm - a.atualizadoEm);
+
+    for (const e of candidatas) {
+      const gravacao = await ctx.db.get(e.gravacaoId);
+      if (!gravacao) continue;
+      if (gravacao.tipo !== "SERMAO") continue;
+      if (gravacao.status !== "PUBLICADO") continue;
+
+      let pregadorNome: string | null = gravacao.pregadorNome ?? null;
+      if (!pregadorNome && gravacao.pregadorId) {
+        const pregador = await ctx.db.get(gravacao.pregadorId);
+        if (pregador) {
+          const entidade = await ctx.db.get(pregador.entidadeId);
+          pregadorNome = entidade?.nomeCompleto ?? null;
+        }
+      }
+
+      return {
+        gravacaoId: gravacao._id,
+        titulo: gravacao.titulo,
+        pregadorNome,
+        serieId: gravacao.serieId ?? null,
+        ultimoSegundo: e.ultimoSegundo,
+        duracaoTotal: e.duracaoTotal,
+        progresso: e.progresso,
+        atualizadoEm: e.atualizadoEm,
+      };
+    }
+
+    return null;
+  },
+});
