@@ -114,7 +114,7 @@ export default function DashboardPage() {
   }
 
   const primeiroNome = name?.split(" ")[0] || "Usuário";
-  const dataHoje = format(new Date(), "dd 'de' MMMM", { locale: ptBR });
+  const dataHoje = format(new Date(), "d 'de' MMMM", { locale: ptBR });
   const hora = new Date().getHours();
   const saudacao = hora < 12 ? "Bom dia" : hora < 18 ? "Boa tarde" : "Boa noite";
 
@@ -124,7 +124,7 @@ export default function DashboardPage() {
         <h1 className="text-[15px] font-medium text-foreground truncate">
           {saudacao}, {primeiroNome}
         </h1>
-        <span className="text-[11px] text-muted-foreground shrink-0 capitalize">
+        <span className="text-[11px] text-muted-foreground shrink-0">
           {dataHoje}
         </span>
       </header>

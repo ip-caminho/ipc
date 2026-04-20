@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { forwardRef, useEffect, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Megaphone, HeartHandshake, type LucideIcon } from "lucide-react";
@@ -17,28 +17,30 @@ import {
 import { AvisosWidget } from "@features/gravacoes/components/AvisosWidget";
 import { MinhaEscalaUnificada } from "@features/escalas/components/MinhaEscalaUnificada";
 
-interface TodayCardProps {
+interface TodayCardProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   icon: LucideIcon;
   title: string;
   subtitle: string;
-  onClick?: () => void;
 }
 
-function TodayCard({ icon: Icon, title, subtitle, onClick }: TodayCardProps) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex flex-col items-start gap-1.5 rounded-md bg-secondary px-2.5 py-3 min-h-[80px] text-left active:opacity-80 transition-opacity"
-    >
-      <Icon className="h-4 w-4 text-secondary-foreground/70" aria-hidden />
-      <span className="text-sm font-medium leading-tight">{title}</span>
-      <span className="text-[11px] text-muted-foreground leading-tight">
-        {subtitle}
-      </span>
-    </button>
-  );
-}
+const TodayCard = forwardRef<HTMLButtonElement, TodayCardProps>(
+  function TodayCard({ icon: Icon, title, subtitle, ...rest }, ref) {
+    return (
+      <button
+        ref={ref}
+        type="button"
+        {...rest}
+        className="flex h-full flex-col items-start gap-1.5 rounded-md bg-secondary px-2.5 py-3 min-h-[92px] text-left active:opacity-80 transition-opacity"
+      >
+        <Icon className="h-4 w-4 text-secondary-foreground/70" aria-hidden />
+        <span className="text-sm font-medium leading-tight">{title}</span>
+        <span className="text-[11px] text-muted-foreground leading-tight">
+          {subtitle}
+        </span>
+      </button>
+    );
+  },
+);
 
 export function TodaySection() {
   const [avisosOpen, setAvisosOpen] = useState(false);
@@ -74,17 +76,14 @@ export function TodaySection() {
   })();
 
   return (
-    <div className="grid grid-cols-2 gap-2">
+    <div className="grid grid-cols-2 gap-2 items-stretch">
       <Drawer open={avisosOpen} onOpenChange={setAvisosOpen}>
         <DrawerTrigger asChild>
-          <div>
-            <TodayCard
-              icon={Megaphone}
-              title="Avisos"
-              subtitle={avisosSubtitle}
-              onClick={() => setAvisosOpen(true)}
-            />
-          </div>
+          <TodayCard
+            icon={Megaphone}
+            title="Avisos"
+            subtitle={avisosSubtitle}
+          />
         </DrawerTrigger>
         <DrawerContent>
           <DrawerHeader>
@@ -98,14 +97,11 @@ export function TodaySection() {
 
       <Drawer open={escalaOpen} onOpenChange={setEscalaOpen}>
         <DrawerTrigger asChild>
-          <div>
-            <TodayCard
-              icon={HeartHandshake}
-              title="Minha escala"
-              subtitle={escalaSubtitle}
-              onClick={() => setEscalaOpen(true)}
-            />
-          </div>
+          <TodayCard
+            icon={HeartHandshake}
+            title="Minha escala"
+            subtitle={escalaSubtitle}
+          />
         </DrawerTrigger>
         <DrawerContent>
           <DrawerHeader>
