@@ -50,6 +50,7 @@
   --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
   --tracking-normal: 0em;
   --spacing: 0.25rem;
+  --z-fullscreen: 60;
 }
 
 .dark {
@@ -241,5 +242,12 @@
   [data-sonner-toaster] {
     width: 75% !important;
     --width: 75% !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .guided-prayer-card {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
   }
 }
