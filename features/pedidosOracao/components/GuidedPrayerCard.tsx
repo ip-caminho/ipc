@@ -3,12 +3,25 @@
 import { useState } from "react";
 import { motion, type PanInfo } from "motion/react";
 import { useMutation } from "convex/react";
+import { formatDistanceToNow, fromUnixTime } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { Heart } from "lucide-react";
 import { cn } from "@shared/lib/utils/cn";
 import { haptic } from "@shared/lib/haptic";
+
+function timeAgo(ts: number): string {
+  try {
+    return formatDistanceToNow(fromUnixTime(ts / 1000), {
+      addSuffix: true,
+      locale: ptBR,
+    });
+  } catch {
+    return "";
+  }
+}
 
 export interface GuidedCardData {
   _id: Id<"pedidosOracao">;
@@ -147,9 +160,14 @@ export function GuidedPrayerCard({
                     aria-hidden
                   />
                   <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-                      {TIPO_LABEL[a.tipo]}
-                    </p>
+                    <div className="flex items-baseline justify-between gap-2">
+                      <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                        {TIPO_LABEL[a.tipo]}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground/70 truncate">
+                        {timeAgo(a.criadoEm)}
+                      </p>
+                    </div>
                     <p className="text-[13px] leading-relaxed text-foreground/85 whitespace-pre-wrap mt-0.5">
                       {a.texto}
                     </p>
