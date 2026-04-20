@@ -97,7 +97,7 @@ export function NewRequestModal({ open, onOpenChange, onCreated }: Props) {
 
   return (
     <ResponsiveDialog open={open} onOpenChange={handleClose}>
-      <ResponsiveDialogContent>
+      <ResponsiveDialogContent className="min-h-[85dvh] md:min-h-0">
         <ResponsiveDialogHeader>
           <ResponsiveDialogTitle>Novo pedido de oração</ResponsiveDialogTitle>
         </ResponsiveDialogHeader>
