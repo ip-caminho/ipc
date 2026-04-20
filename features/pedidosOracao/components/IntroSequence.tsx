@@ -26,28 +26,37 @@ function RadialOpening({
   origin: Origin;
   onComplete: () => void;
 }) {
-  const SIZE = "300vmax";
+  useEffect(() => {
+    const timer = setTimeout(onComplete, 800);
+    return () => clearTimeout(timer);
+  }, [onComplete]);
+
   return (
     <div className="absolute inset-0 overflow-hidden bg-black">
-      <motion.div
-        initial={{ scale: 0, opacity: 1 }}
-        animate={{ scale: 1 }}
-        transition={{ duration: 0.8, ease: IOS_EASE }}
-        onAnimationComplete={onComplete}
+      <div
         style={{
           position: "absolute",
           left: origin.x,
           top: origin.y,
-          width: SIZE,
-          height: SIZE,
-          marginLeft: `calc(${SIZE} / -2)`,
-          marginTop: `calc(${SIZE} / -2)`,
-          borderRadius: "50%",
-          backgroundColor: "#fafaf5",
-          transformOrigin: "center center",
-          willChange: "transform",
+          width: "300vmax",
+          height: "300vmax",
+          transform: "translate(-50%, -50%)",
+          pointerEvents: "none",
         }}
-      />
+      >
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 0.8, ease: IOS_EASE }}
+          style={{
+            width: "100%",
+            height: "100%",
+            borderRadius: "50%",
+            backgroundColor: "#fafaf5",
+            willChange: "transform",
+          }}
+        />
+      </div>
     </div>
   );
 }
