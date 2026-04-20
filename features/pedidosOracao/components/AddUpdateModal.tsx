@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -262,8 +263,9 @@ function MobileFlow({ pedidoId, open, onOpenChange }: Props) {
   };
 
   if (!open) return null;
+  if (typeof document === "undefined") return null;
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[60] bg-background flex flex-col"
       style={{
@@ -271,6 +273,7 @@ function MobileFlow({ pedidoId, open, onOpenChange }: Props) {
         paddingTop: "env(safe-area-inset-top)",
         paddingBottom: "env(safe-area-inset-bottom)",
       }}
+      onClick={(e) => e.stopPropagation()}
     >
       <header className="flex items-center gap-2 px-3 h-14 shrink-0">
         <button
@@ -394,6 +397,7 @@ function MobileFlow({ pedidoId, open, onOpenChange }: Props) {
               : "Continuar"}
         </Button>
       </footer>
-    </div>
+    </div>,
+    document.body,
   );
 }
