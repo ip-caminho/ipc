@@ -78,14 +78,14 @@ export function GuidedPrayerCard({
       key={pedido._id}
       drag="x"
       dragConstraints={{ left: 0, right: 0 }}
-      dragElastic={0.2}
+      dragElastic={0.9}
       onDragEnd={handleDragEnd}
       initial={{ x: `${direction * 100}%`, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       exit={{ x: `${-exitDir * 100}%`, opacity: 0 }}
       transition={{ duration: 0.4, ease: IOS_EASE }}
-      style={{ touchAction: "pan-y" }}
-      className="absolute inset-0 flex flex-col bg-background rounded-2xl border shadow-sm p-6"
+      style={{ touchAction: "pan-x", willChange: "transform" }}
+      className="guided-prayer-card absolute inset-0 flex flex-col bg-background rounded-2xl border shadow-sm p-6"
     >
       <div className="flex flex-col items-center gap-2">
         <Avatar className="h-[54px] w-[54px]">
