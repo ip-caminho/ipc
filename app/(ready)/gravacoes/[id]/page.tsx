@@ -7,49 +7,13 @@ import { Reacoes } from "@features/gravacoes/components/Reacoes";
 import { ComentarioInput, ComentariosList } from "@features/gravacoes/components/Comentarios";
 import { useParams } from "next/navigation";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import { Headphones, Play, Pause, MessageCircle, Download } from "lucide-react";
+import { Headphones, Play, Pause } from "lucide-react";
 import type { Id } from "@/convex/_generated/dataModel";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useEscutaTracker } from "@features/gravacoes/hooks/useEscutaTracker";
 import { useState } from "react";
 import { cn } from "@shared/lib/utils/cn";
-
-function audioBufferToWav(buffer: AudioBuffer): ArrayBuffer {
-  const numChannels = buffer.numberOfChannels;
-  const sampleRate = buffer.sampleRate;
-  const length = buffer.length * numChannels * 2 + 44;
-  const out = new ArrayBuffer(length);
-  const view = new DataView(out);
-
-  function writeString(offset: number, str: string) {
-    for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
-  }
-
-  writeString(0, "RIFF");
-  view.setUint32(4, length - 8, true);
-  writeString(8, "WAVE");
-  writeString(12, "fmt ");
-  view.setUint32(16, 16, true);
-  view.setUint16(20, 1, true);
-  view.setUint16(22, numChannels, true);
-  view.setUint32(24, sampleRate, true);
-  view.setUint32(28, sampleRate * numChannels * 2, true);
-  view.setUint16(32, numChannels * 2, true);
-  view.setUint16(34, 16, true);
-  writeString(36, "data");
-  view.setUint32(40, length - 44, true);
-
-  let offset = 44;
-  for (let i = 0; i < buffer.length; i++) {
-    for (let ch = 0; ch < numChannels; ch++) {
-      const sample = Math.max(-1, Math.min(1, buffer.getChannelData(ch)[i]));
-      view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
-      offset += 2;
-    }
-  }
-  return out;
-}
 
 export default function GravacaoDetailPage() {
   const params = useParams();
@@ -61,7 +25,6 @@ export default function GravacaoDetailPage() {
   const globalPlayer = useAudioPlayer();
   const [highlightId, setHighlightId] = useState<string | null>(null);
   const [resumoExpanded, setResumoExpanded] = useState(false);
-  const [downloading, setDownloading] = useState(false);
 
   if (gravacao === undefined) {
     return <Skeleton className="h-96 w-full max-w-2xl mx-auto" />;
@@ -95,54 +58,6 @@ export default function GravacaoDetailPage() {
         fimSermao: segFim,
         resumeFrom: ultimoSegundo,
       });
-    }
-  };
-
-  const handleDownloadSermao = async () => {
-    if (!gravacao.audioUrl || gravacao.inicioSermao == null) return;
-    setDownloading(true);
-    try {
-      // Baixar áudio
-      const response = await fetch(gravacao.audioUrl);
-      const arrayBuffer = await response.arrayBuffer();
-
-      // Decodificar
-      const audioCtx = new AudioContext();
-      const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-
-      const start = gravacao.inicioSermao;
-      const end = gravacao.fimSermao ?? audioBuffer.duration;
-      const duration = end - start;
-      const sampleRate = audioBuffer.sampleRate;
-      const startSample = Math.floor(start * sampleRate);
-      const endSample = Math.floor(end * sampleRate);
-      const length = endSample - startSample;
-
-      // Criar buffer do trecho
-      const offlineCtx = new OfflineAudioContext(audioBuffer.numberOfChannels, length, sampleRate);
-      const source = offlineCtx.createBufferSource();
-      source.buffer = audioBuffer;
-      source.connect(offlineCtx.destination);
-      source.start(0, start, duration);
-      const renderedBuffer = await offlineCtx.startRendering();
-
-      // Converter pra WAV
-      const wav = audioBufferToWav(renderedBuffer);
-      const blob = new Blob([wav], { type: "audio/wav" });
-
-      // Download
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${gravacao.titulo.replace(/[^a-zA-Z0-9\s]/g, "").trim()}.wav`;
-      a.click();
-      URL.revokeObjectURL(url);
-
-      await audioCtx.close();
-    } catch {
-      // silencioso
-    } finally {
-      setDownloading(false);
     }
   };
 
@@ -213,18 +128,6 @@ export default function GravacaoDetailPage() {
                 ? <Pause size={16} fill="currentColor" strokeWidth={0} />
                 : <Play size={16} fill="currentColor" strokeWidth={0} />
               }
-            </button>
-          )}
-
-          {/* Botão download sermão */}
-          {hasAudio && gravacao.tipo === "SERMAO" && gravacao.inicioSermao != null && (
-            <button
-              onClick={handleDownloadSermao}
-              disabled={downloading}
-              className="w-full flex items-center justify-center gap-2 h-10 rounded-xl text-sm font-medium border border-border text-muted-foreground hover:bg-accent transition-colors"
-            >
-              <Download className="h-4 w-4" />
-              {downloading ? "Preparando download..." : "Baixar audio do sermao"}
             </button>
           )}
 
