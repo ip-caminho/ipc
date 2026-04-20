@@ -26,30 +26,43 @@ function RadialOpening({
   origin: Origin;
   onComplete: () => void;
 }) {
+  const SIZE = "300vmax";
   return (
-    <div className="absolute inset-0 bg-black">
+    <div className="absolute inset-0 overflow-hidden bg-black">
       <motion.div
-        initial={{
-          clipPath: `circle(0px at ${origin.x}px ${origin.y}px)`,
-        }}
-        animate={{
-          clipPath: `circle(150vmax at ${origin.x}px ${origin.y}px)`,
-        }}
-        transition={{ duration: 0.6, ease: IOS_EASE }}
+        initial={{ scale: 0, opacity: 1 }}
+        animate={{ scale: 1 }}
+        transition={{ duration: 0.8, ease: IOS_EASE }}
         onAnimationComplete={onComplete}
-        className="absolute inset-0"
-        style={{ backgroundColor: "#fafaf5" }}
+        style={{
+          position: "absolute",
+          left: origin.x,
+          top: origin.y,
+          width: SIZE,
+          height: SIZE,
+          marginLeft: `calc(${SIZE} / -2)`,
+          marginTop: `calc(${SIZE} / -2)`,
+          borderRadius: "50%",
+          backgroundColor: "#fafaf5",
+          transformOrigin: "center center",
+          willChange: "transform",
+        }}
       />
     </div>
   );
 }
 
 function DailyVerseCard({ onComplete }: { onComplete: () => void }) {
-  const verse = getDailyVerse();
+  const [verse] = useState(() => getDailyVerse());
+  const [isFading, setIsFading] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(onComplete, 3800);
-    return () => clearTimeout(timer);
+    const fadeTimer = setTimeout(() => setIsFading(true), 3400);
+    const completeTimer = setTimeout(onComplete, 4000);
+    return () => {
+      clearTimeout(fadeTimer);
+      clearTimeout(completeTimer);
+    };
   }, [onComplete]);
 
   return (
@@ -59,12 +72,8 @@ function DailyVerseCard({ onComplete }: { onComplete: () => void }) {
     >
       <motion.div
         initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0 }}
-        transition={{
-          opacity: { duration: 0.8, ease: "easeOut" },
-          y: { duration: 0.8, ease: "easeOut" },
-        }}
+        animate={{ opacity: isFading ? 0 : 1, y: 0 }}
+        transition={{ duration: isFading ? 0.6 : 0.8, ease: "easeOut" }}
         className="text-center max-w-md"
       >
         <p className="text-lg italic leading-relaxed mb-6 text-foreground font-serif">
