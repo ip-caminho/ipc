@@ -8,6 +8,7 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { Heart } from "lucide-react";
 import { cn } from "@shared/lib/utils/cn";
+import { haptic } from "@shared/lib/haptic";
 
 export interface GuidedCardData {
   _id: Id<"pedidosOracao">;
@@ -47,6 +48,7 @@ export function GuidedPrayerCard({
 
   const handleOrei = async () => {
     if (submitting) return;
+    haptic(20);
     setSubmitting(true);
     try {
       if (!pedido.euOrando) {
@@ -65,9 +67,11 @@ export function GuidedPrayerCard({
   const handleDragEnd = (_: unknown, info: PanInfo) => {
     const { offset, velocity } = info;
     if (offset.x < -COMMIT_THRESHOLD || velocity.x < -COMMIT_VELOCITY) {
+      haptic(15);
       setExitDir(1);
       onAdvance(false);
     } else if (offset.x > COMMIT_THRESHOLD || velocity.x > COMMIT_VELOCITY) {
+      haptic(15);
       setExitDir(-1);
       onPrevious();
     }
