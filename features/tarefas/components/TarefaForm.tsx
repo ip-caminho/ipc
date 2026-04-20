@@ -1,16 +1,19 @@
 "use client";
 
+import { useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { toast } from "sonner";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/shared/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogBody,
+  ResponsiveDialogFooter,
+} from "@/shared/components/ui/responsive-dialog";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Textarea } from "@/shared/components/ui/textarea";
@@ -22,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
+import { ResponsiveSelect } from "@/shared/components/ui/responsive-select";
 import { tarefaFormSchema, type TarefaFormValues } from "../lib/validations";
 import { PRIORIDADE_OPTIONS } from "../lib/constants";
 import { useAuth } from "@shared/providers/PermissionsProvider";
@@ -52,6 +56,15 @@ export function TarefaForm({ open, onOpenChange, defaultValues, tarefaId }: Tare
       ...defaultValues,
     },
   });
+
+  const responsavelOptions = useMemo(
+    () =>
+      (membros ?? []).map((m: any) => ({
+        value: m._id as string,
+        label: (m.entidade?.nomeCompleto as string) || m._id,
+      })),
+    [membros],
+  );
 
   const isEditing = !!tarefaId;
 
@@ -88,79 +101,76 @@ export function TarefaForm({ open, onOpenChange, defaultValues, tarefaId }: Tare
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{isEditing ? "Editar Tarefa" : "Nova Tarefa"}</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <div>
-            <Label htmlFor="titulo">Título</Label>
-            <Input id="titulo" {...form.register("titulo")} placeholder="O que precisa ser feito?" />
-            {form.formState.errors.titulo && (
-              <p className="text-xs text-red-500 mt-1">{form.formState.errors.titulo.message}</p>
-            )}
-          </div>
-
-          <div>
-            <Label htmlFor="descricao">Descrição</Label>
-            <Textarea id="descricao" {...form.register("descricao")} rows={3} placeholder="Detalhes (opcional)" />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
+      <ResponsiveDialogContent>
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle>{isEditing ? "Editar Tarefa" : "Nova Tarefa"}</ResponsiveDialogTitle>
+        </ResponsiveDialogHeader>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="contents">
+          <ResponsiveDialogBody className="space-y-4">
             <div>
-              <Label>Prioridade</Label>
-              <Select
-                value={form.watch("prioridade")}
-                onValueChange={(v) => form.setValue("prioridade", v as TarefaFormValues["prioridade"])}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {PRIORIDADE_OPTIONS.map((p) => (
-                    <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="titulo">Título</Label>
+              <Input id="titulo" {...form.register("titulo")} placeholder="O que precisa ser feito?" />
+              {form.formState.errors.titulo && (
+                <p className="text-xs text-red-500 mt-1">{form.formState.errors.titulo.message}</p>
+              )}
             </div>
 
             <div>
-              <Label htmlFor="dataVencimento">Prazo</Label>
-              <Input id="dataVencimento" type="date" {...form.register("dataVencimento")} />
+              <Label htmlFor="descricao">Descrição</Label>
+              <Textarea id="descricao" {...form.register("descricao")} rows={3} placeholder="Detalhes (opcional)" />
             </div>
-          </div>
 
-          <div>
-            <Label>Responsável</Label>
-            <Select
-              value={form.watch("responsavelId")}
-              onValueChange={(v) => form.setValue("responsavelId", v)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione..." />
-              </SelectTrigger>
-              <SelectContent>
-                {membros?.map((m: any) => (
-                  <SelectItem key={m._id} value={m._id}>{m.entidade?.nomeCompleto || m._id}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {form.formState.errors.responsavelId && (
-              <p className="text-xs text-red-500 mt-1">{form.formState.errors.responsavelId.message}</p>
-            )}
-          </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Prioridade</Label>
+                <Select
+                  value={form.watch("prioridade")}
+                  onValueChange={(v) => form.setValue("prioridade", v as TarefaFormValues["prioridade"])}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PRIORIDADE_OPTIONS.map((p) => (
+                      <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-          <div className="flex justify-end gap-2">
+              <div>
+                <Label htmlFor="dataVencimento">Prazo</Label>
+                <Input id="dataVencimento" type="date" {...form.register("dataVencimento")} />
+              </div>
+            </div>
+
+            <div>
+              <Label>Responsável</Label>
+              <ResponsiveSelect
+                options={responsavelOptions}
+                value={form.watch("responsavelId")}
+                onValueChange={(v) => form.setValue("responsavelId", v)}
+                placeholder="Selecione..."
+                searchPlaceholder="Buscar membro..."
+                emptyMessage="Nenhum membro encontrado"
+                title="Selecionar responsável"
+              />
+              {form.formState.errors.responsavelId && (
+                <p className="text-xs text-red-500 mt-1">{form.formState.errors.responsavelId.message}</p>
+              )}
+            </div>
+          </ResponsiveDialogBody>
+          <ResponsiveDialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
             <Button type="submit" disabled={form.formState.isSubmitting}>
               {isEditing ? "Salvar" : "Criar"}
             </Button>
-          </div>
+          </ResponsiveDialogFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }

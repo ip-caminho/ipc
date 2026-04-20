@@ -27,7 +27,7 @@ import {
   PopoverTrigger,
 } from "@shared/components/ui/popover";
 import { ScrollArea } from "@shared/components/ui/scroll-area";
-import { ChevronDown, ChevronRight, Info, Users } from "lucide-react";
+import { ChevronDown, ChevronRight, Info, Monitor, Users } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@shared/lib/utils/cn";
 
@@ -292,7 +292,14 @@ export function PermissionMatrix() {
 
   return (
     <TooltipProvider>
-      <div className="overflow-x-auto border rounded-lg">
+      <div className="md:hidden rounded-lg border p-8 text-center space-y-2">
+        <Monitor className="mx-auto h-10 w-10 text-muted-foreground" aria-hidden />
+        <p className="text-sm font-medium">Disponível apenas no desktop</p>
+        <p className="text-xs text-muted-foreground">
+          A matriz de permissões precisa de uma tela maior. Abra no computador para editar.
+        </p>
+      </div>
+      <div className="hidden md:block overflow-x-auto border rounded-lg">
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50">

@@ -5,13 +5,14 @@ import {
   useReactTable,
   getCoreRowModel,
   getFilteredRowModel,
-  flexRender,
   type ColumnDef,
+  type Row,
 } from "@tanstack/react-table";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/components/ui/table";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
-import { Pencil } from "lucide-react";
+import { ResponsiveDataList } from "@/shared/components/ui/responsive-data-list";
+import { ChevronRight, Pencil } from "lucide-react";
+import { cn } from "@/shared/lib/utils/cn";
 import { STATUS_COLORS, CARGO_ECLESIASTICO_OPTIONS } from "../lib/constants";
 
 interface MembroRow {
@@ -85,6 +86,50 @@ const columns: ColumnDef<MembroRow>[] = [
   },
 ];
 
+function MembroMobileCard({ row }: { row: Row<MembroRow> }) {
+  const router = useRouter();
+  const m = row.original;
+  const nome = m.entidade?.nomeCompleto || "-";
+  const status = m.entidade?.status || "ATIVO";
+  const cargoOpt = CARGO_ECLESIASTICO_OPTIONS.find((o) => o.value === m.cargoEclesiastico);
+
+  return (
+    <button
+      type="button"
+      onClick={() => router.push(`/membros/${m._id}`)}
+      className="flex items-start justify-between gap-3 rounded-md border bg-card p-4 text-left min-h-[72px] transition-colors active:bg-accent/50"
+    >
+      <div className="flex-1 min-w-0 space-y-1.5">
+        <div className="font-medium truncate">{nome}</div>
+        {m.entidade?.whatsapp && (
+          <div className="text-xs text-muted-foreground truncate">
+            {m.entidade.whatsapp}
+          </div>
+        )}
+        <div className="flex flex-wrap gap-1.5 pt-1">
+          {cargoOpt && (
+            <Badge variant="outline" className="text-xs">
+              {cargoOpt.label}
+            </Badge>
+          )}
+          {m.rol && (
+            <Badge variant="outline" className="text-xs">
+              Rol {m.rol}
+            </Badge>
+          )}
+          <Badge
+            variant="outline"
+            className={cn("text-xs", STATUS_COLORS[status])}
+          >
+            {status}
+          </Badge>
+        </div>
+      </div>
+      <ChevronRight className="h-4 w-4 shrink-0 self-center text-muted-foreground" aria-hidden />
+    </button>
+  );
+}
+
 interface MembroTableProps {
   data: MembroRow[];
 }
@@ -98,39 +143,10 @@ export function MembroTable({ data }: MembroTableProps) {
   });
 
   return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <TableHead key={header.id}>
-                  {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                </TableHead>
-              ))}
-            </TableRow>
-          ))}
-        </TableHeader>
-        <TableBody>
-          {table.getRowModel().rows.length ? (
-            table.getRowModel().rows.map((row) => (
-              <TableRow key={row.id}>
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={columns.length} className="h-24 text-center">
-                Nenhum membro encontrado
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
-    </div>
+    <ResponsiveDataList
+      table={table}
+      renderMobileCard={(row) => <MembroMobileCard row={row} />}
+      emptyState="Nenhum membro encontrado"
+    />
   );
 }

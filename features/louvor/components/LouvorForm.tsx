@@ -20,12 +20,13 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/shared/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogFooter,
+  ResponsiveDialogBody,
+} from "@/shared/components/ui/responsive-dialog";
 
 interface LouvorFormProps {
   open: boolean;
@@ -90,14 +91,19 @@ export function LouvorForm({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[90vw] sm:max-w-[90vw] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{isEditing ? "Editar" : "Nova"} Musica</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
+      <ResponsiveDialogContent className="md:max-w-[90vw]">
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle>{isEditing ? "Editar" : "Nova"} Musica</ResponsiveDialogTitle>
+        </ResponsiveDialogHeader>
+        <form
+          id="louvor-form"
+          onSubmit={form.handleSubmit(handleSubmit)}
+          className="contents"
+        >
+        <ResponsiveDialogBody className="space-y-4">
           {/* Titulo + Artista */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label htmlFor="titulo">Titulo *</Label>
               <Input id="titulo" {...form.register("titulo")} />
@@ -114,7 +120,7 @@ export function LouvorForm({
           </div>
 
           {/* Tom, Tom Homem, Tom Mulher, BPM */}
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div className="space-y-1">
               <Label>Tom original</Label>
               <Select
@@ -210,7 +216,7 @@ export function LouvorForm({
                 </Badge>
               )}
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <Textarea
                 id="conteudo"
                 className="font-mono text-sm min-h-[40vh] !field-sizing-fixed resize-none"
@@ -232,7 +238,7 @@ export function LouvorForm({
           </div>
 
           {/* YouTube + Spotify */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label htmlFor="youtubeUrl">YouTube URL</Label>
               <Input id="youtubeUrl" placeholder="https://youtube.com/watch?v=..." {...form.register("youtubeUrl")} />
@@ -305,16 +311,17 @@ export function LouvorForm({
             </p>
           </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? "Salvando..." : isEditing ? "Salvar" : "Criar"}
-            </Button>
-          </DialogFooter>
+        </ResponsiveDialogBody>
+        <ResponsiveDialogFooter>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            Cancelar
+          </Button>
+          <Button type="submit" disabled={loading}>
+            {loading ? "Salvando..." : isEditing ? "Salvar" : "Criar"}
+          </Button>
+        </ResponsiveDialogFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }

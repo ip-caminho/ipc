@@ -1,16 +1,19 @@
 "use client";
 
+import { useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { toast } from "sonner";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/shared/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogBody,
+  ResponsiveDialogFooter,
+} from "@/shared/components/ui/responsive-dialog";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Textarea } from "@/shared/components/ui/textarea";
@@ -22,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
+import { ResponsiveSelect } from "@/shared/components/ui/responsive-select";
 import { turmaFormSchema, type TurmaFormValues } from "../lib/validations";
 import { DIA_SEMANA_OPTIONS, DIA_SEMANA_LABELS, CAMPOS_SISTEMA_OPTIONS, TIPOS_TURMA, type TipoTurma } from "../lib/constants";
 import { Checkbox } from "@/shared/components/ui/checkbox";
@@ -45,6 +49,17 @@ export function TurmaFormDialog({ open, onOpenChange }: Props) {
       perguntasExtras: [],
     },
   });
+
+  const instrutorOptions = useMemo(
+    () => [
+      { value: "", label: "Nenhum" },
+      ...(membros ?? []).map((m: any) => ({
+        value: m._id as string,
+        label: (m.entidade?.nomeCompleto as string) || m._id,
+      })),
+    ],
+    [membros],
+  );
 
   async function onSubmit(values: TurmaFormValues) {
     try {
@@ -72,12 +87,13 @@ export function TurmaFormDialog({ open, onOpenChange }: Props) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Nova Turma</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
+      <ResponsiveDialogContent>
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle>Nova Turma</ResponsiveDialogTitle>
+        </ResponsiveDialogHeader>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="contents">
+          <ResponsiveDialogBody className="space-y-4">
           <div>
             <Label htmlFor="nome">Nome</Label>
             <Input id="nome" {...form.register("nome")} placeholder="Ex: Novos Membros - Turma 1/2026" />
@@ -93,14 +109,13 @@ export function TurmaFormDialog({ open, onOpenChange }: Props) {
                   return;
                 }
                 form.setValue("tipo", v as TipoTurma);
-                // Auto-preencher descricao com template
                 const tipo = TIPOS_TURMA.find((t) => t.value === v);
                 if (tipo && tipo.descricaoTemplate && !form.getValues("descricao")) {
                   form.setValue("descricao", tipo.descricaoTemplate);
                 }
               }}
             >
-              <SelectTrigger><SelectValue placeholder="Selecione o tipo" /></SelectTrigger>
+              <SelectTrigger className="w-full"><SelectValue placeholder="Selecione o tipo" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="__none__">Selecione...</SelectItem>
                 {TIPOS_TURMA.map((t) => (
@@ -121,14 +136,14 @@ export function TurmaFormDialog({ open, onOpenChange }: Props) {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <Label>Dia</Label>
               <Select
                 value={form.watch("diaSemana") || "__none__"}
                 onValueChange={(v) => form.setValue("diaSemana", v === "__none__" ? "" : v)}
               >
-                <SelectTrigger><SelectValue placeholder="-" /></SelectTrigger>
+                <SelectTrigger className="w-full"><SelectValue placeholder="-" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__none__">-</SelectItem>
                   {DIA_SEMANA_OPTIONS.map((d) => (
@@ -154,20 +169,15 @@ export function TurmaFormDialog({ open, onOpenChange }: Props) {
 
           <div>
             <Label>Instrutor</Label>
-            <Select
-              value={form.watch("instrutorId") || "__none__"}
-              onValueChange={(v) => form.setValue("instrutorId", v === "__none__" ? "" : v)}
-            >
-              <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__none__">Nenhum</SelectItem>
-                {membros?.map((m: any) => (
-                  <SelectItem key={m._id} value={m._id}>
-                    {m.entidade?.nomeCompleto || m._id}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <ResponsiveSelect
+              options={instrutorOptions}
+              value={form.watch("instrutorId") || ""}
+              onValueChange={(v) => form.setValue("instrutorId", v)}
+              placeholder="Selecione..."
+              searchPlaceholder="Buscar membro..."
+              emptyMessage="Nenhum membro encontrado"
+              title="Selecionar instrutor"
+            />
           </div>
 
           <div>
@@ -197,17 +207,17 @@ export function TurmaFormDialog({ open, onOpenChange }: Props) {
               ))}
             </div>
           </div>
-
-          <div className="flex justify-end gap-2">
+          </ResponsiveDialogBody>
+          <ResponsiveDialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
             <Button type="submit" disabled={form.formState.isSubmitting}>
               Criar
             </Button>
-          </div>
+          </ResponsiveDialogFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }
