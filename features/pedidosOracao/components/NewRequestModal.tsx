@@ -348,7 +348,7 @@ function MobileFlow({ open, onOpenChange, onCreated }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-background flex flex-col"
+      className="fixed inset-0 z-[60] bg-background flex flex-col"
       style={{
         height: "100dvh",
         paddingTop: "env(safe-area-inset-top)",
