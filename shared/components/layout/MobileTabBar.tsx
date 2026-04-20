@@ -50,7 +50,7 @@ export function MobileTabBar() {
 
   if (isLoading) {
     return (
-      <div className="fixed bottom-0 inset-x-0 z-[56] border-t bg-background md:hidden pb-[env(safe-area-inset-bottom)]">
+      <div className="fixed bottom-0 inset-x-0 z-[56] border-t bg-background md:hidden pb-safe">
         <nav className="flex items-stretch h-[68px]" aria-hidden />
       </div>
     );
