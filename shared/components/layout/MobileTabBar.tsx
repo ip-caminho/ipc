@@ -6,10 +6,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@shared/providers/PermissionsProvider";
 import {
   PRIMARY_TABS,
-  BOLETIM_TAB,
   GESTAO_TAB,
   ELEVATED_ROLES,
-  isDomingoWindow,
   type NavItem,
 } from "@shared/constants/navigation";
 
@@ -17,12 +15,6 @@ export function MobileTabBar() {
   const pathname = usePathname();
   const { hasAnyRole, isLoading } = useAuth();
   const [pendingHref, setPendingHref] = useState<string | null>(null);
-  const [isBoletim, setIsBoletim] = useState(false);
-
-  // Computa janela de boletim somente no cliente para evitar mismatch SSR
-  useEffect(() => {
-    setIsBoletim(isDomingoWindow());
-  }, []);
 
   useEffect(() => {
     if (
@@ -38,10 +30,9 @@ export function MobileTabBar() {
 
   const tabs: NavItem[] = useMemo(() => {
     const result = [...PRIMARY_TABS];
-    if (isBoletim) result.push(BOLETIM_TAB);
     if (isGestaoRole) result.push(GESTAO_TAB);
     return result;
-  }, [isBoletim, isGestaoRole]);
+  }, [isGestaoRole]);
 
   const isActive = (href: string) => {
     if (href === "/dashboard") return pathname === "/dashboard";
