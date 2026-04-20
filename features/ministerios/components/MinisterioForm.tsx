@@ -10,12 +10,13 @@ import { Label } from "@/shared/components/ui/label";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Badge } from "@/shared/components/ui/badge";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/shared/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogBody,
+  ResponsiveDialogFooter,
+} from "@/shared/components/ui/responsive-dialog";
 import { X, Plus } from "lucide-react";
 
 interface MinisterioFormProps {
@@ -89,14 +90,15 @@ export function MinisterioForm({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
+      <ResponsiveDialogContent>
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle>
             {isEditing ? "Editar" : "Novo"} Ministerio
-          </DialogTitle>
-        </DialogHeader>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          </ResponsiveDialogTitle>
+        </ResponsiveDialogHeader>
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="contents">
+        <ResponsiveDialogBody className="space-y-4">
           <div className="space-y-1">
             <Label htmlFor="nome">Nome *</Label>
             <Input id="nome" {...form.register("nome")} />
@@ -179,20 +181,21 @@ export function MinisterioForm({
             </div>
           </div>
 
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? "Salvando..." : isEditing ? "Salvar" : "Criar"}
-            </Button>
-          </DialogFooter>
+        </ResponsiveDialogBody>
+        <ResponsiveDialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+          >
+            Cancelar
+          </Button>
+          <Button type="submit" disabled={loading}>
+            {loading ? "Salvando..." : isEditing ? "Salvar" : "Criar"}
+          </Button>
+        </ResponsiveDialogFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }
