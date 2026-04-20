@@ -11,10 +11,13 @@ import { AudioFilterChips } from "@features/gravacoes/components/AudioFilterChip
 import { AudioList } from "@features/gravacoes/components/AudioList";
 import type { AudioListItemData } from "@features/gravacoes/components/AudioListItem";
 import type { AudioTipo } from "@features/gravacoes/lib/categoryGradient";
+import { BibleBookFilter } from "@features/gravacoes/components/BibleBookFilter";
+import { extractBookName } from "@features/gravacoes/lib/bible";
 
 export default function GravacoesPage() {
   const [search, setSearch] = useState("");
   const [tipo, setTipo] = useState<AudioTipo | null>(null);
+  const [livro, setLivro] = useState<string | null>(null);
   const debouncedSearch = useDebounce(search, 300);
 
   // @ts-ignore Convex TS2589
@@ -26,10 +29,12 @@ export default function GravacoesPage() {
 
   const audios = useMemo<AudioListItemData[] | undefined>(() => {
     if (!gravacoes) return undefined;
-    return (gravacoes as AudioListItemData[]).slice().sort((a, b) =>
-      b.data.localeCompare(a.data),
-    );
-  }, [gravacoes]);
+    let result = (gravacoes as (AudioListItemData & { textoBase?: string })[]).slice();
+    if (livro) {
+      result = result.filter((g) => extractBookName(g.textoBase) === livro);
+    }
+    return result.sort((a, b) => b.data.localeCompare(a.data));
+  }, [gravacoes, livro]);
 
   return (
     <ModuloGuard modulo="gravacoes">
@@ -67,6 +72,16 @@ export default function GravacoesPage() {
           <div className="px-4">
             <AudioFilterChips selected={tipo} onSelect={setTipo} />
           </div>
+
+          {gravacoes && gravacoes.length > 0 && (
+            <div className="px-4">
+              <BibleBookFilter
+                gravacoes={gravacoes}
+                selected={livro}
+                onSelect={setLivro}
+              />
+            </div>
+          )}
 
           <div className="px-4">
             <AudioList audios={audios} />
