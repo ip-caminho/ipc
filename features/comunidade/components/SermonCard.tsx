@@ -41,7 +41,7 @@ export function SermonCard({ sermon }: { sermon: SermonCardData }) {
   return (
     <Link
       href={`/gravacoes/${sermon._id}`}
-      className="shrink-0 w-[130px] active:opacity-80 transition-opacity"
+      className="block shrink-0 w-[130px] active:opacity-80 transition-opacity"
     >
       <div
         className="relative h-[130px] w-[130px] rounded-md overflow-hidden flex items-center justify-center"
