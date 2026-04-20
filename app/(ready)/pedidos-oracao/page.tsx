@@ -1,12 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import type { Id } from "@/convex/_generated/dataModel";
 import { Plus, Play } from "lucide-react";
 import { ModuloGuard } from "@shared/components/auth/ModuloGuard";
-import { PedidoOracaoDetalhe } from "@features/pedidosOracao/components/PedidoOracaoDetalhe";
 import { OrarExperiencia } from "@features/pedidosOracao/components/OrarExperiencia";
 import { MuralView } from "@features/pedidosOracao/components/MuralView";
 import { MyRequestsView } from "@features/pedidosOracao/components/MyRequestsView";
@@ -16,8 +15,8 @@ import { cn } from "@shared/lib/utils/cn";
 type Tab = "mural" | "meus";
 
 export default function PedidosOracaoPage() {
+  const router = useRouter();
   const [tab, setTab] = useState<Tab>("mural");
-  const [selectedId, setSelectedId] = useState<Id<"pedidosOracao"> | null>(null);
   const [orarMode, setOrarMode] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
 
@@ -44,17 +43,7 @@ export default function PedidosOracaoPage() {
     );
   }
 
-  // Detail view (Fase 3 vira rota /pedidos-oracao/[id])
-  if (selectedId) {
-    return (
-      <ModuloGuard modulo="pedidos-oracao">
-        <PedidoOracaoDetalhe
-          pedidoId={selectedId}
-          onBack={() => setSelectedId(null)}
-        />
-      </ModuloGuard>
-    );
-  }
+  const goToPedido = (id: string) => router.push(`/pedidos-oracao/${id}`);
 
   return (
     <ModuloGuard modulo="pedidos-oracao">
@@ -129,13 +118,13 @@ export default function PedidosOracaoPage() {
                 <span>Compartilhar um pedido</span>
               </button>
 
-              <MuralView onOpenPedido={(id) => setSelectedId(id as Id<"pedidosOracao">)} />
+              <MuralView onOpenPedido={goToPedido} />
             </div>
           )}
 
           {tab === "meus" && (
             <div className="px-4">
-              <MyRequestsView onOpenPedido={(id) => setSelectedId(id as Id<"pedidosOracao">)} />
+              <MyRequestsView onOpenPedido={goToPedido} />
             </div>
           )}
         </div>
