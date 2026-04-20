@@ -388,8 +388,12 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "features/pedidosOracao/components/UpdateTimeline.tsx",
       "features/pedidosOracao/components/AddUpdateModal.tsx",
       "app/(ready)/pedidos-oracao/[id]/page.tsx (detalhe)",
+      "app/(ready)/pedidos-oracao/guiada/page.tsx (oracao guiada)",
+      "features/pedidosOracao/components/GuidedPrayerDeck.tsx",
+      "features/pedidosOracao/components/GuidedPrayerCard.tsx",
+      "features/pedidosOracao/components/GuidedPrayerComplete.tsx",
       "features/pedidosOracao/components/PedidoOracaoDetalhe.tsx (legado, nao importado)",
-      "features/pedidosOracao/components/OrarExperiencia.tsx (legado — Fase 5 com Motion)",
+      "features/pedidosOracao/components/OrarExperiencia.tsx (legado, nao importado)",
     ],
     queries: [
       "pedidosOracao.queries.listMuralRequests (visibilidade granular)",
@@ -409,7 +413,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     notas: [
       "Aba Mural = feed com visibilidade por scope (private/pg/leaders/church)",
       "Aba Meus pedidos com chips Ativos/Respondidos/Arquivados",
-      "Iniciar oracao guiada = carrossel legado (OrarExperiencia); Fase 5 refatora com Motion",
+      "Iniciar oracao guiada = rota /pedidos-oracao/guiada com Motion: drag horizontal, stack visual, progress bar segmentada, tela final de testemunho",
       "Detalhe do pedido = rota dedicada /pedidos-oracao/[id] com UpdateTimeline; autor pode adicionar atualizacao (ATUALIZACAO/REFORCO/TESTEMUNHO — TESTEMUNHO marca como RESPONDIDO) ou arquivar",
       "Schema tem compat com compartilhadoIgreja (true=church, false=private)",
     ],
