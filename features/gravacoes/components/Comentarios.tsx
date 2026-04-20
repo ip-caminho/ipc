@@ -146,7 +146,7 @@ function ComentarioItem({
                       </span>
                       {(reply.membroId === currentMembroId || isAdmin) && (
                         <button
-                          className="text-xs text-muted-foreground hover:text-destructive"
+                          className="text-xs text-muted-foreground hover:text-destructive inline-flex items-center justify-center min-h-11 min-w-11 md:min-h-0 md:min-w-0 md:p-1 -m-2 md:m-0"
                           onClick={async () => {
                             try {
                               await removeComment({ id: reply._id });
@@ -154,6 +154,7 @@ function ComentarioItem({
                               toast.error(error instanceof Error ? error.message : "Erro");
                             }
                           }}
+                          aria-label="Excluir resposta"
                         >
                           <Trash2 className="h-3 w-3" />
                         </button>

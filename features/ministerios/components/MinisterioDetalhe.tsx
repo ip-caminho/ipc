@@ -219,11 +219,11 @@ export function MinisterioDetalhe({ ministerioId, onBack }: MinisterioDetalhePro
                   {can("ministerios:update") && (
                     <Button
                       variant="ghost"
-                      size="icon"
-                      className="h-7 w-7"
+                      size="icon-tap"
                       onClick={() => handleRemoveMembro(mm._id)}
+                      aria-label="Remover membro do ministério"
                     >
-                      <Trash2 className="h-3.5 w-3.5" />
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   )}
                 </div>

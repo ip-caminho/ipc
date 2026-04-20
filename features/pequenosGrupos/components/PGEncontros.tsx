@@ -80,19 +80,20 @@ export function PGEncontros({ pgId, membros, canEdit }: PGEncontrosProps) {
                       <>
                         <Button
                           variant="ghost"
-                          size="icon"
-                          className="h-7 w-7"
+                          size="icon-tap"
                           onClick={() => { setEditingId(e._id); setFormOpen(true); }}
+                          aria-label="Editar encontro"
                         >
-                          <Pencil className="h-3.5 w-3.5" />
+                          <Pencil className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                          size="icon-tap"
+                          className="text-muted-foreground hover:text-destructive"
                           onClick={() => handleRemove(e._id)}
+                          aria-label="Excluir encontro"
                         >
-                          <Trash2 className="h-3.5 w-3.5" />
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </>
                     )}
