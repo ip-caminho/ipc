@@ -444,13 +444,27 @@ export default defineSchema({
       v.literal("RESPONDIDO"),
       v.literal("ARQUIVADO"),
     ),
+    // Legado: true/false. Substituido por `scope` — mantido para backfill e compat.
     compartilhadoIgreja: v.optional(v.boolean()),
+    // Novo modelo de visibilidade granular
+    scope: v.optional(v.union(
+      v.literal("private"),
+      v.literal("pg"),
+      v.literal("leaders"),
+      v.literal("church"),
+    )),
+    pgId: v.optional(v.id("pequenosGrupos")),
+    anonimo: v.optional(v.boolean()),
+    // Denormalizado para ordenacao/listagem eficiente no mural
+    ultimaAtividadeEm: v.optional(v.number()),
+    qtdOrando: v.optional(v.number()),
     criadoEm: v.number(),
     atualizadoEm: v.optional(v.number()),
   })
     .index("by_membro", ["membroId"])
     .index("by_status", ["status"])
-    .index("by_criadoEm", ["criadoEm"]),
+    .index("by_criadoEm", ["criadoEm"])
+    .index("by_ultimaAtividadeEm", ["ultimaAtividadeEm"]),
 
   pedidoOracaoIntercessores: defineTable({
     pedidoId: v.id("pedidosOracao"),
@@ -459,6 +473,23 @@ export default defineSchema({
   })
     .index("by_pedido", ["pedidoId"])
     .index("by_pedido_membro", ["pedidoId", "membroId"]),
+
+  // Atualizacoes do pedido feitas pelo autor (separadas dos comentarios gerais).
+  // Fase 3 da aba Orar vai usar esta tabela; legado fica em `comentarios` com
+  // tipo=ATUALIZACAO e sera unificado na view de detalhe.
+  pedidoOracaoAtualizacoes: defineTable({
+    pedidoId: v.id("pedidosOracao"),
+    autorId: v.id("membros"),
+    texto: v.string(),
+    tipo: v.union(
+      v.literal("ATUALIZACAO"),
+      v.literal("REFORCO"),
+      v.literal("TESTEMUNHO"),
+    ),
+    criadoEm: v.number(),
+  })
+    .index("by_pedido", ["pedidoId"])
+    .index("by_pedido_criadoEm", ["pedidoId", "criadoEm"]),
 
   // ===== Funcoes (equipes e liturgia) =====
   funcoes: defineTable({
