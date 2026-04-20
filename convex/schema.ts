@@ -169,9 +169,13 @@ export default defineSchema({
     iaResultado: v.optional(v.any()),
     iaProcessadoEm: v.optional(v.number()),
     iaProcessadoPor: v.optional(v.id("membros")),
-    // Sermon boundaries (seconds) — detected by IA
+    // Sermon boundaries (seconds) — detected by IA, só para SERMAO (culto completo)
     inicioSermao: v.optional(v.number()),
     fimSermao: v.optional(v.number()),
+    // Content boundaries (seconds) — generico para todos os tipos. IA detecta e
+    // para SERMAO sincroniza com inicio/fimSermao. Player e UI preferem estes.
+    inicioConteudo: v.optional(v.number()),
+    fimConteudo: v.optional(v.number()),
     // Announcements boundaries (seconds) — detected by IA
     inicioAvisos: v.optional(v.number()),
     fimAvisos: v.optional(v.number()),

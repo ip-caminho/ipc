@@ -86,6 +86,8 @@ export const updateIaStatus = internalMutation({
     tags: v.optional(v.array(v.string())),
     inicioSermao: v.optional(v.number()),
     fimSermao: v.optional(v.number()),
+    inicioConteudo: v.optional(v.number()),
+    fimConteudo: v.optional(v.number()),
     inicioAvisos: v.optional(v.number()),
     fimAvisos: v.optional(v.number()),
     iaAvisos: v.optional(v.array(v.object({
