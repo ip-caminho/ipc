@@ -48,8 +48,8 @@ function relativeLabel(p: Person): RelativeLabel {
   }
   const days = daysUntil(p.dia, p.mes);
   if (days === 0) return { text: "hoje", isToday: true };
-  if (days === 1) return { text: "falta 1 dia", isToday: false };
-  return { text: `faltam ${days} dias`, isToday: false };
+  if (days === 1) return { text: "amanhã", isToday: false };
+  return { text: `em ${days} dias`, isToday: false };
 }
 
 function BirthdayAvatar({
@@ -149,7 +149,15 @@ export function BirthdayList() {
         Aniversariantes
       </SectionLabel>
 
-      <ul className="flex gap-2.5 overflow-x-auto scrollbar-none mask-fade-right -mx-4 pl-4 pr-8 pb-1 pt-1">
+      <ul
+        className="flex gap-2.5 overflow-x-auto scrollbar-none -mx-4 pl-4 pr-6 pb-1 pt-1"
+        style={{
+          maskImage:
+            "linear-gradient(to right, black 0%, black calc(100% - 24px), transparent 100%)",
+          WebkitMaskImage:
+            "linear-gradient(to right, black 0%, black calc(100% - 24px), transparent 100%)",
+        }}
+      >
         {aniversariantes.map((p) => {
           const { text, isToday } = relativeLabel(p);
           return (

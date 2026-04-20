@@ -62,7 +62,7 @@ export function BoletimCard() {
       <Link
         href="/boletim"
         aria-label="Boletim dominical, ao vivo agora"
-        className="flex items-center gap-3 rounded-xl p-4 min-h-[72px] bg-[#1a1a1a] text-white active:opacity-90 transition-opacity"
+        className="flex items-center gap-3 rounded-xl p-3.5 min-h-[64px] bg-[#1a1a1a] text-white active:opacity-90 transition-opacity"
       >
         <FileText className="h-6 w-6 shrink-0" aria-hidden />
         <div className="flex-1 min-w-0">
@@ -84,7 +84,7 @@ export function BoletimCard() {
       href="/boletim"
       aria-label={`Próximo culto, ${proximoCultoLabel}`}
       className={cn(
-        "flex items-center gap-3 rounded-xl p-4 min-h-[72px]",
+        "flex items-center gap-3 rounded-xl p-3.5 min-h-[64px]",
         "bg-secondary text-secondary-foreground active:opacity-90 transition-opacity",
       )}
     >
