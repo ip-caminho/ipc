@@ -11,34 +11,15 @@ import type { GuidedCardData } from "@features/pedidosOracao/components/GuidedPr
 
 type Phase = "intro" | "deck";
 
-const INTRO_STORAGE_KEY = "prayer-intro-origin";
-
 export default function GuidedPrayerPage() {
   // @ts-ignore Convex TS2589
   const mural = useQuery(api.pedidosOracao.queries.listMuralRequests, {});
   const [phase, setPhase] = useState<Phase>("intro");
-  const [origin, setOrigin] = useState<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     const prefersReducedMotion =
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    const saved =
-      typeof window !== "undefined"
-        ? sessionStorage.getItem(INTRO_STORAGE_KEY)
-        : null;
-    if (saved) {
-      try {
-        setOrigin(JSON.parse(saved));
-      } catch {
-        setOrigin({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
-      }
-      sessionStorage.removeItem(INTRO_STORAGE_KEY);
-    } else if (typeof window !== "undefined") {
-      setOrigin({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
-    }
-
     if (prefersReducedMotion) {
       setPhase("deck");
     }
@@ -76,11 +57,8 @@ export default function GuidedPrayerPage() {
           paddingBottom: "env(safe-area-inset-bottom)",
         }}
       >
-        {phase === "intro" && origin && (
-          <IntroSequence
-            origin={origin}
-            onComplete={() => setPhase("deck")}
-          />
+        {phase === "intro" && (
+          <IntroSequence onComplete={() => setPhase("deck")} />
         )}
         {phase === "deck" && (
           <motion.div

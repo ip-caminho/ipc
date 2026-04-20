@@ -66,14 +66,7 @@ export default function PedidosOracaoPage() {
               {/* Card: iniciar oracao guiada */}
               <button
                 type="button"
-                onClick={(e) => {
-                  const rect = e.currentTarget.getBoundingClientRect();
-                  const x = rect.left + rect.width / 2;
-                  const y = rect.top + rect.height / 2;
-                  sessionStorage.setItem(
-                    "prayer-intro-origin",
-                    JSON.stringify({ x, y }),
-                  );
+                onClick={() => {
                   haptic(30);
                   router.push("/pedidos-oracao/guiada");
                 }}
