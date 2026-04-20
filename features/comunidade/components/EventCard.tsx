@@ -22,7 +22,7 @@ export function EventCard({ evento }: { evento: EventCardData }) {
   return (
     <Link
       href="/calendario"
-      className="shrink-0 w-[130px] rounded-md border p-2.5 active:opacity-80 transition-opacity"
+      className="block shrink-0 w-[130px] rounded-md border bg-background p-2.5 active:opacity-80 transition-opacity"
     >
       <p className="text-[9px] font-medium tracking-wide text-muted-foreground uppercase">
         {dataLabel}
