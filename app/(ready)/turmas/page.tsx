@@ -9,6 +9,8 @@ import { Plus } from "lucide-react";
 import { TurmaCard } from "@features/turmas/components/TurmaCard";
 import { PermissionGate } from "@/shared/components/auth/PermissionGate";
 import { ModuloGuard } from "@/shared/components/auth/ModuloGuard";
+import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
+import { PageHeader } from "@shared/components/layout/PageHeader";
 import { parseAsString, useQueryState } from "nuqs";
 import { TurmaFormDialog } from "@features/turmas/components/TurmaFormDialog";
 
@@ -22,9 +24,10 @@ export default function TurmasPage() {
 
   return (
     <ModuloGuard modulo="turmas">
+      <HeaderLayout>
       <div className="container max-w-4xl py-6 space-y-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Turmas</h1>
+        <PageHeader title="Turmas" />
+        <div className="flex items-center justify-end">
           <PermissionGate permission="turmas:create">
             <Button onClick={() => setFormOpen(true)} size="sm">
               <Plus className="h-4 w-4 mr-1" />
@@ -60,6 +63,7 @@ export default function TurmasPage() {
 
         <TurmaFormDialog open={formOpen} onOpenChange={setFormOpen} />
       </div>
+      </HeaderLayout>
     </ModuloGuard>
   );
 }

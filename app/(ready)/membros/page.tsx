@@ -10,6 +10,8 @@ import Link from "next/link";
 import { useState } from "react";
 import { PermissionGate } from "@shared/components/auth/PermissionGate";
 import { ModuloGuard } from "@shared/components/auth/ModuloGuard";
+import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
+import { PageHeader } from "@shared/components/layout/PageHeader";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { useDebounce } from "@shared/hooks/useDebounce";
 
@@ -20,9 +22,10 @@ export default function MembrosPage() {
 
   return (
     <ModuloGuard modulo="membros">
+    <HeaderLayout>
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Membros</h1>
+      <PageHeader title="Membros" />
+      <div className="flex items-center justify-end">
         <PermissionGate permission="membros:create">
           <Button asChild>
             <Link href="/membros/novo">
@@ -55,6 +58,7 @@ export default function MembrosPage() {
         <MembroTable data={membros as any} />
       )}
     </div>
+    </HeaderLayout>
     </ModuloGuard>
   );
 }

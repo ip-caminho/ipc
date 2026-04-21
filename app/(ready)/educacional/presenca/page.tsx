@@ -9,6 +9,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { PermissionGate } from "@shared/components/auth/PermissionGate";
+import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
 import { TURMA_OPTIONS, TURMA_COLORS } from "@features/educacional/lib/constants";
 import { Check, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
@@ -84,6 +85,7 @@ export default function PresencaPage() {
   if (saved) {
     return (
       <PermissionGate permission="educacional:write">
+        <HeaderLayout>
         <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
           <div className="h-16 w-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
             <Check className="h-8 w-8 text-green-600 dark:text-green-400" />
@@ -104,6 +106,7 @@ export default function PresencaPage() {
             </Button>
           </div>
         </div>
+        </HeaderLayout>
       </PermissionGate>
     );
   }
@@ -112,6 +115,7 @@ export default function PresencaPage() {
   if (!turma) {
     return (
       <PermissionGate permission="educacional:write">
+        <HeaderLayout>
         <div className="space-y-4">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="icon" asChild>
@@ -140,6 +144,7 @@ export default function PresencaPage() {
             ))}
           </div>
         </div>
+        </HeaderLayout>
       </PermissionGate>
     );
   }
@@ -149,6 +154,7 @@ export default function PresencaPage() {
 
   return (
     <PermissionGate permission="educacional:write">
+      <HeaderLayout>
       <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center gap-3">
@@ -242,6 +248,7 @@ export default function PresencaPage() {
           </div>
         )}
       </div>
+      </HeaderLayout>
     </PermissionGate>
   );
 }

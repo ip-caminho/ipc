@@ -16,6 +16,8 @@ import { Plus, Search, AlertCircle, BookMarked } from "lucide-react";
 import { LivroCard } from "@features/biblioteca/components/LivroCard";
 import { PermissionGate } from "@/shared/components/auth/PermissionGate";
 import { ModuloGuard } from "@/shared/components/auth/ModuloGuard";
+import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
+import { PageHeader } from "@shared/components/layout/PageHeader";
 import { parseAsString, useQueryState } from "nuqs";
 import Link from "next/link";
 import { useDebounce } from "@shared/hooks/useDebounce";
@@ -36,9 +38,10 @@ export default function BibliotecaPage() {
 
   return (
     <ModuloGuard modulo="biblioteca">
+      <HeaderLayout>
       <div className="container max-w-4xl py-6 space-y-4">
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <h1 className="text-2xl font-bold">Biblioteca</h1>
+        <PageHeader title="Biblioteca" />
+        <div className="flex items-center justify-end flex-wrap gap-2">
           <div className="flex items-center gap-2">
             {meusEmprestimos && meusEmprestimos.length > 0 && (
               <Link href="/biblioteca/meus-emprestimos">
@@ -107,6 +110,7 @@ export default function BibliotecaPage() {
           </div>
         )}
       </div>
+      </HeaderLayout>
     </ModuloGuard>
   );
 }

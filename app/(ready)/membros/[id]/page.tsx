@@ -8,6 +8,8 @@ import { toast } from "sonner";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import type { MembroFormValues } from "@features/membros/lib/validations";
 import type { Id } from "@/convex/_generated/dataModel";
+import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
+import { DetailHeader } from "@shared/components/layout/DetailHeader";
 
 export default function MembroDetailPage() {
   const params = useParams();
@@ -19,15 +21,23 @@ export default function MembroDetailPage() {
 
   if (membro === undefined) {
     return (
-      <div className="space-y-4 max-w-4xl">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-96 w-full" />
-      </div>
+      <HeaderLayout>
+        <DetailHeader backHref="/membros" />
+        <div className="space-y-4 max-w-4xl">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-96 w-full" />
+        </div>
+      </HeaderLayout>
     );
   }
 
   if (!membro) {
-    return <p className="text-muted-foreground">Membro nao encontrado</p>;
+    return (
+      <HeaderLayout>
+        <DetailHeader backHref="/membros" />
+        <p className="text-muted-foreground">Membro nao encontrado</p>
+      </HeaderLayout>
+    );
   }
 
   const defaultValues: Partial<MembroFormValues> = {
@@ -126,8 +136,11 @@ export default function MembroDetailPage() {
   };
 
   return (
-    <div className="max-w-4xl">
-      <MembroForm defaultValues={defaultValues} onSubmit={handleSubmit} isEditing entityId={membro.entidadeId} />
-    </div>
+    <HeaderLayout>
+      <DetailHeader backHref="/membros" />
+      <div className="max-w-4xl">
+        <MembroForm defaultValues={defaultValues} onSubmit={handleSubmit} isEditing entityId={membro.entidadeId} />
+      </div>
+    </HeaderLayout>
   );
 }

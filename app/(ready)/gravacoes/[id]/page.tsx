@@ -14,6 +14,8 @@ import { ptBR } from "date-fns/locale";
 import { useEscutaTracker } from "@features/gravacoes/hooks/useEscutaTracker";
 import { useState } from "react";
 import { cn } from "@shared/lib/utils/cn";
+import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
+import { DetailHeader } from "@shared/components/layout/DetailHeader";
 
 export default function GravacaoDetailPage() {
   const params = useParams();
@@ -67,10 +69,12 @@ export default function GravacaoDetailPage() {
   const hasAudio = gravacao.audioUrl && gravacao.iaStatus === "CONCLUIDO";
 
   return (
+    <HeaderLayout>
     <div className="-m-4 md:-m-6 flex flex-col">
       {/* Conteúdo principal — scroll do documento */}
       <div className="flex-1 px-4 md:px-6">
         <div className="max-w-2xl mx-auto py-4 md:py-6 space-y-5">
+          <DetailHeader backHref="/gravacoes" />
 
           {/* 1. Título + metadados */}
           <div>
@@ -167,5 +171,6 @@ export default function GravacaoDetailPage() {
         </div>
       </div>
     </div>
+    </HeaderLayout>
   );
 }

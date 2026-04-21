@@ -9,11 +9,13 @@ import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Badge } from "@/shared/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
-import { ArrowLeft, BookOpen, Plus, QrCode, Tag } from "lucide-react";
+import { BookOpen, Plus, Tag } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { STATUS_EXEMPLAR } from "@features/biblioteca/lib/constants";
 import { ModuloGuard } from "@/shared/components/auth/ModuloGuard";
+import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
+import { DetailHeader } from "@shared/components/layout/DetailHeader";
 import { EmprestimoForm } from "@features/biblioteca/components/EmprestimoForm";
 import { ExemplarTimeline } from "@features/biblioteca/components/ExemplarTimeline";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -44,10 +46,9 @@ export default function LivroDetalhePage() {
 
   return (
     <ModuloGuard modulo="biblioteca">
+      <HeaderLayout>
       <div className="container max-w-3xl py-6 space-y-4">
-        <Button variant="ghost" size="sm" onClick={() => router.push("/biblioteca")}>
-          <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
-        </Button>
+        <DetailHeader backHref="/biblioteca" />
 
         <Card>
           <CardHeader>
@@ -218,6 +219,7 @@ export default function LivroDetalhePage() {
           exemplares={livro.exemplares}
         />
       </div>
+      </HeaderLayout>
     </ModuloGuard>
   );
 }
