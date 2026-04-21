@@ -7,6 +7,8 @@ import { motion, AnimatePresence } from "motion/react";
 import { api } from "@/convex/_generated/api";
 import { Plus, Play } from "lucide-react";
 import { ModuloGuard } from "@shared/components/auth/ModuloGuard";
+import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
+import { PageHeader } from "@shared/components/layout/PageHeader";
 import { MuralView } from "@features/pedidosOracao/components/MuralView";
 import { MyRequestsView } from "@features/pedidosOracao/components/MyRequestsView";
 import { NewRequestModal } from "@features/pedidosOracao/components/NewRequestModal";
@@ -29,13 +31,14 @@ export default function PedidosOracaoPage() {
 
   return (
     <ModuloGuard modulo="pedidos-oracao">
-      <div className="-m-4 md:-m-6 md:max-w-2xl md:mx-auto">
-        <div className="flex flex-col gap-4 py-4 md:py-6">
-          <header className="px-4">
-            <h1 className="text-[22px] font-medium leading-none">Orar</h1>
-          </header>
+      <HeaderLayout>
+        <div className="-m-4 md:-m-6 md:max-w-2xl md:mx-auto">
+          <div className="flex flex-col gap-4 py-4 md:py-6">
+            <div className="px-4">
+              <PageHeader title="Orar" />
+            </div>
 
-          {/* Sub-abas */}
+            {/* Sub-abas */}
           <div className="px-4">
             <div role="tablist" className="flex gap-4 border-b">
               {(["mural", "meus"] as const).map((t) => {
@@ -108,13 +111,14 @@ export default function PedidosOracaoPage() {
             </div>
           )}
 
-          {tab === "meus" && (
-            <div className="px-4">
-              <MyRequestsView onOpenPedido={goToPedido} />
-            </div>
-          )}
+            {tab === "meus" && (
+              <div className="px-4">
+                <MyRequestsView onOpenPedido={goToPedido} />
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      </HeaderLayout>
 
       {/* FAB mobile: compartilhar pedido */}
       <button

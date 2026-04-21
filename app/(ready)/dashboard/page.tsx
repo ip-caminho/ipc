@@ -13,6 +13,8 @@ import { Button } from "@shared/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/shared/components/ui/card";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
+import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
+import { PageHeader } from "@shared/components/layout/PageHeader";
 import { PushPermissionBanner } from "@shared/notifications/PushPermissionBanner";
 import { BoletimCard } from "@features/dashboard/components/BoletimCard";
 import { TodaySection } from "@features/dashboard/components/TodaySection";
@@ -119,19 +121,13 @@ export default function DashboardPage() {
   const saudacao = hora < 12 ? "Bom dia" : hora < 18 ? "Boa tarde" : "Boa noite";
 
   return (
-    <div className="flex flex-col gap-4">
-      <header className="flex items-baseline justify-between gap-3 py-1">
-        <h1 className="text-[15px] font-medium text-foreground truncate">
-          {saudacao}, {primeiroNome}
-        </h1>
-        <span className="text-[11px] text-muted-foreground shrink-0">
-          {dataHoje}
-        </span>
-      </header>
+    <HeaderLayout>
+      <div className="flex flex-col gap-4">
+        <PageHeader title={`${saudacao}, ${primeiroNome}`} subtitle={dataHoje} />
 
-      <PushPermissionBanner />
+        <PushPermissionBanner />
 
-      <BoletimCard />
+        <BoletimCard />
 
       <section className="space-y-2">
         <SectionLabel>Hoje</SectionLabel>
@@ -142,7 +138,8 @@ export default function DashboardPage() {
 
       <EducacionalPaisWidget />
 
-      <ChamadaWidget />
-    </div>
+        <ChamadaWidget />
+      </div>
+    </HeaderLayout>
   );
 }
