@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Image from "next/image";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { format } from "date-fns";
@@ -77,11 +78,16 @@ function BirthdayAvatar({
     ? "ring-2 ring-blue-500 ring-offset-2 ring-offset-background"
     : "";
   if (p.foto) {
+    const px = size === "lg" ? 80 : 44;
     return (
-      <img
+      <Image
         src={p.foto}
         alt={p.nome}
+        width={px}
+        height={px}
+        sizes={size === "lg" ? "80px" : "44px"}
         className={cn(sizeClass, "rounded-full object-cover", ring)}
+        unoptimized={!p.foto.startsWith("https://cdn.yhc.com.br")}
       />
     );
   }
