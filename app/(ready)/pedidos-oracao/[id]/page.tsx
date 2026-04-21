@@ -7,8 +7,9 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { toast } from "sonner";
-import { ChevronLeft, Archive, Megaphone } from "lucide-react";
+import { Archive, Megaphone } from "lucide-react";
 import { ModuloGuard } from "@shared/components/auth/ModuloGuard";
+import { DetailHeader } from "@shared/components/layout/DetailHeader";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
@@ -100,13 +101,7 @@ export default function PedidoDetalhePage() {
     <ModuloGuard modulo="pedidos-oracao">
       <div className="-m-4 md:-m-6 md:max-w-2xl md:mx-auto">
         <div className="flex flex-col gap-5 py-4 md:py-6 px-4">
-          <Link
-            href="/pedidos-oracao"
-            className="inline-flex items-center gap-1 text-xs text-muted-foreground w-fit min-h-11 active:opacity-70"
-          >
-            <ChevronLeft className="h-3.5 w-3.5" aria-hidden />
-            Voltar ao mural
-          </Link>
+          <DetailHeader backHref="/pedidos-oracao" />
 
           {/* Pedido principal */}
           <article
