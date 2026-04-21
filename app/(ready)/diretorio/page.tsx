@@ -42,6 +42,8 @@ import { ptBR } from "date-fns/locale";
 import { CARGO_ECLESIASTICO_OPTIONS } from "@features/membros/lib/constants";
 import { TURMA_OPTIONS, TURMA_COLORS, TIPO_RESPONSAVEL_LABELS } from "@features/educacional/lib/constants";
 import { ModuloGuard } from "@shared/components/auth/ModuloGuard";
+import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
+import { PageHeader } from "@shared/components/layout/PageHeader";
 
 const CARGO_FILTERS = [
   { value: "todos", label: "Todos", tooltip: "Todos os membros ativos da igreja" },
@@ -493,22 +495,18 @@ export default function DiretorioPage() {
 
   return (
     <ModuloGuard modulo="diretorio">
+    <HeaderLayout>
     <div className="space-y-6 overflow-x-hidden">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Diretorio</h1>
-          <p className="text-muted-foreground">
-            {isCriancas ? "Criancas do educacional infantil" : (
-              <>
-                Encontre membros da igreja
-                {sortedMembros !== undefined && (
-                  <span className="ml-1">({sortedMembros.length})</span>
-                )}
-              </>
-            )}
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title="Diretorio"
+        subtitle={
+          isCriancas
+            ? "Criancas do educacional infantil"
+            : `Encontre membros da igreja${
+                sortedMembros !== undefined ? ` (${sortedMembros.length})` : ""
+              }`
+        }
+      />
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="relative flex-1 max-w-md">
@@ -625,6 +623,7 @@ export default function DiretorioPage() {
     {selectedMembroId && (
       <MembroFicha membroId={selectedMembroId} onClose={() => setSelectedMembroId(null)} />
     )}
+    </HeaderLayout>
     </ModuloGuard>
   );
 }

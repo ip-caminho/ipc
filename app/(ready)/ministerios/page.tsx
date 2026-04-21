@@ -7,6 +7,8 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { useAuth } from "@shared/providers/PermissionsProvider";
 import { PermissionGate } from "@shared/components/auth/PermissionGate";
 import { ModuloGuard } from "@shared/components/auth/ModuloGuard";
+import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
+import { PageHeader } from "@shared/components/layout/PageHeader";
 import { Button } from "@/shared/components/ui/button";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
@@ -47,9 +49,10 @@ export default function MinisteriosPage() {
 
   return (
     <ModuloGuard modulo="ministerios">
+      <HeaderLayout>
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Ministerios</h1>
+        <PageHeader title="Ministerios" />
+        <div className="flex items-center justify-end">
           <PermissionGate permission="ministerios:create">
             <Button onClick={() => setCreateOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
@@ -82,6 +85,7 @@ export default function MinisteriosPage() {
           onSubmit={handleCreate}
         />
       </div>
+      </HeaderLayout>
     </ModuloGuard>
   );
 }

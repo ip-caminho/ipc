@@ -8,6 +8,8 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { useAuth } from "@shared/providers/PermissionsProvider";
 import { PermissionGate } from "@shared/components/auth/PermissionGate";
 import { ModuloGuard } from "@shared/components/auth/ModuloGuard";
+import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
+import { PageHeader } from "@shared/components/layout/PageHeader";
 import { useProfessorTurmas } from "@features/educacional/hooks/useProfessorTurmas";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
@@ -199,13 +201,12 @@ export default function EducacionalPage() {
   if (!isCoordenador && !loadingTurmas && minhasTurmas.length > 1) {
     return (
       <ModuloGuard modulo="educacional">
+        <HeaderLayout>
         <div className="max-w-xl mx-auto space-y-6">
-          <div>
-            <h1 className="text-2xl font-medium">Educacional</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Selecione sua turma para marcar presença
-            </p>
-          </div>
+          <PageHeader
+            title="Educacional"
+            subtitle="Selecione sua turma para marcar presença"
+          />
           <div className="space-y-2">
             {minhasTurmas.map((turma) => {
               const label = TURMA_OPTIONS.find((t) => t.value === turma)?.label || `Turma ${turma}`;
@@ -227,6 +228,7 @@ export default function EducacionalPage() {
             })}
           </div>
         </div>
+        </HeaderLayout>
       </ModuloGuard>
     );
   }
@@ -235,6 +237,7 @@ export default function EducacionalPage() {
   if (!isCoordenador && !loadingTurmas && minhasTurmas.length === 0) {
     return (
       <ModuloGuard modulo="educacional">
+        <HeaderLayout>
         <div className="max-w-md mx-auto text-center pt-12">
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted mx-auto mb-4">
             <Baby className="h-8 w-8 text-muted-foreground" />
@@ -244,6 +247,7 @@ export default function EducacionalPage() {
             Você não está escalado como professor em nenhuma turma.
           </p>
         </div>
+        </HeaderLayout>
       </ModuloGuard>
     );
   }
@@ -286,9 +290,10 @@ export default function EducacionalPage() {
 
   return (
     <ModuloGuard modulo="educacional">
+      <HeaderLayout>
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Educacional Infantil</h1>
+        <PageHeader title="Educacional" />
+        <div className="flex items-center justify-end">
           {canWriteEdu && (
             <Button asChild>
               <Link href="/educacional/presenca">
@@ -510,6 +515,7 @@ export default function EducacionalPage() {
           />
         )}
       </div>
+      </HeaderLayout>
     </ModuloGuard>
   );
 }

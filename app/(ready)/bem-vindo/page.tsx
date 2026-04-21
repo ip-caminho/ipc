@@ -13,6 +13,7 @@ import { Skeleton } from "@/shared/components/ui/skeleton";
 import { FileUpload } from "@/shared/files/components/FileUpload";
 import { toast } from "sonner";
 import { Check, ArrowRight } from "lucide-react";
+import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
 
 export default function BemVindoPage() {
   const data = useQuery(api.membros.onboarding.getOnboardingData);
@@ -73,6 +74,7 @@ export default function BemVindoPage() {
   };
 
   return (
+    <HeaderLayout>
     <div className="flex items-center justify-center min-h-[60vh] px-4">
       <div className="w-full max-w-md space-y-6">
 
@@ -216,5 +218,6 @@ export default function BemVindoPage() {
         )}
       </div>
     </div>
+    </HeaderLayout>
   );
 }

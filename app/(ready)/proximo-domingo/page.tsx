@@ -17,6 +17,8 @@ import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useState } from "react";
 import { ModuloGuard } from "@shared/components/auth/ModuloGuard";
+import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
+import { PageHeader } from "@shared/components/layout/PageHeader";
 import { useBibleLookup } from "@/shared/bible/hooks/useBibleLookup";
 import { BibleVersePreview } from "@/shared/bible/components/BibleVersePreview";
 
@@ -66,10 +68,12 @@ export default function ProximoDomingoPage() {
   if (domingo === undefined) {
     return (
       <ModuloGuard modulo="escalas">
-        <div className="space-y-4">
-          <Skeleton className="h-8 w-48" />
-          <Skeleton className="h-96 w-full" />
-        </div>
+        <HeaderLayout>
+          <div className="space-y-4">
+            <PageHeader title="Próximo domingo" />
+            <Skeleton className="h-96 w-full" />
+          </div>
+        </HeaderLayout>
       </ModuloGuard>
     );
   }
@@ -77,10 +81,13 @@ export default function ProximoDomingoPage() {
   if (domingo === null) {
     return (
       <ModuloGuard modulo="escalas">
-        <div className="flex flex-col items-center justify-center py-24 text-muted-foreground gap-2">
-          <Church className="h-12 w-12" />
-          <p>Nenhum culto dominical cadastrado</p>
-        </div>
+        <HeaderLayout>
+          <PageHeader title="Próximo domingo" />
+          <div className="flex flex-col items-center justify-center py-24 text-muted-foreground gap-2">
+            <Church className="h-12 w-12" />
+            <p>Nenhum culto dominical cadastrado</p>
+          </div>
+        </HeaderLayout>
       </ModuloGuard>
     );
   }
@@ -93,10 +100,11 @@ export default function ProximoDomingoPage() {
 
   return (
     <ModuloGuard modulo="escalas">
+      <HeaderLayout>
       <div className="space-y-6 max-w-3xl">
+        <PageHeader title="Próximo domingo" />
         {/* Header com seletor de data */}
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-medium">Próximo Domingo</h1>
+        <div className="flex items-center justify-end">
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
@@ -303,6 +311,7 @@ export default function ProximoDomingoPage() {
           </Section>
         )}
       </div>
+      </HeaderLayout>
     </ModuloGuard>
   );
 }

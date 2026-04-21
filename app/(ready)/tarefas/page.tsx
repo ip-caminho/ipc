@@ -18,6 +18,8 @@ import { TarefaCard } from "@features/tarefas/components/TarefaCard";
 import { TarefaForm } from "@features/tarefas/components/TarefaForm";
 import { PermissionGate } from "@/shared/components/auth/PermissionGate";
 import { ModuloGuard } from "@/shared/components/auth/ModuloGuard";
+import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
+import { PageHeader } from "@shared/components/layout/PageHeader";
 import { parseAsString, useQueryState } from "nuqs";
 
 export default function TarefasPage() {
@@ -33,9 +35,10 @@ export default function TarefasPage() {
 
   return (
     <ModuloGuard modulo="tarefas">
+      <HeaderLayout>
       <div className="container max-w-4xl py-6 space-y-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Tarefas</h1>
+        <PageHeader title="Tarefas" />
+        <div className="flex items-center justify-end">
           <PermissionGate permission="tarefas:create">
             <Button onClick={() => setFormOpen(true)} size="sm">
               <Plus className="h-4 w-4 mr-1" />
@@ -85,6 +88,7 @@ export default function TarefasPage() {
 
         <TarefaForm open={formOpen} onOpenChange={setFormOpen} />
       </div>
+      </HeaderLayout>
     </ModuloGuard>
   );
 }
