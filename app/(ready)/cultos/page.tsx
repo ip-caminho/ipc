@@ -13,6 +13,8 @@ import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { Fragment, useState } from "react";
 import { ModuloGuard } from "@shared/components/auth/ModuloGuard";
+import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
+import { PageHeader } from "@shared/components/layout/PageHeader";
 import { useFuncoes } from "@features/escalas/hooks/useFuncoes";
 import { MembroCombobox } from "@features/escalas/components/MembroCombobox";
 import { LouvorOrdemSection } from "@features/escalas/components/LouvorOrdemSection";
@@ -534,18 +536,21 @@ export default function CultosPage() {
   if (cultos === undefined) {
     return (
       <ModuloGuard modulo="escalas">
+      <HeaderLayout>
       <div className="space-y-4">
-        <h1 className="text-2xl font-bold">Cultos</h1>
+        <PageHeader title="Cultos" />
         <Skeleton className="h-96" />
       </div>
+      </HeaderLayout>
       </ModuloGuard>
     );
   }
 
   return (
     <ModuloGuard modulo="escalas">
+    <HeaderLayout>
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Planejamento</h1>
+      <PageHeader title="Planejamento" />
 
       {/* Mobile */}
       <div className="md:hidden">
@@ -606,6 +611,7 @@ export default function CultosPage() {
         )}
       </div>
     </div>
+    </HeaderLayout>
     </ModuloGuard>
   );
 }

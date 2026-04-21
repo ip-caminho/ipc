@@ -15,13 +15,15 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
-import { ArrowLeft, Calendar, Pencil, Trash2, User } from "lucide-react";
+import { Calendar, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { TarefaStatusBadge } from "@features/tarefas/components/TarefaStatusBadge";
 import { TarefaPrioridadeBadge } from "@features/tarefas/components/TarefaPrioridadeBadge";
 import { TarefaForm } from "@features/tarefas/components/TarefaForm";
 import { ComentariosThread } from "@/shared/components/ComentariosThread";
 import { ModuloGuard } from "@/shared/components/auth/ModuloGuard";
+import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
+import { DetailHeader } from "@shared/components/layout/DetailHeader";
 import { STATUS_OPTIONS } from "@features/tarefas/lib/constants";
 import type { Id } from "@/convex/_generated/dataModel";
 
@@ -69,10 +71,9 @@ export default function TarefaDetalhePage() {
 
   return (
     <ModuloGuard modulo="tarefas">
+      <HeaderLayout>
       <div className="container max-w-3xl py-6 space-y-4">
-        <Button variant="ghost" size="sm" onClick={() => router.push("/tarefas")}>
-          <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
-        </Button>
+        <DetailHeader backHref="/tarefas" />
 
         <Card>
           <CardHeader>
@@ -172,6 +173,7 @@ export default function TarefaDetalhePage() {
           }}
         />
       </div>
+      </HeaderLayout>
     </ModuloGuard>
   );
 }

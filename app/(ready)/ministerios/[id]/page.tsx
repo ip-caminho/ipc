@@ -2,6 +2,8 @@
 
 import { use } from "react";
 import { ModuloGuard } from "@shared/components/auth/ModuloGuard";
+import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
+import { DetailHeader } from "@shared/components/layout/DetailHeader";
 import { MinisterioDetalhe } from "@features/ministerios/components/MinisterioDetalhe";
 import { useRouter } from "next/navigation";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -16,10 +18,13 @@ export default function MinisterioDetalhePage({
 
   return (
     <ModuloGuard modulo="ministerios">
-      <MinisterioDetalhe
-        ministerioId={id as Id<"ministerios">}
-        onBack={() => router.push("/ministerios")}
-      />
+      <HeaderLayout>
+        <DetailHeader backHref="/ministerios" />
+        <MinisterioDetalhe
+          ministerioId={id as Id<"ministerios">}
+          onBack={() => router.push("/ministerios")}
+        />
+      </HeaderLayout>
     </ModuloGuard>
   );
 }

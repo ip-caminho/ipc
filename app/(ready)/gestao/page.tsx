@@ -5,6 +5,8 @@ import { useEffect } from "react";
 import { NavSectionList } from "@features/navigation/components/NavSectionList";
 import { GESTAO_SECTIONS, ELEVATED_ROLES } from "@shared/constants/navigation";
 import { useAuth } from "@shared/providers/PermissionsProvider";
+import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
+import { PageHeader } from "@shared/components/layout/PageHeader";
 
 export default function GestaoPage() {
   const { hasAnyRole, isLoading } = useAuth();
@@ -21,17 +23,19 @@ export default function GestaoPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto w-full">
-      <header className="mb-6">
-        <h1 className="text-2xl font-medium">Gestão</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Ferramentas operacionais da igreja
-        </p>
-      </header>
-      <NavSectionList
-        sections={GESTAO_SECTIONS}
-        emptyMessage="Sem itens de gestão disponíveis para o seu perfil."
-      />
-    </div>
+    <HeaderLayout>
+      <div className="max-w-2xl mx-auto w-full">
+        <PageHeader
+          title="Gestão"
+          subtitle="Ferramentas operacionais da igreja"
+        />
+        <div className="mt-6">
+          <NavSectionList
+            sections={GESTAO_SECTIONS}
+            emptyMessage="Sem itens de gestão disponíveis para o seu perfil."
+          />
+        </div>
+      </div>
+    </HeaderLayout>
   );
 }

@@ -3,6 +3,8 @@
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { ModuloGuard } from "@shared/components/auth/ModuloGuard";
+import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
+import { PageHeader } from "@shared/components/layout/PageHeader";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { Button } from "@/shared/components/ui/button";
 import { format, addDays, isSaturday, isSunday, nextSaturday, startOfDay } from "date-fns";
@@ -60,10 +62,12 @@ export default function SalasPage() {
   if (salas === undefined) {
     return (
       <ModuloGuard modulo="salas">
+        <HeaderLayout>
         <div className="space-y-4">
-          <h1 className="text-2xl font-bold">Salas</h1>
+          <PageHeader title="Salas" />
           <Skeleton className="h-64" />
         </div>
+        </HeaderLayout>
       </ModuloGuard>
     );
   }
@@ -78,8 +82,9 @@ export default function SalasPage() {
           onBack={() => setFormSalaId(null)}
         />
       ) : (
+      <HeaderLayout>
       <div className="space-y-5">
-        <h1 className="text-2xl font-bold">Salas</h1>
+        <PageHeader title="Salas" />
 
         {/* Weekend navigator */}
         <div className="flex items-center justify-between">
@@ -207,6 +212,7 @@ export default function SalasPage() {
           </div>
         )}
       </div>
+      </HeaderLayout>
       )}
     </ModuloGuard>
   );

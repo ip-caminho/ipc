@@ -13,6 +13,8 @@ import { ChevronLeft, ChevronRight, Music, FileText, CheckSquare, MessageSquare,
 import { toast } from "sonner";
 import { STATUS_ARQUIVO } from "@features/multimidia/lib/constants";
 import { ModuloGuard } from "@/shared/components/auth/ModuloGuard";
+import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
+import { PageHeader } from "@shared/components/layout/PageHeader";
 import type { Id } from "@/convex/_generated/dataModel";
 
 function formatDate(d: string) {
@@ -62,9 +64,10 @@ export default function MultimidiaPage() {
 
   return (
     <ModuloGuard modulo="multimidia">
+      <HeaderLayout>
       <div className="container max-w-4xl py-6 space-y-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Multimídia</h1>
+        <PageHeader title="Multimídia" />
+        <div className="flex items-center justify-end">
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
@@ -243,6 +246,7 @@ export default function MultimidiaPage() {
           </div>
         )}
       </div>
+      </HeaderLayout>
     </ModuloGuard>
   );
 }

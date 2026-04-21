@@ -18,10 +18,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
-import { ArrowLeft, Calendar, Copy, MapPin, Users, Plus, Check, Trash2 } from "lucide-react";
+import { Calendar, Copy, MapPin, Users, Plus, Check, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { STATUS_TURMA, DIA_SEMANA_LABELS } from "@features/turmas/lib/constants";
 import { ModuloGuard } from "@/shared/components/auth/ModuloGuard";
+import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
+import { DetailHeader } from "@shared/components/layout/DetailHeader";
 import type { Id } from "@/convex/_generated/dataModel";
 
 function formatDate(d: string) {
@@ -132,10 +134,9 @@ export default function TurmaDetalhePage() {
 
   return (
     <ModuloGuard modulo="turmas">
+      <HeaderLayout>
       <div className="container max-w-4xl py-6 space-y-4">
-        <Button variant="ghost" size="sm" onClick={() => router.push("/turmas")}>
-          <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
-        </Button>
+        <DetailHeader backHref="/turmas" />
 
         <Card>
           <CardHeader>
@@ -361,6 +362,7 @@ export default function TurmaDetalhePage() {
           </TabsContent>
         </Tabs>
       </div>
+      </HeaderLayout>
     </ModuloGuard>
   );
 }

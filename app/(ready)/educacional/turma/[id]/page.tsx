@@ -6,10 +6,12 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { ModuloGuard } from "@shared/components/auth/ModuloGuard";
+import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
+import { DetailHeader } from "@shared/components/layout/DetailHeader";
 import { useAuth } from "@shared/providers/PermissionsProvider";
 import { Button } from "@/shared/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
-import { ArrowLeft, Check, X, Minus, Send } from "lucide-react";
+import { Check, X, Minus, Send } from "lucide-react";
 import { TURMA_OPTIONS } from "@features/educacional/lib/constants";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -91,9 +93,12 @@ export default function TurmaProfessorPage() {
   if (loadingTurmas || criancas === undefined) {
     return (
       <ModuloGuard modulo="educacional">
-        <div className="max-w-xl mx-auto pt-12 text-center text-sm text-muted-foreground">
-          Carregando...
-        </div>
+        <HeaderLayout>
+          <DetailHeader backHref="/educacional" />
+          <div className="max-w-xl mx-auto pt-12 text-center text-sm text-muted-foreground">
+            Carregando...
+          </div>
+        </HeaderLayout>
       </ModuloGuard>
     );
   }
@@ -101,35 +106,33 @@ export default function TurmaProfessorPage() {
   if (!temAcesso) {
     return (
       <ModuloGuard modulo="educacional">
-        <div className="max-w-md mx-auto text-center pt-12">
-          <h1 className="text-xl font-medium">Sem acesso</h1>
-          <p className="text-sm text-muted-foreground mt-2">
-            Você não está escalado como professor desta turma.
-          </p>
-          <Button
-            variant="outline"
-            className="mt-4"
-            onClick={() => router.replace("/educacional")}
-          >
-            Voltar
-          </Button>
-        </div>
+        <HeaderLayout>
+          <DetailHeader backHref="/educacional" />
+          <div className="max-w-md mx-auto text-center pt-12">
+            <h1 className="text-xl font-medium">Sem acesso</h1>
+            <p className="text-sm text-muted-foreground mt-2">
+              Você não está escalado como professor desta turma.
+            </p>
+            <Button
+              variant="outline"
+              className="mt-4"
+              onClick={() => router.replace("/educacional")}
+            >
+              Voltar
+            </Button>
+          </div>
+        </HeaderLayout>
       </ModuloGuard>
     );
   }
 
   return (
     <ModuloGuard modulo="educacional">
+      <HeaderLayout>
       <div className="max-w-xl mx-auto w-full pb-24">
+        <DetailHeader backHref="/educacional" />
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
-          <button
-            onClick={() => router.replace("/educacional")}
-            className="h-10 w-10 flex items-center justify-center rounded-lg hover:bg-muted transition-colors"
-            aria-label="Voltar"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
           <div className="flex-1 min-w-0">
             <h1 className="text-2xl font-medium leading-tight">{turmaLabel}</h1>
             <p className="text-sm text-muted-foreground">
@@ -214,6 +217,7 @@ export default function TurmaProfessorPage() {
           </div>
         )}
       </div>
+      </HeaderLayout>
     </ModuloGuard>
   );
 }

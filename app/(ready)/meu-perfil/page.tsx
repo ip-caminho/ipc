@@ -10,6 +10,8 @@ import { Label } from "@/shared/components/ui/label";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { Badge } from "@/shared/components/ui/badge";
 import { PhotoUpload } from "@/shared/files/components/PhotoUpload";
+import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
+import { PageHeader } from "@shared/components/layout/PageHeader";
 import { toast } from "sonner";
 import { MapPin, User, Phone, Save } from "lucide-react";
 import { CARGO_ECLESIASTICO_OPTIONS, STATUS_COLORS } from "@features/membros/lib/constants";
@@ -124,7 +126,9 @@ export default function MeuPerfilPage() {
     setFormData((prev) => ({ ...prev, [key]: e.target.value }));
 
   return (
+    <HeaderLayout>
     <div className="max-w-2xl mx-auto space-y-4">
+      <PageHeader title="Meu perfil" />
       {/* Header com foto clicavel */}
       <Card>
         <CardContent className="pt-6">
@@ -280,5 +284,6 @@ export default function MeuPerfilPage() {
         </Button>
       </div>
     </div>
+    </HeaderLayout>
   );
 }
