@@ -34,6 +34,10 @@
 
 - **Scheduled function para reset de `boletim.isLive` após 00:30** — hoje só há safeguard frontend em `isBoletimLiveNow` em `features/dashboard/components/BoletimCard.tsx`. Sem Convex cron, flag pode ficar stale se o backend esquecer de desligar.
 
+## Imagens / Fotos
+
+- **Pipeline de thumbnail para fotos de membros** — fotos subidas em resolucao original (500kb-5MB) sao usadas em avatares de 44px, desperdicando banda. Atualmente mitigado via `next/image` que gera resoluções intermediárias, mas o ideal e o backend gerar `fotoThumb` (ex: 88x88 WebP) no momento do upload e salvar no `membros` — economiza 10x mais banda. Afeta: BirthdayList, AniversariantesCard, PrayerAvatarStack, todas as tabelas com avatar.
+
 ## PWA / Mobile
 
 - **Offline-first + registrar service worker** — [#27](https://github.com/devandrechoi/ipc/issues/27). `public/sw.js` só tem handler de push e provavelmente nem é registrado.
