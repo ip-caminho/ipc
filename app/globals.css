@@ -51,6 +51,7 @@
   --tracking-normal: 0em;
   --spacing: 0.25rem;
   --z-fullscreen: 60;
+  --floating-bar-border: oklch(0.92 0 0);
 }
 
 .dark {
@@ -99,6 +100,7 @@
   --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
   --tracking-normal: 0em;
   --spacing: 0.25rem;
+  --floating-bar-border: oklch(0.28 0 0);
 }
 
 @theme {

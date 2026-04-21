@@ -7,7 +7,7 @@ import { ImpersonationBanner } from "@shared/components/layout/ImpersonationBann
  * Wrapper do conteúdo principal das rotas autenticadas.
  *
  * Scroll é do documento (html/body). Este elemento apenas fornece padding
- * e compensa a altura da MobileTabBar + MobileAudioPlayer no rodapé.
+ * e compensa a altura do FloatingBottomBar flutuante + safe area inferior.
  */
 export function PlayerAwareMain({ children }: { children: ReactNode }) {
   return (

@@ -9,7 +9,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Play, Pause, X, Volume2, VolumeX, SkipBack, SkipForward, MessageCircle } from "lucide-react";
 import Link from "next/link";
 
-export function GlobalAudioPlayer() {
+export function GlobalAudioPlayer({ compact = false }: { compact?: boolean } = {}) {
   const player = useAudioPlayer();
   const { track, isPlaying, isActive, relativeTime, segmentDuration, volume, maxVolume, togglePlayPause, seek, seekRelative, setVolume, close } = player;
 
@@ -45,7 +45,11 @@ export function GlobalAudioPlayer() {
 
   return (
     <div
-      className={`shrink-0 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 transition-all duration-200 ease-out ${
+      className={`shrink-0 transition-all duration-200 ease-out ${
+        compact
+          ? ""
+          : "border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80"
+      } ${
         visible ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"
       }`}
     >
