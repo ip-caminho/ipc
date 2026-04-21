@@ -7,6 +7,8 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { useAuth } from "@shared/providers/PermissionsProvider";
 import { PermissionGate } from "@shared/components/auth/PermissionGate";
 import { ModuloGuard } from "@shared/components/auth/ModuloGuard";
+import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
+import { PageHeader } from "@shared/components/layout/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
@@ -188,8 +190,9 @@ export default function PastoreioPage() {
 
   return (
     <ModuloGuard modulo="pastoreio">
+    <HeaderLayout>
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Pastoreio</h1>
+      <PageHeader title="Pastoreio" />
 
       {/* Stats */}
       {canReadPastoreio && stats && (
@@ -424,6 +427,7 @@ export default function PastoreioPage() {
         onSubmit={handleCreateAnotacao}
       />
     </div>
+    </HeaderLayout>
     </ModuloGuard>
   );
 }

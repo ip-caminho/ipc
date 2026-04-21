@@ -3,6 +3,8 @@
 import { use } from "react";
 import type { Id } from "@/convex/_generated/dataModel";
 import { ModuloGuard } from "@shared/components/auth/ModuloGuard";
+import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
+import { DetailHeader } from "@shared/components/layout/DetailHeader";
 import { LouvorDetalhe } from "@features/louvor/components/LouvorDetalhe";
 
 export default function LouvorDetalhePage({
@@ -14,7 +16,10 @@ export default function LouvorDetalhePage({
 
   return (
     <ModuloGuard modulo="louvor">
-      <LouvorDetalhe louvorId={id as Id<"louvores">} />
+      <HeaderLayout>
+        <DetailHeader backHref="/louvor" />
+        <LouvorDetalhe louvorId={id as Id<"louvores">} />
+      </HeaderLayout>
     </ModuloGuard>
   );
 }

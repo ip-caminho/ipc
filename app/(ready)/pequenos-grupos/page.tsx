@@ -7,6 +7,8 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { useAuth } from "@shared/providers/PermissionsProvider";
 import { PermissionGate } from "@shared/components/auth/PermissionGate";
 import { ModuloGuard } from "@shared/components/auth/ModuloGuard";
+import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
+import { PageHeader } from "@shared/components/layout/PageHeader";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
@@ -62,7 +64,11 @@ export default function PequenosGruposPage() {
 
   return (
     <ModuloGuard modulo="pequenos-grupos">
+    <HeaderLayout>
     <div className="space-y-4">
+      <PageHeader
+        title={viewMode === "remanejamento" ? "Remanejar Membros" : "Pequenos Grupos"}
+      />
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           {viewMode === "remanejamento" && (
@@ -74,11 +80,6 @@ export default function PequenosGruposPage() {
               <ArrowLeft className="h-4 w-4" />
             </Button>
           )}
-          <h1 className="text-2xl font-bold">
-            {viewMode === "remanejamento"
-              ? "Remanejar Membros"
-              : "Pequenos Grupos"}
-          </h1>
         </div>
         <div className="flex gap-2">
           {viewMode === "grid" && (
@@ -166,6 +167,7 @@ export default function PequenosGruposPage() {
         onSubmit={handleCreate}
       />
     </div>
+    </HeaderLayout>
     </ModuloGuard>
   );
 }

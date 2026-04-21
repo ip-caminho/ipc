@@ -6,6 +6,8 @@ import { useQuery } from "convex/react";
 import { Search, ChevronLeft } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { ModuloGuard } from "@shared/components/auth/ModuloGuard";
+import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
+import { PageHeader } from "@shared/components/layout/PageHeader";
 import { useDebounce } from "@shared/hooks/useDebounce";
 import { AudioFilterChips } from "@features/gravacoes/components/AudioFilterChips";
 import { AudioList } from "@features/gravacoes/components/AudioList";
@@ -38,18 +40,19 @@ export default function GravacoesPage() {
 
   return (
     <ModuloGuard modulo="gravacoes">
-      <div className="-m-4 md:-m-6 md:max-w-2xl md:mx-auto">
-        <div className="flex flex-col gap-4 py-4 md:py-6">
-          <header className="px-4 flex flex-col gap-2">
-            <Link
-              href="/comunidade"
-              className="inline-flex items-center gap-1 text-xs text-muted-foreground w-fit min-h-11 active:opacity-70"
-            >
-              <ChevronLeft className="h-3.5 w-3.5" aria-hidden />
-              Comunidade
-            </Link>
-            <h1 className="text-[22px] font-medium leading-none">Ouvir</h1>
-          </header>
+      <HeaderLayout>
+        <div className="-m-4 md:-m-6 md:max-w-2xl md:mx-auto">
+          <div className="flex flex-col gap-4 py-4 md:py-6">
+            <div className="px-4 flex flex-col gap-1">
+              <Link
+                href="/comunidade"
+                className="inline-flex items-center gap-1 text-xs text-muted-foreground w-fit min-h-11 active:opacity-70"
+              >
+                <ChevronLeft className="h-3.5 w-3.5" aria-hidden />
+                Comunidade
+              </Link>
+              <PageHeader title="Ouvir" />
+            </div>
 
           <div className="px-4">
             <div className="relative">
@@ -86,8 +89,9 @@ export default function GravacoesPage() {
           <div className="px-4">
             <AudioList audios={audios} />
           </div>
+          </div>
         </div>
-      </div>
+      </HeaderLayout>
     </ModuloGuard>
   );
 }

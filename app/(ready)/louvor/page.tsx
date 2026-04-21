@@ -7,6 +7,8 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { useAuth } from "@shared/providers/PermissionsProvider";
 import { PermissionGate } from "@shared/components/auth/PermissionGate";
 import { ModuloGuard } from "@shared/components/auth/ModuloGuard";
+import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
+import { PageHeader } from "@shared/components/layout/PageHeader";
 import { useDebounce } from "@shared/hooks/useDebounce";
 import { useIsMobile } from "@shared/hooks/use-mobile";
 import { Button } from "@/shared/components/ui/button";
@@ -119,6 +121,7 @@ export default function LouvorPage() {
 
   return (
     <ModuloGuard modulo="louvor">
+      <HeaderLayout>
       <div className="flex gap-6 md:h-[calc(100vh-6rem)]">
         {/* Coluna esquerda: lista */}
         <div className={cn(
@@ -129,7 +132,7 @@ export default function LouvorPage() {
         )}>
           {/* Header */}
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-medium">Louvor</h1>
+            <PageHeader title="Louvor" />
             <PermissionGate permission="louvor:create">
               <Button size="sm" onClick={() => setCreateOpen(true)} className="min-h-[44px] md:min-h-0">
                 <Plus className="h-4 w-4 mr-1" />
@@ -263,6 +266,7 @@ export default function LouvorPage() {
         onOpenChange={setCreateOpen}
         onSubmit={handleCreate}
       />
+      </HeaderLayout>
     </ModuloGuard>
   );
 }
