@@ -1,6 +1,6 @@
 /**
- * Gera um gradient CSS determinístico baseado no nome da série.
- * Garante que sermões da mesma série tenham a mesma capa visual.
+ * Gera um gradient CSS deterministico baseado em uma seed qualquer.
+ * Mesma seed = mesmo gradient sempre.
  */
 
 const PALETTE: Array<{ from: string; to: string }> = [
@@ -21,8 +21,8 @@ function hash(input: string): number {
   return Math.abs(h);
 }
 
-export function getSermonGradient(seed?: string | null): string {
-  const key = (seed || "sermao").trim().toLowerCase();
+export function getDeterministicGradient(seed?: string | null): string {
+  const key = (seed || "default").trim().toLowerCase();
   const { from, to } = PALETTE[hash(key) % PALETTE.length];
   return `linear-gradient(135deg, ${from} 0%, ${to} 100%)`;
 }
