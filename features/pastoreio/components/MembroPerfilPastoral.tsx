@@ -38,9 +38,9 @@ interface MembroPerfilPastoralProps {
 
 const CARGO_LABELS: Record<string, string> = {
   MEMBRO_COMUNGANTE: "Membro Comungante",
-  MEMBRO_NAO_COMUNGANTE: "Membro Nao Comungante",
-  DIACONO: "Diacono",
-  PRESBITERO: "Presbitero",
+  MEMBRO_NAO_COMUNGANTE: "Membro Não Comungante",
+  DIACONO: "Diácono",
+  PRESBITERO: "Presbítero",
   PASTOR: "Pastor",
 };
 
