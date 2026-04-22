@@ -8,9 +8,9 @@ export const STATUS_OPTIONS = [
 
 export const CARGO_ECLESIASTICO_OPTIONS = [
   { value: "MEMBRO_COMUNGANTE", label: "Membro Comungante" },
-  { value: "MEMBRO_NAO_COMUNGANTE", label: "Membro Nao Comungante" },
-  { value: "DIACONO", label: "Diacono" },
-  { value: "PRESBITERO", label: "Presbitero" },
+  { value: "MEMBRO_NAO_COMUNGANTE", label: "Membro Não Comungante" },
+  { value: "DIACONO", label: "Diácono" },
+  { value: "PRESBITERO", label: "Presbítero" },
   { value: "PASTOR", label: "Pastor" },
 ] as const;
 

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Play } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { getSermonGradient } from "@features/comunidade/lib/sermonGradient";
+import { getDeterministicGradient } from "@shared/lib/utils/gradient";
 
 export interface SermonCardData {
   _id: string;
@@ -28,7 +28,7 @@ function formatDurationShort(seconds?: number | null): string | null {
 export function SermonCard({ sermon }: { sermon: SermonCardData }) {
   const pregador = sermon.pregadorInfo?.nome || sermon.pregadorNome || null;
   const serie = sermon.serieInfo?.nome || null;
-  const gradient = getSermonGradient(serie || sermon.titulo);
+  const gradient = getDeterministicGradient(serie || sermon.titulo);
   const duracao = formatDurationShort(sermon.duracaoSegundos);
 
   let dataCurta: string | null = null;

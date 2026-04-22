@@ -89,3 +89,28 @@ export function formatPhone(phone: string): string {
   }
   return phone;
 }
+
+/**
+ * Format Brazilian phone with country code: +55 11 99999-9999
+ */
+export function formatPhoneInternational(phone: string): string {
+  const cleaned = phone.replace(/\D/g, "");
+  let number = cleaned;
+  if (number.startsWith("55")) number = number.slice(2);
+
+  if (number.length === 11) {
+    return `+55 ${number.slice(0, 2)} ${number.slice(2, 7)}-${number.slice(7)}`;
+  }
+  if (number.length === 10) {
+    return `+55 ${number.slice(0, 2)} ${number.slice(2, 6)}-${number.slice(6)}`;
+  }
+  return phone;
+}
+
+/**
+ * Return only digits with Brazilian country code prefix (for wa.me / tel:).
+ */
+export function cleanPhoneForWhatsApp(phone: string): string {
+  const digits = phone.replace(/\D/g, "");
+  return digits.startsWith("55") ? digits : `55${digits}`;
+}
