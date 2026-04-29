@@ -1,6 +1,7 @@
 import { query } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { requirePermission } from "../_shared/requirePermission";
 
 export const meuMembroId = query({
   args: {},
@@ -18,8 +19,7 @@ export const meuMembroId = query({
 export const listSalas = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) return [];
+    await requirePermission(ctx, "salas:read");
 
     return await ctx.db
       .query("salas")
@@ -34,8 +34,7 @@ export const listReservas = query({
     data: v.string(),
   },
   handler: async (ctx, { salaId, data }) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) return [];
+    await requirePermission(ctx, "salas:read");
 
     let reservas;
     if (salaId) {

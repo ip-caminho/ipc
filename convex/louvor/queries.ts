@@ -1,5 +1,6 @@
 import { query } from "../_generated/server";
 import { v } from "convex/values";
+import { requirePermission } from "../_shared/requirePermission";
 
 export const list = query({
   args: {
@@ -9,6 +10,7 @@ export const list = query({
     status: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    await requirePermission(ctx, "louvor:read");
     let results = await ctx.db.query("louvores").collect();
 
     if (args.status) {
@@ -40,6 +42,7 @@ export const list = query({
 export const getById = query({
   args: { id: v.id("louvores") },
   handler: async (ctx, { id }) => {
+    await requirePermission(ctx, "louvor:read");
     return await ctx.db.get(id);
   },
 });
@@ -47,6 +50,7 @@ export const getById = query({
 export const search = query({
   args: { query: v.string() },
   handler: async (ctx, { query: q }) => {
+    await requirePermission(ctx, "louvor:read");
     if (!q || q.length < 2) return [];
 
     const results = await ctx.db
@@ -68,6 +72,7 @@ export const search = query({
 export const getByTitulos = query({
   args: { titulos: v.array(v.string()) },
   handler: async (ctx, { titulos }) => {
+    await requirePermission(ctx, "louvor:read");
     if (titulos.length === 0) return [];
     const all = await ctx.db.query("louvores").collect();
     const results: Array<{ titulo: string; conteudo?: string; tom?: string; artista?: string }> = [];
@@ -85,6 +90,7 @@ export const getByTitulos = query({
 export const listTags = query({
   args: {},
   handler: async (ctx) => {
+    await requirePermission(ctx, "louvor:read");
     const louvores = await ctx.db.query("louvores").collect();
     const counts: Record<string, number> = {};
     for (const l of louvores) {

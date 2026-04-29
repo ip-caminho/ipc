@@ -1,6 +1,6 @@
 import { query } from "../_generated/server";
 import { v } from "convex/values";
-import { getAuthUserId } from "@convex-dev/auth/server";
+import { requirePermission } from "../_shared/requirePermission";
 
 export const list = query({
   args: {
@@ -9,8 +9,7 @@ export const list = query({
     dataFim: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) return [];
+    await requirePermission(ctx, "calendario:read");
 
     let eventos = await ctx.db.query("calendarioEventos").collect();
 
@@ -45,8 +44,7 @@ export const list = query({
 export const getById = query({
   args: { id: v.id("calendarioEventos") },
   handler: async (ctx, { id }) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) return null;
+    await requirePermission(ctx, "calendario:read");
 
     const evento = await ctx.db.get(id);
     if (!evento) return null;

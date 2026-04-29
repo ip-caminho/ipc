@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { useAuth } from "@shared/providers/PermissionsProvider";
 import { SectionLabel } from "@features/dashboard/components/SectionLabel";
 import { EventCard, type EventCardData } from "./EventCard";
 
@@ -13,8 +14,12 @@ const MASK =
   "linear-gradient(to right, black 0%, black calc(100% - 24px), transparent 100%)";
 
 export function UpcomingEventsScroll() {
+  const { can } = useAuth();
   const hoje = useMemo(() => new Date().toISOString().split("T")[0], []);
-  const eventos = useQuery(api.calendario.queries.list, { dataInicio: hoje });
+  const eventos = useQuery(
+    api.calendario.queries.list,
+    can("calendario:read") ? { dataInicio: hoje } : "skip",
+  );
 
   if (eventos === undefined) return null;
   if (eventos.length === 0) return null;

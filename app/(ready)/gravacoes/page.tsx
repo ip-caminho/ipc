@@ -6,6 +6,8 @@ import { useQuery } from "convex/react";
 import { Search, ChevronLeft } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { ModuloGuard } from "@shared/components/auth/ModuloGuard";
+import { PermissionGate } from "@shared/components/auth/PermissionGate";
+import { SemPermissaoFallback } from "@shared/components/auth/SemPermissaoFallback";
 import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
 import { PageHeader } from "@shared/components/layout/PageHeader";
 import { useDebounce } from "@shared/hooks/useDebounce";
@@ -16,7 +18,7 @@ import type { AudioTipo } from "@features/gravacoes/lib/categoryGradient";
 import { BibleBookFilter } from "@features/gravacoes/components/BibleBookFilter";
 import { extractBookName } from "@features/gravacoes/lib/bible";
 
-export default function GravacoesPage() {
+function GravacoesContent() {
   const [search, setSearch] = useState("");
   const [tipo, setTipo] = useState<AudioTipo | null>(null);
   const [livro, setLivro] = useState<string | null>(null);
@@ -93,5 +95,13 @@ export default function GravacoesPage() {
         </div>
       </HeaderLayout>
     </ModuloGuard>
+  );
+}
+
+export default function GravacoesPage() {
+  return (
+    <PermissionGate permission="gravacoes:read" fallback={<SemPermissaoFallback />}>
+      <GravacoesContent />
+    </PermissionGate>
   );
 }
