@@ -4,15 +4,21 @@ import Link from "next/link";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
+import { useAuth } from "@shared/providers/PermissionsProvider";
 import { SectionLabel } from "@features/dashboard/components/SectionLabel";
 
 export function CurrentRepertoire() {
-  const live = useQuery(api.boletim.queries.getLiveStatus, {});
+  const { can } = useAuth();
+  const podeVerBoletim = can("escalas:read");
+  const live = useQuery(
+    api.boletim.queries.getLiveStatus,
+    podeVerBoletim ? {} : "skip",
+  );
   const cultoId = live?.proximoCulto?.cultoId ?? null;
 
   const setlist = useQuery(
     api.escalas.cultoLouvores.getCultoLouvoresEnriched,
-    cultoId ? { cultoId } : "skip",
+    cultoId && podeVerBoletim ? { cultoId } : "skip",
   );
 
   if (!cultoId) return null;

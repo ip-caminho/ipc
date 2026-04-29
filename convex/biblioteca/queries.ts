@@ -1,6 +1,7 @@
 import { query } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { requirePermission } from "../_shared/requirePermission";
 
 async function resolveMembroNome(ctx: any, membroId: any): Promise<string> {
   if (!membroId) return "";
@@ -17,8 +18,7 @@ export const list = query({
     status: v.optional(v.string()), // DISPONIVEL, EMPRESTADO, etc (filtra por exemplares)
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) return [];
+    await requirePermission(ctx, "biblioteca:read");
 
     let livros;
     if (args.busca && args.busca.trim().length >= 2) {
@@ -57,8 +57,7 @@ export const list = query({
 export const getById = query({
   args: { id: v.id("livros") },
   handler: async (ctx, { id }) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) return null;
+    await requirePermission(ctx, "biblioteca:read");
 
     const livro = await ctx.db.get(id);
     if (!livro) return null;
@@ -79,6 +78,7 @@ export const getById = query({
 export const listExemplares = query({
   args: { livroId: v.id("livros") },
   handler: async (ctx, { livroId }) => {
+    await requirePermission(ctx, "biblioteca:read");
     return await ctx.db
       .query("exemplares")
       .withIndex("by_livro", (q) => q.eq("livroId", livroId))
@@ -92,8 +92,7 @@ export const listEmprestimos = query({
     status: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) return [];
+    await requirePermission(ctx, "biblioteca:read");
 
     let emprestimos;
     if (args.livroId) {
@@ -133,8 +132,7 @@ export const listEmprestimos = query({
 export const listAtrasados = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) return [];
+    await requirePermission(ctx, "biblioteca:read");
 
     const emprestimos = await ctx.db
       .query("emprestimos")
@@ -166,6 +164,7 @@ export const listAtrasados = query({
 export const listCategorias = query({
   args: {},
   handler: async (ctx) => {
+    await requirePermission(ctx, "biblioteca:read");
     const livros = await ctx.db.query("livros").collect();
     const cats = new Set<string>();
     for (const l of livros) {
@@ -178,8 +177,7 @@ export const listCategorias = query({
 export const listEventos = query({
   args: { exemplarId: v.id("exemplares") },
   handler: async (ctx, { exemplarId }) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) return [];
+    await requirePermission(ctx, "biblioteca:read");
 
     return await ctx.db
       .query("livroEventos")

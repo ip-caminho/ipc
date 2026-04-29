@@ -15,6 +15,7 @@ import {
 import { Plus, Search, AlertCircle, BookMarked } from "lucide-react";
 import { LivroCard } from "@features/biblioteca/components/LivroCard";
 import { PermissionGate } from "@/shared/components/auth/PermissionGate";
+import { SemPermissaoFallback } from "@/shared/components/auth/SemPermissaoFallback";
 import { ModuloGuard } from "@/shared/components/auth/ModuloGuard";
 import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
 import { PageHeader } from "@shared/components/layout/PageHeader";
@@ -22,7 +23,7 @@ import { parseAsString, useQueryState } from "nuqs";
 import Link from "next/link";
 import { useDebounce } from "@shared/hooks/useDebounce";
 
-export default function BibliotecaPage() {
+function BibliotecaContent() {
   const { can } = useAuth();
   const [busca, setBusca] = useQueryState("q", parseAsString.withDefault(""));
   const [categoria, setCategoria] = useQueryState("cat", parseAsString.withDefault(""));
@@ -112,5 +113,13 @@ export default function BibliotecaPage() {
       </div>
       </HeaderLayout>
     </ModuloGuard>
+  );
+}
+
+export default function BibliotecaPage() {
+  return (
+    <PermissionGate permission="biblioteca:read" fallback={<SemPermissaoFallback />}>
+      <BibliotecaContent />
+    </PermissionGate>
   );
 }

@@ -8,6 +8,7 @@ import { ptBR } from "date-fns/locale";
 import { useQuery } from "convex/react";
 
 import { api } from "@/convex/_generated/api";
+import { useAuth } from "@shared/providers/PermissionsProvider";
 import { cn } from "@/shared/lib/utils/cn";
 
 /**
@@ -29,8 +30,13 @@ function isBoletimLiveNow(backendIsLive: boolean, now: Date = new Date()): boole
 }
 
 export function BoletimCard() {
+  const { can } = useAuth();
+  const podeVerBoletim = can("escalas:read");
   // @ts-ignore Convex TS2589
-  const status = useQuery(api.boletim.queries.getLiveStatus);
+  const status = useQuery(
+    api.boletim.queries.getLiveStatus,
+    podeVerBoletim ? undefined : "skip",
+  );
 
   // Recalcula a cada minuto para respeitar a janela sem recarregar a página.
   const [now, setNow] = useState(() => new Date());
@@ -54,6 +60,8 @@ export function BoletimCard() {
     }
     return format(data, "EEEE',' HH'h'", { locale: ptBR });
   }, [status?.proximoCulto, fallbackLabel]);
+
+  if (!podeVerBoletim) return null;
 
   const isLive = isBoletimLiveNow(status?.isLive ?? false, now);
 
