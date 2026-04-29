@@ -3,6 +3,8 @@
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { ModuloGuard } from "@shared/components/auth/ModuloGuard";
+import { PermissionGate } from "@shared/components/auth/PermissionGate";
+import { SemPermissaoFallback } from "@shared/components/auth/SemPermissaoFallback";
 import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
 import { PageHeader } from "@shared/components/layout/PageHeader";
 import { Skeleton } from "@/shared/components/ui/skeleton";
@@ -22,7 +24,7 @@ function getWeekendStart(date: Date): Date {
   return nextSaturday(date);
 }
 
-export default function SalasPage() {
+function SalasContent() {
   // @ts-ignore Convex TS2589
   const salas = useQuery(api.salas.queries.listSalas);
 
@@ -215,5 +217,13 @@ export default function SalasPage() {
       </HeaderLayout>
       )}
     </ModuloGuard>
+  );
+}
+
+export default function SalasPage() {
+  return (
+    <PermissionGate permission="salas:read" fallback={<SemPermissaoFallback />}>
+      <SalasContent />
+    </PermissionGate>
   );
 }

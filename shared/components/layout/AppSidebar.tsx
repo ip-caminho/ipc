@@ -82,7 +82,7 @@ export function AppSidebar() {
   const primaryItems: NavItem[] = [
     ...PRIMARY_TABS,
     ...(isBoletim ? [BOLETIM_TAB] : []),
-  ];
+  ].filter(isItemVisible);
 
   const visibleGestaoSections = GESTAO_SECTIONS.map((section) => ({
     ...section,

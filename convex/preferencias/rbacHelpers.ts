@@ -72,20 +72,9 @@ export const INITIAL_ROLE_PERMISSIONS: Record<string, string[]> = {
 
   obreiro: [
     "membros:self_service", "membros:read",
-    "diretorio:read",
-    "gravacoes:read",
-    "escalas:read",
-    "louvor:read",
     "pedidos_oracao:create", "pedidos_oracao:read",
-    "ministerios:read",
-    "calendario:read",
-    "educacional:read",
-    "biblioteca:read",
-    "salas:read", "salas:create",
     // Tarefas
     "tarefas:read", "tarefas:create", "tarefas:update",
-    // Turmas
-    "turmas:read",
   ],
 
   secretaria: [
@@ -126,18 +115,7 @@ export const INITIAL_ROLE_PERMISSIONS: Record<string, string[]> = {
 
   membro: [
     "membros:self_service",
-    "diretorio:read",
-    "gravacoes:read",
-    "escalas:read",
-    "louvor:read",
     "pedidos_oracao:create", "pedidos_oracao:read",
-    "ministerios:read",
-    "calendario:read",
-    "educacional:read",
-    "biblioteca:read",
-    "salas:read", "salas:create",
-    // Turmas
-    "turmas:read",
   ],
 };
 

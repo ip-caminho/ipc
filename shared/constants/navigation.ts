@@ -59,6 +59,8 @@ export const BOLETIM_TAB: NavItem = {
   label: "Boletim",
   href: "/boletim",
   icon: FileText,
+  permission: "escalas:read",
+  modulo: "boletim",
 };
 
 export const GESTAO_TAB: NavItem = {

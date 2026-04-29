@@ -1,6 +1,7 @@
 import { mutation, query } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { checkPermission } from "../_shared/requirePermission";
 
 /**
  * Conta avisos não lidos pelo usuário autenticado.
@@ -10,6 +11,7 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 export const countNaoLidos = query({
   args: {},
   handler: async (ctx) => {
+    if (!(await checkPermission(ctx, "gravacoes:read"))) return 0;
     const userId = await getAuthUserId(ctx);
     if (!userId) return 0;
 
