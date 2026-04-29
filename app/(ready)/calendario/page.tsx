@@ -6,6 +6,7 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useAuth } from "@shared/providers/PermissionsProvider";
 import { PermissionGate } from "@shared/components/auth/PermissionGate";
+import { SemPermissaoFallback } from "@shared/components/auth/SemPermissaoFallback";
 import { ModuloGuard } from "@shared/components/auth/ModuloGuard";
 import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
 import { PageHeader } from "@shared/components/layout/PageHeader";
@@ -35,7 +36,7 @@ const MESES = [
   "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
 ];
 
-export default function CalendarioPage() {
+function CalendarioContent() {
   const { can } = useAuth();
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
@@ -229,5 +230,13 @@ export default function CalendarioPage() {
       </div>
       </HeaderLayout>
     </ModuloGuard>
+  );
+}
+
+export default function CalendarioPage() {
+  return (
+    <PermissionGate permission="calendario:read" fallback={<SemPermissaoFallback />}>
+      <CalendarioContent />
+    </PermissionGate>
   );
 }

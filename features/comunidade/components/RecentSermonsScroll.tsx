@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { useAuth } from "@shared/providers/PermissionsProvider";
 import { SectionLabel } from "@features/dashboard/components/SectionLabel";
 import { SermonCard, type SermonCardData } from "./SermonCard";
 
@@ -12,10 +13,13 @@ const MASK =
   "linear-gradient(to right, black 0%, black calc(100% - 24px), transparent 100%)";
 
 export function RecentSermonsScroll() {
-  const sermoes = useQuery(api.gravacoes.queries.list, {
-    tipo: "SERMAO",
-    status: "PUBLICADO",
-  });
+  const { can } = useAuth();
+  const sermoes = useQuery(
+    api.gravacoes.queries.list,
+    can("gravacoes:read")
+      ? { tipo: "SERMAO", status: "PUBLICADO" }
+      : "skip",
+  );
 
   if (sermoes === undefined) return null;
   if (sermoes.length === 0) return null;

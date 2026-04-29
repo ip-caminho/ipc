@@ -73,10 +73,11 @@ describe("RBAC — getUserPermissionContext", () => {
 
     expect(result).not.toBeNull();
     expect(result!.role).toBe("membro");
-    // Membro tem permissoes basicas (self_service, diretorio, gravacoes, etc)
+    // Membro tem permissoes minimas: self_service e pedidos de oracao
     expect(result!.permissions).toContain("membros:self_service");
-    expect(result!.permissions).toContain("diretorio:read");
-    expect(result!.permissions).toContain("gravacoes:read");
+    expect(result!.permissions).toContain("pedidos_oracao:read");
+    expect(result!.permissions).not.toContain("diretorio:read");
+    expect(result!.permissions).not.toContain("gravacoes:read");
     expect(result!.permissions).not.toContain("membros:delete");
   });
 

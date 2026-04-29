@@ -1,5 +1,6 @@
 import { query } from "../_generated/server";
 import { v } from "convex/values";
+import { checkPermission, requireAnyPermission } from "../_shared/requirePermission";
 
 export const list = query({
   args: {
@@ -8,6 +9,7 @@ export const list = query({
     status: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    await requireAnyPermission(ctx, ["diretorio:read", "membros:read"]);
     const membros = await ctx.db.query("membros").collect();
 
     const results = await Promise.all(
@@ -46,6 +48,7 @@ export const list = query({
 export const getById = query({
   args: { id: v.id("membros") },
   handler: async (ctx, { id }) => {
+    await requireAnyPermission(ctx, ["diretorio:read", "membros:read"]);
     const membro = await ctx.db.get(id);
     if (!membro) return null;
     const entidade = await ctx.db.get(membro.entidadeId);
@@ -105,6 +108,7 @@ export const getPublicProfile = query({
 export const birthdaysThisMonth = query({
   args: {},
   handler: async (ctx) => {
+    if (!(await checkPermission(ctx, "diretorio:read"))) return [];
     const now = new Date();
     const currentMonth = now.getMonth() + 1;
     const currentDay = now.getDate();
@@ -175,6 +179,7 @@ export const birthdaysThisMonth = query({
 export const birthdaysThisWeek = query({
   args: {},
   handler: async (ctx) => {
+    if (!(await checkPermission(ctx, "diretorio:read"))) return [];
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const endOfWeek = new Date(today);

@@ -4,8 +4,8 @@ import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { useAuth } from "@shared/providers/PermissionsProvider";
 import { PermissionGate } from "@shared/components/auth/PermissionGate";
+import { SemPermissaoFallback } from "@shared/components/auth/SemPermissaoFallback";
 import { ModuloGuard } from "@shared/components/auth/ModuloGuard";
 import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
 import { PageHeader } from "@shared/components/layout/PageHeader";
@@ -49,8 +49,7 @@ function TagPill({
   );
 }
 
-export default function LouvorPage() {
-  const { can } = useAuth();
+function LouvorContent() {
   const router = useRouter();
   const isMobile = useIsMobile();
   const [search, setSearch] = useState("");
@@ -268,5 +267,13 @@ export default function LouvorPage() {
       />
       </HeaderLayout>
     </ModuloGuard>
+  );
+}
+
+export default function LouvorPage() {
+  return (
+    <PermissionGate permission="louvor:read" fallback={<SemPermissaoFallback />}>
+      <LouvorContent />
+    </PermissionGate>
   );
 }

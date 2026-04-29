@@ -28,6 +28,8 @@ import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { TURMA_OPTIONS, TURMA_COLORS, TIPO_RESPONSAVEL_LABELS } from "@features/educacional/lib/constants";
 import { ModuloGuard } from "@shared/components/auth/ModuloGuard";
+import { PermissionGate } from "@shared/components/auth/PermissionGate";
+import { SemPermissaoFallback } from "@shared/components/auth/SemPermissaoFallback";
 import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
 import { PageHeader } from "@shared/components/layout/PageHeader";
 import { MemberListItem } from "@features/diretorio/components/MemberListItem";
@@ -280,7 +282,7 @@ function getLetterFromNome(nome: string): string {
   return /[A-Z]/.test(first) ? first : "#";
 }
 
-export default function DiretorioPage() {
+function DiretorioContent() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<FilterValue>("todos");
   const [turmaFilter, setTurmaFilter] = useState<string | null>(null);
@@ -476,5 +478,13 @@ export default function DiretorioPage() {
         )}
       </HeaderLayout>
     </ModuloGuard>
+  );
+}
+
+export default function DiretorioPage() {
+  return (
+    <PermissionGate permission="diretorio:read" fallback={<SemPermissaoFallback />}>
+      <DiretorioContent />
+    </PermissionGate>
   );
 }

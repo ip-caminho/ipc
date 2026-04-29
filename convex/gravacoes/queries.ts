@@ -1,5 +1,6 @@
 import { query } from "../_generated/server";
 import { v } from "convex/values";
+import { checkPermission, requirePermission } from "../_shared/requirePermission";
 
 export const list = query({
   args: {
@@ -10,6 +11,7 @@ export const list = query({
     tag: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    if (!(await checkPermission(ctx, "gravacoes:read"))) return [];
     let results = await ctx.db.query("gravacoes").order("desc").collect();
 
     if (args.tipo) {
@@ -85,6 +87,7 @@ export const list = query({
 export const getById = query({
   args: { id: v.id("gravacoes") },
   handler: async (ctx, { id }) => {
+    await requirePermission(ctx, "gravacoes:read");
     const gravacao = await ctx.db.get(id);
     if (!gravacao) return null;
 
@@ -112,6 +115,7 @@ export const getById = query({
 export const getLatestAvisos = query({
   args: {},
   handler: async (ctx) => {
+    if (!(await checkPermission(ctx, "gravacoes:read"))) return null;
     // Itera pelo index desc ate achar o primeiro sermao com avisos
     const iter = ctx.db
       .query("gravacoes")
@@ -144,6 +148,7 @@ export const getLatestAvisos = query({
 export const listFrases = query({
   args: {},
   handler: async (ctx) => {
+    if (!(await checkPermission(ctx, "gravacoes:read"))) return [];
     const gravacoes = await ctx.db.query("gravacoes").order("desc").collect();
     const frases: { frase: string; pregador: string; titulo: string; gravacaoId: string }[] = [];
 
@@ -186,6 +191,7 @@ export const listFrases = query({
 export const listTags = query({
   args: {},
   handler: async (ctx) => {
+    if (!(await checkPermission(ctx, "gravacoes:read"))) return [];
     const gravacoes = await ctx.db.query("gravacoes").collect();
     const counts: Record<string, number> = {};
     for (const g of gravacoes) {
