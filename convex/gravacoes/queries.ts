@@ -1,6 +1,12 @@
 import { query } from "../_generated/server";
 import { v } from "convex/values";
+import { getAuthUserId } from "@convex-dev/auth/server";
 import { checkPermission, requirePermission } from "../_shared/requirePermission";
+
+async function isQuiosqueAtivo(ctx: any): Promise<boolean> {
+  const config = await ctx.db.query("configApp").first();
+  return !!config?.modoQuiosque;
+}
 
 export const list = query({
   args: {
@@ -203,5 +209,80 @@ export const listTags = query({
     return Object.entries(counts)
       .sort((a, b) => b[1] - a[1])
       .map(([tag, count]) => ({ tag, count }));
+  },
+});
+
+// ===== Modo Quiosque =====
+// Queries dedicadas para o modo de visualizacao restrita (so sermoes).
+// Acessiveis apenas quando configApp.modoQuiosque = true.
+
+export const listSermoesQuiosque = query({
+  args: { search: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return [];
+    if (!(await isQuiosqueAtivo(ctx))) return [];
+
+    let results = await ctx.db
+      .query("gravacoes")
+      .order("desc")
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("tipo"), "SERMAO"),
+          q.eq(q.field("status"), "PUBLICADO"),
+        ),
+      )
+      .collect();
+
+    if (args.search) {
+      const term = args.search.toLowerCase();
+      results = results.filter((g) => {
+        return (
+          g.titulo.toLowerCase().includes(term) ||
+          (g.pregadorNome || "").toLowerCase().includes(term) ||
+          (g.textoBase || "").toLowerCase().includes(term)
+        );
+      });
+    }
+
+    return results.map((g) => ({
+      _id: g._id,
+      titulo: g.titulo,
+      data: g.data,
+      tipo: g.tipo,
+      pregadorNome: g.pregadorNome ?? null,
+      textoBase: g.textoBase ?? null,
+      inicioConteudo: g.inicioConteudo ?? null,
+      fimConteudo: g.fimConteudo ?? null,
+      inicioSermao: g.inicioSermao ?? null,
+      fimSermao: g.fimSermao ?? null,
+    }));
+  },
+});
+
+export const getSermaoQuiosque = query({
+  args: { id: v.id("gravacoes") },
+  handler: async (ctx, { id }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return null;
+    if (!(await isQuiosqueAtivo(ctx))) return null;
+
+    const gravacao = await ctx.db.get(id);
+    if (!gravacao) return null;
+    if (gravacao.tipo !== "SERMAO" || gravacao.status !== "PUBLICADO") return null;
+
+    return {
+      _id: gravacao._id,
+      titulo: gravacao.titulo,
+      data: gravacao.data,
+      tipo: gravacao.tipo,
+      pregadorNome: gravacao.pregadorNome ?? null,
+      textoBase: gravacao.textoBase ?? null,
+      audioUrl: gravacao.audioUrl ?? null,
+      inicioConteudo: gravacao.inicioConteudo ?? null,
+      fimConteudo: gravacao.fimConteudo ?? null,
+      inicioSermao: gravacao.inicioSermao ?? null,
+      fimSermao: gravacao.fimSermao ?? null,
+    };
   },
 });
