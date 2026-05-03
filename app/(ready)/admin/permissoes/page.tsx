@@ -26,7 +26,8 @@ import { PermissionMatrix } from "@features/preferencias/components/PermissionMa
 import { useAuth } from "@shared/providers/PermissionsProvider";
 import { toast } from "sonner";
 import { Input } from "@/shared/components/ui/input";
-import { Copy, Link as LinkIcon, Users, Settings, UserPlus, Search, Eye } from "lucide-react";
+import { Copy, Link as LinkIcon, Users, Settings, UserPlus, Search, Eye, MonitorSmartphone } from "lucide-react";
+import { Switch } from "@/shared/components/ui/switch";
 import type { Id } from "@/convex/_generated/dataModel";
 import type { Role } from "@/types/auth";
 
@@ -261,6 +262,58 @@ function ConvitesTab() {
   );
 }
 
+function ModoTab() {
+  // @ts-ignore Convex TS2589
+  const config = useQuery(api.appConfig.queries.get);
+  const setModoQuiosque = useMutation(api.appConfig.mutations.setModoQuiosque);
+
+  const ativo = !!config?.modoQuiosque;
+
+  const handleToggle = async (proximoValor: boolean) => {
+    try {
+      await setModoQuiosque({ ativo: proximoValor });
+      toast.success(
+        proximoValor
+          ? "Modo quiosque ativado — usuarios nao-admin so verao os sermoes"
+          : "Modo quiosque desativado",
+      );
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro ao alterar modo");
+    }
+  };
+
+  return (
+    <Card className="max-w-2xl">
+      <CardHeader>
+        <CardTitle className="text-lg">Modo Quiosque</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <p className="text-sm text-muted-foreground">
+          Quando ativado, todos os usuarios <strong>exceto admin</strong> veem
+          apenas a tela de sermoes — sem sidebar, sem outras paginas. Util para
+          terminais publicos da igreja ou para limitar o acesso a um experimento
+          minimalista.
+        </p>
+        <div className="flex items-center gap-3 rounded-md border p-3">
+          <MonitorSmartphone className="h-5 w-5 text-muted-foreground" />
+          <div className="flex-1">
+            <p className="text-sm font-medium">Limitar usuarios a tela de sermoes</p>
+            <p className="text-xs text-muted-foreground">
+              Admin continua com acesso completo
+            </p>
+          </div>
+          <Switch
+            checked={ativo}
+            onCheckedChange={handleToggle}
+            disabled={config === undefined}
+            aria-label="Ativar modo quiosque"
+          />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 function SimularSelect() {
   const { impersonate } = useAuth();
   return (
@@ -305,6 +358,10 @@ export default function PermissoesPage() {
               <UserPlus className="h-3.5 w-3.5" />
               Convites
             </TabsTrigger>
+            <TabsTrigger value="modo" className="gap-1.5">
+              <MonitorSmartphone className="h-3.5 w-3.5" />
+              Modo
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="membros" className="mt-4">
@@ -317,6 +374,10 @@ export default function PermissoesPage() {
 
           <TabsContent value="convites" className="mt-4">
             <ConvitesTab />
+          </TabsContent>
+
+          <TabsContent value="modo" className="mt-4">
+            <ModoTab />
           </TabsContent>
         </Tabs>
       </div>

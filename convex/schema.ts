@@ -949,4 +949,11 @@ export default defineSchema({
     ordem: v.number(),
     ativo: v.boolean(),
   }),
+
+  // ===== Configuracao global do app =====
+  // Singleton (uma unica linha). Controla flags de modo de operacao.
+  configApp: defineTable({
+    modoQuiosque: v.boolean(),
+    atualizadoEm: v.number(),
+  }),
 });
