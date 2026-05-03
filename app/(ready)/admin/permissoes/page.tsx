@@ -22,6 +22,7 @@ import {
 } from "@/shared/components/ui/popover";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { AdminGate } from "@shared/components/auth/RoleGate";
+import { ErrorBoundary } from "@shared/components/ErrorBoundary";
 import { PermissionMatrix } from "@features/preferencias/components/PermissionMatrix";
 import { useAuth } from "@shared/providers/PermissionsProvider";
 import { toast } from "sonner";
@@ -377,7 +378,27 @@ export default function PermissoesPage() {
           </TabsContent>
 
           <TabsContent value="modo" className="mt-4">
-            <ModoTab />
+            <ErrorBoundary
+              fallback={
+                <Card className="max-w-2xl">
+                  <CardHeader>
+                    <CardTitle className="text-lg">Modo Quiosque</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <p className="text-sm text-muted-foreground">
+                      Esta funcao depende de novas APIs que ainda nao foram
+                      publicadas no backend Convex. Rode{" "}
+                      <code className="rounded bg-muted px-1.5 py-0.5 text-xs">
+                        npx convex deploy
+                      </code>{" "}
+                      e recarregue a pagina.
+                    </p>
+                  </CardContent>
+                </Card>
+              }
+            >
+              <ModoTab />
+            </ErrorBoundary>
           </TabsContent>
         </Tabs>
       </div>
