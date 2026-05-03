@@ -26,8 +26,15 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@shared/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@shared/components/ui/select";
 import { ScrollArea } from "@shared/components/ui/scroll-area";
-import { ChevronDown, ChevronRight, Info, Monitor, Users } from "lucide-react";
+import { ChevronDown, ChevronRight, Info, Users } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@shared/lib/utils/cn";
 
@@ -191,6 +198,7 @@ export function PermissionMatrix() {
 
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [pendingToggles, setPendingToggles] = useState<Map<string, boolean>>(new Map());
+  const [mobileRole, setMobileRole] = useState<string>("membro");
 
   const rolePermsMap = useMemo(() => {
     if (!rolesWithPermissions) return new Map<string, Set<string>>();
@@ -292,12 +300,120 @@ export function PermissionMatrix() {
 
   return (
     <TooltipProvider>
-      <div className="md:hidden rounded-lg border p-8 text-center space-y-2">
-        <Monitor className="mx-auto h-10 w-10 text-muted-foreground" aria-hidden />
-        <p className="text-sm font-medium">Disponível apenas no desktop</p>
-        <p className="text-xs text-muted-foreground">
-          A matriz de permissões precisa de uma tela maior. Abra no computador para editar.
-        </p>
+      <div className="md:hidden space-y-3">
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+            Editando papel
+          </label>
+          <Select value={mobileRole} onValueChange={setMobileRole}>
+            <SelectTrigger className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {VISIBLE_ROLES.map((role) => (
+                <SelectItem key={role} value={role}>
+                  <span className="flex items-center gap-2">
+                    <Badge
+                      variant="secondary"
+                      className={cn("text-[10px] px-1.5", ROLE_COLORS[role])}
+                    >
+                      {ROLE_LABELS[role]}
+                    </Badge>
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          {moduleEntries.map(([module, perms]) => {
+            const isCollapsed = collapsed.has(module);
+            const activeInRole = perms.filter((p) =>
+              rolePermsMap.get(mobileRole)?.has(p.key)
+            ).length;
+
+            return (
+              <div key={`mobile-${module}`} className="border rounded-md overflow-hidden">
+                <button
+                  type="button"
+                  className="w-full flex items-center justify-between gap-2 p-3 bg-muted/30 hover:bg-muted/50"
+                  onClick={() => toggleCollapse(module)}
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    {isCollapsed ? (
+                      <ChevronRight className="h-4 w-4 shrink-0" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4 shrink-0" />
+                    )}
+                    <span className="font-bold uppercase tracking-wide text-xs truncate">
+                      {module}
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-muted-foreground shrink-0">
+                    {activeInRole}/{perms.length}
+                  </span>
+                </button>
+
+                {!isCollapsed && (
+                  <div className="divide-y">
+                    {perms.map((perm) => {
+                      const isChecked = getRoleCheckboxState(mobileRole, perm.key);
+                      const pending = isRoleCheckboxPending(mobileRole, perm.key);
+                      const customCount = membrosWithPermissions.filter((m) => {
+                        if (m.role === "admin") return false;
+                        const has = m.permissions.includes(perm.key);
+                        const roleHas = m.role
+                          ? rolePermsMap.get(m.role)?.has(perm.key) ?? false
+                          : false;
+                        return has !== roleHas;
+                      }).length;
+
+                      return (
+                        <div
+                          key={`mobile-${perm.key}`}
+                          className="flex items-start gap-3 p-3"
+                        >
+                          <div className={cn("pt-0.5", pending && "opacity-50")}>
+                            <Checkbox
+                              checked={isChecked}
+                              onCheckedChange={() =>
+                                handleRoleToggle(mobileRole, perm.key)
+                              }
+                              disabled={pending}
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium leading-tight">
+                              {perm.label}
+                            </p>
+                            {perm.description && (
+                              <p className="text-xs text-muted-foreground mt-1 leading-snug">
+                                {perm.description}
+                              </p>
+                            )}
+                            {customCount > 0 && (
+                              <div className="mt-2">
+                                <MembroPermissionPopover
+                                  permission={perm.key}
+                                  membros={membrosWithPermissions}
+                                  rolePermsMap={rolePermsMap}
+                                  onToggle={handleMembroToggle}
+                                  getCheckboxState={getMembroCheckboxState}
+                                  isPending={isMembroCheckboxPending}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
       <div className="hidden md:block overflow-x-auto border rounded-lg">
         <Table>

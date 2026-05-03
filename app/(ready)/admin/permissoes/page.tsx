@@ -339,20 +339,20 @@ export default function PermissoesPage() {
   return (
     <AdminGate fallback={<p className="text-muted-foreground">Acesso restrito a administradores</p>}>
       <div className="space-y-4">
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <h1 className="text-xl font-bold">Permissoes</h1>
           <SimularSelect />
         </div>
 
         <Tabs defaultValue="membros">
-          <TabsList>
+          <TabsList className="w-full grid grid-cols-3 sm:inline-flex sm:w-auto">
             <TabsTrigger value="membros" className="gap-1.5">
               <Users className="h-3.5 w-3.5" />
               Membros
             </TabsTrigger>
             <TabsTrigger value="papeis" className="gap-1.5">
               <Settings className="h-3.5 w-3.5" />
-              Configurar Papeis
+              <span className="hidden sm:inline">Configurar </span>Papeis
             </TabsTrigger>
             <TabsTrigger value="convites" className="gap-1.5">
               <UserPlus className="h-3.5 w-3.5" />
