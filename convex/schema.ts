@@ -162,6 +162,25 @@ export default defineSchema({
     // Padrao IPB - identificacao no rol
     numeroMatricula: v.optional(v.string()),
     observacoesPastorais: v.optional(v.string()),
+
+    // Override manual de tipoRol (cron de paradeiro ignorado seta automaticamente)
+    tipoRolOverride: v.optional(v.union(
+      v.literal("COMUNGANTE"),
+      v.literal("NAO_COMUNGANTE"),
+      v.literal("PARADEIRO_IGNORADO"),
+    )),
+
+    // Demissao / saida do rol (Const IPB Art 24)
+    formaDemissao: v.optional(v.union(
+      v.literal("TRANSFERENCIA"),
+      v.literal("EXCLUSAO"),
+      v.literal("FALECIMENTO"),
+      v.literal("PEDIDO_DEMISSAO"),
+      v.literal("JURISDICAO"),
+    )),
+    dataDemissao: v.optional(v.string()),
+    igrejaDestino: v.optional(v.string()),
+    dataFalecimento: v.optional(v.string()),
   })
     .index("by_entidade", ["entidadeId"])
     .index("by_user_id", ["userId"])
@@ -1026,6 +1045,43 @@ export default defineSchema({
   })
     .index("by_status", ["status"])
     .index("by_criadoEm", ["criadoEm"]),
+
+  cargosEclesiasticosHistorico: defineTable({
+    membroId: v.id("membros"),
+    cargo: v.union(
+      v.literal("PASTOR"),
+      v.literal("PRESBITERO"),
+      v.literal("DIACONO"),
+    ),
+    mandatoInicio: v.string(),
+    mandatoFim: v.optional(v.string()),
+    status: v.union(
+      v.literal("ATIVO"),
+      v.literal("ENCERRADO"),
+      v.literal("AFASTADO"),
+    ),
+    observacoes: v.optional(v.string()),
+    registradoEm: v.number(),
+    registradoPor: v.id("membros"),
+  })
+    .index("by_membro", ["membroId"])
+    .index("by_status", ["status"])
+    .index("by_membro_status", ["membroId", "status"]),
+
+  consentimentosLgpd: defineTable({
+    membroId: v.id("membros"),
+    finalidade: v.union(
+      v.literal("CADASTRO_BASICO"),
+      v.literal("MENSAGERIA"),
+      v.literal("FOTO_PUBLICACAO"),
+      v.literal("COMPARTILHAMENTO_IPB"),
+    ),
+    aceitoEm: v.number(),
+    versaoTexto: v.string(),
+    revogadoEm: v.optional(v.number()),
+  })
+    .index("by_membro", ["membroId"])
+    .index("by_membro_finalidade", ["membroId", "finalidade"]),
 
   atosPastorais: defineTable({
     membroId: v.id("membros"),
