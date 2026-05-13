@@ -1,4 +1,4 @@
-import { query, mutation } from "../_generated/server";
+import { query, mutation, type MutationCtx, type QueryCtx } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { internalMutation } from "../_generated/server";
@@ -228,13 +228,13 @@ const VISIBLE_ROLES = ["membro", "obreiro", "secretaria", "presbitero", "pastor"
 
 // ===== HELPER =====
 
-async function requireAdmin(ctx: any) {
+async function requireAdmin(ctx: MutationCtx | QueryCtx) {
   const userId = await getAuthUserId(ctx);
   if (!userId) throw new Error("Not authenticated");
 
   const callerMembro = await ctx.db
     .query("membros")
-    .withIndex("by_user_id", (q: any) => q.eq("userId", userId))
+    .withIndex("by_user_id", (q) => q.eq("userId", userId))
     .first();
 
   if (!callerMembro || callerMembro.role !== "admin") {
@@ -522,7 +522,7 @@ export const getVolunteerPermissionSets = query({
 
     const callerMembro = await ctx.db
       .query("membros")
-      .withIndex("by_user_id", (q: any) => q.eq("userId", userId))
+      .withIndex("by_user_id", (q) => q.eq("userId", userId))
       .first();
 
     if (!callerMembro || callerMembro.role !== "admin") return [];

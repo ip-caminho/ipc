@@ -49,6 +49,14 @@ export const FORMACAO_OPTIONS = [
   { value: "DOUTORADO", label: "Doutorado" },
 ] as const;
 
+export const VINCULO_IGREJA_OPTIONS = [
+  { value: "MEMBRO", label: "Membro" },
+  { value: "FREQUENTADOR", label: "Frequentador" },
+  { value: "VISITANTE", label: "Visitante" },
+  { value: "EX_MEMBRO", label: "Ex-membro" },
+  { value: "NAO_MEMBRO", label: "Nao-membro" },
+] as const;
+
 export const PAPEL_OPTIONS = [
   { value: "MEMBRO", label: "Membro" },
   { value: "VISITANTE", label: "Visitante" },

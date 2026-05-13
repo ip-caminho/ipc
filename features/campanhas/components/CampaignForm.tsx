@@ -13,14 +13,35 @@ import { Textarea } from "@/shared/components/ui/textarea";
 import { Badge } from "@/shared/components/ui/badge";
 import { toast } from "sonner";
 import { Send, X, Search } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/components/ui/select";
 
-const TEMPLATE_DEFAULT = `Ola {nome}, paz do Senhor!
+const TEMPLATE_MEMBRO = `Ola {nome}, paz do Senhor!
 
 A secretaria esta atualizando o cadastro de membros.
 Por favor entre em https://ipc.app/meu-perfil e confirme seus dados.
 Leva 2 minutos.
 
 IPC`;
+
+const TEMPLATE_FREQUENTADOR = `Ola {nome}, paz do Senhor!
+
+Que alegria te ter conosco. Para te servir melhor, gostariamos de cadastrar seu contato.
+Entre em https://ipc.app/meu-perfil e preencha seus dados.
+Leva 2 minutos.
+
+IPC`;
+
+const PUBLICO_ALVO_OPTIONS = [
+  { value: "MEMBRO", label: "Membros (rol oficial)" },
+  { value: "FREQUENTADOR", label: "Frequentadores" },
+  { value: "VISITANTE", label: "Visitantes" },
+];
 
 type MembroSelecionado = { id: Id<"membros">; nome: string; whatsapp: string };
 
@@ -30,13 +51,23 @@ export function CampaignForm() {
   const dispararCampanha = useMutation(api.messaging.campanhas.dispararCampanha);
 
   const [titulo, setTitulo] = useState("Atualizacao de cadastro - " + new Date().toLocaleDateString("pt-BR"));
-  const [template, setTemplate] = useState(TEMPLATE_DEFAULT);
+  const [publicoAlvo, setPublicoAlvo] = useState<"MEMBRO" | "FREQUENTADOR" | "VISITANTE">("MEMBRO");
+  const [template, setTemplate] = useState(TEMPLATE_MEMBRO);
   const [janelaMeses, setJanelaMeses] = useState<number | "">("");
   const [submitting, setSubmitting] = useState(false);
 
   const [modoTeste, setModoTeste] = useState(false);
   const [search, setSearch] = useState("");
   const [selecionados, setSelecionados] = useState<MembroSelecionado[]>([]);
+
+  const handlePublicoChange = (v: string) => {
+    const alvo = v as "MEMBRO" | "FREQUENTADOR" | "VISITANTE";
+    setPublicoAlvo(alvo);
+    // Sugere template default conforme publico alvo (so substitui se ainda for um dos defaults)
+    if (template === TEMPLATE_MEMBRO || template === TEMPLATE_FREQUENTADOR) {
+      setTemplate(alvo === "MEMBRO" ? TEMPLATE_MEMBRO : TEMPLATE_FREQUENTADOR);
+    }
+  };
 
   const buscaMembros = useQuery(
     api.membros.queries.list,
@@ -49,7 +80,7 @@ export function CampaignForm() {
         apenasComWhatsapp: true,
       }
     : {
-        vinculoIgreja: ["MEMBRO"],
+        vinculoIgreja: [publicoAlvo],
         status: ["ATIVO"],
         apenasComWhatsapp: true,
         naoAtualizadoHaMeses: typeof janelaMeses === "number" ? janelaMeses : undefined,
@@ -125,6 +156,22 @@ export function CampaignForm() {
             <Label className="text-xs">Titulo (interno)</Label>
             <Input value={titulo} onChange={(e) => setTitulo(e.target.value)} />
           </div>
+
+          {!modoTeste && (
+            <div className="space-y-1">
+              <Label className="text-xs">Publico alvo</Label>
+              <Select value={publicoAlvo} onValueChange={handlePublicoChange}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PUBLICO_ALVO_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <div className="space-y-1">
             <Label className="text-xs">Template da mensagem</Label>
@@ -262,7 +309,7 @@ export function CampaignForm() {
               <Badge variant="secondary">Modo teste: {selecionados.length} membro(s)</Badge>
             ) : (
               <>
-                <Badge variant="secondary">Vinculo: MEMBRO</Badge>
+                <Badge variant="secondary">Publico: {publicoAlvo}</Badge>
                 <Badge variant="secondary">Status: ATIVO</Badge>
                 <Badge variant="secondary">Com WhatsApp</Badge>
                 {typeof janelaMeses === "number" && janelaMeses > 0 && (

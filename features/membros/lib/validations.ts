@@ -42,6 +42,11 @@ export const membroFormSchema = z.object({
   // Compliance (CBCM)
   cbcm: z.enum(["NAO_INICIADO", "CURSANDO", "CONCLUIDO"]).optional(),
   atestadoAntecedentes: z.string().optional(),
+
+  // Vinculo com a igreja (define segmentacao em campanhas)
+  vinculoIgreja: z
+    .enum(["MEMBRO", "FREQUENTADOR", "VISITANTE", "EX_MEMBRO", "NAO_MEMBRO"])
+    .optional(),
 });
 
 export type MembroFormValues = z.infer<typeof membroFormSchema>;

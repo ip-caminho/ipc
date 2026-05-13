@@ -75,6 +75,7 @@ export default function MembroDetailPage() {
     igrejaProcedencia: membro.igrejaProcedencia || "",
     cbcm: membro.entidade?.cbcm as any,
     atestadoAntecedentes: membro.entidade?.atestadoAntecedentes || "",
+    vinculoIgreja: membro.entidade?.vinculoIgreja as any,
   };
 
   const handleSubmit = async (data: MembroFormValues) => {
@@ -115,6 +116,7 @@ export default function MembroDetailPage() {
           endereco,
           cbcm: data.cbcm || undefined,
           atestadoAntecedentes: data.atestadoAntecedentes || undefined,
+          vinculoIgreja: data.vinculoIgreja || undefined,
         },
         membroData: {
           role: data.role,

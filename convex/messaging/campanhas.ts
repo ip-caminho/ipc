@@ -214,6 +214,37 @@ export const dispararCampanha = mutation({
   },
 });
 
+export const pausarCampanha = mutation({
+  args: { campanhaId: v.id("campanhas") },
+  handler: async (ctx, { campanhaId }) => {
+    await requireAdmin(ctx);
+    const campanha = await ctx.db.get(campanhaId);
+    if (!campanha) throw new Error("Campanha nao encontrada");
+    if (campanha.status !== "EM_EXECUCAO") {
+      throw new Error("So e possivel pausar campanhas em execucao");
+    }
+    await ctx.db.patch(campanhaId, { status: "PAUSADA" });
+    return { ok: true };
+  },
+});
+
+export const retomarCampanha = mutation({
+  args: { campanhaId: v.id("campanhas") },
+  handler: async (ctx, { campanhaId }) => {
+    await requireAdmin(ctx);
+    const campanha = await ctx.db.get(campanhaId);
+    if (!campanha) throw new Error("Campanha nao encontrada");
+    if (campanha.status !== "PAUSADA") {
+      throw new Error("So e possivel retomar campanhas pausadas");
+    }
+    await ctx.db.patch(campanhaId, { status: "EM_EXECUCAO" });
+    await ctx.scheduler.runAfter(0, internal.messaging.campanhas._processarProximo, {
+      campanhaId,
+    });
+    return { ok: true };
+  },
+});
+
 export const reenviarPendentes = mutation({
   args: { campanhaId: v.id("campanhas") },
   handler: async (ctx, { campanhaId }) => {
@@ -252,6 +283,12 @@ export const reenviarPendentes = mutation({
 export const _processarProximo = internalMutation({
   args: { campanhaId: v.id("campanhas") },
   handler: async (ctx, { campanhaId }) => {
+    // Para a cadeia se a campanha foi pausada/cancelada
+    const campanha = await ctx.db.get(campanhaId);
+    if (!campanha || campanha.status !== "EM_EXECUCAO") {
+      return { done: true, paused: campanha?.status === "PAUSADA" };
+    }
+
     const proximo = await ctx.db
       .query("campanhasEnvios")
       .withIndex("by_campanha_status", (q) =>
@@ -364,6 +401,13 @@ export const _registrarResultado = internalMutation({
       )
       .first();
 
+    // Respeita pausa: se a campanha foi pausada durante o envio em curso,
+    // nem agenda proximo nem marca como CONCLUIDA — deixa em PAUSADA.
+    const campanha = await ctx.db.get(envio.campanhaId);
+    if (campanha?.status === "PAUSADA") {
+      return;
+    }
+
     if (proximaPendente) {
       const delay = calcularJitter();
       await ctx.scheduler.runAfter(delay, internal.messaging.campanhas._processarProximo, {
@@ -375,6 +419,22 @@ export const _registrarResultado = internalMutation({
         status: "CONCLUIDA",
         concluidoEm: now,
       });
+    }
+  },
+});
+
+// ============ CONFIRMACAO AO MEMBRO ============
+
+const TEMPLATE_CONFIRMACAO =
+  "Recebemos seus dados, obrigado por confirmar! Que Deus te abencoe. - IPC";
+
+export const _enviarConfirmacao = internalAction({
+  args: { telefone: v.string() },
+  handler: async (_ctx, { telefone }): Promise<void> => {
+    try {
+      await messaging.sendText(telefone, TEMPLATE_CONFIRMACAO);
+    } catch (e) {
+      console.error(`[Campanha] Falha ao enviar confirmacao para ${telefone}:`, e);
     }
   },
 });

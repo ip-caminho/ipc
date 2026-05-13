@@ -9,6 +9,7 @@ import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { Badge } from "@/shared/components/ui/badge";
+import { Checkbox } from "@/shared/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -20,7 +21,7 @@ import { PhotoUpload } from "@/shared/files/components/PhotoUpload";
 import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
 import { PageHeader } from "@shared/components/layout/PageHeader";
 import { toast } from "sonner";
-import { MapPin, User, Phone, Save, AlertCircle, CheckCircle2, HeartPulse } from "lucide-react";
+import { MapPin, User, Phone, Save, AlertCircle, CheckCircle2, HeartPulse, HelpCircle } from "lucide-react";
 import {
   CARGO_ECLESIASTICO_OPTIONS,
   STATUS_COLORS,
@@ -45,6 +46,15 @@ type ContatoEmergencia = {
 
 const MESES_PARA_ALERTA = 6;
 
+const CAMPOS_INCERTOS_DISPONIVEIS: Array<{ field: string; label: string }> = [
+  { field: "dataBatismo", label: "Data do batismo" },
+  { field: "dataMembresia", label: "Data em que me tornei membro" },
+  { field: "dataConversao", label: "Data da conversao" },
+  { field: "profissao", label: "Profissao" },
+  { field: "formacao", label: "Formacao" },
+  { field: "endereco", label: "Endereco" },
+];
+
 function tempoDesde(timestamp: number | undefined): string {
   if (!timestamp) return "nunca";
   const meses = Math.floor((Date.now() - timestamp) / (30 * 24 * 60 * 60 * 1000));
@@ -61,6 +71,7 @@ export default function MeuPerfilPage() {
   const confirmProfile = useMutation(api.membros.selfService.confirmProfile);
 
   const [formData, setFormData] = useState<Record<string, string>>({});
+  const [dadosIncertos, setDadosIncertos] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [initializedFor, setInitializedFor] = useState<string | null>(null);
@@ -70,6 +81,7 @@ export default function MeuPerfilPage() {
     const ent = profile.entidade;
     const end = ent.endereco as Endereco | undefined;
     const ce = ent.contatoEmergencia as ContatoEmergencia | undefined;
+    setDadosIncertos(ent.dadosIncertos ?? []);
     setFormData({
       apelido: ent.apelido || "",
       nomeSocial: ent.nomeSocial || "",
@@ -163,6 +175,13 @@ export default function MeuPerfilPage() {
       const hasAnyCE = newCE.nome && newCE.telefone && newCE.parentesco;
       if (hasAnyCE && JSON.stringify(newCE) !== JSON.stringify(contatoEmergencia || {})) {
         data.contatoEmergencia = newCE;
+      }
+
+      const incertosAtual = (ent?.dadosIncertos as string[] | undefined) ?? [];
+      const incertosNovo = [...dadosIncertos].sort();
+      const incertosAntigo = [...incertosAtual].sort();
+      if (JSON.stringify(incertosNovo) !== JSON.stringify(incertosAntigo)) {
+        data.dadosIncertos = dadosIncertos;
       }
 
       if (Object.keys(data).length === 0) {
@@ -429,6 +448,41 @@ export default function MeuPerfilPage() {
                 <p>{formacaoLabel}</p>
               </div>
             )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Dados incertos */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm text-muted-foreground flex items-center gap-1.5">
+            <HelpCircle className="h-3.5 w-3.5" /> Dados que nao tenho certeza
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <p className="text-xs text-muted-foreground">
+            Marque os campos que voce nao lembra ou nao tem certeza. A secretaria sera notificada e podera ajudar a confirmar com o livro de registros.
+          </p>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {CAMPOS_INCERTOS_DISPONIVEIS.map((c) => {
+              const checked = dadosIncertos.includes(c.field);
+              return (
+                <label
+                  key={c.field}
+                  className="flex items-center gap-2 text-sm cursor-pointer p-2 rounded-md hover:bg-muted/50"
+                >
+                  <Checkbox
+                    checked={checked}
+                    onCheckedChange={(v) => {
+                      setDadosIncertos((prev) =>
+                        v ? [...prev, c.field] : prev.filter((f) => f !== c.field)
+                      );
+                    }}
+                  />
+                  <span>{c.label}</span>
+                </label>
+              );
+            })}
           </div>
         </CardContent>
       </Card>
