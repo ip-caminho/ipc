@@ -71,63 +71,94 @@ export const criarCampanha = mutation({
       status: v.optional(v.array(v.string())),
       apenasComWhatsapp: v.optional(v.boolean()),
       naoAtualizadoHaMeses: v.optional(v.number()),
+      membroIds: v.optional(v.array(v.id("membros"))),
     }),
   },
   handler: async (ctx, args) => {
     const admin = await requireAdmin(ctx);
     const now = Date.now();
 
-    // Resolve destinatarios
-    const vinculosAlvo = args.filtros.vinculoIgreja ?? ["MEMBRO"];
-    const statusAlvo = args.filtros.status ?? ["ATIVO"];
+    // Resolve destinatarios. Se membroIds vier preenchido, ignora outros
+    // filtros e mira so esses (modo teste / disparo segmentado manualmente).
     const apenasComWhatsapp = args.filtros.apenasComWhatsapp ?? true;
-    const janelaInativoMs = args.filtros.naoAtualizadoHaMeses
-      ? args.filtros.naoAtualizadoHaMeses * 30 * 24 * 60 * 60 * 1000
-      : null;
-
-    const entidades = await ctx.db.query("entidades").collect();
+    const membroIdsAlvo = args.filtros.membroIds;
     const destinatarios: Array<{
       membroId: Id<"membros">;
       entidadeId: Id<"entidades">;
       telefone: string;
     }> = [];
 
-    for (const entidade of entidades) {
-      if (entidade.vinculoIgreja && !vinculosAlvo.includes(entidade.vinculoIgreja)) continue;
-      if (!statusAlvo.includes(entidade.status)) continue;
-      if (apenasComWhatsapp && !entidade.whatsapp) continue;
-      if (
-        janelaInativoMs !== null &&
-        entidade.perfilAtualizadoEm &&
-        now - entidade.perfilAtualizadoEm < janelaInativoMs
-      ) {
-        continue;
+    if (membroIdsAlvo && membroIdsAlvo.length > 0) {
+      for (const id of membroIdsAlvo) {
+        const membro = await ctx.db.get(id);
+        if (!membro) continue;
+        const entidade = await ctx.db.get(membro.entidadeId);
+        if (!entidade) continue;
+        if (apenasComWhatsapp && !entidade.whatsapp) continue;
+
+        const enviosAnteriores = await ctx.db
+          .query("campanhasEnvios")
+          .withIndex("by_membro_enviadoEm", (q) => q.eq("membroId", membro._id))
+          .collect();
+        const enviadosEm = enviosAnteriores
+          .map((e) => e.enviadoEm ?? 0)
+          .filter((ts) => ts > 0);
+        if (!podeReceberCampanha(enviadosEm, now)) {
+          console.log(`[Campanha] Pulando membro ${membro._id} - anti-spam`);
+          continue;
+        }
+
+        destinatarios.push({
+          membroId: membro._id,
+          entidadeId: entidade._id,
+          telefone: entidade.whatsapp!,
+        });
       }
+    } else {
+      const vinculosAlvo = args.filtros.vinculoIgreja ?? ["MEMBRO"];
+      const statusAlvo = args.filtros.status ?? ["ATIVO"];
+      const janelaInativoMs = args.filtros.naoAtualizadoHaMeses
+        ? args.filtros.naoAtualizadoHaMeses * 30 * 24 * 60 * 60 * 1000
+        : null;
 
-      const membro = await ctx.db
-        .query("membros")
-        .withIndex("by_entidade", (q) => q.eq("entidadeId", entidade._id))
-        .first();
-      if (!membro) continue;
+      const entidades = await ctx.db.query("entidades").collect();
 
-      // Anti-spam: contar envios deste membro nos ultimos 30 dias
-      const enviosAnteriores = await ctx.db
-        .query("campanhasEnvios")
-        .withIndex("by_membro_enviadoEm", (q) => q.eq("membroId", membro._id))
-        .collect();
-      const enviadosEm = enviosAnteriores
-        .map((e) => e.enviadoEm ?? 0)
-        .filter((ts) => ts > 0);
-      if (!podeReceberCampanha(enviadosEm, now)) {
-        console.log(`[Campanha] Pulando membro ${membro._id} - anti-spam`);
-        continue;
+      for (const entidade of entidades) {
+        if (entidade.vinculoIgreja && !vinculosAlvo.includes(entidade.vinculoIgreja)) continue;
+        if (!statusAlvo.includes(entidade.status)) continue;
+        if (apenasComWhatsapp && !entidade.whatsapp) continue;
+        if (
+          janelaInativoMs !== null &&
+          entidade.perfilAtualizadoEm &&
+          now - entidade.perfilAtualizadoEm < janelaInativoMs
+        ) {
+          continue;
+        }
+
+        const membro = await ctx.db
+          .query("membros")
+          .withIndex("by_entidade", (q) => q.eq("entidadeId", entidade._id))
+          .first();
+        if (!membro) continue;
+
+        const enviosAnteriores = await ctx.db
+          .query("campanhasEnvios")
+          .withIndex("by_membro_enviadoEm", (q) => q.eq("membroId", membro._id))
+          .collect();
+        const enviadosEm = enviosAnteriores
+          .map((e) => e.enviadoEm ?? 0)
+          .filter((ts) => ts > 0);
+        if (!podeReceberCampanha(enviadosEm, now)) {
+          console.log(`[Campanha] Pulando membro ${membro._id} - anti-spam`);
+          continue;
+        }
+
+        destinatarios.push({
+          membroId: membro._id,
+          entidadeId: entidade._id,
+          telefone: entidade.whatsapp!,
+        });
       }
-
-      destinatarios.push({
-        membroId: membro._id,
-        entidadeId: entidade._id,
-        telefone: entidade.whatsapp!,
-      });
     }
 
     const campanhaId = await ctx.db.insert("campanhas", {
@@ -443,6 +474,7 @@ export const previewDestinatarios = query({
       status: v.optional(v.array(v.string())),
       apenasComWhatsapp: v.optional(v.boolean()),
       naoAtualizadoHaMeses: v.optional(v.number()),
+      membroIds: v.optional(v.array(v.id("membros"))),
     }),
   },
   handler: async (ctx, { filtros }) => {
@@ -455,43 +487,57 @@ export const previewDestinatarios = query({
     if (!membro || membro.role !== "admin") return { total: 0, puladosAntiSpam: 0 };
 
     const now = Date.now();
-    const vinculosAlvo = filtros.vinculoIgreja ?? ["MEMBRO"];
-    const statusAlvo = filtros.status ?? ["ATIVO"];
     const apenasComWhatsapp = filtros.apenasComWhatsapp ?? true;
-    const janelaInativoMs = filtros.naoAtualizadoHaMeses
-      ? filtros.naoAtualizadoHaMeses * 30 * 24 * 60 * 60 * 1000
-      : null;
-
-    const entidades = await ctx.db.query("entidades").collect();
+    const membroIdsAlvo = filtros.membroIds;
     let total = 0;
     let puladosAntiSpam = 0;
 
-    for (const entidade of entidades) {
-      if (entidade.vinculoIgreja && !vinculosAlvo.includes(entidade.vinculoIgreja)) continue;
-      if (!statusAlvo.includes(entidade.status)) continue;
-      if (apenasComWhatsapp && !entidade.whatsapp) continue;
-      if (
-        janelaInativoMs !== null &&
-        entidade.perfilAtualizadoEm &&
-        now - entidade.perfilAtualizadoEm < janelaInativoMs
-      ) continue;
-
-      const m = await ctx.db
-        .query("membros")
-        .withIndex("by_entidade", (q) => q.eq("entidadeId", entidade._id))
-        .first();
-      if (!m) continue;
-
+    const contar = async (membroId: Id<"membros">, entidade: Doc<"entidades">) => {
+      if (apenasComWhatsapp && !entidade.whatsapp) return;
       const enviosAnteriores = await ctx.db
         .query("campanhasEnvios")
-        .withIndex("by_membro_enviadoEm", (q) => q.eq("membroId", m._id))
+        .withIndex("by_membro_enviadoEm", (q) => q.eq("membroId", membroId))
         .collect();
       const enviadosEm = enviosAnteriores.map((e) => e.enviadoEm ?? 0).filter((ts) => ts > 0);
       if (!podeReceberCampanha(enviadosEm, now)) {
         puladosAntiSpam++;
-        continue;
+        return;
       }
       total++;
+    };
+
+    if (membroIdsAlvo && membroIdsAlvo.length > 0) {
+      for (const id of membroIdsAlvo) {
+        const m = await ctx.db.get(id);
+        if (!m) continue;
+        const entidade = await ctx.db.get(m.entidadeId);
+        if (!entidade) continue;
+        await contar(m._id, entidade);
+      }
+    } else {
+      const vinculosAlvo = filtros.vinculoIgreja ?? ["MEMBRO"];
+      const statusAlvo = filtros.status ?? ["ATIVO"];
+      const janelaInativoMs = filtros.naoAtualizadoHaMeses
+        ? filtros.naoAtualizadoHaMeses * 30 * 24 * 60 * 60 * 1000
+        : null;
+
+      const entidades = await ctx.db.query("entidades").collect();
+      for (const entidade of entidades) {
+        if (entidade.vinculoIgreja && !vinculosAlvo.includes(entidade.vinculoIgreja)) continue;
+        if (!statusAlvo.includes(entidade.status)) continue;
+        if (
+          janelaInativoMs !== null &&
+          entidade.perfilAtualizadoEm &&
+          now - entidade.perfilAtualizadoEm < janelaInativoMs
+        ) continue;
+
+        const m = await ctx.db
+          .query("membros")
+          .withIndex("by_entidade", (q) => q.eq("entidadeId", entidade._id))
+          .first();
+        if (!m) continue;
+        await contar(m._id, entidade);
+      }
     }
 
     return { total, puladosAntiSpam, janelaAntiSpamDias: ANTISPAM_JANELA_DIAS };

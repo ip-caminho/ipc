@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { useRouter } from "next/navigation";
 import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
@@ -11,7 +12,7 @@ import { Label } from "@/shared/components/ui/label";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Badge } from "@/shared/components/ui/badge";
 import { toast } from "sonner";
-import { Send } from "lucide-react";
+import { Send, X, Search } from "lucide-react";
 
 const TEMPLATE_DEFAULT = `Ola {nome}, paz do Senhor!
 
@@ -20,6 +21,8 @@ Por favor entre em https://ipc.app/meu-perfil e confirme seus dados.
 Leva 2 minutos.
 
 IPC`;
+
+type MembroSelecionado = { id: Id<"membros">; nome: string; whatsapp: string };
 
 export function CampaignForm() {
   const router = useRouter();
@@ -31,14 +34,38 @@ export function CampaignForm() {
   const [janelaMeses, setJanelaMeses] = useState<number | "">("");
   const [submitting, setSubmitting] = useState(false);
 
-  const filtros = {
-    vinculoIgreja: ["MEMBRO"],
-    status: ["ATIVO"],
-    apenasComWhatsapp: true,
-    naoAtualizadoHaMeses: typeof janelaMeses === "number" ? janelaMeses : undefined,
-  };
+  const [modoTeste, setModoTeste] = useState(false);
+  const [search, setSearch] = useState("");
+  const [selecionados, setSelecionados] = useState<MembroSelecionado[]>([]);
+
+  const buscaMembros = useQuery(
+    api.membros.queries.list,
+    modoTeste && search.trim().length >= 2 ? { search: search.trim() } : "skip"
+  );
+
+  const filtros = modoTeste
+    ? {
+        membroIds: selecionados.map((s) => s.id),
+        apenasComWhatsapp: true,
+      }
+    : {
+        vinculoIgreja: ["MEMBRO"],
+        status: ["ATIVO"],
+        apenasComWhatsapp: true,
+        naoAtualizadoHaMeses: typeof janelaMeses === "number" ? janelaMeses : undefined,
+      };
 
   const preview = useQuery(api.messaging.campanhas.previewDestinatarios, { filtros });
+
+  const adicionarMembro = (m: MembroSelecionado) => {
+    if (selecionados.some((s) => s.id === m.id)) return;
+    setSelecionados((prev) => [...prev, m]);
+    setSearch("");
+  };
+
+  const removerMembro = (id: Id<"membros">) => {
+    setSelecionados((prev) => prev.filter((s) => s.id !== id));
+  };
 
   const handleCriar = async (disparar: boolean) => {
     if (!titulo.trim()) {
@@ -49,14 +76,19 @@ export function CampaignForm() {
       toast.error("Informe um template");
       return;
     }
+    if (modoTeste && selecionados.length === 0) {
+      toast.error("Selecione ao menos um membro para o modo teste");
+      return;
+    }
     if (!preview || preview.total === 0) {
       toast.error("Nenhum destinatario com os filtros atuais");
       return;
     }
 
-    if (!confirm(`Confirmar criacao da campanha para ${preview.total} destinatarios?${disparar ? "\n\nA campanha sera disparada imediatamente." : ""}`)) {
-      return;
-    }
+    const msg = modoTeste
+      ? `Disparar para ${preview.total} membro(s) selecionado(s): ${selecionados.map((s) => s.nome).join(", ")}?`
+      : `Confirmar criacao da campanha para ${preview.total} destinatarios?${disparar ? "\n\nA campanha sera disparada imediatamente." : ""}`;
+    if (!confirm(msg)) return;
 
     setSubmitting(true);
     try {
@@ -106,20 +138,117 @@ export function CampaignForm() {
             </p>
           </div>
 
-          <div className="space-y-1">
-            <Label className="text-xs">Pular membros que atualizaram nos ultimos N meses (opcional)</Label>
-            <Input
-              type="number"
-              min={1}
-              max={48}
-              value={janelaMeses}
-              onChange={(e) => {
-                const v = e.target.value;
-                setJanelaMeses(v === "" ? "" : Number(v));
+          {!modoTeste && (
+            <div className="space-y-1">
+              <Label className="text-xs">Pular membros que atualizaram nos ultimos N meses (opcional)</Label>
+              <Input
+                type="number"
+                min={1}
+                max={48}
+                value={janelaMeses}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setJanelaMeses(v === "" ? "" : Number(v));
+                }}
+                placeholder="Ex: 6"
+              />
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className={modoTeste ? "border-amber-300 bg-amber-50 dark:bg-amber-950/30" : undefined}>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center justify-between">
+            Modo teste
+            <Button
+              type="button"
+              variant={modoTeste ? "default" : "outline"}
+              size="sm"
+              onClick={() => {
+                setModoTeste(!modoTeste);
+                setSelecionados([]);
+                setSearch("");
               }}
-              placeholder="Ex: 6"
-            />
-          </div>
+            >
+              {modoTeste ? "Ativo" : "Ativar"}
+            </Button>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {!modoTeste ? (
+            <p className="text-xs text-muted-foreground">
+              Ative para disparar apenas para membros especificos (ideal para validar o fluxo antes do envio em massa).
+            </p>
+          ) : (
+            <>
+              <div className="space-y-1">
+                <Label className="text-xs">Buscar membro (nome ou WhatsApp)</Label>
+                <div className="relative">
+                  <Search className="h-4 w-4 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    className="pl-8"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Digite ao menos 2 caracteres"
+                  />
+                </div>
+              </div>
+
+              {search.trim().length >= 2 && buscaMembros && (
+                <div className="border rounded-md max-h-48 overflow-y-auto divide-y">
+                  {buscaMembros.length === 0 ? (
+                    <p className="p-2 text-xs text-muted-foreground">Nenhum membro encontrado</p>
+                  ) : (
+                    buscaMembros.slice(0, 20).map((m) => {
+                      const ja = selecionados.some((s) => s.id === m._id);
+                      return (
+                        <button
+                          key={m._id}
+                          type="button"
+                          disabled={ja || !m.entidade.whatsapp}
+                          onClick={() =>
+                            adicionarMembro({
+                              id: m._id,
+                              nome: m.entidade.nomeCompleto ?? "(sem nome)",
+                              whatsapp: m.entidade.whatsapp ?? "",
+                            })
+                          }
+                          className="w-full text-left p-2 hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed text-sm flex justify-between items-center"
+                        >
+                          <span>{m.entidade.nomeCompleto}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {m.entidade.whatsapp || "sem WhatsApp"}
+                            {ja && " · ja selecionado"}
+                          </span>
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+              )}
+
+              {selecionados.length > 0 && (
+                <div className="space-y-1">
+                  <Label className="text-xs">Selecionados ({selecionados.length})</Label>
+                  <div className="flex flex-wrap gap-1">
+                    {selecionados.map((s) => (
+                      <Badge key={s.id} variant="secondary" className="gap-1 pr-1">
+                        {s.nome}
+                        <button
+                          type="button"
+                          onClick={() => removerMembro(s.id)}
+                          className="hover:bg-muted-foreground/20 rounded"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </CardContent>
       </Card>
 
@@ -129,11 +258,17 @@ export function CampaignForm() {
         </CardHeader>
         <CardContent className="space-y-2">
           <div className="flex items-center gap-2 flex-wrap">
-            <Badge variant="secondary">Vinculo: MEMBRO</Badge>
-            <Badge variant="secondary">Status: ATIVO</Badge>
-            <Badge variant="secondary">Com WhatsApp</Badge>
-            {typeof janelaMeses === "number" && janelaMeses > 0 && (
-              <Badge variant="secondary">Sem atualizar ha {janelaMeses}+ meses</Badge>
+            {modoTeste ? (
+              <Badge variant="secondary">Modo teste: {selecionados.length} membro(s)</Badge>
+            ) : (
+              <>
+                <Badge variant="secondary">Vinculo: MEMBRO</Badge>
+                <Badge variant="secondary">Status: ATIVO</Badge>
+                <Badge variant="secondary">Com WhatsApp</Badge>
+                {typeof janelaMeses === "number" && janelaMeses > 0 && (
+                  <Badge variant="secondary">Sem atualizar ha {janelaMeses}+ meses</Badge>
+                )}
+              </>
             )}
           </div>
           {preview === undefined ? (
