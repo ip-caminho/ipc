@@ -68,7 +68,7 @@ describe("filterSelfServiceFields", () => {
     });
   });
 
-  it("aceita todos os 6 campos self-service", () => {
+  it("aceita todos os campos self-service", () => {
     const data = {
       telefone: "123",
       email: "a@b.com",
@@ -76,9 +76,44 @@ describe("filterSelfServiceFields", () => {
       profissao: "Dev",
       formacao: "SUPERIOR",
       foto: "https://url.com/foto.jpg",
+      apelido: "Joao",
+      nomeSocial: "Joao Social",
+      contatoEmergencia: { nome: "Maria", telefone: "+5511", parentesco: "Conjuge" },
+      dadosIncertos: ["dataBatismo"],
     };
     const result = filterSelfServiceFields(data);
     expect(result).toEqual(data);
+  });
+
+  it("aceita nomeSocial e contatoEmergencia (novos campos)", () => {
+    const result = filterSelfServiceFields({
+      nomeSocial: "Nome Social",
+      contatoEmergencia: { nome: "X", telefone: "Y", parentesco: "Z" },
+      cpf: "should be filtered",
+    });
+    expect(result).toEqual({
+      nomeSocial: "Nome Social",
+      contatoEmergencia: { nome: "X", telefone: "Y", parentesco: "Z" },
+    });
+  });
+
+  it("aceita dadosIncertos (marcacao 'nao lembro')", () => {
+    const result = filterSelfServiceFields({
+      dadosIncertos: ["dataBatismo", "dataConversao"],
+    });
+    expect(result).toEqual({
+      dadosIncertos: ["dataBatismo", "dataConversao"],
+    });
+  });
+
+  it("bloqueia campos sensiveis de rol mesmo com dadosIncertos", () => {
+    const result = filterSelfServiceFields({
+      dadosIncertos: ["x"],
+      tipoRol: "COMUNGANTE",
+      numeroMatricula: "123",
+      cargoEclesiastico: "PASTOR",
+    });
+    expect(result).toEqual({ dadosIncertos: ["x"] });
   });
 
   it("filtra mistura de campos permitidos e nao-permitidos", () => {

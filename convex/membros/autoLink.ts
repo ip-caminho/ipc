@@ -58,6 +58,14 @@ export const autoLinkByPhone = mutation({
       return { linked: false, reason: "no_matching_entity" };
     }
 
+    // Bloqueia login de membros TRANSFERIDO / FALECIDO / DESLIGADO
+    // (rbac.ts:getUserPermissionContext faz o check, mas autolink
+    // consumava o vinculo antes — agora bloqueia antes de patch).
+    if (entidade.status !== "ATIVO") {
+      console.log(`[AutoLink] Recusado: entidade ${entidade._id} status=${entidade.status}`);
+      return { linked: false, reason: "entity_not_active" };
+    }
+
     // Buscar membro por entidadeId
     const membro = await ctx.db
       .query("membros")

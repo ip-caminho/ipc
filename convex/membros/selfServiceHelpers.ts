@@ -11,6 +11,9 @@ export const SELF_SERVICE_FIELDS = new Set([
   "profissao",
   "formacao",
   "foto",
+  "nomeSocial",
+  "contatoEmergencia",
+  "dadosIncertos",
 ]);
 
 /**
