@@ -19,6 +19,18 @@ export const FORMA_ADMISSAO_OPTIONS = [
   { value: "PROFISSAO_FE", label: "Profissao de Fe" },
   { value: "TRANSFERENCIA", label: "Transferencia" },
   { value: "JURISDICAO", label: "Jurisdicao" },
+  { value: "RESTAURACAO", label: "Restauracao" },
+  { value: "BATISMO_INFANCIA", label: "Batismo na Infancia" },
+  { value: "JURISDICAO_EX_OFFICIO", label: "Jurisdicao Ex Officio" },
+  { value: "DESIGNACAO_PRESBITERIO", label: "Designacao do Presbiterio" },
+] as const;
+
+export const FORMA_DEMISSAO_OPTIONS = [
+  { value: "TRANSFERENCIA", label: "Transferencia" },
+  { value: "EXCLUSAO", label: "Exclusao Disciplinar" },
+  { value: "FALECIMENTO", label: "Falecimento" },
+  { value: "PEDIDO_DEMISSAO", label: "Pedido de Demissao" },
+  { value: "JURISDICAO", label: "Mudanca de Jurisdicao" },
 ] as const;
 
 export const TIPO_DOCUMENTO_OPTIONS = [

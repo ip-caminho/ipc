@@ -94,6 +94,11 @@ async function marcarCampanhasAtualizadas(
   const entidade = membro ? await ctx.db.get(membro.entidadeId) : null;
   const meuTelefone = entidade?.whatsapp ?? entidade?.telefone ?? null;
 
+  // Membro confirmou cadastro -> nao e mais paradeiro ignorado
+  if (membro?.tipoRolOverride === "PARADEIRO_IGNORADO") {
+    await ctx.db.patch(membroId, { tipoRolOverride: undefined });
+  }
+
   const enviosPorMembro = await ctx.db
     .query("campanhasEnvios")
     .withIndex("by_membro_enviadoEm", (q) => q.eq("membroId", membroId))

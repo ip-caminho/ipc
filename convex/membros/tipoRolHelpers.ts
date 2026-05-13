@@ -36,10 +36,15 @@ export type StatusEntidade =
 /**
  * Deriva o tipo de rol IPB a partir de cargoEclesiastico + status da entidade.
  * Retorna null para membros que nao estao em rol oficial (TRANSFERIDO/FALECIDO/DESLIGADO).
+ *
+ * Se `tipoRolOverride` estiver preenchido (geralmente pelo cron de paradeiro
+ * ignorado ou por intervencao manual do admin), ele tem prioridade sobre
+ * a derivacao automatica.
  */
 export function getTipoRol(
   cargoEclesiastico: CargoEclesiastico | undefined,
-  statusEntidade: StatusEntidade
+  statusEntidade: StatusEntidade,
+  tipoRolOverride?: TipoRol
 ): TipoRol | null {
   if (
     statusEntidade === "TRANSFERIDO" ||
@@ -47,6 +52,10 @@ export function getTipoRol(
     statusEntidade === "DESLIGADO"
   ) {
     return null;
+  }
+
+  if (tipoRolOverride) {
+    return tipoRolOverride;
   }
 
   if (statusEntidade === "INATIVO") {
