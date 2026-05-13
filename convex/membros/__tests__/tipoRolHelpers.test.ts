@@ -42,4 +42,18 @@ describe("getTipoRol", () => {
       expect(getTipoRol("MEMBRO_COMUNGANTE", "DESLIGADO")).toBeNull();
     });
   });
+
+  describe("tipoRolOverride", () => {
+    it("override PARADEIRO_IGNORADO vence derivacao automatica", () => {
+      expect(getTipoRol("MEMBRO_COMUNGANTE", "ATIVO", "PARADEIRO_IGNORADO")).toBe(
+        "PARADEIRO_IGNORADO"
+      );
+    });
+    it("override COMUNGANTE forca tipo independente de cargo", () => {
+      expect(getTipoRol("MEMBRO_NAO_COMUNGANTE", "ATIVO", "COMUNGANTE")).toBe("COMUNGANTE");
+    });
+    it("status fora do rol (TRANSFERIDO/FALECIDO) ignora override", () => {
+      expect(getTipoRol("MEMBRO_COMUNGANTE", "FALECIDO", "PARADEIRO_IGNORADO")).toBeNull();
+    });
+  });
 });
