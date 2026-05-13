@@ -120,6 +120,298 @@ async function marcarCampanhasAtualizadas(
  * abre /meu-perfil pela campanha e clica "Confirmar dados" sem editar.
  * Apenas grava perfilAtualizadoEm/Por e dispara hook de campanha.
  */
+// ============ FAMILIA (self-service) ============
+
+/**
+ * Busca membros para selecionar como conjuge ou referenciar como pai/mae.
+ * Retorna nome + foto + entidadeId. Limitado a 20 resultados.
+ * Exige termo de busca >= 2 caracteres.
+ */
+export const searchMembersForFamily = query({
+  args: { search: v.string() },
+  handler: async (ctx, { search }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return [];
+    const term = search.trim().toLowerCase();
+    if (term.length < 2) return [];
+
+    const myMembro = await ctx.db
+      .query("membros")
+      .withIndex("by_user_id", (q) => q.eq("userId", userId))
+      .first();
+
+    const entidades = await ctx.db.query("entidades").collect();
+    const result = entidades
+      .filter((e) => e.status === "ATIVO")
+      .filter((e) => e._id !== myMembro?.entidadeId)
+      .filter((e) => (e.nomeCompleto || "").toLowerCase().includes(term))
+      .slice(0, 20)
+      .map((e) => ({
+        entidadeId: e._id,
+        nomeCompleto: e.nomeCompleto ?? "",
+        foto: e.foto,
+      }));
+    return result;
+  },
+});
+
+export const getMyFamily = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return null;
+
+    const membro = await ctx.db
+      .query("membros")
+      .withIndex("by_user_id", (q) => q.eq("userId", userId))
+      .first();
+    if (!membro) return null;
+
+    let conjuge = null;
+    if (membro.conjugeId) {
+      const conjugeEnt = await ctx.db.get(membro.conjugeId);
+      if (conjugeEnt) {
+        conjuge = {
+          entidadeId: conjugeEnt._id,
+          nomeCompleto: conjugeEnt.nomeCompleto ?? "",
+          foto: conjugeEnt.foto,
+        };
+      }
+    }
+
+    // Filhos: por responsaveis onde eu sou o responsavel
+    const minhasResponsabilidades = await ctx.db
+      .query("responsaveis")
+      .withIndex("by_responsavel", (q) =>
+        q.eq("responsavelEntidadeId", membro.entidadeId)
+      )
+      .collect();
+
+    const filhos = await Promise.all(
+      minhasResponsabilidades.map(async (r) => {
+        const filho = await ctx.db.get(r.criancaEntidadeId);
+        if (!filho) return null;
+        return {
+          entidadeId: filho._id,
+          nomeCompleto: filho.nomeCompleto ?? "",
+          dataNascimento: filho.dataNascimento,
+          foto: filho.foto,
+          tipo: r.tipo,
+          vinculoIgreja: filho.vinculoIgreja,
+        };
+      })
+    );
+
+    return {
+      conjuge,
+      filhos: filhos.filter((f): f is NonNullable<typeof f> => f !== null),
+    };
+  },
+});
+
+export const vincularConjuge = mutation({
+  args: { conjugeEntidadeId: v.id("entidades") },
+  handler: async (ctx, { conjugeEntidadeId }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    const myMembro = await ctx.db
+      .query("membros")
+      .withIndex("by_user_id", (q) => q.eq("userId", userId))
+      .first();
+    if (!myMembro) throw new Error("Member not found");
+
+    if (myMembro.entidadeId === conjugeEntidadeId) {
+      throw new Error("Nao e possivel se vincular a si mesmo");
+    }
+
+    const conjugeEntidade = await ctx.db.get(conjugeEntidadeId);
+    if (!conjugeEntidade) throw new Error("Conjuge nao encontrado");
+
+    await ctx.db.patch(myMembro._id, { conjugeId: conjugeEntidadeId });
+
+    // Vincula o outro lado se for membro
+    const conjugeMembro = await ctx.db
+      .query("membros")
+      .withIndex("by_entidade", (q) => q.eq("entidadeId", conjugeEntidadeId))
+      .first();
+    if (conjugeMembro && !conjugeMembro.conjugeId) {
+      await ctx.db.patch(conjugeMembro._id, { conjugeId: myMembro.entidadeId });
+    }
+
+    return { ok: true };
+  },
+});
+
+export const desvincularConjuge = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    const myMembro = await ctx.db
+      .query("membros")
+      .withIndex("by_user_id", (q) => q.eq("userId", userId))
+      .first();
+    if (!myMembro) throw new Error("Member not found");
+
+    const oldConjugeEntId = myMembro.conjugeId;
+    await ctx.db.patch(myMembro._id, { conjugeId: undefined });
+
+    if (oldConjugeEntId) {
+      const oldConjugeMembro = await ctx.db
+        .query("membros")
+        .withIndex("by_entidade", (q) => q.eq("entidadeId", oldConjugeEntId))
+        .first();
+      if (oldConjugeMembro?.conjugeId === myMembro.entidadeId) {
+        await ctx.db.patch(oldConjugeMembro._id, { conjugeId: undefined });
+      }
+    }
+
+    return { ok: true };
+  },
+});
+
+// ============ FILHOS (self-service) ============
+
+/**
+ * Cria nova entidade como filho do membro autenticado.
+ * - Se batizadoNestaIgreja=true, cria tambem registro em membros com
+ *   tipoRol=NAO_COMUNGANTE (caso ainda <18, podera virar COMUNGANTE
+ *   apos profissao de fe).
+ * - Se nao, cria so entidade com vinculoIgreja=NAO_MEMBRO.
+ * Vincula via tabela responsaveis (tipo PAI/MAE definido pelo sexo
+ * do responsavel quando disponivel; senao RESPONSAVEL).
+ */
+export const adicionarFilho = mutation({
+  args: {
+    nomeCompleto: v.string(),
+    dataNascimento: v.optional(v.string()),
+    sexo: v.optional(v.union(v.literal("M"), v.literal("F"))),
+    batizadoNestaIgreja: v.optional(v.boolean()),
+  },
+  handler: async (ctx, { nomeCompleto, dataNascimento, sexo, batizadoNestaIgreja }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    const myMembro = await ctx.db
+      .query("membros")
+      .withIndex("by_user_id", (q) => q.eq("userId", userId))
+      .first();
+    if (!myMembro) throw new Error("Member not found");
+
+    const minhaEntidade = await ctx.db.get(myMembro.entidadeId);
+    if (!minhaEntidade) throw new Error("Minha entidade nao encontrada");
+
+    const filhoEntidadeId = await ctx.db.insert("entidades", {
+      tipoEntidade: "PF",
+      papeis: batizadoNestaIgreja ? ["MEMBRO"] : ["DEPENDENTE"],
+      status: "ATIVO",
+      nomeCompleto,
+      dataNascimento,
+      sexo,
+      vinculoIgreja: batizadoNestaIgreja ? "MEMBRO" : "NAO_MEMBRO",
+      perfilAtualizadoEm: Date.now(),
+      perfilAtualizadoPor: myMembro._id,
+    });
+
+    if (batizadoNestaIgreja) {
+      await ctx.db.insert("membros", {
+        entidadeId: filhoEntidadeId,
+        role: "membro",
+        cargoEclesiastico: "MEMBRO_NAO_COMUNGANTE",
+      });
+    }
+
+    const tipo: "PAI" | "MAE" | "RESPONSAVEL" =
+      minhaEntidade.sexo === "M"
+        ? "PAI"
+        : minhaEntidade.sexo === "F"
+          ? "MAE"
+          : "RESPONSAVEL";
+
+    await ctx.db.insert("responsaveis", {
+      criancaEntidadeId: filhoEntidadeId,
+      responsavelEntidadeId: myMembro.entidadeId,
+      tipo,
+      principal: true,
+      criadoEm: Date.now(),
+    });
+
+    return { filhoEntidadeId };
+  },
+});
+
+export const vincularFilhoExistente = mutation({
+  args: { filhoEntidadeId: v.id("entidades") },
+  handler: async (ctx, { filhoEntidadeId }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    const myMembro = await ctx.db
+      .query("membros")
+      .withIndex("by_user_id", (q) => q.eq("userId", userId))
+      .first();
+    if (!myMembro) throw new Error("Member not found");
+
+    if (filhoEntidadeId === myMembro.entidadeId) {
+      throw new Error("Nao e possivel se vincular como proprio filho");
+    }
+
+    // Idempotente — nao duplica se ja existe vinculo
+    const existente = await ctx.db
+      .query("responsaveis")
+      .withIndex("by_crianca", (q) => q.eq("criancaEntidadeId", filhoEntidadeId))
+      .collect();
+    if (existente.some((r) => r.responsavelEntidadeId === myMembro.entidadeId)) {
+      return { ok: true, jaVinculado: true };
+    }
+
+    const minhaEntidade = await ctx.db.get(myMembro.entidadeId);
+    const tipo: "PAI" | "MAE" | "RESPONSAVEL" =
+      minhaEntidade?.sexo === "M"
+        ? "PAI"
+        : minhaEntidade?.sexo === "F"
+          ? "MAE"
+          : "RESPONSAVEL";
+
+    await ctx.db.insert("responsaveis", {
+      criancaEntidadeId: filhoEntidadeId,
+      responsavelEntidadeId: myMembro.entidadeId,
+      tipo,
+      principal: false,
+      criadoEm: Date.now(),
+    });
+    return { ok: true };
+  },
+});
+
+export const removerFilho = mutation({
+  args: { filhoEntidadeId: v.id("entidades") },
+  handler: async (ctx, { filhoEntidadeId }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    const myMembro = await ctx.db
+      .query("membros")
+      .withIndex("by_user_id", (q) => q.eq("userId", userId))
+      .first();
+    if (!myMembro) throw new Error("Member not found");
+
+    // Remove apenas o link, mantem a entidade existindo
+    const links = await ctx.db
+      .query("responsaveis")
+      .withIndex("by_crianca", (q) => q.eq("criancaEntidadeId", filhoEntidadeId))
+      .collect();
+    for (const link of links) {
+      if (link.responsavelEntidadeId === myMembro.entidadeId) {
+        await ctx.db.delete(link._id);
+      }
+    }
+    return { ok: true };
+  },
+});
+
 export const confirmProfile = mutation({
   args: {},
   handler: async (ctx) => {
