@@ -20,7 +20,7 @@ import {
   TableRow,
 } from "@/shared/components/ui/table";
 import { CampaignStats } from "@features/campanhas/components/CampaignStats";
-import { Send, RefreshCw } from "lucide-react";
+import { Send, RefreshCw, Pause, Play } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -59,6 +59,8 @@ export default function CampanhaDetalhePage({
   const campanha = useQuery(api.messaging.campanhas.getCampanha, { campanhaId });
   const disparar = useMutation(api.messaging.campanhas.dispararCampanha);
   const reenviar = useMutation(api.messaging.campanhas.reenviarPendentes);
+  const pausar = useMutation(api.messaging.campanhas.pausarCampanha);
+  const retomar = useMutation(api.messaging.campanhas.retomarCampanha);
 
   const [busy, setBusy] = useState(false);
 
@@ -114,6 +116,30 @@ export default function CampanhaDetalhePage({
     }
   };
 
+  const handlePausar = async () => {
+    setBusy(true);
+    try {
+      await pausar({ campanhaId });
+      toast.success("Campanha pausada");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro ao pausar");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleRetomar = async () => {
+    setBusy(true);
+    try {
+      await retomar({ campanhaId });
+      toast.success("Campanha retomada");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro ao retomar");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <HeaderLayout>
       <DetailHeader title={campanha.titulo} backHref="/admin/campanhas" />
@@ -139,7 +165,17 @@ export default function CampanhaDetalhePage({
                 <Send className="h-4 w-4 mr-1" /> Disparar
               </Button>
             )}
-            {campanha.stats.falhados > 0 && (
+            {campanha.status === "EM_EXECUCAO" && (
+              <Button variant="outline" onClick={handlePausar} disabled={busy}>
+                <Pause className="h-4 w-4 mr-1" /> Pausar
+              </Button>
+            )}
+            {campanha.status === "PAUSADA" && (
+              <Button onClick={handleRetomar} disabled={busy}>
+                <Play className="h-4 w-4 mr-1" /> Retomar
+              </Button>
+            )}
+            {campanha.stats.falhados > 0 && campanha.status !== "EM_EXECUCAO" && (
               <Button variant="outline" onClick={handleReenviar} disabled={busy}>
                 <RefreshCw className="h-4 w-4 mr-1" /> Reenviar falhados
               </Button>

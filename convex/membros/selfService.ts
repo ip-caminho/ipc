@@ -5,6 +5,7 @@ import { createFieldAuditLogs } from "../_shared/auditHelpers";
 import { filterSelfServiceFields } from "./selfServiceHelpers";
 import type { Id } from "../_generated/dataModel";
 import { phonesMatch } from "../messaging/phoneUtils";
+import { internal } from "../_generated/api";
 
 export const getMyProfile = query({
   args: {},
@@ -80,6 +81,9 @@ export const updateMyProfile = mutation({
  *      que aponta para a mesma pessoa — ex.: duplicata, troca de membro
  *      vinculado ao user, etc). Sem esse fallback a conversao nao e detectada
  *      mesmo quando a pessoa atualizou o perfil pelo link da campanha.
+ *
+ * Agenda uma confirmacao WhatsApp para o membro (uma so por chamada, mesmo
+ * se houver multiplos envios em estados diferentes).
  */
 async function marcarCampanhasAtualizadas(
   ctx: MutationCtx,
@@ -111,6 +115,8 @@ async function marcarCampanhasAtualizadas(
     return true;
   });
 
+  let confirmarTelefone: string | null = null;
+
   for (const envio of candidatos) {
     if (
       envio.status === "ENVIADO" ||
@@ -121,7 +127,20 @@ async function marcarCampanhasAtualizadas(
         status: "ATUALIZOU",
         atualizouEm: agora,
       });
+      // Confirma so para envios que ja sairam (estavam ENVIADO).
+      // Para PENDENTE/PROCESSANDO o membro entrou direto sem receber, nao manda nada.
+      if (envio.status === "ENVIADO" && !confirmarTelefone) {
+        confirmarTelefone = envio.telefone;
+      }
     }
+  }
+
+  if (confirmarTelefone) {
+    await ctx.scheduler.runAfter(
+      0,
+      internal.messaging.campanhas._enviarConfirmacao,
+      { telefone: confirmarTelefone }
+    );
   }
 }
 
