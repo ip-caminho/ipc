@@ -15,6 +15,7 @@ import {
   SEXO_OPTIONS, ESTADO_CIVIL_OPTIONS, FORMACAO_OPTIONS,
   CARGO_ECLESIASTICO_OPTIONS, FORMA_ADMISSAO_OPTIONS, ROLE_OPTIONS,
   CBCM_OPTIONS, TIPO_DOCUMENTO_OPTIONS, VINCULO_IGREJA_OPTIONS,
+  FORMA_DEMISSAO_OPTIONS,
 } from "../lib/constants";
 import { useState, useRef } from "react";
 import { PhotoUpload } from "@/shared/files/components/PhotoUpload";
@@ -181,6 +182,13 @@ export function MembroForm({ defaultValues, onSubmit, isEditing, entityId }: Mem
                 {...form.register("observacoesPastorais")}
               />
             </div>
+          </Section>
+
+          <Section title="Demissao / Saida do Rol" defaultOpen={false}>
+            <SelectField name="formaDemissao" label="Forma de Demissao" options={FORMA_DEMISSAO_OPTIONS} />
+            <Field name="dataDemissao" label="Data da Demissao" type="date" />
+            <Field name="igrejaDestino" label="Igreja de Destino (transferencia)" />
+            <Field name="dataFalecimento" label="Data de Falecimento" type="date" />
           </Section>
         </CardContent>
       </Card>
