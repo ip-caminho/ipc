@@ -1,8 +1,9 @@
-import { query, mutation } from "../_generated/server";
+import { query, mutation, type MutationCtx } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { createFieldAuditLogs } from "../_shared/auditHelpers";
 import { filterSelfServiceFields } from "./selfServiceHelpers";
+import type { Id } from "../_generated/dataModel";
 
 export const getMyProfile = query({
   args: {},
@@ -49,10 +50,78 @@ export const updateMyProfile = mutation({
     }
 
     const oldEntidade = await ctx.db.get(membro.entidadeId);
-    await ctx.db.patch(membro.entidadeId, filteredData);
+    const now = Date.now();
+    await ctx.db.patch(membro.entidadeId, {
+      ...filteredData,
+      perfilAtualizadoEm: now,
+      perfilAtualizadoPor: membro._id,
+    });
     const newEntidade = await ctx.db.get(membro.entidadeId);
 
     await createFieldAuditLogs(ctx, oldEntidade, newEntidade, "entidades", membro.entidadeId);
+
+    // Hook: se ha campanhasEnvios pendentes ou enviadas para este membro
+    // sem atualizacao ainda, marca como ATUALIZOU. Permite o dashboard
+    // refletir conversao em tempo real.
+    await marcarCampanhasAtualizadas(ctx, membro._id, now);
+
+    return membro._id;
+  },
+});
+
+/**
+ * Marca todos os envios ENVIADO/PENDENTE/PROCESSANDO deste membro como ATUALIZOU.
+ * Idempotente — envios ja em ATUALIZOU sao ignorados.
+ */
+async function marcarCampanhasAtualizadas(
+  ctx: MutationCtx,
+  membroId: Id<"membros">,
+  agora: number
+): Promise<void> {
+  const envios = await ctx.db
+    .query("campanhasEnvios")
+    .withIndex("by_membro_enviadoEm", (q) => q.eq("membroId", membroId))
+    .collect();
+
+  for (const envio of envios) {
+    if (
+      envio.status === "ENVIADO" ||
+      envio.status === "PENDENTE" ||
+      envio.status === "PROCESSANDO"
+    ) {
+      await ctx.db.patch(envio._id, {
+        status: "ATUALIZOU",
+        atualizouEm: agora,
+      });
+    }
+  }
+}
+
+/**
+ * Endpoint "confirmar dados sem mudar nada" — usado quando o membro
+ * abre /meu-perfil pela campanha e clica "Confirmar dados" sem editar.
+ * Apenas grava perfilAtualizadoEm/Por e dispara hook de campanha.
+ */
+export const confirmProfile = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    const membro = await ctx.db
+      .query("membros")
+      .withIndex("by_user_id", (q) => q.eq("userId", userId))
+      .first();
+
+    if (!membro) throw new Error("Member not found");
+
+    const now = Date.now();
+    await ctx.db.patch(membro.entidadeId, {
+      perfilAtualizadoEm: now,
+      perfilAtualizadoPor: membro._id,
+    });
+
+    await marcarCampanhasAtualizadas(ctx, membro._id, now);
     return membro._id;
   },
 });

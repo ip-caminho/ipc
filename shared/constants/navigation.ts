@@ -293,6 +293,13 @@ export const GESTAO_SECTIONS: NavSection[] = [
         description: "Ligar e desligar funcionalidades",
       },
       {
+        label: "Campanhas",
+        href: "/admin/campanhas",
+        icon: Megaphone,
+        description: "WhatsApp em massa para atualização de cadastro",
+        permission: "campanhas:manage",
+      },
+      {
         label: "Auditoria",
         href: "/admin/auditoria",
         icon: History,
