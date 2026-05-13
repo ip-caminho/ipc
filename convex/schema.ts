@@ -85,12 +85,45 @@ export default defineSchema({
       estado: v.string(),
       cep: v.string(),
     })),
+
+    // LGPD / uso pastoral
+    nomeSocial: v.optional(v.string()),
+    contatoEmergencia: v.optional(v.object({
+      nome: v.string(),
+      telefone: v.string(),
+      parentesco: v.string(),
+    })),
+
+    // Distingue MEMBRO (rol) de demais pessoas no sistema.
+    // MEMBRO requer row em `membros`; demais existem apenas em `entidades`.
+    vinculoIgreja: v.optional(v.union(
+      v.literal("MEMBRO"),
+      v.literal("FREQUENTADOR"),
+      v.literal("VISITANTE"),
+      v.literal("EX_MEMBRO"),
+      v.literal("NAO_MEMBRO")
+    )),
+
+    // Auditoria de atualizacao do proprio perfil
+    perfilAtualizadoEm: v.optional(v.number()),
+    perfilAtualizadoPor: v.optional(v.id("membros")),
+
+    // Campos que o membro declarou nao lembrar (ex: "dataBatismo")
+    dadosIncertos: v.optional(v.array(v.string())),
+
+    // Selo de verificacao pela secretaria via livro fisico
+    camposVerificados: v.optional(v.array(v.object({
+      campo: v.string(),
+      verificadoEm: v.number(),
+      verificadoPor: v.id("membros"),
+    }))),
   })
     .index("by_tipo", ["tipoEntidade"])
     .index("by_status", ["status"])
     .index("by_whatsapp", ["whatsapp"])
     .index("by_cpf", ["cpf"])
-    .index("by_cnpj", ["cnpj"]),
+    .index("by_cnpj", ["cnpj"])
+    .index("by_vinculo", ["vinculoIgreja"]),
 
   membros: defineTable({
     entidadeId: v.id("entidades"),
@@ -125,6 +158,10 @@ export default defineSchema({
       nome: v.string(),
       dataNascimento: v.optional(v.string()),
     }))),
+
+    // Padrao IPB - identificacao no rol
+    numeroMatricula: v.optional(v.string()),
+    observacoesPastorais: v.optional(v.string()),
   })
     .index("by_entidade", ["entidadeId"])
     .index("by_user_id", ["userId"])
@@ -956,4 +993,58 @@ export default defineSchema({
     modoQuiosque: v.boolean(),
     atualizadoEm: v.number(),
   }),
+
+  // ===== Campanhas de WhatsApp (envio em massa) =====
+  // Cada campanha enfileira um lote de envios; pipeline `_processarProximo`
+  // pega um por vez e auto-reagenda com jitter aleatorio.
+  campanhas: defineTable({
+    titulo: v.string(),
+    tipo: v.union(
+      v.literal("ATUALIZACAO_CADASTRO"),
+      v.literal("BOAS_VINDAS_FREQUENTADOR"),
+      v.literal("AVISO_GERAL")
+    ),
+    template: v.string(),
+    filtros: v.object({
+      vinculoIgreja: v.optional(v.array(v.string())),
+      status: v.optional(v.array(v.string())),
+      apenasComWhatsapp: v.optional(v.boolean()),
+      naoAtualizadoHaMeses: v.optional(v.number()),
+    }),
+    status: v.union(
+      v.literal("RASCUNHO"),
+      v.literal("EM_EXECUCAO"),
+      v.literal("PAUSADA"),
+      v.literal("CONCLUIDA")
+    ),
+    totalDestinatarios: v.number(),
+    criadoEm: v.number(),
+    criadoPor: v.id("membros"),
+    iniciadoEm: v.optional(v.number()),
+    concluidoEm: v.optional(v.number()),
+  })
+    .index("by_status", ["status"])
+    .index("by_criadoEm", ["criadoEm"]),
+
+  campanhasEnvios: defineTable({
+    campanhaId: v.id("campanhas"),
+    membroId: v.id("membros"),
+    entidadeId: v.id("entidades"),
+    telefone: v.string(),
+    status: v.union(
+      v.literal("PENDENTE"),
+      v.literal("PROCESSANDO"),
+      v.literal("ENVIADO"),
+      v.literal("FALHOU"),
+      v.literal("ATUALIZOU")
+    ),
+    enviadoEm: v.optional(v.number()),
+    atualizouEm: v.optional(v.number()),
+    erro: v.optional(v.string()),
+    tentativas: v.number(),
+  })
+    .index("by_campanha", ["campanhaId"])
+    .index("by_campanha_status", ["campanhaId", "status"])
+    .index("by_membro_enviadoEm", ["membroId", "enviadoEm"])
+    .index("by_membro_campanha", ["membroId", "campanhaId"]),
 });

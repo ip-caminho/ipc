@@ -9,12 +9,23 @@ import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { Badge } from "@/shared/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/components/ui/select";
 import { PhotoUpload } from "@/shared/files/components/PhotoUpload";
 import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
 import { PageHeader } from "@shared/components/layout/PageHeader";
 import { toast } from "sonner";
-import { MapPin, User, Phone, Save } from "lucide-react";
-import { CARGO_ECLESIASTICO_OPTIONS, STATUS_COLORS } from "@features/membros/lib/constants";
+import { MapPin, User, Phone, Save, AlertCircle, CheckCircle2, HeartPulse } from "lucide-react";
+import {
+  CARGO_ECLESIASTICO_OPTIONS,
+  STATUS_COLORS,
+  FORMACAO_OPTIONS,
+} from "@features/membros/lib/constants";
 
 type Endereco = {
   logradouro?: string;
@@ -26,24 +37,46 @@ type Endereco = {
   cep?: string;
 };
 
+type ContatoEmergencia = {
+  nome?: string;
+  telefone?: string;
+  parentesco?: string;
+};
+
+const MESES_PARA_ALERTA = 6;
+
+function tempoDesde(timestamp: number | undefined): string {
+  if (!timestamp) return "nunca";
+  const meses = Math.floor((Date.now() - timestamp) / (30 * 24 * 60 * 60 * 1000));
+  if (meses < 1) return "menos de um mes";
+  if (meses === 1) return "1 mes";
+  if (meses < 12) return `${meses} meses`;
+  const anos = Math.floor(meses / 12);
+  return anos === 1 ? "1 ano" : `${anos} anos`;
+}
+
 export default function MeuPerfilPage() {
   const profile = useQuery(api.membros.selfService.getMyProfile);
   const updateProfile = useMutation(api.membros.selfService.updateMyProfile);
+  const confirmProfile = useMutation(api.membros.selfService.confirmProfile);
 
-  const [formData, setFormData] = useState<Record<string, any>>({});
+  const [formData, setFormData] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+  const [confirming, setConfirming] = useState(false);
   const [initializedFor, setInitializedFor] = useState<string | null>(null);
 
-  // Inicializar form quando dados carregam (ou mudam)
   const entId = profile?.entidade?._id;
   if (profile?.entidade && initializedFor !== entId) {
     const ent = profile.entidade;
     const end = ent.endereco as Endereco | undefined;
+    const ce = ent.contatoEmergencia as ContatoEmergencia | undefined;
     setFormData({
       apelido: ent.apelido || "",
+      nomeSocial: ent.nomeSocial || "",
       telefone: ent.telefone || "",
       email: ent.email || "",
       profissao: ent.profissao || "",
+      formacao: ent.formacao || "",
       logradouro: end?.logradouro || "",
       numero: end?.numero || "",
       complemento: end?.complemento || "",
@@ -51,6 +84,9 @@ export default function MeuPerfilPage() {
       cidade: end?.cidade || "",
       estado: end?.estado || "",
       cep: end?.cep || "",
+      contatoEmergenciaNome: ce?.nome || "",
+      contatoEmergenciaTelefone: ce?.telefone || "",
+      contatoEmergenciaParentesco: ce?.parentesco || "",
     });
     setInitializedFor(entId || null);
   }
@@ -73,8 +109,15 @@ export default function MeuPerfilPage() {
 
   const ent = profile.entidade;
   const endereco = ent?.endereco as Endereco | undefined;
+  const contatoEmergencia = ent?.contatoEmergencia as ContatoEmergencia | undefined;
   const cargoLabel = CARGO_ECLESIASTICO_OPTIONS.find((o) => o.value === profile.cargoEclesiastico)?.label;
+  const formacaoLabel = FORMACAO_OPTIONS.find((o) => o.value === ent?.formacao)?.label;
   const firstName = ent?.apelido || ent?.nomeCompleto?.split(" ")[0] || "";
+
+  const perfilAtualizadoEm = ent?.perfilAtualizadoEm as number | undefined;
+  const desatualizado =
+    !perfilAtualizadoEm ||
+    Date.now() - perfilAtualizadoEm > MESES_PARA_ALERTA * 30 * 24 * 60 * 60 * 1000;
 
   const handlePhotoChange = async (url: string | null) => {
     try {
@@ -88,12 +131,16 @@ export default function MeuPerfilPage() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const data: Record<string, any> = {};
+      const data: Record<string, unknown> = {};
 
       if (formData.apelido !== (ent?.apelido || "")) data.apelido = formData.apelido;
+      if (formData.nomeSocial !== (ent?.nomeSocial || "")) data.nomeSocial = formData.nomeSocial;
       if (formData.telefone !== (ent?.telefone || "")) data.telefone = formData.telefone;
       if (formData.email !== (ent?.email || "")) data.email = formData.email;
       if (formData.profissao !== (ent?.profissao || "")) data.profissao = formData.profissao;
+      if (formData.formacao !== (ent?.formacao || "")) {
+        data.formacao = formData.formacao || undefined;
+      }
 
       const newEndereco: Endereco = {
         logradouro: formData.logradouro || undefined,
@@ -106,6 +153,16 @@ export default function MeuPerfilPage() {
       };
       if (JSON.stringify(newEndereco) !== JSON.stringify(endereco || {})) {
         data.endereco = newEndereco;
+      }
+
+      const newCE: ContatoEmergencia = {
+        nome: formData.contatoEmergenciaNome || undefined,
+        telefone: formData.contatoEmergenciaTelefone || undefined,
+        parentesco: formData.contatoEmergenciaParentesco || undefined,
+      };
+      const hasAnyCE = newCE.nome && newCE.telefone && newCE.parentesco;
+      if (hasAnyCE && JSON.stringify(newCE) !== JSON.stringify(contatoEmergencia || {})) {
+        data.contatoEmergencia = newCE;
       }
 
       if (Object.keys(data).length === 0) {
@@ -122,6 +179,18 @@ export default function MeuPerfilPage() {
     }
   };
 
+  const handleConfirm = async () => {
+    setConfirming(true);
+    try {
+      await confirmProfile();
+      toast.success("Dados confirmados");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro ao confirmar");
+    } finally {
+      setConfirming(false);
+    }
+  };
+
   const set = (key: string) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setFormData((prev) => ({ ...prev, [key]: e.target.value }));
 
@@ -129,6 +198,26 @@ export default function MeuPerfilPage() {
     <HeaderLayout>
     <div className="max-w-2xl mx-auto space-y-4">
       <PageHeader title="Meu perfil" />
+
+      {/* Banner de atualizacao */}
+      {desatualizado && (
+        <Card className="border-amber-300 bg-amber-50 dark:bg-amber-950/30">
+          <CardContent className="p-4 flex gap-3 items-start">
+            <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+            <div className="flex-1 space-y-1">
+              <p className="text-sm font-medium">
+                {perfilAtualizadoEm
+                  ? `Seu cadastro foi atualizado ha ${tempoDesde(perfilAtualizadoEm)}.`
+                  : "Seu cadastro nunca foi confirmado."}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Confirme ou edite seus dados abaixo. Se estiver tudo certo, basta clicar em &quot;Confirmar dados&quot;.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Header com foto clicavel */}
       <Card>
         <CardContent className="pt-6">
@@ -143,6 +232,9 @@ export default function MeuPerfilPage() {
 
             <div className="flex-1 text-center sm:text-left">
               <h1 className="text-xl font-bold">{ent?.nomeCompleto}</h1>
+              {ent?.nomeSocial && (
+                <p className="text-sm text-muted-foreground">Nome social: {ent.nomeSocial}</p>
+              )}
               {ent?.apelido && (
                 <p className="text-sm text-muted-foreground">&ldquo;{ent.apelido}&rdquo;</p>
               )}
@@ -172,8 +264,28 @@ export default function MeuPerfilPage() {
               <Input value={formData.apelido || ""} onChange={set("apelido")} placeholder="Como prefere ser chamado" />
             </div>
             <div className="space-y-1">
+              <Label className="text-xs">Nome social</Label>
+              <Input value={formData.nomeSocial || ""} onChange={set("nomeSocial")} placeholder="Opcional" />
+            </div>
+            <div className="space-y-1">
               <Label className="text-xs">Profissao</Label>
               <Input value={formData.profissao || ""} onChange={set("profissao")} placeholder="Ex: Engenheiro" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Formacao</Label>
+              <Select
+                value={formData.formacao || ""}
+                onValueChange={(v) => setFormData((p) => ({ ...p, formacao: v }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
+                <SelectContent>
+                  {FORMACAO_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </CardContent>
@@ -199,6 +311,45 @@ export default function MeuPerfilPage() {
             <div className="space-y-1">
               <Label className="text-xs">Email</Label>
               <Input type="email" value={formData.email || ""} onChange={set("email")} />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Contato de emergencia */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm text-muted-foreground flex items-center gap-1.5">
+            <HeartPulse className="h-3.5 w-3.5" /> Contato de emergencia
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-xs text-muted-foreground">
+            Pessoa para a igreja contatar em casos urgentes (hospitalizacao, emergencia familiar).
+          </p>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="space-y-1">
+              <Label className="text-xs">Nome</Label>
+              <Input
+                value={formData.contatoEmergenciaNome || ""}
+                onChange={set("contatoEmergenciaNome")}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Telefone</Label>
+              <Input
+                value={formData.contatoEmergenciaTelefone || ""}
+                onChange={set("contatoEmergenciaTelefone")}
+                placeholder="(11) 99999-9999"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Parentesco</Label>
+              <Input
+                value={formData.contatoEmergenciaParentesco || ""}
+                onChange={set("contatoEmergenciaParentesco")}
+                placeholder="Ex: Conjuge, Mae, Irmao"
+              />
             </div>
           </div>
         </CardContent>
@@ -272,13 +423,28 @@ export default function MeuPerfilPage() {
                 <p>{profile.dataBatismo}</p>
               </div>
             )}
+            {formacaoLabel && (
+              <div>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Formacao</p>
+                <p>{formacaoLabel}</p>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
 
-      {/* Botão salvar */}
-      <div className="pb-24 md:pb-4">
-        <Button onClick={handleSave} disabled={saving} className="w-full">
+      {/* Acoes */}
+      <div className="pb-24 md:pb-4 grid gap-2 sm:grid-cols-2">
+        <Button
+          onClick={handleConfirm}
+          disabled={confirming || saving}
+          variant="outline"
+          className="w-full"
+        >
+          <CheckCircle2 className="h-4 w-4 mr-1" />
+          {confirming ? "Confirmando..." : "Confirmar dados (sem alterar)"}
+        </Button>
+        <Button onClick={handleSave} disabled={saving || confirming} className="w-full">
           <Save className="h-4 w-4 mr-1" />
           {saving ? "Salvando..." : "Salvar alteracoes"}
         </Button>
