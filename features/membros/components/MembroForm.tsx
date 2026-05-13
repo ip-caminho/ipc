@@ -7,6 +7,7 @@ import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
+import { Textarea } from "@/shared/components/ui/textarea";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/shared/components/ui/collapsible";
 import { ChevronDown } from "lucide-react";
 import { membroFormSchema, type MembroFormValues } from "../lib/validations";
@@ -163,6 +164,7 @@ export function MembroForm({ defaultValues, onSubmit, isEditing, entityId }: Mem
             <SelectField name="vinculoIgreja" label="Vinculo com a Igreja" options={VINCULO_IGREJA_OPTIONS} />
             <SelectField name="role" label="Perfil no Sistema" options={ROLE_OPTIONS} />
             <Field name="rol" label="Numero do Rol" />
+            <Field name="numeroMatricula" label="Numero de Matricula (IPB)" />
             <Field name="dataMembresia" label="Data da Membresia" type="date" />
             <SelectField name="formaAdmissao" label="Forma de Admissao" options={FORMA_ADMISSAO_OPTIONS} />
             <SelectField name="cargoEclesiastico" label="Cargo Eclesiastico" options={CARGO_ECLESIASTICO_OPTIONS} />
@@ -170,6 +172,15 @@ export function MembroForm({ defaultValues, onSubmit, isEditing, entityId }: Mem
             <Field name="dataBatismo" label="Data de Batismo" type="date" />
             <Field name="igrejaProcedencia" label="Igreja de Procedencia" />
             <SelectField name="cbcm" label="CBCM" options={CBCM_OPTIONS} />
+            <div className="space-y-1 sm:col-span-2 lg:col-span-3">
+              <Label htmlFor="observacoesPastorais">Observacoes Pastorais</Label>
+              <Textarea
+                id="observacoesPastorais"
+                rows={3}
+                placeholder="Anotacoes da secretaria/pastoral (visivel apenas para admins e equipe pastoral)"
+                {...form.register("observacoesPastorais")}
+              />
+            </div>
           </Section>
         </CardContent>
       </Card>

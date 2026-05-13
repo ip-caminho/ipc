@@ -47,6 +47,10 @@ export const membroFormSchema = z.object({
   vinculoIgreja: z
     .enum(["MEMBRO", "FREQUENTADOR", "VISITANTE", "EX_MEMBRO", "NAO_MEMBRO"])
     .optional(),
+
+  // Pastoral (so secretaria/admin editam)
+  numeroMatricula: z.string().optional(),
+  observacoesPastorais: z.string().optional(),
 });
 
 export type MembroFormValues = z.infer<typeof membroFormSchema>;

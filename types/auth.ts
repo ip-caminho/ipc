@@ -47,6 +47,8 @@ export type Permission =
   | "audit:read"
   // Campanhas
   | "campanhas:manage"
+  // Atos Pastorais
+  | "atos_pastorais:manage"
   // Wildcards
   | "*";
 

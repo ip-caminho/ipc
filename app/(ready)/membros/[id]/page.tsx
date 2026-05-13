@@ -3,6 +3,7 @@
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { MembroForm } from "@features/membros/components/MembroForm";
+import { AtosPastoraisSection } from "@features/membros/components/AtosPastoraisSection";
 import { useRouter, useParams } from "next/navigation";
 import { toast } from "sonner";
 import { Skeleton } from "@/shared/components/ui/skeleton";
@@ -76,6 +77,8 @@ export default function MembroDetailPage() {
     cbcm: membro.entidade?.cbcm as any,
     atestadoAntecedentes: membro.entidade?.atestadoAntecedentes || "",
     vinculoIgreja: membro.entidade?.vinculoIgreja as any,
+    numeroMatricula: membro.numeroMatricula || "",
+    observacoesPastorais: membro.observacoesPastorais || "",
   };
 
   const handleSubmit = async (data: MembroFormValues) => {
@@ -127,6 +130,8 @@ export default function MembroDetailPage() {
           dataConversao: data.dataConversao || undefined,
           dataBatismo: data.dataBatismo || undefined,
           igrejaProcedencia: data.igrejaProcedencia || undefined,
+          numeroMatricula: data.numeroMatricula || undefined,
+          observacoesPastorais: data.observacoesPastorais || undefined,
         },
       });
 
@@ -140,8 +145,9 @@ export default function MembroDetailPage() {
   return (
     <HeaderLayout>
       <DetailHeader backHref="/membros" />
-      <div className="max-w-4xl">
+      <div className="max-w-4xl space-y-4">
         <MembroForm defaultValues={defaultValues} onSubmit={handleSubmit} isEditing entityId={membro.entidadeId} />
+        <AtosPastoraisSection membroId={membro._id as Id<"membros">} />
       </div>
     </HeaderLayout>
   );

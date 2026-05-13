@@ -17,6 +17,8 @@ import type * as _shared_llm_types from "../_shared/llm/types.js";
 import type * as _shared_requirePermission from "../_shared/requirePermission.js";
 import type * as appConfig_mutations from "../appConfig/mutations.js";
 import type * as appConfig_queries from "../appConfig/queries.js";
+import type * as atosPastorais_mutations from "../atosPastorais/mutations.js";
+import type * as atosPastorais_queries from "../atosPastorais/queries.js";
 import type * as audit_mutations from "../audit/mutations.js";
 import type * as audit_queries from "../audit/queries.js";
 import type * as auth from "../auth.js";
@@ -127,6 +129,8 @@ declare const fullApi: ApiFromModules<{
   "_shared/requirePermission": typeof _shared_requirePermission;
   "appConfig/mutations": typeof appConfig_mutations;
   "appConfig/queries": typeof appConfig_queries;
+  "atosPastorais/mutations": typeof atosPastorais_mutations;
+  "atosPastorais/queries": typeof atosPastorais_queries;
   "audit/mutations": typeof audit_mutations;
   "audit/queries": typeof audit_queries;
   auth: typeof auth;

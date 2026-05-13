@@ -1027,6 +1027,29 @@ export default defineSchema({
     .index("by_status", ["status"])
     .index("by_criadoEm", ["criadoEm"]),
 
+  atosPastorais: defineTable({
+    membroId: v.id("membros"),
+    tipo: v.union(
+      v.literal("BATISMO"),
+      v.literal("PROFISSAO_FE"),
+      v.literal("CASAMENTO"),
+      v.literal("FUNERAL"),
+      v.literal("RESTAURACAO"),
+      v.literal("OUTRO")
+    ),
+    data: v.string(),
+    local: v.optional(v.string()),
+    oficiante: v.optional(v.string()),
+    padrinhos: v.optional(v.array(v.string())),
+    observacoes: v.optional(v.string()),
+    registradoEm: v.number(),
+    registradoPor: v.id("membros"),
+    livroFolha: v.optional(v.string()),
+  })
+    .index("by_membro", ["membroId"])
+    .index("by_tipo", ["tipo"])
+    .index("by_data", ["data"]),
+
   campanhasEnvios: defineTable({
     campanhaId: v.id("campanhas"),
     membroId: v.id("membros"),

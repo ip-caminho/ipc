@@ -46,6 +46,8 @@ export const ALL_PERMISSIONS = [
   "audit:read",
   // Campanhas
   "campanhas:manage",
+  // Atos Pastorais
+  "atos_pastorais:manage",
 ] as const;
 
 function getPermissionLabel(perm: string): string {

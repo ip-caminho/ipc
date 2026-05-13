@@ -27,6 +27,7 @@ import {
   STATUS_COLORS,
   FORMACAO_OPTIONS,
 } from "@features/membros/lib/constants";
+import { FamiliaSection } from "@features/membros/components/FamiliaSection";
 
 type Endereco = {
   logradouro?: string;
@@ -451,6 +452,9 @@ export default function MeuPerfilPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Familia (Fase 2) */}
+      <FamiliaSection />
 
       {/* Dados incertos */}
       <Card>
