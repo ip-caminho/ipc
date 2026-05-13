@@ -28,6 +28,7 @@ import {
   FORMACAO_OPTIONS,
 } from "@features/membros/lib/constants";
 import { FamiliaSection } from "@features/membros/components/FamiliaSection";
+import { LgpdConsentDialog } from "@features/membros/components/LgpdConsentDialog";
 
 type Endereco = {
   logradouro?: string;
@@ -216,6 +217,7 @@ export default function MeuPerfilPage() {
 
   return (
     <HeaderLayout>
+    <LgpdConsentDialog />
     <div className="max-w-2xl mx-auto space-y-4">
       <PageHeader title="Meu perfil" />
 

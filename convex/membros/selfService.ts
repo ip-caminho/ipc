@@ -81,6 +81,12 @@ async function marcarCampanhasAtualizadas(
   membroId: Id<"membros">,
   agora: number
 ): Promise<void> {
+  // Membro confirmou cadastro -> nao e mais paradeiro ignorado
+  const membro = await ctx.db.get(membroId);
+  if (membro?.tipoRolOverride === "PARADEIRO_IGNORADO") {
+    await ctx.db.patch(membroId, { tipoRolOverride: undefined });
+  }
+
   const envios = await ctx.db
     .query("campanhasEnvios")
     .withIndex("by_membro_enviadoEm", (q) => q.eq("membroId", membroId))

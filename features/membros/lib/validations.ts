@@ -33,7 +33,18 @@ export const membroFormSchema = z.object({
   role: z.string().optional(),
   rol: z.string().optional(),
   dataMembresia: z.string().optional(),
-  formaAdmissao: z.enum(["BATISMO", "PROFISSAO_FE", "TRANSFERENCIA", "JURISDICAO"]).optional(),
+  formaAdmissao: z
+    .enum([
+      "BATISMO",
+      "PROFISSAO_FE",
+      "TRANSFERENCIA",
+      "JURISDICAO",
+      "RESTAURACAO",
+      "BATISMO_INFANCIA",
+      "JURISDICAO_EX_OFFICIO",
+      "DESIGNACAO_PRESBITERIO",
+    ])
+    .optional(),
   cargoEclesiastico: z.enum(["MEMBRO_COMUNGANTE", "MEMBRO_NAO_COMUNGANTE", "DIACONO", "PRESBITERO", "PASTOR"]).optional(),
   dataConversao: z.string().optional(),
   dataBatismo: z.string().optional(),
@@ -51,6 +62,14 @@ export const membroFormSchema = z.object({
   // Pastoral (so secretaria/admin editam)
   numeroMatricula: z.string().optional(),
   observacoesPastorais: z.string().optional(),
+
+  // Demissao
+  formaDemissao: z
+    .enum(["TRANSFERENCIA", "EXCLUSAO", "FALECIMENTO", "PEDIDO_DEMISSAO", "JURISDICAO"])
+    .optional(),
+  dataDemissao: z.string().optional(),
+  igrejaDestino: z.string().optional(),
+  dataFalecimento: z.string().optional(),
 });
 
 export type MembroFormValues = z.infer<typeof membroFormSchema>;
