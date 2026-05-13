@@ -1010,6 +1010,7 @@ export default defineSchema({
       status: v.optional(v.array(v.string())),
       apenasComWhatsapp: v.optional(v.boolean()),
       naoAtualizadoHaMeses: v.optional(v.number()),
+      membroIds: v.optional(v.array(v.id("membros"))),
     }),
     status: v.union(
       v.literal("RASCUNHO"),
