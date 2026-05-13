@@ -248,6 +248,34 @@ export const getMembroPerfil = query({
         })
     );
 
+    // Filhos: combina estrutura nova (responsaveis) com array legado
+    const responsabilidades = await ctx.db
+      .query("responsaveis")
+      .withIndex("by_responsavel", (q) =>
+        q.eq("responsavelEntidadeId", membro.entidadeId)
+      )
+      .collect();
+    const filhosNovos = await Promise.all(
+      responsabilidades.map(async (r) => {
+        const filho = await ctx.db.get(r.criancaEntidadeId);
+        if (!filho) return null;
+        return {
+          nome: filho.nomeCompleto ?? "",
+          dataNascimento: filho.dataNascimento,
+          entidadeId: filho._id,
+        };
+      })
+    );
+    const filhosLegado = (membro.filhos ?? []).map((f) => ({
+      nome: f.nome,
+      dataNascimento: f.dataNascimento,
+      entidadeId: undefined,
+    }));
+    const filhosCombinados = [
+      ...filhosNovos.filter((f): f is NonNullable<typeof f> => f !== null),
+      ...filhosLegado,
+    ];
+
     return {
       membro: {
         _id: membro._id,
@@ -259,7 +287,7 @@ export const getMembroPerfil = query({
         dataConversao: membro.dataConversao,
         dataBatismo: membro.dataBatismo,
         igrejaProcedencia: membro.igrejaProcedencia,
-        filhos: membro.filhos,
+        filhos: filhosCombinados,
       },
       entidade: {
         nomeCompleto: entidade.nomeCompleto || "",
