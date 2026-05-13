@@ -13,7 +13,7 @@ import { membroFormSchema, type MembroFormValues } from "../lib/validations";
 import {
   SEXO_OPTIONS, ESTADO_CIVIL_OPTIONS, FORMACAO_OPTIONS,
   CARGO_ECLESIASTICO_OPTIONS, FORMA_ADMISSAO_OPTIONS, ROLE_OPTIONS,
-  CBCM_OPTIONS, TIPO_DOCUMENTO_OPTIONS,
+  CBCM_OPTIONS, TIPO_DOCUMENTO_OPTIONS, VINCULO_IGREJA_OPTIONS,
 } from "../lib/constants";
 import { useState, useRef } from "react";
 import { PhotoUpload } from "@/shared/files/components/PhotoUpload";
@@ -160,6 +160,7 @@ export function MembroForm({ defaultValues, onSubmit, isEditing, entityId }: Mem
           </Section>
 
           <Section title="Dados Eclesiasticos" defaultOpen={false}>
+            <SelectField name="vinculoIgreja" label="Vinculo com a Igreja" options={VINCULO_IGREJA_OPTIONS} />
             <SelectField name="role" label="Perfil no Sistema" options={ROLE_OPTIONS} />
             <Field name="rol" label="Numero do Rol" />
             <Field name="dataMembresia" label="Data da Membresia" type="date" />

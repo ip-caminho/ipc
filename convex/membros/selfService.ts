@@ -4,6 +4,7 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 import { createFieldAuditLogs } from "../_shared/auditHelpers";
 import { filterSelfServiceFields } from "./selfServiceHelpers";
 import type { Id } from "../_generated/dataModel";
+import { internal } from "../_generated/api";
 
 export const getMyProfile = query({
   args: {},
@@ -72,6 +73,8 @@ export const updateMyProfile = mutation({
 /**
  * Marca todos os envios ENVIADO/PENDENTE/PROCESSANDO deste membro como ATUALIZOU.
  * Idempotente — envios ja em ATUALIZOU sao ignorados.
+ * Agenda uma confirmacao WhatsApp para o membro (uma so por chamada, mesmo
+ * se houver multiplos envios em estados diferentes).
  */
 async function marcarCampanhasAtualizadas(
   ctx: MutationCtx,
@@ -83,6 +86,8 @@ async function marcarCampanhasAtualizadas(
     .withIndex("by_membro_enviadoEm", (q) => q.eq("membroId", membroId))
     .collect();
 
+  let confirmarTelefone: string | null = null;
+
   for (const envio of envios) {
     if (
       envio.status === "ENVIADO" ||
@@ -93,7 +98,20 @@ async function marcarCampanhasAtualizadas(
         status: "ATUALIZOU",
         atualizouEm: agora,
       });
+      // Confirma so para envios que ja sairam (estavam ENVIADO).
+      // Para PENDENTE/PROCESSANDO o membro entrou direto sem receber, nao manda nada.
+      if (envio.status === "ENVIADO" && !confirmarTelefone) {
+        confirmarTelefone = envio.telefone;
+      }
     }
+  }
+
+  if (confirmarTelefone) {
+    await ctx.scheduler.runAfter(
+      0,
+      internal.messaging.campanhas._enviarConfirmacao,
+      { telefone: confirmarTelefone }
+    );
   }
 }
 
