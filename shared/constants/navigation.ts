@@ -300,6 +300,13 @@ export const GESTAO_SECTIONS: NavSection[] = [
         permission: "campanhas:manage",
       },
       {
+        label: "Atos Pastorais",
+        href: "/admin/atos-pastorais",
+        icon: BookOpen,
+        description: "Registro de sacramentos e verificação do livro físico",
+        permission: "atos_pastorais:manage",
+      },
+      {
         label: "Auditoria",
         href: "/admin/auditoria",
         icon: History,
