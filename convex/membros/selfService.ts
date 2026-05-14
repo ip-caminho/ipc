@@ -4,6 +4,7 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 import { createFieldAuditLogs } from "../_shared/auditHelpers";
 import { filterSelfServiceFields } from "./selfServiceHelpers";
 import type { Id } from "../_generated/dataModel";
+import { phonesMatch } from "../messaging/phoneUtils";
 
 export const getMyProfile = query({
   args: {},
@@ -72,18 +73,45 @@ export const updateMyProfile = mutation({
 /**
  * Marca todos os envios ENVIADO/PENDENTE/PROCESSANDO deste membro como ATUALIZOU.
  * Idempotente — envios ja em ATUALIZOU sao ignorados.
+ *
+ * Faz match duplo:
+ *   1) primario por `membroId` (rota normal)
+ *   2) fallback por telefone (caso o envio tenha sido criado para outro membroId
+ *      que aponta para a mesma pessoa — ex.: duplicata, troca de membro
+ *      vinculado ao user, etc). Sem esse fallback a conversao nao e detectada
+ *      mesmo quando a pessoa atualizou o perfil pelo link da campanha.
  */
 async function marcarCampanhasAtualizadas(
   ctx: MutationCtx,
   membroId: Id<"membros">,
   agora: number
 ): Promise<void> {
-  const envios = await ctx.db
+  const membro = await ctx.db.get(membroId);
+  const entidade = membro ? await ctx.db.get(membro.entidadeId) : null;
+  const meuTelefone = entidade?.whatsapp ?? entidade?.telefone ?? null;
+
+  const enviosPorMembro = await ctx.db
     .query("campanhasEnvios")
     .withIndex("by_membro_enviadoEm", (q) => q.eq("membroId", membroId))
     .collect();
 
-  for (const envio of envios) {
+  let enviosPorTelefone: typeof enviosPorMembro = [];
+  if (meuTelefone) {
+    // Sem indice por telefone — scan completo. Tabela e pequena (~centenas).
+    const todos = await ctx.db.query("campanhasEnvios").collect();
+    enviosPorTelefone = todos.filter(
+      (e) => e.status !== "ATUALIZOU" && phonesMatch(e.telefone, meuTelefone)
+    );
+  }
+
+  const seen = new Set<string>();
+  const candidatos = [...enviosPorMembro, ...enviosPorTelefone].filter((e) => {
+    if (seen.has(e._id)) return false;
+    seen.add(e._id);
+    return true;
+  });
+
+  for (const envio of candidatos) {
     if (
       envio.status === "ENVIADO" ||
       envio.status === "PENDENTE" ||
