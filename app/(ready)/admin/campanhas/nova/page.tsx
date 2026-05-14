@@ -2,7 +2,7 @@
 
 import { useAuth } from "@shared/providers/PermissionsProvider";
 import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
-import { PageHeader } from "@shared/components/layout/PageHeader";
+import { DetailHeader } from "@shared/components/layout/DetailHeader";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { CampaignForm } from "@features/campanhas/components/CampaignForm";
@@ -25,7 +25,7 @@ export default function NovaCampanhaPage() {
 
   return (
     <HeaderLayout>
-      <PageHeader title="Nova campanha" />
+      <DetailHeader title="Nova campanha" backHref="/admin/campanhas" />
       <div className="max-w-2xl">
         <CampaignForm />
       </div>

@@ -6,7 +6,7 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useAuth } from "@shared/providers/PermissionsProvider";
 import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
-import { PageHeader } from "@shared/components/layout/PageHeader";
+import { DetailHeader } from "@shared/components/layout/DetailHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
@@ -116,7 +116,7 @@ export default function CampanhaDetalhePage({
 
   return (
     <HeaderLayout>
-      <PageHeader title={campanha.titulo} />
+      <DetailHeader title={campanha.titulo} backHref="/admin/campanhas" />
 
       <div className="space-y-4">
         <div className="flex items-center justify-between gap-2 flex-wrap">
