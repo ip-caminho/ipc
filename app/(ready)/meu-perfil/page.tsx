@@ -21,7 +21,7 @@ import { PhotoUpload } from "@/shared/files/components/PhotoUpload";
 import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
 import { PageHeader } from "@shared/components/layout/PageHeader";
 import { toast } from "sonner";
-import { MapPin, User, Phone, Save, AlertCircle, CheckCircle2, HeartPulse, HelpCircle } from "lucide-react";
+import { MapPin, User, Phone, Save, AlertCircle, CheckCircle2, HeartPulse } from "lucide-react";
 import {
   CARGO_ECLESIASTICO_OPTIONS,
   STATUS_COLORS,
@@ -48,14 +48,34 @@ type ContatoEmergencia = {
 
 const MESES_PARA_ALERTA = 6;
 
-const CAMPOS_INCERTOS_DISPONIVEIS: Array<{ field: string; label: string }> = [
-  { field: "dataBatismo", label: "Data do batismo" },
-  { field: "dataMembresia", label: "Data em que me tornei membro" },
-  { field: "dataConversao", label: "Data da conversao" },
-  { field: "profissao", label: "Profissao" },
-  { field: "formacao", label: "Formacao" },
-  { field: "endereco", label: "Endereco" },
-];
+function DataIncertaRow({
+  label,
+  value,
+  checked,
+  onToggle,
+}: {
+  label: string;
+  value: string | undefined;
+  checked: boolean;
+  onToggle: (v: boolean) => void;
+}) {
+  return (
+    <div>
+      <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{label}</p>
+      <div className="flex items-center justify-between gap-2 min-h-[24px]">
+        <p className={checked ? "text-muted-foreground line-through" : ""}>{value || "-"}</p>
+        <label className="flex items-center gap-1 text-[11px] text-muted-foreground cursor-pointer whitespace-nowrap">
+          <Checkbox
+            checked={checked}
+            onCheckedChange={(v) => onToggle(!!v)}
+            aria-label={`Nao lembro: ${label}`}
+          />
+          Nao lembro
+        </label>
+      </div>
+    </div>
+  );
+}
 
 function tempoDesde(timestamp: number | undefined): string {
   if (!timestamp) return "nunca";
@@ -133,6 +153,33 @@ export default function MeuPerfilPage() {
     !perfilAtualizadoEm ||
     Date.now() - perfilAtualizadoEm > MESES_PARA_ALERTA * 30 * 24 * 60 * 60 * 1000;
 
+  const newEndereco: Endereco = {
+    logradouro: formData.logradouro || undefined,
+    numero: formData.numero || undefined,
+    complemento: formData.complemento || undefined,
+    bairro: formData.bairro || undefined,
+    cidade: formData.cidade || undefined,
+    estado: formData.estado || undefined,
+    cep: formData.cep || undefined,
+  };
+  const newCE: ContatoEmergencia = {
+    nome: formData.contatoEmergenciaNome || undefined,
+    telefone: formData.contatoEmergenciaTelefone || undefined,
+    parentesco: formData.contatoEmergenciaParentesco || undefined,
+  };
+  const hasAnyCE = !!(newCE.nome && newCE.telefone && newCE.parentesco);
+  const incertosAtual = (ent?.dadosIncertos as string[] | undefined) ?? [];
+  const hasChanges =
+    formData.apelido !== (ent?.apelido || "") ||
+    formData.nomeSocial !== (ent?.nomeSocial || "") ||
+    formData.telefone !== (ent?.telefone || "") ||
+    formData.email !== (ent?.email || "") ||
+    formData.profissao !== (ent?.profissao || "") ||
+    formData.formacao !== (ent?.formacao || "") ||
+    JSON.stringify(newEndereco) !== JSON.stringify(endereco || {}) ||
+    (hasAnyCE && JSON.stringify(newCE) !== JSON.stringify(contatoEmergencia || {})) ||
+    JSON.stringify([...dadosIncertos].sort()) !== JSON.stringify([...incertosAtual].sort());
+
   const handlePhotoChange = async (url: string | null) => {
     try {
       await updateProfile({ data: { foto: url || "" } });
@@ -155,39 +202,21 @@ export default function MeuPerfilPage() {
       if (formData.formacao !== (ent?.formacao || "")) {
         data.formacao = formData.formacao || undefined;
       }
-
-      const newEndereco: Endereco = {
-        logradouro: formData.logradouro || undefined,
-        numero: formData.numero || undefined,
-        complemento: formData.complemento || undefined,
-        bairro: formData.bairro || undefined,
-        cidade: formData.cidade || undefined,
-        estado: formData.estado || undefined,
-        cep: formData.cep || undefined,
-      };
       if (JSON.stringify(newEndereco) !== JSON.stringify(endereco || {})) {
         data.endereco = newEndereco;
       }
-
-      const newCE: ContatoEmergencia = {
-        nome: formData.contatoEmergenciaNome || undefined,
-        telefone: formData.contatoEmergenciaTelefone || undefined,
-        parentesco: formData.contatoEmergenciaParentesco || undefined,
-      };
-      const hasAnyCE = newCE.nome && newCE.telefone && newCE.parentesco;
       if (hasAnyCE && JSON.stringify(newCE) !== JSON.stringify(contatoEmergencia || {})) {
         data.contatoEmergencia = newCE;
       }
-
-      const incertosAtual = (ent?.dadosIncertos as string[] | undefined) ?? [];
-      const incertosNovo = [...dadosIncertos].sort();
-      const incertosAntigo = [...incertosAtual].sort();
-      if (JSON.stringify(incertosNovo) !== JSON.stringify(incertosAntigo)) {
+      if (
+        JSON.stringify([...dadosIncertos].sort()) !==
+        JSON.stringify([...incertosAtual].sort())
+      ) {
         data.dadosIncertos = dadosIncertos;
       }
 
       if (Object.keys(data).length === 0) {
-        toast.info("Nenhuma alteracao detectada");
+        toast.info("Nenhuma alteracao nos dados pessoais (familia e foto sao salvas automaticamente)");
         return;
       }
 
@@ -435,16 +464,39 @@ export default function MeuPerfilPage() {
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Rol</p>
               <p>{profile.rol || "-"}</p>
             </div>
-            <div>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Data membresia</p>
-              <p>{profile.dataMembresia || "-"}</p>
-            </div>
-            {profile.dataBatismo && (
-              <div>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Batismo</p>
-                <p>{profile.dataBatismo}</p>
-              </div>
-            )}
+            <DataIncertaRow
+              label="Data membresia"
+              value={profile.dataMembresia}
+
+              checked={dadosIncertos.includes("dataMembresia")}
+              onToggle={(v) =>
+                setDadosIncertos((prev) =>
+                  v ? [...prev, "dataMembresia"] : prev.filter((f) => f !== "dataMembresia")
+                )
+              }
+            />
+            <DataIncertaRow
+              label="Batismo"
+              value={profile.dataBatismo}
+
+              checked={dadosIncertos.includes("dataBatismo")}
+              onToggle={(v) =>
+                setDadosIncertos((prev) =>
+                  v ? [...prev, "dataBatismo"] : prev.filter((f) => f !== "dataBatismo")
+                )
+              }
+            />
+            <DataIncertaRow
+              label="Conversao"
+              value={profile.dataConversao}
+
+              checked={dadosIncertos.includes("dataConversao")}
+              onToggle={(v) =>
+                setDadosIncertos((prev) =>
+                  v ? [...prev, "dataConversao"] : prev.filter((f) => f !== "dataConversao")
+                )
+              }
+            />
             {formacaoLabel && (
               <div>
                 <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Formacao</p>
@@ -452,46 +504,14 @@ export default function MeuPerfilPage() {
               </div>
             )}
           </div>
+          <p className="text-[11px] text-muted-foreground pt-2 border-t mt-3">
+            Marque &quot;Nao lembro&quot; se nao tem certeza da data. A secretaria sera notificada e podera confirmar com o livro de registros.
+          </p>
         </CardContent>
       </Card>
 
       {/* Familia (Fase 2) */}
       <FamiliaSection />
-
-      {/* Dados incertos */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm text-muted-foreground flex items-center gap-1.5">
-            <HelpCircle className="h-3.5 w-3.5" /> Dados que nao tenho certeza
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          <p className="text-xs text-muted-foreground">
-            Marque os campos que voce nao lembra ou nao tem certeza. A secretaria sera notificada e podera ajudar a confirmar com o livro de registros.
-          </p>
-          <div className="grid gap-2 sm:grid-cols-2">
-            {CAMPOS_INCERTOS_DISPONIVEIS.map((c) => {
-              const checked = dadosIncertos.includes(c.field);
-              return (
-                <label
-                  key={c.field}
-                  className="flex items-center gap-2 text-sm cursor-pointer p-2 rounded-md hover:bg-muted/50"
-                >
-                  <Checkbox
-                    checked={checked}
-                    onCheckedChange={(v) => {
-                      setDadosIncertos((prev) =>
-                        v ? [...prev, c.field] : prev.filter((f) => f !== c.field)
-                      );
-                    }}
-                  />
-                  <span>{c.label}</span>
-                </label>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Acoes */}
       <div className="pb-24 md:pb-4 grid gap-2 sm:grid-cols-2">
@@ -504,11 +524,18 @@ export default function MeuPerfilPage() {
           <CheckCircle2 className="h-4 w-4 mr-1" />
           {confirming ? "Confirmando..." : "Confirmar dados (sem alterar)"}
         </Button>
-        <Button onClick={handleSave} disabled={saving || confirming} className="w-full">
+        <Button
+          onClick={handleSave}
+          disabled={saving || confirming || !hasChanges}
+          className="w-full"
+        >
           <Save className="h-4 w-4 mr-1" />
           {saving ? "Salvando..." : "Salvar alteracoes"}
         </Button>
       </div>
+      <p className="text-[11px] text-muted-foreground text-center pb-4">
+        Foto e familia sao salvas automaticamente.
+      </p>
     </div>
     </HeaderLayout>
   );
