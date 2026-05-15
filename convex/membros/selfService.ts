@@ -323,8 +323,25 @@ export const adicionarFilho = mutation({
     dataNascimento: v.optional(v.string()),
     sexo: v.optional(v.union(v.literal("M"), v.literal("F"))),
     batizadoNestaIgreja: v.optional(v.boolean()),
+    dataBatismo: v.optional(v.string()),
+    usoImagem: v.optional(v.union(
+      v.literal("AUTORIZADO"),
+      v.literal("NAO_AUTORIZADO"),
+      v.literal("PENDENTE")
+    )),
+    observacoesMedicas: v.optional(v.string()),
   },
-  handler: async (ctx, { nomeCompleto, dataNascimento, sexo, batizadoNestaIgreja }) => {
+  handler: async (ctx, args) => {
+    const {
+      nomeCompleto,
+      dataNascimento,
+      sexo,
+      batizadoNestaIgreja,
+      dataBatismo,
+      usoImagem,
+      observacoesMedicas,
+    } = args;
+
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
 
@@ -354,6 +371,7 @@ export const adicionarFilho = mutation({
         entidadeId: filhoEntidadeId,
         role: "membro",
         cargoEclesiastico: "MEMBRO_NAO_COMUNGANTE",
+        dataBatismo: dataBatismo || undefined,
       });
     }
 
@@ -372,9 +390,44 @@ export const adicionarFilho = mutation({
       criadoEm: Date.now(),
     });
 
+    // Departamento infantil: se idade derivavel <11, cria criancaPerfil
+    const turma = turmaFromDataNascimento(dataNascimento);
+    if (turma && (usoImagem || observacoesMedicas)) {
+      await ctx.db.insert("criancaPerfil", {
+        entidadeId: filhoEntidadeId,
+        turma,
+        usoImagem: usoImagem || "PENDENTE",
+        observacoesMedicas: observacoesMedicas || undefined,
+        criadoEm: Date.now(),
+      });
+    }
+
     return { filhoEntidadeId };
   },
 });
+
+/**
+ * Deriva a turma do departamento infantil a partir da data de nascimento.
+ * Retorna null para idade >10 ou data invalida.
+ */
+function turmaFromDataNascimento(dataNascimento: string | undefined): string | null {
+  if (!dataNascimento) return null;
+  const birth = new Date(dataNascimento);
+  if (Number.isNaN(birth.getTime())) return null;
+  const now = new Date();
+  let age = now.getFullYear() - birth.getFullYear();
+  const beforeBirthday =
+    now.getMonth() < birth.getMonth() ||
+    (now.getMonth() === birth.getMonth() && now.getDate() < birth.getDate());
+  if (beforeBirthday) age--;
+  if (age < 0) return null;
+  if (age <= 2) return "0-2";
+  if (age <= 4) return "3-4";
+  if (age <= 6) return "5-6";
+  if (age <= 8) return "7-8";
+  if (age <= 10) return "9-10";
+  return null;
+}
 
 export const vincularFilhoExistente = mutation({
   args: { filhoEntidadeId: v.id("entidades") },
@@ -467,5 +520,75 @@ export const confirmProfile = mutation({
 
     await marcarCampanhasAtualizadas(ctx, membro._id, now);
     return membro._id;
+  },
+});
+
+/**
+ * Permite o membro atualizar as proprias datas sacramentais
+ * (membresia, batismo, conversao). Marcadas como "pendentes de
+ * verificacao": removidas de `camposVerificados` e `dadosIncertos`
+ * — secretaria deve confirmar depois com o livro de registros.
+ *
+ * Passar null para limpar; undefined para nao alterar.
+ */
+export const updateMembresiaDatas = mutation({
+  args: {
+    dataMembresia: v.optional(v.union(v.string(), v.null())),
+    dataBatismo: v.optional(v.union(v.string(), v.null())),
+    dataConversao: v.optional(v.union(v.string(), v.null())),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    const membro = await ctx.db
+      .query("membros")
+      .withIndex("by_user_id", (q) => q.eq("userId", userId))
+      .first();
+    if (!membro) throw new Error("Member not found");
+    if (membro.userId !== userId) {
+      throw new Error("Unauthorized: can only update own profile");
+    }
+
+    const patch: Record<string, string | undefined> = {};
+    const camposTocados: string[] = [];
+
+    for (const campo of ["dataMembresia", "dataBatismo", "dataConversao"] as const) {
+      const valor = args[campo];
+      if (valor === undefined) continue;
+      patch[campo] = valor ?? undefined;
+      camposTocados.push(campo);
+    }
+
+    if (camposTocados.length === 0) {
+      return { changed: false };
+    }
+
+    const oldMembro = await ctx.db.get(membro._id);
+    await ctx.db.patch(membro._id, patch);
+    const newMembro = await ctx.db.get(membro._id);
+    await createFieldAuditLogs(ctx, oldMembro, newMembro, "membros", membro._id);
+
+    // Limpa verificacao e marcacao de "nao lembro" para campos que membro acabou
+    // de preencher. Secretaria precisa re-verificar com livro fisico.
+    const entidade = await ctx.db.get(membro.entidadeId);
+    if (entidade) {
+      const camposVerificados = (entidade.camposVerificados ?? []).filter(
+        (c) => !camposTocados.includes(c.campo)
+      );
+      const dadosIncertos = (entidade.dadosIncertos ?? []).filter(
+        (c) => !(camposTocados.includes(c) && patch[c])
+      );
+      const now = Date.now();
+      await ctx.db.patch(membro.entidadeId, {
+        camposVerificados,
+        dadosIncertos,
+        perfilAtualizadoEm: now,
+        perfilAtualizadoPor: membro._id,
+      });
+      await marcarCampanhasAtualizadas(ctx, membro._id, now);
+    }
+
+    return { changed: true, camposTocados };
   },
 });
