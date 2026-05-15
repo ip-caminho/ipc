@@ -31,6 +31,7 @@ import type { Permission, Role } from "@/types/auth";
 export const ELEVATED_ROLES: Role[] = [
   "admin",
   "secretaria",
+  "secretario_executivo",
   "pastor",
   "presbitero",
 ];
@@ -192,6 +193,14 @@ export const GESTAO_SECTIONS: NavSection[] = [
         icon: Users,
         description: "Cadastro e gestão da membresia",
         permission: "membros:read",
+        modulo: "membros",
+      },
+      {
+        label: "Secretário Executivo",
+        href: "/secretario-executivo",
+        icon: BookOpen,
+        description: "Consulta de dados básicos e edição de dados eclesiásticos",
+        permission: "membros:update_eclesiastico",
         modulo: "membros",
       },
       {

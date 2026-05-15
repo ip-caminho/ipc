@@ -11,7 +11,7 @@ export const INITIAL_ROLE_PERMISSIONS: Record<string, string[]> = {
 
   pastor: [
     // Membros e entidades
-    "membros:read", "membros:create", "membros:update",
+    "membros:read", "membros:create", "membros:update", "membros:update_eclesiastico",
     "entidades:read", "entidades:create", "entidades:update",
     "diretorio:read",
     // Pastoreio completo
@@ -79,7 +79,7 @@ export const INITIAL_ROLE_PERMISSIONS: Record<string, string[]> = {
 
   secretaria: [
     // Membros e entidades — CRUD (delete apenas admin)
-    "membros:read", "membros:create", "membros:update",
+    "membros:read", "membros:create", "membros:update", "membros:update_eclesiastico",
     "entidades:read", "entidades:create", "entidades:update", "entidades:delete",
     "diretorio:read",
     // Gravações
@@ -116,6 +116,22 @@ export const INITIAL_ROLE_PERMISSIONS: Record<string, string[]> = {
   membro: [
     "membros:self_service",
     "pedidos_oracao:create", "pedidos_oracao:read",
+  ],
+
+  // Secretario executivo: read em tudo do membro/entidade, write apenas em
+  // dados eclesiasticos. Nao cria/exclui, nao edita dados pessoais.
+  secretario_executivo: [
+    // Read
+    "membros:read", "membros:self_service",
+    "entidades:read",
+    "diretorio:read",
+    // Write eclesiastico
+    "membros:update_eclesiastico",
+    "atos_pastorais:manage",
+    // Auditoria
+    "audit:read",
+    // Operacao basica
+    "pedidos_oracao:read",
   ],
 };
 

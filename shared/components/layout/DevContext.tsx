@@ -87,6 +87,48 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     componentes: ["MembroForm"],
     notas: ["Permissao: membros:read, membros:update"],
   },
+  "/secretario-executivo": {
+    nome: "Secretario Executivo (lista)",
+    pagina: "app/(ready)/secretario-executivo/page.tsx",
+    arquivos: [
+      "app/(ready)/secretario-executivo/page.tsx",
+    ],
+    queries: ["membros.queries.list"],
+    componentes: ["PermissionGate"],
+    notas: [
+      "Permissao: membros:update_eclesiastico",
+      "Roles: admin, pastor, secretaria, secretario_executivo",
+      "Lista de membros para consulta basica + drill-down para edicao eclesiastica",
+    ],
+  },
+  "/secretario-executivo/[id]": {
+    nome: "Detalhe Eclesiastico",
+    pagina: "app/(ready)/secretario-executivo/[id]/page.tsx",
+    arquivos: [
+      "app/(ready)/secretario-executivo/[id]/page.tsx",
+      "features/secretarioExecutivo/components/DadosBasicosSection.tsx",
+      "features/secretarioExecutivo/components/EclesiasticoForm.tsx",
+    ],
+    queries: [
+      "membros.queries.getById",
+      "membros.eclesiastico.getFamily",
+    ],
+    mutations: [
+      "membros.eclesiastico.updateEclesiastico",
+      "membros.eclesiastico.marcarCampoVerificado",
+    ],
+    componentes: [
+      "DadosBasicosSection (read-only)",
+      "EclesiasticoForm",
+      "AtosPastoraisSection",
+      "CargosHistoricoSection",
+    ],
+    notas: [
+      "Permissao: membros:read (visualizar), membros:update_eclesiastico (editar)",
+      "Edita apenas campos eclesiasticos: cargo, rol, sacramentos, admissao, demissao, observacoes pastorais",
+      "Permite marcar campos sacramentais como 'verificados pelo livro fisico' (camposVerificados em entidades)",
+    ],
+  },
   "/entidades": {
     nome: "Lista de Entidades",
     pagina: "app/(ready)/entidades/page.tsx",
@@ -904,6 +946,8 @@ function resolveRoute(pathname: string): PageContext | null {
   if (/^\/ministerios\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/ministerios/[id]"];
   // /membros/[id]
   if (/^\/membros\/[^/]+$/.test(pathname) && pathname !== "/membros/novo") return CONTEXT_MAP["/membros/[id]"];
+  // /secretario-executivo/[id]
+  if (/^\/secretario-executivo\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/secretario-executivo/[id]"];
   // /biblioteca/[id]
   if (/^\/biblioteca\/[^/]+$/.test(pathname) && pathname !== "/biblioteca/novo") return CONTEXT_MAP["/biblioteca/[id]"];
   // /turmas/[id]

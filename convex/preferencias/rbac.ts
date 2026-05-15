@@ -8,7 +8,7 @@ import { INITIAL_ROLE_PERMISSIONS as ROLE_DEFAULTS, resolvePermissions, VOLUNTEE
 
 export const ALL_PERMISSIONS = [
   // Membros
-  "membros:read", "membros:create", "membros:update", "membros:delete", "membros:self_service",
+  "membros:read", "membros:create", "membros:update", "membros:delete", "membros:self_service", "membros:update_eclesiastico",
   // Entidades
   "entidades:read", "entidades:create", "entidades:update", "entidades:delete",
   // Diretorio
@@ -57,6 +57,7 @@ function getPermissionLabel(perm: string): string {
     "membros:update": "Editar Membros",
     "membros:delete": "Excluir Membros",
     "membros:self_service": "Self-Service (editar proprio perfil)",
+    "membros:update_eclesiastico": "Editar Dados Eclesiasticos (cargo, rol, sacramentos, demissao)",
     "entidades:read": "Ver Entidades",
     "entidades:create": "Criar Entidades",
     "entidades:update": "Editar Entidades",

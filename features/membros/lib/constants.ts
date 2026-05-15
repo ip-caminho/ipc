@@ -81,6 +81,7 @@ export const PAPEL_OPTIONS = [
 export const ROLE_OPTIONS = [
   { value: "admin", label: "Administrador" },
   { value: "secretaria", label: "Secretaria" },
+  { value: "secretario_executivo", label: "Secretario Executivo" },
   { value: "obreiro", label: "Obreiro" },
   { value: "membro", label: "Membro" },
 ] as const;
