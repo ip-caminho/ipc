@@ -4,11 +4,12 @@ export type Role =
   | "presbitero"
   | "obreiro"
   | "secretaria"
+  | "secretario_executivo"
   | "membro";
 
 export type Permission =
   // Membros
-  | "membros:read" | "membros:create" | "membros:update" | "membros:delete" | "membros:self_service"
+  | "membros:read" | "membros:create" | "membros:update" | "membros:delete" | "membros:self_service" | "membros:update_eclesiastico"
   // Entidades
   | "entidades:read" | "entidades:create" | "entidades:update" | "entidades:delete"
   // Diretorio
