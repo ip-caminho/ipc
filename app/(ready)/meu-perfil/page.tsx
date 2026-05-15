@@ -20,8 +20,9 @@ import {
 import { PhotoUpload } from "@/shared/files/components/PhotoUpload";
 import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
 import { PageHeader } from "@shared/components/layout/PageHeader";
+import { DatePickerField } from "@shared/components/DatePickerField";
 import { toast } from "sonner";
-import { MapPin, User, Phone, Save, AlertCircle, CheckCircle2, HeartPulse } from "lucide-react";
+import { MapPin, User, Phone, Save, AlertCircle, CheckCircle2, HeartPulse, Church } from "lucide-react";
 import {
   CARGO_ECLESIASTICO_OPTIONS,
   STATUS_COLORS,
@@ -48,31 +49,62 @@ type ContatoEmergencia = {
 
 const MESES_PARA_ALERTA = 6;
 
-function DataIncertaRow({
+function DataSacramentalRow({
   label,
   value,
-  checked,
-  onToggle,
+  onChange,
+  naoLembro,
+  onNaoLembroToggle,
+  verificado,
+  pendenteVerificacao,
+  minDate,
 }: {
   label: string;
-  value: string | undefined;
-  checked: boolean;
-  onToggle: (v: boolean) => void;
+  value: string;
+  onChange: (iso: string) => void;
+  naoLembro: boolean;
+  onNaoLembroToggle: (v: boolean) => void;
+  verificado: boolean;
+  pendenteVerificacao: boolean;
+  minDate?: Date;
 }) {
   return (
-    <div>
-      <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{label}</p>
-      <div className="flex items-center justify-between gap-2 min-h-[24px]">
-        <p className={checked ? "text-muted-foreground line-through" : ""}>{value || "-"}</p>
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between gap-2">
+        <Label className="text-xs">{label}</Label>
         <label className="flex items-center gap-1 text-[11px] text-muted-foreground cursor-pointer whitespace-nowrap">
           <Checkbox
-            checked={checked}
-            onCheckedChange={(v) => onToggle(!!v)}
+            checked={naoLembro}
+            onCheckedChange={(v) => onNaoLembroToggle(!!v)}
             aria-label={`Nao lembro: ${label}`}
           />
           Nao lembro
         </label>
       </div>
+      {!naoLembro && (
+        <DatePickerField
+          value={value}
+          onChange={onChange}
+          placeholder="dd/mm/aaaa"
+          maxDate={new Date()}
+          minDate={minDate}
+        />
+      )}
+      {naoLembro && (
+        <p className="text-[11px] text-muted-foreground italic px-1">
+          Sera preenchido pela secretaria com base no livro de registros.
+        </p>
+      )}
+      {!naoLembro && value && !verificado && pendenteVerificacao && (
+        <p className="text-[11px] text-amber-700 dark:text-amber-400 px-1">
+          Aguardando confirmacao da secretaria.
+        </p>
+      )}
+      {verificado && (
+        <p className="text-[11px] text-emerald-700 dark:text-emerald-400 px-1">
+          Confirmado pela secretaria.
+        </p>
+      )}
     </div>
   );
 }
@@ -90,10 +122,16 @@ function tempoDesde(timestamp: number | undefined): string {
 export default function MeuPerfilPage() {
   const profile = useQuery(api.membros.selfService.getMyProfile);
   const updateProfile = useMutation(api.membros.selfService.updateMyProfile);
+  const updateMembresiaDatas = useMutation(api.membros.selfService.updateMembresiaDatas);
   const confirmProfile = useMutation(api.membros.selfService.confirmProfile);
 
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [dadosIncertos, setDadosIncertos] = useState<string[]>([]);
+  const [datasMembresia, setDatasMembresia] = useState<{
+    dataMembresia: string;
+    dataBatismo: string;
+    dataConversao: string;
+  }>({ dataMembresia: "", dataBatismo: "", dataConversao: "" });
   const [saving, setSaving] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [initializedFor, setInitializedFor] = useState<string | null>(null);
@@ -104,6 +142,11 @@ export default function MeuPerfilPage() {
     const end = ent.endereco as Endereco | undefined;
     const ce = ent.contatoEmergencia as ContatoEmergencia | undefined;
     setDadosIncertos(ent.dadosIncertos ?? []);
+    setDatasMembresia({
+      dataMembresia: profile.dataMembresia || "",
+      dataBatismo: profile.dataBatismo || "",
+      dataConversao: profile.dataConversao || "",
+    });
     setFormData({
       apelido: ent.apelido || "",
       nomeSocial: ent.nomeSocial || "",
@@ -169,6 +212,17 @@ export default function MeuPerfilPage() {
   };
   const hasAnyCE = !!(newCE.nome && newCE.telefone && newCE.parentesco);
   const incertosAtual = (ent?.dadosIncertos as string[] | undefined) ?? [];
+  const camposVerificados = (ent?.camposVerificados as
+    | Array<{ campo: string; verificadoEm: number }>
+    | undefined) ?? [];
+  const isVerificado = (campo: string) =>
+    camposVerificados.some((c) => c.campo === campo);
+
+  const datasChanged =
+    datasMembresia.dataMembresia !== (profile.dataMembresia || "") ||
+    datasMembresia.dataBatismo !== (profile.dataBatismo || "") ||
+    datasMembresia.dataConversao !== (profile.dataConversao || "");
+
   const hasChanges =
     formData.apelido !== (ent?.apelido || "") ||
     formData.nomeSocial !== (ent?.nomeSocial || "") ||
@@ -178,7 +232,8 @@ export default function MeuPerfilPage() {
     formData.formacao !== (ent?.formacao || "") ||
     JSON.stringify(newEndereco) !== JSON.stringify(endereco || {}) ||
     (hasAnyCE && JSON.stringify(newCE) !== JSON.stringify(contatoEmergencia || {})) ||
-    JSON.stringify([...dadosIncertos].sort()) !== JSON.stringify([...incertosAtual].sort());
+    JSON.stringify([...dadosIncertos].sort()) !== JSON.stringify([...incertosAtual].sort()) ||
+    datasChanged;
 
   const handlePhotoChange = async (url: string | null) => {
     try {
@@ -215,12 +270,33 @@ export default function MeuPerfilPage() {
         data.dadosIncertos = dadosIncertos;
       }
 
-      if (Object.keys(data).length === 0) {
+      const hasFieldChanges = Object.keys(data).length > 0;
+      if (!hasFieldChanges && !datasChanged) {
         toast.info("Nenhuma alteracao nos dados pessoais (familia e foto sao salvas automaticamente)");
         return;
       }
 
-      await updateProfile({ data });
+      if (hasFieldChanges) {
+        await updateProfile({ data });
+      }
+
+      if (datasChanged) {
+        await updateMembresiaDatas({
+          dataMembresia:
+            datasMembresia.dataMembresia !== (profile.dataMembresia || "")
+              ? datasMembresia.dataMembresia || null
+              : undefined,
+          dataBatismo:
+            datasMembresia.dataBatismo !== (profile.dataBatismo || "")
+              ? datasMembresia.dataBatismo || null
+              : undefined,
+          dataConversao:
+            datasMembresia.dataConversao !== (profile.dataConversao || "")
+              ? datasMembresia.dataConversao || null
+              : undefined,
+        });
+      }
+
       toast.success("Perfil atualizado");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao atualizar perfil");
@@ -270,31 +346,40 @@ export default function MeuPerfilPage() {
       )}
 
       {/* Header com foto clicavel */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
-            <PhotoUpload
-              folder="membros/fotos"
-              entityId={ent?._id || ""}
-              value={ent?.foto}
-              onChange={handlePhotoChange}
-              fallback={firstName}
-            />
+      <Card className="overflow-hidden border-0 shadow-sm bg-gradient-to-br from-primary/10 via-primary/5 to-background">
+        <CardContent className="p-6">
+          <div className="flex flex-col sm:flex-row items-center sm:items-end gap-5">
+            <div className="relative">
+              <PhotoUpload
+                folder="membros/fotos"
+                entityId={ent?._id || ""}
+                value={ent?.foto}
+                onChange={handlePhotoChange}
+                fallback={firstName}
+              />
+            </div>
 
-            <div className="flex-1 text-center sm:text-left">
-              <h1 className="text-xl font-bold">{ent?.nomeCompleto}</h1>
-              {ent?.nomeSocial && (
-                <p className="text-sm text-muted-foreground">Nome social: {ent.nomeSocial}</p>
-              )}
-              {ent?.apelido && (
-                <p className="text-sm text-muted-foreground">&ldquo;{ent.apelido}&rdquo;</p>
-              )}
-              <div className="flex items-center justify-center sm:justify-start gap-2 mt-1.5 flex-wrap">
+            <div className="flex-1 text-center sm:text-left space-y-2">
+              <div>
+                <h1 className="text-2xl font-semibold tracking-tight leading-tight">
+                  {ent?.nomeCompleto}
+                </h1>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  {ent?.nomeSocial && <>Nome social: {ent.nomeSocial}</>}
+                  {ent?.nomeSocial && ent?.apelido && <> &middot; </>}
+                  {ent?.apelido && <>&ldquo;{ent.apelido}&rdquo;</>}
+                </p>
+              </div>
+              <div className="flex items-center justify-center sm:justify-start gap-1.5 flex-wrap">
                 <Badge variant="outline" className={STATUS_COLORS[ent?.status || "ATIVO"]}>
                   {ent?.status}
                 </Badge>
                 {cargoLabel && <Badge variant="secondary">{cargoLabel}</Badge>}
-                {profile.rol && <Badge variant="outline">Rol {profile.rol}</Badge>}
+                {profile.rol && (
+                  <Badge variant="outline" className="bg-background/60">
+                    Rol {profile.rol}
+                  </Badge>
+                )}
               </div>
             </div>
           </div>
@@ -447,65 +532,97 @@ export default function MeuPerfilPage() {
         </CardContent>
       </Card>
 
-      {/* Membresia (read-only) */}
+      {/* Membresia */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm text-muted-foreground flex items-center gap-1.5">
-            <User className="h-3.5 w-3.5" /> Membresia
+            <Church className="h-3.5 w-3.5" /> Vida na igreja
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-2 text-sm">
-            <div>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Cargo</p>
-              <p>{cargoLabel || "-"}</p>
+            <div className="space-y-0.5">
+              <Label className="text-xs">Cargo</Label>
+              <p className="text-sm">{cargoLabel || "-"}</p>
             </div>
-            <div>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Rol</p>
-              <p>{profile.rol || "-"}</p>
+            <div className="space-y-0.5">
+              <Label className="text-xs">Rol</Label>
+              <p className="text-sm">{profile.rol || "-"}</p>
             </div>
-            <DataIncertaRow
-              label="Data membresia"
-              value={profile.dataMembresia}
-
-              checked={dadosIncertos.includes("dataMembresia")}
-              onToggle={(v) =>
-                setDadosIncertos((prev) =>
-                  v ? [...prev, "dataMembresia"] : prev.filter((f) => f !== "dataMembresia")
-                )
-              }
-            />
-            <DataIncertaRow
-              label="Batismo"
-              value={profile.dataBatismo}
-
-              checked={dadosIncertos.includes("dataBatismo")}
-              onToggle={(v) =>
-                setDadosIncertos((prev) =>
-                  v ? [...prev, "dataBatismo"] : prev.filter((f) => f !== "dataBatismo")
-                )
-              }
-            />
-            <DataIncertaRow
-              label="Conversao"
-              value={profile.dataConversao}
-
-              checked={dadosIncertos.includes("dataConversao")}
-              onToggle={(v) =>
-                setDadosIncertos((prev) =>
-                  v ? [...prev, "dataConversao"] : prev.filter((f) => f !== "dataConversao")
-                )
-              }
-            />
             {formacaoLabel && (
-              <div>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Formacao</p>
-                <p>{formacaoLabel}</p>
+              <div className="space-y-0.5">
+                <Label className="text-xs">Formacao</Label>
+                <p className="text-sm">{formacaoLabel}</p>
               </div>
             )}
           </div>
-          <p className="text-[11px] text-muted-foreground pt-2 border-t mt-3">
-            Marque &quot;Nao lembro&quot; se nao tem certeza da data. A secretaria sera notificada e podera confirmar com o livro de registros.
+
+          <div className="grid gap-3 sm:grid-cols-3 pt-2 border-t">
+            <DataSacramentalRow
+              label="Data de conversao"
+              value={datasMembresia.dataConversao}
+              onChange={(iso) =>
+                setDatasMembresia((p) => ({ ...p, dataConversao: iso }))
+              }
+              naoLembro={dadosIncertos.includes("dataConversao")}
+              onNaoLembroToggle={(v) => {
+                setDadosIncertos((prev) =>
+                  v
+                    ? [...prev, "dataConversao"]
+                    : prev.filter((f) => f !== "dataConversao")
+                );
+                if (v) setDatasMembresia((p) => ({ ...p, dataConversao: "" }));
+              }}
+              verificado={isVerificado("dataConversao")}
+              pendenteVerificacao={
+                datasMembresia.dataConversao !== (profile.dataConversao || "")
+              }
+            />
+            <DataSacramentalRow
+              label="Data de batismo"
+              value={datasMembresia.dataBatismo}
+              onChange={(iso) =>
+                setDatasMembresia((p) => ({ ...p, dataBatismo: iso }))
+              }
+              naoLembro={dadosIncertos.includes("dataBatismo")}
+              onNaoLembroToggle={(v) => {
+                setDadosIncertos((prev) =>
+                  v
+                    ? [...prev, "dataBatismo"]
+                    : prev.filter((f) => f !== "dataBatismo")
+                );
+                if (v) setDatasMembresia((p) => ({ ...p, dataBatismo: "" }));
+              }}
+              verificado={isVerificado("dataBatismo")}
+              pendenteVerificacao={
+                datasMembresia.dataBatismo !== (profile.dataBatismo || "")
+              }
+            />
+            <DataSacramentalRow
+              label="Membresia desde"
+              value={datasMembresia.dataMembresia}
+              onChange={(iso) =>
+                setDatasMembresia((p) => ({ ...p, dataMembresia: iso }))
+              }
+              naoLembro={dadosIncertos.includes("dataMembresia")}
+              onNaoLembroToggle={(v) => {
+                setDadosIncertos((prev) =>
+                  v
+                    ? [...prev, "dataMembresia"]
+                    : prev.filter((f) => f !== "dataMembresia")
+                );
+                if (v) setDatasMembresia((p) => ({ ...p, dataMembresia: "" }));
+              }}
+              verificado={isVerificado("dataMembresia")}
+              pendenteVerificacao={
+                datasMembresia.dataMembresia !== (profile.dataMembresia || "")
+              }
+            />
+          </div>
+
+          <p className="text-[11px] text-muted-foreground">
+            Voce pode editar suas datas sacramentais. A secretaria vai confirmar com
+            o livro de registros depois.
           </p>
         </CardContent>
       </Card>

@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
+import { Textarea } from "@/shared/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import {
   Dialog,
@@ -25,8 +26,25 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import { Checkbox } from "@/shared/components/ui/checkbox";
-import { Users, Search, X, Plus, Heart } from "lucide-react";
+import { DatePickerField } from "@/shared/components/DatePickerField";
+import { Users, Search, X, Plus, Heart, Baby } from "lucide-react";
+import { parseISO } from "date-fns";
 import { toast } from "sonner";
+
+type UsoImagem = "AUTORIZADO" | "NAO_AUTORIZADO" | "PENDENTE";
+
+function ageInYears(iso: string): number | null {
+  if (!iso) return null;
+  const d = parseISO(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  const now = new Date();
+  let years = now.getFullYear() - d.getFullYear();
+  const before =
+    now.getMonth() < d.getMonth() ||
+    (now.getMonth() === d.getMonth() && now.getDate() < d.getDate());
+  if (before) years--;
+  return years;
+}
 
 function initials(name: string): string {
   return name
@@ -58,8 +76,16 @@ export function FamiliaSection() {
     dataNascimento: "",
     sexo: "" as "M" | "F" | "",
     batizadoNestaIgreja: false,
+    dataBatismo: "",
+    usoImagem: "" as UsoImagem | "",
+    observacoesMedicas: "",
   });
   const [savingFilho, setSavingFilho] = useState(false);
+
+  const idadeFilho = filhoForm.dataNascimento
+    ? ageInYears(filhoForm.dataNascimento)
+    : null;
+  const ehCrianca = idadeFilho !== null && idadeFilho >= 0 && idadeFilho < 11;
 
   const handleVincularConjuge = async (entId: Id<"entidades">, nome: string) => {
     try {
@@ -93,6 +119,15 @@ export function FamiliaSection() {
         dataNascimento: filhoForm.dataNascimento || undefined,
         sexo: filhoForm.sexo || undefined,
         batizadoNestaIgreja: filhoForm.batizadoNestaIgreja,
+        dataBatismo:
+          filhoForm.batizadoNestaIgreja && filhoForm.dataBatismo
+            ? filhoForm.dataBatismo
+            : undefined,
+        usoImagem: ehCrianca && filhoForm.usoImagem ? filhoForm.usoImagem : undefined,
+        observacoesMedicas:
+          ehCrianca && filhoForm.observacoesMedicas.trim()
+            ? filhoForm.observacoesMedicas.trim()
+            : undefined,
       });
       toast.success("Filho adicionado");
       setFilhoForm({
@@ -100,6 +135,9 @@ export function FamiliaSection() {
         dataNascimento: "",
         sexo: "",
         batizadoNestaIgreja: false,
+        dataBatismo: "",
+        usoImagem: "",
+        observacoesMedicas: "",
       });
       setOpenFilho(false);
     } catch (e) {
@@ -200,11 +238,11 @@ export function FamiliaSection() {
                   <Plus className="h-3 w-3 mr-1" /> Adicionar
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Adicionar filho</DialogTitle>
                 </DialogHeader>
-                <div className="space-y-3 py-2">
+                <div className="space-y-4 py-2">
                   <div className="space-y-1">
                     <Label className="text-xs">Nome completo *</Label>
                     <Input
@@ -217,12 +255,13 @@ export function FamiliaSection() {
                   <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-1">
                       <Label className="text-xs">Data de nascimento</Label>
-                      <Input
-                        type="date"
+                      <DatePickerField
                         value={filhoForm.dataNascimento}
-                        onChange={(e) =>
-                          setFilhoForm((p) => ({ ...p, dataNascimento: e.target.value }))
+                        onChange={(iso) =>
+                          setFilhoForm((p) => ({ ...p, dataNascimento: iso }))
                         }
+                        placeholder="dd/mm/aaaa"
+                        maxDate={new Date()}
                       />
                     </div>
                     <div className="space-y-1">
@@ -252,6 +291,86 @@ export function FamiliaSection() {
                     />
                     Foi batizado(a) nesta igreja
                   </label>
+
+                  {filhoForm.batizadoNestaIgreja && (
+                    <div className="space-y-1 pl-6 border-l-2 border-primary/30">
+                      <Label className="text-xs">Data do batismo</Label>
+                      <DatePickerField
+                        value={filhoForm.dataBatismo}
+                        onChange={(iso) =>
+                          setFilhoForm((p) => ({ ...p, dataBatismo: iso }))
+                        }
+                        placeholder="Selecione a data"
+                        maxDate={new Date()}
+                        minDate={
+                          filhoForm.dataNascimento
+                            ? parseISO(filhoForm.dataNascimento)
+                            : undefined
+                        }
+                      />
+                    </div>
+                  )}
+
+                  {ehCrianca && (
+                    <div className="space-y-3 rounded-md bg-muted/40 p-3 border">
+                      <div className="flex items-start gap-2">
+                        <Baby className="h-4 w-4 mt-0.5 text-muted-foreground flex-shrink-0" />
+                        <div>
+                          <p className="text-sm font-medium">Departamento infantil</p>
+                          <p className="text-[11px] text-muted-foreground">
+                            {idadeFilho} ano{idadeFilho === 1 ? "" : "s"} · turma do
+                            departamento infantil ({" "}
+                            {idadeFilho! <= 2
+                              ? "0-2"
+                              : idadeFilho! <= 4
+                                ? "3-4"
+                                : idadeFilho! <= 6
+                                  ? "5-6"
+                                  : idadeFilho! <= 8
+                                    ? "7-8"
+                                    : "9-10"}
+                            {" "})
+                          </p>
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Autorizacao de uso de imagem</Label>
+                        <Select
+                          value={filhoForm.usoImagem}
+                          onValueChange={(v) =>
+                            setFilhoForm((p) => ({ ...p, usoImagem: v as UsoImagem }))
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="AUTORIZADO">
+                              Autorizado (fotos, videos)
+                            </SelectItem>
+                            <SelectItem value="NAO_AUTORIZADO">Nao autorizado</SelectItem>
+                            <SelectItem value="PENDENTE">Decidir depois</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">
+                          Observacoes medicas (alergias, restricoes, medicamentos)
+                        </Label>
+                        <Textarea
+                          rows={3}
+                          value={filhoForm.observacoesMedicas}
+                          onChange={(e) =>
+                            setFilhoForm((p) => ({
+                              ...p,
+                              observacoesMedicas: e.target.value,
+                            }))
+                          }
+                          placeholder="Ex: alergia a amendoim, uso de inalador..."
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <DialogFooter>
                   <Button variant="outline" onClick={() => setOpenFilho(false)}>
