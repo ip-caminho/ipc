@@ -75,6 +75,7 @@ import type * as louvor_queries from "../louvor/queries.js";
 import type * as membros_autoLink from "../membros/autoLink.js";
 import type * as membros_bootstrap from "../membros/bootstrap.js";
 import type * as membros_convites from "../membros/convites.js";
+import type * as membros_eclesiastico from "../membros/eclesiastico.js";
 import type * as membros_import from "../membros/import.js";
 import type * as membros_mutations from "../membros/mutations.js";
 import type * as membros_onboarding from "../membros/onboarding.js";
@@ -192,6 +193,7 @@ declare const fullApi: ApiFromModules<{
   "membros/autoLink": typeof membros_autoLink;
   "membros/bootstrap": typeof membros_bootstrap;
   "membros/convites": typeof membros_convites;
+  "membros/eclesiastico": typeof membros_eclesiastico;
   "membros/import": typeof membros_import;
   "membros/mutations": typeof membros_mutations;
   "membros/onboarding": typeof membros_onboarding;
