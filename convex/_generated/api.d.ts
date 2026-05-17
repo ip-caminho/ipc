@@ -95,6 +95,7 @@ import type * as migration_queries from "../migration/queries.js";
 import type * as migration_vinculoIgreja from "../migration/vinculoIgreja.js";
 import type * as ministerios_mutations from "../ministerios/mutations.js";
 import type * as ministerios_queries from "../ministerios/queries.js";
+import type * as modulos_constants from "../modulos/constants.js";
 import type * as modulos_mutations from "../modulos/mutations.js";
 import type * as modulos_queries from "../modulos/queries.js";
 import type * as multimidia_mutations from "../multimidia/mutations.js";
@@ -213,6 +214,7 @@ declare const fullApi: ApiFromModules<{
   "migration/vinculoIgreja": typeof migration_vinculoIgreja;
   "ministerios/mutations": typeof ministerios_mutations;
   "ministerios/queries": typeof ministerios_queries;
+  "modulos/constants": typeof modulos_constants;
   "modulos/mutations": typeof modulos_mutations;
   "modulos/queries": typeof modulos_queries;
   "multimidia/mutations": typeof multimidia_mutations;
