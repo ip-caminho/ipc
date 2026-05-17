@@ -1,21 +1,21 @@
 "use client";
 
 import { Search } from "lucide-react";
-import Link from "next/link";
 
 /**
- * Entry point para busca global. Leva para a tela de resultados.
- * Por enquanto é apenas um link visual — a tela de busca é fase 2.
+ * Entry point para busca global. A tela de busca e fase 2 — por enquanto
+ * apresentamos o input desabilitado em vez de um link para uma rota
+ * inexistente (evita redirect silencioso para /dashboard).
  */
 export function SearchBar() {
   return (
-    <Link
-      href="/comunidade/busca"
-      className="flex items-center gap-2 bg-secondary rounded-md px-3 h-11 text-sm text-muted-foreground active:opacity-80 transition-opacity"
-      aria-label="Buscar conteúdo"
+    <div
+      className="flex items-center gap-2 bg-secondary/60 rounded-md px-3 h-11 text-sm text-muted-foreground/70 cursor-not-allowed select-none"
+      aria-disabled="true"
+      title="Busca disponivel em breve"
     >
       <Search className="h-4 w-4" aria-hidden />
-      <span>Buscar sermões, músicas, pessoas</span>
-    </Link>
+      <span>Buscar sermões, músicas, pessoas (em breve)</span>
+    </div>
   );
 }
