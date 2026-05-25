@@ -5,12 +5,9 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useAuth } from "@shared/providers/PermissionsProvider";
 import { SectionLabel } from "@features/dashboard/components/SectionLabel";
-import { SermonCard, type SermonCardData } from "./SermonCard";
+import { AudioListItem, type AudioListItemData } from "@features/gravacoes/components/AudioListItem";
 
-const LIMIT = 4;
-
-const MASK =
-  "linear-gradient(to right, black 0%, black calc(100% - 24px), transparent 100%)";
+const LIMIT = 6;
 
 export function RecentSermonsScroll() {
   const { can } = useAuth();
@@ -24,12 +21,12 @@ export function RecentSermonsScroll() {
   if (sermoes === undefined) return null;
   if (sermoes.length === 0) return null;
 
-  const recentes = (sermoes as SermonCardData[]).slice(0, LIMIT);
+  const recentes = (sermoes as AudioListItemData[]).slice(0, LIMIT);
 
   return (
-    <section>
+    <section className="px-4">
       <SectionLabel
-        className="mb-2 px-4"
+        className="mb-1"
         action={
           <Link
             href="/gravacoes"
@@ -42,16 +39,11 @@ export function RecentSermonsScroll() {
         Sermões recentes
       </SectionLabel>
 
-      <ul
-        className="flex gap-2.5 overflow-x-auto scrollbar-none px-4 pr-6 pb-1 pt-1"
-        style={{ maskImage: MASK, WebkitMaskImage: MASK }}
-      >
+      <div className="divide-y divide-border">
         {recentes.map((s) => (
-          <li key={s._id} className="shrink-0">
-            <SermonCard sermon={s} />
-          </li>
+          <AudioListItem key={s._id} audio={s} />
         ))}
-      </ul>
+      </div>
     </section>
   );
 }
