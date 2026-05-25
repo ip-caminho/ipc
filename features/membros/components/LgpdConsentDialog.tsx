@@ -6,13 +6,14 @@ import { api } from "@/convex/_generated/api";
 import { Button } from "@/shared/components/ui/button";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/shared/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogBody,
+} from "@/shared/components/ui/responsive-dialog";
 import { toast } from "sonner";
 
 const VERSAO = "1.0";
@@ -62,15 +63,15 @@ export function LgpdConsentDialog() {
   };
 
   return (
-    <Dialog open={true}>
-      <DialogContent className="max-w-lg" onPointerDownOutside={(e) => e.preventDefault()}>
-        <DialogHeader>
-          <DialogTitle>Termo de Consentimento (LGPD)</DialogTitle>
-          <DialogDescription>
+    <ResponsiveDialog open={true}>
+      <ResponsiveDialogContent>
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle>Termo de Consentimento (LGPD)</ResponsiveDialogTitle>
+          <ResponsiveDialogDescription>
             Lei 13.709/2018 (Lei Geral de Protecao de Dados)
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-3 py-2 text-sm">
+          </ResponsiveDialogDescription>
+        </ResponsiveDialogHeader>
+        <ResponsiveDialogBody>
           <p>
             A IPC trata seus dados pessoais para fins de cadastro de membros, exercicio das
             atividades eclesiasticas e comunicacao pastoral, conforme Arts 5o II e 11 da
@@ -109,13 +110,13 @@ export function LgpdConsentDialog() {
             Voce pode revogar seus consentimentos a qualquer momento entrando em contato
             com a secretaria. Versao do termo: {VERSAO}.
           </p>
-        </div>
-        <DialogFooter>
+        </ResponsiveDialogBody>
+        <ResponsiveDialogFooter>
           <Button onClick={handleAceitar} disabled={salvando || !aceiteBasico}>
             {salvando ? "Salvando..." : "Aceitar e continuar"}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </ResponsiveDialogFooter>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }

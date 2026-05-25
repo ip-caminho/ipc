@@ -27,7 +27,7 @@ const TodayCard = forwardRef<HTMLButtonElement, TodayCardProps>(
         ref={ref}
         type="button"
         {...rest}
-        className="flex h-full flex-col items-start gap-1.5 rounded-md bg-secondary px-2.5 py-3 min-h-[92px] text-left active:opacity-80 transition-opacity"
+        className="flex h-full flex-col items-start gap-1.5 rounded-xl bg-secondary px-3 py-3 min-h-[92px] text-left active:opacity-80 transition-opacity"
       >
         <Icon className="h-4 w-4 text-secondary-foreground/70" aria-hidden />
         <span className="text-sm font-medium leading-tight">{title}</span>
