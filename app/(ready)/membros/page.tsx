@@ -1,13 +1,16 @@
 "use client";
 
+import { useRef } from "react";
 import { useQuery } from "convex/react";
+import { parseAsString, useQueryState } from "nuqs";
 import { api } from "@/convex/_generated/api";
-import { MembroTable } from "@features/membros/components/MembroTable";
+import { MembroTable, type MembroRow } from "@features/membros/components/MembroTable";
+import { MembrosFilterBar } from "@features/membros/components/MembrosFilterBar";
+import { MembrosExportView } from "@features/membros/components/MembrosExportView";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Printer } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
 import { PermissionGate } from "@shared/components/auth/PermissionGate";
 import { ModuloGuard } from "@shared/components/auth/ModuloGuard";
 import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
@@ -16,37 +19,71 @@ import { Skeleton } from "@/shared/components/ui/skeleton";
 import { useDebounce } from "@shared/hooks/useDebounce";
 
 export default function MembrosPage() {
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useQueryState("q", parseAsString.withDefault(""));
+  const [status, setStatus] = useQueryState("status", parseAsString.withDefault(""));
+  const [cargo, setCargo] = useQueryState("cargo", parseAsString.withDefault(""));
   const debouncedSearch = useDebounce(search, 300);
-  const membros = useQuery(api.membros.queries.list, { search: debouncedSearch || undefined });
+  const exportRef = useRef<HTMLDivElement>(null);
+
+  const queryStatus = status === "TODOS" ? "TODOS" : status || undefined;
+  // @ts-expect-error Convex TS2589
+  const membros = useQuery(api.membros.queries.list, {
+    search: debouncedSearch || undefined,
+    status: queryStatus,
+    cargoEclesiastico: cargo && cargo !== "TODOS" ? cargo : undefined,
+  });
 
   return (
     <ModuloGuard modulo="membros">
     <HeaderLayout>
     <div className="space-y-4">
       <PageHeader title="Membros" />
-      <div className="flex items-center justify-end">
-        <PermissionGate permission="membros:create">
-          <Button asChild>
-            <Link href="/membros/novo">
-              <Plus className="h-4 w-4 mr-2" />
-              Novo Membro
-            </Link>
-          </Button>
-        </PermissionGate>
-      </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between gap-2">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Buscar por nome ou telefone..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => setSearch(e.target.value || null)}
             className="pl-8"
           />
         </div>
+        <div className="flex items-center gap-2">
+          <PermissionGate permission="membros:read">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => window.print()}
+              disabled={!membros || membros.length === 0}
+            >
+              <Printer className="h-4 w-4 mr-1.5" />
+              <span className="hidden sm:inline">Imprimir lista</span>
+            </Button>
+          </PermissionGate>
+          <PermissionGate permission="membros:create">
+            <Button asChild size="sm">
+              <Link href="/membros/novo">
+                <Plus className="h-4 w-4 mr-1.5" />
+                <span className="hidden sm:inline">Novo Membro</span>
+              </Link>
+            </Button>
+          </PermissionGate>
+        </div>
       </div>
+
+      <MembrosFilterBar
+        status={status}
+        onStatusChange={(v) => setStatus(v || null)}
+        cargo={cargo}
+        onCargoChange={(v) => setCargo(v === "TODOS" ? null : v)}
+      />
+
+      {membros !== undefined && (
+        <p className="text-xs text-muted-foreground">
+          {membros.length} membro{membros.length !== 1 && "s"} encontrado{membros.length !== 1 && "s"}
+        </p>
+      )}
 
       {membros === undefined ? (
         <div className="space-y-2">
@@ -55,10 +92,19 @@ export default function MembrosPage() {
           ))}
         </div>
       ) : (
-        <MembroTable data={membros as any} />
+        <MembroTable data={membros as MembroRow[]} />
       )}
     </div>
     </HeaderLayout>
+
+    {membros && (
+      <MembrosExportView
+        ref={exportRef}
+        data={membros as MembroRow[]}
+        filtroStatus={status}
+        filtroCargo={cargo}
+      />
+    )}
     </ModuloGuard>
   );
 }
