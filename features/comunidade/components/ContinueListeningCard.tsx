@@ -22,28 +22,27 @@ export function ContinueListeningCard() {
   return (
     <Link
       href={`/gravacoes/${data.gravacaoId}`}
-      className="block rounded-xl p-3 active:opacity-90 transition-opacity"
-      style={{ backgroundColor: "#1a1a1a" }}
+      className="block rounded-xl p-4 active:opacity-90 transition-opacity bg-foreground"
     >
       <div className="flex items-center gap-3">
-        <div className="shrink-0 h-10 w-10 rounded bg-white/10 flex items-center justify-center">
-          <Play className="h-4 w-4 text-white" fill="currentColor" strokeWidth={0} />
+        <div className="shrink-0 h-10 w-10 rounded-lg bg-background/10 flex items-center justify-center">
+          <Play className="h-4 w-4 text-background" fill="currentColor" strokeWidth={0} />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[9px] font-medium tracking-wider uppercase text-white/60">
+          <p className="text-xs font-medium tracking-wider uppercase text-background/60">
             Continuar ouvindo
           </p>
-          <p className="text-xs text-white font-medium truncate mt-0.5">
+          <p className="text-xs text-background font-medium truncate mt-0.5">
             {data.titulo}
           </p>
         </div>
-        <span className="shrink-0 text-[10px] text-white/70 tabular-nums">
+        <span className="shrink-0 text-xs text-background/70 tabular-nums">
           {formatTime(data.ultimoSegundo)}
         </span>
       </div>
-      <div className="mt-2 h-0.5 w-full rounded-full bg-white/15 overflow-hidden">
+      <div className="mt-2 h-0.5 w-full rounded-full bg-background/15 overflow-hidden">
         <div
-          className="h-full bg-white/80"
+          className="h-full bg-background/80"
           style={{ width: `${progressoPct}%` }}
         />
       </div>

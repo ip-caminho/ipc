@@ -36,6 +36,7 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     optimizeCss: false,
+    viewTransition: true,
   },
 };
 

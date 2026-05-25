@@ -72,9 +72,9 @@ export function GlobalAudioPlayer({ compact = false }: { compact?: boolean } = {
           @keyframes eq3 { 0%,100%{height:6px} 50%{height:16px} }
         `}</style>
         <div style={{ display: "flex", alignItems: "flex-end", gap: 3, height: 16, flexShrink: 0 }}>
-          <span style={{ width: 3, borderRadius: 9999, backgroundColor: "#3b82f6", opacity: isPlaying ? 1 : 0.3, height: isPlaying ? 4 : 4, animation: isPlaying ? "eq1 0.8s ease-in-out infinite" : "none" }} />
-          <span style={{ width: 3, borderRadius: 9999, backgroundColor: "#3b82f6", opacity: isPlaying ? 1 : 0.3, height: isPlaying ? 10 : 6, animation: isPlaying ? "eq2 0.6s ease-in-out infinite" : "none" }} />
-          <span style={{ width: 3, borderRadius: 9999, backgroundColor: "#3b82f6", opacity: isPlaying ? 1 : 0.3, height: isPlaying ? 6 : 4, animation: isPlaying ? "eq3 0.9s ease-in-out infinite" : "none" }} />
+          <span style={{ width: 3, borderRadius: 9999, backgroundColor: "var(--primary)", opacity: isPlaying ? 1 : 0.3, height: isPlaying ? 4 : 4, animation: isPlaying ? "eq1 0.8s ease-in-out infinite" : "none" }} />
+          <span style={{ width: 3, borderRadius: 9999, backgroundColor: "var(--primary)", opacity: isPlaying ? 1 : 0.3, height: isPlaying ? 10 : 6, animation: isPlaying ? "eq2 0.6s ease-in-out infinite" : "none" }} />
+          <span style={{ width: 3, borderRadius: 9999, backgroundColor: "var(--primary)", opacity: isPlaying ? 1 : 0.3, height: isPlaying ? 6 : 4, animation: isPlaying ? "eq3 0.9s ease-in-out infinite" : "none" }} />
         </div>
 
         {/* Title area — tap to expand on mobile */}

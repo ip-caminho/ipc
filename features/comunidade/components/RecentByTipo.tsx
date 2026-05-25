@@ -38,7 +38,7 @@ export function RecentByTipo({ titulo, tipo }: RecentByTipoProps) {
         action={
           <Link
             href={`/gravacoes?tipo=${tipo}`}
-            className="text-[11px] font-medium text-primary active:opacity-70"
+            className="text-xs font-medium text-primary active:opacity-70"
           >
             Ver todos
           </Link>

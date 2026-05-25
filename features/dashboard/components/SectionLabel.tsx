@@ -12,7 +12,7 @@ interface SectionLabelProps {
 export function SectionLabel({ children, action, className }: SectionLabelProps) {
   return (
     <div className={cn("flex items-center justify-between gap-2", className)}>
-      <h2 className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+      <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         {children}
       </h2>
       {action && <div className="flex items-center">{action}</div>}
