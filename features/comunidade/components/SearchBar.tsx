@@ -15,7 +15,7 @@ export function SearchBar() {
       title="Busca disponivel em breve"
     >
       <Search className="h-4 w-4" aria-hidden />
-      <span>Buscar sermões, músicas, pessoas (em breve)</span>
+      <span>Buscar por título ou pregador (em breve)</span>
     </div>
   );
 }
