@@ -35,12 +35,11 @@ export function AudioFilterChips({ selected, onSelect }: AudioFilterChipsProps) 
             aria-selected={active}
             onClick={() => onSelect(chip.value)}
             className={cn(
-              "shrink-0 rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors min-h-[32px] whitespace-nowrap",
+              "shrink-0 rounded-full px-4 py-1.5 text-xs font-medium transition-colors min-h-[32px] whitespace-nowrap",
               active
-                ? "text-white"
+                ? "bg-foreground text-background"
                 : "border text-foreground",
             )}
-            style={active ? { backgroundColor: "#1a1a1a" } : undefined}
           >
             {chip.label}
           </button>

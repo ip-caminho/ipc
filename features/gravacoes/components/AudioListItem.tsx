@@ -70,14 +70,14 @@ export function AudioListItem({ audio }: { audio: AudioListItemData }) {
         />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[9px] font-medium tracking-wider text-muted-foreground uppercase">
+        <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
           {categoria}
         </p>
-        <p className="text-[13px] font-medium leading-tight line-clamp-2 mt-0.5">
+        <p className="text-sm font-medium leading-tight line-clamp-2 mt-0.5">
           {audio.titulo}
         </p>
         {metaParts.length > 0 && (
-          <p className="text-[11px] text-muted-foreground truncate mt-0.5">
+          <p className="text-xs text-muted-foreground truncate mt-0.5">
             {metaParts.join(" · ")}
           </p>
         )}

@@ -31,7 +31,7 @@ const TodayCard = forwardRef<HTMLButtonElement, TodayCardProps>(
       >
         <Icon className="h-4 w-4 text-secondary-foreground/70" aria-hidden />
         <span className="text-sm font-medium leading-tight">{title}</span>
-        <span className="text-[11px] text-muted-foreground leading-tight">
+        <span className="text-xs text-muted-foreground leading-tight">
           {subtitle}
         </span>
       </button>

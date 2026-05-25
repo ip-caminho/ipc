@@ -106,7 +106,7 @@ export function FloatingBottomBar() {
                   className={cn("h-[22px] w-[22px]", loading && "animate-pulse")}
                   strokeWidth={active ? 2.25 : 1.75}
                 />
-                <span className="text-[10px] font-medium">{tab.label}</span>
+                <span className="text-xs font-medium">{tab.label}</span>
               </Link>
             );
           })}
