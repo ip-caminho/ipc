@@ -24,7 +24,7 @@ function GravacoesContent() {
   const [livro, setLivro] = useState<string | null>(null);
   const debouncedSearch = useDebounce(search, 300);
 
-  // @ts-ignore Convex TS2589
+  // @ts-expect-error Convex TS2589
   const gravacoes = useQuery(api.gravacoes.queries.list, {
     status: "PUBLICADO",
     tipo: tipo ?? undefined,
@@ -51,9 +51,9 @@ function GravacoesContent() {
                 className="inline-flex items-center gap-1 text-xs text-muted-foreground w-fit min-h-11 active:opacity-70"
               >
                 <ChevronLeft className="h-3.5 w-3.5" aria-hidden />
-                Comunidade
+                Gravações
               </Link>
-              <PageHeader title="Ouvir" />
+              <PageHeader title="Todos" />
             </div>
 
           <div className="px-4">
