@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useQuery } from "convex/react";
+import { parseAsString, useQueryState } from "nuqs";
 import { Search, ChevronLeft } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { ModuloGuard } from "@shared/components/auth/ModuloGuard";
@@ -18,11 +19,15 @@ import type { AudioTipo } from "@features/gravacoes/lib/categoryGradient";
 import { BibleBookFilter } from "@features/gravacoes/components/BibleBookFilter";
 import { extractBookName } from "@features/gravacoes/lib/bible";
 
+const VALID_TIPOS = new Set(["SERMAO", "ESTUDO_BIBLICO", "PALESTRA", "OUTRO"]);
+
 function GravacoesContent() {
-  const [search, setSearch] = useState("");
-  const [tipo, setTipo] = useState<AudioTipo | null>(null);
-  const [livro, setLivro] = useState<string | null>(null);
+  const [search, setSearch] = useQueryState("q", parseAsString.withDefault(""));
+  const [tipoParam, setTipoParam] = useQueryState("tipo", parseAsString.withDefault(""));
+  const [livro, setLivro] = useQueryState("livro", parseAsString.withDefault(""));
   const debouncedSearch = useDebounce(search, 300);
+
+  const tipo = (VALID_TIPOS.has(tipoParam) ? tipoParam : null) as AudioTipo | null;
 
   // @ts-expect-error Convex TS2589
   const gravacoes = useQuery(api.gravacoes.queries.list, {
@@ -67,7 +72,7 @@ function GravacoesContent() {
                 inputMode="search"
                 placeholder="Buscar por título ou pregador"
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => setSearch(e.target.value || null)}
                 className="w-full text-base md:text-sm rounded-md bg-secondary px-3 h-11 pl-9 placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 aria-label="Buscar áudios"
               />
@@ -75,15 +80,15 @@ function GravacoesContent() {
           </div>
 
           <div className="px-4">
-            <AudioFilterChips selected={tipo} onSelect={setTipo} />
+            <AudioFilterChips selected={tipo} onSelect={(v) => setTipoParam(v || null)} />
           </div>
 
           {gravacoes && gravacoes.length > 0 && (
             <div className="px-4">
               <BibleBookFilter
                 gravacoes={gravacoes}
-                selected={livro}
-                onSelect={setLivro}
+                selected={livro || null}
+                onSelect={(v) => setLivro(v || null)}
               />
             </div>
           )}
