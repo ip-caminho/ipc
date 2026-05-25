@@ -16,15 +16,12 @@ import { Label } from "@/shared/components/ui/label";
 import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
 import { PageHeader } from "@shared/components/layout/PageHeader";
 import { PushPermissionBanner } from "@shared/notifications/PushPermissionBanner";
-import { BoletimCard } from "@features/dashboard/components/BoletimCard";
 import { TodaySection } from "@features/dashboard/components/TodaySection";
 import { BirthdayList } from "@features/dashboard/components/BirthdayList";
 import { SectionLabel } from "@features/dashboard/components/SectionLabel";
-import { EducacionalPaisWidget } from "@features/educacional/components/EducacionalPaisWidget";
-import { ChamadaWidget } from "@features/turmas/components/ChamadaWidget";
 
 function BootstrapForm() {
-  // @ts-ignore Convex TS2589
+  // @ts-expect-error Convex TS2589
   const bootstrap = useMutation(api.membros.bootstrap.bootstrapAdmin);
   const relinkAdmin = useMutation(api.debug.relinkAdmin);
   const [loading, setLoading] = useState(false);
@@ -127,18 +124,12 @@ export default function DashboardPage() {
 
         <PushPermissionBanner />
 
-        <BoletimCard />
-
       <section className="space-y-2">
         <SectionLabel>Hoje</SectionLabel>
         <TodaySection />
       </section>
 
       <BirthdayList />
-
-      <EducacionalPaisWidget />
-
-        <ChamadaWidget />
       </div>
     </HeaderLayout>
   );
