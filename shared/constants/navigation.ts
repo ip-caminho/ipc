@@ -53,7 +53,7 @@ export type NavSection = {
 export const PRIMARY_TABS: NavItem[] = [
   { label: "Início", href: "/dashboard", icon: Home },
   { label: "Comunidade", href: "/comunidade", icon: Users },
-  { label: "Orar", href: "/pedidos-oracao", icon: HandHeart },
+  { label: "Orar", href: "/pedidos-oracao", icon: HandHeart, modulo: "pedidos-oracao" },
 ];
 
 export const BOLETIM_TAB: NavItem = {

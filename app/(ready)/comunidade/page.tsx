@@ -5,9 +5,6 @@ import { PageHeader } from "@shared/components/layout/PageHeader";
 import { SearchBar } from "@features/comunidade/components/SearchBar";
 import { ContinueListeningCard } from "@features/comunidade/components/ContinueListeningCard";
 import { RecentSermonsScroll } from "@features/comunidade/components/RecentSermonsScroll";
-import { UpcomingEventsScroll } from "@features/comunidade/components/UpcomingEventsScroll";
-import { CurrentRepertoire } from "@features/comunidade/components/CurrentRepertoire";
-import { ExploreGrid } from "@features/comunidade/components/ExploreGrid";
 
 export default function ComunidadePage() {
   return (
@@ -21,9 +18,6 @@ export default function ComunidadePage() {
           </div>
 
           <RecentSermonsScroll />
-          <UpcomingEventsScroll />
-          <CurrentRepertoire />
-          <ExploreGrid />
         </div>
       </div>
     </HeaderLayout>
