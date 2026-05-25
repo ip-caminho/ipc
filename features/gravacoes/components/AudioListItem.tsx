@@ -60,7 +60,7 @@ export function AudioListItem({ audio }: { audio: AudioListItemData }) {
       className="flex items-center gap-3 py-1.5 active:opacity-80 transition-opacity"
     >
       <div
-        className="shrink-0 relative h-14 w-14 rounded-md overflow-hidden flex items-center justify-center"
+        className="shrink-0 relative h-14 w-14 rounded-lg overflow-hidden flex items-center justify-center"
         style={{ background: gradient }}
       >
         <Play

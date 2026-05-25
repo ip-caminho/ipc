@@ -97,7 +97,7 @@ function MembroMobileCard({ row }: { row: Row<MembroRow> }) {
     <button
       type="button"
       onClick={() => router.push(`/membros/${m._id}`)}
-      className="flex items-start justify-between gap-3 rounded-md border bg-card p-4 text-left min-h-[72px] transition-colors active:bg-accent/50"
+      className="flex items-start justify-between gap-3 rounded-xl border bg-card p-4 text-left min-h-[72px] transition-colors active:bg-accent/50"
     >
       <div className="flex-1 min-w-0 space-y-1.5">
         <div className="font-medium truncate">{nome}</div>

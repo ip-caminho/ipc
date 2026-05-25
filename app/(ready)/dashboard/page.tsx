@@ -19,6 +19,8 @@ import { PushPermissionBanner } from "@shared/notifications/PushPermissionBanner
 import { TodaySection } from "@features/dashboard/components/TodaySection";
 import { BirthdayList } from "@features/dashboard/components/BirthdayList";
 import { SectionLabel } from "@features/dashboard/components/SectionLabel";
+import { UltimoSermaoCard } from "@features/dashboard/components/UltimoSermaoCard";
+import { PerfilDesatualizadoCard } from "@features/dashboard/components/PerfilDesatualizadoCard";
 
 function BootstrapForm() {
   // @ts-expect-error Convex TS2589
@@ -123,6 +125,10 @@ export default function DashboardPage() {
         <PageHeader title={`${saudacao}, ${primeiroNome}`} subtitle={dataHoje} />
 
         <PushPermissionBanner />
+
+        <PerfilDesatualizadoCard />
+
+        <UltimoSermaoCard />
 
       <section className="space-y-2">
         <SectionLabel>Hoje</SectionLabel>

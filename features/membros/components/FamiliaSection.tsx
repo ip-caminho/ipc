@@ -11,13 +11,14 @@ import { Label } from "@/shared/components/ui/label";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/shared/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogTrigger,
+  ResponsiveDialogBody,
+} from "@/shared/components/ui/responsive-dialog";
 import {
   Select,
   SelectContent,
@@ -232,17 +233,18 @@ export function FamiliaSection() {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label className="text-xs">Filhos ({familia?.filhos.length ?? 0})</Label>
-            <Dialog open={openFilho} onOpenChange={setOpenFilho}>
-              <DialogTrigger asChild>
+            <ResponsiveDialog open={openFilho} onOpenChange={setOpenFilho}>
+              <ResponsiveDialogTrigger asChild>
                 <Button size="sm" variant="outline">
                   <Plus className="h-3 w-3 mr-1" /> Adicionar
                 </Button>
-              </DialogTrigger>
-              <DialogContent className="max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>Adicionar filho</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 py-2">
+              </ResponsiveDialogTrigger>
+              <ResponsiveDialogContent>
+                <ResponsiveDialogHeader>
+                  <ResponsiveDialogTitle>Adicionar filho</ResponsiveDialogTitle>
+                </ResponsiveDialogHeader>
+                <ResponsiveDialogBody>
+                <div className="space-y-4">
                   <div className="space-y-1">
                     <Label className="text-xs">Nome completo *</Label>
                     <Input
@@ -372,16 +374,17 @@ export function FamiliaSection() {
                     </div>
                   )}
                 </div>
-                <DialogFooter>
+                </ResponsiveDialogBody>
+                <ResponsiveDialogFooter>
                   <Button variant="outline" onClick={() => setOpenFilho(false)}>
                     Cancelar
                   </Button>
                   <Button onClick={handleAdicionarFilho} disabled={savingFilho}>
                     {savingFilho ? "Salvando..." : "Adicionar"}
                   </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+                </ResponsiveDialogFooter>
+              </ResponsiveDialogContent>
+            </ResponsiveDialog>
           </div>
 
           {familia && familia.filhos.length > 0 && (
