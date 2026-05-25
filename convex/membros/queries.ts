@@ -21,10 +21,11 @@ export const list = query({
 
     let filtered = results.filter(Boolean) as NonNullable<(typeof results)[0]>[];
 
-    if (args.status) {
+    if (args.status === "TODOS") {
+      // Sem filtro de status
+    } else if (args.status) {
       filtered = filtered.filter((r) => r!.entidade.status === args.status);
     } else {
-      // Default: show only ATIVO
       filtered = filtered.filter((r) => r!.entidade.status === "ATIVO");
     }
 

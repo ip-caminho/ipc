@@ -56,10 +56,12 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     arquivos: [
       "app/(ready)/membros/page.tsx",
       "features/membros/components/MembroTable.tsx",
+      "features/membros/components/MembrosFilterBar.tsx",
+      "features/membros/components/MembrosExportView.tsx",
     ],
     queries: ["membros.queries.list"],
-    componentes: ["MembroTable", "PermissionGate"],
-    notas: ["Permissao: membros:read"],
+    componentes: ["MembroTable", "MembrosFilterBar", "MembrosExportView", "PermissionGate"],
+    notas: ["Permissao: membros:read", "Filtros via nuqs URL state: status, cargo, q", "Exportacao via window.print() com layout A4"],
   },
   "/membros/novo": {
     nome: "Novo Membro",

@@ -15,7 +15,7 @@ import { ChevronRight, Pencil } from "lucide-react";
 import { cn } from "@/shared/lib/utils/cn";
 import { STATUS_COLORS, CARGO_ECLESIASTICO_OPTIONS } from "../lib/constants";
 
-interface MembroRow {
+export interface MembroRow {
   _id: string;
   entidade: {
     _id: string;
