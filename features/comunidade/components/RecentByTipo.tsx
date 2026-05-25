@@ -26,7 +26,10 @@ export function RecentByTipo({ titulo, tipo }: RecentByTipoProps) {
   if (gravacoes === undefined) return null;
   if (gravacoes.length === 0) return null;
 
-  const recentes = (gravacoes as AudioListItemData[]).slice(0, LIMIT);
+  const recentes = (gravacoes as AudioListItemData[])
+    .slice()
+    .sort((a, b) => b.data.localeCompare(a.data))
+    .slice(0, LIMIT);
 
   return (
     <section className="px-4">
