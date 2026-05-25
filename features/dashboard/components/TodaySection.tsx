@@ -3,9 +3,7 @@
 import { forwardRef, useEffect, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { Megaphone, HeartHandshake, type LucideIcon } from "lucide-react";
-import { format, parseISO } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { Megaphone, type LucideIcon } from "lucide-react";
 
 import {
   Drawer,
@@ -15,7 +13,6 @@ import {
   DrawerTrigger,
 } from "@/shared/components/ui/drawer";
 import { AvisosWidget } from "@features/gravacoes/components/AvisosWidget";
-import { MinhaEscalaUnificada } from "@features/escalas/components/MinhaEscalaUnificada";
 
 interface TodayCardProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   icon: LucideIcon;
@@ -44,17 +41,13 @@ const TodayCard = forwardRef<HTMLButtonElement, TodayCardProps>(
 
 export function TodaySection() {
   const [avisosOpen, setAvisosOpen] = useState(false);
-  const [escalaOpen, setEscalaOpen] = useState(false);
 
-  // @ts-ignore Convex TS2589
+  // @ts-expect-error Convex TS2589
   const avisosData = useQuery(api.gravacoes.queries.getLatestAvisos);
-  // @ts-ignore Convex TS2589
+  // @ts-expect-error Convex TS2589
   const avisosNaoLidos = useQuery(api.gravacoes.avisosLeituras.countNaoLidos);
-  // @ts-ignore Convex TS2589
-  const proximaEscala = useQuery(api.escalas.queries.minhaProximaEscala);
   const marcarComoLido = useMutation(api.gravacoes.avisosLeituras.marcarComoLido);
 
-  // Marca como lido ao abrir o drawer (uma vez por sessão de visualização).
   useEffect(() => {
     if (!avisosOpen) return;
     if (!avisosData?.gravacaoId) return;
@@ -68,15 +61,8 @@ export function TodaySection() {
     return `${avisosNaoLidos} ${avisosNaoLidos === 1 ? "novo" : "novos"}`;
   })();
 
-  const escalaSubtitle = (() => {
-    if (proximaEscala === undefined) return "Carregando...";
-    if (!proximaEscala?.proxima) return "Sem escalas";
-    const data = parseISO(proximaEscala.proxima.data);
-    return `Próx: ${format(data, "EEE dd/MM", { locale: ptBR })}`;
-  })();
-
   return (
-    <div className="grid grid-cols-2 gap-2 items-stretch">
+    <div className="grid grid-cols-1 gap-2">
       <Drawer open={avisosOpen} onOpenChange={setAvisosOpen}>
         <DrawerTrigger asChild>
           <TodayCard
@@ -91,24 +77,6 @@ export function TodaySection() {
           </DrawerHeader>
           <div className="px-4 pb-6 h-[60vh] flex flex-col">
             <AvisosWidget variant="drawer" />
-          </div>
-        </DrawerContent>
-      </Drawer>
-
-      <Drawer open={escalaOpen} onOpenChange={setEscalaOpen}>
-        <DrawerTrigger asChild>
-          <TodayCard
-            icon={HeartHandshake}
-            title="Minha escala"
-            subtitle={escalaSubtitle}
-          />
-        </DrawerTrigger>
-        <DrawerContent>
-          <DrawerHeader>
-            <DrawerTitle className="text-base">Minha Escala</DrawerTitle>
-          </DrawerHeader>
-          <div className="px-4 pb-6 max-h-[70vh] overflow-y-auto">
-            <MinhaEscalaUnificada />
           </div>
         </DrawerContent>
       </Drawer>
