@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 import { useAuth } from "@shared/providers/PermissionsProvider";
 import {
   PRIMARY_TABS,
@@ -19,9 +21,11 @@ import { cn } from "@shared/lib/utils/cn";
 
 export function FloatingBottomBar() {
   const pathname = usePathname();
-  const { hasAnyRole, isLoading } = useAuth();
+  const { hasAnyRole, can, isLoading } = useAuth();
   const { isActive: audioActive } = useAudioPlayer();
   const [pendingHref, setPendingHref] = useState<string | null>(null);
+  // @ts-expect-error Convex TS2589
+  const modulosAtivos = useQuery(api.modulos.queries.listModulosAtivos);
 
   useEffect(() => {
     if (
@@ -37,8 +41,12 @@ export function FloatingBottomBar() {
     const result = [...PRIMARY_TABS];
     if (hasAnyRole(ELEVATED_ROLES)) result.push(GESTAO_TAB);
     if (isDomingoWindow()) result.push(BOLETIM_TAB);
-    return result;
-  }, [hasAnyRole]);
+    return result.filter((item) => {
+      if (item.modulo && modulosAtivos && !modulosAtivos.includes(item.modulo)) return false;
+      if (item.permission && !can(item.permission)) return false;
+      return true;
+    });
+  }, [hasAnyRole, modulosAtivos, can]);
 
   const isActive = (href: string) => {
     if (href === "/dashboard") return pathname === "/dashboard";
