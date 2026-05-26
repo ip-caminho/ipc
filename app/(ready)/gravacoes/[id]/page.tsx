@@ -7,7 +7,7 @@ import { Reacoes } from "@features/gravacoes/components/Reacoes";
 import { ComentarioInput, ComentariosList } from "@features/gravacoes/components/Comentarios";
 import { useParams } from "next/navigation";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import { Headphones, Play, Pause } from "lucide-react";
+import { Play, Pause } from "lucide-react";
 import type { Id } from "@/convex/_generated/dataModel";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -119,19 +119,27 @@ export default function GravacaoDetailPage() {
           {hasAudio && (
             <button
               onClick={handlePlay}
-              className={cn(
-                "w-full flex items-center justify-center gap-2.5 h-12 rounded-xl text-base font-medium transition-all min-h-[48px]",
-                isThisPlaying
-                  ? "bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300"
-                  : "bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500",
-              )}
+              className="flex items-center gap-3 active:opacity-80 transition-opacity"
             >
-              <Headphones className="h-4.5 w-4.5" />
-              {isThisPlaying ? "Pausar pregação" : "Ouvir pregação"}
-              {isThisPlaying
-                ? <Pause size={16} fill="currentColor" strokeWidth={0} />
-                : <Play size={16} fill="currentColor" strokeWidth={0} />
-              }
+              <div
+                className={cn(
+                  "shrink-0 h-12 w-12 rounded-full flex items-center justify-center transition-colors",
+                  isThisPlaying
+                    ? "bg-primary/10"
+                    : "bg-primary",
+                )}
+              >
+                {isThisPlaying
+                  ? <Pause className="h-5 w-5 text-primary" fill="currentColor" strokeWidth={0} />
+                  : <Play className="h-5 w-5 text-primary-foreground ml-0.5" fill="currentColor" strokeWidth={0} />
+                }
+              </div>
+              <span className={cn(
+                "text-sm font-medium",
+                isThisPlaying ? "text-primary" : "text-foreground",
+              )}>
+                {isThisPlaying ? "Pausar" : "Ouvir"}
+              </span>
             </button>
           )}
 
