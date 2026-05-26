@@ -18,7 +18,6 @@ import { PageHeader } from "@shared/components/layout/PageHeader";
 import { PushPermissionBanner } from "@shared/notifications/PushPermissionBanner";
 import { TodaySection } from "@features/dashboard/components/TodaySection";
 import { BirthdayList } from "@features/dashboard/components/BirthdayList";
-import { SectionLabel } from "@features/dashboard/components/SectionLabel";
 import { UltimoSermaoCard } from "@features/dashboard/components/UltimoSermaoCard";
 import { ProfileCompletenessCard } from "@features/dashboard/components/ProfileCompletenessCard";
 
@@ -130,10 +129,7 @@ export default function DashboardPage() {
 
         <UltimoSermaoCard />
 
-      <section className="space-y-2">
-        <SectionLabel>Hoje</SectionLabel>
         <TodaySection />
-      </section>
 
       <BirthdayList />
       </div>
