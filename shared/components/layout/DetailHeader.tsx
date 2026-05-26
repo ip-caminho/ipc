@@ -5,7 +5,7 @@ import { ChevronLeft } from "lucide-react";
 
 interface DetailHeaderProps {
   title?: string;
-  backHref: string;
+  backHref?: string;
 }
 
 export function DetailHeader({ title, backHref }: DetailHeaderProps) {
@@ -15,7 +15,13 @@ export function DetailHeader({ title, backHref }: DetailHeaderProps) {
     <div className="flex items-center gap-2 pt-4 pb-3">
       <button
         type="button"
-        onClick={() => router.push(backHref)}
+        onClick={() => {
+          if (window.history.length > 1) {
+            router.back();
+          } else {
+            router.push(backHref || "/");
+          }
+        }}
         className="flex items-center gap-1 text-sm text-muted-foreground -ml-1 px-1 min-h-11 active:opacity-70"
         aria-label="Voltar"
       >
