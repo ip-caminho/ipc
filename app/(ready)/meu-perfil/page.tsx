@@ -23,7 +23,7 @@ import { PageHeader } from "@shared/components/layout/PageHeader";
 import { DatePickerField } from "@shared/components/DatePickerField";
 import { toast } from "sonner";
 import Link from "next/link";
-import { MapPin, User, Phone, Save, AlertCircle, CheckCircle2, HeartPulse, Church, ArrowRight } from "lucide-react";
+import { MapPin, User, Phone, Save, AlertCircle, CheckCircle2, HeartPulse, Church, ArrowRight, Pencil, X } from "lucide-react";
 import {
   CARGO_ECLESIASTICO_OPTIONS,
   STATUS_COLORS,
@@ -49,6 +49,15 @@ type ContatoEmergencia = {
   telefone?: string;
   parentesco?: string;
 };
+
+function ReadOnlyField({ label, value, span }: { label: string; value?: string | null; span?: number }) {
+  return (
+    <div className={span === 2 ? "sm:col-span-2" : ""}>
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="text-sm mt-0.5">{value || <span className="text-muted-foreground italic">—</span>}</p>
+    </div>
+  );
+}
 
 const MESES_PARA_ALERTA = 6;
 
@@ -138,6 +147,7 @@ export default function MeuPerfilPage() {
   const [saving, setSaving] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [initializedFor, setInitializedFor] = useState<string | null>(null);
+  const [editingSection, setEditingSection] = useState<string | null>(null);
 
   const entId = profile?.entidade?._id;
   if (profile?.entidade && initializedFor !== entId) {
@@ -410,14 +420,23 @@ export default function MeuPerfilPage() {
         </CardContent>
       </Card>
 
-      {/* Dados editaveis */}
+      {/* Dados pessoais */}
       <Card>
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-3 flex-row items-center justify-between">
           <CardTitle className="text-sm text-muted-foreground flex items-center gap-1.5">
             <User className="h-3.5 w-3.5" /> Dados pessoais
           </CardTitle>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={() => setEditingSection(editingSection === "pessoais" ? null : "pessoais")}
+          >
+            {editingSection === "pessoais" ? <X className="h-3.5 w-3.5" /> : <Pencil className="h-3.5 w-3.5" />}
+          </Button>
         </CardHeader>
         <CardContent className="space-y-3">
+          {editingSection === "pessoais" ? (
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1 sm:col-span-2">
               <Label className="text-xs">Nome completo</Label>
@@ -494,81 +513,102 @@ export default function MeuPerfilPage() {
               </datalist>
             </div>
           </div>
+          ) : (
+          <div className="grid gap-2 sm:grid-cols-2">
+            <ReadOnlyField label="Nome completo" value={ent?.nomeCompleto} span={2} />
+            <ReadOnlyField label="Como e conhecido" value={ent?.apelido} />
+            <ReadOnlyField label="Profissao" value={ent?.profissao} />
+            <ReadOnlyField label="Formacao" value={formacaoLabel} />
+            <ReadOnlyField label="CPF" value={ent?.cpf} />
+            <ReadOnlyField label="Estado civil" value={ESTADO_CIVIL_OPTIONS.find((o) => o.value === ent?.estadoCivil)?.label} />
+            <ReadOnlyField label="Nacionalidade" value={ent?.nacionalidade} />
+          </div>
+          )}
         </CardContent>
       </Card>
 
       {/* Contato */}
       <Card>
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-3 flex-row items-center justify-between">
           <CardTitle className="text-sm text-muted-foreground flex items-center gap-1.5">
             <Phone className="h-3.5 w-3.5" /> Contato
           </CardTitle>
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingSection(editingSection === "contato" ? null : "contato")}>
+            {editingSection === "contato" ? <X className="h-3.5 w-3.5" /> : <Pencil className="h-3.5 w-3.5" />}
+          </Button>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="space-y-1">
-            <Label className="text-xs">WhatsApp</Label>
-            <p className="text-sm text-muted-foreground px-3 py-2 bg-muted rounded-md">{ent?.whatsapp || "-"}</p>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1">
-              <Label className="text-xs">Telefone</Label>
-              <Input value={formData.telefone || ""} onChange={set("telefone")} />
+          {editingSection === "contato" ? (
+          <>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1">
+                <Label className="text-xs">Telefone</Label>
+                <Input value={formData.telefone || ""} onChange={set("telefone")} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Email</Label>
+                <Input type="email" value={formData.email || ""} onChange={set("email")} />
+              </div>
             </div>
-            <div className="space-y-1">
-              <Label className="text-xs">Email</Label>
-              <Input type="email" value={formData.email || ""} onChange={set("email")} />
-            </div>
+          </>
+          ) : (
+          <div className="grid gap-2 sm:grid-cols-2">
+            <ReadOnlyField label="WhatsApp" value={ent?.whatsapp} />
+            <ReadOnlyField label="Telefone" value={ent?.telefone} />
+            <ReadOnlyField label="Email" value={ent?.email} />
           </div>
+          )}
         </CardContent>
       </Card>
 
       {/* Contato de emergencia */}
       <Card>
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-3 flex-row items-center justify-between">
           <CardTitle className="text-sm text-muted-foreground flex items-center gap-1.5">
             <HeartPulse className="h-3.5 w-3.5" /> Contato de emergencia
           </CardTitle>
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingSection(editingSection === "emergencia" ? null : "emergencia")}>
+            {editingSection === "emergencia" ? <X className="h-3.5 w-3.5" /> : <Pencil className="h-3.5 w-3.5" />}
+          </Button>
         </CardHeader>
         <CardContent className="space-y-3">
-          <p className="text-xs text-muted-foreground">
-            Pessoa para a igreja contatar em casos urgentes (hospitalizacao, emergencia familiar).
-          </p>
+          {editingSection === "emergencia" ? (
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="space-y-1">
               <Label className="text-xs">Nome</Label>
-              <Input
-                value={formData.contatoEmergenciaNome || ""}
-                onChange={set("contatoEmergenciaNome")}
-              />
+              <Input value={formData.contatoEmergenciaNome || ""} onChange={set("contatoEmergenciaNome")} />
             </div>
             <div className="space-y-1">
               <Label className="text-xs">Telefone</Label>
-              <Input
-                value={formData.contatoEmergenciaTelefone || ""}
-                onChange={set("contatoEmergenciaTelefone")}
-                placeholder="(11) 99999-9999"
-              />
+              <Input value={formData.contatoEmergenciaTelefone || ""} onChange={set("contatoEmergenciaTelefone")} placeholder="(11) 99999-9999" />
             </div>
             <div className="space-y-1">
               <Label className="text-xs">Parentesco</Label>
-              <Input
-                value={formData.contatoEmergenciaParentesco || ""}
-                onChange={set("contatoEmergenciaParentesco")}
-                placeholder="Ex: Conjuge, Mae, Irmao"
-              />
+              <Input value={formData.contatoEmergenciaParentesco || ""} onChange={set("contatoEmergenciaParentesco")} placeholder="Ex: Conjuge, Mae, Irmao" />
             </div>
           </div>
+          ) : (
+          <div className="grid gap-2 sm:grid-cols-3">
+            <ReadOnlyField label="Nome" value={(contatoEmergencia as { nome?: string })?.nome} />
+            <ReadOnlyField label="Telefone" value={(contatoEmergencia as { telefone?: string })?.telefone} />
+            <ReadOnlyField label="Parentesco" value={(contatoEmergencia as { parentesco?: string })?.parentesco} />
+          </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* Endereço */}
+      {/* Endereco */}
       <Card>
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-3 flex-row items-center justify-between">
           <CardTitle className="text-sm text-muted-foreground flex items-center gap-1.5">
             <MapPin className="h-3.5 w-3.5" /> Endereco
           </CardTitle>
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingSection(editingSection === "endereco" ? null : "endereco")}>
+            {editingSection === "endereco" ? <X className="h-3.5 w-3.5" /> : <Pencil className="h-3.5 w-3.5" />}
+          </Button>
         </CardHeader>
         <CardContent className="space-y-3">
+          {editingSection === "endereco" ? (
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1 sm:col-span-2">
               <Label className="text-xs">Logradouro</Label>
@@ -599,6 +639,17 @@ export default function MeuPerfilPage() {
               <Input value={formData.cep || ""} onChange={set("cep")} placeholder="00000-000" />
             </div>
           </div>
+          ) : (
+          <div className="grid gap-2 sm:grid-cols-2">
+            <ReadOnlyField label="Logradouro" value={endereco?.logradouro} span={2} />
+            <ReadOnlyField label="Numero" value={endereco?.numero} />
+            <ReadOnlyField label="Complemento" value={endereco?.complemento} />
+            <ReadOnlyField label="Bairro" value={endereco?.bairro} />
+            <ReadOnlyField label="Cidade" value={endereco?.cidade} />
+            <ReadOnlyField label="Estado" value={endereco?.estado} />
+            <ReadOnlyField label="CEP" value={endereco?.cep} />
+          </div>
+          )}
         </CardContent>
       </Card>
 

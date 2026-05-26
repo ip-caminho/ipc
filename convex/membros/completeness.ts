@@ -65,8 +65,6 @@ export const REQUIRED_FIELDS: FieldDef[] = [
   { key: "profissao", label: "Profissao", check: (e) => !!e.profissao },
   { key: "foto", label: "Foto", check: (e) => !!e.foto },
   { key: "dataBatismo", label: "Data de batismo", check: (_e, m) => !!m.dataBatismo },
-  { key: "dataMembresia", label: "Data de membresia", check: (_e, m) => !!m.dataMembresia },
-  { key: "formaAdmissao", label: "Forma de admissao", check: (_e, m) => !!m.formaAdmissao },
 ];
 
 const MESES_STALE = 6;
