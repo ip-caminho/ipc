@@ -27,6 +27,8 @@ import {
   CARGO_ECLESIASTICO_OPTIONS,
   STATUS_COLORS,
   FORMACAO_OPTIONS,
+  ESTADO_CIVIL_OPTIONS,
+  FORMA_ADMISSAO_OPTIONS,
 } from "@features/membros/lib/constants";
 import { FamiliaSection } from "@features/membros/components/FamiliaSection";
 import { LgpdConsentDialog } from "@features/membros/components/LgpdConsentDialog";
@@ -150,10 +152,14 @@ export default function MeuPerfilPage() {
     setFormData({
       apelido: ent.apelido || "",
       nomeSocial: ent.nomeSocial || "",
+      cpf: ent.cpf || "",
+      estadoCivil: ent.estadoCivil || "",
+      nacionalidade: ent.nacionalidade || "",
       telefone: ent.telefone || "",
       email: ent.email || "",
       profissao: ent.profissao || "",
       formacao: ent.formacao || "",
+      formaAdmissao: profile.formaAdmissao || "",
       logradouro: end?.logradouro || "",
       numero: end?.numero || "",
       complemento: end?.complemento || "",
@@ -226,10 +232,14 @@ export default function MeuPerfilPage() {
   const hasChanges =
     formData.apelido !== (ent?.apelido || "") ||
     formData.nomeSocial !== (ent?.nomeSocial || "") ||
+    formData.cpf !== (ent?.cpf || "") ||
+    formData.estadoCivil !== (ent?.estadoCivil || "") ||
+    formData.nacionalidade !== (ent?.nacionalidade || "") ||
     formData.telefone !== (ent?.telefone || "") ||
     formData.email !== (ent?.email || "") ||
     formData.profissao !== (ent?.profissao || "") ||
     formData.formacao !== (ent?.formacao || "") ||
+    formData.formaAdmissao !== (profile.formaAdmissao || "") ||
     JSON.stringify(newEndereco) !== JSON.stringify(endereco || {}) ||
     (hasAnyCE && JSON.stringify(newCE) !== JSON.stringify(contatoEmergencia || {})) ||
     JSON.stringify([...dadosIncertos].sort()) !== JSON.stringify([...incertosAtual].sort()) ||
@@ -251,6 +261,10 @@ export default function MeuPerfilPage() {
 
       if (formData.apelido !== (ent?.apelido || "")) data.apelido = formData.apelido;
       if (formData.nomeSocial !== (ent?.nomeSocial || "")) data.nomeSocial = formData.nomeSocial;
+      if (formData.cpf !== (ent?.cpf || "")) data.cpf = formData.cpf;
+      if (formData.estadoCivil !== (ent?.estadoCivil || "")) data.estadoCivil = formData.estadoCivil || undefined;
+      if (formData.nacionalidade !== (ent?.nacionalidade || "")) data.nacionalidade = formData.nacionalidade;
+      if (formData.formaAdmissao !== (profile.formaAdmissao || "")) data.formaAdmissao = formData.formaAdmissao || undefined;
       if (formData.telefone !== (ent?.telefone || "")) data.telefone = formData.telefone;
       if (formData.email !== (ent?.email || "")) data.email = formData.email;
       if (formData.profissao !== (ent?.profissao || "")) data.profissao = formData.profissao;
@@ -423,6 +437,42 @@ export default function MeuPerfilPage() {
                 </SelectContent>
               </Select>
             </div>
+            <div className="space-y-1">
+              <Label className="text-xs">CPF</Label>
+              <Input value={formData.cpf || ""} onChange={set("cpf")} placeholder="000.000.000-00" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Estado civil</Label>
+              <Select
+                value={formData.estadoCivil || ""}
+                onValueChange={(v) => setFormData((p) => ({ ...p, estadoCivil: v }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
+                <SelectContent>
+                  {ESTADO_CIVIL_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Nacionalidade</Label>
+              <Select
+                value={formData.nacionalidade || ""}
+                onValueChange={(v) => setFormData((p) => ({ ...p, nacionalidade: v }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
+                <SelectContent>
+                  {["Brasileiro(a)", "Argentino(a)", "Boliviano(a)", "Chileno(a)", "Colombiano(a)", "Coreano(a)", "Chines(a)", "Cubano(a)", "Equatoriano(a)", "Estadunidense", "Filipino(a)", "Frances(a)", "Japones(a)", "Mexicano(a)", "Paraguaio(a)", "Peruano(a)", "Portugues(a)", "Uruguaio(a)", "Venezuelano(a)", "Outro"].map((n) => (
+                    <SelectItem key={n} value={n}>{n}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -555,6 +605,25 @@ export default function MeuPerfilPage() {
                 <p className="text-sm">{formacaoLabel}</p>
               </div>
             )}
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2 pt-2 border-t">
+            <div className="space-y-1">
+              <Label className="text-xs">Forma de admissao</Label>
+              <Select
+                value={formData.formaAdmissao || ""}
+                onValueChange={(v) => setFormData((p) => ({ ...p, formaAdmissao: v }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
+                <SelectContent>
+                  {FORMA_ADMISSAO_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-3 pt-2 border-t">

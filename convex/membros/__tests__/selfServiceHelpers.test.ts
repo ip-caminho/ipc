@@ -11,8 +11,13 @@ describe("SELF_SERVICE_FIELDS", () => {
     expect(SELF_SERVICE_FIELDS.has("foto")).toBe(true);
   });
 
+  it("contem novos campos editaveis pelo membro", () => {
+    expect(SELF_SERVICE_FIELDS.has("cpf")).toBe(true);
+    expect(SELF_SERVICE_FIELDS.has("estadoCivil")).toBe(true);
+    expect(SELF_SERVICE_FIELDS.has("nacionalidade")).toBe(true);
+  });
+
   it("nao contem campos administrativos", () => {
-    expect(SELF_SERVICE_FIELDS.has("cpf")).toBe(false);
     expect(SELF_SERVICE_FIELDS.has("rg")).toBe(false);
     expect(SELF_SERVICE_FIELDS.has("nomeCompleto")).toBe(false);
     expect(SELF_SERVICE_FIELDS.has("role")).toBe(false);
@@ -37,7 +42,6 @@ describe("filterSelfServiceFields", () => {
   it("filtra campos nao permitidos", () => {
     const result = filterSelfServiceFields({
       telefone: "+5511999999999",
-      cpf: "12345678900",
       role: "admin",
       nomeCompleto: "Hacker",
     });
@@ -46,7 +50,6 @@ describe("filterSelfServiceFields", () => {
 
   it("retorna null quando nenhum campo é permitido", () => {
     const result = filterSelfServiceFields({
-      cpf: "12345678900",
       role: "admin",
       nomeCompleto: "Hacker",
     });
@@ -85,11 +88,11 @@ describe("filterSelfServiceFields", () => {
     expect(result).toEqual(data);
   });
 
-  it("aceita nomeSocial e contatoEmergencia (novos campos)", () => {
+  it("aceita nomeSocial e contatoEmergencia", () => {
     const result = filterSelfServiceFields({
       nomeSocial: "Nome Social",
       contatoEmergencia: { nome: "X", telefone: "Y", parentesco: "Z" },
-      cpf: "should be filtered",
+      role: "should be filtered",
     });
     expect(result).toEqual({
       nomeSocial: "Nome Social",
@@ -127,6 +130,7 @@ describe("filterSelfServiceFields", () => {
     });
     expect(result).toEqual({
       telefone: "123",
+      cpf: "000",
       foto: "url",
       profissao: "Eng",
     });

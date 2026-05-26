@@ -14,6 +14,13 @@ export const SELF_SERVICE_FIELDS = new Set([
   "nomeSocial",
   "contatoEmergencia",
   "dadosIncertos",
+  "cpf",
+  "estadoCivil",
+  "nacionalidade",
+]);
+
+export const SELF_SERVICE_MEMBRO_FIELDS = new Set([
+  "formaAdmissao",
 ]);
 
 /**
@@ -26,6 +33,18 @@ export function filterSelfServiceFields(
   const filtered: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(data)) {
     if (SELF_SERVICE_FIELDS.has(key)) {
+      filtered[key] = value;
+    }
+  }
+  return Object.keys(filtered).length > 0 ? filtered : null;
+}
+
+export function filterSelfServiceMembroFields(
+  data: Record<string, unknown>
+): Record<string, unknown> | null {
+  const filtered: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(data)) {
+    if (SELF_SERVICE_MEMBRO_FIELDS.has(key)) {
       filtered[key] = value;
     }
   }
