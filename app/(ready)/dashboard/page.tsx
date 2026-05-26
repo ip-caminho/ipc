@@ -20,6 +20,7 @@ import { TodaySection } from "@features/dashboard/components/TodaySection";
 import { BirthdayList } from "@features/dashboard/components/BirthdayList";
 import { UltimoSermaoCard } from "@features/dashboard/components/UltimoSermaoCard";
 import { ProfileCompletenessCard } from "@features/dashboard/components/ProfileCompletenessCard";
+import { ProfileNudgeDialog } from "@features/dashboard/components/ProfileNudgeDialog";
 
 function BootstrapForm() {
   // @ts-expect-error Convex TS2589
@@ -133,6 +134,7 @@ export default function DashboardPage() {
 
       <BirthdayList />
       </div>
+      <ProfileNudgeDialog />
     </HeaderLayout>
   );
 }
