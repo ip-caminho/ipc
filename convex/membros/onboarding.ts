@@ -2,7 +2,6 @@ import { query, mutation } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 
-/** Dados para a tela de boas-vindas */
 export const getOnboardingData = query({
   args: {},
   handler: async (ctx) => {
@@ -30,12 +29,12 @@ export const getOnboardingData = query({
       dataNascimento: entidade.dataNascimento || "",
       sexo: entidade.sexo || "",
       endereco: entidade.endereco || null,
+      contatoEmergencia: entidade.contatoEmergencia || null,
       profissao: entidade.profissao || "",
     };
   },
 });
 
-/** Confirmar dados e marcar onboarding como completo */
 export const completeOnboarding = mutation({
   args: {
     foto: v.optional(v.string()),
@@ -43,6 +42,24 @@ export const completeOnboarding = mutation({
     email: v.optional(v.string()),
     whatsapp: v.optional(v.string()),
     profissao: v.optional(v.string()),
+    endereco: v.optional(
+      v.object({
+        logradouro: v.string(),
+        numero: v.string(),
+        complemento: v.optional(v.string()),
+        bairro: v.string(),
+        cidade: v.string(),
+        estado: v.string(),
+        cep: v.string(),
+      })
+    ),
+    contatoEmergencia: v.optional(
+      v.object({
+        nome: v.string(),
+        telefone: v.string(),
+        parentesco: v.string(),
+      })
+    ),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
@@ -55,19 +72,19 @@ export const completeOnboarding = mutation({
 
     if (!membro) throw new Error("Membro nao encontrado");
 
-    // Atualizar dados opcionais na entidade
-    const updates: Record<string, string | undefined> = {};
+    const updates: Record<string, unknown> = {};
     if (args.foto !== undefined) updates.foto = args.foto;
     if (args.apelido !== undefined) updates.apelido = args.apelido;
     if (args.email !== undefined) updates.email = args.email;
     if (args.whatsapp !== undefined) updates.whatsapp = args.whatsapp;
     if (args.profissao !== undefined) updates.profissao = args.profissao;
+    if (args.endereco !== undefined) updates.endereco = args.endereco;
+    if (args.contatoEmergencia !== undefined) updates.contatoEmergencia = args.contatoEmergencia;
 
-    if (Object.keys(updates).length > 0) {
-      await ctx.db.patch(membro.entidadeId, updates);
-    }
+    updates.perfilAtualizadoEm = Date.now();
+    updates.perfilAtualizadoPor = membro._id;
 
-    // Marcar onboarding como completo
+    await ctx.db.patch(membro.entidadeId, updates);
     await ctx.db.patch(membro._id, { onboardingCompleto: true });
 
     return { ok: true };
