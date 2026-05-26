@@ -2,7 +2,7 @@ import { query, mutation, type MutationCtx } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { createFieldAuditLogs } from "../_shared/auditHelpers";
-import { filterSelfServiceFields } from "./selfServiceHelpers";
+import { filterSelfServiceFields, filterSelfServiceMembroFields } from "./selfServiceHelpers";
 import type { Id } from "../_generated/dataModel";
 import { phonesMatch } from "../messaging/phoneUtils";
 import { internal } from "../_generated/api";
@@ -45,19 +45,28 @@ export const updateMyProfile = mutation({
       throw new Error("Unauthorized: can only update own profile");
     }
 
-    // Filter to only allowed fields
     const filteredData = filterSelfServiceFields(data);
-    if (!filteredData) {
+    const filteredMembroData = filterSelfServiceMembroFields(data);
+
+    if (!filteredData && !filteredMembroData) {
       throw new Error("No valid fields to update");
     }
 
     const oldEntidade = await ctx.db.get(membro.entidadeId);
     const now = Date.now();
-    await ctx.db.patch(membro.entidadeId, {
-      ...filteredData,
-      perfilAtualizadoEm: now,
-      perfilAtualizadoPor: membro._id,
-    });
+
+    if (filteredData) {
+      await ctx.db.patch(membro.entidadeId, {
+        ...filteredData,
+        perfilAtualizadoEm: now,
+        perfilAtualizadoPor: membro._id,
+      });
+    }
+
+    if (filteredMembroData) {
+      await ctx.db.patch(membro._id, filteredMembroData);
+    }
+
     const newEntidade = await ctx.db.get(membro.entidadeId);
 
     await createFieldAuditLogs(ctx, oldEntidade, newEntidade, "entidades", membro.entidadeId);
