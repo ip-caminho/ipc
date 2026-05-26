@@ -33,13 +33,16 @@ import {
 } from "@/shared/components/ui/tooltip";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { Button } from "@/shared/components/ui/button";
+import { Switch } from "@/shared/components/ui/switch";
 import { Church, LogOut, ChevronRight } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { useAuth } from "@shared/providers/PermissionsProvider";
+import { useNavigationMode } from "@shared/providers/NavigationModeProvider";
 import {
   PRIMARY_TABS,
   BOLETIM_TAB,
   GESTAO_SECTIONS,
+  COMUNIDADE_SECTIONS,
   ELEVATED_ROLES,
   isDomingoWindow,
   type NavItem,
@@ -65,6 +68,7 @@ export function AppSidebar() {
   const pathname = usePathname();
   const { name, role, foto, hasAnyRole } = useAuth();
   const { signOut } = useAuthActions();
+  const { mode, setMode, canToggle, isAdminMode } = useNavigationMode();
   const isItemVisible = useIsItemVisible();
   const [isBoletim, setIsBoletim] = useState(false);
 
@@ -77,14 +81,15 @@ export function AppSidebar() {
     return pathname === href || pathname.startsWith(href + "/");
   };
 
-  const isGestaoRole = hasAnyRole(ELEVATED_ROLES);
-
   const primaryItems: NavItem[] = [
     ...PRIMARY_TABS,
     ...(isBoletim ? [BOLETIM_TAB] : []),
   ].filter(isItemVisible);
 
-  const visibleGestaoSections = GESTAO_SECTIONS.map((section) => ({
+  const sectionSource = isAdminMode ? GESTAO_SECTIONS : COMUNIDADE_SECTIONS;
+  const sectionLabel = isAdminMode ? "Gestao" : "Comunidade";
+
+  const visibleSections = sectionSource.map((section) => ({
     ...section,
     items: section.items.filter(isItemVisible),
   })).filter((section) => section.items.length > 0);
@@ -122,12 +127,12 @@ export function AppSidebar() {
             </SidebarGroupContent>
           </SidebarGroup>
 
-          {isGestaoRole && visibleGestaoSections.length > 0 && (
+          {visibleSections.length > 0 && (
             <SidebarGroup>
-              <SidebarGroupLabel>Gestão</SidebarGroupLabel>
+              <SidebarGroupLabel>{sectionLabel}</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {visibleGestaoSections.map((section) => {
+                  {visibleSections.map((section) => {
                     const sectionActive = section.items.some((item) =>
                       isActive(item.href)
                     );
@@ -172,16 +177,25 @@ export function AppSidebar() {
         </TooltipProvider>
       </SidebarContent>
 
-      <SidebarFooter className="border-t p-4">
+      <SidebarFooter className="border-t p-4 space-y-3">
+        {canToggle && (
+          <div className="flex items-center justify-between px-1">
+            <span className="text-xs text-muted-foreground">Modo admin</span>
+            <Switch
+              checked={mode === "admin"}
+              onCheckedChange={(checked) => setMode(checked ? "admin" : "member")}
+            />
+          </div>
+        )}
         <div className="flex items-center gap-3">
           <Avatar className="h-8 w-8">
-            {foto && <AvatarImage src={foto} alt={name || "Usuário"} />}
+            {foto && <AvatarImage src={foto} alt={name || "Usuario"} />}
             <AvatarFallback>
               {name?.charAt(0)?.toUpperCase() || "?"}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">{name || "Usuário"}</p>
+            <p className="text-sm font-medium truncate">{name || "Usuario"}</p>
             <p className="text-xs text-muted-foreground truncate">
               {role || ""}
             </p>
