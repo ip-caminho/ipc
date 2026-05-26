@@ -25,6 +25,8 @@ import {
   LayoutGrid,
   History,
   ClipboardCheck,
+  MoreHorizontal,
+  User,
   type LucideIcon,
 } from "lucide-react";
 import type { Permission, Role } from "@/types/auth";
@@ -333,6 +335,36 @@ export const GESTAO_SECTIONS: NavSection[] = [
     ],
   },
 ];
+
+export const MORE_TAB: NavItem = {
+  label: "Mais",
+  href: "/__more__",
+  icon: MoreHorizontal,
+};
+
+export const MEMBER_TABS: NavItem[] = [
+  { label: "Início", href: "/dashboard", icon: Home },
+  { label: "Gravações", href: "/comunidade", icon: Ear, modulo: "gravacoes" },
+  MORE_TAB,
+];
+
+export const ADMIN_TABS: NavItem[] = [
+  { label: "Início", href: "/dashboard", icon: Home },
+  { label: "Membros", href: "/membros", icon: Users, permission: "membros:read", modulo: "membros" },
+  MORE_TAB,
+];
+
+export const MORE_MEMBER_SECTIONS: NavSection[] = [
+  {
+    titulo: "Acesso rapido",
+    items: [
+      { label: "Meu perfil", href: "/meu-perfil", icon: User, description: "Editar seus dados pessoais" },
+      ...COMUNIDADE_SECTIONS.flatMap((s) => s.items),
+    ],
+  },
+];
+
+export const MORE_ADMIN_SECTIONS: NavSection[] = GESTAO_SECTIONS;
 
 export function isDomingoWindow(date: Date = new Date()): boolean {
   const day = date.getDay(); // 0 = domingo, 6 = sábado
