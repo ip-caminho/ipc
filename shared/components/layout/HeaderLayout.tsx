@@ -12,7 +12,7 @@ export function HeaderLayout({
   return (
     <div className="relative">
       {showUserMenu && (
-        <div className="absolute top-4 right-4 z-10">
+        <div className="hidden md:block absolute top-4 right-4 z-10">
           <UserMenu />
         </div>
       )}
