@@ -18,7 +18,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avat
 import { FileUpload } from "@/shared/files/components/FileUpload";
 import { toast } from "sonner";
 import { calculateCompleteness } from "@convex/membros/completeness";
-import { ESTADO_CIVIL_OPTIONS } from "@features/membros/lib/constants";
+import { ESTADO_CIVIL_OPTIONS, FORMA_ADMISSAO_OPTIONS } from "@features/membros/lib/constants";
+import { DatePickerField } from "@shared/components/DatePickerField";
 import { WelcomeStep } from "./guided-steps/WelcomeStep";
 import { StepShell } from "./guided-steps/StepShell";
 import { EmergencyContactStep } from "./guided-steps/EmergencyContactStep";
@@ -32,6 +33,7 @@ type StepDef = {
 export function GuidedProfileFlow() {
   const profile = useQuery(api.membros.selfService.getMyProfile);
   const updateProfile = useMutation(api.membros.selfService.updateMyProfile);
+  const updateMembresiaDatas = useMutation(api.membros.selfService.updateMembresiaDatas);
   const confirmProfile = useMutation(api.membros.selfService.confirmProfile);
   const [currentIndex, setCurrentIndex] = useState(-1);
   const [saving, setSaving] = useState(false);
@@ -57,6 +59,9 @@ export function GuidedProfileFlow() {
       { key: "endereco", isFilled: () => !!(ent.endereco?.logradouro && ent.endereco?.cidade && ent.endereco?.estado && ent.endereco?.cep) },
       { key: "contatoEmergencia", isFilled: () => !!(ent.contatoEmergencia?.nome && ent.contatoEmergencia?.telefone && ent.contatoEmergencia?.parentesco) },
       { key: "profissao", isFilled: () => !!ent.profissao },
+      { key: "dataBatismo", isFilled: () => !!membro?.dataBatismo },
+      { key: "dataMembresia", isFilled: () => !!membro?.dataMembresia },
+      { key: "formaAdmissao", isFilled: () => !!membro?.formaAdmissao },
     ].filter((s) => !s.isFilled());
   }, [ent]);
 
@@ -86,6 +91,21 @@ export function GuidedProfileFlow() {
       }
     },
     [updateProfile, advance]
+  );
+
+  const saveMembroField = useCallback(
+    async (data: Record<string, string | null>) => {
+      setSaving(true);
+      try {
+        await updateMembresiaDatas(data);
+        advance();
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Erro ao salvar");
+      } finally {
+        setSaving(false);
+      }
+    },
+    [updateMembresiaDatas, advance]
   );
 
   const savePhoto = useCallback(
@@ -301,6 +321,51 @@ export function GuidedProfileFlow() {
               onBack={goBack}
               saving={saving}
             />
+          )}
+
+          {step.key === "dataBatismo" && (
+            <DateStep
+              title="Data de batismo"
+              subtitle="Se nao lembrar, pode pular"
+              initial={membro?.dataBatismo || ""}
+              percentage={completeness.percentage}
+              onSave={(iso) => saveMembroField({ dataBatismo: iso || null })}
+              onSkip={advance}
+              onBack={goBack}
+              saving={saving}
+            />
+          )}
+
+          {step.key === "dataMembresia" && (
+            <StepShell
+              title="Data de membresia"
+              subtitle="Este campo e preenchido pela secretaria"
+              percentage={completeness.percentage}
+              onNext={advance}
+              onBack={goBack}
+              nextLabel="Entendi, continuar"
+              hideActions={false}
+            >
+              <p className="text-sm text-muted-foreground text-center py-4">
+                A data de membresia sera registrada pela secretaria com base no livro de atas.
+              </p>
+            </StepShell>
+          )}
+
+          {step.key === "formaAdmissao" && (
+            <StepShell
+              title="Forma de admissao"
+              subtitle="Este campo e preenchido pela secretaria"
+              percentage={completeness.percentage}
+              onNext={advance}
+              onBack={goBack}
+              nextLabel="Entendi, continuar"
+              hideActions={false}
+            >
+              <p className="text-sm text-muted-foreground text-center py-4">
+                A forma de admissao sera registrada pela secretaria.
+              </p>
+            </StepShell>
           )}
         </CardContent>
       </Card>
@@ -524,6 +589,47 @@ function AddressGuidedStep({
           </div>
         </div>
       </div>
+    </StepShell>
+  );
+}
+
+function DateStep({
+  title,
+  subtitle,
+  initial,
+  percentage,
+  onSave,
+  onSkip,
+  onBack,
+  saving,
+}: {
+  title: string;
+  subtitle?: string;
+  initial: string;
+  percentage: number;
+  onSave: (iso: string) => void;
+  onSkip: () => void;
+  onBack?: () => void;
+  saving: boolean;
+}) {
+  const [value, setValue] = useState(initial);
+
+  return (
+    <StepShell
+      title={title}
+      subtitle={subtitle}
+      percentage={percentage}
+      onNext={() => onSave(value)}
+      onSkip={onSkip}
+      onBack={onBack}
+      saving={saving}
+    >
+      <DatePickerField
+        value={value}
+        onChange={setValue}
+        placeholder="dd/mm/aaaa"
+        maxDate={new Date()}
+      />
     </StepShell>
   );
 }
