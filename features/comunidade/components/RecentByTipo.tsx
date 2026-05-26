@@ -49,7 +49,7 @@ export function RecentByTipo({ titulo, tipo }: RecentByTipoProps) {
 
       <div className="divide-y divide-border">
         {recentes.map((g) => (
-          <AudioListItem key={g._id} audio={g} />
+          <AudioListItem key={g._id} audio={g} hideType />
         ))}
       </div>
     </section>

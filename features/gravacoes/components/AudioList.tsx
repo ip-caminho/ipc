@@ -8,9 +8,10 @@ const PAGE_SIZE = 20;
 
 interface AudioListProps {
   audios: AudioListItemData[] | undefined;
+  hideType?: boolean;
 }
 
-export function AudioList({ audios }: AudioListProps) {
+export function AudioList({ audios, hideType }: AudioListProps) {
   const [visible, setVisible] = useState(PAGE_SIZE);
 
   if (audios === undefined) {
@@ -40,7 +41,7 @@ export function AudioList({ audios }: AudioListProps) {
   return (
     <div className="flex flex-col gap-3">
       {shown.map((a) => (
-        <AudioListItem key={a._id} audio={a} />
+        <AudioListItem key={a._id} audio={a} hideType={hideType} />
       ))}
       {hasMore && (
         <button

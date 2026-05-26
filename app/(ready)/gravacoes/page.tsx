@@ -21,6 +21,13 @@ import { extractBookName } from "@features/gravacoes/lib/bible";
 
 const VALID_TIPOS = new Set(["SERMAO", "ESTUDO_BIBLICO", "PALESTRA", "OUTRO"]);
 
+const TIPO_TITULO: Record<string, string> = {
+  SERMAO: "Pregacoes",
+  ESTUDO_BIBLICO: "Estudos",
+  PALESTRA: "Palestras",
+  OUTRO: "Outros",
+};
+
 function GravacoesContent() {
   const [search, setSearch] = useQueryState("q", parseAsString.withDefault(""));
   const [tipoParam, setTipoParam] = useQueryState("tipo", parseAsString.withDefault(""));
@@ -28,8 +35,9 @@ function GravacoesContent() {
   const debouncedSearch = useDebounce(search, 300);
 
   const tipo = (VALID_TIPOS.has(tipoParam) ? tipoParam : null) as AudioTipo | null;
+  const isFiltered = !!tipo;
+  const pageTitle = tipo ? TIPO_TITULO[tipo] || "Todos" : "Todos";
 
-  // @ts-expect-error Convex TS2589
   const gravacoes = useQuery(api.gravacoes.queries.list, {
     status: "PUBLICADO",
     tipo: tipo ?? undefined,
@@ -58,7 +66,7 @@ function GravacoesContent() {
                 <ChevronLeft className="h-3.5 w-3.5" aria-hidden />
                 Gravações
               </Link>
-              <PageHeader title="Todos" />
+              <PageHeader title={pageTitle} />
             </div>
 
           <div className="px-4">
@@ -79,22 +87,26 @@ function GravacoesContent() {
             </div>
           </div>
 
-          <div className="px-4">
-            <AudioFilterChips selected={tipo} onSelect={(v) => setTipoParam(v || null)} />
-          </div>
+          {!isFiltered && (
+            <>
+              <div className="px-4">
+                <AudioFilterChips selected={tipo} onSelect={(v) => setTipoParam(v || null)} />
+              </div>
 
-          {gravacoes && gravacoes.length > 0 && (
-            <div className="px-4">
-              <BibleBookFilter
-                gravacoes={gravacoes}
-                selected={livro || null}
-                onSelect={(v) => setLivro(v || null)}
-              />
-            </div>
+              {gravacoes && gravacoes.length > 0 && (
+                <div className="px-4">
+                  <BibleBookFilter
+                    gravacoes={gravacoes}
+                    selected={livro || null}
+                    onSelect={(v) => setLivro(v || null)}
+                  />
+                </div>
+              )}
+            </>
           )}
 
           <div className="px-4">
-            <AudioList audios={audios} />
+            <AudioList audios={audios} hideType={isFiltered} />
           </div>
           </div>
         </div>
