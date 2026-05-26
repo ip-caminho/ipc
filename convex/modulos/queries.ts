@@ -32,17 +32,16 @@ export const listModulosAtivos = query({
     );
     const ativosNaTabela = modulos.filter((m) => m.ativo).map((m) => m.slug);
 
-    // Defensivo: slug conhecido pelo codigo mas ausente da tabela e tratado
-    // como ativo. Evita redirect silencioso para /dashboard quando uma nova
-    // feature e adicionada sem rerodar o seed.
-    const ausentes = MODULOS_INICIAIS.map((m) => m.slug).filter(
-      (slug) => !modulos.some((m) => m.slug === slug),
-    );
+    // Slugs conhecidos pelo codigo mas ausentes da tabela usam o padrao
+    // definido em MODULOS_INICIAIS (ativo: true/false).
+    const ausentes = MODULOS_INICIAIS
+      .filter((m) => m.ativo && !modulos.some((db) => db.slug === m.slug))
+      .map((m) => m.slug);
 
     return Array.from(
       new Set([
         ...ativosNaTabela,
-        ...ausentes.filter((slug) => !desativados.has(slug)),
+        ...ausentes,
       ]),
     );
   },
