@@ -439,7 +439,19 @@ export default function MeuPerfilPage() {
             </div>
             <div className="space-y-1">
               <Label className="text-xs">CPF</Label>
-              <Input value={formData.cpf || ""} onChange={set("cpf")} placeholder="000.000.000-00" />
+              <Input
+                value={formData.cpf || ""}
+                onChange={(e) => {
+                  const raw = e.target.value.replace(/\D/g, "").slice(0, 11);
+                  const masked = raw
+                    .replace(/(\d{3})(\d)/, "$1.$2")
+                    .replace(/(\d{3})(\d)/, "$1.$2")
+                    .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+                  setFormData((p) => ({ ...p, cpf: masked }));
+                }}
+                placeholder="000.000.000-00"
+                inputMode="numeric"
+              />
             </div>
             <div className="space-y-1">
               <Label className="text-xs">Estado civil</Label>
