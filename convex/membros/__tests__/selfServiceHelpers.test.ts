@@ -19,7 +19,6 @@ describe("SELF_SERVICE_FIELDS", () => {
 
   it("nao contem campos administrativos", () => {
     expect(SELF_SERVICE_FIELDS.has("rg")).toBe(false);
-    expect(SELF_SERVICE_FIELDS.has("nomeCompleto")).toBe(false);
     expect(SELF_SERVICE_FIELDS.has("role")).toBe(false);
     expect(SELF_SERVICE_FIELDS.has("permissions")).toBe(false);
     expect(SELF_SERVICE_FIELDS.has("status")).toBe(false);
@@ -43,7 +42,7 @@ describe("filterSelfServiceFields", () => {
     const result = filterSelfServiceFields({
       telefone: "+5511999999999",
       role: "admin",
-      nomeCompleto: "Hacker",
+      status: "INATIVO",
     });
     expect(result).toEqual({ telefone: "+5511999999999" });
   });
@@ -51,7 +50,7 @@ describe("filterSelfServiceFields", () => {
   it("retorna null quando nenhum campo é permitido", () => {
     const result = filterSelfServiceFields({
       role: "admin",
-      nomeCompleto: "Hacker",
+      status: "INATIVO",
     });
     expect(result).toBeNull();
   });

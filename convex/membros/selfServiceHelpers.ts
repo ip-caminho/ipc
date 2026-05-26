@@ -4,6 +4,7 @@
  */
 
 export const SELF_SERVICE_FIELDS = new Set([
+  "nomeCompleto",
   "apelido",
   "telefone",
   "email",
@@ -19,10 +20,6 @@ export const SELF_SERVICE_FIELDS = new Set([
   "nacionalidade",
 ]);
 
-export const SELF_SERVICE_MEMBRO_FIELDS = new Set([
-  "formaAdmissao",
-]);
-
 /**
  * Filter an update payload to only contain allowed self-service fields.
  * Returns null if no valid fields remain.
@@ -33,18 +30,6 @@ export function filterSelfServiceFields(
   const filtered: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(data)) {
     if (SELF_SERVICE_FIELDS.has(key)) {
-      filtered[key] = value;
-    }
-  }
-  return Object.keys(filtered).length > 0 ? filtered : null;
-}
-
-export function filterSelfServiceMembroFields(
-  data: Record<string, unknown>
-): Record<string, unknown> | null {
-  const filtered: Record<string, unknown> = {};
-  for (const [key, value] of Object.entries(data)) {
-    if (SELF_SERVICE_MEMBRO_FIELDS.has(key)) {
       filtered[key] = value;
     }
   }

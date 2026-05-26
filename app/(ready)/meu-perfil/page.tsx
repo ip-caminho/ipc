@@ -150,8 +150,8 @@ export default function MeuPerfilPage() {
       dataConversao: profile.dataConversao || "",
     });
     setFormData({
+      nomeCompleto: ent.nomeCompleto || "",
       apelido: ent.apelido || "",
-      nomeSocial: ent.nomeSocial || "",
       cpf: ent.cpf || "",
       estadoCivil: ent.estadoCivil || "",
       nacionalidade: ent.nacionalidade || "",
@@ -159,7 +159,6 @@ export default function MeuPerfilPage() {
       email: ent.email || "",
       profissao: ent.profissao || "",
       formacao: ent.formacao || "",
-      formaAdmissao: profile.formaAdmissao || "",
       logradouro: end?.logradouro || "",
       numero: end?.numero || "",
       complemento: end?.complemento || "",
@@ -230,8 +229,8 @@ export default function MeuPerfilPage() {
     datasMembresia.dataConversao !== (profile.dataConversao || "");
 
   const hasChanges =
+    formData.nomeCompleto !== (ent?.nomeCompleto || "") ||
     formData.apelido !== (ent?.apelido || "") ||
-    formData.nomeSocial !== (ent?.nomeSocial || "") ||
     formData.cpf !== (ent?.cpf || "") ||
     formData.estadoCivil !== (ent?.estadoCivil || "") ||
     formData.nacionalidade !== (ent?.nacionalidade || "") ||
@@ -239,7 +238,6 @@ export default function MeuPerfilPage() {
     formData.email !== (ent?.email || "") ||
     formData.profissao !== (ent?.profissao || "") ||
     formData.formacao !== (ent?.formacao || "") ||
-    formData.formaAdmissao !== (profile.formaAdmissao || "") ||
     JSON.stringify(newEndereco) !== JSON.stringify(endereco || {}) ||
     (hasAnyCE && JSON.stringify(newCE) !== JSON.stringify(contatoEmergencia || {})) ||
     JSON.stringify([...dadosIncertos].sort()) !== JSON.stringify([...incertosAtual].sort()) ||
@@ -259,12 +257,11 @@ export default function MeuPerfilPage() {
     try {
       const data: Record<string, unknown> = {};
 
+      if (formData.nomeCompleto !== (ent?.nomeCompleto || "")) data.nomeCompleto = formData.nomeCompleto;
       if (formData.apelido !== (ent?.apelido || "")) data.apelido = formData.apelido;
-      if (formData.nomeSocial !== (ent?.nomeSocial || "")) data.nomeSocial = formData.nomeSocial;
       if (formData.cpf !== (ent?.cpf || "")) data.cpf = formData.cpf;
       if (formData.estadoCivil !== (ent?.estadoCivil || "")) data.estadoCivil = formData.estadoCivil || undefined;
       if (formData.nacionalidade !== (ent?.nacionalidade || "")) data.nacionalidade = formData.nacionalidade;
-      if (formData.formaAdmissao !== (profile.formaAdmissao || "")) data.formaAdmissao = formData.formaAdmissao || undefined;
       if (formData.telefone !== (ent?.telefone || "")) data.telefone = formData.telefone;
       if (formData.email !== (ent?.email || "")) data.email = formData.email;
       if (formData.profissao !== (ent?.profissao || "")) data.profissao = formData.profissao;
@@ -409,13 +406,13 @@ export default function MeuPerfilPage() {
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1">
-              <Label className="text-xs">Apelido</Label>
-              <Input value={formData.apelido || ""} onChange={set("apelido")} placeholder="Como prefere ser chamado" />
+            <div className="space-y-1 sm:col-span-2">
+              <Label className="text-xs">Nome completo</Label>
+              <Input value={formData.nomeCompleto || ""} onChange={set("nomeCompleto")} />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">Nome social</Label>
-              <Input value={formData.nomeSocial || ""} onChange={set("nomeSocial")} placeholder="Opcional" />
+              <Label className="text-xs">Como e conhecido na igreja?</Label>
+              <Input value={formData.apelido || ""} onChange={set("apelido")} placeholder={ent?.nomeCompleto?.split(" ")[0]} />
             </div>
             <div className="space-y-1">
               <Label className="text-xs">Profissao</Label>
@@ -471,19 +468,17 @@ export default function MeuPerfilPage() {
             </div>
             <div className="space-y-1">
               <Label className="text-xs">Nacionalidade</Label>
-              <Select
+              <Input
                 value={formData.nacionalidade || ""}
-                onValueChange={(v) => setFormData((p) => ({ ...p, nacionalidade: v }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione" />
-                </SelectTrigger>
-                <SelectContent>
-                  {["Brasileiro(a)", "Argentino(a)", "Boliviano(a)", "Chileno(a)", "Colombiano(a)", "Coreano(a)", "Chines(a)", "Cubano(a)", "Equatoriano(a)", "Estadunidense", "Filipino(a)", "Frances(a)", "Japones(a)", "Mexicano(a)", "Paraguaio(a)", "Peruano(a)", "Portugues(a)", "Uruguaio(a)", "Venezuelano(a)", "Outro"].map((n) => (
-                    <SelectItem key={n} value={n}>{n}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                onChange={set("nacionalidade")}
+                placeholder="Ex: Brasileiro(a)"
+                list="nacionalidades"
+              />
+              <datalist id="nacionalidades">
+                {["Brasileiro(a)", "Coreano(a)", "Japones(a)", "Chines(a)", "Estadunidense", "Portugues(a)", "Argentino(a)", "Boliviano(a)", "Chileno(a)", "Colombiano(a)", "Cubano(a)", "Equatoriano(a)", "Filipino(a)", "Frances(a)", "Mexicano(a)", "Paraguaio(a)", "Peruano(a)", "Uruguaio(a)", "Venezuelano(a)"].map((n) => (
+                  <option key={n} value={n} />
+                ))}
+              </datalist>
             </div>
           </div>
         </CardContent>
@@ -619,26 +614,18 @@ export default function MeuPerfilPage() {
             )}
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2 pt-2 border-t">
-            <div className="space-y-1">
+          <div className="grid gap-3 sm:grid-cols-3 pt-2 border-t">
+            <div className="space-y-0.5">
               <Label className="text-xs">Forma de admissao</Label>
-              <Select
-                value={formData.formaAdmissao || ""}
-                onValueChange={(v) => setFormData((p) => ({ ...p, formaAdmissao: v }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione" />
-                </SelectTrigger>
-                <SelectContent>
-                  {FORMA_ADMISSAO_OPTIONS.map((o) => (
-                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <p className="text-sm">{FORMA_ADMISSAO_OPTIONS.find((o) => o.value === profile.formaAdmissao)?.label || "-"}</p>
+            </div>
+            <div className="space-y-0.5">
+              <Label className="text-xs">Membresia desde</Label>
+              <p className="text-sm">{profile.dataMembresia ? profile.dataMembresia.split("-").reverse().join("/") : "-"}</p>
             </div>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-3 pt-2 border-t">
+          <div className="grid gap-3 sm:grid-cols-2 pt-2 border-t">
             <DataSacramentalRow
               label="Data de conversao"
               value={datasMembresia.dataConversao}
@@ -679,26 +666,6 @@ export default function MeuPerfilPage() {
                 datasMembresia.dataBatismo !== (profile.dataBatismo || "")
               }
             />
-            <DataSacramentalRow
-              label="Membresia desde"
-              value={datasMembresia.dataMembresia}
-              onChange={(iso) =>
-                setDatasMembresia((p) => ({ ...p, dataMembresia: iso }))
-              }
-              naoLembro={dadosIncertos.includes("dataMembresia")}
-              onNaoLembroToggle={(v) => {
-                setDadosIncertos((prev) =>
-                  v
-                    ? [...prev, "dataMembresia"]
-                    : prev.filter((f) => f !== "dataMembresia")
-                );
-                if (v) setDatasMembresia((p) => ({ ...p, dataMembresia: "" }));
-              }}
-              verificado={isVerificado("dataMembresia")}
-              pendenteVerificacao={
-                datasMembresia.dataMembresia !== (profile.dataMembresia || "")
-              }
-            />
           </div>
 
           <p className="text-[11px] text-muted-foreground">
@@ -720,7 +687,7 @@ export default function MeuPerfilPage() {
           className="w-full"
         >
           <CheckCircle2 className="h-4 w-4 mr-1" />
-          {confirming ? "Confirmando..." : "Confirmar dados (sem alterar)"}
+          {confirming ? "Confirmando..." : "Meus dados estao corretos"}
         </Button>
         <Button
           onClick={handleSave}

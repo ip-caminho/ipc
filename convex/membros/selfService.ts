@@ -2,7 +2,7 @@ import { query, mutation, type MutationCtx } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { createFieldAuditLogs } from "../_shared/auditHelpers";
-import { filterSelfServiceFields, filterSelfServiceMembroFields } from "./selfServiceHelpers";
+import { filterSelfServiceFields } from "./selfServiceHelpers";
 import type { Id } from "../_generated/dataModel";
 import { phonesMatch } from "../messaging/phoneUtils";
 import { internal } from "../_generated/api";
@@ -46,27 +46,17 @@ export const updateMyProfile = mutation({
     }
 
     const filteredData = filterSelfServiceFields(data);
-    const filteredMembroData = filterSelfServiceMembroFields(data);
-
-    if (!filteredData && !filteredMembroData) {
+    if (!filteredData) {
       throw new Error("No valid fields to update");
     }
 
     const oldEntidade = await ctx.db.get(membro.entidadeId);
     const now = Date.now();
-
-    if (filteredData) {
-      await ctx.db.patch(membro.entidadeId, {
-        ...filteredData,
-        perfilAtualizadoEm: now,
-        perfilAtualizadoPor: membro._id,
-      });
-    }
-
-    if (filteredMembroData) {
-      await ctx.db.patch(membro._id, filteredMembroData);
-    }
-
+    await ctx.db.patch(membro.entidadeId, {
+      ...filteredData,
+      perfilAtualizadoEm: now,
+      perfilAtualizadoPor: membro._id,
+    });
     const newEntidade = await ctx.db.get(membro.entidadeId);
 
     await createFieldAuditLogs(ctx, oldEntidade, newEntidade, "entidades", membro.entidadeId);
