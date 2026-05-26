@@ -36,7 +36,7 @@ function formatDurationFromBoundaries(
   return rem === 0 ? `${h}h` : `${h}h${rem.toString().padStart(2, "0")}`;
 }
 
-export function AudioListItem({ audio }: { audio: AudioListItemData }) {
+export function AudioListItem({ audio, hideType }: { audio: AudioListItemData; hideType?: boolean }) {
   const pregador = audio.pregadorInfo?.nome || audio.pregadorNome || null;
   const gradient = getCategoryGradient(audio.tipo);
   const categoria = getTipoLabel(audio.tipo);
@@ -70,10 +70,12 @@ export function AudioListItem({ audio }: { audio: AudioListItemData }) {
         />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
-          {categoria}
-        </p>
-        <p className="text-sm font-medium leading-tight line-clamp-2 mt-0.5">
+        {!hideType && (
+          <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+            {categoria}
+          </p>
+        )}
+        <p className={`text-sm font-medium leading-tight line-clamp-2 ${hideType ? "" : "mt-0.5"}`}>
           {audio.titulo}
         </p>
         {metaParts.length > 0 && (
