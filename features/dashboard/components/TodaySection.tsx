@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, useEffect, useState } from "react";
+import { forwardRef, useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Megaphone, type LucideIcon } from "lucide-react";
@@ -13,6 +13,7 @@ import {
   DrawerTrigger,
 } from "@/shared/components/ui/drawer";
 import { AvisosWidget } from "@features/gravacoes/components/AvisosWidget";
+import { SectionLabel } from "./SectionLabel";
 
 interface TodayCardProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   icon: LucideIcon;
@@ -41,11 +42,17 @@ const TodayCard = forwardRef<HTMLButtonElement, TodayCardProps>(
 
 export function TodaySection() {
   const [avisosOpen, setAvisosOpen] = useState(false);
+  const modulosAtivos = useQuery(api.modulos.queries.listModulosAtivos);
+  const avisosAtivo = modulosAtivos?.includes("avisos") ?? false;
 
-  // @ts-expect-error Convex TS2589
-  const avisosData = useQuery(api.gravacoes.queries.getLatestAvisos);
-  // @ts-expect-error Convex TS2589
-  const avisosNaoLidos = useQuery(api.gravacoes.avisosLeituras.countNaoLidos);
+  const avisosData = useQuery(
+    api.gravacoes.queries.getLatestAvisos,
+    avisosAtivo ? {} : "skip"
+  );
+  const avisosNaoLidos = useQuery(
+    api.gravacoes.avisosLeituras.countNaoLidos,
+    avisosAtivo ? {} : "skip"
+  );
   const marcarComoLido = useMutation(api.gravacoes.avisosLeituras.marcarComoLido);
 
   useEffect(() => {
@@ -61,7 +68,11 @@ export function TodaySection() {
     return `${avisosNaoLidos} ${avisosNaoLidos === 1 ? "novo" : "novos"}`;
   })();
 
+  if (!avisosAtivo) return null;
+
   return (
+    <section className="space-y-2">
+    <SectionLabel>Hoje</SectionLabel>
     <div className="grid grid-cols-1 gap-2">
       <Drawer open={avisosOpen} onOpenChange={setAvisosOpen}>
         <DrawerTrigger asChild>
@@ -81,5 +92,6 @@ export function TodaySection() {
         </DrawerContent>
       </Drawer>
     </div>
+    </section>
   );
 }

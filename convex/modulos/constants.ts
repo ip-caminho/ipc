@@ -25,6 +25,7 @@ export const MODULOS_INICIAIS: ModuloSeed[] = [
   { slug: "turmas", label: "Turmas", descricao: "Turmas e cursos", ativo: false, ordem: 16 },
   { slug: "biblioteca", label: "Biblioteca", descricao: "Acervo de livros e emprestimos", ativo: false, ordem: 17 },
   { slug: "multimidia", label: "Multimidia", descricao: "Painel de multimidia para cultos", ativo: false, ordem: 18 },
+  { slug: "avisos", label: "Avisos", descricao: "Avisos semanais extraidos dos cultos", ativo: false, ordem: 19 },
 ];
 
 export const MODULOS_SLUGS = MODULOS_INICIAIS.map((m) => m.slug);
