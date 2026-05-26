@@ -60,8 +60,6 @@ export function GuidedProfileFlow() {
       { key: "contatoEmergencia", isFilled: () => !!(ent.contatoEmergencia?.nome && ent.contatoEmergencia?.telefone && ent.contatoEmergencia?.parentesco) },
       { key: "profissao", isFilled: () => !!ent.profissao },
       { key: "dataBatismo", isFilled: () => !!membro?.dataBatismo },
-      { key: "dataMembresia", isFilled: () => !!membro?.dataMembresia },
-      { key: "formaAdmissao", isFilled: () => !!membro?.formaAdmissao },
     ].filter((s) => !s.isFilled());
   }, [ent]);
 
@@ -336,37 +334,6 @@ export function GuidedProfileFlow() {
             />
           )}
 
-          {step.key === "dataMembresia" && (
-            <StepShell
-              title="Data de membresia"
-              subtitle="Este campo e preenchido pela secretaria"
-              percentage={completeness.percentage}
-              onNext={advance}
-              onBack={goBack}
-              nextLabel="Entendi, continuar"
-              hideActions={false}
-            >
-              <p className="text-sm text-muted-foreground text-center py-4">
-                A data de membresia sera registrada pela secretaria com base no livro de atas.
-              </p>
-            </StepShell>
-          )}
-
-          {step.key === "formaAdmissao" && (
-            <StepShell
-              title="Forma de admissao"
-              subtitle="Este campo e preenchido pela secretaria"
-              percentage={completeness.percentage}
-              onNext={advance}
-              onBack={goBack}
-              nextLabel="Entendi, continuar"
-              hideActions={false}
-            >
-              <p className="text-sm text-muted-foreground text-center py-4">
-                A forma de admissao sera registrada pela secretaria.
-              </p>
-            </StepShell>
-          )}
         </CardContent>
       </Card>
 
