@@ -22,7 +22,8 @@ import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
 import { PageHeader } from "@shared/components/layout/PageHeader";
 import { DatePickerField } from "@shared/components/DatePickerField";
 import { toast } from "sonner";
-import { MapPin, User, Phone, Save, AlertCircle, CheckCircle2, HeartPulse, Church } from "lucide-react";
+import Link from "next/link";
+import { MapPin, User, Phone, Save, AlertCircle, CheckCircle2, HeartPulse, Church, ArrowRight } from "lucide-react";
 import {
   CARGO_ECLESIASTICO_OPTIONS,
   STATUS_COLORS,
@@ -336,6 +337,18 @@ export default function MeuPerfilPage() {
     <LgpdConsentDialog />
     <div className="max-w-2xl mx-auto space-y-4">
       <PageHeader title="Meu perfil" />
+
+      {/* Link para fluxo guiado */}
+      <Link
+        href="/meu-perfil/completar"
+        className="flex items-center justify-between rounded-xl border border-primary/30 bg-primary/5 p-4 active:opacity-80 transition-opacity"
+      >
+        <div>
+          <p className="text-sm font-medium">Completar perfil</p>
+          <p className="text-xs text-muted-foreground">Preencha passo a passo</p>
+        </div>
+        <ArrowRight className="h-5 w-5 text-primary shrink-0" />
+      </Link>
 
       {/* Banner de atualizacao */}
       {desatualizado && (

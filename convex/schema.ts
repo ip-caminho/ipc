@@ -148,6 +148,7 @@ export default defineSchema({
       v.literal("PRESBITERO"),
       v.literal("PASTOR")
     )),
+    civilmenteCapazes: v.optional(v.boolean()),
     dataConversao: v.optional(v.string()),
     dataBatismo: v.optional(v.string()),
     igrejaProcedencia: v.optional(v.string()),
