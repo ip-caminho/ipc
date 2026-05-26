@@ -24,6 +24,7 @@ import {
   Shield,
   LayoutGrid,
   History,
+  ClipboardCheck,
   type LucideIcon,
 } from "lucide-react";
 import type { Permission, Role } from "@/types/auth";
@@ -300,6 +301,13 @@ export const GESTAO_SECTIONS: NavSection[] = [
         href: "/admin/modulos",
         icon: LayoutGrid,
         description: "Ligar e desligar funcionalidades",
+      },
+      {
+        label: "Cadastro Vivo",
+        href: "/admin/cadastro-vivo",
+        icon: ClipboardCheck,
+        description: "Completude e saude dos perfis de membros",
+        permission: "membros:read",
       },
       {
         label: "Campanhas",

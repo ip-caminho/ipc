@@ -20,7 +20,7 @@ import { TodaySection } from "@features/dashboard/components/TodaySection";
 import { BirthdayList } from "@features/dashboard/components/BirthdayList";
 import { SectionLabel } from "@features/dashboard/components/SectionLabel";
 import { UltimoSermaoCard } from "@features/dashboard/components/UltimoSermaoCard";
-import { PerfilDesatualizadoCard } from "@features/dashboard/components/PerfilDesatualizadoCard";
+import { ProfileCompletenessCard } from "@features/dashboard/components/ProfileCompletenessCard";
 
 function BootstrapForm() {
   // @ts-expect-error Convex TS2589
@@ -126,7 +126,7 @@ export default function DashboardPage() {
 
         <PushPermissionBanner />
 
-        <PerfilDesatualizadoCard />
+        <ProfileCompletenessCard />
 
         <UltimoSermaoCard />
 
