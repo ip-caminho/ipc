@@ -121,7 +121,7 @@ export default function DashboardPage() {
 
   return (
     <HeaderLayout>
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-5">
         <PageHeader title={`${saudacao}, ${primeiroNome}`} subtitle={dataHoje} />
 
         <PushPermissionBanner />
