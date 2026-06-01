@@ -83,11 +83,15 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     arquivos: [
       "app/(ready)/membros/[id]/page.tsx",
       "features/membros/components/MembroForm.tsx",
+      "features/membros/components/AcessoSection.tsx",
     ],
-    queries: ["membros.queries.getById"],
-    mutations: ["membros.mutations.update"],
-    componentes: ["MembroForm"],
-    notas: ["Permissao: membros:read, membros:update"],
+    queries: ["membros.queries.getById", "membros.acesso.getStatusAcesso"],
+    mutations: ["membros.mutations.update", "membros.acesso.gerarLink"],
+    componentes: ["MembroForm", "AcessoSection"],
+    notas: [
+      "Permissao: membros:read, membros:update",
+      "AcessoSection (membros:update): status de acesso + gerar magic link + enviar via wa.me",
+    ],
   },
   "/secretario-executivo": {
     nome: "Secretario Executivo (lista)",
@@ -799,9 +803,25 @@ const CONTEXT_MAP: Record<string, PageContext> = {
   "/signin": {
     nome: "Login",
     pagina: "app/(auth)/signin/page.tsx",
-    arquivos: ["app/(auth)/signin/page.tsx", "convex/auth/phoneOTP.ts"],
-    mutations: ["audit.mutations.logLogin"],
-    notas: ["WhatsApp OTP (bypass em dev)", "Valida status do membro no login"],
+    arquivos: ["app/(auth)/signin/page.tsx", "convex/auth/phoneOTP.ts", "shared/lib/acesso.ts"],
+    mutations: ["audit.mutations.logLogin", "membros.acesso.verificarAcessoDireto"],
+    notas: [
+      "Abas: Entrar (telefone+senha) e Primeiro acesso (telefone + 5 digitos do CPF)",
+      "WhatsApp OTP mantido como opcao secundaria; bypass em dev",
+      "Identificador de login derivado do telefone (loginIdFromPhone)",
+    ],
+  },
+  "/ativar/[token]": {
+    nome: "Ativar acesso (criar senha)",
+    pagina: "app/(auth)/ativar/[token]/page.tsx",
+    arquivos: ["app/(auth)/ativar/[token]/page.tsx"],
+    queries: ["membros.acesso.getAtivacaoByToken"],
+    mutations: ["membros.acesso.concluirAtivacao", "audit.mutations.logLogin"],
+    notas: [
+      "Destino do magic link e do primeiro acesso direto",
+      "Cria senha (signUp password) e vincula userId ao membro existente",
+      "Forca onboardingCompleto=false -> wizard /bem-vindo confirma dados",
+    ],
   },
   "/comunidade": {
     nome: "Comunidade (hub de consumo)",
@@ -966,6 +986,8 @@ function resolveRoute(pathname: string): PageContext | null {
   if (/^\/ministerios\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/ministerios/[id]"];
   // /membros/[id]
   if (/^\/membros\/[^/]+$/.test(pathname) && pathname !== "/membros/novo") return CONTEXT_MAP["/membros/[id]"];
+  // /ativar/[token]
+  if (/^\/ativar\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/ativar/[token]"];
   // /secretario-executivo/[id]
   if (/^\/secretario-executivo\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/secretario-executivo/[id]"];
   // /biblioteca/[id]
