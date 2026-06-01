@@ -294,9 +294,15 @@ export default defineSchema({
     criadoPor: v.optional(v.id("membros")),
     expiraEm: v.number(),
     role: v.optional(v.string()),
+    // Acesso de membro existente: quando preenchido, o token ativa o login
+    // de um membro ja cadastrado (nao cria novo). Origem: link gerado pelo
+    // admin ("link") ou verificacao telefone+CPF ("direto").
+    membroId: v.optional(v.id("membros")),
+    origem: v.optional(v.union(v.literal("link"), v.literal("direto"))),
   })
     .index("by_token", ["token"])
-    .index("by_status", ["status"]),
+    .index("by_status", ["status"])
+    .index("by_membro", ["membroId"]),
 
   auditLogs: defineTable({
     action: v.string(),

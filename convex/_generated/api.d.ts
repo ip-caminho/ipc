@@ -72,6 +72,7 @@ import type * as lgpd_index from "../lgpd/index.js";
 import type * as louvor_metricas from "../louvor/metricas.js";
 import type * as louvor_mutations from "../louvor/mutations.js";
 import type * as louvor_queries from "../louvor/queries.js";
+import type * as membros_acesso from "../membros/acesso.js";
 import type * as membros_autoLink from "../membros/autoLink.js";
 import type * as membros_bootstrap from "../membros/bootstrap.js";
 import type * as membros_cadastroVivo from "../membros/cadastroVivo.js";
@@ -193,6 +194,7 @@ declare const fullApi: ApiFromModules<{
   "louvor/metricas": typeof louvor_metricas;
   "louvor/mutations": typeof louvor_mutations;
   "louvor/queries": typeof louvor_queries;
+  "membros/acesso": typeof membros_acesso;
   "membros/autoLink": typeof membros_autoLink;
   "membros/bootstrap": typeof membros_bootstrap;
   "membros/cadastroVivo": typeof membros_cadastroVivo;
