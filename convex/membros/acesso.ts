@@ -1,4 +1,4 @@
-import { mutation, query } from "../_generated/server";
+import { mutation, query, type QueryCtx } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { requirePermission } from "../_shared/requirePermission";
@@ -245,5 +245,137 @@ export const getStatusAcesso = query({
       whatsapp: entidade?.whatsapp || entidade?.telefone || null,
       nome: entidade?.nomeCompleto || "",
     };
+  },
+});
+
+/** Ultimo login (LOGIN no auditLogs) de um membro, via indice by_membro. */
+async function ultimoLogin(
+  ctx: QueryCtx,
+  membroId: Doc<"membros">["_id"]
+): Promise<{ em: number; metodo: string | null } | null> {
+  const logs = await ctx.db
+    .query("auditLogs")
+    .withIndex("by_membro", (q) => q.eq("membroId", membroId))
+    .order("desc")
+    .take(50);
+  const login = logs.find((l) => l.action === "LOGIN");
+  if (!login) return null;
+  return { em: login.createdAt, metodo: (login.to as string) ?? null };
+}
+
+type AcessoRow = {
+  membroId: Doc<"membros">["_id"];
+  nome: string;
+  whatsapp: string | null;
+  ativado: boolean;
+  onboardingCompleto: boolean;
+  temLinkPendente: boolean;
+  metodoAtivacao: "link" | "direto" | null;
+  ultimoAcessoEm: number | null;
+};
+
+type AcessosOverview = {
+  rows: AcessoRow[];
+  resumo: {
+    total: number;
+    ativados: number;
+    pendentes: number;
+    semAcesso: number;
+    adesao: number;
+  };
+};
+
+/**
+ * Visao geral de acesso dos membros ATIVOS, para o painel admin:
+ * status, metodo de ativacao, ultimo acesso + contagens-resumo.
+ */
+export const getAcessosOverview = query({
+  args: {},
+  handler: async (ctx): Promise<AcessosOverview> => {
+    await requirePermission(ctx, "membros:read");
+
+    const membros = await ctx.db.query("membros").collect();
+    const rows: AcessoRow[] = [];
+
+    for (const membro of membros) {
+      const entidade = await ctx.db.get(membro.entidadeId);
+      if (!entidade || entidade.status !== "ATIVO") continue;
+
+      const convites = await ctx.db
+        .query("membroConvites")
+        .withIndex("by_membro", (q) => q.eq("membroId", membro._id))
+        .collect();
+      const pendente = convites.find(
+        (c) => c.status === "PENDENTE" && c.expiraEm >= Date.now()
+      );
+      const aceito = convites.find((c) => c.status === "ACEITO");
+      const login = await ultimoLogin(ctx, membro._id);
+
+      rows.push({
+        membroId: membro._id,
+        nome: entidade.nomeCompleto || "",
+        whatsapp: entidade.whatsapp || entidade.telefone || null,
+        ativado: !!membro.userId,
+        onboardingCompleto: membro.onboardingCompleto ?? false,
+        temLinkPendente: !!pendente,
+        metodoAtivacao: aceito?.origem ?? null,
+        ultimoAcessoEm: login?.em ?? null,
+      });
+    }
+
+    rows.sort((a, b) => a.nome.localeCompare(b.nome));
+
+    const total = rows.length;
+    const ativados = rows.filter((r) => r.ativado).length;
+    const pendentes = rows.filter((r) => !r.ativado && r.temLinkPendente).length;
+    const semAcesso = rows.filter((r) => !r.ativado && !r.temLinkPendente).length;
+
+    return {
+      rows,
+      resumo: {
+        total,
+        ativados,
+        pendentes,
+        semAcesso,
+        adesao: total > 0 ? Math.round((ativados / total) * 100) : 0,
+      },
+    };
+  },
+});
+
+// Acoes relevantes para o historico de atividade (evita ruido interno)
+const ACOES_HISTORICO = ["LOGIN", "CREATE", "FIELD_CHANGE", "DELETE"];
+
+type AtividadeItem = {
+  id: Doc<"auditLogs">["_id"];
+  action: string;
+  tabela: string;
+  field: string | null;
+  valor: string | null;
+  em: number;
+};
+
+/** Historico de atividade de um membro (logins + acoes principais). */
+export const getAtividadeMembro = query({
+  args: { membroId: v.id("membros"), limit: v.optional(v.number()) },
+  handler: async (ctx, { membroId, limit }): Promise<AtividadeItem[]> => {
+    await requirePermission(ctx, "membros:read");
+
+    const logs = await ctx.db
+      .query("auditLogs")
+      .withIndex("by_membro", (q) => q.eq("membroId", membroId))
+      .order("desc")
+      .take(Math.min(limit ?? 30, 100));
+
+    return logs
+      .filter((l) => ACOES_HISTORICO.includes(l.action))
+      .map((l) => ({
+        id: l._id,
+        action: l.action,
+        tabela: l.referenciaTabela,
+        field: l.field ?? null,
+        valor: l.action === "LOGIN" ? ((l.to as string) ?? null) : null,
+        em: l.createdAt,
+      }));
   },
 });

@@ -317,7 +317,8 @@ export default defineSchema({
   })
     .index("by_referencia", ["referenciaTabela", "referenciaId"])
     .index("by_user", ["userId"])
-    .index("by_created_at", ["createdAt"]),
+    .index("by_created_at", ["createdAt"])
+    .index("by_membro", ["membroId", "createdAt"]),
 
   rolePermissions: defineTable({
     role: v.string(),
