@@ -30,10 +30,9 @@ export default function SignIn() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  // modo whatsapp (mantido como opcao secundaria)
-  const [waStep, setWaStep] = useState<null | "phone" | { phone: string }>(null);
 
   const bypassMode = process.env.NEXT_PUBLIC_AUTH_BYPASS_MODE === "true";
+  // @ts-expect-error Convex TS2589
   const logLogin = useMutation(api.audit.mutations.logLogin);
   const verificarAcessoDireto = useMutation(api.membros.acesso.verificarAcessoDireto);
 
@@ -101,55 +100,6 @@ export default function SignIn() {
     }
   }
 
-  // ----- WhatsApp OTP (secundario) -----
-  async function handleWaPhone(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-    const phone = normalizePhone(new FormData(e.currentTarget).get("phone") as string);
-    try {
-      const fd = new FormData();
-      fd.set("phone", phone);
-      try {
-        await signIn("whatsapp-otp", fd);
-      } catch (err) {
-        if (!(err instanceof TypeError && err.message.includes("null"))) throw err;
-      }
-      setWaStep({ phone });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro desconhecido");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleWaCode(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-    const fd = new FormData(e.currentTarget);
-    if (typeof waStep === "object" && waStep) fd.set("phone", waStep.phone);
-    try {
-      try {
-        await signIn("whatsapp-otp", fd);
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        if (!(msg.includes("redirect") || (err instanceof TypeError && msg.includes("null")))) {
-          throw err;
-        }
-      }
-      try {
-        await logLogin({ method: "whatsapp-otp" });
-      } catch {
-        /* silent */
-      }
-      setTimeout(() => router.push("/dashboard"), 500);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro desconhecido");
-      setLoading(false);
-    }
-  }
-
   return (
     <Card className="w-full max-w-sm">
       <CardHeader className="text-center">
@@ -177,47 +127,6 @@ export default function SignIn() {
               </Button>
             </form>
           </>
-        ) : waStep !== null ? (
-          // Fluxo WhatsApp OTP
-          typeof waStep === "object" ? (
-            <form className="flex flex-col gap-4" onSubmit={handleWaCode}>
-              <p className="text-sm text-muted-foreground">
-                Digite o codigo enviado para {waStep.phone}
-              </p>
-              <div className="space-y-2">
-                <Label htmlFor="code">Codigo</Label>
-                <Input id="code" type="tel" name="code" placeholder="000000" maxLength={6} required />
-              </div>
-              <input name="phone" value={waStep.phone} type="hidden" />
-              <Button type="submit" disabled={loading} className="w-full">
-                {loading ? "Verificando..." : "Verificar"}
-              </Button>
-              <button
-                type="button"
-                className="text-sm text-muted-foreground underline hover:no-underline cursor-pointer"
-                onClick={() => setWaStep(null)}
-              >
-                Voltar
-              </button>
-            </form>
-          ) : (
-            <form className="flex flex-col gap-4" onSubmit={handleWaPhone}>
-              <div className="space-y-2">
-                <Label htmlFor="phone">Telefone</Label>
-                <Input id="phone" type="tel" name="phone" placeholder="11999991111" required />
-              </div>
-              <Button type="submit" disabled={loading} className="w-full">
-                {loading ? "Aguarde..." : "Enviar codigo"}
-              </Button>
-              <button
-                type="button"
-                className="text-sm text-muted-foreground underline hover:no-underline cursor-pointer"
-                onClick={() => setWaStep(null)}
-              >
-                Voltar
-              </button>
-            </form>
-          )
         ) : (
           <Tabs defaultValue="senha" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
@@ -268,16 +177,6 @@ export default function SignIn() {
               </form>
             </TabsContent>
           </Tabs>
-        )}
-
-        {!bypassMode && waStep === null && (
-          <button
-            type="button"
-            className="mt-4 w-full text-center text-xs text-muted-foreground underline hover:no-underline cursor-pointer"
-            onClick={() => setWaStep("phone")}
-          >
-            Entrar com codigo por WhatsApp
-          </button>
         )}
 
         {error && (
