@@ -191,3 +191,85 @@ export const getFamily = query({
     return { conjuge, filhos };
   },
 });
+
+const FIELD_LABELS: Record<string, string> = {
+  cargoEclesiastico: "Cargo eclesiastico",
+  rol: "Rol",
+  tipoRolOverride: "Tipo de rol",
+  numeroMatricula: "Matricula",
+  dataConversao: "Data de conversao",
+  dataBatismo: "Data de batismo",
+  dataMembresia: "Membresia",
+  formaAdmissao: "Forma de admissao",
+  igrejaProcedencia: "Igreja de procedencia",
+  observacoesPastorais: "Observacoes pastorais",
+  formaDemissao: "Forma de demissao",
+  dataDemissao: "Data de demissao",
+  igrejaDestino: "Igreja destino",
+  dataFalecimento: "Data de falecimento",
+};
+
+type HistoricoItem = {
+  id: string;
+  field: string;
+  label: string;
+  de: string | null;
+  para: string | null;
+  em: number;
+  autor: string | null;
+};
+
+/**
+ * Historico de alteracoes eclesiasticas de um membro (FIELD_CHANGE no
+ * auditLog), para revisao e reversao de ajustes acidentais.
+ */
+export const getHistorico = query({
+  args: { membroId: v.id("membros") },
+  handler: async (ctx, { membroId }): Promise<HistoricoItem[]> => {
+    await requireAnyPermission(ctx, [
+      "membros:update_eclesiastico",
+      "membros:read",
+    ]);
+
+    const logs = await ctx.db
+      .query("auditLogs")
+      .withIndex("by_referencia", (q) =>
+        q.eq("referenciaTabela", "membros").eq("referenciaId", membroId)
+      )
+      .order("desc")
+      .take(200);
+
+    const eclesi = logs.filter(
+      (l) => l.action === "FIELD_CHANGE" && l.field && ECLESIASTICO_FIELDS.has(l.field)
+    );
+
+    const out: HistoricoItem[] = [];
+    const nomeCache = new Map<string, string | null>();
+    for (const l of eclesi) {
+      let autor: string | null = null;
+      if (l.membroId) {
+        const key = l.membroId as string;
+        if (nomeCache.has(key)) {
+          autor = nomeCache.get(key) ?? null;
+        } else {
+          const a = await ctx.db.get(l.membroId);
+          const e = a ? await ctx.db.get(a.entidadeId) : null;
+          autor = e?.nomeCompleto ?? null;
+          nomeCache.set(key, autor);
+        }
+      }
+      const de = l.from === undefined || l.from === null ? null : String(l.from);
+      const para = l.to === undefined || l.to === null ? null : String(l.to);
+      out.push({
+        id: l._id,
+        field: l.field as string,
+        label: FIELD_LABELS[l.field as string] ?? (l.field as string),
+        de,
+        para,
+        em: l.createdAt,
+        autor,
+      });
+    }
+    return out;
+  },
+});
