@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -25,6 +25,7 @@ import {
 } from "@/shared/components/ui/select";
 import { DatePickerField } from "@shared/components/DatePickerField";
 import { ExternalLink, History } from "lucide-react";
+import { cn } from "@shared/lib/utils/cn";
 import {
   CARGO_ECLESIASTICO_OPTIONS,
   STATUS_COLORS,
@@ -49,9 +50,25 @@ export type MembroEclesiastico = {
   dataConversao?: string;
   dataBatismo?: string;
   dataMembresia?: string;
+  sexo?: string;
+  dataNascimento?: string;
+  familiaHeadId?: string;
+  familiaHeadNome?: string;
+  familiaOrder?: number;
 };
 
-function LinhaMembro({ membro }: { membro: MembroEclesiastico }) {
+const COL_NOME = "sticky left-0 z-10 bg-background";
+
+function LinhaMembro({
+  membro,
+  agrupar,
+  inicioFamilia,
+}: {
+  membro: MembroEclesiastico;
+  agrupar: boolean;
+  inicioFamilia: boolean;
+}) {
+  // @ts-expect-error Convex TS2589
   const update = useMutation(api.membros.eclesiastico.updateEclesiastico);
   const membroId = membro._id as Id<"membros">;
   const [histOpen, setHistOpen] = useState(false);
@@ -65,19 +82,21 @@ function LinhaMembro({ membro }: { membro: MembroEclesiastico }) {
     }
   }
 
-  // Inputs de texto sao nao-controlados (defaultValue + key sincroniza com o
-  // servidor, ex: ao reverter). Salva no blur se mudou em relacao ao atual.
   function salvarSeMudou(field: string, atual: string, value: string) {
     if (value === atual) return;
     salvar(field, value);
   }
 
   const status = membro.entidade?.status || "ATIVO";
+  const ehFilho = agrupar && membro.familiaOrder === 2;
 
   return (
-    <TableRow>
-      <TableCell className="font-medium whitespace-nowrap">
-        <Link href={`/secretario-executivo/${membro._id}`} className="hover:underline">
+    <TableRow className={cn(agrupar && inicioFamilia && "border-t-2 border-t-border")}>
+      <TableCell className={cn(COL_NOME, "font-medium whitespace-nowrap")}>
+        <Link
+          href={`/secretario-executivo/${membro._id}`}
+          className={cn("hover:underline", ehFilho && "pl-6 block text-muted-foreground")}
+        >
           {membro.entidade?.nomeCompleto || "-"}
         </Link>
       </TableCell>
@@ -188,13 +207,40 @@ function LinhaMembro({ membro }: { membro: MembroEclesiastico }) {
   );
 }
 
-export function SecretarioExecutivoTabela({ membros }: { membros: MembroEclesiastico[] }) {
+export function SecretarioExecutivoTabela({
+  membros,
+  agrupar,
+}: {
+  membros: MembroEclesiastico[];
+  agrupar: boolean;
+}) {
+  const ordenados = useMemo(() => {
+    if (!agrupar) return membros;
+    return [...membros].sort((a, b) => {
+      const hn = (a.familiaHeadNome ?? "").localeCompare(b.familiaHeadNome ?? "");
+      if (hn !== 0) return hn;
+      if ((a.familiaHeadId ?? "") !== (b.familiaHeadId ?? "")) {
+        return (a.familiaHeadId ?? "").localeCompare(b.familiaHeadId ?? "");
+      }
+      const oa = a.familiaOrder ?? 0;
+      const ob = b.familiaOrder ?? 0;
+      if (oa !== ob) return oa - ob;
+      if (oa === 2) {
+        // filhos: mais velho primeiro (data de nascimento mais antiga no topo)
+        const da = a.dataNascimento || "9999-99-99";
+        const db = b.dataNascimento || "9999-99-99";
+        if (da !== db) return da < db ? -1 : 1;
+      }
+      return (a.entidade?.nomeCompleto ?? "").localeCompare(b.entidade?.nomeCompleto ?? "");
+    });
+  }, [membros, agrupar]);
+
   return (
     <div className="rounded-md border overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="whitespace-nowrap">Nome</TableHead>
+            <TableHead className={cn(COL_NOME, "whitespace-nowrap")}>Nome</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Cargo eclesiastico</TableHead>
             <TableHead>Rol</TableHead>
@@ -207,8 +253,15 @@ export function SecretarioExecutivoTabela({ membros }: { membros: MembroEclesias
           </TableRow>
         </TableHeader>
         <TableBody>
-          {membros.map((m) => (
-            <LinhaMembro key={m._id} membro={m} />
+          {ordenados.map((m, i) => (
+            <LinhaMembro
+              key={m._id}
+              membro={m}
+              agrupar={agrupar}
+              inicioFamilia={
+                i > 0 && m.familiaHeadId !== ordenados[i - 1].familiaHeadId
+              }
+            />
           ))}
         </TableBody>
       </Table>
