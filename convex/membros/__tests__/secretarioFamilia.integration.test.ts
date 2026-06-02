@@ -89,6 +89,40 @@ describe("listParaSecretario — agrupamento por familia", () => {
     expect(by("Filha Nova").dataNascimento).toBe("2015-08-20");
   });
 
+  it("inclui filho DEPENDENTE (entidade sem membro) na familia", async () => {
+    const t = convexTest(schema, modules);
+    const admin = await seedAdmin(t);
+    const pai = await pessoa(t, "Andre Pai", "M");
+
+    // Noah: entidade dependente, SEM registro de membro
+    const noahEnt = await t.run(async (ctx) => {
+      const e = await ctx.db.insert("entidades", {
+        tipoEntidade: "PF",
+        papeis: ["DEPENDENTE"],
+        status: "ATIVO",
+        nomeCompleto: "Noah Dependente",
+        vinculoIgreja: "NAO_MEMBRO",
+        dataNascimento: "2020-01-01",
+      });
+      await ctx.db.insert("responsaveis", {
+        criancaEntidadeId: e,
+        responsavelEntidadeId: pai.entidadeId,
+        tipo: "PAI",
+        principal: true,
+        criadoEm: 1,
+      });
+      return e;
+    });
+
+    const linhas = await admin.query(api.membros.eclesiastico.listParaSecretario, {});
+    const noah = linhas.find((l) => l.entidade.nomeCompleto === "Noah Dependente");
+    expect(noah).toBeTruthy();
+    expect(noah!.ehMembro).toBe(false);
+    expect(noah!.entidadeId).toBe(noahEnt as Id<"entidades">);
+    expect(noah!.familiaHeadId).toBe(pai.entidadeId);
+    expect(noah!.familiaOrder).toBe(2);
+  });
+
   it("membro solteiro e seu proprio chefe", async () => {
     const t = convexTest(schema, modules);
     const admin = await seedAdmin(t);
