@@ -120,14 +120,16 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "features/secretarioExecutivo/components/SecretarioExecutivoTabela.tsx",
       "features/secretarioExecutivo/components/HistoricoEclesiasticoDrawer.tsx",
     ],
-    queries: ["membros.queries.list", "membros.eclesiastico.getHistorico"],
+    queries: ["membros.eclesiastico.listParaSecretario", "membros.eclesiastico.getHistorico"],
     mutations: ["membros.eclesiastico.updateEclesiastico"],
     componentes: ["SecretarioExecutivoTabela", "HistoricoEclesiasticoDrawer", "PermissionGate"],
     notas: [
       "Permissao: membros:update_eclesiastico",
       "Roles: admin, pastor, secretaria, secretario_executivo",
       "Edicao tabular inline (auto-save no blur): cargo, rol, tipoRol, matricula, datas sacramentais",
-      "Historico de alteracoes (FIELD_CHANGE) por membro com reverter; drill-down no detalhe para admissao/demissao/atos/cargos",
+      "Coluna Nome fixa (sticky). Botao 'Agrupar por familia': cabecalho por familia, chefe(homem)->conjuge->filhos(mais velho primeiro)",
+      "listParaSecretario inclui filhos DEPENDENTES (entidade sem membro, via responsaveis) — aparecem read-only na familia",
+      "Historico (FIELD_CHANGE) com reverter; drill-down no detalhe para admissao/demissao/atos/cargos",
     ],
   },
   "/secretario-executivo/[id]": {

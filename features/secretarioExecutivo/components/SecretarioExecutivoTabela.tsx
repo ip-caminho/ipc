@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, Fragment } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -24,7 +24,7 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import { DatePickerField } from "@shared/components/DatePickerField";
-import { ExternalLink, History } from "lucide-react";
+import { ExternalLink, History, Users } from "lucide-react";
 import { cn } from "@shared/lib/utils/cn";
 import {
   CARGO_ECLESIASTICO_OPTIONS,
@@ -39,9 +39,13 @@ const TIPO_ROL_OPTIONS = [
 ] as const;
 
 const NONE = "__none__";
+const NUM_COLS = 10;
+const COL_NOME = "sticky left-0 z-10 bg-background";
 
 export type MembroEclesiastico = {
   _id: string;
+  ehMembro?: boolean;
+  entidadeId?: string;
   entidade?: { nomeCompleto?: string; whatsapp?: string; status?: string };
   cargoEclesiastico?: string;
   rol?: string;
@@ -57,17 +61,7 @@ export type MembroEclesiastico = {
   familiaOrder?: number;
 };
 
-const COL_NOME = "sticky left-0 z-10 bg-background";
-
-function LinhaMembro({
-  membro,
-  agrupar,
-  inicioFamilia,
-}: {
-  membro: MembroEclesiastico;
-  agrupar: boolean;
-  inicioFamilia: boolean;
-}) {
+function LinhaMembro({ membro, agrupar }: { membro: MembroEclesiastico; agrupar: boolean }) {
   // @ts-expect-error Convex TS2589
   const update = useMutation(api.membros.eclesiastico.updateEclesiastico);
   const membroId = membro._id as Id<"membros">;
@@ -81,23 +75,24 @@ function LinhaMembro({
       toast.error(err instanceof Error ? err.message : "Erro ao salvar");
     }
   }
-
   function salvarSeMudou(field: string, atual: string, value: string) {
-    if (value === atual) return;
-    salvar(field, value);
+    if (value !== atual) salvar(field, value);
   }
 
   const status = membro.entidade?.status || "ATIVO";
   const ehFilho = agrupar && membro.familiaOrder === 2;
 
   return (
-    <TableRow className={cn(agrupar && inicioFamilia && "border-t-2 border-t-border")}>
+    <TableRow>
       <TableCell className={cn(COL_NOME, "font-medium whitespace-nowrap")}>
         <Link
           href={`/secretario-executivo/${membro._id}`}
-          className={cn("hover:underline", ehFilho && "pl-6 block text-muted-foreground")}
+          className={cn("hover:underline", agrupar && "pl-6 block")}
         >
           {membro.entidade?.nomeCompleto || "-"}
+          {ehFilho && (
+            <span className="ml-1 text-[10px] text-muted-foreground">(filho)</span>
+          )}
         </Link>
       </TableCell>
       <TableCell>
@@ -158,50 +153,60 @@ function LinhaMembro({
         />
       </TableCell>
       <TableCell>
-        <DatePickerField
-          value={membro.dataConversao ?? ""}
-          onChange={(iso) => salvar("dataConversao", iso)}
-          className="h-8 w-[150px] text-xs"
-        />
+        <DatePickerField value={membro.dataConversao ?? ""} onChange={(iso) => salvar("dataConversao", iso)} className="h-8 w-[150px] text-xs" />
       </TableCell>
       <TableCell>
-        <DatePickerField
-          value={membro.dataBatismo ?? ""}
-          onChange={(iso) => salvar("dataBatismo", iso)}
-          className="h-8 w-[150px] text-xs"
-        />
+        <DatePickerField value={membro.dataBatismo ?? ""} onChange={(iso) => salvar("dataBatismo", iso)} className="h-8 w-[150px] text-xs" />
       </TableCell>
       <TableCell>
-        <DatePickerField
-          value={membro.dataMembresia ?? ""}
-          onChange={(iso) => salvar("dataMembresia", iso)}
-          className="h-8 w-[150px] text-xs"
-        />
+        <DatePickerField value={membro.dataMembresia ?? ""} onChange={(iso) => salvar("dataMembresia", iso)} className="h-8 w-[150px] text-xs" />
       </TableCell>
       <TableCell>
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setHistOpen(true)}
-            className="text-muted-foreground hover:text-foreground"
-            title="Historico de alteracoes / reverter"
-          >
+          <button type="button" onClick={() => setHistOpen(true)} className="text-muted-foreground hover:text-foreground" title="Historico / reverter">
             <History className="h-4 w-4" />
           </button>
-          <Link
-            href={`/secretario-executivo/${membro._id}`}
-            className="text-muted-foreground hover:text-foreground"
-            title="Abrir detalhe (admissao, demissao, atos, cargos)"
-          >
+          <Link href={`/secretario-executivo/${membro._id}`} className="text-muted-foreground hover:text-foreground" title="Abrir detalhe">
             <ExternalLink className="h-4 w-4" />
           </Link>
         </div>
-        <HistoricoEclesiasticoDrawer
-          membroId={membroId}
-          nome={membro.entidade?.nomeCompleto || ""}
-          open={histOpen}
-          onOpenChange={setHistOpen}
-        />
+        <HistoricoEclesiasticoDrawer membroId={membroId} nome={membro.entidade?.nomeCompleto || ""} open={histOpen} onOpenChange={setHistOpen} />
+      </TableCell>
+    </TableRow>
+  );
+}
+
+function LinhaDependente({ dep }: { dep: MembroEclesiastico }) {
+  return (
+    <TableRow className="bg-muted/10">
+      <TableCell className={cn(COL_NOME, "font-medium whitespace-nowrap")}>
+        <span className="pl-6 block text-muted-foreground">
+          {dep.entidade?.nomeCompleto || "-"}
+          <span className="ml-1 text-[10px]">(filho)</span>
+        </span>
+      </TableCell>
+      <TableCell>
+        <Badge variant="secondary" className="text-xs">Dependente · nao membro</Badge>
+      </TableCell>
+      <TableCell colSpan={NUM_COLS - 3} className="text-xs text-muted-foreground">
+        {dep.dataNascimento ? `Nascimento: ${dep.dataNascimento}` : "Sem dados eclesiasticos (nao e membro)"}
+      </TableCell>
+      <TableCell></TableCell>
+    </TableRow>
+  );
+}
+
+function CabecalhoFamilia({ nome, total }: { nome: string; total: number }) {
+  return (
+    <TableRow className="border-t-2 border-t-border hover:bg-transparent">
+      <TableCell colSpan={NUM_COLS} className={cn(COL_NOME, "bg-muted/60 py-2")}>
+        <div className="flex items-center gap-2 text-sm font-semibold">
+          <Users className="h-4 w-4 text-muted-foreground" />
+          Familia {nome || "(sem chefe definido)"}
+          <span className="text-xs font-normal text-muted-foreground">
+            · {total} pessoa{total !== 1 ? "s" : ""}
+          </span>
+        </div>
       </TableCell>
     </TableRow>
   );
@@ -214,8 +219,11 @@ export function SecretarioExecutivoTabela({
   membros: MembroEclesiastico[];
   agrupar: boolean;
 }) {
-  const ordenados = useMemo(() => {
-    if (!agrupar) return membros;
+  const linhas = useMemo(() => {
+    if (!agrupar) {
+      // modo lista: so membros, ordem alfabetica
+      return membros.filter((m) => m.ehMembro !== false);
+    }
     return [...membros].sort((a, b) => {
       const hn = (a.familiaHeadNome ?? "").localeCompare(b.familiaHeadNome ?? "");
       if (hn !== 0) return hn;
@@ -226,7 +234,6 @@ export function SecretarioExecutivoTabela({
       const ob = b.familiaOrder ?? 0;
       if (oa !== ob) return oa - ob;
       if (oa === 2) {
-        // filhos: mais velho primeiro (data de nascimento mais antiga no topo)
         const da = a.dataNascimento || "9999-99-99";
         const db = b.dataNascimento || "9999-99-99";
         if (da !== db) return da < db ? -1 : 1;
@@ -234,6 +241,17 @@ export function SecretarioExecutivoTabela({
       return (a.entidade?.nomeCompleto ?? "").localeCompare(b.entidade?.nomeCompleto ?? "");
     });
   }, [membros, agrupar]);
+
+  const totalPorFamilia = useMemo(() => {
+    const map = new Map<string, number>();
+    if (agrupar) {
+      for (const l of linhas) {
+        const k = l.familiaHeadId ?? "";
+        map.set(k, (map.get(k) ?? 0) + 1);
+      }
+    }
+    return map;
+  }, [linhas, agrupar]);
 
   return (
     <div className="rounded-md border overflow-x-auto">
@@ -253,16 +271,25 @@ export function SecretarioExecutivoTabela({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {ordenados.map((m, i) => (
-            <LinhaMembro
-              key={m._id}
-              membro={m}
-              agrupar={agrupar}
-              inicioFamilia={
-                i > 0 && m.familiaHeadId !== ordenados[i - 1].familiaHeadId
-              }
-            />
-          ))}
+          {linhas.map((m, i) => {
+            const novaFamilia =
+              agrupar && (i === 0 || m.familiaHeadId !== linhas[i - 1].familiaHeadId);
+            return (
+              <Fragment key={m._id}>
+                {novaFamilia && (
+                  <CabecalhoFamilia
+                    nome={m.familiaHeadNome ?? ""}
+                    total={totalPorFamilia.get(m.familiaHeadId ?? "") ?? 1}
+                  />
+                )}
+                {m.ehMembro === false ? (
+                  <LinhaDependente dep={m} />
+                ) : (
+                  <LinhaMembro membro={m} agrupar={agrupar} />
+                )}
+              </Fragment>
+            );
+          })}
         </TableBody>
       </Table>
     </div>

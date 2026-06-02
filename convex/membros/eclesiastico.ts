@@ -194,7 +194,9 @@ export const getFamily = query({
 });
 
 type LinhaSecretario = {
-  _id: string;
+  _id: string; // membroId (membro) ou entidadeId (dependente)
+  ehMembro: boolean;
+  entidadeId: string;
   entidade: { nomeCompleto?: string; whatsapp?: string; status?: string };
   cargoEclesiastico?: string;
   rol?: string;
@@ -212,10 +214,10 @@ type LinhaSecretario = {
 
 /**
  * Lista para a tabela do secretario executivo: membros + dados eclesiasticos
- * + metadados de familia (chefe/ordem) para agrupamento.
+ * + filhos DEPENDENTES (nao-membros, ex: crianca nao batizada) + metadados de
+ * familia para agrupamento.
  *
  * Familia: homem adulto (chefe) -> conjuge -> filhos (mais velho primeiro).
- * Metadados calculados sobre o conjunto completo; busca filtra a saida.
  */
 export const listParaSecretario = query({
   args: { search: v.optional(v.string()) },
@@ -226,48 +228,51 @@ export const listParaSecretario = query({
     ]);
 
     const membros = await ctx.db.query("membros").collect();
-    const porEnt = new Map<string, { m: Doc<"membros">; e: Doc<"entidades"> }>();
-    const entNome = new Map<string, string>();
+    const membroPorEnt = new Map<string, Doc<"membros">>();
+    const entPorId = new Map<string, Doc<"entidades">>();
     for (const m of membros) {
       const e = await ctx.db.get(m.entidadeId);
       if (!e) continue;
-      porEnt.set(e._id, { m, e });
-      entNome.set(e._id, e.nomeCompleto ?? "");
+      membroPorEnt.set(e._id, m);
+      entPorId.set(e._id, e);
     }
 
-    // Relacoes de parentesco (so entre quem e membro)
-    const filhosDe = new Map<string, string[]>(); // responsavel -> [crianca]
-    const paisDe = new Map<string, string[]>(); // crianca -> [responsavel]
+    // Relacoes de parentesco: pai precisa ser membro. Filhos podem ser
+    // membros OU dependentes (entidade sem membro) — estes tambem entram.
+    const filhosDe = new Map<string, string[]>();
+    const paisDe = new Map<string, string[]>();
     const responsaveis = await ctx.db.query("responsaveis").collect();
     for (const r of responsaveis) {
       const crianca = r.criancaEntidadeId as string;
       const resp = r.responsavelEntidadeId as string;
-      if (!porEnt.has(crianca) || !porEnt.has(resp)) continue;
+      if (!membroPorEnt.has(resp)) continue;
+      if (!entPorId.has(crianca)) {
+        const ce = await ctx.db.get(r.criancaEntidadeId);
+        if (!ce) continue;
+        entPorId.set(crianca, ce);
+      }
       (filhosDe.get(resp) ?? filhosDe.set(resp, []).get(resp)!).push(crianca);
       (paisDe.get(crianca) ?? paisDe.set(crianca, []).get(crianca)!).push(resp);
     }
 
     // Chefe de um casal = homem; sem homem, deterministico (menor id)
     function chefeDoCasal(entId: string): string {
-      const reg = porEnt.get(entId);
-      if (!reg) return entId;
-      const conjId = reg.m.conjugeId as string | undefined;
-      if (!conjId || !porEnt.has(conjId)) return entId;
-      const conj = porEnt.get(conjId)!;
-      if (reg.e.sexo === "M") return entId;
-      if (conj.e.sexo === "M") return conjId;
+      const m = membroPorEnt.get(entId);
+      const conjId = m?.conjugeId as string | undefined;
+      if (!conjId || !membroPorEnt.has(conjId)) return entId;
+      if (entPorId.get(entId)?.sexo === "M") return entId;
+      if (entPorId.get(conjId)?.sexo === "M") return conjId;
       return entId < conjId ? entId : conjId;
     }
 
     function metaFamilia(entId: string): { headId: string; order: number } {
-      const reg = porEnt.get(entId)!;
-      const temConjuge = !!reg.m.conjugeId && porEnt.has(reg.m.conjugeId as string);
+      const m = membroPorEnt.get(entId);
+      const conjId = m?.conjugeId as string | undefined;
+      const temConjuge = !!conjId && membroPorEnt.has(conjId);
       const temFilhos = (filhosDe.get(entId)?.length ?? 0) > 0;
       const pais = paisDe.get(entId) ?? [];
       const dependente = pais.length > 0 && !temConjuge && !temFilhos;
-      if (dependente) {
-        return { headId: chefeDoCasal(pais[0]), order: 2 };
-      }
+      if (dependente) return { headId: chefeDoCasal(pais[0]), order: 2 };
       if (temConjuge) {
         const headId = chefeDoCasal(entId);
         return { headId, order: headId === entId ? 0 : 1 };
@@ -276,26 +281,29 @@ export const listParaSecretario = query({
     }
 
     let linhas: LinhaSecretario[] = [];
-    for (const [entId, { m, e }] of porEnt) {
+    for (const [entId, e] of entPorId) {
+      const m = membroPorEnt.get(entId);
       const { headId, order } = metaFamilia(entId);
       linhas.push({
-        _id: m._id,
+        _id: m ? m._id : entId,
+        ehMembro: !!m,
+        entidadeId: entId,
         entidade: {
           nomeCompleto: e.nomeCompleto,
           whatsapp: e.whatsapp,
           status: e.status,
         },
-        cargoEclesiastico: m.cargoEclesiastico,
-        rol: m.rol,
-        tipoRolOverride: m.tipoRolOverride,
-        numeroMatricula: m.numeroMatricula,
-        dataConversao: m.dataConversao,
-        dataBatismo: m.dataBatismo,
-        dataMembresia: m.dataMembresia,
+        cargoEclesiastico: m?.cargoEclesiastico,
+        rol: m?.rol,
+        tipoRolOverride: m?.tipoRolOverride,
+        numeroMatricula: m?.numeroMatricula,
+        dataConversao: m?.dataConversao,
+        dataBatismo: m?.dataBatismo,
+        dataMembresia: m?.dataMembresia,
         sexo: e.sexo,
         dataNascimento: e.dataNascimento,
         familiaHeadId: headId,
-        familiaHeadNome: entNome.get(headId) ?? "",
+        familiaHeadNome: entPorId.get(headId)?.nomeCompleto ?? "",
         familiaOrder: order,
       });
     }
