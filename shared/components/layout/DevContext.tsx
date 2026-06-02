@@ -113,17 +113,21 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     ],
   },
   "/secretario-executivo": {
-    nome: "Secretario Executivo (lista)",
+    nome: "Secretario Executivo (tabela)",
     pagina: "app/(ready)/secretario-executivo/page.tsx",
     arquivos: [
       "app/(ready)/secretario-executivo/page.tsx",
+      "features/secretarioExecutivo/components/SecretarioExecutivoTabela.tsx",
+      "features/secretarioExecutivo/components/HistoricoEclesiasticoDrawer.tsx",
     ],
-    queries: ["membros.queries.list"],
-    componentes: ["PermissionGate"],
+    queries: ["membros.queries.list", "membros.eclesiastico.getHistorico"],
+    mutations: ["membros.eclesiastico.updateEclesiastico"],
+    componentes: ["SecretarioExecutivoTabela", "HistoricoEclesiasticoDrawer", "PermissionGate"],
     notas: [
       "Permissao: membros:update_eclesiastico",
       "Roles: admin, pastor, secretaria, secretario_executivo",
-      "Lista de membros para consulta basica + drill-down para edicao eclesiastica",
+      "Edicao tabular inline (auto-save no blur): cargo, rol, tipoRol, matricula, datas sacramentais",
+      "Historico de alteracoes (FIELD_CHANGE) por membro com reverter; drill-down no detalhe para admissao/demissao/atos/cargos",
     ],
   },
   "/secretario-executivo/[id]": {
