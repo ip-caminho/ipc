@@ -8,7 +8,7 @@ import {
   type QueryCtx,
 } from "../_generated/server";
 import { v } from "convex/values";
-import { internal } from "../_generated/api";
+import { makeFunctionReference } from "convex/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import type { Doc, Id } from "../_generated/dataModel";
 import {
@@ -18,6 +18,32 @@ import {
   ANTISPAM_JANELA_DIAS,
 } from "./campanhasHelpers";
 import { messaging } from "./service";
+
+// Auto-referencias do scheduler construidas por string: evitam TS2589
+// (a arvore de tipos `internal` ficou profunda demais para o scheduler
+// resolver). Mantem o tipo de args/retorno nos call sites.
+const refProcessarProximo = makeFunctionReference<
+  "mutation",
+  { campanhaId: Id<"campanhas"> }
+>("messaging/campanhas:_processarProximo");
+const refEnviarMensagem = makeFunctionReference<
+  "action",
+  { envioId: Id<"campanhasEnvios"> }
+>("messaging/campanhas:_enviarMensagem");
+const refLoadEnvioContext = makeFunctionReference<
+  "query",
+  { envioId: Id<"campanhasEnvios"> },
+  {
+    telefone: string;
+    template: string;
+    primeiroNome: string;
+    apelido: string | undefined;
+  } | null
+>("messaging/campanhas:_loadEnvioContext");
+const refRegistrarResultado = makeFunctionReference<
+  "mutation",
+  { envioId: Id<"campanhasEnvios">; success: boolean; erro?: string }
+>("messaging/campanhas:_registrarResultado");
 
 /**
  * Pipeline de campanha de mensageria.
@@ -206,7 +232,7 @@ export const dispararCampanha = mutation({
       iniciadoEm: Date.now(),
     });
 
-    await ctx.scheduler.runAfter(0, internal.messaging.campanhas._processarProximo, {
+    await ctx.scheduler.runAfter(0, refProcessarProximo, {
       campanhaId,
     });
 
@@ -238,7 +264,7 @@ export const retomarCampanha = mutation({
       throw new Error("So e possivel retomar campanhas pausadas");
     }
     await ctx.db.patch(campanhaId, { status: "EM_EXECUCAO" });
-    await ctx.scheduler.runAfter(0, internal.messaging.campanhas._processarProximo, {
+    await ctx.scheduler.runAfter(0, refProcessarProximo, {
       campanhaId,
     });
     return { ok: true };
@@ -270,7 +296,7 @@ export const reenviarPendentes = mutation({
       concluidoEm: undefined,
     });
 
-    await ctx.scheduler.runAfter(0, internal.messaging.campanhas._processarProximo, {
+    await ctx.scheduler.runAfter(0, refProcessarProximo, {
       campanhaId,
     });
 
@@ -307,7 +333,7 @@ export const _processarProximo = internalMutation({
 
     await ctx.db.patch(proximo._id, { status: "PROCESSANDO" });
 
-    await ctx.scheduler.runAfter(0, internal.messaging.campanhas._enviarMensagem, {
+    await ctx.scheduler.runAfter(0, refEnviarMensagem, {
       envioId: proximo._id,
     });
 
@@ -320,7 +346,7 @@ export const _enviarMensagem = internalAction({
   handler: async (ctx, { envioId }): Promise<void> => {
     // Carregar envio e contexto via queries internas
     const ctxData = await ctx.runQuery(
-      internal.messaging.campanhas._loadEnvioContext,
+      refLoadEnvioContext,
       { envioId }
     );
     if (!ctxData) return;
@@ -339,7 +365,7 @@ export const _enviarMensagem = internalAction({
       erro = e instanceof Error ? e.message : "Erro desconhecido no envio";
     }
 
-    await ctx.runMutation(internal.messaging.campanhas._registrarResultado, {
+    await ctx.runMutation(refRegistrarResultado, {
       envioId,
       success,
       erro,
@@ -410,7 +436,7 @@ export const _registrarResultado = internalMutation({
 
     if (proximaPendente) {
       const delay = calcularJitter();
-      await ctx.scheduler.runAfter(delay, internal.messaging.campanhas._processarProximo, {
+      await ctx.scheduler.runAfter(delay, refProcessarProximo, {
         campanhaId: envio.campanhaId,
       });
     } else {
