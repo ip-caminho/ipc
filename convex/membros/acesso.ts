@@ -87,16 +87,13 @@ export const verificarAcessoDireto = mutation({
       throw new Error("Informe os 5 primeiros digitos do CPF");
     }
 
-    const normalized = normalizeToE164(telefone);
-    const variants = [
-      normalized,
-      normalized.replace(/^\+55/, ""),
-      normalized.replace(/^\+/, ""),
-    ];
+    // Compara so os digitos (E164) dos dois lados: robusto a formatacao
+    // (ex: "(11) 94208-8102" no cadastro vs "11942088102" digitado).
+    const alvoDigits = normalizeToE164(telefone).replace(/\D/g, "");
 
     const entidades = await ctx.db.query("entidades").collect();
     const entidade = entidades.find(
-      (e) => e.whatsapp && variants.includes(e.whatsapp)
+      (e) => e.whatsapp && normalizeToE164(e.whatsapp).replace(/\D/g, "") === alvoDigits
     );
 
     // Mensagem generica para nao revelar se o telefone existe
