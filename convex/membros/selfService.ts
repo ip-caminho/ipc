@@ -5,7 +5,15 @@ import { createFieldAuditLogs } from "../_shared/auditHelpers";
 import { filterSelfServiceFields } from "./selfServiceHelpers";
 import type { Id } from "../_generated/dataModel";
 import { phonesMatch } from "../messaging/phoneUtils";
-import { internal } from "../_generated/api";
+import { makeFunctionReference } from "convex/server";
+
+// Referencia construida por string: evita TS2589 (a arvore de tipos
+// `internal` ficou profunda demais para o scheduler resolver).
+const enviarConfirmacaoRef = makeFunctionReference<
+  "action",
+  { telefone: string },
+  void
+>("messaging/campanhas:_enviarConfirmacao");
 
 export const getMyProfile = query({
   args: {},
@@ -140,11 +148,9 @@ async function marcarCampanhasAtualizadas(
   }
 
   if (confirmarTelefone) {
-    await ctx.scheduler.runAfter(
-      0,
-      internal.messaging.campanhas._enviarConfirmacao,
-      { telefone: confirmarTelefone }
-    );
+    await ctx.scheduler.runAfter(0, enviarConfirmacaoRef, {
+      telefone: confirmarTelefone,
+    });
   }
 }
 
