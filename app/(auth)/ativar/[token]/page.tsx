@@ -2,8 +2,8 @@
 
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useRouter, useParams } from "next/navigation";
-import { useState } from "react";
-import { useQuery, useMutation } from "convex/react";
+import { useState, useEffect } from "react";
+import { useQuery, useMutation, useConvexAuth } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
@@ -22,14 +22,44 @@ export default function AtivarPage() {
   const { token } = useParams<{ token: string }>();
   const { signIn } = useAuthActions();
   const router = useRouter();
+  // @ts-expect-error Convex TS2589
   const dados = useQuery(api.membros.acesso.getAtivacaoByToken, { token });
   const concluir = useMutation(api.membros.acesso.concluirAtivacao);
   const logLogin = useMutation(api.audit.mutations.logLogin);
 
+  const { isAuthenticated } = useConvexAuth();
   const [senha, setSenha] = useState("");
   const [confirma, setConfirma] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [pendingToken, setPendingToken] = useState<string | null>(null);
+
+  // Vincula o membro so depois que a sessao autenticar (evita corrida de
+  // propagacao de auth apos o signUp/signIn).
+  useEffect(() => {
+    if (!isAuthenticated || !pendingToken) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        await concluir({ token: pendingToken });
+        try {
+          await logLogin({ method: "primeiro-acesso" });
+        } catch {
+          /* silent */
+        }
+        if (!cancelled) router.push("/dashboard");
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : "Erro ao vincular acesso");
+          setLoading(false);
+          setPendingToken(null);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated, pendingToken, concluir, logLogin, router]);
 
   if (dados === undefined) {
     return (
@@ -81,21 +111,18 @@ export default function AtivarPage() {
 
     setLoading(true);
     try {
-      await signIn("password", { flow: "signUp", email: loginId, password: senha });
-      await concluir({ token });
       try {
-        await logLogin({ method: "primeiro-acesso" });
+        await signIn("password", { flow: "signUp", email: loginId, password: senha });
       } catch {
-        /* silent */
+        // Conta ja criada numa tentativa anterior — entra com a mesma senha.
+        await signIn("password", { flow: "signIn", email: loginId, password: senha });
       }
-      setTimeout(() => router.push("/dashboard"), 400);
-    } catch (err: unknown) {
-      const m = err instanceof Error ? err.message : String(err);
-      if (m.toLowerCase().includes("already") || m.includes("exists")) {
-        setError("Este acesso ja foi ativado. Entre com sua senha na tela de login.");
-      } else {
-        setError(m || "Erro ao ativar acesso");
-      }
+      // Dispara a vinculacao no effect, apos a sessao autenticar.
+      setPendingToken(token);
+    } catch {
+      setError(
+        "Nao foi possivel ativar. Se voce ja tentou antes, use exatamente a mesma senha."
+      );
       setLoading(false);
     }
   }
