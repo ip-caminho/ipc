@@ -73,6 +73,12 @@ automático**. Não publicar UI direto no main pra revisar; usar a branch.
 - URL do preview: `https://ipc-git-<branch-slug>-cyhandre-3063s-projects.vercel.app`
   (branch slug = nome da branch com `/`→`-`). A URL exata também sai via Vercel
   MCP (`list_deployments`) ou no PR.
+- ATENÇÃO: previews têm Vercel Authentication ligada → respondem **401** para
+  acesso headless (agent-browser/curl). Para checar preview automaticamente,
+  configurar "Protection Bypass for Automation" (segredo) e enviar header
+  `x-vercel-protection-bypass: <segredo>` no agent-browser (`--headers`). Sem
+  isso, o agent-browser só verifica **prod** (após merge); previews servem para
+  revisão manual do André (logado na Vercel).
 - Fluxo: trabalhar na branch → `git push origin <branch>` → Vercel builda
   preview → agente abre no agent-browser (mobile) e/ou manda a URL pro André
   revisar no celular → só depois `merge --ff-only` no main.
