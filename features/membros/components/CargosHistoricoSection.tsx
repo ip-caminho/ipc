@@ -53,12 +53,24 @@ export function CargosHistoricoSection({ membroId }: { membroId: Id<"membros"> }
   const [form, setForm] = useState<{
     cargo: Cargo;
     mandatoInicio: string;
+    mandatoFim: string;
     observacoes: string;
   }>({
     cargo: "DIACONO",
     mandatoInicio: "",
+    mandatoFim: "",
     observacoes: "",
   });
+  // encerramento via date picker (substitui o prompt)
+  const [encerrarAlvo, setEncerrarAlvo] = useState<Id<"cargosEclesiasticosHistorico"> | null>(null);
+  const [encerrarData, setEncerrarData] = useState("");
+
+  // IPB: mandato ate 5 anos. Pre-preenche o fim previsto a partir do inicio.
+  function maisCincoAnos(iso: string): string {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return "";
+    const [y, m, d] = iso.split("-");
+    return `${Number(y) + 5}-${m}-${d}`;
+  }
 
   const handleIniciar = async () => {
     if (!form.mandatoInicio) {
@@ -71,11 +83,12 @@ export function CargosHistoricoSection({ membroId }: { membroId: Id<"membros"> }
         membroId,
         cargo: form.cargo,
         mandatoInicio: form.mandatoInicio,
+        mandatoFim: form.mandatoFim || undefined,
         observacoes: form.observacoes || undefined,
       });
       toast.success("Mandato registrado");
       setOpen(false);
-      setForm({ cargo: "DIACONO", mandatoInicio: "", observacoes: "" });
+      setForm({ cargo: "DIACONO", mandatoInicio: "", mandatoFim: "", observacoes: "" });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro");
     } finally {
@@ -83,12 +96,13 @@ export function CargosHistoricoSection({ membroId }: { membroId: Id<"membros"> }
     }
   };
 
-  const handleEncerrar = async (id: Id<"cargosEclesiasticosHistorico">) => {
-    const fim = prompt("Data de encerramento (YYYY-MM-DD)");
-    if (!fim) return;
+  const confirmarEncerrar = async () => {
+    if (!encerrarAlvo || !encerrarData) return;
     try {
-      await encerrar({ id, mandatoFim: fim });
+      await encerrar({ id: encerrarAlvo, mandatoFim: encerrarData });
       toast.success("Mandato encerrado");
+      setEncerrarAlvo(null);
+      setEncerrarData("");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro");
     }
@@ -140,10 +154,29 @@ export function CargosHistoricoSection({ membroId }: { membroId: Id<"membros"> }
                   <Input
                     type="date"
                     value={form.mandatoInicio}
-                    onChange={(e) => setForm((p) => ({ ...p, mandatoInicio: e.target.value }))}
+                    onChange={(e) =>
+                      setForm((p) => ({
+                        ...p,
+                        mandatoInicio: e.target.value,
+                        // sugere fim = inicio + 5 anos (limite IPB); editavel
+                        mandatoFim: maisCincoAnos(e.target.value),
+                      }))
+                    }
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Fim do mandato (previsto)</Label>
+                  <Input
+                    type="date"
+                    value={form.mandatoFim}
+                    onChange={(e) => setForm((p) => ({ ...p, mandatoFim: e.target.value }))}
                   />
                 </div>
               </div>
+              <p className="text-[11px] text-muted-foreground -mt-1">
+                Mandato IPB: ate 5 anos (sugestao automatica, editavel). O fim
+                previsto alimenta os alertas de mandatos vencidos / a vencer.
+              </p>
               <div className="space-y-1">
                 <Label className="text-xs">Observacoes</Label>
                 <Textarea
@@ -181,7 +214,15 @@ export function CargosHistoricoSection({ membroId }: { membroId: Id<"membros"> }
                   </div>
                 </div>
                 {c.status === "ATIVO" && (
-                  <Button size="sm" variant="ghost" onClick={() => handleEncerrar(c._id)} aria-label="Encerrar">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      setEncerrarAlvo(c._id);
+                      setEncerrarData(c.mandatoFim ?? new Date().toISOString().slice(0, 10));
+                    }}
+                    aria-label="Encerrar"
+                  >
                     <Square className="h-4 w-4" />
                   </Button>
                 )}
@@ -193,6 +234,22 @@ export function CargosHistoricoSection({ membroId }: { membroId: Id<"membros"> }
           </ul>
         )}
       </CardContent>
+
+      <Dialog open={encerrarAlvo !== null} onOpenChange={(o) => !o && setEncerrarAlvo(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Encerrar mandato</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-1 py-2">
+            <Label className="text-xs">Data de encerramento</Label>
+            <Input type="date" value={encerrarData} onChange={(e) => setEncerrarData(e.target.value)} />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEncerrarAlvo(null)}>Cancelar</Button>
+            <Button onClick={confirmarEncerrar} disabled={!encerrarData}>Encerrar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

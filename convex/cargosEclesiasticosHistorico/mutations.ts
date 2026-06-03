@@ -14,6 +14,7 @@ export const iniciarMandato = mutation({
     membroId: v.id("membros"),
     cargo: CARGO_VALIDATOR,
     mandatoInicio: v.string(),
+    mandatoFim: v.optional(v.string()),
     observacoes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
