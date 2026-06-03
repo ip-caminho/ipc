@@ -34,6 +34,7 @@ import { HistoricoEclesiasticoDrawer } from "./HistoricoEclesiasticoDrawer";
 const NONE = "__none__";
 const NUM_COLS = 10;
 const COL_NOME = "sticky left-0 z-10 bg-background";
+const COL_HEAD = "sticky top-0 z-20 bg-background";
 
 const STATUS_OPTIONS = [
   { value: "ATIVO", label: "Ativo" },
@@ -291,20 +292,20 @@ export function SecretarioExecutivoTabela({
   }, [linhas, agrupar]);
 
   return (
-    <div className="rounded-md border overflow-x-auto">
+    <div className="rounded-md border overflow-hidden [&_[data-slot=table-container]]:max-h-[calc(100vh-16rem)] [&_[data-slot=table-container]]:overflow-auto">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className={cn(COL_NOME, "whitespace-nowrap")}>Nome</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Cargo eclesiastico</TableHead>
-            <TableHead>Rol</TableHead>
-            <TableHead>Civ. capaz</TableHead>
-            <TableHead>Matricula</TableHead>
-            <TableHead>Conversao</TableHead>
-            <TableHead>Batismo</TableHead>
-            <TableHead>Membresia</TableHead>
-            <TableHead></TableHead>
+            <TableHead className={cn(COL_NOME, "top-0 z-30 whitespace-nowrap")}>Nome</TableHead>
+            <TableHead className={COL_HEAD}>Status</TableHead>
+            <TableHead className={COL_HEAD}>Cargo eclesiastico</TableHead>
+            <TableHead className={COL_HEAD}>Rol</TableHead>
+            <TableHead className={COL_HEAD}>Civ. capaz</TableHead>
+            <TableHead className={COL_HEAD}>Matricula</TableHead>
+            <TableHead className={COL_HEAD}>Conversao</TableHead>
+            <TableHead className={COL_HEAD}>Batismo</TableHead>
+            <TableHead className={COL_HEAD}>Membresia</TableHead>
+            <TableHead className={COL_HEAD}></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
