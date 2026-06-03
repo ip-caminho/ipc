@@ -12,7 +12,7 @@ import { mutation, query } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { requireAnyPermission } from "../_shared/requirePermission";
-import { createFieldAuditLogs } from "../_shared/auditHelpers";
+import { createFieldAuditLogs, createActionAuditLog } from "../_shared/auditHelpers";
 import type { Doc } from "../_generated/dataModel";
 
 const ECLESIASTICO_FIELDS = new Set([
@@ -403,5 +403,44 @@ export const getHistorico = query({
       });
     }
     return out;
+  },
+});
+
+/**
+ * Promove um dependente (entidade sem membro) a membro, criando o registro
+ * de `membros` e atualizando o vinculo da entidade. Habilita a edicao dos
+ * campos eclesiasticos dele na tabela.
+ */
+export const tornarMembro = mutation({
+  args: { entidadeId: v.id("entidades") },
+  handler: async (ctx, { entidadeId }) => {
+    await requireAnyPermission(ctx, [
+      "membros:update_eclesiastico",
+      "membros:update",
+    ]);
+
+    const entidade = await ctx.db.get(entidadeId);
+    if (!entidade) throw new Error("Entidade nao encontrada");
+
+    const existente = await ctx.db
+      .query("membros")
+      .withIndex("by_entidade", (q) => q.eq("entidadeId", entidadeId))
+      .first();
+    if (existente) return { membroId: existente._id, jaEra: true };
+
+    const membroId = await ctx.db.insert("membros", {
+      entidadeId,
+      role: "membro",
+      cargoEclesiastico: "MEMBRO_NAO_COMUNGANTE",
+    });
+
+    const papeis = Array.from(
+      new Set([...(entidade.papeis ?? []).filter((p) => p !== "DEPENDENTE"), "MEMBRO"])
+    ) as typeof entidade.papeis;
+    await ctx.db.patch(entidadeId, { papeis, vinculoIgreja: "MEMBRO" });
+
+    await createActionAuditLog(ctx, "CREATE", "membros", membroId);
+
+    return { membroId, jaEra: false };
   },
 });
