@@ -38,7 +38,7 @@ const FULL_MEMBRO = {
 
 describe("REQUIRED_FIELDS", () => {
   it("tem 13 campos obrigatorios", () => {
-    expect(REQUIRED_FIELDS).toHaveLength(13);
+    expect(REQUIRED_FIELDS).toHaveLength(12);
   });
 
   it("cada campo tem key, label e check", () => {
@@ -54,8 +54,8 @@ describe("calculateCompleteness", () => {
   it("retorna 100% para perfil completo", () => {
     const result = calculateCompleteness(FULL_ENTIDADE, FULL_MEMBRO);
     expect(result.percentage).toBe(100);
-    expect(result.filled).toBe(13);
-    expect(result.total).toBe(13);
+    expect(result.filled).toBe(12);
+    expect(result.total).toBe(12);
     expect(result.missing).toEqual([]);
   });
 
@@ -63,17 +63,17 @@ describe("calculateCompleteness", () => {
     const result = calculateCompleteness(EMPTY_ENTIDADE, EMPTY_MEMBRO);
     expect(result.percentage).toBe(0);
     expect(result.filled).toBe(0);
-    expect(result.total).toBe(13);
-    expect(result.missing).toHaveLength(13);
+    expect(result.total).toBe(12);
+    expect(result.missing).toHaveLength(12);
   });
 
   it("calcula porcentagem parcial corretamente", () => {
     const entidade = { nomeCompleto: "Ana", whatsapp: "11999" };
     const result = calculateCompleteness(entidade, EMPTY_MEMBRO);
     expect(result.filled).toBe(2);
-    expect(result.total).toBe(13);
-    expect(result.percentage).toBe(15);
-    expect(result.missing).toHaveLength(11);
+    expect(result.total).toBe(12);
+    expect(result.percentage).toBe(17);
+    expect(result.missing).toHaveLength(10);
   });
 
   it("aceita email OU telefone como contatoSecundario", () => {
