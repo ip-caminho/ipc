@@ -123,6 +123,46 @@ describe("listParaSecretario — agrupamento por familia", () => {
     expect(noah!.familiaOrder).toBe(2);
   });
 
+  it("tornarMembro promove dependente a membro", async () => {
+    const t = convexTest(schema, modules);
+    const admin = await seedAdmin(t);
+
+    const entId = await t.run(async (ctx) =>
+      ctx.db.insert("entidades", {
+        tipoEntidade: "PF",
+        papeis: ["DEPENDENTE"],
+        status: "ATIVO",
+        nomeCompleto: "Crianca Promovida",
+        vinculoIgreja: "NAO_MEMBRO",
+      })
+    );
+
+    const res = await admin.mutation(api.membros.eclesiastico.tornarMembro, {
+      entidadeId: entId,
+    });
+    expect(res.jaEra).toBe(false);
+
+    const { membro, entidade } = await t.run(async (ctx) => {
+      const m = await ctx.db
+        .query("membros")
+        .withIndex("by_entidade", (q) => q.eq("entidadeId", entId))
+        .first();
+      const e = await ctx.db.get(entId);
+      return { membro: m, entidade: e };
+    });
+    expect(membro).toBeTruthy();
+    expect(membro?.cargoEclesiastico).toBe("MEMBRO_NAO_COMUNGANTE");
+    expect(entidade?.vinculoIgreja).toBe("MEMBRO");
+    expect(entidade?.papeis).toContain("MEMBRO");
+    expect(entidade?.papeis).not.toContain("DEPENDENTE");
+
+    // idempotente
+    const dupe = await admin.mutation(api.membros.eclesiastico.tornarMembro, {
+      entidadeId: entId,
+    });
+    expect(dupe.jaEra).toBe(true);
+  });
+
   it("membro solteiro e seu proprio chefe", async () => {
     const t = convexTest(schema, modules);
     const admin = await seedAdmin(t);

@@ -15,6 +15,7 @@ import {
   TableRow,
 } from "@/shared/components/ui/table";
 import { Input } from "@/shared/components/ui/input";
+import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import {
   Select,
@@ -24,7 +25,7 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import { DatePickerField } from "@shared/components/DatePickerField";
-import { ExternalLink, History, Users } from "lucide-react";
+import { ExternalLink, History, Users, UserPlus } from "lucide-react";
 import { cn } from "@shared/lib/utils/cn";
 import {
   CARGO_ECLESIASTICO_OPTIONS,
@@ -177,6 +178,22 @@ function LinhaMembro({ membro, agrupar }: { membro: MembroEclesiastico; agrupar:
 }
 
 function LinhaDependente({ dep }: { dep: MembroEclesiastico }) {
+  const tornarMembro = useMutation(api.membros.eclesiastico.tornarMembro);
+  const [loading, setLoading] = useState(false);
+
+  async function promover() {
+    if (!dep.entidadeId) return;
+    setLoading(true);
+    try {
+      await tornarMembro({ entidadeId: dep.entidadeId as Id<"entidades"> });
+      toast.success("Agora e membro — edite os dados eclesiasticos");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao tornar membro");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <TableRow className="bg-muted/10">
       <TableCell className={cn(COL_NOME, "font-medium whitespace-nowrap")}>
@@ -191,7 +208,19 @@ function LinhaDependente({ dep }: { dep: MembroEclesiastico }) {
       <TableCell colSpan={NUM_COLS - 3} className="text-xs text-muted-foreground">
         {dep.dataNascimento ? `Nascimento: ${dep.dataNascimento}` : "Sem dados eclesiasticos (nao e membro)"}
       </TableCell>
-      <TableCell></TableCell>
+      <TableCell>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={loading}
+          onClick={promover}
+          title="Criar registro de membro para editar dados eclesiasticos"
+        >
+          <UserPlus className="h-3.5 w-3.5 mr-1" />
+          {loading ? "..." : "Tornar membro"}
+        </Button>
+      </TableCell>
     </TableRow>
   );
 }
