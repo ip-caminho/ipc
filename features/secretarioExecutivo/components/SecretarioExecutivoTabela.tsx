@@ -289,6 +289,8 @@ export function SecretarioExecutivoTabela({
       base = base.filter((m) => m.ehMembro !== false && m.mandatoVencido);
     } else if (categoria === "MANDATO_VENCENDO") {
       base = base.filter((m) => m.ehMembro !== false && m.mandatoVencendo);
+    } else if (categoria === "CIVILMENTE_CAPAZ") {
+      base = base.filter((m) => m.rolCategoria === "PRINCIPAL" && m.civilmenteCapazes);
     } else if (categoria === "PASTOR" || categoria === "PRESBITERO" || categoria === "DIACONO") {
       base = base.filter((m) => m.ehMembro !== false && m.cargoEclesiastico === categoria);
     } else if (categoria) {
