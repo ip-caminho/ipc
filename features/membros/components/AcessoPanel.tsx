@@ -5,6 +5,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { normalizeToE164 } from "@convex/messaging/phoneUtils";
+import { cn } from "@shared/lib/utils/cn";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Badge } from "@/shared/components/ui/badge";
@@ -50,9 +51,25 @@ function mensagemWa(nome: string, link: string): string {
   return `Ola, ${nome.split(" ")[0]}! Seu acesso ao sistema da igreja esta pronto. Crie sua senha neste link (valido por 7 dias): ${link}`;
 }
 
-function ResumoCard({ label, valor }: { label: string; valor: string | number }) {
+function ResumoCard({
+  label,
+  valor,
+  ativo,
+  onClick,
+}: {
+  label: string;
+  valor: string | number;
+  ativo?: boolean;
+  onClick?: () => void;
+}) {
   return (
-    <Card>
+    <Card
+      onClick={onClick}
+      className={cn(
+        onClick && "cursor-pointer hover:bg-accent/40 transition-colors",
+        ativo && "ring-2 ring-primary border-primary"
+      )}
+    >
       <CardContent className="p-4">
         <p className="text-2xl font-semibold">{valor}</p>
         <p className="text-xs text-muted-foreground">{label}</p>
@@ -69,6 +86,11 @@ export function AcessoPanel() {
   const [lote, setLote] = useState<string | null>(null);
   const [loteLoading, setLoteLoading] = useState(false);
   const [atividade, setAtividade] = useState<{ id: Id<"membros">; nome: string } | null>(null);
+  const [filtro, setFiltro] = useState<"todos" | "ativados" | "pendentes" | "sem">("todos");
+
+  function alternarFiltro(f: "ativados" | "pendentes" | "sem") {
+    setFiltro((atual) => (atual === f ? "todos" : f));
+  }
 
   async function gerar(row: Row) {
     try {
@@ -113,14 +135,20 @@ export function AcessoPanel() {
   }
 
   const semAcesso = data.rows.filter((r) => !r.ativado);
+  const linhas = data.rows.filter((r) => {
+    if (filtro === "ativados") return r.ativado;
+    if (filtro === "pendentes") return !r.ativado && r.temLinkPendente;
+    if (filtro === "sem") return !r.ativado && !r.temLinkPendente;
+    return true;
+  });
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
-        <ResumoCard label="Membros ativos" valor={data.resumo.total} />
-        <ResumoCard label="Com acesso" valor={data.resumo.ativados} />
-        <ResumoCard label="Link pendente" valor={data.resumo.pendentes} />
-        <ResumoCard label="Sem acesso" valor={data.resumo.semAcesso} />
+        <ResumoCard label="Membros ativos" valor={data.resumo.total} ativo={filtro === "todos"} onClick={() => setFiltro("todos")} />
+        <ResumoCard label="Com acesso" valor={data.resumo.ativados} ativo={filtro === "ativados"} onClick={() => alternarFiltro("ativados")} />
+        <ResumoCard label="Link pendente" valor={data.resumo.pendentes} ativo={filtro === "pendentes"} onClick={() => alternarFiltro("pendentes")} />
+        <ResumoCard label="Sem acesso" valor={data.resumo.semAcesso} ativo={filtro === "sem"} onClick={() => alternarFiltro("sem")} />
         <ResumoCard label="Adesao" valor={`${data.resumo.adesao}%`} />
       </div>
 
@@ -147,7 +175,7 @@ export function AcessoPanel() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data.rows.map((row) => (
+            {linhas.map((row) => (
               <TableRow key={row.membroId}>
                 <TableCell className="font-medium">{row.nome}</TableCell>
                 <TableCell>
