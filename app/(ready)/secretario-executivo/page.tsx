@@ -30,6 +30,7 @@ const DESCRICAO_FILTRO: Record<string, string> = {
   DIACONO: "Diaconos",
   MANDATO_VENCIDO: "Mandatos vencidos (renovar/encerrar)",
   MANDATO_VENCENDO: "Mandatos a vencer em 90 dias",
+  CIVILMENTE_CAPAZ: "Comungantes civilmente capazes (aptos a votar)",
 };
 
 const CARGOS = ["PASTOR", "PRESBITERO", "DIACONO"];
@@ -42,6 +43,7 @@ function filtrarPorCategoria(
   if (categoria === "PENDENCIA") return membros.filter((m) => m.ehMembro !== false && m.pendencia);
   if (categoria === "MANDATO_VENCIDO") return membros.filter((m) => m.ehMembro !== false && m.mandatoVencido);
   if (categoria === "MANDATO_VENCENDO") return membros.filter((m) => m.ehMembro !== false && m.mandatoVencendo);
+  if (categoria === "CIVILMENTE_CAPAZ") return membros.filter((m) => m.rolCategoria === "PRINCIPAL" && m.civilmenteCapazes);
   if (categoria && CARGOS.includes(categoria))
     return membros.filter((m) => m.ehMembro !== false && m.cargoEclesiastico === categoria);
   if (categoria) return membros.filter((m) => m.ehMembro !== false && m.rolCategoria === categoria);
@@ -104,6 +106,7 @@ export default function SecretarioExecutivoPage() {
           ) : (
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-8">
               <CardNum label="Comungantes" valor={resumo.comungantes} cor="text-emerald-700" ativo={categoria === "PRINCIPAL"} onClick={() => toggle("PRINCIPAL")} />
+              <CardNum label="Civilmente capazes" valor={resumo.civilmenteCapazes} cor="text-emerald-700" ativo={categoria === "CIVILMENTE_CAPAZ"} onClick={() => toggle("CIVILMENTE_CAPAZ")} />
               <CardNum label="Nao-comungantes" valor={resumo.naoComungantes} cor="text-sky-700" ativo={categoria === "SEPARADO"} onClick={() => toggle("SEPARADO")} />
               <CardNum label="Ausentes" valor={resumo.ausentes} cor="text-amber-700" ativo={categoria === "AUSENTE"} onClick={() => toggle("AUSENTE")} />
               <CardNum label="Arquivo" valor={resumo.arquivo} ativo={categoria === "ARQUIVO"} onClick={() => toggle("ARQUIVO")} />
