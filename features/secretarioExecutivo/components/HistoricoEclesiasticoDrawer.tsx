@@ -33,7 +33,6 @@ export function HistoricoEclesiasticoDrawer({
   open: boolean;
   onOpenChange: (v: boolean) => void;
 }) {
-  // @ts-expect-error Convex TS2589
   const historico = useQuery(api.membros.eclesiastico.getHistorico, open ? { membroId } : "skip");
   const update = useMutation(api.membros.eclesiastico.updateEclesiastico);
   const [revertendo, setRevertendo] = useState<string | null>(null);

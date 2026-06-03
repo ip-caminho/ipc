@@ -195,6 +195,46 @@ describe("listParaSecretario — agrupamento por familia", () => {
     expect(by("Foi Transferido").rolCategoria).toBe("ARQUIVO");
   });
 
+  it("vincularConjugeAdmin liga os dois lados", async () => {
+    const t = convexTest(schema, modules);
+    const admin = await seedAdmin(t);
+    const a = await pessoa(t, "Esposo A", "M");
+    const b = await pessoa(t, "Esposa B", "F");
+
+    await admin.mutation(api.membros.eclesiastico.vincularConjugeAdmin, {
+      membroId: a.membroId,
+      conjugeEntidadeId: b.entidadeId,
+    });
+
+    const { ma, mb } = await t.run(async (ctx) => ({
+      ma: await ctx.db.get(a.membroId),
+      mb: await ctx.db.get(b.membroId),
+    }));
+    expect(ma?.conjugeId).toBe(b.entidadeId);
+    expect(mb?.conjugeId).toBe(a.entidadeId);
+  });
+
+  it("adicionarFilhoAdmin cria dependente vinculado e aparece na familia", async () => {
+    const t = convexTest(schema, modules);
+    const admin = await seedAdmin(t);
+    const pai = await pessoa(t, "Pai Admin", "M");
+
+    await admin.mutation(api.membros.eclesiastico.adicionarFilhoAdmin, {
+      responsavelMembroId: pai.membroId,
+      nomeCompleto: "Filho Criado",
+      dataNascimento: "2018-05-05",
+      sexo: "M",
+      batizadoNestaIgreja: false,
+    });
+
+    const linhas = await admin.query(api.membros.eclesiastico.listParaSecretario, {});
+    const filho = linhas.find((l) => l.entidade.nomeCompleto === "Filho Criado");
+    expect(filho).toBeTruthy();
+    expect(filho!.ehMembro).toBe(false);
+    expect(filho!.familiaHeadId).toBe(pai.entidadeId);
+    expect(filho!.familiaOrder).toBe(2);
+  });
+
   it("filtra por busca mantendo metadados", async () => {
     const t = convexTest(schema, modules);
     const admin = await seedAdmin(t);
