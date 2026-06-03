@@ -246,6 +246,9 @@ export type ResumoSecretario = {
   dependentes: number;
   pendencias: number;
   civilmenteCapazes: number;
+  pastores: number;
+  presbiteros: number;
+  diaconos: number;
 };
 
 /** Calcula se um membro tem pendencia de cadastro eclesiastico. */
@@ -385,10 +388,14 @@ export const getResumoSecretario = query({
     const familias = new Set<string>();
     let comungantes = 0, naoComungantes = 0, ausentes = 0, arquivo = 0;
     let dependentes = 0, pendencias = 0, civilmenteCapazes = 0;
+    let pastores = 0, presbiteros = 0, diaconos = 0;
     for (const l of linhas) {
       familias.add(l.familiaHeadId);
       if (!l.ehMembro) { dependentes++; continue; }
       if (l.pendencia) pendencias++;
+      if (l.cargoEclesiastico === "PASTOR") pastores++;
+      else if (l.cargoEclesiastico === "PRESBITERO") presbiteros++;
+      else if (l.cargoEclesiastico === "DIACONO") diaconos++;
       switch (l.rolCategoria) {
         case "PRINCIPAL":
           comungantes++;
@@ -409,6 +416,9 @@ export const getResumoSecretario = query({
       dependentes,
       pendencias,
       civilmenteCapazes,
+      pastores,
+      presbiteros,
+      diaconos,
     };
   },
 });

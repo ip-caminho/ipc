@@ -240,8 +240,10 @@ describe("listParaSecretario — agrupamento por familia", () => {
     const admin = await seedAdmin(t);
     const nc = await pessoa(t, "Nao Com", "F");
     const arq = await pessoa(t, "Arquivado", "M");
+    const presb = await pessoa(t, "Presb Itero", "M");
     await t.run(async (ctx) => {
       await ctx.db.patch(nc.membroId, { cargoEclesiastico: "MEMBRO_NAO_COMUNGANTE" });
+      await ctx.db.patch(presb.membroId, { cargoEclesiastico: "PRESBITERO" });
       await ctx.db.patch(arq.entidadeId, { status: "TRANSFERIDO" });
       // dependente
       const dep = await ctx.db.insert("entidades", {
@@ -266,6 +268,7 @@ describe("listParaSecretario — agrupamento por familia", () => {
     expect(r.dependentes).toBe(1);
     expect(r.comungantes).toBeGreaterThanOrEqual(1); // admin
     expect(r.totalRol).toBe(r.comungantes + r.naoComungantes);
+    expect(r.presbiteros).toBe(1);
   });
 
   it("filtra por busca mantendo metadados", async () => {

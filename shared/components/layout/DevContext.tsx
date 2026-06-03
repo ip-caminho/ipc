@@ -134,7 +134,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "Permissao: membros:update_eclesiastico",
       "Roles: admin, pastor, secretaria, secretario_executivo",
       "Edicao tabular inline (auto-save no blur): cargo, rol, tipoRol, matricula, datas sacramentais",
-      "Dashboard de cards clicaveis (getResumoSecretario): comungantes/nao-comungantes/ausentes/arquivo/total/familias/dependentes/pendencias — filtram a tabela",
+      "Dashboard de cards clicaveis (getResumoSecretario): comungantes/nao-comungantes/ausentes/arquivo/total/familias/dependentes/pendencias + oficiais (pastores/presbiteros/diaconos) — filtram a tabela",
       "Impressao A4 com assinatura para assembleia (RolExportView, window.print) respeitando o filtro atual — movida de /membros pra ca",
       "Coluna Nome + header fixos (sticky). Botao 'Agrupar por familia': cabecalho por familia, chefe(homem)->conjuge->filhos(mais velho primeiro)",
       "listParaSecretario inclui filhos DEPENDENTES (entidade sem membro, via responsaveis); botao 'Tornar membro' (tornarMembro) cria o registro e habilita edicao",
