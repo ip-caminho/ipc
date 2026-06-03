@@ -136,6 +136,36 @@ describe("acesso — verificarAcessoDireto", () => {
   });
 });
 
+describe("acesso — resetarAcesso", () => {
+  it("desvincula userId e remove a conta de login", async () => {
+    const t = convexTest(schema, modules);
+    const { identity } = await seedAdmin(t);
+    const { membroId } = await seedMembroSemAcesso(t);
+
+    // simula ativado: cria user + authAccount + vincula
+    const userId = await t.run(async (ctx) => {
+      const uid = await ctx.db.insert("users", {});
+      await ctx.db.insert("authAccounts", {
+        userId: uid,
+        provider: "password",
+        providerAccountId: "5511999998888@membro.local",
+      });
+      await ctx.db.patch(membroId, { userId: uid, onboardingCompleto: true });
+      return uid;
+    });
+
+    await identity.mutation(api.membros.acesso.resetarAcesso, { membroId });
+
+    const { membro, contas } = await t.run(async (ctx) => {
+      const m = await ctx.db.get(membroId);
+      const all = await ctx.db.query("authAccounts").collect();
+      return { membro: m, contas: all.filter((a) => a.userId === userId) };
+    });
+    expect(membro?.userId).toBeUndefined();
+    expect(contas).toHaveLength(0);
+  });
+});
+
 describe("acesso — gerarLink", () => {
   it("admin gera link para membro existente", async () => {
     const t = convexTest(schema, modules);

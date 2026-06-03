@@ -248,6 +248,46 @@ export const getStatusAcesso = query({
   },
 });
 
+/**
+ * Reseta o acesso de um membro: desvincula o usuario, expira convites
+ * pendentes e remove a conta de login (authAccounts + sessoes), permitindo
+ * que a pessoa faça o "Primeiro acesso" de novo como nova (nova senha).
+ */
+export const resetarAcesso = mutation({
+  args: { membroId: v.id("membros") },
+  handler: async (ctx, { membroId }) => {
+    await requirePermission(ctx, "membros:update");
+    const membro = await ctx.db.get(membroId);
+    if (!membro) throw new Error("Membro nao encontrado");
+
+    const userId = membro.userId;
+    await ctx.db.patch(membroId, { userId: undefined, onboardingCompleto: undefined });
+
+    // Expira convites pendentes (tokens antigos)
+    const convites = await ctx.db
+      .query("membroConvites")
+      .withIndex("by_membro", (q) => q.eq("membroId", membroId))
+      .collect();
+    for (const c of convites) {
+      if (c.status === "PENDENTE") await ctx.db.patch(c._id, { status: "EXPIRADO" });
+    }
+
+    // Remove a conta de login para liberar novo cadastro (signUp do mesmo loginId)
+    if (userId) {
+      const accounts = await ctx.db.query("authAccounts").collect();
+      for (const a of accounts) {
+        if (a.userId === userId) await ctx.db.delete(a._id);
+      }
+      const sessions = await ctx.db.query("authSessions").collect();
+      for (const s of sessions) {
+        if (s.userId === userId) await ctx.db.delete(s._id);
+      }
+    }
+
+    return { ok: true };
+  },
+});
+
 /** Ultimo login (LOGIN no auditLogs) de um membro, via indice by_membro. */
 async function ultimoLogin(
   ctx: QueryCtx,
