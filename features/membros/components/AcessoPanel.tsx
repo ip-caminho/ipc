@@ -81,6 +81,7 @@ function ResumoCard({
 export function AcessoPanel() {
   const data = useQuery(api.membros.acesso.getAcessosOverview, {});
   const gerarLink = useMutation(api.membros.acesso.gerarLink);
+  const resetarAcesso = useMutation(api.membros.acesso.resetarAcesso);
 
   const [link, setLink] = useState<{ url: string; row: Row } | null>(null);
   const [lote, setLote] = useState<string | null>(null);
@@ -90,6 +91,16 @@ export function AcessoPanel() {
 
   function alternarFiltro(f: "ativados" | "pendentes" | "sem") {
     setFiltro((atual) => (atual === f ? "todos" : f));
+  }
+
+  async function resetar(row: Row) {
+    if (!confirm(`Resetar o acesso de ${row.nome}? Perde o login atual e podera se cadastrar de novo (nova senha).`)) return;
+    try {
+      await resetarAcesso({ membroId: row.membroId });
+      toast.success("Acesso resetado");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao resetar");
+    }
   }
 
   async function gerar(row: Row) {
@@ -206,6 +217,11 @@ export function AcessoPanel() {
                     {!row.ativado && (
                       <Button variant="outline" size="sm" onClick={() => gerar(row)}>
                         {row.temLinkPendente ? "Novo link" : "Gerar link"}
+                      </Button>
+                    )}
+                    {row.ativado && (
+                      <Button variant="outline" size="sm" className="text-destructive" onClick={() => resetar(row)}>
+                        Resetar
                       </Button>
                     )}
                     <Button
