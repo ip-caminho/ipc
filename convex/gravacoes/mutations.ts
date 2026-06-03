@@ -50,7 +50,14 @@ export const update = mutation({
     const oldRecord = await ctx.db.get(id);
     if (!oldRecord) throw new Error("Gravacao not found");
 
-    await ctx.db.patch(id, data);
+    // Player e UI preferem inicioConteudo/fimConteudo. Ao editar o trecho do
+    // sermao (inicioSermao/fimSermao), sincroniza esses campos — senao o
+    // playback continua usando o valor antigo de inicioConteudo.
+    const patch = { ...data };
+    if (data.inicioSermao !== undefined) patch.inicioConteudo = data.inicioSermao;
+    if (data.fimSermao !== undefined) patch.fimConteudo = data.fimSermao;
+
+    await ctx.db.patch(id, patch);
     const newRecord = await ctx.db.get(id);
 
     await createFieldAuditLogs(ctx, oldRecord, newRecord, "gravacoes", id);
