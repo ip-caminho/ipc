@@ -7,7 +7,17 @@ import { Reacoes } from "@features/gravacoes/components/Reacoes";
 import { ComentarioInput, ComentariosList } from "@features/gravacoes/components/Comentarios";
 import { useParams } from "next/navigation";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import { Play, Pause } from "lucide-react";
+import { Button } from "@/shared/components/ui/button";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+  EmptyDescription,
+  EmptyContent,
+} from "@/shared/components/ui/empty";
+import Link from "next/link";
+import { Play, Pause, FileQuestion } from "lucide-react";
 import type { Id } from "@/convex/_generated/dataModel";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -32,7 +42,24 @@ export default function GravacaoDetailPage() {
     return <Skeleton className="h-96 w-full max-w-2xl mx-auto" />;
   }
   if (!gravacao) {
-    return <p className="text-muted-foreground text-center py-16">Gravação não encontrada</p>;
+    return (
+      <Empty className="min-h-[60vh]">
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <FileQuestion />
+          </EmptyMedia>
+          <EmptyTitle>Gravação não encontrada</EmptyTitle>
+          <EmptyDescription>
+            Ela pode ter sido removida ou o link está incorreto.
+          </EmptyDescription>
+        </EmptyHeader>
+        <EmptyContent>
+          <Button asChild variant="outline">
+            <Link href="/gravacoes">Voltar para gravações</Link>
+          </Button>
+        </EmptyContent>
+      </Empty>
+    );
   }
 
   // Boundaries do conteudo: preferir inicio/fimConteudo (universal),
