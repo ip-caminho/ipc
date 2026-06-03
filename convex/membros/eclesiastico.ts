@@ -8,7 +8,7 @@
  * endereco, contato) ficam de fora.
  */
 
-import { mutation, query } from "../_generated/server";
+import { mutation, query, type QueryCtx } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { requireAnyPermission } from "../_shared/requirePermission";
@@ -228,12 +228,125 @@ type LinhaSecretario = {
   dataMembresia?: string;
   civilmenteCapazes?: boolean;
   rolCategoria: RolCategoria | null; // null = dependente (fora do rol)
+  pendencia: boolean; // dados eclesiasticos faltando (cadastro incompleto)
   sexo?: string;
   dataNascimento?: string;
   familiaHeadId: string;
   familiaHeadNome: string;
   familiaOrder: number; // 0 chefe (homem adulto), 1 conjuge, 2 filho
 };
+
+export type ResumoSecretario = {
+  comungantes: number;
+  naoComungantes: number;
+  ausentes: number;
+  arquivo: number;
+  totalRol: number;
+  familias: number;
+  dependentes: number;
+  pendencias: number;
+  civilmenteCapazes: number;
+};
+
+/** Calcula se um membro tem pendencia de cadastro eclesiastico. */
+function temPendencia(
+  m: Doc<"membros"> | undefined,
+  rolCat: RolCategoria | null
+): boolean {
+  if (!m || (rolCat !== "PRINCIPAL" && rolCat !== "SEPARADO")) return false;
+  if (!m.cargoEclesiastico) return true;
+  if (!m.numeroMatricula) return true;
+  if (rolCat === "PRINCIPAL" && !m.dataMembresia) return true;
+  if (rolCat === "SEPARADO" && !m.dataBatismo) return true;
+  return false;
+}
+
+/**
+ * Monta as linhas (membros + dependentes) com metadados de familia, rol e
+ * pendencia, sobre toda a base. Reusado pela lista e pelo resumo.
+ */
+async function montarLinhasSecretario(ctx: QueryCtx): Promise<LinhaSecretario[]> {
+  const membros = await ctx.db.query("membros").collect();
+  const membroPorEnt = new Map<string, Doc<"membros">>();
+  const entPorId = new Map<string, Doc<"entidades">>();
+  for (const m of membros) {
+    const e = await ctx.db.get(m.entidadeId);
+    if (!e) continue;
+    membroPorEnt.set(e._id, m);
+    entPorId.set(e._id, e);
+  }
+
+  const filhosDe = new Map<string, string[]>();
+  const paisDe = new Map<string, string[]>();
+  const responsaveis = await ctx.db.query("responsaveis").collect();
+  for (const r of responsaveis) {
+    const crianca = r.criancaEntidadeId as string;
+    const resp = r.responsavelEntidadeId as string;
+    if (!membroPorEnt.has(resp)) continue;
+    if (!entPorId.has(crianca)) {
+      const ce = await ctx.db.get(r.criancaEntidadeId);
+      if (!ce) continue;
+      entPorId.set(crianca, ce);
+    }
+    (filhosDe.get(resp) ?? filhosDe.set(resp, []).get(resp)!).push(crianca);
+    (paisDe.get(crianca) ?? paisDe.set(crianca, []).get(crianca)!).push(resp);
+  }
+
+  function chefeDoCasal(entId: string): string {
+    const m = membroPorEnt.get(entId);
+    const conjId = m?.conjugeId as string | undefined;
+    if (!conjId || !membroPorEnt.has(conjId)) return entId;
+    if (entPorId.get(entId)?.sexo === "M") return entId;
+    if (entPorId.get(conjId)?.sexo === "M") return conjId;
+    return entId < conjId ? entId : conjId;
+  }
+
+  function metaFamilia(entId: string): { headId: string; order: number } {
+    const m = membroPorEnt.get(entId);
+    const conjId = m?.conjugeId as string | undefined;
+    const temConjuge = !!conjId && membroPorEnt.has(conjId);
+    const temFilhos = (filhosDe.get(entId)?.length ?? 0) > 0;
+    const pais = paisDe.get(entId) ?? [];
+    const dependente = pais.length > 0 && !temConjuge && !temFilhos;
+    if (dependente) return { headId: chefeDoCasal(pais[0]), order: 2 };
+    if (temConjuge) {
+      const headId = chefeDoCasal(entId);
+      return { headId, order: headId === entId ? 0 : 1 };
+    }
+    return { headId: entId, order: 0 };
+  }
+
+  const linhas: LinhaSecretario[] = [];
+  for (const [entId, e] of entPorId) {
+    const m = membroPorEnt.get(entId);
+    const { headId, order } = metaFamilia(entId);
+    const rolCategoria = m
+      ? categoriaDoRol(m.cargoEclesiastico, e.status, m.tipoRolOverride)
+      : null;
+    linhas.push({
+      _id: m ? m._id : entId,
+      ehMembro: !!m,
+      entidadeId: entId,
+      entidade: { nomeCompleto: e.nomeCompleto, whatsapp: e.whatsapp, status: e.status },
+      cargoEclesiastico: m?.cargoEclesiastico,
+      rol: m?.rol,
+      tipoRolOverride: m?.tipoRolOverride,
+      numeroMatricula: m?.numeroMatricula,
+      dataConversao: m?.dataConversao,
+      dataBatismo: m?.dataBatismo,
+      dataMembresia: m?.dataMembresia,
+      civilmenteCapazes: m?.civilmenteCapazes,
+      rolCategoria,
+      pendencia: temPendencia(m, rolCategoria),
+      sexo: e.sexo,
+      dataNascimento: e.dataNascimento,
+      familiaHeadId: headId,
+      familiaHeadNome: entPorId.get(headId)?.nomeCompleto ?? "",
+      familiaOrder: order,
+    });
+  }
+  return linhas;
+}
 
 /**
  * Lista para a tabela do secretario executivo: membros + dados eclesiasticos
@@ -245,96 +358,9 @@ type LinhaSecretario = {
 export const listParaSecretario = query({
   args: { search: v.optional(v.string()) },
   handler: async (ctx, { search }): Promise<LinhaSecretario[]> => {
-    await requireAnyPermission(ctx, [
-      "membros:update_eclesiastico",
-      "membros:read",
-    ]);
+    await requireAnyPermission(ctx, ["membros:update_eclesiastico", "membros:read"]);
 
-    const membros = await ctx.db.query("membros").collect();
-    const membroPorEnt = new Map<string, Doc<"membros">>();
-    const entPorId = new Map<string, Doc<"entidades">>();
-    for (const m of membros) {
-      const e = await ctx.db.get(m.entidadeId);
-      if (!e) continue;
-      membroPorEnt.set(e._id, m);
-      entPorId.set(e._id, e);
-    }
-
-    // Relacoes de parentesco: pai precisa ser membro. Filhos podem ser
-    // membros OU dependentes (entidade sem membro) — estes tambem entram.
-    const filhosDe = new Map<string, string[]>();
-    const paisDe = new Map<string, string[]>();
-    const responsaveis = await ctx.db.query("responsaveis").collect();
-    for (const r of responsaveis) {
-      const crianca = r.criancaEntidadeId as string;
-      const resp = r.responsavelEntidadeId as string;
-      if (!membroPorEnt.has(resp)) continue;
-      if (!entPorId.has(crianca)) {
-        const ce = await ctx.db.get(r.criancaEntidadeId);
-        if (!ce) continue;
-        entPorId.set(crianca, ce);
-      }
-      (filhosDe.get(resp) ?? filhosDe.set(resp, []).get(resp)!).push(crianca);
-      (paisDe.get(crianca) ?? paisDe.set(crianca, []).get(crianca)!).push(resp);
-    }
-
-    // Chefe de um casal = homem; sem homem, deterministico (menor id)
-    function chefeDoCasal(entId: string): string {
-      const m = membroPorEnt.get(entId);
-      const conjId = m?.conjugeId as string | undefined;
-      if (!conjId || !membroPorEnt.has(conjId)) return entId;
-      if (entPorId.get(entId)?.sexo === "M") return entId;
-      if (entPorId.get(conjId)?.sexo === "M") return conjId;
-      return entId < conjId ? entId : conjId;
-    }
-
-    function metaFamilia(entId: string): { headId: string; order: number } {
-      const m = membroPorEnt.get(entId);
-      const conjId = m?.conjugeId as string | undefined;
-      const temConjuge = !!conjId && membroPorEnt.has(conjId);
-      const temFilhos = (filhosDe.get(entId)?.length ?? 0) > 0;
-      const pais = paisDe.get(entId) ?? [];
-      const dependente = pais.length > 0 && !temConjuge && !temFilhos;
-      if (dependente) return { headId: chefeDoCasal(pais[0]), order: 2 };
-      if (temConjuge) {
-        const headId = chefeDoCasal(entId);
-        return { headId, order: headId === entId ? 0 : 1 };
-      }
-      return { headId: entId, order: 0 };
-    }
-
-    let linhas: LinhaSecretario[] = [];
-    for (const [entId, e] of entPorId) {
-      const m = membroPorEnt.get(entId);
-      const { headId, order } = metaFamilia(entId);
-      linhas.push({
-        _id: m ? m._id : entId,
-        ehMembro: !!m,
-        entidadeId: entId,
-        entidade: {
-          nomeCompleto: e.nomeCompleto,
-          whatsapp: e.whatsapp,
-          status: e.status,
-        },
-        cargoEclesiastico: m?.cargoEclesiastico,
-        rol: m?.rol,
-        tipoRolOverride: m?.tipoRolOverride,
-        numeroMatricula: m?.numeroMatricula,
-        dataConversao: m?.dataConversao,
-        dataBatismo: m?.dataBatismo,
-        dataMembresia: m?.dataMembresia,
-        civilmenteCapazes: m?.civilmenteCapazes,
-        rolCategoria: m
-          ? categoriaDoRol(m.cargoEclesiastico, e.status, m.tipoRolOverride)
-          : null,
-        sexo: e.sexo,
-        dataNascimento: e.dataNascimento,
-        familiaHeadId: headId,
-        familiaHeadNome: entPorId.get(headId)?.nomeCompleto ?? "",
-        familiaOrder: order,
-      });
-    }
-
+    let linhas = await montarLinhasSecretario(ctx);
     if (search) {
       const t = search.toLowerCase();
       linhas = linhas.filter(
@@ -343,11 +369,47 @@ export const listParaSecretario = query({
           (l.entidade.whatsapp ?? "").includes(t)
       );
     }
-
     linhas.sort((a, b) =>
       (a.entidade.nomeCompleto ?? "").localeCompare(b.entidade.nomeCompleto ?? "")
     );
     return linhas;
+  },
+});
+
+/** Contagens para o dashboard do secretario (sobre toda a base, sem busca). */
+export const getResumoSecretario = query({
+  args: {},
+  handler: async (ctx): Promise<ResumoSecretario> => {
+    await requireAnyPermission(ctx, ["membros:update_eclesiastico", "membros:read"]);
+    const linhas = await montarLinhasSecretario(ctx);
+    const familias = new Set<string>();
+    let comungantes = 0, naoComungantes = 0, ausentes = 0, arquivo = 0;
+    let dependentes = 0, pendencias = 0, civilmenteCapazes = 0;
+    for (const l of linhas) {
+      familias.add(l.familiaHeadId);
+      if (!l.ehMembro) { dependentes++; continue; }
+      if (l.pendencia) pendencias++;
+      switch (l.rolCategoria) {
+        case "PRINCIPAL":
+          comungantes++;
+          if (l.civilmenteCapazes) civilmenteCapazes++;
+          break;
+        case "SEPARADO": naoComungantes++; break;
+        case "AUSENTE": ausentes++; break;
+        case "ARQUIVO": arquivo++; break;
+      }
+    }
+    return {
+      comungantes,
+      naoComungantes,
+      ausentes,
+      arquivo,
+      totalRol: comungantes + naoComungantes,
+      familias: familias.size,
+      dependentes,
+      pendencias,
+      civilmenteCapazes,
+    };
   },
 });
 

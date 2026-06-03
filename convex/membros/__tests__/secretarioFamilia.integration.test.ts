@@ -235,6 +235,39 @@ describe("listParaSecretario — agrupamento por familia", () => {
     expect(filho!.familiaOrder).toBe(2);
   });
 
+  it("getResumoSecretario conta categorias do rol", async () => {
+    const t = convexTest(schema, modules);
+    const admin = await seedAdmin(t);
+    const nc = await pessoa(t, "Nao Com", "F");
+    const arq = await pessoa(t, "Arquivado", "M");
+    await t.run(async (ctx) => {
+      await ctx.db.patch(nc.membroId, { cargoEclesiastico: "MEMBRO_NAO_COMUNGANTE" });
+      await ctx.db.patch(arq.entidadeId, { status: "TRANSFERIDO" });
+      // dependente
+      const dep = await ctx.db.insert("entidades", {
+        tipoEntidade: "PF",
+        papeis: ["DEPENDENTE"],
+        status: "ATIVO",
+        nomeCompleto: "Dep Endente",
+        vinculoIgreja: "NAO_MEMBRO",
+      });
+      await ctx.db.insert("responsaveis", {
+        criancaEntidadeId: dep,
+        responsavelEntidadeId: arq.entidadeId,
+        tipo: "PAI",
+        principal: true,
+        criadoEm: 1,
+      });
+    });
+
+    const r = await admin.query(api.membros.eclesiastico.getResumoSecretario, {});
+    expect(r.naoComungantes).toBe(1);
+    expect(r.arquivo).toBe(1);
+    expect(r.dependentes).toBe(1);
+    expect(r.comungantes).toBeGreaterThanOrEqual(1); // admin
+    expect(r.totalRol).toBe(r.comungantes + r.naoComungantes);
+  });
+
   it("filtra por busca mantendo metadados", async () => {
     const t = convexTest(schema, modules);
     const admin = await seedAdmin(t);
