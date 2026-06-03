@@ -229,6 +229,7 @@ type LinhaSecretario = {
   civilmenteCapazes?: boolean;
   rolCategoria: RolCategoria | null; // null = dependente (fora do rol)
   pendencia: boolean; // dados eclesiasticos faltando (cadastro incompleto)
+  mandatoVencido: boolean; // tem mandato ATIVO com mandatoFim no passado
   sexo?: string;
   dataNascimento?: string;
   familiaHeadId: string;
@@ -249,6 +250,7 @@ export type ResumoSecretario = {
   pastores: number;
   presbiteros: number;
   diaconos: number;
+  mandatosVencidos: number;
 };
 
 /** Calcula se um membro tem pendencia de cadastro eclesiastico. */
@@ -319,6 +321,19 @@ async function montarLinhasSecretario(ctx: QueryCtx): Promise<LinhaSecretario[]>
     return { headId: entId, order: 0 };
   }
 
+  // Mandatos vencidos: cargo ATIVO com data fim no passado (deveria renovar/encerrar)
+  const hoje = new Date(Date.now()).toISOString().slice(0, 10);
+  const mandatoVencidoPorMembro = new Set<string>();
+  const mandatosAtivos = await ctx.db
+    .query("cargosEclesiasticosHistorico")
+    .withIndex("by_status", (q) => q.eq("status", "ATIVO"))
+    .collect();
+  for (const md of mandatosAtivos) {
+    if (md.mandatoFim && md.mandatoFim < hoje) {
+      mandatoVencidoPorMembro.add(md.membroId as string);
+    }
+  }
+
   const linhas: LinhaSecretario[] = [];
   for (const [entId, e] of entPorId) {
     const m = membroPorEnt.get(entId);
@@ -341,6 +356,7 @@ async function montarLinhasSecretario(ctx: QueryCtx): Promise<LinhaSecretario[]>
       civilmenteCapazes: m?.civilmenteCapazes,
       rolCategoria,
       pendencia: temPendencia(m, rolCategoria),
+      mandatoVencido: m ? mandatoVencidoPorMembro.has(m._id) : false,
       sexo: e.sexo,
       dataNascimento: e.dataNascimento,
       familiaHeadId: headId,
@@ -388,11 +404,12 @@ export const getResumoSecretario = query({
     const familias = new Set<string>();
     let comungantes = 0, naoComungantes = 0, ausentes = 0, arquivo = 0;
     let dependentes = 0, pendencias = 0, civilmenteCapazes = 0;
-    let pastores = 0, presbiteros = 0, diaconos = 0;
+    let pastores = 0, presbiteros = 0, diaconos = 0, mandatosVencidos = 0;
     for (const l of linhas) {
       familias.add(l.familiaHeadId);
       if (!l.ehMembro) { dependentes++; continue; }
       if (l.pendencia) pendencias++;
+      if (l.mandatoVencido) mandatosVencidos++;
       if (l.cargoEclesiastico === "PASTOR") pastores++;
       else if (l.cargoEclesiastico === "PRESBITERO") presbiteros++;
       else if (l.cargoEclesiastico === "DIACONO") diaconos++;
@@ -419,6 +436,7 @@ export const getResumoSecretario = query({
       pastores,
       presbiteros,
       diaconos,
+      mandatosVencidos,
     };
   },
 });

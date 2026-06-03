@@ -271,6 +271,31 @@ describe("listParaSecretario — agrupamento por familia", () => {
     expect(r.presbiteros).toBe(1);
   });
 
+  it("detecta mandato vencido (cargo ATIVO com fim no passado)", async () => {
+    const t = convexTest(schema, modules);
+    const admin = await seedAdmin(t);
+    const presb = await pessoa(t, "Presb Vencido", "M");
+    await t.run(async (ctx) => {
+      await ctx.db.patch(presb.membroId, { cargoEclesiastico: "PRESBITERO" });
+      await ctx.db.insert("cargosEclesiasticosHistorico", {
+        membroId: presb.membroId,
+        cargo: "PRESBITERO",
+        mandatoInicio: "2015-01-01",
+        mandatoFim: "2020-01-01", // no passado
+        status: "ATIVO",
+        registradoEm: 1,
+        registradoPor: presb.membroId,
+      });
+    });
+
+    const r = await admin.query(api.membros.eclesiastico.getResumoSecretario, {});
+    expect(r.mandatosVencidos).toBe(1);
+
+    const linhas = await admin.query(api.membros.eclesiastico.listParaSecretario, {});
+    const l = linhas.find((x) => x.entidade.nomeCompleto === "Presb Vencido");
+    expect(l!.mandatoVencido).toBe(true);
+  });
+
   it("filtra por busca mantendo metadados", async () => {
     const t = convexTest(schema, modules);
     const admin = await seedAdmin(t);

@@ -28,6 +28,7 @@ const DESCRICAO_FILTRO: Record<string, string> = {
   PASTOR: "Pastores",
   PRESBITERO: "Presbiteros",
   DIACONO: "Diaconos",
+  MANDATO_VENCIDO: "Mandatos vencidos (renovar/encerrar)",
 };
 
 const CARGOS = ["PASTOR", "PRESBITERO", "DIACONO"];
@@ -38,6 +39,7 @@ function filtrarPorCategoria(
 ): MembroEclesiastico[] {
   if (categoria === "DEPENDENTES") return membros.filter((m) => m.ehMembro === false);
   if (categoria === "PENDENCIA") return membros.filter((m) => m.ehMembro !== false && m.pendencia);
+  if (categoria === "MANDATO_VENCIDO") return membros.filter((m) => m.ehMembro !== false && m.mandatoVencido);
   if (categoria && CARGOS.includes(categoria))
     return membros.filter((m) => m.ehMembro !== false && m.cargoEclesiastico === categoria);
   if (categoria) return membros.filter((m) => m.ehMembro !== false && m.rolCategoria === categoria);
@@ -116,6 +118,15 @@ export default function SecretarioExecutivoPage() {
               <CardNum label="Pastores" valor={resumo.pastores} ativo={categoria === "PASTOR"} onClick={() => toggle("PASTOR")} />
               <CardNum label="Presbiteros" valor={resumo.presbiteros} ativo={categoria === "PRESBITERO"} onClick={() => toggle("PRESBITERO")} />
               <CardNum label="Diaconos" valor={resumo.diaconos} ativo={categoria === "DIACONO"} onClick={() => toggle("DIACONO")} />
+              {resumo.mandatosVencidos > 0 && (
+                <CardNum
+                  label="Mandatos vencidos"
+                  valor={resumo.mandatosVencidos}
+                  cor="text-rose-700"
+                  ativo={categoria === "MANDATO_VENCIDO"}
+                  onClick={() => toggle("MANDATO_VENCIDO")}
+                />
+              )}
             </div>
           )}
 
