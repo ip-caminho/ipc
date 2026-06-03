@@ -28,6 +28,11 @@ export const getOnboardingData = query({
       email: entidade.email || "",
       dataNascimento: entidade.dataNascimento || "",
       sexo: entidade.sexo || "",
+      cpf: entidade.cpf || "",
+      estadoCivil: entidade.estadoCivil || "",
+      nacionalidade: entidade.nacionalidade || "",
+      pai: entidade.pai || "",
+      mae: entidade.mae || "",
       endereco: entidade.endereco || null,
       contatoEmergencia: entidade.contatoEmergencia || null,
       profissao: entidade.profissao || "",
@@ -42,6 +47,13 @@ export const completeOnboarding = mutation({
     email: v.optional(v.string()),
     whatsapp: v.optional(v.string()),
     profissao: v.optional(v.string()),
+    cpf: v.optional(v.string()),
+    dataNascimento: v.optional(v.string()),
+    sexo: v.optional(v.string()),
+    estadoCivil: v.optional(v.string()),
+    nacionalidade: v.optional(v.string()),
+    pai: v.optional(v.string()),
+    mae: v.optional(v.string()),
     endereco: v.optional(
       v.object({
         logradouro: v.string(),
@@ -78,6 +90,13 @@ export const completeOnboarding = mutation({
     if (args.email !== undefined) updates.email = args.email;
     if (args.whatsapp !== undefined) updates.whatsapp = args.whatsapp;
     if (args.profissao !== undefined) updates.profissao = args.profissao;
+    if (args.cpf !== undefined) updates.cpf = args.cpf;
+    if (args.dataNascimento !== undefined) updates.dataNascimento = args.dataNascimento;
+    if (args.sexo !== undefined) updates.sexo = args.sexo;
+    if (args.estadoCivil !== undefined) updates.estadoCivil = args.estadoCivil;
+    if (args.nacionalidade !== undefined) updates.nacionalidade = args.nacionalidade;
+    if (args.pai !== undefined) updates.pai = args.pai;
+    if (args.mae !== undefined) updates.mae = args.mae;
     if (args.endereco !== undefined) updates.endereco = args.endereco;
     if (args.contatoEmergencia !== undefined) updates.contatoEmergencia = args.contatoEmergencia;
 

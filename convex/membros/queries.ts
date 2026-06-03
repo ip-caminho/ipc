@@ -109,7 +109,11 @@ export const getPublicProfile = query({
 export const birthdaysThisMonth = query({
   args: {},
   handler: async (ctx) => {
-    if (!(await checkPermission(ctx, "diretorio:read"))) return [];
+    // Aniversariantes visiveis a qualquer membro autenticado; WhatsApp so
+    // para quem tem diretorio:read.
+    const temDiretorio = !!(await checkPermission(ctx, "diretorio:read"));
+    const podeVer = temDiretorio || !!(await checkPermission(ctx, "membros:self_service"));
+    if (!podeVer) return [];
     const now = new Date();
     const currentMonth = now.getMonth() + 1;
     const currentDay = now.getDate();
@@ -150,7 +154,7 @@ export const birthdaysThisMonth = query({
           _id: m._id,
           nome: (entidade as any).apelido || entidade.nomeCompleto || "Sem nome",
           foto: (entidade as any).foto || undefined,
-          whatsapp: (entidade as any).whatsapp || undefined,
+          whatsapp: temDiretorio ? ((entidade as any).whatsapp || undefined) : undefined,
           dataNascimento: entidade.dataNascimento,
           dia: birthDay,
           mes: birthMonth,

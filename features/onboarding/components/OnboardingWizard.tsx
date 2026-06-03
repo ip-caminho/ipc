@@ -22,6 +22,12 @@ interface OnboardingData {
   whatsapp: string;
   email: string;
   dataNascimento: string;
+  sexo: string;
+  cpf: string;
+  estadoCivil: string;
+  nacionalidade: string;
+  pai: string;
+  mae: string;
   profissao: string;
   endereco: {
     logradouro?: string;
@@ -54,6 +60,13 @@ export function OnboardingWizard({ data }: Props) {
     apelido: data.apelido || "",
     email: data.email || "",
     profissao: data.profissao || "",
+    cpf: data.cpf || "",
+    dataNascimento: data.dataNascimento || "",
+    sexo: data.sexo || "",
+    estadoCivil: data.estadoCivil || "",
+    nacionalidade: data.nacionalidade || "Brasileiro",
+    pai: data.pai || "",
+    mae: data.mae || "",
   });
   const [address, setAddress] = useState<AddressData>({
     logradouro: data.endereco?.logradouro || "",
@@ -83,6 +96,13 @@ export function OnboardingWizard({ data }: Props) {
         apelido: personalData.apelido || undefined,
         email: personalData.email || undefined,
         profissao: personalData.profissao || undefined,
+        cpf: personalData.cpf || undefined,
+        dataNascimento: personalData.dataNascimento || undefined,
+        sexo: personalData.sexo || undefined,
+        estadoCivil: personalData.estadoCivil || undefined,
+        nacionalidade: personalData.nacionalidade || undefined,
+        pai: personalData.pai || undefined,
+        mae: personalData.mae || undefined,
         endereco: hasAddress
           ? {
               logradouro: address.logradouro,
@@ -141,7 +161,6 @@ export function OnboardingWizard({ data }: Props) {
               <DataStep
                 nomeCompleto={data.nomeCompleto}
                 whatsapp={data.whatsapp}
-                dataNascimento={data.dataNascimento}
                 formData={personalData}
                 onUpdate={(p) => setPersonalData((prev) => ({ ...prev, ...p }))}
                 onNext={() => setStep(3)}
