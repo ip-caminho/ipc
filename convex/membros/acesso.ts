@@ -89,11 +89,14 @@ export const verificarAcessoDireto = mutation({
 
     // Compara so os digitos (E164) dos dois lados: robusto a formatacao
     // (ex: "(11) 94208-8102" no cadastro vs "11942088102" digitado).
+    // Casa contra whatsapp OU telefone fixo (o numero pode estar em qualquer um).
     const alvoDigits = normalizeToE164(telefone).replace(/\D/g, "");
+    const soDigitos = (v?: string) => (v ? normalizeToE164(v).replace(/\D/g, "") : "");
 
     const entidades = await ctx.db.query("entidades").collect();
     const entidade = entidades.find(
-      (e) => e.whatsapp && normalizeToE164(e.whatsapp).replace(/\D/g, "") === alvoDigits
+      (e) =>
+        soDigitos(e.whatsapp) === alvoDigits || soDigitos(e.telefone) === alvoDigits
     );
 
     // Mensagem generica para nao revelar se o telefone existe
