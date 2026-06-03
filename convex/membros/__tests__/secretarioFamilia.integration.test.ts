@@ -296,6 +296,30 @@ describe("listParaSecretario — agrupamento por familia", () => {
     expect(l!.mandatoVencido).toBe(true);
   });
 
+  it("detecta mandato a vencer em 90 dias", async () => {
+    const t = convexTest(schema, modules);
+    const admin = await seedAdmin(t);
+    const diac = await pessoa(t, "Diac Vencendo", "M");
+    const em30dias = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .slice(0, 10);
+    await t.run(async (ctx) => {
+      await ctx.db.insert("cargosEclesiasticosHistorico", {
+        membroId: diac.membroId,
+        cargo: "DIACONO",
+        mandatoInicio: "2023-01-01",
+        mandatoFim: em30dias,
+        status: "ATIVO",
+        registradoEm: 1,
+        registradoPor: diac.membroId,
+      });
+    });
+
+    const r = await admin.query(api.membros.eclesiastico.getResumoSecretario, {});
+    expect(r.mandatosVencendo).toBe(1);
+    expect(r.mandatosVencidos).toBe(0);
+  });
+
   it("filtra por busca mantendo metadados", async () => {
     const t = convexTest(schema, modules);
     const admin = await seedAdmin(t);
