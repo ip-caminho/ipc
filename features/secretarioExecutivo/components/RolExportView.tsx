@@ -46,9 +46,15 @@ export const RolExportView = forwardRef<HTMLDivElement, Props>(function RolExpor
           body * { visibility: hidden !important; }
           .print-export, .print-export * { visibility: visible !important; }
           .print-export {
-            position: fixed; left: 0; top: 0; width: 100%;
+            /* absolute (nao fixed): fixed repete na mesma posicao em toda pagina,
+               sobrepondo o conteudo numa lista multipagina */
+            position: absolute; left: 0; top: 0; width: 100%;
             font-family: 'Times New Roman', serif; font-size: 11pt; color: #000;
           }
+          /* repete o cabecalho da tabela em cada pagina */
+          .print-export thead { display: table-header-group; }
+          /* nao quebra uma linha no meio entre paginas */
+          .print-export tr { page-break-inside: avoid; }
         }
       `}</style>
 
