@@ -87,7 +87,7 @@ export function FamiliaDrawer({ membroId, entidadeId, nome, open, onOpenChange }
   const [fNome, setFNome] = useState("");
   const [fNasc, setFNasc] = useState("");
   const [fSexo, setFSexo] = useState("");
-  const [fBatizado, setFBatizado] = useState(false);
+  const [fBatismoInfantil, setFBatismoInfantil] = useState(false);
   const [salvando, setSalvando] = useState(false);
 
   async function acao(fn: () => Promise<unknown>, msg: string) {
@@ -111,10 +111,10 @@ export function FamiliaDrawer({ membroId, entidadeId, nome, open, onOpenChange }
         nomeCompleto: fNome.trim(),
         dataNascimento: fNasc || undefined,
         sexo: fSexo === "M" || fSexo === "F" ? fSexo : undefined,
-        batizadoNestaIgreja: fBatizado,
+        batismoInfantil: fBatismoInfantil,
       });
       toast.success("Filho adicionado");
-      setFNome(""); setFNasc(""); setFSexo(""); setFBatizado(false); setAddFilho(false);
+      setFNome(""); setFNasc(""); setFSexo(""); setFBatismoInfantil(false); setAddFilho(false);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro ao adicionar filho");
     } finally {
@@ -229,9 +229,13 @@ export function FamiliaDrawer({ membroId, entidadeId, nome, open, onOpenChange }
                     </Select>
                   </div>
                 </div>
-                <label className="flex items-center gap-2 text-xs">
-                  <Checkbox checked={fBatizado} onCheckedChange={(c) => setFBatizado(c === true)} />
-                  Batizado nesta igreja (cria como membro)
+                <label className="flex items-start gap-2 text-xs">
+                  <Checkbox checked={fBatismoInfantil} onCheckedChange={(c) => setFBatismoInfantil(c === true)} className="mt-0.5" />
+                  <span>
+                    Recebeu batismo infantil — registra como{" "}
+                    <strong>membro nao comungante</strong> (Rol Separado). Sem
+                    batismo, fica como dependente.
+                  </span>
                 </label>
                 <div className="flex gap-2">
                   <Button size="sm" onClick={criarFilho} disabled={salvando}>

@@ -583,7 +583,9 @@ export const adicionarFilhoAdmin = mutation({
     nomeCompleto: v.string(),
     dataNascimento: v.optional(v.string()),
     sexo: v.optional(v.union(v.literal("M"), v.literal("F"))),
-    batizadoNestaIgreja: v.optional(v.boolean()),
+    // Batismo infantil (em qualquer igreja crista) -> membro nao-comungante
+    // (IPB Const.: nao-comungantes sao batizados na infancia sem profissao de fe)
+    batismoInfantil: v.optional(v.boolean()),
     dataBatismo: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
@@ -595,16 +597,16 @@ export const adicionarFilhoAdmin = mutation({
 
     const filhoEntidadeId = await ctx.db.insert("entidades", {
       tipoEntidade: "PF",
-      papeis: args.batizadoNestaIgreja ? ["MEMBRO"] : ["DEPENDENTE"],
+      papeis: args.batismoInfantil ? ["MEMBRO"] : ["DEPENDENTE"],
       status: "ATIVO",
       nomeCompleto: args.nomeCompleto,
       dataNascimento: args.dataNascimento,
       sexo: args.sexo,
-      vinculoIgreja: args.batizadoNestaIgreja ? "MEMBRO" : "NAO_MEMBRO",
+      vinculoIgreja: args.batismoInfantil ? "MEMBRO" : "NAO_MEMBRO",
       perfilAtualizadoEm: Date.now(),
     });
 
-    if (args.batizadoNestaIgreja) {
+    if (args.batismoInfantil) {
       await ctx.db.insert("membros", {
         entidadeId: filhoEntidadeId,
         role: "membro",

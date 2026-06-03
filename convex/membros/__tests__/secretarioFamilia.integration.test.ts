@@ -224,7 +224,7 @@ describe("listParaSecretario — agrupamento por familia", () => {
       nomeCompleto: "Filho Criado",
       dataNascimento: "2018-05-05",
       sexo: "M",
-      batizadoNestaIgreja: false,
+      batismoInfantil: false,
     });
 
     const linhas = await admin.query(api.membros.eclesiastico.listParaSecretario, {});
