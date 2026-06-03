@@ -57,7 +57,6 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "app/(ready)/membros/page.tsx",
       "features/membros/components/MembroTable.tsx",
       "features/membros/components/MembrosFilterBar.tsx",
-      "features/membros/components/MembrosExportView.tsx",
       "features/membros/components/AcessoPanel.tsx",
       "features/membros/components/AtividadeMembroDrawer.tsx",
     ],
@@ -70,7 +69,6 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     componentes: [
       "MembroTable",
       "MembrosFilterBar",
-      "MembrosExportView",
       "AcessoPanel",
       "AtividadeMembroDrawer",
       "PermissionGate",
@@ -79,7 +77,6 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "Permissao: membros:read",
       "Filtros via nuqs URL state: status, cargo, q",
       "Switch de view via nuqs (?view=acesso): aba Acesso (membros:update) = painel de status + resumo + historico + wa.me",
-      "Exportacao via window.print() com layout A4",
     ],
   },
   "/membros/novo": {
@@ -113,12 +110,14 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     ],
   },
   "/secretario-executivo": {
-    nome: "Secretario Executivo (tabela)",
+    nome: "Rol de Membros",
     pagina: "app/(ready)/secretario-executivo/page.tsx",
     arquivos: [
       "app/(ready)/secretario-executivo/page.tsx",
       "features/secretarioExecutivo/components/SecretarioExecutivoTabela.tsx",
       "features/secretarioExecutivo/components/HistoricoEclesiasticoDrawer.tsx",
+      "features/secretarioExecutivo/components/FamiliaDrawer.tsx",
+      "features/secretarioExecutivo/components/RolExportView.tsx",
     ],
     queries: ["membros.eclesiastico.listParaSecretario", "membros.eclesiastico.getResumoSecretario", "membros.eclesiastico.getHistorico"],
     mutations: [
@@ -130,12 +129,13 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "membros.eclesiastico.vincularFilhoExistenteAdmin",
       "membros.eclesiastico.removerFilhoAdmin",
     ],
-    componentes: ["SecretarioExecutivoTabela", "HistoricoEclesiasticoDrawer", "FamiliaDrawer", "PermissionGate"],
+    componentes: ["SecretarioExecutivoTabela", "HistoricoEclesiasticoDrawer", "FamiliaDrawer", "RolExportView", "PermissionGate"],
     notas: [
       "Permissao: membros:update_eclesiastico",
       "Roles: admin, pastor, secretaria, secretario_executivo",
       "Edicao tabular inline (auto-save no blur): cargo, rol, tipoRol, matricula, datas sacramentais",
       "Dashboard de cards clicaveis (getResumoSecretario): comungantes/nao-comungantes/ausentes/arquivo/total/familias/dependentes/pendencias — filtram a tabela",
+      "Impressao A4 com assinatura para assembleia (RolExportView, window.print) respeitando o filtro atual — movida de /membros pra ca",
       "Coluna Nome + header fixos (sticky). Botao 'Agrupar por familia': cabecalho por familia, chefe(homem)->conjuge->filhos(mais velho primeiro)",
       "listParaSecretario inclui filhos DEPENDENTES (entidade sem membro, via responsaveis); botao 'Tornar membro' (tornarMembro) cria o registro e habilita edicao",
       "Historico (FIELD_CHANGE) com reverter; drill-down no detalhe para admissao/demissao/atos/cargos",

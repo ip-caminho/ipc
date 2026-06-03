@@ -199,10 +199,10 @@ export const GESTAO_SECTIONS: NavSection[] = [
         modulo: "membros",
       },
       {
-        label: "Secretário Executivo",
+        label: "Rol de Membros",
         href: "/secretario-executivo",
         icon: BookOpen,
-        description: "Consulta de dados básicos e edição de dados eclesiásticos",
+        description: "Rol IPB, família, dados eclesiásticos e impressão para assembleia",
         permission: "membros:update_eclesiastico",
         modulo: "membros",
       },

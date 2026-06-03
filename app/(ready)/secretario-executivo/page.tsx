@@ -5,7 +5,7 @@ import { api } from "@/convex/_generated/api";
 import { Input } from "@/shared/components/ui/input";
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import { Search, Users } from "lucide-react";
+import { Search, Users, Printer } from "lucide-react";
 import { useState } from "react";
 import { useDebounce } from "@shared/hooks/useDebounce";
 import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
@@ -16,6 +16,26 @@ import {
   SecretarioExecutivoTabela,
   type MembroEclesiastico,
 } from "@features/secretarioExecutivo/components/SecretarioExecutivoTabela";
+import { RolExportView } from "@features/secretarioExecutivo/components/RolExportView";
+
+const DESCRICAO_FILTRO: Record<string, string> = {
+  PRINCIPAL: "Comungantes (Rol Principal)",
+  SEPARADO: "Nao-comungantes (Rol Separado)",
+  AUSENTE: "Ausentes (paradeiro ignorado)",
+  ARQUIVO: "Arquivo (transferidos/excluidos/falecidos)",
+  DEPENDENTES: "Dependentes (nao membros)",
+  PENDENCIA: "Pendencias de cadastro",
+};
+
+function filtrarPorCategoria(
+  membros: MembroEclesiastico[],
+  categoria: string | null
+): MembroEclesiastico[] {
+  if (categoria === "DEPENDENTES") return membros.filter((m) => m.ehMembro === false);
+  if (categoria === "PENDENCIA") return membros.filter((m) => m.ehMembro !== false && m.pendencia);
+  if (categoria) return membros.filter((m) => m.ehMembro !== false && m.rolCategoria === categoria);
+  return membros.filter((m) => m.ehMembro !== false);
+}
 
 function CardNum({
   label,
@@ -63,7 +83,7 @@ export default function SecretarioExecutivoPage() {
     <PermissionGate permission="membros:update_eclesiastico">
       <HeaderLayout>
         <div className="space-y-4">
-          <PageHeader title="Secretario Executivo" subtitle="Rol e dados eclesiasticos" />
+          <PageHeader title="Rol de Membros" subtitle="Rol, familia e dados eclesiasticos" />
 
           {/* Dashboard */}
           {resumo === undefined ? (
@@ -106,6 +126,16 @@ export default function SecretarioExecutivoPage() {
               <Users className="h-4 w-4 mr-1.5" />
               {agrupar ? "Agrupado por familia" : "Agrupar por familia"}
             </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={!membros || membros.length === 0}
+              onClick={() => window.print()}
+            >
+              <Printer className="h-4 w-4 mr-1.5" />
+              Imprimir lista
+            </Button>
             {categoria && (
               <Button type="button" variant="ghost" size="sm" onClick={() => setCategoria(null)}>
                 Limpar filtro
@@ -125,6 +155,17 @@ export default function SecretarioExecutivoPage() {
             />
           )}
         </div>
+
+        {membros && (
+          <RolExportView
+            rows={filtrarPorCategoria(membros as MembroEclesiastico[], categoria)}
+            descricao={
+              (categoria ? DESCRICAO_FILTRO[categoria] ?? "Membros" : "Todos os membros (em rol)") +
+              (debouncedSearch ? ` · busca: "${debouncedSearch}"` : "")
+            }
+            dataHoje={new Date().toLocaleDateString("pt-BR")}
+          />
+        )}
       </HeaderLayout>
     </PermissionGate>
   );
