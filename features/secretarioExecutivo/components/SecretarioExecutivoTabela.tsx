@@ -67,6 +67,7 @@ export type MembroEclesiastico = {
   civilmenteCapazes?: boolean;
   rolCategoria?: RolCategoria | null;
   pendencia?: boolean;
+  mandatoVencido?: boolean;
   sexo?: string;
   dataNascimento?: string;
   familiaHeadId?: string;
@@ -278,6 +279,8 @@ export function SecretarioExecutivoTabela({
       base = base.filter((m) => m.ehMembro === false);
     } else if (categoria === "PENDENCIA") {
       base = base.filter((m) => m.ehMembro !== false && m.pendencia);
+    } else if (categoria === "MANDATO_VENCIDO") {
+      base = base.filter((m) => m.ehMembro !== false && m.mandatoVencido);
     } else if (categoria === "PASTOR" || categoria === "PRESBITERO" || categoria === "DIACONO") {
       base = base.filter((m) => m.ehMembro !== false && m.cargoEclesiastico === categoria);
     } else if (categoria) {
