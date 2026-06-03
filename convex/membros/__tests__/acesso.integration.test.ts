@@ -71,6 +71,32 @@ describe("acesso — verificarAcessoDireto", () => {
     expect(convite?.status).toBe("PENDENTE");
   });
 
+  it("casa pelo telefone fixo quando nao ha whatsapp", async () => {
+    const t = convexTest(schema, modules);
+    const { membroId } = await t.run(async (ctx) => {
+      const entidadeId = await ctx.db.insert("entidades", {
+        tipoEntidade: "PF",
+        papeis: ["MEMBRO"],
+        status: "ATIVO",
+        nomeCompleto: "So Telefone",
+        telefone: "1133224455", // sem whatsapp
+        cpf: "52998824725",
+      });
+      const mId = await ctx.db.insert("membros", { entidadeId, role: "membro" });
+      return { membroId: mId };
+    });
+
+    const { token } = await t.mutation(api.membros.acesso.verificarAcessoDireto, {
+      telefone: "1133224455",
+      cpfPrefix: "52998",
+    });
+    expect(token).toBeTruthy();
+    const convite = await t.run(async (ctx) =>
+      ctx.db.query("membroConvites").withIndex("by_token", (q) => q.eq("token", token)).first()
+    );
+    expect(convite?.membroId).toBe(membroId);
+  });
+
   it("rejeita CPF incorreto com mensagem generica", async () => {
     const t = convexTest(schema, modules);
     await seedMembroSemAcesso(t);
