@@ -1,6 +1,9 @@
 "use client";
 
-import { cn } from "@shared/lib/utils/cn";
+import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from "@/shared/components/ui/toggle-group";
 import type { AudioTipo } from "@features/gravacoes/lib/categoryGradient";
 
 type Chip = { value: AudioTipo | null; label: string };
@@ -13,6 +16,12 @@ const CHIPS: Chip[] = [
   { value: "OUTRO", label: "Outros" },
 ];
 
+// Sentinela para o filtro "Tudo" (radix usa string vazia como sinal de deseleção)
+const ALL = "__ALL__";
+
+const PILL =
+  "shrink-0 rounded-full border border-input px-4 text-xs font-medium text-foreground hover:bg-muted data-[state=on]:border-transparent data-[state=on]:bg-foreground data-[state=on]:text-background data-[state=on]:hover:bg-foreground data-[state=on]:hover:text-background";
+
 interface AudioFilterChipsProps {
   selected: AudioTipo | null;
   onSelect: (tipo: AudioTipo | null) => void;
@@ -20,31 +29,26 @@ interface AudioFilterChipsProps {
 
 export function AudioFilterChips({ selected, onSelect }: AudioFilterChipsProps) {
   return (
-    <div
-      className="flex items-center gap-2 overflow-x-auto scrollbar-none -mx-4 px-4 pr-6 pb-1"
-      role="tablist"
+    <ToggleGroup
+      type="single"
+      size="sm"
+      spacing={2}
+      value={selected ?? ALL}
+      onValueChange={(v) => {
+        if (v) onSelect(v === ALL ? null : (v as AudioTipo));
+      }}
       aria-label="Filtrar por categoria"
+      className="w-full justify-start overflow-x-auto scrollbar-none -mx-4 px-4 pr-6 pb-1"
     >
-      {CHIPS.map((chip) => {
-        const active = selected === chip.value;
-        return (
-          <button
-            key={chip.label}
-            type="button"
-            role="tab"
-            aria-selected={active}
-            onClick={() => onSelect(chip.value)}
-            className={cn(
-              "shrink-0 rounded-full px-4 py-1.5 text-xs font-medium transition-colors min-h-[32px] whitespace-nowrap",
-              active
-                ? "bg-foreground text-background"
-                : "border text-foreground",
-            )}
-          >
-            {chip.label}
-          </button>
-        );
-      })}
-    </div>
+      {CHIPS.map((chip) => (
+        <ToggleGroupItem
+          key={chip.label}
+          value={chip.value ?? ALL}
+          className={PILL}
+        >
+          {chip.label}
+        </ToggleGroupItem>
+      ))}
+    </ToggleGroup>
   );
 }

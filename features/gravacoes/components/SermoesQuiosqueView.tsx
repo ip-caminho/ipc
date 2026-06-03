@@ -10,6 +10,7 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { useDebounce } from "@shared/hooks/useDebounce";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { Button } from "@/shared/components/ui/button";
+import { Empty, EmptyHeader, EmptyTitle } from "@/shared/components/ui/empty";
 import { AudioListItem, type AudioListItemData } from "@features/gravacoes/components/AudioListItem";
 import { SecureAudioPlayer } from "@shared/files/components/SecureAudioPlayer";
 
@@ -62,9 +63,11 @@ function SermaoListaTela({
           ))}
         </div>
       ) : ordenados.length === 0 ? (
-        <p className="text-sm text-muted-foreground text-center py-12">
-          Nenhum sermão disponível.
-        </p>
+        <Empty>
+          <EmptyHeader>
+            <EmptyTitle>Nenhum sermão disponível</EmptyTitle>
+          </EmptyHeader>
+        </Empty>
       ) : (
         <ul className="flex flex-col">
           {ordenados.map((s) => (

@@ -1,7 +1,10 @@
 "use client";
 
-import { cn } from "@shared/lib/utils/cn";
 import { STATUS_OPTIONS, CARGO_ECLESIASTICO_OPTIONS } from "../lib/constants";
+import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from "@/shared/components/ui/toggle-group";
 import {
   Select,
   SelectContent,
@@ -18,6 +21,12 @@ const STATUS_CHIPS: StatusChip[] = [
   ...STATUS_OPTIONS.filter((o) => o.value !== "ATIVO"),
 ];
 
+// Sentinela para "Ativos" (value ""), pois radix usa string vazia como deseleção
+const ATIVOS = "__ATIVOS__";
+
+const PILL =
+  "shrink-0 rounded-full border border-input px-4 text-xs font-medium text-foreground hover:bg-muted data-[state=on]:border-transparent data-[state=on]:bg-foreground data-[state=on]:text-background data-[state=on]:hover:bg-foreground data-[state=on]:hover:text-background";
+
 interface MembrosFilterBarProps {
   status: string;
   onStatusChange: (value: string) => void;
@@ -33,32 +42,27 @@ export function MembrosFilterBar({
 }: MembrosFilterBarProps) {
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-      <div
-        className="flex items-center gap-2 overflow-x-auto scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0 pb-1"
-        role="tablist"
+      <ToggleGroup
+        type="single"
+        size="sm"
+        spacing={2}
+        value={status === "" ? ATIVOS : status}
+        onValueChange={(v) => {
+          if (v) onStatusChange(v === ATIVOS ? "" : v);
+        }}
         aria-label="Filtrar por status"
+        className="justify-start overflow-x-auto scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0 pb-1"
       >
-        {STATUS_CHIPS.map((chip) => {
-          const active = status === chip.value;
-          return (
-            <button
-              key={chip.value}
-              type="button"
-              role="tab"
-              aria-selected={active}
-              onClick={() => onStatusChange(chip.value)}
-              className={cn(
-                "shrink-0 rounded-full px-4 py-1.5 text-xs font-medium transition-colors min-h-[32px] whitespace-nowrap",
-                active
-                  ? "bg-foreground text-background"
-                  : "border text-foreground",
-              )}
-            >
-              {chip.label}
-            </button>
-          );
-        })}
-      </div>
+        {STATUS_CHIPS.map((chip) => (
+          <ToggleGroupItem
+            key={chip.value}
+            value={chip.value === "" ? ATIVOS : chip.value}
+            className={PILL}
+          >
+            {chip.label}
+          </ToggleGroupItem>
+        ))}
+      </ToggleGroup>
 
       <Select value={cargo} onValueChange={onCargoChange}>
         <SelectTrigger className="w-full sm:w-[200px] h-8 text-xs">
