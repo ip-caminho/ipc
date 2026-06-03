@@ -10,6 +10,24 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
+import { Textarea } from "@/shared/components/ui/textarea";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+  EmptyDescription,
+} from "@/shared/components/ui/empty";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/shared/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
 import { IaResultadoDisplay } from "@features/gravacoes/components/IaResultadoDisplay";
 import { IaProcessarButton } from "@features/gravacoes/components/IaProcessarButton";
@@ -22,7 +40,7 @@ import { PermissionGate } from "@shared/components/auth/PermissionGate";
 import { useAuth } from "@shared/providers/PermissionsProvider";
 import { TIPO_GRAVACAO_OPTIONS } from "@features/gravacoes/lib/constants";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/shared/components/ui/dropdown-menu";
-import { ArrowLeft, Save, Plus, Trash2, Megaphone, Globe, GlobeLock, Play, Pause, MoreVertical } from "lucide-react";
+import { ArrowLeft, Save, Plus, Trash2, Megaphone, Globe, GlobeLock, Play, Pause, MoreVertical, Sparkles } from "lucide-react";
 import type { Id } from "@/convex/_generated/dataModel";
 import Link from "next/link";
 import { useIsMobile } from "@shared/hooks/use-mobile";
@@ -122,21 +140,19 @@ function DadosEditor({ gravacao }: { gravacao: any }) {
 
         <div className="space-y-1">
           <Label>Descricao</Label>
-          <textarea
+          <Textarea
             value={form.descricao}
             onChange={(e) => set("descricao", e.target.value)}
             rows={2}
-            className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           />
         </div>
 
         <div className="space-y-1">
           <Label>Resumo</Label>
-          <textarea
+          <Textarea
             value={form.resumo}
             onChange={(e) => set("resumo", e.target.value)}
             rows={4}
-            className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           />
         </div>
 
@@ -230,11 +246,11 @@ function AvisosEditor({ gravacaoId, avisos: initial }: { gravacaoId: Id<"gravaco
               value={aviso.titulo}
               onChange={(e) => update(i, "titulo", e.target.value)}
             />
-            <textarea
+            <Textarea
               placeholder="Descricao"
               value={aviso.descricao}
               onChange={(e) => update(i, "descricao", e.target.value)}
-              className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="min-h-[60px]"
             />
           </div>
         ))}
@@ -249,6 +265,7 @@ export default function GravacaoAdminPage() {
   const id = params.id as string;
   const { can } = useAuth();
   const isMobile = useIsMobile();
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   const gravacao = useQuery(api.gravacoes.queries.getById, { id: id as Id<"gravacoes"> });
   const globalPlayer = useAudioPlayer();
@@ -288,7 +305,6 @@ export default function GravacaoAdminPage() {
   };
 
   const handleRemove = async () => {
-    if (!confirm("Tem certeza que deseja excluir esta gravacao? Esta acao nao pode ser desfeita.")) return;
     try {
       await removeGravacao({ id: gravacao._id });
       toast.success("Gravacao excluida");
@@ -344,7 +360,7 @@ export default function GravacaoAdminPage() {
                 {can("gravacoes:delete") && (
                   <>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem variant="destructive" onClick={handleRemove}>
+                    <DropdownMenuItem variant="destructive" onClick={() => setDeleteOpen(true)}>
                       <Trash2 className="h-4 w-4" />
                       Excluir
                     </DropdownMenuItem>
@@ -376,7 +392,7 @@ export default function GravacaoAdminPage() {
               )}
             </PermissionGate>
             <PermissionGate permission="gravacoes:delete">
-              <Button variant="destructive" size="sm" onClick={handleRemove}>
+              <Button variant="destructive" size="sm" onClick={() => setDeleteOpen(true)}>
                 <Trash2 className="h-3.5 w-3.5 mr-1.5" />
                 Excluir
               </Button>
@@ -405,11 +421,11 @@ export default function GravacaoAdminPage() {
           )}
         </TabsList>
 
-        <TabsContent value="dados" className="mt-4">
+        <TabsContent value="dados" forceMount className="mt-4 data-[state=inactive]:hidden">
           <DadosEditor gravacao={gravacao} />
         </TabsContent>
 
-        <TabsContent value="avisos" className="mt-4">
+        <TabsContent value="avisos" forceMount className="mt-4 data-[state=inactive]:hidden">
           <AvisosEditor
             gravacaoId={gravacao._id}
             avisos={gravacao.iaAvisos || []}
@@ -423,13 +439,17 @@ export default function GravacaoAdminPage() {
               iaTranscricao={gravacao.iaTranscricao}
             />
           ) : (
-            <Card>
-              <CardContent className="py-8">
-                <p className="text-sm text-muted-foreground text-center">
-                  Nenhum resultado de IA disponivel. Processe a gravacao primeiro.
-                </p>
-              </CardContent>
-            </Card>
+            <Empty className="border">
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <Sparkles />
+                </EmptyMedia>
+                <EmptyTitle>Sem resultado de IA</EmptyTitle>
+                <EmptyDescription>
+                  Processe a gravacao para gerar tema, pontos-chave e frases.
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
           )}
         </TabsContent>
 
@@ -444,13 +464,14 @@ export default function GravacaoAdminPage() {
               fimAvisos={gravacao.fimAvisos}
             />
           ) : (
-            <Card>
-              <CardContent className="py-8">
-                <p className="text-sm text-muted-foreground text-center">
-                  Nenhum audio disponivel.
-                </p>
-              </CardContent>
-            </Card>
+            <Empty className="border">
+              <EmptyHeader>
+                <EmptyTitle>Nenhum audio disponivel</EmptyTitle>
+                <EmptyDescription>
+                  Faca upload do audio para editar os trechos.
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
           )}
         </TabsContent>
 
@@ -496,6 +517,26 @@ export default function GravacaoAdminPage() {
           </TabsContent>
         )}
       </Tabs>
+
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir gravacao?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acao nao pode ser desfeita. A gravacao e seus dados serao removidos permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleRemove}
+              className="bg-destructive text-white hover:bg-destructive/90"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
