@@ -230,6 +230,7 @@ type LinhaSecretario = {
   rolCategoria: RolCategoria | null; // null = dependente (fora do rol)
   pendencia: boolean; // dados eclesiasticos faltando (cadastro incompleto)
   mandatoVencido: boolean; // tem mandato ATIVO com mandatoFim no passado
+  mandatoVencendo: boolean; // mandato ATIVO vencendo nos proximos 90 dias
   sexo?: string;
   dataNascimento?: string;
   familiaHeadId: string;
@@ -251,6 +252,7 @@ export type ResumoSecretario = {
   presbiteros: number;
   diaconos: number;
   mandatosVencidos: number;
+  mandatosVencendo: number;
 };
 
 /** Calcula se um membro tem pendencia de cadastro eclesiastico. */
@@ -321,17 +323,19 @@ async function montarLinhasSecretario(ctx: QueryCtx): Promise<LinhaSecretario[]>
     return { headId: entId, order: 0 };
   }
 
-  // Mandatos vencidos: cargo ATIVO com data fim no passado (deveria renovar/encerrar)
+  // Mandatos: ATIVO com data fim no passado = vencido; nos proximos 90 dias = vencendo.
   const hoje = new Date(Date.now()).toISOString().slice(0, 10);
+  const limite90 = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
   const mandatoVencidoPorMembro = new Set<string>();
+  const mandatoVencendoPorMembro = new Set<string>();
   const mandatosAtivos = await ctx.db
     .query("cargosEclesiasticosHistorico")
     .withIndex("by_status", (q) => q.eq("status", "ATIVO"))
     .collect();
   for (const md of mandatosAtivos) {
-    if (md.mandatoFim && md.mandatoFim < hoje) {
-      mandatoVencidoPorMembro.add(md.membroId as string);
-    }
+    if (!md.mandatoFim) continue;
+    if (md.mandatoFim < hoje) mandatoVencidoPorMembro.add(md.membroId as string);
+    else if (md.mandatoFim <= limite90) mandatoVencendoPorMembro.add(md.membroId as string);
   }
 
   const linhas: LinhaSecretario[] = [];
@@ -357,6 +361,7 @@ async function montarLinhasSecretario(ctx: QueryCtx): Promise<LinhaSecretario[]>
       rolCategoria,
       pendencia: temPendencia(m, rolCategoria),
       mandatoVencido: m ? mandatoVencidoPorMembro.has(m._id) : false,
+      mandatoVencendo: m ? mandatoVencendoPorMembro.has(m._id) : false,
       sexo: e.sexo,
       dataNascimento: e.dataNascimento,
       familiaHeadId: headId,
@@ -404,12 +409,14 @@ export const getResumoSecretario = query({
     const familias = new Set<string>();
     let comungantes = 0, naoComungantes = 0, ausentes = 0, arquivo = 0;
     let dependentes = 0, pendencias = 0, civilmenteCapazes = 0;
-    let pastores = 0, presbiteros = 0, diaconos = 0, mandatosVencidos = 0;
+    let pastores = 0, presbiteros = 0, diaconos = 0;
+    let mandatosVencidos = 0, mandatosVencendo = 0;
     for (const l of linhas) {
       familias.add(l.familiaHeadId);
       if (!l.ehMembro) { dependentes++; continue; }
       if (l.pendencia) pendencias++;
       if (l.mandatoVencido) mandatosVencidos++;
+      if (l.mandatoVencendo) mandatosVencendo++;
       if (l.cargoEclesiastico === "PASTOR") pastores++;
       else if (l.cargoEclesiastico === "PRESBITERO") presbiteros++;
       else if (l.cargoEclesiastico === "DIACONO") diaconos++;
@@ -437,6 +444,7 @@ export const getResumoSecretario = query({
       presbiteros,
       diaconos,
       mandatosVencidos,
+      mandatosVencendo,
     };
   },
 });
