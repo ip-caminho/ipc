@@ -35,12 +35,15 @@ export const RolExportView = forwardRef<HTMLDivElement, Props>(function RolExpor
     <div ref={ref} className="hidden print:block print-export">
       <style>{`
         @media print {
+          /* margens uniformes da pagina */
+          @page { size: A4; margin: 1.5cm; }
           body * { visibility: hidden !important; }
           .print-export, .print-export * { visibility: visible !important; }
           .print-export {
-            /* absolute (nao fixed): fixed repete na mesma posicao em toda pagina,
-               sobrepondo o conteudo numa lista multipagina */
-            position: absolute; left: 0; top: 0; width: 100%;
+            /* absolute (nao fixed): fixed repete na mesma posicao em toda pagina.
+               left+right ancorados (nao width:100%): width:100% transbordava a
+               direita, deixando a margem esquerda maior */
+            position: absolute; left: 0; right: 0; top: 0;
             font-family: 'Times New Roman', serif; font-size: 11pt; color: #000;
           }
           /* repete o cabecalho da tabela em cada pagina */
@@ -50,7 +53,7 @@ export const RolExportView = forwardRef<HTMLDivElement, Props>(function RolExpor
         }
       `}</style>
 
-      <div style={{ padding: "1cm" }}>
+      <div>
         <div style={{ textAlign: "center", marginBottom: "0.5cm" }}>
           <h1 style={{ fontSize: "14pt", fontWeight: "bold", margin: 0 }}>
             Rol de Membros — Igreja Presbiteriana do Caminho
