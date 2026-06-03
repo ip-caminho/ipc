@@ -504,3 +504,173 @@ export const updateStatus = mutation({
     return { changed: true };
   },
 });
+
+// ============ VINCULOS DE FAMILIA (admin / secretario) ============
+
+const PERM_FAMILIA = ["membros:update_eclesiastico", "membros:update"];
+
+/** Busca entidades por nome para vincular como conjuge/filho. */
+export const buscarEntidadesFamilia = query({
+  args: { termo: v.string(), excluirEntidadeId: v.optional(v.id("entidades")) },
+  handler: async (ctx, { termo, excluirEntidadeId }) => {
+    await requireAnyPermission(ctx, PERM_FAMILIA);
+    const t = termo.trim().toLowerCase();
+    if (t.length < 2) return [];
+    const entidades = await ctx.db.query("entidades").collect();
+    const out: Array<{ entidadeId: string; nomeCompleto: string; ehMembro: boolean }> = [];
+    for (const e of entidades) {
+      if (e._id === excluirEntidadeId) continue;
+      if (!(e.nomeCompleto ?? "").toLowerCase().includes(t)) continue;
+      const m = await ctx.db
+        .query("membros")
+        .withIndex("by_entidade", (q) => q.eq("entidadeId", e._id))
+        .first();
+      out.push({ entidadeId: e._id, nomeCompleto: e.nomeCompleto ?? "", ehMembro: !!m });
+      if (out.length >= 20) break;
+    }
+    return out;
+  },
+});
+
+export const vincularConjugeAdmin = mutation({
+  args: { membroId: v.id("membros"), conjugeEntidadeId: v.id("entidades") },
+  handler: async (ctx, { membroId, conjugeEntidadeId }) => {
+    await requireAnyPermission(ctx, PERM_FAMILIA);
+    const membro = await ctx.db.get(membroId);
+    if (!membro) throw new Error("Membro nao encontrado");
+    if (membro.entidadeId === conjugeEntidadeId) {
+      throw new Error("Nao e possivel vincular a propria pessoa");
+    }
+    const conjuge = await ctx.db.get(conjugeEntidadeId);
+    if (!conjuge) throw new Error("Conjuge nao encontrado");
+
+    await ctx.db.patch(membroId, { conjugeId: conjugeEntidadeId });
+    const conjugeMembro = await ctx.db
+      .query("membros")
+      .withIndex("by_entidade", (q) => q.eq("entidadeId", conjugeEntidadeId))
+      .first();
+    if (conjugeMembro && !conjugeMembro.conjugeId) {
+      await ctx.db.patch(conjugeMembro._id, { conjugeId: membro.entidadeId });
+    }
+    return { ok: true };
+  },
+});
+
+export const desvincularConjugeAdmin = mutation({
+  args: { membroId: v.id("membros") },
+  handler: async (ctx, { membroId }) => {
+    await requireAnyPermission(ctx, PERM_FAMILIA);
+    const membro = await ctx.db.get(membroId);
+    if (!membro) throw new Error("Membro nao encontrado");
+    const antigoConjuge = membro.conjugeId;
+    await ctx.db.patch(membroId, { conjugeId: undefined });
+    if (antigoConjuge) {
+      const outro = await ctx.db
+        .query("membros")
+        .withIndex("by_entidade", (q) => q.eq("entidadeId", antigoConjuge))
+        .first();
+      if (outro && outro.conjugeId === membro.entidadeId) {
+        await ctx.db.patch(outro._id, { conjugeId: undefined });
+      }
+    }
+    return { ok: true };
+  },
+});
+
+export const adicionarFilhoAdmin = mutation({
+  args: {
+    responsavelMembroId: v.id("membros"),
+    nomeCompleto: v.string(),
+    dataNascimento: v.optional(v.string()),
+    sexo: v.optional(v.union(v.literal("M"), v.literal("F"))),
+    batizadoNestaIgreja: v.optional(v.boolean()),
+    dataBatismo: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    await requireAnyPermission(ctx, PERM_FAMILIA);
+    const responsavel = await ctx.db.get(args.responsavelMembroId);
+    if (!responsavel) throw new Error("Responsavel nao encontrado");
+    const respEntidade = await ctx.db.get(responsavel.entidadeId);
+    if (!respEntidade) throw new Error("Entidade do responsavel nao encontrada");
+
+    const filhoEntidadeId = await ctx.db.insert("entidades", {
+      tipoEntidade: "PF",
+      papeis: args.batizadoNestaIgreja ? ["MEMBRO"] : ["DEPENDENTE"],
+      status: "ATIVO",
+      nomeCompleto: args.nomeCompleto,
+      dataNascimento: args.dataNascimento,
+      sexo: args.sexo,
+      vinculoIgreja: args.batizadoNestaIgreja ? "MEMBRO" : "NAO_MEMBRO",
+      perfilAtualizadoEm: Date.now(),
+    });
+
+    if (args.batizadoNestaIgreja) {
+      await ctx.db.insert("membros", {
+        entidadeId: filhoEntidadeId,
+        role: "membro",
+        cargoEclesiastico: "MEMBRO_NAO_COMUNGANTE",
+        dataBatismo: args.dataBatismo || undefined,
+      });
+    }
+
+    const tipo: "PAI" | "MAE" | "RESPONSAVEL" =
+      respEntidade.sexo === "M" ? "PAI" : respEntidade.sexo === "F" ? "MAE" : "RESPONSAVEL";
+    await ctx.db.insert("responsaveis", {
+      criancaEntidadeId: filhoEntidadeId,
+      responsavelEntidadeId: responsavel.entidadeId,
+      tipo,
+      principal: true,
+      criadoEm: Date.now(),
+    });
+    return { filhoEntidadeId };
+  },
+});
+
+export const vincularFilhoExistenteAdmin = mutation({
+  args: { responsavelMembroId: v.id("membros"), filhoEntidadeId: v.id("entidades") },
+  handler: async (ctx, { responsavelMembroId, filhoEntidadeId }) => {
+    await requireAnyPermission(ctx, PERM_FAMILIA);
+    const responsavel = await ctx.db.get(responsavelMembroId);
+    if (!responsavel) throw new Error("Responsavel nao encontrado");
+    if (filhoEntidadeId === responsavel.entidadeId) {
+      throw new Error("Nao e possivel vincular como proprio filho");
+    }
+    const existente = await ctx.db
+      .query("responsaveis")
+      .withIndex("by_crianca", (q) => q.eq("criancaEntidadeId", filhoEntidadeId))
+      .collect();
+    if (existente.some((r) => r.responsavelEntidadeId === responsavel.entidadeId)) {
+      return { ok: true, jaVinculado: true };
+    }
+    const respEntidade = await ctx.db.get(responsavel.entidadeId);
+    const tipo: "PAI" | "MAE" | "RESPONSAVEL" =
+      respEntidade?.sexo === "M" ? "PAI" : respEntidade?.sexo === "F" ? "MAE" : "RESPONSAVEL";
+    await ctx.db.insert("responsaveis", {
+      criancaEntidadeId: filhoEntidadeId,
+      responsavelEntidadeId: responsavel.entidadeId,
+      tipo,
+      principal: false,
+      criadoEm: Date.now(),
+    });
+    return { ok: true };
+  },
+});
+
+export const removerFilhoAdmin = mutation({
+  args: { responsavelMembroId: v.id("membros"), filhoEntidadeId: v.id("entidades") },
+  handler: async (ctx, { responsavelMembroId, filhoEntidadeId }) => {
+    await requireAnyPermission(ctx, PERM_FAMILIA);
+    const responsavel = await ctx.db.get(responsavelMembroId);
+    if (!responsavel) throw new Error("Responsavel nao encontrado");
+    const links = await ctx.db
+      .query("responsaveis")
+      .withIndex("by_crianca", (q) => q.eq("criancaEntidadeId", filhoEntidadeId))
+      .collect();
+    for (const link of links) {
+      if (link.responsavelEntidadeId === responsavel.entidadeId) {
+        await ctx.db.delete(link._id);
+      }
+    }
+    return { ok: true };
+  },
+});

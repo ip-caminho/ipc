@@ -121,8 +121,16 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "features/secretarioExecutivo/components/HistoricoEclesiasticoDrawer.tsx",
     ],
     queries: ["membros.eclesiastico.listParaSecretario", "membros.eclesiastico.getHistorico"],
-    mutations: ["membros.eclesiastico.updateEclesiastico", "membros.eclesiastico.tornarMembro"],
-    componentes: ["SecretarioExecutivoTabela", "HistoricoEclesiasticoDrawer", "PermissionGate"],
+    mutations: [
+      "membros.eclesiastico.updateEclesiastico",
+      "membros.eclesiastico.updateStatus",
+      "membros.eclesiastico.tornarMembro",
+      "membros.eclesiastico.vincularConjugeAdmin",
+      "membros.eclesiastico.adicionarFilhoAdmin",
+      "membros.eclesiastico.vincularFilhoExistenteAdmin",
+      "membros.eclesiastico.removerFilhoAdmin",
+    ],
+    componentes: ["SecretarioExecutivoTabela", "HistoricoEclesiasticoDrawer", "FamiliaDrawer", "PermissionGate"],
     notas: [
       "Permissao: membros:update_eclesiastico",
       "Roles: admin, pastor, secretaria, secretario_executivo",

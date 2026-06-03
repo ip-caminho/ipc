@@ -26,10 +26,11 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import { DatePickerField } from "@shared/components/DatePickerField";
-import { ExternalLink, History, Users, UserPlus } from "lucide-react";
+import { ExternalLink, History, Users, UserPlus, Heart } from "lucide-react";
 import { cn } from "@shared/lib/utils/cn";
 import { CARGO_ECLESIASTICO_OPTIONS } from "@features/membros/lib/constants";
 import { HistoricoEclesiasticoDrawer } from "./HistoricoEclesiasticoDrawer";
+import { FamiliaDrawer } from "./FamiliaDrawer";
 
 const NONE = "__none__";
 const NUM_COLS = 10;
@@ -73,13 +74,12 @@ export type MembroEclesiastico = {
 };
 
 function LinhaMembro({ membro, agrupar }: { membro: MembroEclesiastico; agrupar: boolean }) {
-  // @ts-expect-error Convex TS2589
   const update = useMutation(api.membros.eclesiastico.updateEclesiastico);
-  // @ts-expect-error Convex TS2589
   const updateStatus = useMutation(api.membros.eclesiastico.updateStatus);
   const membroId = membro._id as Id<"membros">;
   const entidadeId = membro.entidadeId as Id<"entidades"> | undefined;
   const [histOpen, setHistOpen] = useState(false);
+  const [famOpen, setFamOpen] = useState(false);
 
   async function salvar(field: string, value: unknown) {
     try {
@@ -95,7 +95,10 @@ function LinhaMembro({ membro, agrupar }: { membro: MembroEclesiastico; agrupar:
   async function salvarStatus(status: string) {
     if (!entidadeId) return;
     try {
-      await updateStatus({ entidadeId, status });
+      await updateStatus({
+        entidadeId,
+        status: status as "ATIVO" | "INATIVO" | "TRANSFERIDO" | "FALECIDO" | "DESLIGADO",
+      });
       toast.success("Status atualizado", { duration: 1200 });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro ao salvar status");
@@ -185,6 +188,9 @@ function LinhaMembro({ membro, agrupar }: { membro: MembroEclesiastico; agrupar:
       </TableCell>
       <TableCell>
         <div className="flex items-center gap-2">
+          <button type="button" onClick={() => setFamOpen(true)} className="text-muted-foreground hover:text-foreground" title="Familia (conjuge / filhos)">
+            <Heart className="h-4 w-4" />
+          </button>
           <button type="button" onClick={() => setHistOpen(true)} className="text-muted-foreground hover:text-foreground" title="Historico / reverter">
             <History className="h-4 w-4" />
           </button>
@@ -193,6 +199,7 @@ function LinhaMembro({ membro, agrupar }: { membro: MembroEclesiastico; agrupar:
           </Link>
         </div>
         <HistoricoEclesiasticoDrawer membroId={membroId} nome={membro.entidade?.nomeCompleto || ""} open={histOpen} onOpenChange={setHistOpen} />
+        <FamiliaDrawer membroId={membroId} entidadeId={entidadeId} nome={membro.entidade?.nomeCompleto || ""} open={famOpen} onOpenChange={setFamOpen} />
       </TableCell>
     </TableRow>
   );
