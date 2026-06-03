@@ -1,7 +1,7 @@
 "use client";
 
 import { Badge } from "@/shared/components/ui/badge";
-import { Loader2 } from "lucide-react";
+import { Spinner } from "@/shared/components/ui/spinner";
 import {
   Tooltip,
   TooltipContent,
@@ -31,7 +31,7 @@ export function IaStatusBadge({ iaStatus, iaErro }: IaStatusBadgeProps) {
 
   const badge = (
     <Badge variant={config.variant} className="gap-1">
-      {config.animate && <Loader2 className="h-3 w-3 animate-spin" />}
+      {config.animate && <Spinner className="size-3" />}
       {config.label}
     </Badge>
   );

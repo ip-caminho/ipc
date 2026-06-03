@@ -2,6 +2,12 @@
 
 import { useState } from "react";
 import { Skeleton } from "@/shared/components/ui/skeleton";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyTitle,
+  EmptyDescription,
+} from "@/shared/components/ui/empty";
 import { AudioListItem, type AudioListItemData } from "./AudioListItem";
 
 const PAGE_SIZE = 20;
@@ -26,12 +32,14 @@ export function AudioList({ audios, hideType }: AudioListProps) {
 
   if (audios.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-center">
-        <p className="text-base font-medium">Nenhum áudio encontrado</p>
-        <p className="text-sm text-muted-foreground mt-1">
-          Tente outra categoria ou termo de busca
-        </p>
-      </div>
+      <Empty>
+        <EmptyHeader>
+          <EmptyTitle>Nenhum áudio encontrado</EmptyTitle>
+          <EmptyDescription>
+            Tente outra categoria ou termo de busca
+          </EmptyDescription>
+        </EmptyHeader>
+      </Empty>
     );
   }
 

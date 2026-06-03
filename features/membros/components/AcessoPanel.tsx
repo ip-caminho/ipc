@@ -7,7 +7,13 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { normalizeToE164 } from "@convex/messaging/phoneUtils";
 import { cn } from "@shared/lib/utils/cn";
 import { Button } from "@/shared/components/ui/button";
-import { Input } from "@/shared/components/ui/input";
+import { Textarea } from "@/shared/components/ui/textarea";
+import {
+  InputGroup,
+  InputGroupInput,
+  InputGroupAddon,
+  InputGroupButton,
+} from "@/shared/components/ui/input-group";
 import { Badge } from "@/shared/components/ui/badge";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { Card, CardContent } from "@/shared/components/ui/card";
@@ -249,19 +255,22 @@ export function AcessoPanel() {
           </DialogHeader>
           {link && (
             <>
-              <div className="flex items-center gap-2">
-                <Input readOnly value={link.url} className="text-xs" />
-                <Button
-                  size="icon"
-                  variant="outline"
-                  onClick={() => {
-                    navigator.clipboard.writeText(link.url);
-                    toast.success("Link copiado");
-                  }}
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
-              </div>
+              <InputGroup>
+                <InputGroupInput readOnly value={link.url} className="text-xs" />
+                <InputGroupAddon align="inline-end">
+                  <InputGroupButton
+                    size="icon-sm"
+                    variant="outline"
+                    aria-label="Copiar link"
+                    onClick={() => {
+                      navigator.clipboard.writeText(link.url);
+                      toast.success("Link copiado");
+                    }}
+                  >
+                    <Copy />
+                  </InputGroupButton>
+                </InputGroupAddon>
+              </InputGroup>
               <Button className="w-full" onClick={() => enviarWa(link.row, link.url)}>
                 <MessageCircle className="h-4 w-4 mr-2" />
                 Enviar pelo WhatsApp
@@ -280,10 +289,10 @@ export function AcessoPanel() {
               Copie as mensagens e envie pelos seus canais. Cada link vale 7 dias.
             </DialogDescription>
           </DialogHeader>
-          <textarea
+          <Textarea
             readOnly
             value={lote ?? ""}
-            className="h-64 w-full rounded-md border p-2 text-xs font-mono"
+            className="h-64 text-xs font-mono"
           />
           <Button
             className="w-full"

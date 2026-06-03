@@ -16,7 +16,8 @@ import {
   AlertDialogTrigger,
 } from "@/shared/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { Sparkles, RotateCcw, Loader2 } from "lucide-react";
+import { Spinner } from "@/shared/components/ui/spinner";
+import { Sparkles, RotateCcw } from "lucide-react";
 
 interface IaProcessarButtonProps {
   gravacaoId: Id<"gravacoes">;
@@ -44,7 +45,7 @@ export function IaProcessarButton({ gravacaoId, iaStatus, hasAudio }: IaProcessa
   if (isProcessing) {
     return (
       <Button size="sm" disabled>
-        <Loader2 className="h-4 w-4 animate-spin mr-1" />
+        <Spinner className="mr-1" />
         Processando...
       </Button>
     );

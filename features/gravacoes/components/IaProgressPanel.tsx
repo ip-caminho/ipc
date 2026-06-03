@@ -6,7 +6,8 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { Progress } from "@/shared/components/ui/progress";
-import { Check, Loader2, AlertCircle, Sparkles, RotateCcw } from "lucide-react";
+import { Check, AlertCircle, Sparkles, RotateCcw } from "lucide-react";
+import { Spinner } from "@/shared/components/ui/spinner";
 import { cn } from "@shared/lib/utils/cn";
 import { toast } from "sonner";
 
@@ -145,7 +146,7 @@ export function IaProgressPanel({ gravacaoId, iaStatus, iaErro, iaTranscricao, y
         <div className="space-y-1.5">
           <Progress value={progress} className="h-2 transition-all duration-700" />
           <div className="flex items-center gap-2">
-            <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+            <Spinner className="size-3 text-muted-foreground" />
             <p className="text-xs text-muted-foreground">{label}</p>
           </div>
         </div>
@@ -158,7 +159,7 @@ export function IaProgressPanel({ gravacaoId, iaStatus, iaErro, iaTranscricao, y
             return (
               <div key={step.key} className="flex items-center gap-2">
                 {isDone && <Check className="h-3.5 w-3.5 text-primary shrink-0" />}
-                {isActive && <Loader2 className="h-3.5 w-3.5 animate-spin text-primary shrink-0" />}
+                {isActive && <Spinner className="size-3.5 text-primary shrink-0" />}
                 {!isDone && !isActive && <div className="h-3.5 w-3.5 rounded-full border border-muted-foreground/20 shrink-0" />}
                 <span className={cn(
                   "text-xs",

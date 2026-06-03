@@ -9,7 +9,8 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Slider } from "@/shared/components/ui/slider";
-import { Play, Pause, Save, Scissors, RotateCcw, Volume2, Loader2 } from "lucide-react";
+import { Play, Pause, Save, Scissors, RotateCcw, Volume2 } from "lucide-react";
+import { Spinner } from "@/shared/components/ui/spinner";
 import { toast } from "sonner";
 import { useAudioPlayer } from "@shared/audio/useAudioPlayer";
 import { useWaveformPeaks } from "../hooks/useWaveformPeaks";
@@ -214,7 +215,7 @@ export function SegmentEditor({
           {/* Waveform ou fallback slider */}
           {waveformLoading ? (
             <div className="flex flex-col items-center justify-center h-24 text-xs text-muted-foreground gap-2">
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Spinner />
               <span>Carregando forma de onda... {waveformProgress > 0 ? `${waveformProgress}%` : ""}</span>
               {waveformProgress > 0 && (
                 <div className="w-48 h-1 bg-muted-foreground/20 rounded-full overflow-hidden">
