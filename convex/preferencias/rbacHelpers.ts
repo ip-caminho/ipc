@@ -115,6 +115,7 @@ export const INITIAL_ROLE_PERMISSIONS: Record<string, string[]> = {
 
   membro: [
     "membros:self_service",
+    "gravacoes:read",
     "pedidos_oracao:create", "pedidos_oracao:read",
   ],
 
