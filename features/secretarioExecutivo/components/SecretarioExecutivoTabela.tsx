@@ -66,6 +66,7 @@ export type MembroEclesiastico = {
   dataMembresia?: string;
   civilmenteCapazes?: boolean;
   rolCategoria?: RolCategoria | null;
+  pendencia?: boolean;
   sexo?: string;
   dataNascimento?: string;
   familiaHeadId?: string;
@@ -265,13 +266,25 @@ function CabecalhoFamilia({ nome, total }: { nome: string; total: number }) {
 export function SecretarioExecutivoTabela({
   membros,
   agrupar,
+  categoria,
 }: {
   membros: MembroEclesiastico[];
   agrupar: boolean;
+  categoria?: string | null;
 }) {
   const linhas = useMemo(() => {
-    if (!agrupar) return membros.filter((m) => m.ehMembro !== false);
-    return [...membros].sort((a, b) => {
+    let base = membros;
+    if (categoria === "DEPENDENTES") {
+      base = base.filter((m) => m.ehMembro === false);
+    } else if (categoria === "PENDENCIA") {
+      base = base.filter((m) => m.ehMembro !== false && m.pendencia);
+    } else if (categoria) {
+      base = base.filter((m) => m.ehMembro !== false && m.rolCategoria === categoria);
+    } else if (!agrupar) {
+      base = base.filter((m) => m.ehMembro !== false);
+    }
+    if (!agrupar) return base;
+    return [...base].sort((a, b) => {
       const hn = (a.familiaHeadNome ?? "").localeCompare(b.familiaHeadNome ?? "");
       if (hn !== 0) return hn;
       if ((a.familiaHeadId ?? "") !== (b.familiaHeadId ?? "")) {
@@ -287,7 +300,7 @@ export function SecretarioExecutivoTabela({
       }
       return (a.entidade?.nomeCompleto ?? "").localeCompare(b.entidade?.nomeCompleto ?? "");
     });
-  }, [membros, agrupar]);
+  }, [membros, agrupar, categoria]);
 
   const totalPorFamilia = useMemo(() => {
     const map = new Map<string, number>();

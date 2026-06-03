@@ -5,7 +5,7 @@ import { api } from "@/convex/_generated/api";
 import { Input } from "@/shared/components/ui/input";
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import { Search, BookMarked, Users } from "lucide-react";
+import { Search, Users } from "lucide-react";
 import { useState } from "react";
 import { useDebounce } from "@shared/hooks/useDebounce";
 import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
@@ -17,41 +17,79 @@ import {
   type MembroEclesiastico,
 } from "@features/secretarioExecutivo/components/SecretarioExecutivoTabela";
 
+function CardNum({
+  label,
+  valor,
+  ativo,
+  cor,
+  onClick,
+}: {
+  label: string;
+  valor: number | string;
+  ativo?: boolean;
+  cor?: string;
+  onClick?: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "rounded-md border p-3 text-left transition-colors hover:bg-accent/40",
+        ativo && "ring-2 ring-primary border-primary"
+      )}
+    >
+      <p className={cn("text-2xl font-semibold leading-none", cor)}>{valor}</p>
+      <p className="mt-1 text-xs text-muted-foreground">{label}</p>
+    </button>
+  );
+}
+
 export default function SecretarioExecutivoPage() {
   const [search, setSearch] = useState("");
   const [agrupar, setAgrupar] = useState(false);
+  const [categoria, setCategoria] = useState<string | null>(null);
   const debouncedSearch = useDebounce(search, 300);
   const membros = useQuery(api.membros.eclesiastico.listParaSecretario, {
     search: debouncedSearch || undefined,
   });
+  const resumo = useQuery(api.membros.eclesiastico.getResumoSecretario, {});
+
+  function toggle(cat: string) {
+    setCategoria((c) => (c === cat ? null : cat));
+  }
 
   return (
     <PermissionGate permission="membros:update_eclesiastico">
       <HeaderLayout>
         <div className="space-y-4">
-          <PageHeader
-            title="Secretario Executivo"
-            subtitle="Edicao tabular de dados eclesiasticos"
-          />
+          <PageHeader title="Secretario Executivo" subtitle="Rol e dados eclesiasticos" />
 
-          <div className="rounded-md border bg-muted/30 p-3 flex items-start gap-2">
-            <BookMarked className="h-4 w-4 mt-0.5 text-muted-foreground flex-shrink-0" />
-            <div className="text-xs text-muted-foreground space-y-1">
-              <p>
-                Edite status, cargo, matricula, datas e civilmente capaz direto na
-                tabela (salva ao sair do campo). O Rol e derivado automaticamente
-                do cargo + status. Agrupe por familia para revisar por nucleo.
-              </p>
-              <p>
-                <strong>Rol:</strong>{" "}
-                <span className="text-emerald-700">Principal</span> = comungantes
-                (profissao de fe; subcategoria civilmente capazes) ·{" "}
-                <span className="text-sky-700">Separado</span> = nao comungantes ·{" "}
-                <span className="text-amber-700">Ausente</span> = paradeiro ignorado
-                (status Ausente) · <span className="text-foreground">Arquivo</span> =
-                transferidos, excluidos e falecidos.
-              </p>
+          {/* Dashboard */}
+          {resumo === undefined ? (
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-8">
+              {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-16" />)}
             </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-8">
+              <CardNum label="Comungantes" valor={resumo.comungantes} cor="text-emerald-700" ativo={categoria === "PRINCIPAL"} onClick={() => toggle("PRINCIPAL")} />
+              <CardNum label="Nao-comungantes" valor={resumo.naoComungantes} cor="text-sky-700" ativo={categoria === "SEPARADO"} onClick={() => toggle("SEPARADO")} />
+              <CardNum label="Ausentes" valor={resumo.ausentes} cor="text-amber-700" ativo={categoria === "AUSENTE"} onClick={() => toggle("AUSENTE")} />
+              <CardNum label="Arquivo" valor={resumo.arquivo} ativo={categoria === "ARQUIVO"} onClick={() => toggle("ARQUIVO")} />
+              <CardNum label="Total no rol" valor={resumo.totalRol} ativo={categoria === null && !agrupar} onClick={() => { setCategoria(null); setAgrupar(false); }} />
+              <CardNum label="Familias" valor={resumo.familias} ativo={agrupar} onClick={() => { setCategoria(null); setAgrupar((v) => !v); }} />
+              <CardNum label="Dependentes" valor={resumo.dependentes} ativo={categoria === "DEPENDENTES"} onClick={() => toggle("DEPENDENTES")} />
+              <CardNum label="Pendencias" valor={resumo.pendencias} cor={resumo.pendencias > 0 ? "text-rose-700" : undefined} ativo={categoria === "PENDENCIA"} onClick={() => toggle("PENDENCIA")} />
+            </div>
+          )}
+
+          <div className="rounded-md border bg-muted/30 p-3 text-xs text-muted-foreground">
+            <strong>Rol:</strong>{" "}
+            <span className="text-emerald-700">Principal</span> = comungantes (profissao de fe;
+            subcategoria civilmente capazes) · <span className="text-sky-700">Separado</span> =
+            nao comungantes (batismo infantil) · <span className="text-amber-700">Ausente</span> =
+            paradeiro ignorado · <span className="text-foreground">Arquivo</span> = transferidos,
+            excluidos e falecidos. Edicao salva ao sair do campo; o Rol e derivado de cargo + status.
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
@@ -64,32 +102,26 @@ export default function SecretarioExecutivoPage() {
                 className="pl-8"
               />
             </div>
-            <Button
-              type="button"
-              variant={agrupar ? "default" : "outline"}
-              size="sm"
-              onClick={() => setAgrupar((v) => !v)}
-              className={cn(agrupar && "shadow-sm")}
-            >
+            <Button type="button" variant={agrupar ? "default" : "outline"} size="sm" onClick={() => setAgrupar((v) => !v)}>
               <Users className="h-4 w-4 mr-1.5" />
               {agrupar ? "Agrupado por familia" : "Agrupar por familia"}
             </Button>
+            {categoria && (
+              <Button type="button" variant="ghost" size="sm" onClick={() => setCategoria(null)}>
+                Limpar filtro
+              </Button>
+            )}
           </div>
 
           {membros === undefined ? (
             <div className="space-y-2">
-              {[0, 1, 2, 3, 4].map((i) => (
-                <Skeleton key={i} className="h-12 w-full" />
-              ))}
+              {[0, 1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-12 w-full" />)}
             </div>
-          ) : membros.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-8 text-center">
-              Nenhum membro encontrado.
-            </p>
           ) : (
             <SecretarioExecutivoTabela
               membros={membros as MembroEclesiastico[]}
               agrupar={agrupar}
+              categoria={categoria}
             />
           )}
         </div>
