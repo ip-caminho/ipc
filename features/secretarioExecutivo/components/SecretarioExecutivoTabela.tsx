@@ -167,7 +167,11 @@ function CardMembro({ membro, agrupar }: { membro: MembroEclesiastico; agrupar: 
   const ehFilho = agrupar && membro.familiaOrder === 2;
   const href = `/secretario-executivo/${membro._id}`;
   const statusLabel = STATUS_OPTIONS.find((o) => o.value === status)?.label ?? status;
-  const cargoLabel = CARGO_ECLESIASTICO_OPTIONS.find((o) => o.value === membro.cargoEclesiastico)?.label;
+  // So exibe Cargo quando e oficio (redundante com o badge de Rol para membros comuns)
+  const ehOficio = ["PASTOR", "PRESBITERO", "DIACONO"].includes(membro.cargoEclesiastico ?? "");
+  const cargoLabel = ehOficio
+    ? CARGO_ECLESIASTICO_OPTIONS.find((o) => o.value === membro.cargoEclesiastico)?.label
+    : undefined;
 
   return (
     <Link href={href} className="block rounded-md border p-3 space-y-2 hover:bg-accent/40">
