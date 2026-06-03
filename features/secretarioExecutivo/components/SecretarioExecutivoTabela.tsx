@@ -76,7 +76,7 @@ export type MembroEclesiastico = {
   familiaOrder?: number;
 };
 
-function LinhaMembro({ membro, agrupar }: { membro: MembroEclesiastico; agrupar: boolean }) {
+function useLinhaMembro(membro: MembroEclesiastico) {
   const update = useMutation(api.membros.eclesiastico.updateEclesiastico);
   const updateStatus = useMutation(api.membros.eclesiastico.updateStatus);
   const membroId = membro._id as Id<"membros">;
@@ -108,6 +108,177 @@ function LinhaMembro({ membro, agrupar }: { membro: MembroEclesiastico; agrupar:
       toast.error(err instanceof Error ? err.message : "Erro ao salvar status");
     }
   }
+
+  return {
+    membroId,
+    entidadeId,
+    salvar,
+    salvarSeMudou,
+    salvarStatus,
+    histOpen,
+    setHistOpen,
+    famOpen,
+    setFamOpen,
+    cargosOpen,
+    setCargosOpen,
+  };
+}
+
+function DrawersMembro({
+  ctl,
+  nome,
+}: {
+  ctl: ReturnType<typeof useLinhaMembro>;
+  nome: string;
+}) {
+  return (
+    <>
+      <HistoricoEclesiasticoDrawer membroId={ctl.membroId} nome={nome} open={ctl.histOpen} onOpenChange={ctl.setHistOpen} />
+      <FamiliaDrawer membroId={ctl.membroId} entidadeId={ctl.entidadeId} nome={nome} open={ctl.famOpen} onOpenChange={ctl.setFamOpen} />
+      <CargosDrawer membroId={ctl.membroId} nome={nome} open={ctl.cargosOpen} onOpenChange={ctl.setCargosOpen} />
+    </>
+  );
+}
+
+function AcoesMembro({ ctl, href }: { ctl: ReturnType<typeof useLinhaMembro>; href: string }) {
+  return (
+    <div className="flex items-center gap-2">
+      <button type="button" onClick={() => ctl.setCargosOpen(true)} className="text-muted-foreground hover:text-foreground" title="Cargos / mandato">
+        <Briefcase className="h-4 w-4" />
+      </button>
+      <button type="button" onClick={() => ctl.setFamOpen(true)} className="text-muted-foreground hover:text-foreground" title="Familia (conjuge / filhos)">
+        <Heart className="h-4 w-4" />
+      </button>
+      <button type="button" onClick={() => ctl.setHistOpen(true)} className="text-muted-foreground hover:text-foreground" title="Historico / reverter">
+        <History className="h-4 w-4" />
+      </button>
+      <Link href={href} className="text-muted-foreground hover:text-foreground" title="Abrir detalhe">
+        <ExternalLink className="h-4 w-4" />
+      </Link>
+    </div>
+  );
+}
+
+function CardMembro({ membro, agrupar }: { membro: MembroEclesiastico; agrupar: boolean }) {
+  const ctl = useLinhaMembro(membro);
+  const nome = membro.entidade?.nomeCompleto || "-";
+  const status = membro.entidade?.status || "ATIVO";
+  const rol = membro.rolCategoria ? ROL_BADGE[membro.rolCategoria] : null;
+  const ehFilho = agrupar && membro.familiaOrder === 2;
+  const href = `/secretario-executivo/${membro._id}`;
+
+  return (
+    <div className="rounded-md border p-3 space-y-2.5">
+      <div className="flex items-start justify-between gap-2">
+        <Link href={href} className="text-sm font-medium hover:underline">
+          {nome}
+          {ehFilho && <span className="ml-1 text-[10px] text-muted-foreground">(filho)</span>}
+        </Link>
+        {rol && (
+          <Badge variant="outline" className={cn("shrink-0 text-xs", rol.className)}>
+            {rol.label}
+          </Badge>
+        )}
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        <div className="space-y-1">
+          <span className="text-[10px] uppercase text-muted-foreground">Status</span>
+          <Select value={status} onValueChange={ctl.salvarStatus}>
+            <SelectTrigger className="h-8 w-full text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {STATUS_OPTIONS.map((o) => (
+                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1">
+          <span className="text-[10px] uppercase text-muted-foreground">Cargo</span>
+          <Select
+            value={membro.cargoEclesiastico || NONE}
+            onValueChange={(v) => ctl.salvar("cargoEclesiastico", v === NONE ? "" : v)}
+          >
+            <SelectTrigger className="h-8 w-full text-xs">
+              <SelectValue placeholder="-" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={NONE}>—</SelectItem>
+              {CARGO_ECLESIASTICO_OPTIONS.map((o) => (
+                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+        {membro.rolCategoria === "PRINCIPAL" && (
+          <span>
+            Civ. capaz:{" "}
+            {membro.civilmenteCapazes ? (
+              <span className="text-emerald-700">Sim</span>
+            ) : (
+              <span className="text-amber-700">Menor</span>
+            )}
+          </span>
+        )}
+        {membro.numeroMatricula && <span>Matricula: {membro.numeroMatricula}</span>}
+        {membro.dataMembresia && <span>Membresia: {membro.dataMembresia}</span>}
+      </div>
+
+      <div className="flex items-center justify-between border-t pt-2">
+        <span className="text-[10px] uppercase text-muted-foreground">Editar datas no detalhe</span>
+        <AcoesMembro ctl={ctl} href={href} />
+      </div>
+      <DrawersMembro ctl={ctl} nome={nome} />
+    </div>
+  );
+}
+
+function CardDependente({ dep }: { dep: MembroEclesiastico }) {
+  const tornarMembro = useMutation(api.membros.eclesiastico.tornarMembro);
+  const [loading, setLoading] = useState(false);
+  const nome = dep.entidade?.nomeCompleto || "-";
+
+  async function promover() {
+    if (!dep.entidadeId) return;
+    setLoading(true);
+    try {
+      await tornarMembro({ entidadeId: dep.entidadeId as Id<"entidades"> });
+      toast.success("Agora e membro — edite os dados eclesiasticos");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao tornar membro");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="rounded-md border bg-muted/10 p-3 space-y-2">
+      <div className="flex items-start justify-between gap-2">
+        <span className="text-sm font-medium text-muted-foreground">
+          {nome}
+          <span className="ml-1 text-[10px]">(filho)</span>
+        </span>
+        <Badge variant="secondary" className="shrink-0 text-xs">Dependente</Badge>
+      </div>
+      <p className="text-xs text-muted-foreground">
+        {dep.dataNascimento ? `Nascimento: ${dep.dataNascimento}` : "Sem dados eclesiasticos (nao e membro)"}
+      </p>
+      <Button type="button" variant="outline" size="sm" className="w-full" disabled={loading} onClick={promover}>
+        <UserPlus className="h-3.5 w-3.5 mr-1" />
+        {loading ? "..." : "Tornar membro"}
+      </Button>
+    </div>
+  );
+}
+
+function LinhaMembro({ membro, agrupar }: { membro: MembroEclesiastico; agrupar: boolean }) {
+  const ctl = useLinhaMembro(membro);
+  const { salvar, salvarSeMudou, salvarStatus } = ctl;
 
   const status = membro.entidade?.status || "ATIVO";
   const rol = membro.rolCategoria ? ROL_BADGE[membro.rolCategoria] : null;
@@ -191,23 +362,8 @@ function LinhaMembro({ membro, agrupar }: { membro: MembroEclesiastico; agrupar:
         <DatePickerField value={membro.dataMembresia ?? ""} onChange={(iso) => salvar("dataMembresia", iso)} className="h-8 w-[150px] text-xs" />
       </TableCell>
       <TableCell>
-        <div className="flex items-center gap-2">
-          <button type="button" onClick={() => setCargosOpen(true)} className="text-muted-foreground hover:text-foreground" title="Cargos / mandato">
-            <Briefcase className="h-4 w-4" />
-          </button>
-          <button type="button" onClick={() => setFamOpen(true)} className="text-muted-foreground hover:text-foreground" title="Familia (conjuge / filhos)">
-            <Heart className="h-4 w-4" />
-          </button>
-          <button type="button" onClick={() => setHistOpen(true)} className="text-muted-foreground hover:text-foreground" title="Historico / reverter">
-            <History className="h-4 w-4" />
-          </button>
-          <Link href={`/secretario-executivo/${membro._id}`} className="text-muted-foreground hover:text-foreground" title="Abrir detalhe">
-            <ExternalLink className="h-4 w-4" />
-          </Link>
-        </div>
-        <HistoricoEclesiasticoDrawer membroId={membroId} nome={membro.entidade?.nomeCompleto || ""} open={histOpen} onOpenChange={setHistOpen} />
-        <FamiliaDrawer membroId={membroId} entidadeId={entidadeId} nome={membro.entidade?.nomeCompleto || ""} open={famOpen} onOpenChange={setFamOpen} />
-        <CargosDrawer membroId={membroId} nome={membro.entidade?.nomeCompleto || ""} open={cargosOpen} onOpenChange={setCargosOpen} />
+        <AcoesMembro ctl={ctl} href={`/secretario-executivo/${membro._id}`} />
+        <DrawersMembro ctl={ctl} nome={membro.entidade?.nomeCompleto || ""} />
       </TableCell>
     </TableRow>
   );
@@ -327,7 +483,38 @@ export function SecretarioExecutivoTabela({
   }, [linhas, agrupar]);
 
   return (
-    <div className="rounded-md border overflow-hidden [&_[data-slot=table-container]]:max-h-[calc(100vh-16rem)] [&_[data-slot=table-container]]:overflow-auto">
+    <>
+    {/* Mobile: cards */}
+    <div className="space-y-3 md:hidden">
+      {linhas.map((m, i) => {
+        const novaFamilia = agrupar && (i === 0 || m.familiaHeadId !== linhas[i - 1].familiaHeadId);
+        return (
+          <Fragment key={m._id}>
+            {novaFamilia && (
+              <div className="flex items-center gap-2 pt-2 text-sm font-semibold">
+                <Users className="h-4 w-4 text-muted-foreground" />
+                Familia {m.familiaHeadNome || "(sem chefe definido)"}
+                <span className="text-xs font-normal text-muted-foreground">
+                  · {totalPorFamilia.get(m.familiaHeadId ?? "") ?? 1} pessoa
+                  {(totalPorFamilia.get(m.familiaHeadId ?? "") ?? 1) !== 1 ? "s" : ""}
+                </span>
+              </div>
+            )}
+            {m.ehMembro === false ? (
+              <CardDependente dep={m} />
+            ) : (
+              <CardMembro membro={m} agrupar={agrupar} />
+            )}
+          </Fragment>
+        );
+      })}
+      {linhas.length === 0 && (
+        <p className="py-8 text-center text-sm text-muted-foreground">Nenhum registro.</p>
+      )}
+    </div>
+
+    {/* Desktop: tabela */}
+    <div className="hidden rounded-md border overflow-hidden md:block [&_[data-slot=table-container]]:max-h-[calc(100vh-16rem)] [&_[data-slot=table-container]]:overflow-auto">
       <Table>
         <TableHeader>
           <TableRow>
@@ -365,5 +552,6 @@ export function SecretarioExecutivoTabela({
         </TableBody>
       </Table>
     </div>
+    </>
   );
 }
