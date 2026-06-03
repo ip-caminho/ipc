@@ -13,7 +13,27 @@ import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { requireAnyPermission } from "../_shared/requirePermission";
 import { createFieldAuditLogs, createActionAuditLog } from "../_shared/auditHelpers";
+import { getTipoRol, type CargoEclesiastico, type StatusEntidade, type TipoRol } from "./tipoRolHelpers";
 import type { Doc } from "../_generated/dataModel";
+
+export type RolCategoria = "PRINCIPAL" | "SEPARADO" | "AUSENTE" | "ARQUIVO";
+
+/** Mapeia o tipoRol derivado (IPB) para a categoria de rol exibida. */
+function categoriaDoRol(
+  cargo: string | undefined,
+  status: string,
+  override: string | undefined
+): RolCategoria {
+  const t: TipoRol | null = getTipoRol(
+    cargo as CargoEclesiastico | undefined,
+    status as StatusEntidade,
+    override as TipoRol | undefined
+  );
+  if (t === null) return "ARQUIVO";
+  if (t === "COMUNGANTE") return "PRINCIPAL";
+  if (t === "NAO_COMUNGANTE") return "SEPARADO";
+  return "AUSENTE";
+}
 
 const ECLESIASTICO_FIELDS = new Set([
   // Membresia
@@ -27,6 +47,7 @@ const ECLESIASTICO_FIELDS = new Set([
   "numeroMatricula",
   "observacoesPastorais",
   "tipoRolOverride",
+  "civilmenteCapazes",
   // Demissao
   "formaDemissao",
   "dataDemissao",
@@ -205,6 +226,8 @@ type LinhaSecretario = {
   dataConversao?: string;
   dataBatismo?: string;
   dataMembresia?: string;
+  civilmenteCapazes?: boolean;
+  rolCategoria: RolCategoria | null; // null = dependente (fora do rol)
   sexo?: string;
   dataNascimento?: string;
   familiaHeadId: string;
@@ -300,6 +323,10 @@ export const listParaSecretario = query({
         dataConversao: m?.dataConversao,
         dataBatismo: m?.dataBatismo,
         dataMembresia: m?.dataMembresia,
+        civilmenteCapazes: m?.civilmenteCapazes,
+        rolCategoria: m
+          ? categoriaDoRol(m.cargoEclesiastico, e.status, m.tipoRolOverride)
+          : null,
         sexo: e.sexo,
         dataNascimento: e.dataNascimento,
         familiaHeadId: headId,
@@ -442,5 +469,38 @@ export const tornarMembro = mutation({
     await createActionAuditLog(ctx, "CREATE", "membros", membroId);
 
     return { membroId, jaEra: false };
+  },
+});
+
+/**
+ * Atualiza o status da entidade (ATIVO/INATIVO/TRANSFERIDO/DESLIGADO/FALECIDO).
+ * Afeta a categoria de rol derivada (ATIVO -> Principal/Separado; demais ->
+ * Arquivo/Ausente) e o bloqueio de login. Audita a mudanca.
+ */
+export const updateStatus = mutation({
+  args: {
+    entidadeId: v.id("entidades"),
+    status: v.union(
+      v.literal("ATIVO"),
+      v.literal("INATIVO"),
+      v.literal("TRANSFERIDO"),
+      v.literal("DESLIGADO"),
+      v.literal("FALECIDO")
+    ),
+  },
+  handler: async (ctx, { entidadeId, status }) => {
+    await requireAnyPermission(ctx, [
+      "membros:update_eclesiastico",
+      "membros:update",
+    ]);
+    const entidade = await ctx.db.get(entidadeId);
+    if (!entidade) throw new Error("Entidade nao encontrada");
+    if (entidade.status === status) return { changed: false };
+
+    const old = { ...entidade };
+    await ctx.db.patch(entidadeId, { status });
+    const novo = await ctx.db.get(entidadeId);
+    await createFieldAuditLogs(ctx, old, novo, "entidades", entidadeId);
+    return { changed: true };
   },
 });

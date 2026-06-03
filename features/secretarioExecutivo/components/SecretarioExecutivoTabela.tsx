@@ -17,6 +17,7 @@ import {
 import { Input } from "@/shared/components/ui/input";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
+import { Checkbox } from "@/shared/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -27,21 +28,29 @@ import {
 import { DatePickerField } from "@shared/components/DatePickerField";
 import { ExternalLink, History, Users, UserPlus } from "lucide-react";
 import { cn } from "@shared/lib/utils/cn";
-import {
-  CARGO_ECLESIASTICO_OPTIONS,
-  STATUS_COLORS,
-} from "@features/membros/lib/constants";
+import { CARGO_ECLESIASTICO_OPTIONS } from "@features/membros/lib/constants";
 import { HistoricoEclesiasticoDrawer } from "./HistoricoEclesiasticoDrawer";
-
-const TIPO_ROL_OPTIONS = [
-  { value: "COMUNGANTE", label: "Comungante" },
-  { value: "NAO_COMUNGANTE", label: "Nao comungante" },
-  { value: "PARADEIRO_IGNORADO", label: "Paradeiro ignorado" },
-] as const;
 
 const NONE = "__none__";
 const NUM_COLS = 10;
 const COL_NOME = "sticky left-0 z-10 bg-background";
+
+const STATUS_OPTIONS = [
+  { value: "ATIVO", label: "Ativo" },
+  { value: "INATIVO", label: "Ausente" },
+  { value: "TRANSFERIDO", label: "Transferido" },
+  { value: "DESLIGADO", label: "Excluido" },
+  { value: "FALECIDO", label: "Falecido" },
+] as const;
+
+type RolCategoria = "PRINCIPAL" | "SEPARADO" | "AUSENTE" | "ARQUIVO";
+
+const ROL_BADGE: Record<RolCategoria, { label: string; className: string }> = {
+  PRINCIPAL: { label: "Principal", className: "bg-emerald-100 text-emerald-800 border-emerald-200" },
+  SEPARADO: { label: "Separado", className: "bg-sky-100 text-sky-800 border-sky-200" },
+  AUSENTE: { label: "Ausente", className: "bg-amber-100 text-amber-800 border-amber-200" },
+  ARQUIVO: { label: "Arquivo", className: "bg-muted text-muted-foreground" },
+};
 
 export type MembroEclesiastico = {
   _id: string;
@@ -49,12 +58,12 @@ export type MembroEclesiastico = {
   entidadeId?: string;
   entidade?: { nomeCompleto?: string; whatsapp?: string; status?: string };
   cargoEclesiastico?: string;
-  rol?: string;
-  tipoRolOverride?: string;
   numeroMatricula?: string;
   dataConversao?: string;
   dataBatismo?: string;
   dataMembresia?: string;
+  civilmenteCapazes?: boolean;
+  rolCategoria?: RolCategoria | null;
   sexo?: string;
   dataNascimento?: string;
   familiaHeadId?: string;
@@ -65,10 +74,13 @@ export type MembroEclesiastico = {
 function LinhaMembro({ membro, agrupar }: { membro: MembroEclesiastico; agrupar: boolean }) {
   // @ts-expect-error Convex TS2589
   const update = useMutation(api.membros.eclesiastico.updateEclesiastico);
+  // @ts-expect-error Convex TS2589
+  const updateStatus = useMutation(api.membros.eclesiastico.updateStatus);
   const membroId = membro._id as Id<"membros">;
+  const entidadeId = membro.entidadeId as Id<"entidades"> | undefined;
   const [histOpen, setHistOpen] = useState(false);
 
-  async function salvar(field: string, value: string) {
+  async function salvar(field: string, value: unknown) {
     try {
       await update({ membroId, data: { [field]: value } });
       toast.success("Salvo", { duration: 1200 });
@@ -79,27 +91,41 @@ function LinhaMembro({ membro, agrupar }: { membro: MembroEclesiastico; agrupar:
   function salvarSeMudou(field: string, atual: string, value: string) {
     if (value !== atual) salvar(field, value);
   }
+  async function salvarStatus(status: string) {
+    if (!entidadeId) return;
+    try {
+      await updateStatus({ entidadeId, status });
+      toast.success("Status atualizado", { duration: 1200 });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao salvar status");
+    }
+  }
 
   const status = membro.entidade?.status || "ATIVO";
+  const rol = membro.rolCategoria ? ROL_BADGE[membro.rolCategoria] : null;
   const ehFilho = agrupar && membro.familiaOrder === 2;
 
   return (
     <TableRow>
       <TableCell className={cn(COL_NOME, "font-medium whitespace-nowrap")}>
-        <Link
-          href={`/secretario-executivo/${membro._id}`}
-          className={cn("hover:underline", agrupar && "pl-6 block")}
-        >
+        <Link href={`/secretario-executivo/${membro._id}`} className={cn("hover:underline", agrupar && "pl-6 block")}>
           {membro.entidade?.nomeCompleto || "-"}
-          {ehFilho && (
-            <span className="ml-1 text-[10px] text-muted-foreground">(filho)</span>
-          )}
+          {ehFilho && <span className="ml-1 text-[10px] text-muted-foreground">(filho)</span>}
         </Link>
       </TableCell>
       <TableCell>
-        <Badge variant="outline" className={`text-xs ${STATUS_COLORS[status] || ""}`}>
-          {status}
-        </Badge>
+        <Select value={status} onValueChange={salvarStatus}>
+          <SelectTrigger className="h-8 w-[130px] text-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {STATUS_OPTIONS.map((o) => (
+              <SelectItem key={o.value} value={o.value}>
+                {o.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </TableCell>
       <TableCell>
         <Select
@@ -120,30 +146,24 @@ function LinhaMembro({ membro, agrupar }: { membro: MembroEclesiastico; agrupar:
         </Select>
       </TableCell>
       <TableCell>
-        <Input
-          key={membro.rol ?? ""}
-          defaultValue={membro.rol ?? ""}
-          onBlur={(e) => salvarSeMudou("rol", membro.rol ?? "", e.target.value)}
-          className="h-8 w-20 text-xs"
-        />
+        {rol ? (
+          <Badge variant="outline" className={cn("text-xs", rol.className)}>
+            {rol.label}
+          </Badge>
+        ) : (
+          <span className="text-xs text-muted-foreground">—</span>
+        )}
       </TableCell>
       <TableCell>
-        <Select
-          value={membro.tipoRolOverride || NONE}
-          onValueChange={(v) => salvar("tipoRolOverride", v === NONE ? "" : v)}
-        >
-          <SelectTrigger className="h-8 w-[170px] text-xs">
-            <SelectValue placeholder="Automatico" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={NONE}>Automatico</SelectItem>
-            {TIPO_ROL_OPTIONS.map((o) => (
-              <SelectItem key={o.value} value={o.value}>
-                {o.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {membro.rolCategoria === "PRINCIPAL" ? (
+          <Checkbox
+            checked={!!membro.civilmenteCapazes}
+            onCheckedChange={(c) => salvar("civilmenteCapazes", c === true)}
+            title="Civilmente capaz"
+          />
+        ) : (
+          <span className="text-xs text-muted-foreground">—</span>
+        )}
       </TableCell>
       <TableCell>
         <Input
@@ -209,14 +229,7 @@ function LinhaDependente({ dep }: { dep: MembroEclesiastico }) {
         {dep.dataNascimento ? `Nascimento: ${dep.dataNascimento}` : "Sem dados eclesiasticos (nao e membro)"}
       </TableCell>
       <TableCell>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={loading}
-          onClick={promover}
-          title="Criar registro de membro para editar dados eclesiasticos"
-        >
+        <Button type="button" variant="outline" size="sm" disabled={loading} onClick={promover} title="Criar registro de membro">
           <UserPlus className="h-3.5 w-3.5 mr-1" />
           {loading ? "..." : "Tornar membro"}
         </Button>
@@ -249,10 +262,7 @@ export function SecretarioExecutivoTabela({
   agrupar: boolean;
 }) {
   const linhas = useMemo(() => {
-    if (!agrupar) {
-      // modo lista: so membros, ordem alfabetica
-      return membros.filter((m) => m.ehMembro !== false);
-    }
+    if (!agrupar) return membros.filter((m) => m.ehMembro !== false);
     return [...membros].sort((a, b) => {
       const hn = (a.familiaHeadNome ?? "").localeCompare(b.familiaHeadNome ?? "");
       if (hn !== 0) return hn;
@@ -273,11 +283,9 @@ export function SecretarioExecutivoTabela({
 
   const totalPorFamilia = useMemo(() => {
     const map = new Map<string, number>();
-    if (agrupar) {
-      for (const l of linhas) {
-        const k = l.familiaHeadId ?? "";
-        map.set(k, (map.get(k) ?? 0) + 1);
-      }
+    if (agrupar) for (const l of linhas) {
+      const k = l.familiaHeadId ?? "";
+      map.set(k, (map.get(k) ?? 0) + 1);
     }
     return map;
   }, [linhas, agrupar]);
@@ -291,7 +299,7 @@ export function SecretarioExecutivoTabela({
             <TableHead>Status</TableHead>
             <TableHead>Cargo eclesiastico</TableHead>
             <TableHead>Rol</TableHead>
-            <TableHead>Tipo de rol</TableHead>
+            <TableHead>Civ. capaz</TableHead>
             <TableHead>Matricula</TableHead>
             <TableHead>Conversao</TableHead>
             <TableHead>Batismo</TableHead>
@@ -301,8 +309,7 @@ export function SecretarioExecutivoTabela({
         </TableHeader>
         <TableBody>
           {linhas.map((m, i) => {
-            const novaFamilia =
-              agrupar && (i === 0 || m.familiaHeadId !== linhas[i - 1].familiaHeadId);
+            const novaFamilia = agrupar && (i === 0 || m.familiaHeadId !== linhas[i - 1].familiaHeadId);
             return (
               <Fragment key={m._id}>
                 {novaFamilia && (

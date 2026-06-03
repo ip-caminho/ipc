@@ -36,12 +36,22 @@ export default function SecretarioExecutivoPage() {
 
           <div className="rounded-md border bg-muted/30 p-3 flex items-start gap-2">
             <BookMarked className="h-4 w-4 mt-0.5 text-muted-foreground flex-shrink-0" />
-            <p className="text-xs text-muted-foreground">
-              Edite cargo, rol, matricula e datas sacramentais direto na tabela
-              (salva automaticamente ao sair do campo). Agrupe por familia para
-              revisar por nucleo (chefe, conjuge e filhos). Para admissao,
-              demissao, atos e cargos, abra o detalhe.
-            </p>
+            <div className="text-xs text-muted-foreground space-y-1">
+              <p>
+                Edite status, cargo, matricula, datas e civilmente capaz direto na
+                tabela (salva ao sair do campo). O Rol e derivado automaticamente
+                do cargo + status. Agrupe por familia para revisar por nucleo.
+              </p>
+              <p>
+                <strong>Rol:</strong>{" "}
+                <span className="text-emerald-700">Principal</span> = comungantes
+                (profissao de fe; subcategoria civilmente capazes) ·{" "}
+                <span className="text-sky-700">Separado</span> = nao comungantes ·{" "}
+                <span className="text-amber-700">Ausente</span> = paradeiro ignorado
+                (status Ausente) · <span className="text-foreground">Arquivo</span> =
+                transferidos, excluidos e falecidos.
+              </p>
+            </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">

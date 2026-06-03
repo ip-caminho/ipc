@@ -174,6 +174,27 @@ describe("listParaSecretario — agrupamento por familia", () => {
     expect(l.familiaOrder).toBe(0);
   });
 
+  it("deriva rolCategoria de cargo + status", async () => {
+    const t = convexTest(schema, modules);
+    const admin = await seedAdmin(t);
+
+    await pessoa(t, "Com Ungante", "M");
+    const naoComungante = await pessoa(t, "Nao Comungante", "F");
+    const transferido = await pessoa(t, "Foi Transferido", "M");
+    await t.run(async (ctx) => {
+      await ctx.db.patch(naoComungante.membroId, {
+        cargoEclesiastico: "MEMBRO_NAO_COMUNGANTE",
+      });
+      await ctx.db.patch(transferido.entidadeId, { status: "TRANSFERIDO" });
+    });
+
+    const linhas = await admin.query(api.membros.eclesiastico.listParaSecretario, {});
+    const by = (n: string) => linhas.find((l) => l.entidade.nomeCompleto === n)!;
+    expect(by("Com Ungante").rolCategoria).toBe("PRINCIPAL");
+    expect(by("Nao Comungante").rolCategoria).toBe("SEPARADO");
+    expect(by("Foi Transferido").rolCategoria).toBe("ARQUIVO");
+  });
+
   it("filtra por busca mantendo metadados", async () => {
     const t = convexTest(schema, modules);
     const admin = await seedAdmin(t);
