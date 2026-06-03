@@ -27,9 +27,24 @@ import { toast } from "sonner";
 export function AcessoSection({ membroId }: { membroId: Id<"membros"> }) {
   const status = useQuery(api.membros.acesso.getStatusAcesso, { membroId });
   const gerarLink = useMutation(api.membros.acesso.gerarLink);
+  const resetar = useMutation(api.membros.acesso.resetarAcesso);
   const [open, setOpen] = useState(false);
   const [link, setLink] = useState("");
   const [loading, setLoading] = useState(false);
+  const [resetando, setResetando] = useState(false);
+
+  async function handleResetar() {
+    if (!confirm("Resetar o acesso? A pessoa perde o login atual e podera se cadastrar de novo (criar nova senha).")) return;
+    setResetando(true);
+    try {
+      await resetar({ membroId });
+      toast.success("Acesso resetado — pode fazer o primeiro acesso de novo");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao resetar");
+    } finally {
+      setResetando(false);
+    }
+  }
 
   if (status === undefined || status === null) return null;
 
@@ -86,6 +101,12 @@ export function AcessoSection({ membroId }: { membroId: Id<"membros"> }) {
         {!status.ativado && (
           <Button onClick={handleGerar} disabled={loading} variant="outline" size="sm">
             {loading ? "Gerando..." : status.temLinkPendente ? "Gerar novo link" : "Gerar link de acesso"}
+          </Button>
+        )}
+
+        {status.ativado && (
+          <Button onClick={handleResetar} disabled={resetando} variant="outline" size="sm" className="text-destructive">
+            {resetando ? "Resetando..." : "Resetar acesso (tratar como novo)"}
           </Button>
         )}
 
