@@ -1,6 +1,5 @@
 "use client";
 
-import { useRef } from "react";
 import { useQuery } from "convex/react";
 import { parseAsString, useQueryState } from "nuqs";
 import { api } from "@/convex/_generated/api";
@@ -8,10 +7,9 @@ import { MembroTable, type MembroRow } from "@features/membros/components/Membro
 import { MembrosFilterBar } from "@features/membros/components/MembrosFilterBar";
 import { AcessoPanel } from "@features/membros/components/AcessoPanel";
 import { cn } from "@shared/lib/utils/cn";
-import { MembrosExportView } from "@features/membros/components/MembrosExportView";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
-import { Plus, Search, Printer } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import Link from "next/link";
 import { PermissionGate } from "@shared/components/auth/PermissionGate";
 import { ModuloGuard } from "@shared/components/auth/ModuloGuard";
@@ -26,7 +24,6 @@ export default function MembrosPage() {
   const [cargo, setCargo] = useQueryState("cargo", parseAsString.withDefault(""));
   const [view, setView] = useQueryState("view", parseAsString.withDefault("cadastro"));
   const debouncedSearch = useDebounce(search, 300);
-  const exportRef = useRef<HTMLDivElement>(null);
 
   const queryStatus = status === "TODOS" ? "TODOS" : status || undefined;
   // @ts-expect-error Convex TS2589
@@ -82,17 +79,6 @@ export default function MembrosPage() {
           />
         </div>
         <div className="flex items-center gap-2">
-          <PermissionGate permission="membros:read">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => window.print()}
-              disabled={!membros || membros.length === 0}
-            >
-              <Printer className="h-4 w-4 mr-1.5" />
-              <span className="hidden sm:inline">Imprimir lista</span>
-            </Button>
-          </PermissionGate>
           <PermissionGate permission="membros:create">
             <Button asChild size="sm">
               <Link href="/membros/novo">
@@ -130,15 +116,6 @@ export default function MembrosPage() {
       )}
     </div>
     </HeaderLayout>
-
-    {membros && (
-      <MembrosExportView
-        ref={exportRef}
-        data={membros as MembroRow[]}
-        filtroStatus={status}
-        filtroCargo={cargo}
-      />
-    )}
     </ModuloGuard>
   );
 }
