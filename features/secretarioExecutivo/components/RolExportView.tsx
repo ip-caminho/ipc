@@ -10,14 +10,6 @@ const ROL_LABEL: Record<string, string> = {
   ARQUIVO: "Arquivo",
 };
 
-const CARGO_ABREV: Record<string, string> = {
-  MEMBRO_COMUNGANTE: "MC",
-  MEMBRO_NAO_COMUNGANTE: "MNC",
-  DIACONO: "Diac.",
-  PRESBITERO: "Presb.",
-  PASTOR: "Pr.",
-};
-
 function thStyle(extra: React.CSSProperties): React.CSSProperties {
   return { borderBottom: "2px solid #000", padding: "4px 6px", fontWeight: "bold", textAlign: "center", ...extra };
 }
@@ -72,10 +64,9 @@ export const RolExportView = forwardRef<HTMLDivElement, Props>(function RolExpor
           <thead>
             <tr>
               <th style={thStyle({ width: "6%" })}>N°</th>
-              <th style={thStyle({ width: "40%", textAlign: "left" })}>Nome</th>
+              <th style={thStyle({ width: "46%", textAlign: "left" })}>Nome</th>
               <th style={thStyle({ width: "12%" })}>Rol</th>
-              <th style={thStyle({ width: "10%" })}>Cargo</th>
-              <th style={thStyle({ width: "32%", textAlign: "left" })}>Assinatura</th>
+              <th style={thStyle({ width: "36%", textAlign: "left" })}>Assinatura</th>
             </tr>
           </thead>
           <tbody>
@@ -85,9 +76,6 @@ export const RolExportView = forwardRef<HTMLDivElement, Props>(function RolExpor
                 <td style={tdStyle({})}>{m.entidade?.nomeCompleto ?? "-"}</td>
                 <td style={tdStyle({ textAlign: "center" })}>
                   {m.ehMembro === false ? "Dep." : ROL_LABEL[m.rolCategoria ?? ""] ?? "-"}
-                </td>
-                <td style={tdStyle({ textAlign: "center" })}>
-                  {m.cargoEclesiastico ? CARGO_ABREV[m.cargoEclesiastico] ?? m.cargoEclesiastico : "-"}
                 </td>
                 <td style={tdStyle({})}>
                   <div style={{ borderBottom: "1px solid #999", minHeight: "18px" }} />
