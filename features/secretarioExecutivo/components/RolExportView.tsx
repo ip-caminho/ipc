@@ -55,7 +55,7 @@ export const RolExportView = forwardRef<HTMLDivElement, Props>(function RolExpor
       <div style={{ padding: "1cm" }}>
         <div style={{ textAlign: "center", marginBottom: "0.5cm" }}>
           <h1 style={{ fontSize: "14pt", fontWeight: "bold", margin: 0 }}>
-            Rol de Membros — Igreja Presbiteriana de Cotia
+            Rol de Membros — Igreja Presbiteriana do Caminho
           </h1>
           <p style={{ fontSize: "10pt", margin: "4px 0 0" }}>
             {descricao} | Data: {dataHoje} | Total: {sorted.length}

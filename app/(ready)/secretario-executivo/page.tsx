@@ -13,6 +13,12 @@ import { PageHeader } from "@shared/components/layout/PageHeader";
 import { PermissionGate } from "@shared/components/auth/PermissionGate";
 import { cn } from "@shared/lib/utils/cn";
 import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider,
+} from "@/shared/components/ui/tooltip";
+import {
   SecretarioExecutivoTabela,
   type MembroEclesiastico,
 } from "@features/secretarioExecutivo/components/SecretarioExecutivoTabela";
@@ -55,15 +61,17 @@ function CardNum({
   valor,
   ativo,
   cor,
+  dica,
   onClick,
 }: {
   label: string;
   valor: number | string;
   ativo?: boolean;
   cor?: string;
+  dica?: string;
   onClick?: () => void;
 }) {
-  return (
+  const botao = (
     <button
       type="button"
       onClick={onClick}
@@ -75,6 +83,13 @@ function CardNum({
       <p className={cn("text-2xl font-semibold leading-none", cor)}>{valor}</p>
       <p className="mt-1 text-xs text-muted-foreground">{label}</p>
     </button>
+  );
+  if (!dica) return botao;
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{botao}</TooltipTrigger>
+      <TooltipContent className="max-w-[220px] text-xs">{dica}</TooltipContent>
+    </Tooltip>
   );
 }
 
@@ -104,44 +119,33 @@ export default function SecretarioExecutivoPage() {
               {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-16" />)}
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-8">
-              <CardNum label="Comungantes" valor={resumo.comungantes} cor="text-emerald-700" ativo={categoria === "PRINCIPAL"} onClick={() => toggle("PRINCIPAL")} />
-              <CardNum label="Civilmente capazes" valor={resumo.civilmenteCapazes} cor="text-emerald-700" ativo={categoria === "CIVILMENTE_CAPAZ"} onClick={() => toggle("CIVILMENTE_CAPAZ")} />
-              <CardNum label="Nao-comungantes" valor={resumo.naoComungantes} cor="text-sky-700" ativo={categoria === "SEPARADO"} onClick={() => toggle("SEPARADO")} />
-              <CardNum label="Ausentes" valor={resumo.ausentes} cor="text-amber-700" ativo={categoria === "AUSENTE"} onClick={() => toggle("AUSENTE")} />
-              <CardNum label="Arquivo" valor={resumo.arquivo} ativo={categoria === "ARQUIVO"} onClick={() => toggle("ARQUIVO")} />
-              <CardNum label="Total no rol" valor={resumo.totalRol} ativo={categoria === null && !agrupar} onClick={() => { setCategoria(null); setAgrupar(false); }} />
-              <CardNum label="Familias" valor={resumo.familias} ativo={agrupar} onClick={() => { setCategoria(null); setAgrupar((v) => !v); }} />
-              <CardNum label="Dependentes" valor={resumo.dependentes} ativo={categoria === "DEPENDENTES"} onClick={() => toggle("DEPENDENTES")} />
-              <CardNum label="Pendencias" valor={resumo.pendencias} cor={resumo.pendencias > 0 ? "text-rose-700" : undefined} ativo={categoria === "PENDENCIA"} onClick={() => toggle("PENDENCIA")} />
-            </div>
-          )}
-
-          {resumo !== undefined && (
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs font-medium text-muted-foreground">Oficiais:</span>
-              <CardNum label="Pastores" valor={resumo.pastores} ativo={categoria === "PASTOR"} onClick={() => toggle("PASTOR")} />
-              <CardNum label="Presbiteros" valor={resumo.presbiteros} ativo={categoria === "PRESBITERO"} onClick={() => toggle("PRESBITERO")} />
-              <CardNum label="Diaconos" valor={resumo.diaconos} ativo={categoria === "DIACONO"} onClick={() => toggle("DIACONO")} />
-              {resumo.mandatosVencidos > 0 && (
-                <CardNum
-                  label="Mandatos vencidos"
-                  valor={resumo.mandatosVencidos}
-                  cor="text-rose-700"
-                  ativo={categoria === "MANDATO_VENCIDO"}
-                  onClick={() => toggle("MANDATO_VENCIDO")}
-                />
-              )}
-              {resumo.mandatosVencendo > 0 && (
-                <CardNum
-                  label="A vencer (90d)"
-                  valor={resumo.mandatosVencendo}
-                  cor="text-amber-700"
-                  ativo={categoria === "MANDATO_VENCENDO"}
-                  onClick={() => toggle("MANDATO_VENCENDO")}
-                />
-              )}
-            </div>
+            <TooltipProvider delayDuration={200}>
+              <div className="space-y-2">
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-8">
+                  <CardNum label="Comungantes" valor={resumo.comungantes} cor="text-emerald-700" dica="Membros comungantes (fizeram profissao de fe) — Rol Principal." ativo={categoria === "PRINCIPAL"} onClick={() => toggle("PRINCIPAL")} />
+                  <CardNum label="Civilmente capazes" valor={resumo.civilmenteCapazes} cor="text-emerald-700" dica="Comungantes com 18+ anos — aptos a votar na assembleia." ativo={categoria === "CIVILMENTE_CAPAZ"} onClick={() => toggle("CIVILMENTE_CAPAZ")} />
+                  <CardNum label="Nao-comungantes" valor={resumo.naoComungantes} cor="text-sky-700" dica="Batizados na infancia, sem profissao de fe — Rol Separado." ativo={categoria === "SEPARADO"} onClick={() => toggle("SEPARADO")} />
+                  <CardNum label="Ausentes" valor={resumo.ausentes} cor="text-amber-700" dica="Status Ausente (paradeiro ignorado)." ativo={categoria === "AUSENTE"} onClick={() => toggle("AUSENTE")} />
+                  <CardNum label="Arquivo" valor={resumo.arquivo} dica="Transferidos, excluidos e falecidos (fora do rol)." ativo={categoria === "ARQUIVO"} onClick={() => toggle("ARQUIVO")} />
+                  <CardNum label="Total no rol" valor={resumo.totalRol} dica="Comungantes + nao-comungantes. Clique para ver todos (limpa filtros)." ativo={categoria === null && !agrupar} onClick={() => { setCategoria(null); setAgrupar(false); }} />
+                  <CardNum label="Familias" valor={resumo.familias} dica="Nucleos familiares. Clique para agrupar a tabela por familia." ativo={agrupar} onClick={() => { setCategoria(null); setAgrupar((v) => !v); }} />
+                  <CardNum label="Dependentes" valor={resumo.dependentes} dica="Filhos nao-membros (sem batismo) vinculados a um membro." ativo={categoria === "DEPENDENTES"} onClick={() => toggle("DEPENDENTES")} />
+                  <CardNum label="Pendencias" valor={resumo.pendencias} cor={resumo.pendencias > 0 ? "text-rose-700" : undefined} dica="Membros com cadastro eclesiastico incompleto (cargo, matricula ou data)." ativo={categoria === "PENDENCIA"} onClick={() => toggle("PENDENCIA")} />
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-medium text-muted-foreground">Oficiais:</span>
+                  <CardNum label="Pastores" valor={resumo.pastores} dica="Membros com cargo de Pastor." ativo={categoria === "PASTOR"} onClick={() => toggle("PASTOR")} />
+                  <CardNum label="Presbiteros" valor={resumo.presbiteros} dica="Membros com cargo de Presbitero." ativo={categoria === "PRESBITERO"} onClick={() => toggle("PRESBITERO")} />
+                  <CardNum label="Diaconos" valor={resumo.diaconos} dica="Membros com cargo de Diacono." ativo={categoria === "DIACONO"} onClick={() => toggle("DIACONO")} />
+                  {resumo.mandatosVencidos > 0 && (
+                    <CardNum label="Mandatos vencidos" valor={resumo.mandatosVencidos} cor="text-rose-700" dica="Mandatos ativos com termino no passado — renovar ou encerrar." ativo={categoria === "MANDATO_VENCIDO"} onClick={() => toggle("MANDATO_VENCIDO")} />
+                  )}
+                  {resumo.mandatosVencendo > 0 && (
+                    <CardNum label="A vencer (90d)" valor={resumo.mandatosVencendo} cor="text-amber-700" dica="Mandatos que terminam nos proximos 90 dias — preparar eleicao." ativo={categoria === "MANDATO_VENCENDO"} onClick={() => toggle("MANDATO_VENCENDO")} />
+                  )}
+                </div>
+              </div>
+            </TooltipProvider>
           )}
 
           <div className="rounded-md border bg-muted/30 p-3 text-xs text-muted-foreground">
