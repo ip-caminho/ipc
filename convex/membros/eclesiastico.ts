@@ -326,6 +326,9 @@ async function montarLinhasSecretario(ctx: QueryCtx): Promise<LinhaSecretario[]>
   // Mandatos: ATIVO com data fim no passado = vencido; nos proximos 90 dias = vencendo.
   const hoje = new Date(Date.now()).toISOString().slice(0, 10);
   const limite90 = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  // Maioridade civil (18 anos): nascido em/antes desta data => civilmente capaz.
+  const [hy, hmes, hd] = hoje.split("-");
+  const limiteMaioridade = `${Number(hy) - 18}-${hmes}-${hd}`;
   const mandatoVencidoPorMembro = new Set<string>();
   const mandatoVencendoPorMembro = new Set<string>();
   const mandatosAtivos = await ctx.db
@@ -357,7 +360,8 @@ async function montarLinhasSecretario(ctx: QueryCtx): Promise<LinhaSecretario[]>
       dataConversao: m?.dataConversao,
       dataBatismo: m?.dataBatismo,
       dataMembresia: m?.dataMembresia,
-      civilmenteCapazes: m?.civilmenteCapazes,
+      // Derivado da idade (>= 18 anos = maioridade civil)
+      civilmenteCapazes: !!m && !!e.dataNascimento && e.dataNascimento <= limiteMaioridade,
       rolCategoria,
       pendencia: temPendencia(m, rolCategoria),
       mandatoVencido: m ? mandatoVencidoPorMembro.has(m._id) : false,

@@ -17,7 +17,6 @@ import {
 import { Input } from "@/shared/components/ui/input";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
-import { Checkbox } from "@/shared/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -26,11 +25,12 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import { DatePickerField } from "@shared/components/DatePickerField";
-import { ExternalLink, History, Users, UserPlus, Heart } from "lucide-react";
+import { ExternalLink, History, Users, UserPlus, Heart, Briefcase } from "lucide-react";
 import { cn } from "@shared/lib/utils/cn";
 import { CARGO_ECLESIASTICO_OPTIONS } from "@features/membros/lib/constants";
 import { HistoricoEclesiasticoDrawer } from "./HistoricoEclesiasticoDrawer";
 import { FamiliaDrawer } from "./FamiliaDrawer";
+import { CargosDrawer } from "./CargosDrawer";
 
 const NONE = "__none__";
 const NUM_COLS = 10;
@@ -83,6 +83,7 @@ function LinhaMembro({ membro, agrupar }: { membro: MembroEclesiastico; agrupar:
   const entidadeId = membro.entidadeId as Id<"entidades"> | undefined;
   const [histOpen, setHistOpen] = useState(false);
   const [famOpen, setFamOpen] = useState(false);
+  const [cargosOpen, setCargosOpen] = useState(false);
 
   async function salvar(field: string, value: unknown) {
     try {
@@ -163,11 +164,11 @@ function LinhaMembro({ membro, agrupar }: { membro: MembroEclesiastico; agrupar:
       </TableCell>
       <TableCell>
         {membro.rolCategoria === "PRINCIPAL" ? (
-          <Checkbox
-            checked={!!membro.civilmenteCapazes}
-            onCheckedChange={(c) => salvar("civilmenteCapazes", c === true)}
-            title="Civilmente capaz"
-          />
+          membro.civilmenteCapazes ? (
+            <span className="text-xs text-emerald-700">Sim</span>
+          ) : (
+            <span className="text-xs text-amber-700" title="Menor de 18 anos">Menor</span>
+          )
         ) : (
           <span className="text-xs text-muted-foreground">—</span>
         )}
@@ -191,6 +192,9 @@ function LinhaMembro({ membro, agrupar }: { membro: MembroEclesiastico; agrupar:
       </TableCell>
       <TableCell>
         <div className="flex items-center gap-2">
+          <button type="button" onClick={() => setCargosOpen(true)} className="text-muted-foreground hover:text-foreground" title="Cargos / mandato">
+            <Briefcase className="h-4 w-4" />
+          </button>
           <button type="button" onClick={() => setFamOpen(true)} className="text-muted-foreground hover:text-foreground" title="Familia (conjuge / filhos)">
             <Heart className="h-4 w-4" />
           </button>
@@ -203,6 +207,7 @@ function LinhaMembro({ membro, agrupar }: { membro: MembroEclesiastico; agrupar:
         </div>
         <HistoricoEclesiasticoDrawer membroId={membroId} nome={membro.entidade?.nomeCompleto || ""} open={histOpen} onOpenChange={setHistOpen} />
         <FamiliaDrawer membroId={membroId} entidadeId={entidadeId} nome={membro.entidade?.nomeCompleto || ""} open={famOpen} onOpenChange={setFamOpen} />
+        <CargosDrawer membroId={membroId} nome={membro.entidade?.nomeCompleto || ""} open={cargosOpen} onOpenChange={setCargosOpen} />
       </TableCell>
     </TableRow>
   );

@@ -18,7 +18,7 @@ export const iniciarMandato = mutation({
     observacoes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    await requireAnyPermission(ctx, ["membros:update"]);
+    await requireAnyPermission(ctx, ["membros:update_eclesiastico", "membros:update"]);
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
 
@@ -45,7 +45,7 @@ export const encerrarMandato = mutation({
     status: v.optional(v.union(v.literal("ENCERRADO"), v.literal("AFASTADO"))),
   },
   handler: async (ctx, { id, mandatoFim, status }) => {
-    await requireAnyPermission(ctx, ["membros:update"]);
+    await requireAnyPermission(ctx, ["membros:update_eclesiastico", "membros:update"]);
     const cargo = await ctx.db.get(id);
     if (!cargo) throw new Error("Mandato nao encontrado");
     await ctx.db.patch(id, {
@@ -59,7 +59,7 @@ export const encerrarMandato = mutation({
 export const remover = mutation({
   args: { id: v.id("cargosEclesiasticosHistorico") },
   handler: async (ctx, { id }) => {
-    await requireAnyPermission(ctx, ["membros:delete", "membros:update"]);
+    await requireAnyPermission(ctx, ["membros:delete", "membros:update", "membros:update_eclesiastico"]);
     await ctx.db.delete(id);
     return { ok: true };
   },

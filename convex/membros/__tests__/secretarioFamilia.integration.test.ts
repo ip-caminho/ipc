@@ -320,6 +320,19 @@ describe("listParaSecretario — agrupamento por familia", () => {
     expect(r.mandatosVencidos).toBe(0);
   });
 
+  it("deriva civilmente capaz pela idade (>= 18 anos)", async () => {
+    const t = convexTest(schema, modules);
+    const admin = await seedAdmin(t);
+    await pessoa(t, "Adulto Capaz", "M", "1990-01-01");
+    await pessoa(t, "Menino Comungante", "M", "2020-01-01");
+
+    const linhas = await admin.query(api.membros.eclesiastico.listParaSecretario, {});
+    const adulto = linhas.find((l) => l.entidade.nomeCompleto === "Adulto Capaz");
+    const menino = linhas.find((l) => l.entidade.nomeCompleto === "Menino Comungante");
+    expect(adulto!.civilmenteCapazes).toBe(true);
+    expect(menino!.civilmenteCapazes).toBe(false);
+  });
+
   it("filtra por busca mantendo metadados", async () => {
     const t = convexTest(schema, modules);
     const admin = await seedAdmin(t);
