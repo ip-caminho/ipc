@@ -25,7 +25,12 @@ const DESCRICAO_FILTRO: Record<string, string> = {
   ARQUIVO: "Arquivo (transferidos/excluidos/falecidos)",
   DEPENDENTES: "Dependentes (nao membros)",
   PENDENCIA: "Pendencias de cadastro",
+  PASTOR: "Pastores",
+  PRESBITERO: "Presbiteros",
+  DIACONO: "Diaconos",
 };
+
+const CARGOS = ["PASTOR", "PRESBITERO", "DIACONO"];
 
 function filtrarPorCategoria(
   membros: MembroEclesiastico[],
@@ -33,6 +38,8 @@ function filtrarPorCategoria(
 ): MembroEclesiastico[] {
   if (categoria === "DEPENDENTES") return membros.filter((m) => m.ehMembro === false);
   if (categoria === "PENDENCIA") return membros.filter((m) => m.ehMembro !== false && m.pendencia);
+  if (categoria && CARGOS.includes(categoria))
+    return membros.filter((m) => m.ehMembro !== false && m.cargoEclesiastico === categoria);
   if (categoria) return membros.filter((m) => m.ehMembro !== false && m.rolCategoria === categoria);
   return membros.filter((m) => m.ehMembro !== false);
 }
@@ -100,6 +107,15 @@ export default function SecretarioExecutivoPage() {
               <CardNum label="Familias" valor={resumo.familias} ativo={agrupar} onClick={() => { setCategoria(null); setAgrupar((v) => !v); }} />
               <CardNum label="Dependentes" valor={resumo.dependentes} ativo={categoria === "DEPENDENTES"} onClick={() => toggle("DEPENDENTES")} />
               <CardNum label="Pendencias" valor={resumo.pendencias} cor={resumo.pendencias > 0 ? "text-rose-700" : undefined} ativo={categoria === "PENDENCIA"} onClick={() => toggle("PENDENCIA")} />
+            </div>
+          )}
+
+          {resumo !== undefined && (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs font-medium text-muted-foreground">Oficiais:</span>
+              <CardNum label="Pastores" valor={resumo.pastores} ativo={categoria === "PASTOR"} onClick={() => toggle("PASTOR")} />
+              <CardNum label="Presbiteros" valor={resumo.presbiteros} ativo={categoria === "PRESBITERO"} onClick={() => toggle("PRESBITERO")} />
+              <CardNum label="Diaconos" valor={resumo.diaconos} ativo={categoria === "DIACONO"} onClick={() => toggle("DIACONO")} />
             </div>
           )}
 
