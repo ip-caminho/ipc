@@ -21,14 +21,14 @@ describe("INITIAL_ROLE_PERMISSIONS", () => {
     expect(perms).toContain("audit:read");
   });
 
-  it("membro tem apenas self_service e pedidos de oracao", () => {
+  it("membro tem self_service, gravacoes:read e pedidos de oracao", () => {
     const perms = INITIAL_ROLE_PERMISSIONS.membro;
     expect(perms).toContain("membros:self_service");
+    expect(perms).toContain("gravacoes:read"); // ouvir pregacoes/estudos
     expect(perms).toContain("pedidos_oracao:create");
     expect(perms).toContain("pedidos_oracao:read");
-    // Acessos a Conteudo/Pessoas e espacos foram removidos
+    // Diretorio/Pessoas e espacos seguem restritos para o membro
     expect(perms).not.toContain("diretorio:read");
-    expect(perms).not.toContain("gravacoes:read");
     expect(perms).not.toContain("escalas:read");
     expect(perms).not.toContain("louvor:read");
     expect(perms).not.toContain("calendario:read");
