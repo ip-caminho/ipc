@@ -159,62 +159,32 @@ function AcoesMembro({ ctl, href }: { ctl: ReturnType<typeof useLinhaMembro>; hr
   );
 }
 
+// Mobile: card somente-leitura. Edicao so no desktop — clicar no nome abre o detalhe.
 function CardMembro({ membro, agrupar }: { membro: MembroEclesiastico; agrupar: boolean }) {
-  const ctl = useLinhaMembro(membro);
   const nome = membro.entidade?.nomeCompleto || "-";
   const status = membro.entidade?.status || "ATIVO";
   const rol = membro.rolCategoria ? ROL_BADGE[membro.rolCategoria] : null;
   const ehFilho = agrupar && membro.familiaOrder === 2;
   const href = `/secretario-executivo/${membro._id}`;
+  const statusLabel = STATUS_OPTIONS.find((o) => o.value === status)?.label ?? status;
+  const cargoLabel = CARGO_ECLESIASTICO_OPTIONS.find((o) => o.value === membro.cargoEclesiastico)?.label;
 
   return (
-    <div className="rounded-md border p-3 space-y-2.5">
+    <Link href={href} className="block rounded-md border p-3 space-y-2 hover:bg-accent/40">
       <div className="flex items-start justify-between gap-2">
-        <Link href={href} className="text-sm font-medium hover:underline">
+        <span className="text-sm font-medium">
           {nome}
           {ehFilho && <span className="ml-1 text-[10px] text-muted-foreground">(filho)</span>}
-        </Link>
+        </span>
         {rol && (
           <Badge variant="outline" className={cn("shrink-0 text-xs", rol.className)}>
             {rol.label}
           </Badge>
         )}
       </div>
-
-      <div className="grid grid-cols-2 gap-2">
-        <div className="space-y-1">
-          <span className="text-[10px] uppercase text-muted-foreground">Status</span>
-          <Select value={status} onValueChange={ctl.salvarStatus}>
-            <SelectTrigger className="h-8 w-full text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {STATUS_OPTIONS.map((o) => (
-                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-1">
-          <span className="text-[10px] uppercase text-muted-foreground">Cargo</span>
-          <Select
-            value={membro.cargoEclesiastico || NONE}
-            onValueChange={(v) => ctl.salvar("cargoEclesiastico", v === NONE ? "" : v)}
-          >
-            <SelectTrigger className="h-8 w-full text-xs">
-              <SelectValue placeholder="-" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={NONE}>—</SelectItem>
-              {CARGO_ECLESIASTICO_OPTIONS.map((o) => (
-                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
       <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+        <span>Status: {statusLabel}</span>
+        {cargoLabel && <span>Cargo: {cargoLabel}</span>}
         {membro.rolCategoria === "PRINCIPAL" && (
           <span>
             Civ. capaz:{" "}
@@ -228,36 +198,14 @@ function CardMembro({ membro, agrupar }: { membro: MembroEclesiastico; agrupar: 
         {membro.numeroMatricula && <span>Matricula: {membro.numeroMatricula}</span>}
         {membro.dataMembresia && <span>Membresia: {membro.dataMembresia}</span>}
       </div>
-
-      <div className="flex items-center justify-between border-t pt-2">
-        <span className="text-[10px] uppercase text-muted-foreground">Editar datas no detalhe</span>
-        <AcoesMembro ctl={ctl} href={href} />
-      </div>
-      <DrawersMembro ctl={ctl} nome={nome} />
-    </div>
+    </Link>
   );
 }
 
 function CardDependente({ dep }: { dep: MembroEclesiastico }) {
-  const tornarMembro = useMutation(api.membros.eclesiastico.tornarMembro);
-  const [loading, setLoading] = useState(false);
   const nome = dep.entidade?.nomeCompleto || "-";
-
-  async function promover() {
-    if (!dep.entidadeId) return;
-    setLoading(true);
-    try {
-      await tornarMembro({ entidadeId: dep.entidadeId as Id<"entidades"> });
-      toast.success("Agora e membro — edite os dados eclesiasticos");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erro ao tornar membro");
-    } finally {
-      setLoading(false);
-    }
-  }
-
   return (
-    <div className="rounded-md border bg-muted/10 p-3 space-y-2">
+    <div className="rounded-md border bg-muted/10 p-3 space-y-1.5">
       <div className="flex items-start justify-between gap-2">
         <span className="text-sm font-medium text-muted-foreground">
           {nome}
@@ -268,10 +216,6 @@ function CardDependente({ dep }: { dep: MembroEclesiastico }) {
       <p className="text-xs text-muted-foreground">
         {dep.dataNascimento ? `Nascimento: ${dep.dataNascimento}` : "Sem dados eclesiasticos (nao e membro)"}
       </p>
-      <Button type="button" variant="outline" size="sm" className="w-full" disabled={loading} onClick={promover}>
-        <UserPlus className="h-3.5 w-3.5 mr-1" />
-        {loading ? "..." : "Tornar membro"}
-      </Button>
     </div>
   );
 }
