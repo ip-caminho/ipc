@@ -4,10 +4,7 @@ import Link from "next/link";
 import { Play } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import {
-  getCategoryGradient,
-  getTipoLabel,
-} from "@features/gravacoes/lib/categoryGradient";
+import { getTipoLabel } from "@features/gravacoes/lib/categoryGradient";
 
 export interface AudioListItemData {
   _id: string;
@@ -38,7 +35,6 @@ function formatDurationFromBoundaries(
 
 export function AudioListItem({ audio, hideType }: { audio: AudioListItemData; hideType?: boolean }) {
   const pregador = audio.pregadorInfo?.nome || audio.pregadorNome || null;
-  const gradient = getCategoryGradient(audio.tipo);
   const categoria = getTipoLabel(audio.tipo);
   const duracao = formatDurationFromBoundaries(
     audio.inicioConteudo ?? audio.inicioSermao,
@@ -59,12 +55,9 @@ export function AudioListItem({ audio, hideType }: { audio: AudioListItemData; h
       href={`/gravacoes/${audio._id}`}
       className="flex items-center gap-3 py-1.5 active:opacity-80 transition-opacity"
     >
-      <div
-        className="shrink-0 relative h-14 w-14 rounded-lg overflow-hidden flex items-center justify-center"
-        style={{ background: gradient }}
-      >
+      <div className="shrink-0 h-9 w-9 rounded-full bg-muted flex items-center justify-center">
         <Play
-          className="h-5 w-5 text-white/90"
+          className="h-4 w-4 text-muted-foreground"
           fill="currentColor"
           strokeWidth={0}
         />

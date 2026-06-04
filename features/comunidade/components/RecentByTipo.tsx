@@ -17,19 +17,17 @@ interface RecentByTipoProps {
 export function RecentByTipo({ titulo, tipo }: RecentByTipoProps) {
   const { can } = useAuth();
   const gravacoes = useQuery(
-    api.gravacoes.queries.list,
+    api.gravacoes.queries.listRecentesByTipo,
     can("gravacoes:read")
-      ? { tipo, status: "PUBLICADO" }
+      ? { tipo, limit: LIMIT }
       : "skip",
   );
 
   if (gravacoes === undefined) return null;
   if (gravacoes.length === 0) return null;
 
-  const recentes = (gravacoes as AudioListItemData[])
-    .slice()
-    .sort((a, b) => b.data.localeCompare(a.data))
-    .slice(0, LIMIT);
+  // Ja vem ordenado por data desc e limitado do servidor.
+  const recentes = gravacoes as AudioListItemData[];
 
   return (
     <section className="px-4">
