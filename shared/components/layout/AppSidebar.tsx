@@ -42,7 +42,6 @@ import {
   PRIMARY_TABS,
   BOLETIM_TAB,
   GESTAO_SECTIONS,
-  COMUNIDADE_SECTIONS,
   ELEVATED_ROLES,
   isDomingoWindow,
   type NavItem,
@@ -86,13 +85,14 @@ export function AppSidebar() {
     ...(isBoletim ? [BOLETIM_TAB] : []),
   ].filter(isItemVisible);
 
-  const sectionSource = isAdminMode ? GESTAO_SECTIONS : COMUNIDADE_SECTIONS;
-  const sectionLabel = isAdminMode ? "Gestao" : "Comunidade";
-
-  const visibleSections = sectionSource.map((section) => ({
-    ...section,
-    items: section.items.filter(isItemVisible),
-  })).filter((section) => section.items.length > 0);
+  // Secoes colapsaveis aparecem so no modo admin (Gestao). No modo membro,
+  // a navegacao fica nas tabs primarias (Inicio, Gravacoes, Orar).
+  const visibleSections = (isAdminMode ? GESTAO_SECTIONS : [])
+    .map((section) => ({
+      ...section,
+      items: section.items.filter(isItemVisible),
+    }))
+    .filter((section) => section.items.length > 0);
 
   return (
     <Sidebar>
@@ -129,7 +129,7 @@ export function AppSidebar() {
 
           {visibleSections.length > 0 && (
             <SidebarGroup>
-              <SidebarGroupLabel>{sectionLabel}</SidebarGroupLabel>
+              <SidebarGroupLabel>Gestão</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {visibleSections.map((section) => {
