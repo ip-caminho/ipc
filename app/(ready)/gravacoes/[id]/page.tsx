@@ -97,9 +97,8 @@ export default function GravacaoDetailPage() {
 
   return (
     <HeaderLayout>
-    <div className="-m-4 md:-m-6 flex flex-col">
-      {/* Conteúdo principal — scroll do documento */}
-      <div className="flex-1 px-4 md:px-6">
+    <div className="-m-4 md:-m-6">
+      <div className="px-4 md:px-6">
         <div className="max-w-2xl mx-auto py-4 md:py-6 space-y-5">
           <DetailHeader backHref="/gravacoes" />
 
@@ -182,6 +181,16 @@ export default function GravacaoDetailPage() {
               <div className="flex-1 h-px bg-border" />
             </div>
 
+            <div className="mb-4">
+              <ComentarioInput
+                gravacaoId={gravacao._id}
+                onCreated={(commentId) => {
+                  setHighlightId(commentId);
+                  setTimeout(() => setHighlightId(null), 2000);
+                }}
+              />
+            </div>
+
             {comentarioCount === 0 && comentarios !== undefined ? (
               <p className="text-sm text-muted-foreground/60 text-center py-6">
                 Nenhum comentário ainda. Seja o primeiro.
@@ -190,19 +199,6 @@ export default function GravacaoDetailPage() {
               <ComentariosList gravacaoId={gravacao._id} highlightId={highlightId} />
             )}
           </div>
-        </div>
-      </div>
-
-      {/* Input de comentário no final do fluxo */}
-      <div className="bg-background px-4 pt-3 pb-4 md:px-6 md:pb-6 border-t">
-        <div className="max-w-2xl mx-auto">
-          <ComentarioInput
-            gravacaoId={gravacao._id}
-            onCreated={(commentId) => {
-              setHighlightId(commentId);
-              setTimeout(() => setHighlightId(null), 2000);
-            }}
-          />
         </div>
       </div>
     </div>
