@@ -1,4 +1,5 @@
 import { query } from "../_generated/server";
+import type { Doc } from "../_generated/dataModel";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { checkPermission, requirePermission } from "../_shared/requirePermission";
@@ -86,6 +87,45 @@ export const list = query({
 
         return { ...g, pregadorInfo, serieInfo, reacoesSummary, comentarioCount: comentarios.length };
       })
+    );
+  },
+});
+
+// Versao enxuta para o hub /comunidade: usa o indice by_tipo (sem varrer a
+// tabela toda), ordena por data, limita no servidor e enriquece apenas os N
+// itens exibidos. Nao traz reacoes/comentarios/serie (o AudioListItem nao usa)
+// — evita o N+1 da `list` generica.
+export const listRecentesByTipo = query({
+  args: {
+    tipo: v.string(),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    if (!(await checkPermission(ctx, "gravacoes:read"))) return [];
+    const limit = args.limit ?? 4;
+
+    const doTipo = await ctx.db
+      .query("gravacoes")
+      .withIndex("by_tipo", (q) => q.eq("tipo", args.tipo as Doc<"gravacoes">["tipo"]))
+      .collect();
+
+    const recentes = doTipo
+      .filter((g) => g.status === "PUBLICADO")
+      .sort((a, b) => b.data.localeCompare(a.data))
+      .slice(0, limit);
+
+    return Promise.all(
+      recentes.map(async (g) => {
+        let pregadorInfo = null;
+        if (g.pregadorId) {
+          const membro = await ctx.db.get(g.pregadorId);
+          if (membro) {
+            const entidade = await ctx.db.get(membro.entidadeId);
+            pregadorInfo = { nome: entidade?.nomeCompleto || "" };
+          }
+        }
+        return { ...g, pregadorInfo };
+      }),
     );
   },
 });
