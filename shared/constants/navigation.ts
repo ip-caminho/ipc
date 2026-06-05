@@ -203,7 +203,7 @@ export const GESTAO_SECTIONS: NavSection[] = [
         href: "/secretario-executivo",
         icon: BookOpen,
         description: "Rol IPB, família, dados eclesiásticos e impressão para assembleia",
-        permission: "membros:update_eclesiastico",
+        permission: "rol:read",
         modulo: "membros",
       },
       {

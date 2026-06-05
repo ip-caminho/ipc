@@ -10,7 +10,7 @@ import { useState } from "react";
 import { useDebounce } from "@shared/hooks/useDebounce";
 import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
 import { PageHeader } from "@shared/components/layout/PageHeader";
-import { PermissionGate } from "@shared/components/auth/PermissionGate";
+import { AnyPermissionGate } from "@shared/components/auth/PermissionGate";
 import { cn } from "@shared/lib/utils/cn";
 import {
   Tooltip,
@@ -108,7 +108,7 @@ export default function SecretarioExecutivoPage() {
   }
 
   return (
-    <PermissionGate permission="membros:update_eclesiastico">
+    <AnyPermissionGate permissions={["rol:read", "rol:update"]}>
       <HeaderLayout>
         <div className="space-y-4">
           <PageHeader title="Rol de Membros" subtitle="Rol, familia e dados eclesiasticos" />
@@ -212,6 +212,6 @@ export default function SecretarioExecutivoPage() {
           />
         )}
       </HeaderLayout>
-    </PermissionGate>
+    </AnyPermissionGate>
   );
 }
