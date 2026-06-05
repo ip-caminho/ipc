@@ -13,6 +13,7 @@ import {
 } from "@/shared/components/ui/sheet";
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
+import { useAuth } from "@shared/providers/PermissionsProvider";
 import { Undo2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -36,6 +37,9 @@ export function HistoricoEclesiasticoDrawer({
   const historico = useQuery(api.membros.eclesiastico.getHistorico, open ? { membroId } : "skip");
   const update = useMutation(api.membros.eclesiastico.updateEclesiastico);
   const [revertendo, setRevertendo] = useState<string | null>(null);
+  // Reverter e uma edicao — some para quem so tem rol:read.
+  const { can } = useAuth();
+  const podeReverter = can("rol:update");
 
   async function reverter(item: {
     id: string;
@@ -60,7 +64,9 @@ export function HistoricoEclesiasticoDrawer({
         <SheetHeader>
           <SheetTitle>Historico — {nome}</SheetTitle>
           <SheetDescription>
-            Alteracoes eclesiasticas. Use &quot;Reverter&quot; para desfazer um ajuste.
+            {podeReverter
+              ? 'Alteracoes eclesiasticas. Use "Reverter" para desfazer um ajuste.'
+              : "Alteracoes eclesiasticas."}
           </SheetDescription>
         </SheetHeader>
         <div className="px-4 pb-6">
@@ -91,17 +97,19 @@ export function HistoricoEclesiasticoDrawer({
                       {item.autor ? ` · ${item.autor}` : ""}
                     </p>
                   </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={revertendo === item.id}
-                    onClick={() => reverter(item)}
-                    title={`Reverter para "${item.de ?? "vazio"}"`}
-                  >
-                    <Undo2 className="h-3.5 w-3.5 mr-1" />
-                    Reverter
-                  </Button>
+                  {podeReverter && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={revertendo === item.id}
+                      onClick={() => reverter(item)}
+                      title={`Reverter para "${item.de ?? "vazio"}"`}
+                    >
+                      <Undo2 className="h-3.5 w-3.5 mr-1" />
+                      Reverter
+                    </Button>
+                  )}
                 </li>
               ))}
             </ul>
