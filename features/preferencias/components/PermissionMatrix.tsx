@@ -33,8 +33,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@shared/components/ui/select";
-import { ScrollArea } from "@shared/components/ui/scroll-area";
-import { ChevronDown, ChevronRight, Info, Users } from "lucide-react";
+import { Input } from "@shared/components/ui/input";
+import { ChevronDown, ChevronRight, Info, Search, Users } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@shared/lib/utils/cn";
 
@@ -98,6 +98,12 @@ function MembroPermissionPopover({
   isPending: (membroId: string, permission: string) => boolean;
 }) {
   const activeMembros = membros.filter((m) => m.role !== "admin");
+  const [busca, setBusca] = useState("");
+  const membrosFiltrados = busca.trim()
+    ? activeMembros.filter((m) =>
+        (m.name ?? "").toLowerCase().includes(busca.trim().toLowerCase()),
+      )
+    : activeMembros;
 
   const membrosWithCustomPermission = activeMembros.filter((m) => {
     const hasPermission = m.permissions.includes(permission);
@@ -140,15 +146,24 @@ function MembroPermissionPopover({
         </div>
       </PopoverTrigger>
       <PopoverContent className="w-72 p-0" align="start">
-        <div className="p-3 border-b">
+        <div className="p-3 border-b space-y-2">
           <div className="flex items-center gap-2">
             <Users className="h-4 w-4 text-muted-foreground" />
             <span className="font-medium text-sm">Membros</span>
           </div>
+          <div className="relative">
+            <Search className="absolute left-2 top-2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar nome..."
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              className="h-8 pl-7 text-sm"
+            />
+          </div>
         </div>
-        <ScrollArea className="max-h-64">
+        <div className="max-h-64 overflow-y-auto">
           <div className="p-2 space-y-1">
-            {activeMembros.map((m) => {
+            {membrosFiltrados.map((m) => {
               const realHasPermission = m.permissions.includes(permission);
               const hasPermission = getCheckboxState(m._id, permission, realHasPermission);
               const isCheckboxPending = isPending(m._id, permission);
@@ -177,13 +192,13 @@ function MembroPermissionPopover({
                 </div>
               );
             })}
-            {activeMembros.length === 0 && (
+            {membrosFiltrados.length === 0 && (
               <div className="text-center text-muted-foreground text-sm py-4">
-                Nenhum membro ativo
+                {busca.trim() ? "Nenhum membro encontrado" : "Nenhum membro ativo"}
               </div>
             )}
           </div>
-        </ScrollArea>
+        </div>
       </PopoverContent>
     </Popover>
   );
