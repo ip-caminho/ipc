@@ -73,6 +73,16 @@ export const GESTAO_TAB: NavItem = {
   icon: Settings,
 };
 
+// Aparece no nivel primario (fora de agrupamento) para quem tem rol:read —
+// ex.: membro comum que recebeu acesso ao Rol via permissao individual.
+export const ROL_TAB: NavItem = {
+  label: "Rol de Membros",
+  href: "/secretario-executivo",
+  icon: BookOpen,
+  permission: "rol:read",
+  modulo: "membros",
+};
+
 export const COMUNIDADE_SECTIONS: NavSection[] = [
   {
     titulo: "Conteúdo",
@@ -359,6 +369,7 @@ export const MORE_MEMBER_SECTIONS: NavSection[] = [
     titulo: "Acesso rapido",
     items: [
       { label: "Meu perfil", href: "/meu-perfil", icon: User, description: "Editar seus dados pessoais" },
+      ROL_TAB,
       ...COMUNIDADE_SECTIONS.flatMap((s) => s.items),
     ],
   },
