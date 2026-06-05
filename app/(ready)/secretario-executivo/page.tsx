@@ -46,18 +46,6 @@ const DESCRICAO_FILTRO: Record<string, string> = {
 
 const CARGOS = ["PASTOR", "PRESBITERO", "DIACONO"];
 
-// Filtros que vivem dentro do colapsavel "Mais filtros" — quando um deles
-// esta ativo, o colapsavel abre sozinho para o filtro aplicado ficar visivel.
-const MAIS_FILTROS = [
-  "CIVILMENTE_CAPAZ",
-  "AUSENTE",
-  "ARQUIVO",
-  "DEPENDENTES",
-  "PASTOR",
-  "PRESBITERO",
-  "DIACONO",
-];
-
 function filtrarPorCategoria(
   membros: MembroEclesiastico[],
   categoria: string | null
@@ -116,7 +104,6 @@ export default function SecretarioExecutivoPage() {
   const [categoria, setCategoria] = useState<string | null>(null);
   const [maisOpen, setMaisOpen] = useState(false);
   const debouncedSearch = useDebounce(search, 300);
-  const maisAtivo = (categoria !== null && MAIS_FILTROS.includes(categoria)) || agrupar;
   const membros = useQuery(api.membros.eclesiastico.listParaSecretario, {
     search: debouncedSearch || undefined,
   });
@@ -159,11 +146,11 @@ export default function SecretarioExecutivoPage() {
                   </div>
                 )}
 
-                <Collapsible open={maisOpen || maisAtivo} onOpenChange={setMaisOpen}>
+                <Collapsible open={maisOpen} onOpenChange={setMaisOpen}>
                   <CollapsibleTrigger asChild>
                     <Button type="button" variant="ghost" size="sm" className="-ml-2 text-muted-foreground">
-                      <ChevronRight className={cn("h-4 w-4 mr-1 transition-transform", (maisOpen || maisAtivo) && "rotate-90")} />
-                      Mais filtros
+                      <ChevronRight className={cn("h-4 w-4 mr-1 transition-transform", maisOpen && "rotate-90")} />
+                      {maisOpen ? "Menos filtros" : "Mais filtros"}
                     </Button>
                   </CollapsibleTrigger>
                   <CollapsibleContent>

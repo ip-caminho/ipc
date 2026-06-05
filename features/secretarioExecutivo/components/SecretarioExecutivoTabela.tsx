@@ -17,6 +17,7 @@ import {
 import { Input } from "@/shared/components/ui/input";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import {
   Select,
   SelectContent,
@@ -59,7 +60,7 @@ export type MembroEclesiastico = {
   _id: string;
   ehMembro?: boolean;
   entidadeId?: string;
-  entidade?: { nomeCompleto?: string; whatsapp?: string; status?: string };
+  entidade?: { nomeCompleto?: string; whatsapp?: string; status?: string; foto?: string };
   cargoEclesiastico?: string;
   numeroMatricula?: string;
   dataConversao?: string;
@@ -76,6 +77,23 @@ export type MembroEclesiastico = {
   familiaHeadNome?: string;
   familiaOrder?: number;
 };
+
+function iniciais(nome?: string): string {
+  if (!nome) return "?";
+  const partes = nome.trim().split(/\s+/);
+  const primeira = partes[0]?.[0] ?? "";
+  const ultima = partes.length > 1 ? partes[partes.length - 1][0] : "";
+  return (primeira + ultima).toUpperCase() || "?";
+}
+
+function AvatarMembro({ nome, foto, className }: { nome?: string; foto?: string; className?: string }) {
+  return (
+    <Avatar className={cn("h-7 w-7 shrink-0", className)}>
+      {foto && <AvatarImage src={foto} alt={nome ?? ""} />}
+      <AvatarFallback className="text-[10px]">{iniciais(nome)}</AvatarFallback>
+    </Avatar>
+  );
+}
 
 function useLinhaMembro(membro: MembroEclesiastico) {
   const update = useMutation(api.membros.eclesiastico.updateEclesiastico);
@@ -187,10 +205,13 @@ function CardMembro({ membro, agrupar }: { membro: MembroEclesiastico; agrupar: 
   return (
     <Link href={href} className="block rounded-md border p-3 space-y-2 hover:bg-accent/40">
       <div className="flex items-start justify-between gap-2">
-        <span className="text-sm font-medium">
-          {nome}
-          {ehFilho && <span className="ml-1 text-[10px] text-muted-foreground">(filho)</span>}
-        </span>
+        <div className="flex min-w-0 items-center gap-2">
+          <AvatarMembro nome={nome} foto={membro.entidade?.foto} className="h-8 w-8" />
+          <span className="text-sm font-medium">
+            {nome}
+            {ehFilho && <span className="ml-1 text-[10px] text-muted-foreground">(filho)</span>}
+          </span>
+        </div>
         {rol && (
           <Badge variant="outline" className={cn("shrink-0 text-xs", rol.className)}>
             {rol.label}
@@ -222,10 +243,13 @@ function CardDependente({ dep }: { dep: MembroEclesiastico }) {
   return (
     <div className="rounded-md border bg-muted/10 p-3 space-y-1.5">
       <div className="flex items-start justify-between gap-2">
-        <span className="text-sm font-medium text-muted-foreground">
-          {nome}
-          <span className="ml-1 text-[10px]">(filho)</span>
-        </span>
+        <div className="flex min-w-0 items-center gap-2">
+          <AvatarMembro nome={nome} foto={dep.entidade?.foto} className="h-8 w-8" />
+          <span className="text-sm font-medium text-muted-foreground">
+            {nome}
+            <span className="ml-1 text-[10px]">(filho)</span>
+          </span>
+        </div>
         <Badge variant="secondary" className="shrink-0 text-xs">Dependente</Badge>
       </div>
       <p className="text-xs text-muted-foreground">
@@ -248,9 +272,12 @@ function LinhaMembro({ membro, agrupar, readOnly }: { membro: MembroEclesiastico
   return (
     <TableRow>
       <TableCell className={cn(COL_NOME, "font-medium whitespace-nowrap")}>
-        <Link href={`/secretario-executivo/${membro._id}`} className={cn("hover:underline", agrupar && "pl-6 block")}>
-          {membro.entidade?.nomeCompleto || "-"}
-          {ehFilho && <span className="ml-1 text-[10px] text-muted-foreground">(filho)</span>}
+        <Link href={`/secretario-executivo/${membro._id}`} className={cn("flex items-center gap-2 hover:underline", agrupar && "pl-6")}>
+          <AvatarMembro nome={membro.entidade?.nomeCompleto} foto={membro.entidade?.foto} />
+          <span>
+            {membro.entidade?.nomeCompleto || "-"}
+            {ehFilho && <span className="ml-1 text-[10px] text-muted-foreground">(filho)</span>}
+          </span>
         </Link>
       </TableCell>
       <TableCell>
@@ -374,9 +401,12 @@ function LinhaDependente({ dep, readOnly }: { dep: MembroEclesiastico; readOnly?
   return (
     <TableRow className="bg-muted/10">
       <TableCell className={cn(COL_NOME, "font-medium whitespace-nowrap")}>
-        <span className="pl-6 block text-muted-foreground">
-          {dep.entidade?.nomeCompleto || "-"}
-          <span className="ml-1 text-[10px]">(filho)</span>
+        <span className="flex items-center gap-2 pl-6 text-muted-foreground">
+          <AvatarMembro nome={dep.entidade?.nomeCompleto} foto={dep.entidade?.foto} />
+          <span>
+            {dep.entidade?.nomeCompleto || "-"}
+            <span className="ml-1 text-[10px]">(filho)</span>
+          </span>
         </span>
       </TableCell>
       <TableCell>
