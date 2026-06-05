@@ -5,7 +5,12 @@ import { api } from "@/convex/_generated/api";
 import { Input } from "@/shared/components/ui/input";
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import { Search, Users, Printer } from "lucide-react";
+import { Search, Users, Printer, ChevronRight } from "lucide-react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/shared/components/ui/collapsible";
 import { useState } from "react";
 import { useDebounce } from "@shared/hooks/useDebounce";
 import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
@@ -40,6 +45,18 @@ const DESCRICAO_FILTRO: Record<string, string> = {
 };
 
 const CARGOS = ["PASTOR", "PRESBITERO", "DIACONO"];
+
+// Filtros que vivem dentro do colapsavel "Mais filtros" — quando um deles
+// esta ativo, o colapsavel abre sozinho para o filtro aplicado ficar visivel.
+const MAIS_FILTROS = [
+  "CIVILMENTE_CAPAZ",
+  "AUSENTE",
+  "ARQUIVO",
+  "DEPENDENTES",
+  "PASTOR",
+  "PRESBITERO",
+  "DIACONO",
+];
 
 function filtrarPorCategoria(
   membros: MembroEclesiastico[],
@@ -97,7 +114,9 @@ export default function SecretarioExecutivoPage() {
   const [search, setSearch] = useState("");
   const [agrupar, setAgrupar] = useState(false);
   const [categoria, setCategoria] = useState<string | null>(null);
+  const [maisOpen, setMaisOpen] = useState(false);
   const debouncedSearch = useDebounce(search, 300);
+  const maisAtivo = (categoria !== null && MAIS_FILTROS.includes(categoria)) || agrupar;
   const membros = useQuery(api.membros.eclesiastico.listParaSecretario, {
     search: debouncedSearch || undefined,
   });
@@ -113,37 +132,54 @@ export default function SecretarioExecutivoPage() {
         <div className="space-y-4">
           <PageHeader title="Rol de Membros" subtitle="Rol, familia e dados eclesiasticos" />
 
-          {/* Dashboard */}
+          {/* Dashboard — essenciais sempre visiveis; demais no colapsavel */}
           {resumo === undefined ? (
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-8">
-              {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-16" />)}
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-16" />)}
             </div>
           ) : (
             <TooltipProvider delayDuration={200}>
               <div className="space-y-2">
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-8">
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                   <CardNum label="Comungantes" valor={resumo.comungantes} cor="text-emerald-700" dica="Membros comungantes (fizeram profissao de fe) — Rol Principal." ativo={categoria === "PRINCIPAL"} onClick={() => toggle("PRINCIPAL")} />
-                  <CardNum label="Civilmente capazes" valor={resumo.civilmenteCapazes} cor="text-emerald-700" dica="Comungantes com 18+ anos — aptos a votar na assembleia." ativo={categoria === "CIVILMENTE_CAPAZ"} onClick={() => toggle("CIVILMENTE_CAPAZ")} />
                   <CardNum label="Nao-comungantes" valor={resumo.naoComungantes} cor="text-sky-700" dica="Batizados na infancia, sem profissao de fe — Rol Separado." ativo={categoria === "SEPARADO"} onClick={() => toggle("SEPARADO")} />
-                  <CardNum label="Ausentes" valor={resumo.ausentes} cor="text-amber-700" dica="Status Ausente (paradeiro ignorado)." ativo={categoria === "AUSENTE"} onClick={() => toggle("AUSENTE")} />
-                  <CardNum label="Arquivo" valor={resumo.arquivo} dica="Transferidos, excluidos e falecidos (fora do rol)." ativo={categoria === "ARQUIVO"} onClick={() => toggle("ARQUIVO")} />
                   <CardNum label="Total no rol" valor={resumo.totalRol} dica="Comungantes + nao-comungantes. Clique para ver todos (limpa filtros)." ativo={categoria === null && !agrupar} onClick={() => { setCategoria(null); setAgrupar(false); }} />
-                  <CardNum label="Familias" valor={resumo.familias} dica="Nucleos familiares. Clique para agrupar a tabela por familia." ativo={agrupar} onClick={() => { setCategoria(null); setAgrupar((v) => !v); }} />
-                  <CardNum label="Dependentes" valor={resumo.dependentes} dica="Filhos nao-membros (sem batismo) vinculados a um membro." ativo={categoria === "DEPENDENTES"} onClick={() => toggle("DEPENDENTES")} />
                   <CardNum label="Pendencias" valor={resumo.pendencias} cor={resumo.pendencias > 0 ? "text-rose-700" : undefined} dica="Membros com cadastro eclesiastico incompleto (cargo, matricula ou data)." ativo={categoria === "PENDENCIA"} onClick={() => toggle("PENDENCIA")} />
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-xs font-medium text-muted-foreground">Oficiais:</span>
-                  <CardNum label="Pastores" valor={resumo.pastores} dica="Membros com cargo de Pastor." ativo={categoria === "PASTOR"} onClick={() => toggle("PASTOR")} />
-                  <CardNum label="Presbiteros" valor={resumo.presbiteros} dica="Membros com cargo de Presbitero." ativo={categoria === "PRESBITERO"} onClick={() => toggle("PRESBITERO")} />
-                  <CardNum label="Diaconos" valor={resumo.diaconos} dica="Membros com cargo de Diacono." ativo={categoria === "DIACONO"} onClick={() => toggle("DIACONO")} />
-                  {resumo.mandatosVencidos > 0 && (
-                    <CardNum label="Mandatos vencidos" valor={resumo.mandatosVencidos} cor="text-rose-700" dica="Mandatos ativos com termino no passado — renovar ou encerrar." ativo={categoria === "MANDATO_VENCIDO"} onClick={() => toggle("MANDATO_VENCIDO")} />
-                  )}
-                  {resumo.mandatosVencendo > 0 && (
-                    <CardNum label="A vencer (90d)" valor={resumo.mandatosVencendo} cor="text-amber-700" dica="Mandatos que terminam nos proximos 90 dias — preparar eleicao." ativo={categoria === "MANDATO_VENCENDO"} onClick={() => toggle("MANDATO_VENCENDO")} />
-                  )}
-                </div>
+
+                {/* Alertas de mandato ficam fora do colapsavel (alerta enterrado nao alerta) */}
+                {(resumo.mandatosVencidos > 0 || resumo.mandatosVencendo > 0) && (
+                  <div className="flex flex-wrap items-center gap-2">
+                    {resumo.mandatosVencidos > 0 && (
+                      <CardNum label="Mandatos vencidos" valor={resumo.mandatosVencidos} cor="text-rose-700" dica="Mandatos ativos com termino no passado — renovar ou encerrar." ativo={categoria === "MANDATO_VENCIDO"} onClick={() => toggle("MANDATO_VENCIDO")} />
+                    )}
+                    {resumo.mandatosVencendo > 0 && (
+                      <CardNum label="A vencer (90d)" valor={resumo.mandatosVencendo} cor="text-amber-700" dica="Mandatos que terminam nos proximos 90 dias — preparar eleicao." ativo={categoria === "MANDATO_VENCENDO"} onClick={() => toggle("MANDATO_VENCENDO")} />
+                    )}
+                  </div>
+                )}
+
+                <Collapsible open={maisOpen || maisAtivo} onOpenChange={setMaisOpen}>
+                  <CollapsibleTrigger asChild>
+                    <Button type="button" variant="ghost" size="sm" className="-ml-2 text-muted-foreground">
+                      <ChevronRight className={cn("h-4 w-4 mr-1 transition-transform", (maisOpen || maisAtivo) && "rotate-90")} />
+                      Mais filtros
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="flex flex-wrap items-center gap-2 pt-1">
+                      <CardNum label="Civilmente capazes" valor={resumo.civilmenteCapazes} cor="text-emerald-700" dica="Comungantes com 18+ anos — aptos a votar na assembleia." ativo={categoria === "CIVILMENTE_CAPAZ"} onClick={() => toggle("CIVILMENTE_CAPAZ")} />
+                      <CardNum label="Ausentes" valor={resumo.ausentes} cor="text-amber-700" dica="Status Ausente (paradeiro ignorado)." ativo={categoria === "AUSENTE"} onClick={() => toggle("AUSENTE")} />
+                      <CardNum label="Arquivo" valor={resumo.arquivo} dica="Transferidos, excluidos e falecidos (fora do rol)." ativo={categoria === "ARQUIVO"} onClick={() => toggle("ARQUIVO")} />
+                      <CardNum label="Familias" valor={resumo.familias} dica="Nucleos familiares. Clique para agrupar a tabela por familia." ativo={agrupar} onClick={() => { setCategoria(null); setAgrupar((v) => !v); }} />
+                      <CardNum label="Dependentes" valor={resumo.dependentes} dica="Filhos nao-membros (sem batismo) vinculados a um membro." ativo={categoria === "DEPENDENTES"} onClick={() => toggle("DEPENDENTES")} />
+                      <span className="ml-1 text-xs font-medium text-muted-foreground">Oficiais:</span>
+                      <CardNum label="Pastores" valor={resumo.pastores} dica="Membros com cargo de Pastor." ativo={categoria === "PASTOR"} onClick={() => toggle("PASTOR")} />
+                      <CardNum label="Presbiteros" valor={resumo.presbiteros} dica="Membros com cargo de Presbitero." ativo={categoria === "PRESBITERO"} onClick={() => toggle("PRESBITERO")} />
+                      <CardNum label="Diaconos" valor={resumo.diaconos} dica="Membros com cargo de Diacono." ativo={categoria === "DIACONO"} onClick={() => toggle("DIACONO")} />
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
               </div>
             </TooltipProvider>
           )}
