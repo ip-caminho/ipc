@@ -28,6 +28,7 @@ import { DatePickerField } from "@shared/components/DatePickerField";
 import { ExternalLink, History, Users, UserPlus, Heart, Briefcase } from "lucide-react";
 import { cn } from "@shared/lib/utils/cn";
 import { CARGO_ECLESIASTICO_OPTIONS } from "@features/membros/lib/constants";
+import { useAuth } from "@shared/providers/PermissionsProvider";
 import { HistoricoEclesiasticoDrawer } from "./HistoricoEclesiasticoDrawer";
 import { FamiliaDrawer } from "./FamiliaDrawer";
 import { CargosDrawer } from "./CargosDrawer";
@@ -127,28 +128,38 @@ function useLinhaMembro(membro: MembroEclesiastico) {
 function DrawersMembro({
   ctl,
   nome,
+  readOnly,
 }: {
   ctl: ReturnType<typeof useLinhaMembro>;
   nome: string;
+  readOnly?: boolean;
 }) {
   return (
     <>
       <HistoricoEclesiasticoDrawer membroId={ctl.membroId} nome={nome} open={ctl.histOpen} onOpenChange={ctl.setHistOpen} />
-      <FamiliaDrawer membroId={ctl.membroId} entidadeId={ctl.entidadeId} nome={nome} open={ctl.famOpen} onOpenChange={ctl.setFamOpen} />
-      <CargosDrawer membroId={ctl.membroId} nome={nome} open={ctl.cargosOpen} onOpenChange={ctl.setCargosOpen} />
+      {!readOnly && (
+        <>
+          <FamiliaDrawer membroId={ctl.membroId} entidadeId={ctl.entidadeId} nome={nome} open={ctl.famOpen} onOpenChange={ctl.setFamOpen} />
+          <CargosDrawer membroId={ctl.membroId} nome={nome} open={ctl.cargosOpen} onOpenChange={ctl.setCargosOpen} />
+        </>
+      )}
     </>
   );
 }
 
-function AcoesMembro({ ctl, href }: { ctl: ReturnType<typeof useLinhaMembro>; href: string }) {
+function AcoesMembro({ ctl, href, readOnly }: { ctl: ReturnType<typeof useLinhaMembro>; href: string; readOnly?: boolean }) {
   return (
     <div className="flex items-center gap-2">
-      <button type="button" onClick={() => ctl.setCargosOpen(true)} className="text-muted-foreground hover:text-foreground" title="Cargos / mandato">
-        <Briefcase className="h-4 w-4" />
-      </button>
-      <button type="button" onClick={() => ctl.setFamOpen(true)} className="text-muted-foreground hover:text-foreground" title="Familia (conjuge / filhos)">
-        <Heart className="h-4 w-4" />
-      </button>
+      {!readOnly && (
+        <>
+          <button type="button" onClick={() => ctl.setCargosOpen(true)} className="text-muted-foreground hover:text-foreground" title="Cargos / mandato">
+            <Briefcase className="h-4 w-4" />
+          </button>
+          <button type="button" onClick={() => ctl.setFamOpen(true)} className="text-muted-foreground hover:text-foreground" title="Familia (conjuge / filhos)">
+            <Heart className="h-4 w-4" />
+          </button>
+        </>
+      )}
       <button type="button" onClick={() => ctl.setHistOpen(true)} className="text-muted-foreground hover:text-foreground" title="Historico / reverter">
         <History className="h-4 w-4" />
       </button>
@@ -224,13 +235,15 @@ function CardDependente({ dep }: { dep: MembroEclesiastico }) {
   );
 }
 
-function LinhaMembro({ membro, agrupar }: { membro: MembroEclesiastico; agrupar: boolean }) {
+function LinhaMembro({ membro, agrupar, readOnly }: { membro: MembroEclesiastico; agrupar: boolean; readOnly?: boolean }) {
   const ctl = useLinhaMembro(membro);
   const { salvar, salvarSeMudou, salvarStatus } = ctl;
 
   const status = membro.entidade?.status || "ATIVO";
   const rol = membro.rolCategoria ? ROL_BADGE[membro.rolCategoria] : null;
   const ehFilho = agrupar && membro.familiaOrder === 2;
+  const statusLabel = STATUS_OPTIONS.find((o) => o.value === status)?.label ?? status;
+  const cargoLabel = CARGO_ECLESIASTICO_OPTIONS.find((o) => o.value === membro.cargoEclesiastico)?.label;
 
   return (
     <TableRow>
@@ -241,36 +254,44 @@ function LinhaMembro({ membro, agrupar }: { membro: MembroEclesiastico; agrupar:
         </Link>
       </TableCell>
       <TableCell>
-        <Select value={status} onValueChange={salvarStatus}>
-          <SelectTrigger className="h-8 w-[130px] text-xs">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {STATUS_OPTIONS.map((o) => (
-              <SelectItem key={o.value} value={o.value}>
-                {o.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {readOnly ? (
+          <span className="text-xs">{statusLabel}</span>
+        ) : (
+          <Select value={status} onValueChange={salvarStatus}>
+            <SelectTrigger className="h-8 w-[130px] text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {STATUS_OPTIONS.map((o) => (
+                <SelectItem key={o.value} value={o.value}>
+                  {o.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
       </TableCell>
       <TableCell>
-        <Select
-          value={membro.cargoEclesiastico || NONE}
-          onValueChange={(v) => salvar("cargoEclesiastico", v === NONE ? "" : v)}
-        >
-          <SelectTrigger className="h-8 w-[190px] text-xs">
-            <SelectValue placeholder="-" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={NONE}>—</SelectItem>
-            {CARGO_ECLESIASTICO_OPTIONS.map((o) => (
-              <SelectItem key={o.value} value={o.value}>
-                {o.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {readOnly ? (
+          <span className="text-xs">{cargoLabel ?? "—"}</span>
+        ) : (
+          <Select
+            value={membro.cargoEclesiastico || NONE}
+            onValueChange={(v) => salvar("cargoEclesiastico", v === NONE ? "" : v)}
+          >
+            <SelectTrigger className="h-8 w-[190px] text-xs">
+              <SelectValue placeholder="-" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={NONE}>—</SelectItem>
+              {CARGO_ECLESIASTICO_OPTIONS.map((o) => (
+                <SelectItem key={o.value} value={o.value}>
+                  {o.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
       </TableCell>
       <TableCell>
         {rol ? (
@@ -293,31 +314,47 @@ function LinhaMembro({ membro, agrupar }: { membro: MembroEclesiastico; agrupar:
         )}
       </TableCell>
       <TableCell>
-        <Input
-          key={membro.numeroMatricula ?? ""}
-          defaultValue={membro.numeroMatricula ?? ""}
-          onBlur={(e) => salvarSeMudou("numeroMatricula", membro.numeroMatricula ?? "", e.target.value)}
-          className="h-8 w-24 text-xs"
-        />
+        {readOnly ? (
+          <span className="text-xs">{membro.numeroMatricula || "—"}</span>
+        ) : (
+          <Input
+            key={membro.numeroMatricula ?? ""}
+            defaultValue={membro.numeroMatricula ?? ""}
+            onBlur={(e) => salvarSeMudou("numeroMatricula", membro.numeroMatricula ?? "", e.target.value)}
+            className="h-8 w-24 text-xs"
+          />
+        )}
       </TableCell>
       <TableCell>
-        <DatePickerField value={membro.dataConversao ?? ""} onChange={(iso) => salvar("dataConversao", iso)} className="h-8 w-[150px] text-xs" />
+        {readOnly ? (
+          <span className="text-xs">{membro.dataConversao || "—"}</span>
+        ) : (
+          <DatePickerField value={membro.dataConversao ?? ""} onChange={(iso) => salvar("dataConversao", iso)} className="h-8 w-[150px] text-xs" />
+        )}
       </TableCell>
       <TableCell>
-        <DatePickerField value={membro.dataBatismo ?? ""} onChange={(iso) => salvar("dataBatismo", iso)} className="h-8 w-[150px] text-xs" />
+        {readOnly ? (
+          <span className="text-xs">{membro.dataBatismo || "—"}</span>
+        ) : (
+          <DatePickerField value={membro.dataBatismo ?? ""} onChange={(iso) => salvar("dataBatismo", iso)} className="h-8 w-[150px] text-xs" />
+        )}
       </TableCell>
       <TableCell>
-        <DatePickerField value={membro.dataMembresia ?? ""} onChange={(iso) => salvar("dataMembresia", iso)} className="h-8 w-[150px] text-xs" />
+        {readOnly ? (
+          <span className="text-xs">{membro.dataMembresia || "—"}</span>
+        ) : (
+          <DatePickerField value={membro.dataMembresia ?? ""} onChange={(iso) => salvar("dataMembresia", iso)} className="h-8 w-[150px] text-xs" />
+        )}
       </TableCell>
       <TableCell>
-        <AcoesMembro ctl={ctl} href={`/secretario-executivo/${membro._id}`} />
-        <DrawersMembro ctl={ctl} nome={membro.entidade?.nomeCompleto || ""} />
+        <AcoesMembro ctl={ctl} href={`/secretario-executivo/${membro._id}`} readOnly={readOnly} />
+        <DrawersMembro ctl={ctl} nome={membro.entidade?.nomeCompleto || ""} readOnly={readOnly} />
       </TableCell>
     </TableRow>
   );
 }
 
-function LinhaDependente({ dep }: { dep: MembroEclesiastico }) {
+function LinhaDependente({ dep, readOnly }: { dep: MembroEclesiastico; readOnly?: boolean }) {
   const tornarMembro = useMutation(api.membros.eclesiastico.tornarMembro);
   const [loading, setLoading] = useState(false);
 
@@ -349,10 +386,14 @@ function LinhaDependente({ dep }: { dep: MembroEclesiastico }) {
         {dep.dataNascimento ? `Nascimento: ${dep.dataNascimento}` : "Sem dados eclesiasticos (nao e membro)"}
       </TableCell>
       <TableCell>
-        <Button type="button" variant="outline" size="sm" disabled={loading} onClick={promover} title="Criar registro de membro">
-          <UserPlus className="h-3.5 w-3.5 mr-1" />
-          {loading ? "..." : "Tornar membro"}
-        </Button>
+        {readOnly ? (
+          <span className="text-xs text-muted-foreground">—</span>
+        ) : (
+          <Button type="button" variant="outline" size="sm" disabled={loading} onClick={promover} title="Criar registro de membro">
+            <UserPlus className="h-3.5 w-3.5 mr-1" />
+            {loading ? "..." : "Tornar membro"}
+          </Button>
+        )}
       </TableCell>
     </TableRow>
   );
@@ -383,6 +424,10 @@ export function SecretarioExecutivoTabela({
   agrupar: boolean;
   categoria?: string | null;
 }) {
+  // Sem rol:update, a tabela vira somente-leitura (valores como texto, sem acoes de edicao).
+  const { can } = useAuth();
+  const readOnly = !can("rol:update");
+
   const linhas = useMemo(() => {
     let base = membros;
     if (categoria === "DEPENDENTES") {
@@ -490,9 +535,9 @@ export function SecretarioExecutivoTabela({
                   />
                 )}
                 {m.ehMembro === false ? (
-                  <LinhaDependente dep={m} />
+                  <LinhaDependente dep={m} readOnly={readOnly} />
                 ) : (
-                  <LinhaMembro membro={m} agrupar={agrupar} />
+                  <LinhaMembro membro={m} agrupar={agrupar} readOnly={readOnly} />
                 )}
               </Fragment>
             );
