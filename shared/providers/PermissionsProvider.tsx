@@ -22,10 +22,23 @@ export function PermissionsProvider({
 
   const pathname = usePathname();
   const router = useRouter();
-  const [impersonatedRole, setImpersonatedRole] = useState<Role | null>(null);
+  // Persiste a impersonacao na aba (sessionStorage): sem isso, F5 ou abrir uma
+  // URL direto resetava o estado e o admin voltava ao papel real sem perceber.
+  // No SSR nao ha sessionStorage; o primeiro render do client ainda esta em
+  // loading de permissoes, entao nao ha mismatch pratico de hidratacao.
+  const [impersonatedRole, setImpersonatedRole] = useState<Role | null>(() => {
+    if (typeof window === "undefined") return null;
+    return (sessionStorage.getItem("impersonated-role") as Role | null) ?? null;
+  });
 
-  const impersonate = useCallback((role: Role) => setImpersonatedRole(role), []);
-  const stopImpersonating = useCallback(() => setImpersonatedRole(null), []);
+  const impersonate = useCallback((role: Role) => {
+    sessionStorage.setItem("impersonated-role", role);
+    setImpersonatedRole(role);
+  }, []);
+  const stopImpersonating = useCallback(() => {
+    sessionStorage.removeItem("impersonated-role");
+    setImpersonatedRole(null);
+  }, []);
 
   // Auto-vincular pelo telefone se logado mas sem membro
   useEffect(() => {
