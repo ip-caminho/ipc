@@ -218,7 +218,7 @@ type LinhaSecretario = {
   _id: string; // membroId (membro) ou entidadeId (dependente)
   ehMembro: boolean;
   entidadeId: string;
-  entidade: { nomeCompleto?: string; whatsapp?: string; status?: string };
+  entidade: { nomeCompleto?: string; whatsapp?: string; status?: string; foto?: string };
   cargoEclesiastico?: string;
   rol?: string;
   tipoRolOverride?: string;
@@ -352,7 +352,7 @@ async function montarLinhasSecretario(ctx: QueryCtx): Promise<LinhaSecretario[]>
       _id: m ? m._id : entId,
       ehMembro: !!m,
       entidadeId: entId,
-      entidade: { nomeCompleto: e.nomeCompleto, whatsapp: e.whatsapp, status: e.status },
+      entidade: { nomeCompleto: e.nomeCompleto, whatsapp: e.whatsapp, status: e.status, foto: e.foto },
       cargoEclesiastico: m?.cargoEclesiastico,
       rol: m?.rol,
       tipoRolOverride: m?.tipoRolOverride,
