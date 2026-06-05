@@ -41,6 +41,7 @@ import { useNavigationMode } from "@shared/providers/NavigationModeProvider";
 import {
   PRIMARY_TABS,
   BOLETIM_TAB,
+  ROL_TAB,
   GESTAO_SECTIONS,
   ELEVATED_ROLES,
   isDomingoWindow,
@@ -83,6 +84,10 @@ export function AppSidebar() {
   const primaryItems: NavItem[] = [
     ...PRIMARY_TABS,
     ...(isBoletim ? [BOLETIM_TAB] : []),
+    // Rol de Membros no nivel primario para quem tem rol:read (ex.: membro
+    // com permissao individual). No modo admin sai daqui — ja esta no grupo
+    // de gestao "Pessoas" (evita duplicar).
+    ...(!isAdminMode ? [ROL_TAB] : []),
   ].filter(isItemVisible);
 
   // Secoes colapsaveis aparecem so no modo admin (Gestao). No modo membro,
