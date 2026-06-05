@@ -86,7 +86,7 @@ export default function SecretarioExecutivoDetalhePage() {
             familia={familia}
           />
 
-          <PermissionGate permission="membros:update_eclesiastico">
+          <PermissionGate permission="rol:update">
             <EclesiasticoForm
               membroId={membro._id}
               entidadeId={entidade._id}

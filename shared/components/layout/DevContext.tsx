@@ -131,7 +131,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     ],
     componentes: ["SecretarioExecutivoTabela", "HistoricoEclesiasticoDrawer", "FamiliaDrawer", "CargosDrawer", "RolExportView", "PermissionGate"],
     notas: [
-      "Permissao: membros:update_eclesiastico",
+      "Permissao: rol:read (ver pagina/tabela), rol:update (editar — sem ela a tabela fica somente-leitura)",
       "Roles: admin, pastor, secretaria, secretario_executivo",
       "Edicao tabular inline (auto-save no blur): cargo, rol, tipoRol, matricula, datas sacramentais",
       "Dashboard de cards clicaveis (getResumoSecretario): comungantes/nao-comungantes/ausentes/arquivo/total/familias/dependentes/pendencias + oficiais (pastores/presbiteros/diaconos) + alertas de mandatos vencidos e a vencer em 90 dias (cargosEclesiasticosHistorico ATIVO) — filtram a tabela",
@@ -165,7 +165,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "CargosHistoricoSection",
     ],
     notas: [
-      "Permissao: membros:read (visualizar), membros:update_eclesiastico (editar)",
+      "Permissao: membros:read (visualizar), rol:update (editar)",
       "Edita apenas campos eclesiasticos: cargo, rol, sacramentos, admissao, demissao, observacoes pastorais",
       "Permite marcar campos sacramentais como 'verificados pelo livro fisico' (camposVerificados em entidades)",
     ],

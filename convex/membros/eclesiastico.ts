@@ -1,6 +1,6 @@
 /**
  * Mutations para edicao de dados eclesiasticos do membro.
- * Gated por `membros:update_eclesiastico` (ou `membros:update` para retrocompat).
+ * Gated por `rol:update` (ou `membros:update` para retrocompat); leitura por `rol:read`.
  *
  * Permitido a: admin, pastor, secretaria, secretario_executivo.
  *
@@ -62,7 +62,7 @@ export const updateEclesiastico = mutation({
   },
   handler: async (ctx, { membroId, data }) => {
     await requireAnyPermission(ctx, [
-      "membros:update_eclesiastico",
+      "rol:update",
       "membros:update",
     ]);
 
@@ -110,7 +110,7 @@ export const marcarCampoVerificado = mutation({
   },
   handler: async (ctx, { entidadeId, campo, desmarcar }) => {
     await requireAnyPermission(ctx, [
-      "membros:update_eclesiastico",
+      "rol:update",
       "membros:update",
     ]);
 
@@ -162,7 +162,7 @@ export const marcarCampoVerificado = mutation({
 export const getFamily = query({
   args: { membroId: v.id("membros") },
   handler: async (ctx, { membroId }) => {
-    await requireAnyPermission(ctx, ["membros:read", "diretorio:read"]);
+    await requireAnyPermission(ctx, ["membros:read", "diretorio:read", "rol:read"]);
 
     const membro = await ctx.db.get(membroId);
     if (!membro) return null;
@@ -386,7 +386,7 @@ async function montarLinhasSecretario(ctx: QueryCtx): Promise<LinhaSecretario[]>
 export const listParaSecretario = query({
   args: { search: v.optional(v.string()) },
   handler: async (ctx, { search }): Promise<LinhaSecretario[]> => {
-    await requireAnyPermission(ctx, ["membros:update_eclesiastico", "membros:read"]);
+    await requireAnyPermission(ctx, ["rol:read"]);
 
     let linhas = await montarLinhasSecretario(ctx);
     if (search) {
@@ -408,7 +408,7 @@ export const listParaSecretario = query({
 export const getResumoSecretario = query({
   args: {},
   handler: async (ctx): Promise<ResumoSecretario> => {
-    await requireAnyPermission(ctx, ["membros:update_eclesiastico", "membros:read"]);
+    await requireAnyPermission(ctx, ["rol:read"]);
     const linhas = await montarLinhasSecretario(ctx);
     const familias = new Set<string>();
     let comungantes = 0, naoComungantes = 0, ausentes = 0, arquivo = 0;
@@ -487,10 +487,7 @@ type HistoricoItem = {
 export const getHistorico = query({
   args: { membroId: v.id("membros") },
   handler: async (ctx, { membroId }): Promise<HistoricoItem[]> => {
-    await requireAnyPermission(ctx, [
-      "membros:update_eclesiastico",
-      "membros:read",
-    ]);
+    await requireAnyPermission(ctx, ["rol:read"]);
 
     const logs = await ctx.db
       .query("auditLogs")
@@ -544,7 +541,7 @@ export const tornarMembro = mutation({
   args: { entidadeId: v.id("entidades") },
   handler: async (ctx, { entidadeId }) => {
     await requireAnyPermission(ctx, [
-      "membros:update_eclesiastico",
+      "rol:update",
       "membros:update",
     ]);
 
@@ -592,7 +589,7 @@ export const updateStatus = mutation({
   },
   handler: async (ctx, { entidadeId, status }) => {
     await requireAnyPermission(ctx, [
-      "membros:update_eclesiastico",
+      "rol:update",
       "membros:update",
     ]);
     const entidade = await ctx.db.get(entidadeId);
@@ -609,7 +606,7 @@ export const updateStatus = mutation({
 
 // ============ VINCULOS DE FAMILIA (admin / secretario) ============
 
-const PERM_FAMILIA = ["membros:update_eclesiastico", "membros:update"];
+const PERM_FAMILIA = ["rol:update", "membros:update"];
 
 /** Busca entidades por nome para vincular como conjuge/filho. */
 export const buscarEntidadesFamilia = query({

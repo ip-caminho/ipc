@@ -9,7 +9,9 @@ export type Role =
 
 export type Permission =
   // Membros
-  | "membros:read" | "membros:create" | "membros:update" | "membros:delete" | "membros:self_service" | "membros:update_eclesiastico"
+  | "membros:read" | "membros:create" | "membros:update" | "membros:delete" | "membros:self_service"
+  // Rol de Membros (pagina do secretario executivo)
+  | "rol:read" | "rol:update"
   // Entidades
   | "entidades:read" | "entidades:create" | "entidades:update" | "entidades:delete"
   // Diretorio
