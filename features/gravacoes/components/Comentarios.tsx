@@ -111,7 +111,7 @@ function ComentarioItem({
             <div className="flex items-center gap-2 mt-2">
               <input
                 ref={inputRef}
-                className="flex-1 text-sm rounded-md border border-input bg-background px-3 py-1.5 placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                className="flex-1 text-base md:text-sm rounded-md border border-input bg-background px-3 py-1.5 placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 placeholder="Escreva uma resposta..."
                 value={replyText}
                 onChange={(e) => setReplyText(e.target.value)}
@@ -190,7 +190,7 @@ export function ComentarioInput({ gravacaoId, onCreated }: { gravacaoId: Id<"gra
   return (
     <div className="flex items-center gap-2">
       <input
-        className="flex-1 text-sm rounded-xl border border-border bg-background px-4 py-3 placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        className="flex-1 text-base md:text-sm rounded-xl border border-border bg-background px-4 py-3 placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
         placeholder="Escreva um comentario..."
         value={newComment}
         onChange={(e) => setNewComment(e.target.value)}
