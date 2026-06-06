@@ -53,8 +53,8 @@ A maioria das telas exige login (papel admin). Usar `scripts/screenshot-auth.sh`
 ```bash
 scripts/screenshot-auth.sh /secretario-executivo tmp/rol-mobile.png 390 844
 scripts/screenshot-auth.sh /secretario-executivo tmp/rol-desktop.png 1280 900
-# preview de branch:
-SCREENSHOT_BASE_URL=https://ipc-git-<branch>-cyhandre-3063s-projects.vercel.app \
+# preview de branch (slug do team da igreja na Vercel):
+SCREENSHOT_BASE_URL=https://ipc-git-<branch>-<team-slug>.vercel.app \
   scripts/screenshot-auth.sh /membros tmp/membros.png
 ```
 
@@ -70,7 +70,7 @@ SCREENSHOT_BASE_URL=https://ipc-git-<branch>-cyhandre-3063s-projects.vercel.app 
 O projeto Vercel é git-connected — **todo push de branch gera um preview
 automático**. Não publicar UI direto no main pra revisar; usar a branch.
 
-- URL do preview: `https://ipc-git-<branch-slug>-cyhandre-3063s-projects.vercel.app`
+- URL do preview: `https://ipc-git-<branch-slug>-<team-slug>.vercel.app`
   (branch slug = nome da branch com `/`→`-`). A URL exata também sai via Vercel
   MCP (`list_deployments`) ou no PR.
 - ATENÇÃO: previews têm Vercel Authentication ligada → respondem **401** para
@@ -83,10 +83,11 @@ automático**. Não publicar UI direto no main pra revisar; usar a branch.
   preview → agente abre no agent-browser (mobile) e/ou manda a URL pro André
   revisar no celular → só depois `merge --ff-only` no main.
 
-IDs Vercel (cache):
-- team: `team_vHMcoVDCHqVm9qXcjg9cBhp0` (`cyhandre-3063s-projects`)
-- project: `prj_M6yYQGRb695cyHsDkYCMALDK9Hji` (`ipc`)
-- prod: `https://ipc-psi.vercel.app`
+Vercel (conta institucional da igreja desde 06/2026; projeto antigo na conta
+pessoal foi descontinuado):
+- prod: `https://ipc-pi-ten.vercel.app`
+- repo: `ip-caminho/ipc` (GitHub da igreja; org `ipcdocaminho` reservada para
+  quando houver plano Pro)
 
 ## Checklist ao mexer em UI
 - [ ] Layout base mobile; desktop via `md:`/`lg:`

@@ -19,7 +19,7 @@ ROTA="${1:-/dashboard}"
 SAIDA="${2:-$ROOT/tmp/shot.png}"
 W="${3:-390}"
 H="${4:-844}"
-BASE="${SCREENSHOT_BASE_URL:-https://ipc-psi.vercel.app}"
+BASE="${SCREENSHOT_BASE_URL:-https://ipc-pi-ten.vercel.app}"
 
 # saida absoluta: o daemon do agent-browser resolve paths no cwd DELE
 case "$SAIDA" in /*) ;; *) SAIDA="$ROOT/$SAIDA";; esac
