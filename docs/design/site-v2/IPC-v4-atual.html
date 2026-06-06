@@ -1,0 +1,550 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>IPC — Igreja Presbiteriana do Caminho</title>
+
+<style>
+/* ============================================================
+   IPC site v4 — estado atual portado do app (Next.js).
+   Self-contained: tokens + fontes + estilos inline.
+   Dados dinâmicos (horários, endereço, contato, cursos, banco)
+   estão como [placeholders] — no app vêm do Convex.
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=Source+Sans+3:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+
+:root{
+  /* ---- Brand: Navy ---- */
+  --navy-50:#EEF1F6; --navy-100:#D6DEEA; --navy-200:#AEBCD2; --navy-300:#7D90B3;
+  --navy-400:#4F6691; --navy-500:#324B73; --navy-600:#243657; --navy-700:#1B2A4A;
+  --navy-800:#14213D; --navy-900:#0E1730;
+  /* ---- Brand: Ochre ---- */
+  --ochre-50:#FAF4E8; --ochre-100:#F1E4C9; --ochre-200:#E4CD9C; --ochre-300:#D4B26B;
+  --ochre-400:#C49A47; --ochre-500:#B0853A; --ochre-600:#8F6A2D;
+  /* ---- Stone (papel/pedra) ---- */
+  --stone-0:#FFFFFF; --stone-50:#F7F3EA; --stone-100:#F0EADC; --stone-200:#E5DDCB;
+  --stone-300:#D5CAB2; --stone-400:#B3A88E; --stone-500:#8C8268; --stone-600:#6A6250;
+  --stone-800:#332F27; --stone-900:#221F1A;
+
+  /* ---- Aliases ---- */
+  --surface-page:var(--stone-50); --surface-card:var(--stone-0); --surface-sunken:var(--stone-100);
+  --surface-accent:var(--ochre-50);
+  --text-strong:var(--stone-900); --text-body:var(--stone-800); --text-muted:var(--stone-600);
+  --text-subtle:var(--stone-500); --brand-soft:var(--navy-50);
+  --border-subtle:var(--stone-200); --border-default:var(--stone-300); --border-strong:var(--stone-400);
+
+  /* ---- Tipografia ---- */
+  --font-display:'Spectral', Georgia, 'Times New Roman', serif;
+  --font-body:'Source Sans 3', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono:ui-monospace, monospace;
+  --fw-regular:400; --fw-medium:500; --fw-semibold:600; --fw-display:800;
+  --text-xs:0.8125rem; --text-sm:0.9375rem; --text-base:1.125rem; --text-lg:1.25rem;
+  --text-xl:1.5rem; --text-3xl:2.25rem;
+  --leading-snug:1.28; --leading-normal:1.55; --leading-relaxed:1.7;
+  --tracking-tight:-0.015em; --tracking-caps:0.12em;
+
+  /* ---- Espaço ---- */
+  --space-1:0.25rem; --space-2:0.5rem; --space-3:0.75rem; --space-4:1rem; --space-5:1.25rem;
+  --space-6:1.5rem; --space-8:2rem; --space-10:2.5rem; --space-12:3rem; --space-16:4rem;
+  --space-20:5rem; --space-24:6rem; --space-32:8rem;
+  --gutter:var(--space-6); --gutter-lg:var(--space-8);
+
+  /* ---- Efeitos ---- */
+  --radius-sm:6px; --radius-md:10px; --radius-lg:16px;
+  --border-width:1px; --border-width-thick:2px;
+  --shadow-sm:0 1px 3px rgba(51,47,39,.08),0 1px 2px rgba(51,47,39,.05);
+  --shadow-md:0 4px 10px rgba(51,47,39,.08),0 2px 4px rgba(51,47,39,.05);
+  --ease-out:cubic-bezier(.16,1,.3,1); --dur-fast:120ms; --dur-base:200ms;
+  --transition-base:all var(--dur-base) cubic-bezier(.2,0,0,1);
+
+  /* ---- Page-level ---- */
+  --header-h:76px; --measure:64ch;
+  --accent-ink:var(--ochre-600); --accent-rule:var(--ochre-400);
+  --dark-surface:var(--navy-800); --dark-surface-2:var(--navy-900);
+  --ease:var(--ease-out);
+}
+
+*,*::before,*::after{ box-sizing:border-box; }
+html{ -webkit-text-size-adjust:100%; scroll-behavior:smooth; scroll-padding-top:var(--header-h); }
+body{
+  margin:0; background:var(--surface-page); color:var(--text-body);
+  font-family:var(--font-body); font-size:var(--text-base); line-height:var(--leading-relaxed);
+  font-weight:var(--fw-regular); -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+}
+::selection{ background:var(--navy-700); color:var(--stone-50); }
+p{ margin:0 0 1em; text-wrap:pretty; }
+h1,h2,h3,h4{ font-family:var(--font-display); color:var(--text-strong); margin:0; text-wrap:balance; }
+img{ max-width:100%; display:block; }
+a{ color:inherit; }
+:focus-visible{ outline:none; box-shadow:0 0 0 3px var(--ochre-200); border-radius:3px; }
+
+/* ---------- Containers ---------- */
+.wrap{ width:100%; max-width:760px; margin:0 auto; padding:0 var(--gutter); }
+.wrap-wide{ width:100%; max-width:1080px; margin:0 auto; padding:0 var(--gutter); }
+
+/* ---------- Eyebrow ---------- */
+.eyebrow{ font-family:var(--font-body); font-weight:var(--fw-semibold); font-size:var(--text-sm);
+  letter-spacing:var(--tracking-caps); text-transform:uppercase; color:var(--accent-ink); margin:0 0 var(--space-5); }
+
+/* ---------- Botões ---------- */
+.btn{ display:inline-flex; align-items:center; gap:8px; font-family:var(--font-body);
+  font-weight:var(--fw-semibold); font-size:var(--text-sm); letter-spacing:.01em;
+  border-radius:var(--radius-md); padding:13px 22px; border:var(--border-width-thick) solid transparent;
+  cursor:pointer; transition:var(--transition-base); text-decoration:none; }
+.btn-primary{ background:var(--navy-700); color:var(--stone-50); border-color:var(--navy-700); box-shadow:var(--shadow-sm); }
+.btn-primary:hover{ background:var(--navy-800); border-color:var(--navy-800); color:var(--stone-50); box-shadow:var(--shadow-md); }
+.btn-outline{ background:transparent; color:var(--text-strong); border-color:var(--border-strong); }
+.btn-outline:hover{ border-color:var(--navy-700); color:var(--navy-700); background:var(--brand-soft); }
+.link-quiet{ font-family:var(--font-body); font-weight:var(--fw-medium); font-size:var(--text-sm);
+  color:var(--text-strong); text-decoration:underline; text-decoration-thickness:1px;
+  text-decoration-color:var(--border-strong); text-underline-offset:5px;
+  transition:color var(--dur-fast) var(--ease), text-decoration-color var(--dur-fast) var(--ease); }
+.link-quiet:hover{ color:var(--accent-ink); text-decoration-color:var(--accent-ink); }
+
+/* =========================== HEADER =========================== */
+header.site{ position:sticky; top:0; z-index:50; height:var(--header-h);
+  background:color-mix(in srgb, var(--surface-page) 88%, transparent); backdrop-filter:blur(8px);
+  border-bottom:var(--border-width) solid var(--border-subtle); }
+.site-inner{ max-width:1180px; margin:0 auto; padding:0 var(--gutter-lg); height:100%;
+  display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:var(--space-6); }
+.brand{ display:inline-flex; align-items:center; gap:12px; text-decoration:none; }
+.brand img{ height:30px; width:auto; }
+.brand .bar{ width:1.5px; height:28px; background:var(--accent-rule); }
+.brand .name{ line-height:1.1; white-space:nowrap; }
+.brand .name .l1{ font-family:var(--font-display); font-weight:600; font-size:15px; color:var(--text-strong); display:block; letter-spacing:-.01em; }
+.brand .name .l2{ font-family:var(--font-display); font-weight:700; font-style:italic; font-size:15px; color:var(--accent-ink); display:block; }
+nav.primary{ just-self:center; display:flex; align-items:center; gap:2px; font-family:var(--font-body); font-size:var(--text-sm); font-weight:var(--fw-medium); }
+nav.primary a{ padding:8px 14px; color:var(--text-body); text-decoration:none; border-radius:var(--radius-sm); transition:color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease); }
+nav.primary a:hover{ color:var(--navy-700); background:var(--brand-soft); }
+.header-cta{ justify-self:end; }
+.header-cta .btn{ padding:9px 16px; white-space:nowrap; }
+@media (max-width:920px){ .site-inner{ grid-template-columns:1fr auto; } nav.primary{ display:none; } }
+@media (max-width:480px){ .brand .name{ display:none; } .brand .bar{ display:none; } }
+
+/* =========================== RITMO =========================== */
+section{ padding:var(--space-32) 0; }
+@media (max-width:760px){ section{ padding:var(--space-20) 0; } }
+.section-head{ margin-bottom:var(--space-16); }
+.section-head h2{ font-family:var(--font-display); font-weight:var(--fw-semibold); font-size:var(--text-3xl);
+  line-height:var(--leading-snug); letter-spacing:var(--tracking-tight); color:var(--text-strong); margin:0; max-width:18ch; }
+.title-rule{ display:block; width:56px; height:2px; background:var(--accent-rule); margin-top:var(--space-6); }
+
+/* =========================== HERO =========================== */
+.hero{ min-height:min(82vh,760px); display:flex; align-items:center; justify-content:center; text-align:center; padding:var(--space-24) 0; }
+.hero .wrap-wide{ max-width:1040px; }
+.hero h1{ font-family:var(--font-display); font-weight:var(--fw-display); font-size:clamp(34px,5vw,60px);
+  line-height:1.08; letter-spacing:-.02em; color:var(--text-strong); margin:0 auto; text-wrap:balance; }
+.hero h1 .ln{ display:block; }
+.hero .sub{ margin:var(--space-8) auto 0; font-size:var(--text-lg); line-height:var(--leading-normal); color:var(--text-muted); max-width:46ch; }
+.hero .refs{ margin:var(--space-5) auto 0; display:inline-flex; flex-wrap:wrap; justify-content:center; gap:14px;
+  font-family:var(--font-body); font-weight:var(--fw-semibold); font-size:var(--text-xs); letter-spacing:var(--tracking-caps); text-transform:uppercase; color:var(--text-subtle); }
+.hero .refs .sep{ color:var(--accent-rule); }
+.hero .cta-row{ margin-top:var(--space-12); display:flex; align-items:center; justify-content:center; gap:var(--space-8); flex-wrap:wrap; }
+
+/* =========================== EIXOS =========================== */
+.eixos{ border-top:var(--border-width) solid var(--border-default); }
+.eixo{ display:grid; grid-template-columns:64px 1fr 1.05fr; column-gap:var(--space-12); align-items:baseline;
+  padding:var(--space-12) 0; border-bottom:var(--border-width) solid var(--border-subtle); }
+.eixo:last-child{ border-bottom:none; }
+.eixo .num{ font-family:var(--font-display); font-style:italic; font-weight:500; font-size:var(--text-xl); color:var(--accent-ink); }
+.eixo .key{ font-family:var(--font-display); font-weight:var(--fw-semibold); font-size:clamp(26px,3vw,36px); line-height:1.12; letter-spacing:var(--tracking-tight); color:var(--text-strong); }
+.eixo .body p{ margin:0; color:var(--text-body); }
+.eixo .bref{ display:block; margin-top:var(--space-4); font-family:var(--font-display); font-style:italic; font-size:var(--text-base); color:var(--accent-ink); }
+@media (max-width:820px){ .eixo{ grid-template-columns:40px 1fr; row-gap:var(--space-4); } .eixo .body{ grid-column:1 / -1; } }
+
+/* =========================== INVERSE =========================== */
+.inverse{ background:var(--dark-surface); color:var(--stone-50); }
+.inverse .eyebrow{ color:var(--ochre-300); }
+.inverse .section-head{ text-align:center; }
+.inverse .section-head h2{ color:var(--stone-50); margin:0 auto; max-width:22ch; }
+.inverse .title-rule{ margin-left:auto; margin-right:auto; background:var(--ochre-400); }
+.inverse .negatives{ max-width:640px; margin:0 auto; text-align:center; }
+.inverse .negatives p{ font-size:var(--text-xl); line-height:1.5; color:var(--navy-100); margin:0 0 var(--space-6); }
+.inverse .negatives p:last-child{ margin-bottom:0; }
+.contraste-solo{ background:var(--dark-surface-2); text-align:center; padding:var(--space-32) var(--gutter); }
+.contraste-solo .emphasis{ margin:0 auto; max-width:18ch; font-family:var(--font-display); font-style:italic; font-weight:500;
+  font-size:clamp(30px,4.4vw,56px); line-height:1.18; letter-spacing:-.02em; color:var(--stone-50); }
+.contraste-solo .emphasis .hl{ color:var(--ochre-300); font-style:italic; }
+
+/* =========================== CREMOS =========================== */
+.creed .article{ padding:var(--space-16) 0; border-top:var(--border-width) solid var(--border-subtle); }
+.creed .article:first-child{ border-top:none; padding-top:0; }
+.creed .article .roman{ font-family:var(--font-display); font-style:italic; font-size:var(--text-lg); color:var(--accent-ink); margin-bottom:var(--space-4); }
+.creed .article .thesis{ font-family:var(--font-display); font-weight:var(--fw-semibold); font-size:clamp(24px,3vw,34px);
+  line-height:1.2; letter-spacing:var(--tracking-tight); color:var(--text-strong); margin:0 0 var(--space-5); text-wrap:balance; }
+.creed .article p{ margin:0; color:var(--text-body); max-width:var(--measure); }
+
+/* =========================== VIVEMOS / MUNDO / FORMACAO =========================== */
+.practice{ border-top:var(--border-width) solid var(--border-default); }
+.practice .row{ display:grid; grid-template-columns:280px 1fr; column-gap:var(--space-16);
+  padding:var(--space-12) 0; border-bottom:var(--border-width) solid var(--border-subtle); align-items:start; }
+.practice .row:last-of-type{ border-bottom:var(--border-width) solid var(--border-default); }
+.practice .row .label{ font-family:var(--font-display); font-weight:var(--fw-semibold); font-size:var(--text-xl); line-height:1.2; letter-spacing:var(--tracking-tight); color:var(--text-strong); }
+.practice .row .label::after{ content:""; display:block; width:28px; height:2px; background:var(--accent-rule); margin-top:var(--space-4); }
+.practice .row .body{ margin:0; color:var(--text-body); }
+.practice .closing{ margin:var(--space-12) 0 0; max-width:760px; font-family:var(--font-display); font-style:italic; font-size:var(--text-lg); line-height:var(--leading-normal); color:var(--text-muted); }
+@media (max-width:820px){ .practice .row{ grid-template-columns:1fr; row-gap:var(--space-4); } .practice .row .label::after{ margin-bottom:var(--space-2); } }
+
+/* =========================== CURSOS =========================== */
+.cursos-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:var(--space-8); }
+@media (max-width:760px){ .cursos-grid{ grid-template-columns:1fr; } }
+.curso-card{ background:var(--surface-card); border:var(--border-width) solid var(--border-default);
+  border-radius:var(--radius-lg); padding:var(--space-8); display:flex; flex-direction:column; gap:var(--space-5); }
+.curso-card h3{ font-family:var(--font-display); font-weight:var(--fw-semibold); font-size:var(--text-xl); line-height:1.2; }
+.curso-card .desc{ color:var(--text-muted); margin:var(--space-2) 0 0; }
+.curso-card .meta{ margin:0; color:var(--text-body); font-size:var(--text-sm); line-height:1.6; }
+.curso-card .meta strong{ color:var(--text-strong); font-weight:var(--fw-semibold); }
+.curso-card .vagas{ color:var(--ochre-600); font-weight:var(--fw-semibold); font-size:var(--text-sm); margin:0; }
+.curso-card .chips{ display:flex; flex-wrap:wrap; gap:6px; }
+.curso-card .chips span{ font-size:var(--text-xs); padding:3px 9px; border-radius:var(--radius-sm); background:var(--surface-sunken); color:var(--text-muted); }
+.curso-card .chips-label{ font-size:var(--text-xs); letter-spacing:var(--tracking-caps); text-transform:uppercase; color:var(--text-subtle); font-weight:var(--fw-semibold); margin:0 0 var(--space-2); }
+.curso-card .cta{ margin-top:auto; }
+.curso-card .cta .btn{ width:100%; justify-content:center; }
+
+/* =========================== VISITE =========================== */
+.visite .lead{ font-size:var(--text-lg); line-height:var(--leading-relaxed); color:var(--text-body); max-width:var(--measure); }
+.visite-meta{ margin:var(--space-12) 0 0; padding:var(--space-10) 0;
+  border-top:var(--border-width) solid var(--border-default); border-bottom:var(--border-width) solid var(--border-default);
+  display:grid; grid-template-columns:140px 1fr; row-gap:var(--space-6); column-gap:var(--space-8); align-items:baseline; }
+.visite-meta dt{ font-family:var(--font-body); font-weight:var(--fw-semibold); font-size:var(--text-xs); letter-spacing:var(--tracking-caps); text-transform:uppercase; color:var(--text-subtle); }
+.visite-meta dd{ margin:0; }
+.visite-meta .big{ font-family:var(--font-display); font-weight:var(--fw-semibold); font-size:clamp(30px,4vw,46px); line-height:1.1; letter-spacing:var(--tracking-tight); color:var(--text-strong); margin:0; }
+.visite-meta .tipo{ margin:var(--space-2) 0 0; font-size:var(--text-sm); color:var(--text-muted); }
+.visite-meta .place{ font-family:var(--font-display); font-size:var(--text-xl); line-height:1.4; color:var(--text-strong); margin:0; }
+.map-row{ grid-column:1 / -1; display:flex; gap:var(--space-5); flex-wrap:wrap; align-items:center; margin-top:var(--space-2); }
+.map-embed{ margin-top:var(--space-8); border:var(--border-width) solid var(--border-default); border-radius:var(--radius-lg); overflow:hidden; }
+.map-embed iframe{ display:block; width:100%; height:300px; border:0; }
+.first-sunday{ margin-top:var(--space-16); }
+.first-sunday h3{ font-family:var(--font-body); font-weight:var(--fw-semibold); font-size:var(--text-sm); letter-spacing:var(--tracking-caps); text-transform:uppercase; color:var(--accent-ink); margin:0 0 var(--space-6); }
+.first-sunday p{ color:var(--text-body); max-width:var(--measure); }
+.ceia{ margin-top:var(--space-16); padding:var(--space-8) var(--space-10); background:var(--surface-accent);
+  border-left:3px solid var(--accent-rule); border-radius:var(--radius-md); font-family:var(--font-display); font-style:italic; font-size:var(--text-lg); line-height:var(--leading-normal); color:var(--text-strong); }
+.visite-wait{ margin-top:var(--space-20); text-align:center; font-family:var(--font-display); font-style:italic; font-weight:500; font-size:clamp(26px,3.2vw,38px); line-height:1.25; letter-spacing:var(--tracking-tight); color:var(--text-strong); }
+@media (max-width:560px){ .visite-meta{ grid-template-columns:1fr; row-gap:var(--space-2); } .visite-meta dt{ margin-top:var(--space-5); } }
+
+/* =========================== BANCO =========================== */
+.bank{ max-width:560px; border-top:var(--border-width) solid var(--border-default); }
+.bank .row{ display:flex; justify-content:space-between; gap:var(--space-8); padding:var(--space-4) 0; border-bottom:var(--border-width) solid var(--border-subtle); }
+.bank .row dt{ color:var(--text-muted); font-size:var(--text-sm); }
+.bank .row dd{ margin:0; font-weight:var(--fw-semibold); color:var(--text-strong); text-align:right; word-break:break-all; }
+.bank .row.pix dd{ color:var(--accent-ink); }
+
+/* =========================== FOOTER =========================== */
+footer.site{ background:var(--dark-surface-2); color:var(--navy-100); }
+.foot-wrap{ max-width:1080px; margin:0 auto; padding:var(--space-24) var(--gutter) var(--space-12); }
+.foot-brand img{ height:38px; width:auto; filter:invert(1); }
+.foot-brand .tag{ margin-top:var(--space-6); font-family:var(--font-display); font-style:italic; font-size:var(--text-lg); line-height:var(--leading-normal); color:var(--stone-100); max-width:30ch; }
+footer.site h4{ font-family:var(--font-body); font-weight:var(--fw-semibold); font-size:var(--text-xs); letter-spacing:var(--tracking-caps); text-transform:uppercase; color:var(--ochre-300); margin:0 0 var(--space-5); }
+footer.site p{ color:var(--navy-100); margin:0 0 var(--space-2); }
+footer.site a{ color:var(--navy-100); }
+footer.site a.foot-link{ text-decoration:underline; text-decoration-color:var(--navy-500); text-underline-offset:3px; transition:color var(--dur-fast) var(--ease), text-decoration-color var(--dur-fast) var(--ease); }
+footer.site a.foot-link:hover{ color:var(--stone-50); text-decoration-color:var(--ochre-300); }
+.foot-cols{ display:grid; grid-template-columns:1.2fr 1fr; gap:var(--space-16); padding-bottom:var(--space-12); border-bottom:var(--border-width) solid var(--navy-600); }
+.foot-cols .foot-contato{ display:grid; grid-template-columns:repeat(2,1fr); gap:var(--space-8); }
+.foot-bottom{ margin-top:var(--space-10); display:flex; justify-content:space-between; align-items:center; gap:var(--space-6); flex-wrap:wrap; }
+.members-link{ font-family:var(--font-body); font-weight:var(--fw-semibold); font-size:var(--text-sm); color:var(--stone-50); text-decoration:underline; text-decoration-color:var(--ochre-400); text-underline-offset:5px; transition:text-decoration-color var(--dur-fast) var(--ease); }
+.members-link:hover{ color:var(--stone-50); text-decoration-color:var(--ochre-300); }
+.colofao{ font-family:var(--font-mono); font-size:var(--text-xs); letter-spacing:.06em; color:var(--navy-300); line-height:1.8; }
+.colofao .hl{ color:var(--ochre-300); }
+@media (max-width:820px){ .foot-cols{ grid-template-columns:1fr; gap:var(--space-10); } .foot-cols .foot-contato{ grid-template-columns:1fr; gap:var(--space-6); } }
+
+/* =========================== REVEAL =========================== */
+@media (prefers-reduced-motion:no-preference){
+  [data-rise]{ opacity:0; transform:translateY(24px); transition:opacity .9s var(--ease), transform .9s var(--ease); transition-delay:calc(var(--i,0) * 80ms); }
+  [data-rise].in{ opacity:1; transform:none; }
+}
+</style>
+</head>
+<body>
+
+<!-- =========================== HEADER =========================== -->
+<header class="site">
+  <div class="site-inner">
+    <a href="#top" class="brand" aria-label="Igreja Presbiteriana do Caminho">
+      <img src="assets/ipc-mark.png" alt="IPC" />
+      <span class="bar"></span>
+      <span class="name">
+        <span class="l1">Igreja Presbiteriana</span>
+        <span class="l2">do Caminho</span>
+      </span>
+    </a>
+    <nav class="primary" aria-label="Principal">
+      <a href="#cremos">Cremos</a>
+      <a href="#vivemos">Vivemos</a>
+      <a href="#mundo">Mundo</a>
+      <a href="#visite">Visite</a>
+    </nav>
+    <div class="header-cta">
+      <a href="#membros" class="btn btn-outline">Área de Membros&nbsp;→</a>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+
+<!-- =========================== HERO =========================== -->
+<section class="hero">
+  <div class="wrap-wide">
+    <p class="eyebrow">São Paulo · Comunidade Presbiteriana</p>
+    <h1>
+      <span class="ln">Uma comunidade bíblica de discipulado,</span>
+      <span class="ln">participando da missão de Deus neste mundo.</span>
+    </h1>
+    <p class="sub">Presbiteriana. No centro de São Paulo. Pequena por escolha.</p>
+    <p class="refs"><span>Reformada</span><span class="sep">·</span><span>Westminster</span><span class="sep">·</span><span>Desde 2024</span></p>
+    <div class="cta-row">
+      <a href="#visite" class="btn btn-primary">Venha visitar</a>
+      <a href="#eixos" class="link-quiet">Conheça nossa comunidade</a>
+    </div>
+  </div>
+</section>
+
+<!-- =========================== EIXOS =========================== -->
+<section id="eixos">
+  <div class="wrap-wide">
+    <div class="section-head" data-rise>
+      <p class="eyebrow">O que nos define em quatro palavras</p>
+      <h2>Cada palavra tem peso.</h2>
+      <span class="title-rule"></span>
+    </div>
+    <div class="eixos">
+      <div class="eixo" data-rise style="--i:0">
+        <div class="num">01</div><div class="key">Comunidade</div>
+        <div class="body"><p>Não somos um público que assiste a um culto, nem uma plataforma. Somos pessoas conhecidas pelo nome, compartilhando a mesa, o tempo e a vida ao longo dos anos.</p><span class="bref">Atos 2.42</span></div>
+      </div>
+      <div class="eixo" data-rise style="--i:1">
+        <div class="num">02</div><div class="key">Bíblica</div>
+        <div class="body"><p>A Escritura lê a gente antes de a gente ler a Escritura. Ela molda como vemos a cidade, o trabalho, a família — e não o contrário.</p><span class="bref">2 Timóteo 3.16–17</span></div>
+      </div>
+      <div class="eixo" data-rise style="--i:2">
+        <div class="num">03</div><div class="key">De discipulado</div>
+        <div class="body"><p>Caminhamos atrás de Jesus juntos, aprendendo devagar a pensar, sentir e viver como Ele. Isso leva uma vida inteira, e tudo bem.</p><span class="bref">Mateus 28.19–20</span></div>
+      </div>
+      <div class="eixo" data-rise style="--i:3">
+        <div class="num">04</div><div class="key">Participando da missão de Deus</div>
+        <div class="body"><p>A missão é de Deus, não nossa. Entramos nela onde já estamos — na segunda-feira, no bairro, no trabalho — enquanto esperamos o mundo que há de vir.</p><span class="bref">Jeremias 29.7</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================== CONTRASTE =========================== -->
+<section class="inverse" id="contraste">
+  <div class="wrap">
+    <div class="section-head" data-rise>
+      <p class="eyebrow">Antes de qualquer outra conversa</p>
+      <h2>O que você não vai encontrar aqui.</h2>
+      <span class="title-rule"></span>
+    </div>
+    <div class="negatives">
+      <p data-rise style="--i:0">Não somos uma igreja performática. Não temos iluminação cênica, fumaça, palco, banda buscando viralizar.</p>
+      <p data-rise style="--i:1">Não somos descolados, não estamos competindo por atenção com o algoritmo, não estamos preocupados em parecer relevantes pra uma geração específica.</p>
+      <p data-rise style="--i:2">Não somos influentes — nem queremos ser. Não temos pastor-celebridade, programa de TV, linha de produtos, nem estratégia de marca.</p>
+      <p data-rise style="--i:3">Não somos um evento dominical produzido pra você consumir, e depois voltar pra casa.</p>
+    </div>
+  </div>
+</section>
+<div class="contraste-solo">
+  <p class="emphasis" data-rise>Somos uma comunidade aprendendo, junto, a se parecer com <span class="hl">Cristo</span> — começando pela segunda-feira.</p>
+</div>
+
+<!-- =========================== CREMOS =========================== -->
+<section id="cremos">
+  <div class="wrap">
+    <div class="section-head" data-rise>
+      <p class="eyebrow">O que cremos — e por quê</p>
+      <h2>O que cremos.</h2>
+      <span class="title-rule"></span>
+    </div>
+    <div class="creed">
+      <div class="article" data-rise><div class="roman">I.</div><p class="thesis">O evangelho é o centro.</p><p>Não um dos temas, não o ponto de partida pra temas melhores — o centro. Que Deus, em Cristo, reconcilia consigo um povo que não tinha como se reconciliar. Tudo que fazemos como igreja deriva disso, ou é decoração.</p></div>
+      <div class="article" data-rise><div class="roman">II.</div><p class="thesis">A Escritura é a voz mais clara disponível.</p><p>Existem outras vozes — tradição, experiência, cultura — e todas importam. Mas só a Bíblia fala com autoridade final sobre quem Deus é, quem somos e pra onde as coisas vão. Ler bem, juntos e devagar, é o trabalho de uma vida.</p></div>
+      <div class="article" data-rise><div class="roman">III.</div><p class="thesis">A igreja é povo, não lugar.</p><p>A igreja não é o prédio onde nos encontramos, nem o horário do culto, nem a denominação no papel. É um povo chamado por Deus, reunido por Ele, enviado por Ele. O prédio serve; o povo é que é.</p></div>
+      <div class="article" data-rise><div class="roman">IV.</div><p class="thesis">A história tem um destino.</p><p>O mundo não está em colapso aleatório nem em progresso inevitável. Vai em direção a um momento concreto: a volta de Cristo, céus novos e terra nova. Isso muda como a gente trabalha, chora, descansa e espera — hoje.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================== VIVEMOS =========================== -->
+<section id="vivemos">
+  <div class="wrap-wide">
+    <div class="section-head" data-rise>
+      <p class="eyebrow">Como isso vira semana</p>
+      <h2>Como vivemos em comunidade.</h2>
+      <span class="title-rule"></span>
+    </div>
+    <div class="practice">
+      <div class="row" data-rise><div class="label">No culto, aos domingos</div><p class="body">Nos reunimos pra ouvir a Palavra pregada, cantar juntos, orar juntos, confessar juntos, comer juntos ao redor da mesa do Senhor. É o centro da semana, não um apêndice dela. O culto não existe pra nos entreter; existe pra nos formar.</p></div>
+      <div class="row" data-rise><div class="label">Nos Pequenos Grupos, durante a semana</div><p class="body">O culto nos reúne; o Pequeno Grupo nos conhece. Em casas, em mesas, em grupos de oito a doze pessoas, conversamos sobre o texto bíblico, sobre a semana real, sobre os tropeços e as alegrias concretas. É onde a teologia deixa de ser abstrata.</p></div>
+      <div class="row" data-rise><div class="label">À mesa, sempre que possível</div><p class="body">Comer junto é um ato teológico. Abrimos a casa, dividimos o pão, ouvimos as histórias uns dos outros. Boa parte do discipulado da comunidade acontece entre o prato e o cafezinho, sem pauta, sem liturgia — só com tempo.</p></div>
+      <div class="row" data-rise><div class="label">Em casa, onde tudo se prova</div><p class="body">A fé que não toca a cozinha, o quarto do filho, a planilha do mês, o argumento com o vizinho — essa fé ainda não chegou. A casa é o laboratório onde o que cremos vira o que somos.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================== MUNDO =========================== -->
+<section id="mundo">
+  <div class="wrap-wide">
+    <div class="section-head" data-rise>
+      <p class="eyebrow">A cidade, o prédio, a mesa</p>
+      <h2>O que fazemos no mundo.</h2>
+      <span class="title-rule"></span>
+    </div>
+    <div class="practice">
+      <div class="row" data-rise><div class="label">A segunda-feira é o maior campo missionário</div><p class="body">A maior parte da vida cristã não acontece no culto — acontece no trabalho, no trânsito, na reunião das 10h, na conversa com o colega de mesa. Formamos uns aos outros pra pensar vocacionalmente sobre o expediente: o ofício é adoração.</p></div>
+      <div class="row" data-rise><div class="label">Antes da cidade, o prédio</div><p class="body">Queremos amar a cidade, mas começamos pelo quarteirão. Pelo porteiro, pela padaria da esquina, pelos vizinhos de elevador. A missão global passa pelo nome do síndico.</p></div>
+      <div class="row" data-rise><div class="label">São Paulo é nosso endereço</div><p class="body">Não somos uma igreja genérica que poderia estar em qualquer cidade. Estamos aqui, neste fuso, neste trânsito, nesta densidade, nesta desigualdade. A cidade não é pano de fundo — é o lugar concreto pra onde fomos enviados.</p></div>
+    </div>
+    <p class="closing" data-rise>Tudo isso com os olhos no horizonte: um dia o Rei volta, enxuga toda lágrima, e a cidade inteira — não só a igreja — é feita nova. Trabalhamos, esperamos e descansamos dentro dessa promessa.</p>
+  </div>
+</section>
+
+<!-- =========================== FORMACAO (dinamico: educacional) =========================== -->
+<section id="formacao">
+  <div class="wrap-wide">
+    <div class="section-head" data-rise>
+      <p class="eyebrow">Departamento educacional</p>
+      <h2>Formação.</h2>
+      <span class="title-rule"></span>
+    </div>
+    <div class="practice">
+      <div class="row" data-rise><div class="label">[Turma / classe]</div><p class="body">[Responsável]</p></div>
+      <div class="row" data-rise><div class="label">[Turma / classe]</div><p class="body">[Responsável]</p></div>
+      <div class="row" data-rise><div class="label">[Turma / classe]</div><p class="body">[Responsável]</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================== CURSOS (dinamico: turmas abertas) =========================== -->
+<section id="cursos">
+  <div class="wrap-wide">
+    <div class="section-head" data-rise>
+      <p class="eyebrow">Inscrições abertas</p>
+      <h2>Cursos e turmas.</h2>
+      <span class="title-rule"></span>
+    </div>
+    <div class="cursos-grid">
+      <div class="curso-card" data-rise>
+        <div><h3>[Nome do curso]</h3><p class="desc">[Descrição curta do curso]</p></div>
+        <p class="meta"><strong>Início:</strong> [dd/mm/aaaa] · <strong>Fim:</strong> [dd/mm/aaaa]<br/>[Dia da semana] às [horário]<br/>[Local]<br/>Com [instrutor]</p>
+        <p class="vagas">Apenas [N] vagas restantes</p>
+        <div><p class="chips-label">Encontros previstos (N)</p><div class="chips"><span>00/00</span><span>00/00</span><span>00/00</span></div></div>
+        <div class="cta"><a href="#" class="btn btn-primary">Inscreva-se</a></div>
+      </div>
+      <div class="curso-card" data-rise>
+        <div><h3>[Nome do curso]</h3><p class="desc">[Descrição curta do curso]</p></div>
+        <p class="meta"><strong>Início:</strong> [dd/mm/aaaa]<br/>[Dia da semana] às [horário]<br/>[Local]</p>
+        <div class="cta"><a href="#" class="btn btn-primary">Inscreva-se</a></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================== VISITE (dinamico: horarios/endereco) =========================== -->
+<section id="visite" class="visite">
+  <div class="wrap">
+    <div class="section-head" data-rise>
+      <p class="eyebrow">Porta aberta, domingo de manhã</p>
+      <h2>Venha visitar.</h2>
+      <span class="title-rule"></span>
+    </div>
+    <p class="lead" data-rise>Sem cadastro, sem formulário, sem crachá de visitante. A porta está aberta no domingo de manhã. Chega, senta onde quiser, fica o tempo que precisar. Se quiser conversar, a gente conversa; se preferir só observar, tudo bem também.</p>
+
+    <dl class="visite-meta" data-rise>
+      <dt>Quando</dt>
+      <dd>
+        <div><p class="big">[Domingo, 00:00]</p><p class="tipo">[Tipo de culto]</p></div>
+        <p class="place" style="margin-top:var(--space-4)">[Outro horário] — [tipo]</p>
+      </dd>
+      <dt>Onde</dt>
+      <dd class="place">[Endereço], [bairro]<br/>São Paulo, SP</dd>
+      <div class="map-row">
+        <a href="#" class="btn btn-primary">Ver no Google Maps</a>
+        <a href="#" class="link-quiet">Ver no Waze →</a>
+      </div>
+    </dl>
+
+    <div class="map-embed" data-rise>
+      <iframe src="" title="Localização da igreja" loading="lazy"></iframe>
+    </div>
+
+    <div class="first-sunday" data-rise>
+      <h3>No seu primeiro domingo</h3>
+      <p>O culto dura cerca de 90 minutos. Cantamos, lemos a Bíblia em voz alta, oramos, ouvimos um sermão expositivo — normalmente entre 35 e 45 minutos sobre um texto específico — e terminamos com uma oração final. Não há passagem de pauta, não há momento constrangedor pra visitantes se identificarem, não há pressão pra participar de nada.</p>
+      <p>Vista-se como estiver confortável. Calça jeans, camisa, vestido, tênis — todas as opções estão certas. A gente se importa que você esteja ali; o resto é detalhe.</p>
+      <p>Crianças são bem-vindas no culto inteiro. Se o bebê chorar, a mãe chora junto, a igreja ri junto, e o sermão continua. Há um espaço tranquilo pra amamentação e troca, se precisar.</p>
+      <p>Depois do culto, tem café. Fique, se quiser. Se não puder, a gente te vê no próximo domingo.</p>
+    </div>
+
+    <p class="ceia" data-rise>Celebramos a Ceia do Senhor todos os domingos, e a mesa é do Senhor — não da IPC. Se você é cristão batizado e em comunhão com alguma igreja, você é bem-vindo a participar. Se não é, escute, observe, pense — e converse com um dos presbíteros depois, se quiser.</p>
+
+    <p class="visite-wait" data-rise>Estamos esperando você.</p>
+  </div>
+</section>
+
+<!-- =========================== DADOS BANCARIOS (dinamico) =========================== -->
+<section id="ofertas">
+  <div class="wrap">
+    <div class="section-head" data-rise>
+      <p class="eyebrow">Dízimos e ofertas</p>
+      <h2>Dados bancários.</h2>
+      <span class="title-rule"></span>
+    </div>
+    <dl class="bank" data-rise>
+      <div class="row"><dt>Banco</dt><dd>[Banco]</dd></div>
+      <div class="row"><dt>Agência</dt><dd>[0000]</dd></div>
+      <div class="row"><dt>Conta</dt><dd>[00000-0]</dd></div>
+      <div class="row pix"><dt>PIX</dt><dd>[chave pix]</dd></div>
+    </dl>
+  </div>
+</section>
+
+</main>
+
+<!-- =========================== FOOTER =========================== -->
+<footer class="site" id="membros">
+  <div class="foot-wrap">
+    <div class="foot-cols">
+      <div class="foot-brand">
+        <img src="assets/ipc-mark-white.png" alt="IPC" />
+        <p class="tag">Uma comunidade aprendendo, junto, a se parecer com Cristo — começando pela segunda-feira.</p>
+      </div>
+      <div class="foot-contato">
+        <div>
+          <h4>Contato</h4>
+          <p>[Endereço completo]</p>
+          <p><a href="#" class="foot-link">WhatsApp [número]</a></p>
+          <p><a href="#" class="foot-link">[telefone]</a></p>
+          <p><a href="#" class="foot-link">[email]</a></p>
+        </div>
+        <div>
+          <h4>Tradição</h4>
+          <p>Presbiteriana reformada. Alinhados à Confissão de Fé de Westminster (1647).</p>
+        </div>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <a href="#" class="members-link">Área de Membros →</a>
+      <div class="colofao">Composto em <span class="hl">Spectral</span> &amp; <span class="hl">Source Sans 3</span>. São Paulo, 2026.<br/>© 2026 Igreja Presbiteriana do Caminho.</div>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var els = document.querySelectorAll('[data-rise]');
+  if(window.matchMedia('(prefers-reduced-motion: no-preference)').matches){
+    var obs = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){ if(en.isIntersecting){ en.target.classList.add('in'); obs.unobserve(en.target); } });
+    }, { threshold:0.14, rootMargin:'0px 0px -6% 0px' });
+    els.forEach(function(el){ obs.observe(el); });
+  } else {
+    els.forEach(function(el){ el.classList.add('in'); });
+  }
+})();
+</script>
+
+</body>
+</html>
