@@ -87,14 +87,9 @@ export const COMUNIDADE_SECTIONS: NavSection[] = [
   {
     titulo: "Conteúdo",
     items: [
-      {
-        label: "Ouvir",
-        href: "/gravacoes",
-        icon: Ear,
-        description: "Sermões, estudos bíblicos e palestras",
-        permission: "gravacoes:read",
-        modulo: "gravacoes",
-      },
+      // "Ouvir" (/gravacoes) saiu daqui: duplicava a tab "Gravações"
+      // (/comunidade) com outro nome; a lista segue acessivel pelos
+      // "Ver todos" do hub.
       {
         label: "Repertório",
         href: "/louvor",
