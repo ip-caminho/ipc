@@ -30,23 +30,6 @@ export const metadata: Metadata = {
 // Dados da igreja mudam raramente — revalida a cada 5 minutos
 export const revalidate = 300;
 
-type Horario = { dia: string; horario: string; tipo?: string };
-type Educacional = { turma: string; responsavel?: string };
-
-type IgrejaInfo = {
-  horarios?: Horario[];
-  educacional?: Educacional[];
-  endereco?: string;
-  googleMapsEmbed?: string;
-  whatsapp?: string;
-  telefone?: string;
-  email?: string;
-  banco?: string;
-  agencia?: string;
-  conta?: string;
-  pix?: string;
-} | null;
-
 type Turma = {
   _id: string;
   nome: string;
@@ -115,16 +98,13 @@ function calcularEncontros(dataInicio: string, dataFim?: string, diaSemana?: str
   return datas;
 }
 
-async function getDados(): Promise<{ info: IgrejaInfo; turmas: Turma[] }> {
+async function getTurmas(): Promise<Turma[]> {
   try {
-    const [info, turmas] = await Promise.all([
-      fetchQuery(api.preferencias.queries.getIgrejaInfo) as Promise<IgrejaInfo>,
-      fetchQuery(api.turmas.queries.listTurmasAbertas) as Promise<Turma[]>,
-    ]);
-    return { info, turmas: turmas ?? [] };
+    const turmas = (await fetchQuery(api.turmas.queries.listTurmasAbertas)) as Turma[];
+    return turmas ?? [];
   } catch {
     // Convex indisponivel (ex.: build sem env) — renderiza so o conteudo estatico
-    return { info: null, turmas: [] };
+    return [];
   }
 }
 
@@ -197,6 +177,14 @@ const VIVEMOS = [
   },
 ];
 
+const EDUCACIONAL = [
+  { faixa: "03 a 06 anos", nome: "Nicole van Eijk" },
+  { faixa: "07 a 08 anos", nome: "Annes Son" },
+  { faixa: "09 a 10 anos", nome: "Karina Di Carlo" },
+  { faixa: "11 a 16 anos", nome: "Davi Jung" },
+  { faixa: "17 a 22 anos", nome: "Ian Kim" },
+];
+
 const MUNDO = [
   {
     label: "A segunda-feira é o maior campo missionário",
@@ -213,18 +201,12 @@ const MUNDO = [
 ];
 
 export default async function LandingPage() {
-  const { info, turmas } = await getDados();
-
-  const educacional = info?.educacional || [];
-  const banco = info?.banco || "";
-  const agencia = info?.agencia || "";
-  const conta = info?.conta || "";
-  const pix = info?.pix || "";
+  const turmas = await getTurmas();
 
   // Informações fixas da igreja (o banco ainda tem dados antigos de teste)
-  const endereco = "Rua Pedra Azul, 674 — São Paulo, SP";
-  const email = "contato@ipdocaminho.com";
-  const mapsQuery = "Rua Pedra Azul, 674, São Paulo, SP";
+  const endereco = "Rua Pedra Azul, 674A (esquina com Rua Ximbó) — Vila Mariana, São Paulo, SP";
+  const email = "ipdocaminho@gmail.com";
+  const mapsQuery = "Rua Pedra Azul, 674, Vila Mariana, São Paulo, SP";
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapsQuery)}`;
   const wazeUrl = `https://waze.com/ul?q=${encodeURIComponent(mapsQuery)}&navigate=yes`;
   const mapEmbed = `https://www.google.com/maps?q=${encodeURIComponent(mapsQuery)}&output=embed`;
@@ -423,25 +405,25 @@ export default async function LandingPage() {
         </section>
 
         {/* =========================== EDUCACIONAL =========================== */}
-        {educacional.length > 0 && (
-          <section id="formacao">
-            <div className="wrap-wide">
-              <div className="section-head" data-rise>
-                <p className="eyebrow">Departamento educacional</p>
-                <h2>Formação.</h2>
-                <span className="title-rule" />
-              </div>
-              <div className="practice">
-                {educacional.map((e, i) => (
-                  <div key={i} className="row" data-rise>
-                    <div className="label">{e.turma}</div>
-                    <p className="body">{e.responsavel}</p>
-                  </div>
-                ))}
-              </div>
+        <section id="formacao">
+          <div className="wrap-wide">
+            <div className="section-head" data-rise>
+              <p className="eyebrow">Ministério educacional</p>
+              <h2>Formação por idade.</h2>
+              <span className="title-rule" />
             </div>
-          </section>
-        )}
+            <div className="practice">
+              {EDUCACIONAL.map((e) => (
+                <div key={e.faixa} className="row" data-rise>
+                  <div className="label">{e.faixa}</div>
+                  <p className="body">
+                    Fale com <strong>{e.nome}</strong>
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
 
         {/* =========================== CURSOS ABERTOS =========================== */}
         {turmas.length > 0 && (
@@ -618,9 +600,19 @@ export default async function LandingPage() {
               <div>
                 <h4>Contato</h4>
                 <p>{endereco}</p>
-                <p>
+                <p style={{ marginTop: "var(--space-3)" }}>
                   <a href={`mailto:${email}`} className="foot-link">
                     {email}
+                  </a>
+                </p>
+                <p>
+                  <a href="https://instagram.com/ip.docaminho" target="_blank" rel="noopener noreferrer" className="foot-link">
+                    @ip.docaminho
+                  </a>
+                </p>
+                <p>
+                  <a href="https://facebook.com/ip.docaminho" target="_blank" rel="noopener noreferrer" className="foot-link">
+                    facebook.com/ip.docaminho
                   </a>
                 </p>
               </div>
@@ -631,19 +623,14 @@ export default async function LandingPage() {
                   Denominação: Igreja Presbiteriana do Brasil.
                 </p>
               </div>
-              {(banco || pix) && (
-                <div>
-                  <h4>Dízimos e ofertas</h4>
-                  {banco && <p>{banco}</p>}
-                  {agencia && <p>Agência {agencia}</p>}
-                  {conta && <p>Conta {conta}</p>}
-                  {pix && (
-                    <p style={{ marginTop: "var(--space-3)" }}>
-                      PIX: <span style={{ color: "var(--orange-300)" }}>{pix}</span>
-                    </p>
-                  )}
-                </div>
-              )}
+              <div>
+                <h4>Dízimos e ofertas</h4>
+                <p>Santander (033)</p>
+                <p>Agência 0108</p>
+                <p>Conta 13007643-7</p>
+                <p style={{ marginTop: "var(--space-3)" }}>Igreja Presbiteriana do Caminho</p>
+                <p>CNPJ 48.792.102/0001-13</p>
+              </div>
             </div>
           </div>
 
