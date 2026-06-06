@@ -94,7 +94,7 @@ export function MoreSheet({ open, onOpenChange }: Props) {
 
         {canToggle && (
           <div className="px-5 py-3 flex items-center justify-between">
-            <span className="text-sm">Modo admin</span>
+            <span className="text-sm">Modo gestão</span>
             <Switch
               checked={mode === "admin"}
               onCheckedChange={(checked) => setMode(checked ? "admin" : "member")}
