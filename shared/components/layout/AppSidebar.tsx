@@ -185,7 +185,7 @@ export function AppSidebar() {
       <SidebarFooter className="border-t p-4 space-y-3">
         {canToggle && (
           <div className="flex items-center justify-between px-1">
-            <span className="text-xs text-muted-foreground">Modo admin</span>
+            <span className="text-xs text-muted-foreground">Modo gestão</span>
             <Switch
               checked={mode === "admin"}
               onCheckedChange={(checked) => setMode(checked ? "admin" : "member")}
