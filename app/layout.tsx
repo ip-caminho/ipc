@@ -36,6 +36,10 @@ export const metadata: Metadata = {
 export const viewport = {
   width: "device-width",
   initialScale: 1,
+  // Desativa o auto-zoom do iOS ao focar inputs (que "prendia" a pagina
+  // ampliada). O pinch-zoom manual continua funcionando — iOS e Android
+  // ignoram o limite para o gesto do usuario (acessibilidade preservada).
+  maximumScale: 1,
   viewportFit: "cover" as const,
   themeColor: "#1a1a1a",
 };
