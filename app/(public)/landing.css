@@ -98,8 +98,8 @@ html:has(.site-v2) {
   --space-20: 5rem;
   --space-24: 6rem;
   --space-32: 8rem;
-  --gutter: var(--space-6);
-  --gutter-lg: var(--space-8);
+  --gutter: var(--space-8);
+  --gutter-lg: var(--space-10);
 
   /* ---- Efeitos ---- */
   --radius-sm: 6px;
@@ -147,8 +147,8 @@ html:has(.site-v2) {
 .site-v2 :focus-visible { outline: none; box-shadow: 0 0 0 3px var(--orange-200); border-radius: 4px; }
 
 /* ---------- Containers ---------- */
-.site-v2 .wrap { width: 100%; max-width: 760px; margin: 0 auto; padding: 0 var(--gutter); }
-.site-v2 .wrap-wide { width: 100%; max-width: 1080px; margin: 0 auto; padding: 0 var(--gutter); }
+.site-v2 .wrap { width: 100%; max-width: 880px; margin: 0 auto; padding: 0 var(--gutter); }
+.site-v2 .wrap-wide { width: 100%; max-width: 1180px; margin: 0 auto; padding: 0 var(--gutter); }
 
 /* ---------- Eyebrow ---------- */
 .site-v2 .eyebrow {
@@ -667,11 +667,11 @@ html:has(.site-v2) {
 .site-v2 footer.site a.foot-link:hover { color: #fff; text-decoration-color: var(--orange-300); }
 
 .site-v2 .foot-cols {
-  display: grid; grid-template-columns: 1.2fr 1fr; gap: var(--space-16);
+  display: grid; grid-template-columns: 1fr 1.7fr; gap: var(--space-16);
   padding-bottom: var(--space-12);
   border-bottom: var(--border-width) solid var(--navy-600);
 }
-.site-v2 .foot-cols .foot-contato { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-8); }
+.site-v2 .foot-cols .foot-contato { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-8); }
 .site-v2 .foot-bottom {
   margin-top: var(--space-10);
   display: flex; justify-content: space-between; align-items: center; gap: var(--space-6); flex-wrap: wrap;

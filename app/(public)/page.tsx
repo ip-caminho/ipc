@@ -61,12 +61,6 @@ type Turma = {
   token?: string;
 };
 
-function formatWhatsappLink(phone: string): string {
-  const digits = phone.replace(/\D/g, "");
-  const number = digits.startsWith("55") ? digits : `55${digits}`;
-  return `https://wa.me/${number}`;
-}
-
 function formatDate(d: string) {
   const [y, m, day] = d.split("-");
   return `${day}/${m}/${y}`;
@@ -221,24 +215,19 @@ const MUNDO = [
 export default async function LandingPage() {
   const { info, turmas } = await getDados();
 
-  const horarios = info?.horarios || [];
   const educacional = info?.educacional || [];
-  const endereco = info?.endereco || "";
-  const googleMapsEmbed = info?.googleMapsEmbed || "";
-  const whatsapp = info?.whatsapp || "";
-  const telefone = info?.telefone || "";
-  const email = info?.email || "";
   const banco = info?.banco || "";
   const agencia = info?.agencia || "";
   const conta = info?.conta || "";
   const pix = info?.pix || "";
 
-  const mapsUrl = endereco
-    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(endereco)}`
-    : "";
-  const wazeUrl = endereco
-    ? `https://waze.com/ul?q=${encodeURIComponent(endereco)}&navigate=yes`
-    : "";
+  // Informações fixas da igreja (o banco ainda tem dados antigos de teste)
+  const endereco = "Rua Pedra Azul, 674 — São Paulo, SP";
+  const email = "contato@ipdocaminho.com";
+  const mapsQuery = "Rua Pedra Azul, 674, São Paulo, SP";
+  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapsQuery)}`;
+  const wazeUrl = `https://waze.com/ul?q=${encodeURIComponent(mapsQuery)}&navigate=yes`;
+  const mapEmbed = `https://www.google.com/maps?q=${encodeURIComponent(mapsQuery)}&output=embed`;
 
   return (
     <div className={`site-v2 ${spectral.variable} ${sourceSans.variable}`}>
@@ -283,14 +272,6 @@ export default async function LandingPage() {
               <span className="ln">Uma comunidade bíblica de discipulado,</span>
               <span className="ln">participando da missão de Deus neste mundo.</span>
             </h1>
-            <p className="sub">Presbiteriana. No centro de São Paulo. Pequena por escolha.</p>
-            <p className="refs">
-              <span>Reformada</span>
-              <span className="sep">·</span>
-              <span>Westminster</span>
-              <span className="sep">·</span>
-              <span>Desde 2024</span>
-            </p>
             <div className="cta-row">
               <a href="#visite" className="btn btn-primary">
                 Venha visitar
@@ -354,8 +335,7 @@ export default async function LandingPage() {
         </section>
         <div className="contraste-solo">
           <p className="emphasis" data-rise>
-            Somos uma comunidade aprendendo, junto, a se parecer com <span className="hl">Cristo</span>{" "}
-            — começando pela segunda-feira.
+            Somos uma comunidade aprendendo, junto, a se parecer com <span className="hl">Cristo</span>.
           </p>
         </div>
 
@@ -559,57 +539,6 @@ export default async function LandingPage() {
               conversa; se preferir só observar, tudo bem também.
             </p>
 
-            <dl className="visite-meta" data-rise>
-              <dt>Quando</dt>
-              <dd>
-                {horarios.length > 0 ? (
-                  horarios.map((h, i) =>
-                    i === 0 ? (
-                      <div key={i}>
-                        <p className="big">
-                          {h.dia}, {h.horario}
-                        </p>
-                        {h.tipo && <p className="tipo">{h.tipo}</p>}
-                      </div>
-                    ) : (
-                      <p key={i} className="place" style={{ marginTop: "var(--space-4)" }}>
-                        {h.dia}, {h.horario}
-                        {h.tipo && ` — ${h.tipo}`}
-                      </p>
-                    ),
-                  )
-                ) : (
-                  <p className="big">Domingos pela manhã</p>
-                )}
-              </dd>
-
-              <dt>Onde</dt>
-              <dd className="place">{endereco || "São Paulo, SP"}</dd>
-
-              {endereco && (
-                <div className="map-row">
-                  <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary">
-                    Ver no Google Maps
-                  </a>
-                  <a href={wazeUrl} target="_blank" rel="noopener noreferrer" className="link-quiet">
-                    Ver no Waze →
-                  </a>
-                </div>
-              )}
-            </dl>
-
-            {googleMapsEmbed && (
-              <div className="map-embed" data-rise>
-                <iframe
-                  src={googleMapsEmbed}
-                  allowFullScreen
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                  title="Localização da igreja"
-                />
-              </div>
-            )}
-
             <div className="first-sunday" data-rise>
               <h3>No seu primeiro domingo</h3>
               <p>
@@ -639,47 +568,39 @@ export default async function LandingPage() {
             <p className="visite-wait" data-rise>
               Estamos esperando você.
             </p>
+
+            <dl className="visite-meta" data-rise>
+              <dt>Quando</dt>
+              <dd>
+                <p className="big">Domingos, 10h</p>
+                <p className="tipo">Culto dominical</p>
+              </dd>
+
+              <dt>Onde</dt>
+              <dd className="place">{endereco}</dd>
+
+              <div className="map-row">
+                <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="btn btn-outline">
+                  Ver no Google Maps
+                </a>
+                <a href={wazeUrl} target="_blank" rel="noopener noreferrer" className="btn btn-outline">
+                  Ver no Waze
+                </a>
+              </div>
+            </dl>
+
+            <div className="map-embed" data-rise>
+              <iframe
+                src={mapEmbed}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title="Localização da igreja"
+              />
+            </div>
           </div>
         </section>
 
-        {/* =========================== DADOS BANCÁRIOS =========================== */}
-        {(banco || pix) && (
-          <section id="ofertas">
-            <div className="wrap">
-              <div className="section-head" data-rise>
-                <p className="eyebrow">Dízimos e ofertas</p>
-                <h2>Dados bancários.</h2>
-                <span className="title-rule" />
-              </div>
-              <dl className="bank" data-rise>
-                {banco && (
-                  <div className="row">
-                    <dt>Banco</dt>
-                    <dd>{banco}</dd>
-                  </div>
-                )}
-                {agencia && (
-                  <div className="row">
-                    <dt>Agência</dt>
-                    <dd>{agencia}</dd>
-                  </div>
-                )}
-                {conta && (
-                  <div className="row">
-                    <dt>Conta</dt>
-                    <dd>{conta}</dd>
-                  </div>
-                )}
-                {pix && (
-                  <div className="row pix">
-                    <dt>PIX</dt>
-                    <dd>{pix}</dd>
-                  </div>
-                )}
-              </dl>
-            </div>
-          </section>
-        )}
       </main>
 
       {/* =========================== FOOTER =========================== */}
@@ -690,45 +611,39 @@ export default async function LandingPage() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/logo.png" alt="IPC" />
               <p className="tag">
-                Uma comunidade aprendendo, junto, a se parecer com Cristo — começando pela
-                segunda-feira.
+                Uma comunidade bíblica de discipulado, participando da missão de Deus neste mundo.
               </p>
             </div>
             <div className="foot-contato">
               <div>
                 <h4>Contato</h4>
-                {endereco && <p>{endereco}</p>}
-                {whatsapp && (
-                  <p>
-                    <a
-                      href={formatWhatsappLink(whatsapp)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="foot-link"
-                    >
-                      WhatsApp {whatsapp}
-                    </a>
-                  </p>
-                )}
-                {telefone && (
-                  <p>
-                    <a href={`tel:${telefone.replace(/\D/g, "")}`} className="foot-link">
-                      {telefone}
-                    </a>
-                  </p>
-                )}
-                {email && (
-                  <p>
-                    <a href={`mailto:${email}`} className="foot-link">
-                      {email}
-                    </a>
-                  </p>
-                )}
+                <p>{endereco}</p>
+                <p>
+                  <a href={`mailto:${email}`} className="foot-link">
+                    {email}
+                  </a>
+                </p>
               </div>
               <div>
                 <h4>Tradição</h4>
                 <p>Presbiteriana reformada. Alinhados à Confissão de Fé de Westminster (1647).</p>
+                <p style={{ marginTop: "var(--space-3)" }}>
+                  Denominação: Igreja Presbiteriana do Brasil.
+                </p>
               </div>
+              {(banco || pix) && (
+                <div>
+                  <h4>Dízimos e ofertas</h4>
+                  {banco && <p>{banco}</p>}
+                  {agencia && <p>Agência {agencia}</p>}
+                  {conta && <p>Conta {conta}</p>}
+                  {pix && (
+                    <p style={{ marginTop: "var(--space-3)" }}>
+                      PIX: <span style={{ color: "var(--orange-300)" }}>{pix}</span>
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
@@ -736,11 +651,6 @@ export default async function LandingPage() {
             <Link href="/signin" className="members-link">
               Área de Membros →
             </Link>
-            <div className="colofao">
-              Composto em <span className="hl">Spectral</span> &amp;{" "}
-              <span className="hl">Source Sans 3</span>. São Paulo, {new Date().getFullYear()}.
-              <br />© {new Date().getFullYear()} Igreja Presbiteriana do Caminho.
-            </div>
           </div>
         </div>
       </footer>
