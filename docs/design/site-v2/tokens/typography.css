@@ -1,0 +1,63 @@
+/* ============================================================
+   IPC — Typography tokens
+   Serifada nos títulos (tradição/reverência), sans humanista
+   no corpo. Tamanhos generosos, hierarquia clara — legibilidade
+   é prioridade (parte da congregação é mais velha).
+   ============================================================ */
+
+:root {
+  /* ---- Families ------------------------------------------- */
+  --font-display: 'Spectral', Georgia, 'Times New Roman', serif;
+  --font-body:    'Source Sans 3', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono:    ui-monospace, monospace;
+
+  /* ---- Weights -------------------------------------------- */
+  --fw-regular:  400; /* @kind font */
+  --fw-medium:   500; /* @kind font */
+  --fw-semibold: 600; /* @kind font */
+  --fw-bold:     700; /* @kind font */
+  /* Spectral Extrabold para títulos grandes */
+  --fw-display:  800; /* @kind font */
+
+  /* ---- Fluid type scale (min .. max) ----------------------
+     Base body = 18px (legibilidade). Major-third-ish ramp.    */
+  --text-xs:   0.8125rem;  /* 13px — etiquetas, metadados      */
+  --text-sm:   0.9375rem;  /* 15px — apoio, legendas           */
+  --text-base: 1.125rem;   /* 18px — corpo padrão              */
+  --text-lg:   1.25rem;    /* 20px — corpo de destaque, lead   */
+  --text-xl:   1.5rem;     /* 24px — subtítulo                 */
+  --text-2xl:  1.875rem;   /* 30px — H3                        */
+  --text-3xl:  2.25rem;    /* 36px — H2                        */
+  --text-4xl:  2.75rem;    /* 44px — H1                        */
+  --text-5xl:  3.5rem;     /* 56px — hero                      */
+
+  /* ---- Line heights --------------------------------------- */
+  --leading-tight:   1.12;
+  --leading-snug:    1.28;
+  --leading-normal:  1.55;
+  --leading-relaxed: 1.7;   /* blocos longos de texto         */
+
+  /* ---- Letter spacing ------------------------------------- */
+  --tracking-tight:  -0.015em;
+  --tracking-normal: 0;
+  --tracking-wide:   0.02em;
+  --tracking-caps:   0.12em;   /* eyebrows / overlines em CAIXA */
+
+  /* ---- Semantic roles ------------------------------------- */
+  --display-family: var(--font-display);
+  --display-weight: var(--fw-display);
+  --display-leading: var(--leading-tight);
+  --display-tracking: var(--tracking-tight);
+
+  --heading-family: var(--font-display);
+  --heading-weight: var(--fw-semibold);
+  --heading-leading: var(--leading-snug);
+
+  --body-family: var(--font-body);
+  --body-weight: var(--fw-regular);
+  --body-leading: var(--leading-relaxed);
+
+  --eyebrow-family: var(--font-body);
+  --eyebrow-weight: var(--fw-semibold);
+  --eyebrow-tracking: var(--tracking-caps);
+}

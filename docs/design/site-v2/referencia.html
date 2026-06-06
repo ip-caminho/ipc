@@ -1,0 +1,905 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>IPC — Igreja Presbiteriana do Caminho</title>
+
+<!-- ===== IPC Design System tokens ===== -->
+<link rel="stylesheet" href="_ds/ipc-design-system-b519b036-d797-4626-83de-7c392dcee535/styles.css">
+
+<style>
+  /* ============================================================
+     Page-level system — built ENTIRELY on IPC DS tokens.
+     Spectral (display) + Source Sans 3 (body); navy brand,
+     ochre accent, warm stone neutrals. Dark sections = navy.
+     ============================================================ */
+  :root{
+    --header-h: 76px;
+    --measure: 64ch;
+    --accent-ink: var(--ochre-600);   /* tweakable: ochre <-> navy */
+    --accent-rule: var(--ochre-400);
+    --dark-surface: var(--navy-800);  /* tweakable: navy <-> ink */
+    --dark-surface-2: var(--navy-900);
+    --ease: var(--ease-out);
+  }
+
+  html{ scroll-behavior:smooth; scroll-padding-top: var(--header-h); }
+  body{ background: var(--surface-page); color: var(--text-body); }
+
+  ::selection{ background: var(--navy-700); color: var(--stone-50); }
+
+  /* ---------- Containers ---------- */
+  .wrap{ width:100%; max-width: 760px; margin:0 auto; padding:0 var(--gutter); }
+  .wrap-wide{ width:100%; max-width: 1080px; margin:0 auto; padding:0 var(--gutter); }
+
+  a.inline{
+    color: var(--text-strong);
+    text-decoration: underline;
+    text-decoration-thickness:1px;
+    text-decoration-color: var(--border-default);
+    text-underline-offset:3px;
+    transition: color var(--dur-fast) var(--ease), text-decoration-color var(--dur-fast) var(--ease);
+  }
+  a.inline:hover{ color: var(--accent-ink); text-decoration-color: var(--accent-ink); }
+
+  /* ---------- Eyebrow ---------- */
+  .eyebrow{
+    font-family: var(--font-body);
+    font-weight: var(--fw-semibold);
+    font-size: var(--text-sm);
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: var(--accent-ink);
+    margin: 0 0 var(--space-5);
+  }
+
+  /* ---------- Buttons ---------- */
+  .btn{
+    display:inline-flex; align-items:center; gap:8px;
+    font-family: var(--font-body);
+    font-weight: var(--fw-semibold);
+    font-size: var(--text-sm);
+    letter-spacing: 0.01em;
+    border-radius: var(--radius-md);
+    padding: 13px 22px;
+    border: var(--border-width-thick) solid transparent;
+    cursor:pointer;
+    transition: var(--transition-base);
+    text-decoration:none;
+  }
+  .btn-primary{ background: var(--navy-700); color: var(--stone-50); border-color: var(--navy-700); box-shadow: var(--shadow-sm); }
+  .btn-primary:hover{ background: var(--navy-800); border-color: var(--navy-800); color: var(--stone-50); box-shadow: var(--shadow-md); }
+  .btn-outline{ background: transparent; color: var(--text-strong); border-color: var(--border-strong); }
+  .btn-outline:hover{ border-color: var(--navy-700); color: var(--navy-700); background: var(--brand-soft); }
+  .link-quiet{
+    font-family: var(--font-body);
+    font-weight: var(--fw-medium);
+    font-size: var(--text-sm);
+    color: var(--text-strong);
+    text-decoration: underline;
+    text-decoration-thickness:1px;
+    text-decoration-color: var(--border-strong);
+    text-underline-offset:5px;
+    transition: color var(--dur-fast) var(--ease), text-decoration-color var(--dur-fast) var(--ease);
+  }
+  .link-quiet:hover{ color: var(--accent-ink); text-decoration-color: var(--accent-ink); }
+
+  /* =========================== HEADER =========================== */
+  header.site{
+    position: sticky; top:0; z-index:50;
+    height: var(--header-h);
+    background: color-mix(in srgb, var(--surface-page) 88%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom: var(--border-width) solid var(--border-subtle);
+  }
+  .site-inner{
+    max-width: 1180px; margin:0 auto; padding: 0 var(--gutter-lg);
+    height:100%;
+    display:grid; grid-template-columns: 1fr auto 1fr; align-items:center; gap: var(--space-6);
+  }
+  .brand{ display:inline-flex; align-items:center; gap: 12px; text-decoration:none; }
+  .brand img{ height: 30px; width:auto; }
+  .brand .bar{ width:1.5px; height: 28px; background: var(--accent-rule); }
+  .brand .name{ line-height:1.1; white-space:nowrap; }
+  .brand .name .l1{ font-family: var(--font-display); font-weight:600; font-size: 15px; color: var(--text-strong); display:block; letter-spacing:-0.01em; }
+  .brand .name .l2{ font-family: var(--font-display); font-weight:700; font-style:italic; font-size: 15px; color: var(--accent-ink); display:block; }
+  nav.primary{
+    justify-self:center;
+    display:flex; align-items:center; gap: 2px;
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    font-weight: var(--fw-medium);
+  }
+  nav.primary a{
+    padding: 8px 14px;
+    color: var(--text-body);
+    text-decoration:none;
+    border-radius: var(--radius-sm);
+    transition: color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
+  }
+  nav.primary a:hover{ color: var(--navy-700); background: var(--brand-soft); }
+  .header-cta{ justify-self:end; }
+  .header-cta .btn{ padding: 9px 16px; white-space:nowrap; }
+
+  @media (max-width: 920px){
+    .site-inner{ grid-template-columns: 1fr auto; }
+    nav.primary{ display:none; }
+  }
+  @media (max-width: 480px){
+    .brand .name{ display:none; }
+    .brand .bar{ display:none; }
+  }
+
+  /* =========================== SECTION RHYTHM =========================== */
+  section{ padding: var(--space-32) 0; }
+  @media (max-width: 760px){ section{ padding: var(--space-20) 0; } }
+
+  .section-head{ margin-bottom: var(--space-16); }
+  .section-head h2{
+    font-family: var(--font-display);
+    font-weight: var(--fw-semibold);
+    font-size: var(--text-3xl);
+    line-height: var(--leading-snug);
+    letter-spacing: var(--tracking-tight);
+    color: var(--text-strong);
+    margin:0;
+    max-width: 18ch;
+  }
+  .title-rule{
+    display:block; width: 56px; height: 2px;
+    background: var(--accent-rule);
+    margin-top: var(--space-6);
+  }
+
+  /* =========================== HERO =========================== */
+  .hero{
+    min-height: min(82vh, 760px);
+    display:flex; align-items:center; justify-content:center;
+    text-align:center;
+    padding: var(--space-24) 0;
+  }
+  .hero .wrap-wide{ max-width: 1040px; }
+  .hero h1{
+    font-family: var(--font-display);
+    font-weight: var(--fw-display);
+    font-size: clamp(34px, 5vw, 60px);
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    color: var(--text-strong);
+    margin: 0 auto;
+    text-wrap: balance;
+  }
+  .hero h1 .ln{ display:block; }
+  .hero .sub{
+    margin: var(--space-8) auto 0;
+    font-size: var(--text-lg);
+    line-height: var(--leading-normal);
+    color: var(--text-muted);
+    max-width: 46ch;
+  }
+  .hero .refs{
+    margin: var(--space-5) auto 0;
+    display:inline-flex; flex-wrap:wrap; justify-content:center; gap: 14px;
+    font-family: var(--font-body);
+    font-weight: var(--fw-semibold);
+    font-size: var(--text-xs);
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: var(--text-subtle);
+  }
+  .hero .refs .sep{ color: var(--accent-rule); }
+  .hero .cta-row{
+    margin-top: var(--space-12);
+    display:flex; align-items:center; justify-content:center; gap: var(--space-8); flex-wrap:wrap;
+  }
+
+  /* =========================== EIXOS =========================== */
+  .eixos{ border-top: var(--border-width) solid var(--border-default); }
+  .eixo{
+    display:grid;
+    grid-template-columns: 64px 1fr 1.05fr;
+    column-gap: var(--space-12);
+    align-items: baseline;
+    padding: var(--space-12) 0;
+    border-bottom: var(--border-width) solid var(--border-subtle);
+  }
+  .eixo:last-child{ border-bottom:none; }
+  .eixo .num{
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 500;
+    font-size: var(--text-xl);
+    color: var(--accent-ink);
+  }
+  .eixo .key{
+    font-family: var(--font-display);
+    font-weight: var(--fw-semibold);
+    font-size: clamp(26px, 3vw, 36px);
+    line-height: 1.12;
+    letter-spacing: var(--tracking-tight);
+    color: var(--text-strong);
+  }
+  .eixo .body{ margin:0; }
+  .eixo .body p{ margin:0; color: var(--text-body); }
+  .eixo .bref{
+    display:block;
+    margin-top: var(--space-4);
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: var(--text-base);
+    color: var(--accent-ink);
+  }
+  @media (max-width: 820px){
+    .eixo{ grid-template-columns: 40px 1fr; row-gap: var(--space-4); }
+    .eixo .body{ grid-column: 1 / -1; }
+  }
+
+  /* =========================== INVERSE (contraste) =========================== */
+  .inverse{
+    background: var(--dark-surface);
+    color: var(--stone-50);
+  }
+  .inverse .eyebrow{ color: var(--ochre-300); }
+  .inverse .section-head{ text-align:center; }
+  .inverse .section-head h2{ color: var(--stone-50); margin:0 auto; max-width: 22ch; }
+  .inverse .title-rule{ margin-left:auto; margin-right:auto; background: var(--ochre-400); }
+  .inverse .negatives{ max-width: 640px; margin: 0 auto; text-align:center; }
+  .inverse .negatives p{
+    font-size: var(--text-xl);
+    line-height: 1.5;
+    color: var(--navy-100);
+    margin: 0 0 var(--space-6);
+  }
+  .inverse .negatives p:last-child{ margin-bottom:0; }
+  .contraste-solo{
+    background: var(--dark-surface-2);
+    text-align:center;
+    padding: var(--space-32) var(--gutter);
+  }
+  .contraste-solo .emphasis{
+    margin: 0 auto;
+    max-width: 18ch;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 500;
+    font-size: clamp(30px, 4.4vw, 56px);
+    line-height: 1.18;
+    letter-spacing: -0.02em;
+    color: var(--stone-50);
+  }
+  .contraste-solo .emphasis .hl{ color: var(--ochre-300); font-style: italic; }
+
+  /* =========================== CREMOS (pull-quotes) =========================== */
+  .creed{ counter-reset: creed; }
+  .creed .article{
+    padding: var(--space-16) 0;
+    border-top: var(--border-width) solid var(--border-subtle);
+  }
+  .creed .article:first-child{ border-top:none; padding-top:0; }
+  .creed .article .roman{
+    counter-increment: creed;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: var(--text-lg);
+    color: var(--accent-ink);
+    margin-bottom: var(--space-4);
+  }
+  .creed .article .thesis{
+    font-family: var(--font-display);
+    font-weight: var(--fw-semibold);
+    font-size: clamp(24px, 3vw, 34px);
+    line-height: 1.2;
+    letter-spacing: var(--tracking-tight);
+    color: var(--text-strong);
+    margin: 0 0 var(--space-5);
+    text-wrap: balance;
+  }
+  .creed .article p{ margin:0; color: var(--text-body); max-width: var(--measure); }
+
+  /* =========================== VIVEMOS / MUNDO (label + body) =========================== */
+  .practice{ border-top: var(--border-width) solid var(--border-default); }
+  .practice .row{
+    display:grid;
+    grid-template-columns: 280px 1fr;
+    column-gap: var(--space-16);
+    padding: var(--space-12) 0;
+    border-bottom: var(--border-width) solid var(--border-subtle);
+    align-items: start;
+  }
+  .practice .row:last-of-type{ border-bottom: var(--border-width) solid var(--border-default); }
+  .practice .row .label{
+    font-family: var(--font-display);
+    font-weight: var(--fw-semibold);
+    font-size: var(--text-xl);
+    line-height: 1.2;
+    letter-spacing: var(--tracking-tight);
+    color: var(--text-strong);
+  }
+  .practice .row .label::after{
+    content:""; display:block; width: 28px; height:2px;
+    background: var(--accent-rule); margin-top: var(--space-4);
+  }
+  .practice .row .body{ margin:0; color: var(--text-body); }
+  .practice .closing{
+    margin: var(--space-12) 0 0;
+    max-width: 760px;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: var(--text-lg);
+    line-height: var(--leading-normal);
+    color: var(--text-muted);
+  }
+  @media (max-width: 820px){
+    .practice .row{ grid-template-columns: 1fr; row-gap: var(--space-4); }
+    .practice .row .label::after{ margin-bottom: var(--space-2); }
+  }
+
+  /* =========================== VISITE =========================== */
+  .visite .lead{ font-size: var(--text-lg); line-height: var(--leading-relaxed); color: var(--text-body); max-width: var(--measure); }
+  .visite-meta{
+    margin: var(--space-12) 0 0;
+    padding: var(--space-10) 0;
+    border-top: var(--border-width) solid var(--border-default);
+    border-bottom: var(--border-width) solid var(--border-default);
+    display:grid;
+    grid-template-columns: 140px 1fr;
+    row-gap: var(--space-6);
+    column-gap: var(--space-8);
+    align-items: baseline;
+  }
+  .visite-meta dt{
+    font-family: var(--font-body);
+    font-weight: var(--fw-semibold);
+    font-size: var(--text-xs);
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: var(--text-subtle);
+  }
+  .visite-meta dd{ margin:0; }
+  .visite-meta .big{
+    font-family: var(--font-display);
+    font-weight: var(--fw-semibold);
+    font-size: clamp(30px, 4vw, 46px);
+    line-height: 1.1;
+    letter-spacing: var(--tracking-tight);
+    color: var(--text-strong);
+  }
+  .visite-meta .place{
+    font-family: var(--font-display);
+    font-size: var(--text-xl);
+    line-height: 1.4;
+    color: var(--text-strong);
+  }
+  .map-row{ grid-column: 1 / -1; display:flex; gap: var(--space-5); flex-wrap:wrap; align-items:center; margin-top: var(--space-2); }
+
+  .first-sunday{ margin-top: var(--space-16); }
+  .first-sunday h3{
+    font-family: var(--font-body);
+    font-weight: var(--fw-semibold);
+    font-size: var(--text-sm);
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: var(--accent-ink);
+    margin: 0 0 var(--space-6);
+  }
+  .first-sunday p{ color: var(--text-body); max-width: var(--measure); }
+  .ceia{
+    margin-top: var(--space-16);
+    padding: var(--space-8) var(--space-10);
+    background: var(--surface-accent);
+    border-left: 3px solid var(--accent-rule);
+    border-radius: var(--radius-md);
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: var(--text-lg);
+    line-height: var(--leading-normal);
+    color: var(--text-strong);
+  }
+  .visite-wait{
+    margin-top: var(--space-20);
+    text-align:center;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 500;
+    font-size: clamp(26px, 3.2vw, 38px);
+    line-height: 1.25;
+    letter-spacing: var(--tracking-tight);
+    color: var(--text-strong);
+  }
+  @media (max-width: 560px){
+    .visite-meta{ grid-template-columns: 1fr; row-gap: var(--space-2); }
+    .visite-meta dt{ margin-top: var(--space-5); }
+  }
+
+  /* =========================== FOOTER =========================== */
+  footer.site{ background: var(--dark-surface-2); color: var(--navy-100); }
+  .foot-wrap{ max-width: 1080px; margin:0 auto; padding: var(--space-24) var(--gutter) var(--space-12); }
+  .foot-top{
+    display:grid; grid-template-columns: 1.2fr 1fr; gap: var(--space-16);
+    padding-bottom: var(--space-12);
+    border-bottom: var(--border-width) solid var(--navy-600);
+  }
+  .foot-brand img{ height: 38px; width:auto; }
+  .foot-brand .tag{
+    margin-top: var(--space-6);
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: var(--text-lg);
+    line-height: var(--leading-normal);
+    color: var(--stone-100);
+    max-width: 30ch;
+  }
+  .lideranca-grid{ display:grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-8); }
+  footer.site h4{
+    font-family: var(--font-body);
+    font-weight: var(--fw-semibold);
+    font-size: var(--text-xs);
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: var(--ochre-300);
+    margin: 0 0 var(--space-5);
+  }
+  footer.site ul{ list-style:none; padding:0; margin:0; }
+  footer.site li{ margin-bottom: var(--space-1); color: var(--navy-100); }
+  footer.site p{ color: var(--navy-100); margin: 0 0 var(--space-2); }
+  footer.site a{ color: var(--navy-100); }
+  footer.site a.foot-link{
+    text-decoration: underline; text-decoration-color: var(--navy-500); text-underline-offset:3px;
+    transition: color var(--dur-fast) var(--ease), text-decoration-color var(--dur-fast) var(--ease);
+  }
+  footer.site a.foot-link:hover{ color: var(--stone-50); text-decoration-color: var(--ochre-300); }
+
+  .foot-cols{
+    display:grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-16);
+    padding: var(--space-12) 0;
+    border-bottom: var(--border-width) solid var(--navy-600);
+  }
+  .foot-bottom{
+    margin-top: var(--space-10);
+    display:flex; justify-content:space-between; align-items:center; gap: var(--space-6); flex-wrap:wrap;
+  }
+  .members-link{
+    font-family: var(--font-body);
+    font-weight: var(--fw-semibold);
+    font-size: var(--text-sm);
+    color: var(--stone-50);
+    text-decoration: underline; text-decoration-color: var(--ochre-400); text-underline-offset:5px;
+    transition: text-decoration-color var(--dur-fast) var(--ease);
+  }
+  .members-link:hover{ color: var(--stone-50); text-decoration-color: var(--ochre-300); }
+  .colofao{ font-family: var(--font-mono); font-size: var(--text-xs); letter-spacing: 0.06em; color: var(--navy-300); line-height: 1.8; }
+  .colofao .hl{ color: var(--ochre-300); }
+
+  @media (max-width: 820px){
+    .foot-top{ grid-template-columns: 1fr; gap: var(--space-10); }
+    .foot-cols{ grid-template-columns: 1fr; gap: var(--space-10); }
+    .lideranca-grid{ gap: var(--space-6); }
+  }
+  @media (max-width: 560px){
+    .lideranca-grid{ grid-template-columns: 1fr; }
+  }
+
+  /* =========================== REVEAL MOTION =========================== */
+  @media (prefers-reduced-motion: no-preference){
+    [data-rise]{ opacity:0; transform: translateY(24px); transition: opacity .9s var(--ease), transform .9s var(--ease); transition-delay: calc(var(--i,0) * 80ms); }
+    [data-rise].in{ opacity:1; transform:none; }
+  }
+
+  /* =========================== TWEAK PANEL =========================== */
+  #tweak-panel{
+    position:fixed; right:20px; bottom:20px; z-index:100; width: 264px;
+    background: var(--surface-card);
+    border: var(--border-width) solid var(--border-default);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    padding: var(--space-5) var(--space-6);
+    font-family: var(--font-body);
+    display:none;
+  }
+  body.tw-panel-on #tweak-panel{ display:block; }
+  #tweak-panel h5{
+    margin:0 0 var(--space-4); font-family: var(--font-body); font-weight: var(--fw-semibold);
+    font-size: var(--text-xs); letter-spacing: var(--tracking-caps); text-transform:uppercase; color: var(--accent-ink);
+  }
+  #tweak-panel .tw-row{ padding: var(--space-3) 0; border-top: var(--border-width) solid var(--border-subtle); }
+  #tweak-panel .tw-row:first-of-type{ border-top:none; }
+  #tweak-panel .tw-name{ font-weight: var(--fw-semibold); color: var(--text-strong); font-size: var(--text-sm); display:block; margin-bottom: var(--space-2); }
+  #tweak-panel .seg{ display:flex; gap: 6px; }
+  #tweak-panel .seg button{
+    flex:1; font-family: var(--font-body); font-size: var(--text-xs); font-weight: var(--fw-medium);
+    background: transparent; border: var(--border-width) solid var(--border-default); color: var(--text-muted);
+    padding: 7px 8px; border-radius: var(--radius-sm); cursor:pointer; transition: var(--transition-base);
+  }
+  #tweak-panel .seg button:hover{ border-color: var(--navy-400); color: var(--navy-700); }
+  #tweak-panel .seg button.on{ background: var(--navy-700); border-color: var(--navy-700); color: var(--stone-50); }
+
+  /* ---- Tweak: accent = navy ---- */
+  body.tw-accent-navy{ --accent-ink: var(--navy-600); --accent-rule: var(--navy-400); }
+  /* ---- Tweak: dark = ink (warm near-black) ---- */
+  body.tw-dark-ink{ --dark-surface: var(--stone-900); --dark-surface-2: #1A1714; }
+  /* ---- Tweak: hero contido ---- */
+  body.tw-hero-contained .hero h1{ font-size: clamp(28px, 3.6vw, 44px); }
+  body.tw-hero-contained .hero{ min-height: min(64vh, 600px); }
+</style>
+</head>
+<body>
+
+<!-- =========================== HEADER =========================== -->
+<header class="site" data-screen-label="Header">
+  <div class="site-inner">
+    <a href="#top" class="brand" aria-label="Igreja Presbiteriana do Caminho">
+      <img src="assets/logo/ipc-mark.png" alt="IPC" />
+      <span class="bar"></span>
+      <span class="name">
+        <span class="l1">Igreja Presbiteriana</span>
+        <span class="l2">do Caminho</span>
+      </span>
+    </a>
+    <nav class="primary" aria-label="Principal">
+      <a href="#cremos">Cremos</a>
+      <a href="#vivemos">Vivemos</a>
+      <a href="#mundo">Mundo</a>
+      <a href="#visite">Visite</a>
+    </nav>
+    <div class="header-cta">
+      <a href="#membros" class="btn btn-outline">Área de Membros&nbsp;→</a>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+
+<!-- =========================== HERO =========================== -->
+<section class="hero" data-screen-label="Hero">
+  <div class="wrap-wide">
+    <p class="eyebrow">São Paulo · Comunidade Presbiteriana</p>
+    <h1>
+      <span class="ln">Uma comunidade bíblica de discipulado,</span>
+      <span class="ln">participando da missão de Deus neste mundo.</span>
+    </h1>
+    <p class="sub">Presbiteriana. No centro de São Paulo. Pequena por escolha.</p>
+    <p class="refs"><span>Reformada</span><span class="sep">·</span><span>Westminster</span><span class="sep">·</span><span>Desde [ano]</span></p>
+    <div class="cta-row">
+      <a href="#visite" class="btn btn-primary">Venha visitar</a>
+      <a href="#eixos" class="link-quiet">Conheça nossa comunidade</a>
+    </div>
+  </div>
+</section>
+
+<!-- =========================== EIXOS =========================== -->
+<section id="eixos" data-screen-label="Eixos">
+  <div class="wrap-wide">
+    <div class="section-head" data-rise>
+      <p class="eyebrow">O que nos define em quatro palavras</p>
+      <h2>Cada palavra tem peso.</h2>
+      <span class="title-rule"></span>
+    </div>
+    <div class="eixos">
+      <div class="eixo" data-rise style="--i:0">
+        <div class="num">01</div>
+        <div class="key">Comunidade</div>
+        <div class="body">
+          <p>Não somos um público que assiste a um culto, nem uma plataforma. Somos pessoas conhecidas pelo nome, compartilhando a mesa, o tempo e a vida ao longo dos anos.</p>
+          <span class="bref">Atos 2.42</span>
+        </div>
+      </div>
+      <div class="eixo" data-rise style="--i:1">
+        <div class="num">02</div>
+        <div class="key">Bíblica</div>
+        <div class="body">
+          <p>A Escritura lê a gente antes de a gente ler a Escritura. Ela molda como vemos a cidade, o trabalho, a família — e não o contrário.</p>
+          <span class="bref">2 Timóteo 3.16–17</span>
+        </div>
+      </div>
+      <div class="eixo" data-rise style="--i:2">
+        <div class="num">03</div>
+        <div class="key">De discipulado</div>
+        <div class="body">
+          <p>Caminhamos atrás de Jesus juntos, aprendendo devagar a pensar, sentir e viver como Ele. Isso leva uma vida inteira, e tudo bem.</p>
+          <span class="bref">Mateus 28.19–20</span>
+        </div>
+      </div>
+      <div class="eixo" data-rise style="--i:3">
+        <div class="num">04</div>
+        <div class="key">Participando da missão de Deus</div>
+        <div class="body">
+          <p>A missão é de Deus, não nossa. Entramos nela onde já estamos — na segunda-feira, no bairro, no trabalho — enquanto esperamos o mundo que há de vir.</p>
+          <span class="bref">Jeremias 29.7</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================== CONTRASTE =========================== -->
+<section class="inverse" id="contraste" data-screen-label="Contraste">
+  <div class="wrap">
+    <div class="section-head" data-rise>
+      <p class="eyebrow">Antes de qualquer outra conversa</p>
+      <h2>O que você não vai encontrar aqui.</h2>
+      <span class="title-rule"></span>
+    </div>
+    <div class="negatives">
+      <p data-rise style="--i:0">Não somos uma igreja performática. Não temos iluminação cênica, fumaça, palco, banda buscando viralizar.</p>
+      <p data-rise style="--i:1">Não somos descolados, não estamos competindo por atenção com o algoritmo, não estamos preocupados em parecer relevantes pra uma geração específica.</p>
+      <p data-rise style="--i:2">Não somos influentes — nem queremos ser. Não temos pastor-celebridade, programa de TV, linha de produtos, nem estratégia de marca.</p>
+      <p data-rise style="--i:3">Não somos um evento dominical produzido pra você consumir, e depois voltar pra casa.</p>
+    </div>
+  </div>
+</section>
+<div class="contraste-solo" data-screen-label="Contraste — síntese">
+  <p class="emphasis" data-rise>Somos uma comunidade aprendendo, junto, a se parecer com <span class="hl">Cristo</span> — começando pela segunda-feira.</p>
+</div>
+
+<!-- =========================== CREMOS =========================== -->
+<section id="cremos" data-screen-label="Cremos">
+  <div class="wrap">
+    <div class="section-head" data-rise>
+      <p class="eyebrow">O que cremos — e por quê</p>
+      <h2>O que cremos.</h2>
+      <span class="title-rule"></span>
+    </div>
+    <div class="creed">
+      <div class="article" data-rise style="--i:0">
+        <div class="roman">I.</div>
+        <p class="thesis">O evangelho é o centro.</p>
+        <p>Não um dos temas, não o ponto de partida pra temas melhores — o centro. Que Deus, em Cristo, reconcilia consigo um povo que não tinha como se reconciliar. Tudo que fazemos como igreja deriva disso, ou é decoração.</p>
+      </div>
+      <div class="article" data-rise style="--i:0">
+        <div class="roman">II.</div>
+        <p class="thesis">A Escritura é a voz mais clara disponível.</p>
+        <p>Existem outras vozes — tradição, experiência, cultura — e todas importam. Mas só a Bíblia fala com autoridade final sobre quem Deus é, quem somos e pra onde as coisas vão. Ler bem, juntos e devagar, é o trabalho de uma vida.</p>
+      </div>
+      <div class="article" data-rise style="--i:0">
+        <div class="roman">III.</div>
+        <p class="thesis">A igreja é povo, não lugar.</p>
+        <p>A igreja não é o prédio onde nos encontramos, nem o horário do culto, nem a denominação no papel. É um povo chamado por Deus, reunido por Ele, enviado por Ele. O prédio serve; o povo é que é.</p>
+      </div>
+      <div class="article" data-rise style="--i:0">
+        <div class="roman">IV.</div>
+        <p class="thesis">A história tem um destino.</p>
+        <p>O mundo não está em colapso aleatório nem em progresso inevitável. Vai em direção a um momento concreto: a volta de Cristo, céus novos e terra nova. Isso muda como a gente trabalha, chora, descansa e espera — hoje.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================== VIVEMOS =========================== -->
+<section id="vivemos" data-screen-label="Vivemos">
+  <div class="wrap-wide">
+    <div class="section-head" data-rise>
+      <p class="eyebrow">Como isso vira semana</p>
+      <h2>Como vivemos em comunidade.</h2>
+      <span class="title-rule"></span>
+    </div>
+    <div class="practice">
+      <div class="row" data-rise style="--i:0">
+        <div class="label">No culto, aos domingos</div>
+        <p class="body">Nos reunimos pra ouvir a Palavra pregada, cantar juntos, orar juntos, confessar juntos, comer juntos ao redor da mesa do Senhor. É o centro da semana, não um apêndice dela. O culto não existe pra nos entreter; existe pra nos formar.</p>
+      </div>
+      <div class="row" data-rise style="--i:0">
+        <div class="label">Nos Pequenos Grupos, durante a semana</div>
+        <p class="body">O culto nos reúne; o Pequeno Grupo nos conhece. Em casas, em mesas, em grupos de oito a doze pessoas, conversamos sobre o texto bíblico, sobre a semana real, sobre os tropeços e as alegrias concretas. É onde a teologia deixa de ser abstrata.</p>
+      </div>
+      <div class="row" data-rise style="--i:0">
+        <div class="label">À mesa, sempre que possível</div>
+        <p class="body">Comer junto é um ato teológico. Abrimos a casa, dividimos o pão, ouvimos as histórias uns dos outros. Boa parte do discipulado da comunidade acontece entre o prato e o cafezinho, sem pauta, sem liturgia — só com tempo.</p>
+      </div>
+      <div class="row" data-rise style="--i:0">
+        <div class="label">Em casa, onde tudo se prova</div>
+        <p class="body">A fé que não toca a cozinha, o quarto do filho, a planilha do mês, o argumento com o vizinho — essa fé ainda não chegou. A casa é o laboratório onde o que cremos vira o que somos.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================== MUNDO =========================== -->
+<section id="mundo" data-screen-label="Mundo">
+  <div class="wrap-wide">
+    <div class="section-head" data-rise>
+      <p class="eyebrow">A cidade, o prédio, a mesa</p>
+      <h2>O que fazemos no mundo.</h2>
+      <span class="title-rule"></span>
+    </div>
+    <div class="practice">
+      <div class="row" data-rise style="--i:0">
+        <div class="label">A segunda-feira é o maior campo missionário</div>
+        <p class="body">A maior parte da vida cristã não acontece no culto — acontece no trabalho, no trânsito, na reunião das 10h, na conversa com o colega de mesa. Formamos uns aos outros pra pensar vocacionalmente sobre o expediente: o ofício é adoração.</p>
+      </div>
+      <div class="row" data-rise style="--i:0">
+        <div class="label">Antes da cidade, o prédio</div>
+        <p class="body">Queremos amar a cidade, mas começamos pelo quarteirão. Pelo porteiro, pela padaria da esquina, pelos vizinhos de elevador. A missão global passa pelo nome do síndico.</p>
+      </div>
+      <div class="row" data-rise style="--i:0">
+        <div class="label">São Paulo é nosso endereço</div>
+        <p class="body">Não somos uma igreja genérica que poderia estar em qualquer cidade. Estamos aqui, neste fuso, neste trânsito, nesta densidade, nesta desigualdade. A cidade não é pano de fundo — é o lugar concreto pra onde fomos enviados.</p>
+      </div>
+    </div>
+    <p class="closing" data-rise>Tudo isso com os olhos no horizonte: um dia o Rei volta, enxuga toda lágrima, e a cidade inteira — não só a igreja — é feita nova. Trabalhamos, esperamos e descansamos dentro dessa promessa.</p>
+  </div>
+</section>
+
+<!-- =========================== VISITE =========================== -->
+<section id="visite" class="visite" data-screen-label="Visite">
+  <div class="wrap">
+    <div class="section-head" data-rise>
+      <p class="eyebrow">Porta aberta, domingo de manhã</p>
+      <h2>Venha visitar.</h2>
+      <span class="title-rule"></span>
+    </div>
+    <p class="lead" data-rise>Sem cadastro, sem formulário, sem crachá de visitante. A porta está aberta no domingo de manhã. Chega, senta onde quiser, fica o tempo que precisar. Se quiser conversar, a gente conversa; se preferir só observar, tudo bem também.</p>
+
+    <dl class="visite-meta" data-rise>
+      <dt>Quando</dt>
+      <dd class="big">Domingos, [horário]</dd>
+
+      <dt>Onde</dt>
+      <dd class="place">[endereço], [bairro]<br/>São Paulo, SP</dd>
+
+      <div class="map-row">
+        <a href="#" class="btn btn-primary">Ver no Google Maps</a>
+        <a href="#" class="link-quiet">Ver no Waze →</a>
+      </div>
+    </dl>
+
+    <div class="first-sunday" data-rise>
+      <h3>No seu primeiro domingo</h3>
+      <p>O culto dura cerca de 90 minutos. Cantamos, lemos a Bíblia em voz alta, oramos, ouvimos um sermão expositivo — normalmente entre 35 e 45 minutos sobre um texto específico — e terminamos com uma oração final. Não há passagem de pauta, não há momento constrangedor pra visitantes se identificarem, não há pressão pra participar de nada.</p>
+      <p>Vista-se como estiver confortável. Calça jeans, camisa, vestido, tênis — todas as opções estão certas. A gente se importa que você esteja ali; o resto é detalhe.</p>
+      <p>Crianças são bem-vindas no culto inteiro. Se o bebê chorar, a mãe chora junto, a igreja ri junto, e o sermão continua. Há um espaço tranquilo pra amamentação e troca, se precisar.</p>
+      <p>Depois do culto, tem café. Fique, se quiser. Se não puder, a gente te vê no próximo domingo.</p>
+    </div>
+
+    <p class="ceia" data-rise>Celebramos a Ceia do Senhor todos os domingos, e a mesa é do Senhor — não da IPC. Se você é cristão batizado e em comunhão com alguma igreja, você é bem-vindo a participar. Se não é, escute, observe, pense — e converse com um dos presbíteros depois, se quiser.</p>
+
+    <p class="visite-wait" data-rise>Estamos esperando você.</p>
+  </div>
+</section>
+
+</main>
+
+<!-- =========================== FOOTER =========================== -->
+<footer class="site" id="lideranca" data-screen-label="Footer">
+  <div class="foot-wrap">
+    <div class="foot-top">
+      <div class="foot-brand">
+        <img src="assets/logo/ipc-mark-white.png" alt="IPC" />
+        <p class="tag">Uma comunidade aprendendo, junto, a se parecer com Cristo — começando pela segunda-feira.</p>
+      </div>
+      <div>
+        <h4>Liderança</h4>
+        <div class="lideranca-grid">
+          <div>
+            <div class="sub-label" style="font-size:var(--text-xs);letter-spacing:var(--tracking-caps);text-transform:uppercase;color:var(--navy-300);margin-bottom:var(--space-2)">Pastor</div>
+            <ul><li>[nome do pastor]</li></ul>
+          </div>
+          <div>
+            <div class="sub-label" style="font-size:var(--text-xs);letter-spacing:var(--tracking-caps);text-transform:uppercase;color:var(--navy-300);margin-bottom:var(--space-2)">Conselho</div>
+            <ul><li>[presbítero]</li><li>[presbítero]</li><li>[presbítero]</li></ul>
+          </div>
+          <div>
+            <div class="sub-label" style="font-size:var(--text-xs);letter-spacing:var(--tracking-caps);text-transform:uppercase;color:var(--navy-300);margin-bottom:var(--space-2)">Diaconia</div>
+            <ul><li>[diácono]</li><li>[diácono]</li></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="foot-cols">
+      <div>
+        <h4>Contato</h4>
+        <p>[endereço]<br/>[bairro], São Paulo — SP</p>
+        <p style="margin-top:var(--space-3)"><a href="mailto:contato@ipc.org.br" class="foot-link">contato@ipc.org.br</a></p>
+      </div>
+      <div>
+        <h4>Tradição</h4>
+        <p>Presbiteriana reformada, filiada à [denominação]. Alinhados à Confissão de Fé de Westminster (1647).</p>
+      </div>
+    </div>
+
+    <div class="foot-bottom">
+      <a href="#membros" class="members-link">Área de Membros →</a>
+      <div class="colofao">Composto em <span class="hl">Spectral</span> &amp; <span class="hl">Source Sans 3</span>. São Paulo, 2026.<br/>© 2026 Igreja Presbiteriana do Caminho.</div>
+    </div>
+  </div>
+</footer>
+
+<!-- =========================== TWEAK PANEL =========================== -->
+<div id="tweak-panel" aria-label="Tweaks">
+  <h5>Tweaks · ajustar versão</h5>
+  <div class="tw-row">
+    <span class="tw-name">Cor de acento</span>
+    <div class="seg" data-group="accent">
+      <button type="button" data-val="ochre" class="on">Ocre</button>
+      <button type="button" data-val="navy">Marinho</button>
+    </div>
+  </div>
+  <div class="tw-row">
+    <span class="tw-name">Seções escuras</span>
+    <div class="seg" data-group="dark">
+      <button type="button" data-val="navy" class="on">Marinho</button>
+      <button type="button" data-val="ink">Tinta</button>
+    </div>
+  </div>
+  <div class="tw-row">
+    <span class="tw-name">Hero</span>
+    <div class="seg" data-group="hero">
+      <button type="button" data-val="grande" class="on">Grande</button>
+      <button type="button" data-val="contido">Contido</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// Swallow the benign "ResizeObserver loop completed" notice emitted by the host preview harness.
+window.addEventListener('error', function(e){
+  if(e && e.message && e.message.indexOf('ResizeObserver loop') !== -1){ e.stopImmediatePropagation(); e.preventDefault(); }
+});
+(function(){
+  const body = document.body;
+
+  /* ---- Tweaks: segmented controls -> body classes + persist ---- */
+  const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+    "accent": "ochre",
+    "dark": "navy",
+    "hero": "grande"
+  }/*EDITMODE-END*/;
+  const state = Object.assign({}, TWEAK_DEFAULTS);
+
+  const CLASS_MAP = {
+    accent: { ochre: null, navy: 'tw-accent-navy' },
+    dark:   { navy: null, ink: 'tw-dark-ink' },
+    hero:   { grande: null, contido: 'tw-hero-contained' }
+  };
+
+  function apply(){
+    Object.keys(CLASS_MAP).forEach(group => {
+      Object.values(CLASS_MAP[group]).forEach(cls => { if(cls) body.classList.remove(cls); });
+      const cls = CLASS_MAP[group][state[group]];
+      if(cls) body.classList.add(cls);
+    });
+    document.querySelectorAll('#tweak-panel .seg').forEach(seg => {
+      const g = seg.dataset.group;
+      seg.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.val === state[g]));
+    });
+  }
+
+  document.querySelectorAll('#tweak-panel .seg button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const g = btn.closest('.seg').dataset.group;
+      state[g] = btn.dataset.val;
+      apply();
+      try{ window.parent.postMessage({type:'__edit_mode_set_keys', edits:{[g]: state[g]}}, '*'); }catch(e){}
+    });
+  });
+
+  window.addEventListener('message', (e) => {
+    const d = e.data || {};
+    if(d.type === '__activate_edit_mode') body.classList.add('tw-panel-on');
+    else if(d.type === '__deactivate_edit_mode') body.classList.remove('tw-panel-on');
+  });
+  window.parent.postMessage({type:'__edit_mode_available'}, '*');
+  apply();
+
+  /* ---- Reveal on scroll (respects reduced-motion via CSS) ---- */
+  const els = document.querySelectorAll('[data-rise]');
+  if(window.matchMedia('(prefers-reduced-motion: no-preference)').matches){
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach(en => { if(en.isIntersecting){ en.target.classList.add('in'); obs.unobserve(en.target); } });
+    }, { threshold: 0.14, rootMargin: '0px 0px -6% 0px' });
+    els.forEach(el => obs.observe(el));
+    // Safety net
+    setTimeout(() => {
+      document.querySelectorAll('[data-rise]:not(.in)').forEach(el => {
+        if(el.getBoundingClientRect().top < window.innerHeight) el.classList.add('in');
+      });
+    }, 2000);
+  } else {
+    els.forEach(el => el.classList.add('in'));
+  }
+})();
+</script>
+
+</body>
+</html>

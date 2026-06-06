@@ -1,0 +1,103 @@
+/* ============================================================
+   IPC — Color tokens
+   Paleta sóbria e quente: neutros terrosos (papel/pedra),
+   azul-marinho como cor de marca, ocre discreto para calor.
+   Nada saturado — reverente, acolhedor, alto contraste.
+   ============================================================ */
+
+:root {
+  /* ---- Brand: Navy (azul-marinho) — cor primária ------------ */
+  --navy-50:  #EEF1F6;
+  --navy-100: #D6DEEA;
+  --navy-200: #AEBCD2;
+  --navy-300: #7D90B3;
+  --navy-400: #4F6691;
+  --navy-500: #324B73;
+  --navy-600: #243657;
+  --navy-700: #1B2A4A;   /* core brand navy */
+  --navy-800: #14213D;
+  --navy-900: #0E1730;
+
+  /* ---- Brand: Ochre (ocre / dourado terroso) — acento cálido */
+  --ochre-50:  #FAF4E8;
+  --ochre-100: #F1E4C9;
+  --ochre-200: #E4CD9C;
+  --ochre-300: #D4B26B;
+  --ochre-400: #C49A47;
+  --ochre-500: #B0853A;   /* core ochre */
+  --ochre-600: #8F6A2D;
+  --ochre-700: #6E5223;
+
+  /* ---- Earth neutrals: Stone (papel + pedra, quentes) ------- */
+  --stone-0:   #FFFFFF;
+  --stone-50:  #F7F3EA;   /* paper / page background */
+  --stone-100: #F0EADC;
+  --stone-200: #E5DDCB;
+  --stone-300: #D5CAB2;
+  --stone-400: #B3A88E;
+  --stone-500: #8C8268;
+  --stone-600: #6A6250;
+  --stone-700: #4C463A;
+  --stone-800: #332F27;
+  --stone-900: #221F1A;   /* warm near-black ink */
+
+  /* ---- Semantic status (mutadas, nada vibrante) ------------- */
+  --green-100: #DDE7D6;
+  --green-500: #4F7A4D;   /* sucesso / "ao vivo" calmo */
+  --green-700: #38602F;
+
+  --amber-100: #F3E6C6;
+  --amber-500: #C08A2D;   /* atenção */
+  --amber-700: #8A6118;
+
+  --red-100:   #EFD7D2;
+  --red-500:   #A8453A;   /* erro / cancelado (tijolo) */
+  --red-700:   #7E2F27;
+
+  /* ===========================================================
+     SEMANTIC ALIASES — use these in components, not raw scales
+     =========================================================== */
+
+  /* Surfaces / backgrounds */
+  --surface-page:      var(--stone-50);
+  --surface-card:      var(--stone-0);
+  --surface-sunken:    var(--stone-100);
+  --surface-raised:    var(--stone-0);
+  --surface-inverse:   var(--navy-700);
+  --surface-inverse-2: var(--navy-800);
+  --surface-accent:    var(--ochre-50);
+
+  /* Text / ink */
+  --text-strong:    var(--stone-900);
+  --text-body:      var(--stone-800);
+  --text-muted:     var(--stone-600);
+  --text-subtle:    var(--stone-500);
+  --text-on-navy:   var(--stone-50);
+  --text-on-navy-muted: var(--navy-200);
+  --text-on-ochre:  var(--stone-900);
+  --text-link:      var(--navy-600);
+  --text-link-hover:var(--navy-800);
+
+  /* Brand */
+  --brand:          var(--navy-700);
+  --brand-strong:   var(--navy-800);
+  --brand-soft:     var(--navy-50);
+  --accent:         var(--ochre-500);
+  --accent-strong:  var(--ochre-600);
+  --accent-soft:    var(--ochre-50);
+
+  /* Borders / dividers / rings */
+  --border-subtle:  var(--stone-200);
+  --border-default: var(--stone-300);
+  --border-strong:  var(--stone-400);
+  --border-inverse: var(--navy-500);
+  --ring-focus:     var(--ochre-400);
+
+  /* Status semantics */
+  --success:        var(--green-500);
+  --success-soft:   var(--green-100);
+  --warning:        var(--amber-500);
+  --warning-soft:   var(--amber-100);
+  --danger:         var(--red-500);
+  --danger-soft:    var(--red-100);
+}
