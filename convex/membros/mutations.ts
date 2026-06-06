@@ -2,6 +2,7 @@ import { mutation } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { createFieldAuditLogs, createActionAuditLog } from "../_shared/auditHelpers";
+import { espelharConjuge, limparEspelhoConjuge } from "./familiaHelpers";
 
 export const create = mutation({
   args: {
@@ -86,6 +87,11 @@ export const create = mutation({
       filhos: args.filhos,
     });
 
+    // Vinculo de conjuge e bilateral
+    if (args.conjugeId) {
+      await espelharConjuge(ctx, entidadeId, args.conjugeId);
+    }
+
     await createActionAuditLog(ctx, "CREATE", "membros", membroId);
     return membroId;
   },
@@ -118,6 +124,16 @@ export const update = mutation({
       await ctx.db.patch(id, membroData);
       const newMembro = await ctx.db.get(id);
       await createFieldAuditLogs(ctx, oldMembro, newMembro, "membros", id);
+
+      // Vinculo de conjuge e bilateral: espelha o novo e limpa o antigo
+      if ("conjugeId" in membroData && membroData.conjugeId !== oldMembro.conjugeId) {
+        if (oldMembro.conjugeId) {
+          await limparEspelhoConjuge(ctx, membro.entidadeId, oldMembro.conjugeId);
+        }
+        if (membroData.conjugeId) {
+          await espelharConjuge(ctx, membro.entidadeId, membroData.conjugeId);
+        }
+      }
     }
 
     return id;
