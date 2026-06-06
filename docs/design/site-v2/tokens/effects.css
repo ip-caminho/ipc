@@ -1,0 +1,46 @@
+/* ============================================================
+   IPC — Radius, shadow, border & motion tokens
+   Cantos levemente arredondados; sombras quentes e suaves
+   (nada de drama). Transições calmas, sem bounce.
+   ============================================================ */
+
+:root {
+  /* ---- Radius --------------------------------------------- */
+  --radius-xs:   3px;
+  --radius-sm:   6px;
+  --radius-md:   10px;   /* padrão: cards, inputs, botões      */
+  --radius-lg:   16px;
+  --radius-xl:   24px;
+  --radius-pill: 999px;
+  --radius-circle: 50%;
+
+  /* ---- Borders -------------------------------------------- */
+  --border-width:      1px; /* @kind other */
+  --border-width-thick: 2px; /* @kind other */
+
+  /* ---- Shadows (quentes, baixas) --------------------------
+     Tom de sombra puxa o marrom/pedra, não cinza neutro.      */
+  --shadow-xs:  0 1px 2px rgba(51, 47, 39, 0.06);
+  --shadow-sm:  0 1px 3px rgba(51, 47, 39, 0.08), 0 1px 2px rgba(51, 47, 39, 0.05);
+  --shadow-md:  0 4px 10px rgba(51, 47, 39, 0.08), 0 2px 4px rgba(51, 47, 39, 0.05);
+  --shadow-lg:  0 12px 28px rgba(51, 47, 39, 0.10), 0 4px 10px rgba(51, 47, 39, 0.06);
+  --shadow-xl:  0 24px 48px rgba(20, 33, 61, 0.14), 0 8px 18px rgba(51, 47, 39, 0.08);
+
+  /* Inner shadow for inputs / wells */
+  --shadow-inset: inset 0 1px 2px rgba(51, 47, 39, 0.07);
+
+  /* Focus ring */
+  --ring-width: 3px;
+  --ring:       0 0 0 var(--ring-width) var(--ochre-200);
+
+  /* ---- Motion --------------------------------------------- */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);   /* @kind other */
+  --ease-out:      cubic-bezier(0.16, 1, 0.3, 1); /* @kind other */
+  --ease-in-out:   cubic-bezier(0.65, 0, 0.35, 1);/* @kind other */
+
+  --dur-fast:   120ms; /* @kind other */
+  --dur-base:   200ms; /* @kind other */
+  --dur-slow:   360ms; /* @kind other */
+
+  --transition-base: all var(--dur-base) var(--ease-standard); /* @kind other */
+}

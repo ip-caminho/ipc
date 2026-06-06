@@ -1,0 +1,71 @@
+/* ============================================================
+   IPC — Base layer
+   Defaults de elemento + classes utilitárias de tipografia.
+   Importado por styles.css. Consome apenas tokens.
+   ============================================================ */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--body-leading);
+  font-weight: var(--fw-regular);
+  color: var(--text-body);
+  background: var(--surface-page);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  color: var(--text-strong);
+  margin: 0 0 0.5em;
+  text-wrap: balance;
+}
+h1 { font-size: var(--text-4xl); font-weight: var(--fw-display); line-height: var(--leading-tight); letter-spacing: var(--tracking-tight); }
+h2 { font-size: var(--text-3xl); font-weight: var(--fw-semibold); line-height: var(--leading-snug); }
+h3 { font-size: var(--text-2xl); font-weight: var(--fw-semibold); line-height: var(--leading-snug); }
+h4 { font-size: var(--text-xl);  font-weight: var(--fw-semibold); line-height: var(--leading-snug); }
+
+p { margin: 0 0 1em; text-wrap: pretty; }
+
+a { color: var(--text-link); text-decoration-color: var(--stone-300); text-underline-offset: 0.16em; transition: color var(--dur-fast) var(--ease-standard); }
+a:hover { color: var(--text-link-hover); text-decoration-color: currentColor; }
+
+:focus-visible { outline: none; box-shadow: var(--ring); border-radius: var(--radius-xs); }
+
+hr { border: none; border-top: var(--border-width) solid var(--border-subtle); margin: var(--space-8) 0; }
+
+img { max-width: 100%; display: block; }
+
+/* ---- Typographic role classes --------------------------- */
+.ds-eyebrow {
+  font-family: var(--font-body);
+  font-weight: var(--fw-semibold);
+  font-size: var(--text-sm);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--accent-strong);
+}
+.ds-display {
+  font-family: var(--font-display);
+  font-weight: var(--fw-display);
+  font-size: var(--text-5xl);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tight);
+  color: var(--text-strong);
+}
+.ds-lead {
+  font-size: var(--text-lg);
+  line-height: var(--leading-relaxed);
+  color: var(--text-muted);
+}
+.ds-prose { max-width: var(--measure-prose); }
+.ds-prose p { line-height: var(--leading-relaxed); }
+
+/* ---- Layout helpers ------------------------------------- */
+.ds-container { width: 100%; max-width: var(--container-lg); margin-inline: auto; padding-inline: var(--gutter); }
