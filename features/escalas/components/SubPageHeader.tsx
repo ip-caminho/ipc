@@ -15,7 +15,7 @@ export function SubPageHeader({ title }: { title: string }) {
       >
         <ChevronLeft className="h-5 w-5" />
       </button>
-      <h2 className="text-lg font-semibold">{title}</h2>
+      <h2 className="font-display text-lg font-semibold tracking-tight">{title}</h2>
     </div>
   );
 }

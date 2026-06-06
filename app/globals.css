@@ -5,38 +5,39 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.1450 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.1450 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.1450 0 0);
-  --primary: oklch(0.2050 0 0);
-  --primary-foreground: oklch(0.9850 0 0);
-  --secondary: oklch(0.9700 0 0);
-  --secondary-foreground: oklch(0.2050 0 0);
-  --muted: oklch(0.9700 0 0);
-  --muted-foreground: oklch(0.5560 0 0);
-  --accent: oklch(0.9700 0 0);
-  --accent-foreground: oklch(0.2050 0 0);
+  /* Paleta de marca (eco da landing): marinho + laranja + papel creme */
+  --background: #FAF8F4;
+  --foreground: #111D33;
+  --card: #FFFFFF;
+  --card-foreground: #111D33;
+  --popover: #FFFFFF;
+  --popover-foreground: #111D33;
+  --primary: #16243F;
+  --primary-foreground: #FAF8F4;
+  --secondary: #F4F0E9;
+  --secondary-foreground: #16243F;
+  --muted: #F4F0E9;
+  --muted-foreground: #635D52;
+  --accent: #FDEEE2;
+  --accent-foreground: #111D33;
   --destructive: oklch(0.5770 0.2450 27.3250);
   --destructive-foreground: oklch(1 0 0);
-  --border: oklch(0.9220 0 0);
-  --input: oklch(0.9220 0 0);
-  --ring: oklch(0.7080 0 0);
-  --chart-1: oklch(0.8100 0.1000 252);
-  --chart-2: oklch(0.6200 0.1900 260);
-  --chart-3: oklch(0.5500 0.2200 263);
-  --chart-4: oklch(0.4900 0.2200 264);
-  --chart-5: oklch(0.4200 0.1800 266);
-  --sidebar: oklch(0.9850 0 0);
-  --sidebar-foreground: oklch(0.1450 0 0);
-  --sidebar-primary: oklch(0.2050 0 0);
-  --sidebar-primary-foreground: oklch(0.9850 0 0);
-  --sidebar-accent: oklch(0.9700 0 0);
-  --sidebar-accent-foreground: oklch(0.2050 0 0);
-  --sidebar-border: oklch(0.9220 0 0);
-  --sidebar-ring: oklch(0.7080 0 0);
+  --border: #ECE6DC;
+  --input: #DCD4C6;
+  --ring: #F0732B;
+  --chart-1: #F0732B;
+  --chart-2: #283D5E;
+  --chart-3: #F49B5C;
+  --chart-4: #6E82A2;
+  --chart-5: #BC5414;
+  --sidebar: #F4F0E9;
+  --sidebar-foreground: #111D33;
+  --sidebar-primary: #16243F;
+  --sidebar-primary-foreground: #FAF8F4;
+  --sidebar-accent: #FDEEE2;
+  --sidebar-accent-foreground: #111D33;
+  --sidebar-border: #ECE6DC;
+  --sidebar-ring: #F0732B;
   --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   --radius: 0.625rem;
@@ -55,38 +56,39 @@
 }
 
 .dark {
-  --background: oklch(0.1450 0 0);
-  --foreground: oklch(0.9850 0 0);
-  --card: oklch(0.2050 0 0);
-  --card-foreground: oklch(0.9850 0 0);
-  --popover: oklch(0.2690 0 0);
-  --popover-foreground: oklch(0.9850 0 0);
-  --primary: oklch(0.9220 0 0);
-  --primary-foreground: oklch(0.2050 0 0);
-  --secondary: oklch(0.2690 0 0);
-  --secondary-foreground: oklch(0.9850 0 0);
-  --muted: oklch(0.2690 0 0);
-  --muted-foreground: oklch(0.7080 0 0);
-  --accent: oklch(0.3710 0 0);
-  --accent-foreground: oklch(0.9850 0 0);
+  /* Dark de marca: marinho profundo + laranja como destaque */
+  --background: #0B1426;
+  --foreground: #FAF8F4;
+  --card: #111D33;
+  --card-foreground: #FAF8F4;
+  --popover: #111D33;
+  --popover-foreground: #FAF8F4;
+  --primary: #F0732B;
+  --primary-foreground: #0B1426;
+  --secondary: #16243F;
+  --secondary-foreground: #FAF8F4;
+  --muted: #16243F;
+  --muted-foreground: #A6B5CD;
+  --accent: #1C2E49;
+  --accent-foreground: #FAF8F4;
   --destructive: oklch(0.7040 0.1910 22.2160);
   --destructive-foreground: oklch(0.9850 0 0);
-  --border: oklch(0.2750 0 0);
-  --input: oklch(0.3250 0 0);
-  --ring: oklch(0.5560 0 0);
-  --chart-1: oklch(0.8100 0.1000 252);
-  --chart-2: oklch(0.6200 0.1900 260);
-  --chart-3: oklch(0.5500 0.2200 263);
-  --chart-4: oklch(0.4900 0.2200 264);
-  --chart-5: oklch(0.4200 0.1800 266);
-  --sidebar: oklch(0.2050 0 0);
-  --sidebar-foreground: oklch(0.9850 0 0);
-  --sidebar-primary: oklch(0.4880 0.2430 264.3760);
-  --sidebar-primary-foreground: oklch(0.9850 0 0);
-  --sidebar-accent: oklch(0.2690 0 0);
-  --sidebar-accent-foreground: oklch(0.9850 0 0);
-  --sidebar-border: oklch(0.2750 0 0);
-  --sidebar-ring: oklch(0.4390 0 0);
+  --border: #1C2E49;
+  --input: #283D5E;
+  --ring: #F0732B;
+  --chart-1: #F0732B;
+  --chart-2: #A6B5CD;
+  --chart-3: #F49B5C;
+  --chart-4: #6E82A2;
+  --chart-5: #F8BC8E;
+  --sidebar: #111D33;
+  --sidebar-foreground: #FAF8F4;
+  --sidebar-primary: #F0732B;
+  --sidebar-primary-foreground: #0B1426;
+  --sidebar-accent: #1C2E49;
+  --sidebar-accent-foreground: #FAF8F4;
+  --sidebar-border: #1C2E49;
+  --sidebar-ring: #F0732B;
   --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   --radius: 0.625rem;
@@ -162,6 +164,12 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+}
+
+/* Serif de marca (Spectral) p/ titulos de pagina — eco da landing.
+   Regra sem @layer: vence as camadas do Tailwind de forma deterministica. */
+.font-display {
+  font-family: var(--font-display), ui-serif, Georgia, Cambria, serif;
 }
 
 /* Scrollbar hidden utility (iOS-style smooth horizontal scroll) */
