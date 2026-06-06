@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Spectral } from "next/font/google";
 import "./globals.css";
 import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
 import ConvexClientProvider from "@shared/providers/ConvexClientProvider";
@@ -16,6 +16,16 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+// Spectral (serif) para titulos de pagina — eco da landing publica.
+// Variavel propria (--font-display) p/ nao colidir com o --font-spectral
+// que a landing escopa em .site-v2.
+const spectral = Spectral({
+  variable: "--font-display",
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -41,7 +51,7 @@ export const viewport = {
   // ignoram o limite para o gesto do usuario (acessibilidade preservada).
   maximumScale: 1,
   viewportFit: "cover" as const,
-  themeColor: "#1a1a1a",
+  themeColor: "#16243F",
 };
 
 export default function RootLayout({
@@ -53,7 +63,7 @@ export default function RootLayout({
     <ConvexAuthNextjsServerProvider>
       <html lang="pt-BR" suppressHydrationWarning>
         <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+          className={`${geistSans.variable} ${geistMono.variable} ${spectral.variable} antialiased`}
         >
           <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
             <ConvexClientProvider>

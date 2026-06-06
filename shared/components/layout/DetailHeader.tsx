@@ -29,7 +29,7 @@ export function DetailHeader({ title, backHref }: DetailHeaderProps) {
         Voltar
       </button>
       {title && (
-        <h1 className="text-lg font-medium truncate flex-1 min-w-0">
+        <h1 className="font-display text-lg font-semibold tracking-tight truncate flex-1 min-w-0">
           {title}
         </h1>
       )}
