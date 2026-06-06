@@ -12,6 +12,7 @@ import { mutation, query, type QueryCtx } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { requireAnyPermission } from "../_shared/requirePermission";
+import { espelharConjuge, vincularCriancaAoConjuge } from "./familiaHelpers";
 import { createFieldAuditLogs, createActionAuditLog } from "../_shared/auditHelpers";
 import { getTipoRol, type CargoEclesiastico, type StatusEntidade, type TipoRol } from "./tipoRolHelpers";
 import type { Doc } from "../_generated/dataModel";
@@ -560,6 +561,15 @@ export const tornarMembro = mutation({
       cargoEclesiastico: "MEMBRO_NAO_COMUNGANTE",
     });
 
+    // Se alguem ja apontava esta pessoa como conjuge (vinculo criado quando
+    // ela ainda nao era membro), espelha agora.
+    const apontante = (await ctx.db.query("membros").collect()).find(
+      (m) => m.conjugeId === entidadeId,
+    );
+    if (apontante) {
+      await ctx.db.patch(membroId, { conjugeId: apontante.entidadeId });
+    }
+
     const papeis = Array.from(
       new Set([...(entidade.papeis ?? []).filter((p) => p !== "DEPENDENTE"), "MEMBRO"])
     ) as typeof entidade.papeis;
@@ -644,13 +654,7 @@ export const vincularConjugeAdmin = mutation({
     if (!conjuge) throw new Error("Conjuge nao encontrado");
 
     await ctx.db.patch(membroId, { conjugeId: conjugeEntidadeId });
-    const conjugeMembro = await ctx.db
-      .query("membros")
-      .withIndex("by_entidade", (q) => q.eq("entidadeId", conjugeEntidadeId))
-      .first();
-    if (conjugeMembro && !conjugeMembro.conjugeId) {
-      await ctx.db.patch(conjugeMembro._id, { conjugeId: membro.entidadeId });
-    }
+    await espelharConjuge(ctx, membro.entidadeId, conjugeEntidadeId);
     return { ok: true };
   },
 });
@@ -723,6 +727,8 @@ export const adicionarFilhoAdmin = mutation({
       principal: true,
       criadoEm: Date.now(),
     });
+    // Filho pertence ao casal: vincula tambem ao conjuge, se houver
+    await vincularCriancaAoConjuge(ctx, responsavel.entidadeId, filhoEntidadeId);
     return { filhoEntidadeId };
   },
 });
@@ -753,6 +759,8 @@ export const vincularFilhoExistenteAdmin = mutation({
       principal: false,
       criadoEm: Date.now(),
     });
+    // Filho pertence ao casal: vincula tambem ao conjuge, se houver
+    await vincularCriancaAoConjuge(ctx, responsavel.entidadeId, filhoEntidadeId);
     return { ok: true };
   },
 });

@@ -3,6 +3,7 @@ import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { createFieldAuditLogs } from "../_shared/auditHelpers";
 import { filterSelfServiceFields } from "./selfServiceHelpers";
+import { espelharConjuge, vincularCriancaAoConjuge } from "./familiaHelpers";
 import type { Id } from "../_generated/dataModel";
 import { phonesMatch } from "../messaging/phoneUtils";
 import { makeFunctionReference } from "convex/server";
@@ -268,15 +269,7 @@ export const vincularConjuge = mutation({
     if (!conjugeEntidade) throw new Error("Conjuge nao encontrado");
 
     await ctx.db.patch(myMembro._id, { conjugeId: conjugeEntidadeId });
-
-    // Vincula o outro lado se for membro
-    const conjugeMembro = await ctx.db
-      .query("membros")
-      .withIndex("by_entidade", (q) => q.eq("entidadeId", conjugeEntidadeId))
-      .first();
-    if (conjugeMembro && !conjugeMembro.conjugeId) {
-      await ctx.db.patch(conjugeMembro._id, { conjugeId: myMembro.entidadeId });
-    }
+    await espelharConjuge(ctx, myMembro.entidadeId, conjugeEntidadeId);
 
     return { ok: true };
   },
@@ -394,6 +387,8 @@ export const adicionarFilho = mutation({
       principal: true,
       criadoEm: Date.now(),
     });
+    // Filho pertence ao casal: vincula tambem ao conjuge, se houver
+    await vincularCriancaAoConjuge(ctx, myMembro.entidadeId, filhoEntidadeId);
 
     // Departamento infantil: se idade derivavel <11, cria criancaPerfil
     const turma = turmaFromDataNascimento(dataNascimento);
@@ -474,6 +469,8 @@ export const vincularFilhoExistente = mutation({
       principal: false,
       criadoEm: Date.now(),
     });
+    // Filho pertence ao casal: vincula tambem ao conjuge, se houver
+    await vincularCriancaAoConjuge(ctx, myMembro.entidadeId, filhoEntidadeId);
     return { ok: true };
   },
 });

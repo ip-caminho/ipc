@@ -1,6 +1,6 @@
 import { convexTest } from "convex-test";
 import { describe, it, expect } from "vitest";
-import { api } from "../../_generated/api";
+import { api, internal } from "../../_generated/api";
 import type { Id } from "../../_generated/dataModel";
 import schema from "../../schema";
 import { modules } from "../../test.setup";
@@ -344,5 +344,103 @@ describe("listParaSecretario — agrupamento por familia", () => {
     });
     expect(linhas).toHaveLength(1);
     expect(linhas[0].entidade.nomeCompleto).toBe("Pedro Pesquisa");
+  });
+
+  it("adicionarFilhoAdmin vincula o filho tambem ao conjuge do responsavel", async () => {
+    const t = convexTest(schema, modules);
+    const admin = await seedAdmin(t);
+    const pai = await pessoa(t, "Pai Casal", "M");
+    const mae = await pessoa(t, "Mae Casal", "F");
+
+    await admin.mutation(api.membros.eclesiastico.vincularConjugeAdmin, {
+      membroId: pai.membroId,
+      conjugeEntidadeId: mae.entidadeId,
+    });
+    const { filhoEntidadeId } = await admin.mutation(api.membros.eclesiastico.adicionarFilhoAdmin, {
+      responsavelMembroId: pai.membroId,
+      nomeCompleto: "Filho do Casal",
+      dataNascimento: "2019-01-01",
+      sexo: "F",
+      batismoInfantil: false,
+    });
+
+    const responsaveis = await t.run(async (ctx) =>
+      ctx.db
+        .query("responsaveis")
+        .withIndex("by_crianca", (q) => q.eq("criancaEntidadeId", filhoEntidadeId))
+        .collect()
+    );
+    const ids = responsaveis.map((r) => r.responsavelEntidadeId);
+    expect(ids).toContain(pai.entidadeId);
+    expect(ids).toContain(mae.entidadeId);
+    expect(responsaveis.find((r) => r.responsavelEntidadeId === mae.entidadeId)?.tipo).toBe("MAE");
+  });
+
+  it("tornarMembro espelha o conjuge de quem ja apontava para a entidade", async () => {
+    const t = convexTest(schema, modules);
+    const admin = await seedAdmin(t);
+    const esposo = await pessoa(t, "Esposo Membro", "M");
+    // Esposa existe so como entidade (dependente), sem registro de membro
+    const esposaEntidadeId = await t.run(async (ctx) =>
+      ctx.db.insert("entidades", {
+        tipoEntidade: "PF",
+        papeis: ["DEPENDENTE"],
+        status: "ATIVO",
+        nomeCompleto: "Esposa Promovida",
+        sexo: "F",
+      })
+    );
+    await t.run(async (ctx) => {
+      await ctx.db.patch(esposo.membroId, { conjugeId: esposaEntidadeId });
+    });
+
+    const { membroId } = await admin.mutation(api.membros.eclesiastico.tornarMembro, {
+      entidadeId: esposaEntidadeId,
+    });
+
+    const novaMembro = await t.run(async (ctx) => ctx.db.get(membroId));
+    expect(novaMembro?.conjugeId).toBe(esposo.entidadeId);
+  });
+
+  it("migrateFamiliaBidirecional espelha conjuge e adiciona o conjuge como responsavel", async () => {
+    const t = convexTest(schema, modules);
+    const a = await pessoa(t, "Conjuge A", "M");
+    const b = await pessoa(t, "Conjuge B", "F");
+    // Vinculo assimetrico (so A aponta) + crianca com responsavel unico (A)
+    const criancaEntidadeId = await t.run(async (ctx) => {
+      await ctx.db.patch(a.membroId, { conjugeId: b.entidadeId });
+      const cid = await ctx.db.insert("entidades", {
+        tipoEntidade: "PF",
+        papeis: ["DEPENDENTE"],
+        status: "ATIVO",
+        nomeCompleto: "Crianca Migrada",
+        sexo: "M",
+      });
+      await ctx.db.insert("responsaveis", {
+        criancaEntidadeId: cid,
+        responsavelEntidadeId: a.entidadeId,
+        tipo: "PAI",
+        principal: true,
+        criadoEm: Date.now(),
+      });
+      return cid;
+    });
+
+    const resultado = await t.mutation(internal.membros.migrations.migrateFamiliaBidirecional, {});
+    expect(resultado).toEqual({ conjugesEspelhados: 1, responsaveisAdicionados: 1 });
+
+    const { mb, responsaveis } = await t.run(async (ctx) => ({
+      mb: await ctx.db.get(b.membroId),
+      responsaveis: await ctx.db
+        .query("responsaveis")
+        .withIndex("by_crianca", (q) => q.eq("criancaEntidadeId", criancaEntidadeId))
+        .collect(),
+    }));
+    expect(mb?.conjugeId).toBe(a.entidadeId);
+    expect(responsaveis.map((r) => r.responsavelEntidadeId)).toContain(b.entidadeId);
+
+    // Idempotencia: segunda rodada nao muda nada
+    const segunda = await t.mutation(internal.membros.migrations.migrateFamiliaBidirecional, {});
+    expect(segunda).toEqual({ conjugesEspelhados: 0, responsaveisAdicionados: 0 });
   });
 });
