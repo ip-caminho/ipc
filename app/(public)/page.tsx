@@ -1,21 +1,65 @@
-"use client";
-
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import type { Metadata } from "next";
 import Link from "next/link";
-import {
-  Church,
-  Clock,
-  MapPin,
-  Phone,
-  Mail,
-  MessageCircle,
-  Landmark,
-  GraduationCap,
-  BookOpen,
-} from "lucide-react";
-import { Button } from "@/shared/components/ui/button";
-import { Logo } from "@shared/components/layout/Logo";
+import { Spectral, Source_Sans_3 } from "next/font/google";
+import { fetchQuery } from "convex/nextjs";
+import { api } from "@/convex/_generated/api";
+import { RiseObserver } from "./RiseObserver";
+import "./landing.css";
+
+const spectral = Spectral({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  style: ["normal", "italic"],
+  variable: "--font-spectral",
+  display: "swap",
+});
+
+const sourceSans = Source_Sans_3({
+  subsets: ["latin"],
+  style: ["normal", "italic"],
+  variable: "--font-source-sans",
+  display: "swap",
+});
+
+export const metadata: Metadata = {
+  title: "Igreja Presbiteriana do Caminho — São Paulo",
+  description:
+    "Uma comunidade bíblica de discipulado, participando da missão de Deus neste mundo. Presbiteriana, em São Paulo, desde 2024.",
+};
+
+// Dados da igreja mudam raramente — revalida a cada 5 minutos
+export const revalidate = 300;
+
+type Horario = { dia: string; horario: string; tipo?: string };
+type Educacional = { turma: string; responsavel?: string };
+
+type IgrejaInfo = {
+  horarios?: Horario[];
+  educacional?: Educacional[];
+  endereco?: string;
+  googleMapsEmbed?: string;
+  whatsapp?: string;
+  telefone?: string;
+  email?: string;
+  banco?: string;
+  agencia?: string;
+  conta?: string;
+  pix?: string;
+} | null;
+
+type Turma = {
+  _id: string;
+  nome: string;
+  descricao?: string;
+  dataInicio: string;
+  dataFim?: string;
+  diaSemana?: string;
+  horario?: string;
+  local?: string;
+  instrutorNome?: string;
+  vagasRestantes?: number | null;
+  token?: string;
+};
 
 function formatWhatsappLink(phone: string): string {
   const digits = phone.replace(/\D/g, "");
@@ -63,7 +107,6 @@ function calcularEncontros(dataInicio: string, dataFim?: string, diaSemana?: str
   const fim = new Date(dataFim + "T12:00:00");
   if (isNaN(inicio.getTime()) || isNaN(fim.getTime())) return [];
 
-  // Avancar ate o primeiro diaSemana >= inicio
   const primeiro = new Date(inicio);
   while (primeiro.getDay() !== targetDay) {
     primeiro.setDate(primeiro.getDate() + 1);
@@ -78,23 +121,106 @@ function calcularEncontros(dataInicio: string, dataFim?: string, diaSemana?: str
   return datas;
 }
 
-export default function LandingPage() {
-  // @ts-ignore Convex TS2589
-  const info = useQuery(api.preferencias.queries.getIgrejaInfo);
-  // @ts-ignore Convex TS2589
-  const turmas = useQuery(api.turmas.queries.listTurmasAbertas);
-
-  if (info === undefined) {
-    return (
-      <div className="flex h-dvh items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-      </div>
-    );
+async function getDados(): Promise<{ info: IgrejaInfo; turmas: Turma[] }> {
+  try {
+    const [info, turmas] = await Promise.all([
+      fetchQuery(api.preferencias.queries.getIgrejaInfo) as Promise<IgrejaInfo>,
+      fetchQuery(api.turmas.queries.listTurmasAbertas) as Promise<Turma[]>,
+    ]);
+    return { info, turmas: turmas ?? [] };
+  } catch {
+    // Convex indisponivel (ex.: build sem env) — renderiza so o conteudo estatico
+    return { info: null, turmas: [] };
   }
+}
 
-  const nome = info?.nome || "Igreja Presbiteriana";
-  const descricao = info?.descricao || "";
-  const foto = info?.foto;
+const EIXOS = [
+  {
+    num: "01",
+    key: "Comunidade",
+    body: "Não somos um público que assiste a um culto, nem uma plataforma. Somos pessoas conhecidas pelo nome, compartilhando a mesa, o tempo e a vida ao longo dos anos.",
+    bref: "Atos 2.42",
+  },
+  {
+    num: "02",
+    key: "Bíblica",
+    body: "A Escritura lê a gente antes de a gente ler a Escritura. Ela molda como vemos a cidade, o trabalho, a família — e não o contrário.",
+    bref: "2 Timóteo 3.16–17",
+  },
+  {
+    num: "03",
+    key: "De discipulado",
+    body: "Caminhamos atrás de Jesus juntos, aprendendo devagar a pensar, sentir e viver como Ele. Isso leva uma vida inteira, e tudo bem.",
+    bref: "Mateus 28.19–20",
+  },
+  {
+    num: "04",
+    key: "Participando da missão de Deus",
+    body: "A missão é de Deus, não nossa. Entramos nela onde já estamos — na segunda-feira, no bairro, no trabalho — enquanto esperamos o mundo que há de vir.",
+    bref: "Jeremias 29.7",
+  },
+];
+
+const CREMOS = [
+  {
+    roman: "I.",
+    thesis: "O evangelho é o centro.",
+    body: "Não um dos temas, não o ponto de partida pra temas melhores — o centro. Que Deus, em Cristo, reconcilia consigo um povo que não tinha como se reconciliar. Tudo que fazemos como igreja deriva disso, ou é decoração.",
+  },
+  {
+    roman: "II.",
+    thesis: "A Escritura é a voz mais clara disponível.",
+    body: "Existem outras vozes — tradição, experiência, cultura — e todas importam. Mas só a Bíblia fala com autoridade final sobre quem Deus é, quem somos e pra onde as coisas vão. Ler bem, juntos e devagar, é o trabalho de uma vida.",
+  },
+  {
+    roman: "III.",
+    thesis: "A igreja é povo, não lugar.",
+    body: "A igreja não é o prédio onde nos encontramos, nem o horário do culto, nem a denominação no papel. É um povo chamado por Deus, reunido por Ele, enviado por Ele. O prédio serve; o povo é que é.",
+  },
+  {
+    roman: "IV.",
+    thesis: "A história tem um destino.",
+    body: "O mundo não está em colapso aleatório nem em progresso inevitável. Vai em direção a um momento concreto: a volta de Cristo, céus novos e terra nova. Isso muda como a gente trabalha, chora, descansa e espera — hoje.",
+  },
+];
+
+const VIVEMOS = [
+  {
+    label: "No culto, aos domingos",
+    body: "Nos reunimos pra ouvir a Palavra pregada, cantar juntos, orar juntos, confessar juntos, comer juntos ao redor da mesa do Senhor. É o centro da semana, não um apêndice dela. O culto não existe pra nos entreter; existe pra nos formar.",
+  },
+  {
+    label: "Nos Pequenos Grupos, durante a semana",
+    body: "O culto nos reúne; o Pequeno Grupo nos conhece. Em casas, em mesas, em grupos de oito a doze pessoas, conversamos sobre o texto bíblico, sobre a semana real, sobre os tropeços e as alegrias concretas. É onde a teologia deixa de ser abstrata.",
+  },
+  {
+    label: "À mesa, sempre que possível",
+    body: "Comer junto é um ato teológico. Abrimos a casa, dividimos o pão, ouvimos as histórias uns dos outros. Boa parte do discipulado da comunidade acontece entre o prato e o cafezinho, sem pauta, sem liturgia — só com tempo.",
+  },
+  {
+    label: "Em casa, onde tudo se prova",
+    body: "A fé que não toca a cozinha, o quarto do filho, a planilha do mês, o argumento com o vizinho — essa fé ainda não chegou. A casa é o laboratório onde o que cremos vira o que somos.",
+  },
+];
+
+const MUNDO = [
+  {
+    label: "A segunda-feira é o maior campo missionário",
+    body: "A maior parte da vida cristã não acontece no culto — acontece no trabalho, no trânsito, na reunião das 10h, na conversa com o colega de mesa. Formamos uns aos outros pra pensar vocacionalmente sobre o expediente: o ofício é adoração.",
+  },
+  {
+    label: "Antes da cidade, o prédio",
+    body: "Queremos amar a cidade, mas começamos pelo quarteirão. Pelo porteiro, pela padaria da esquina, pelos vizinhos de elevador. A missão global passa pelo nome do síndico.",
+  },
+  {
+    label: "São Paulo é nosso endereço",
+    body: "Não somos uma igreja genérica que poderia estar em qualquer cidade. Estamos aqui, neste fuso, neste trânsito, nesta densidade, nesta desigualdade. A cidade não é pano de fundo — é o lugar concreto pra onde fomos enviados.",
+  },
+];
+
+export default async function LandingPage() {
+  const { info, turmas } = await getDados();
+
   const horarios = info?.horarios || [];
   const educacional = info?.educacional || [];
   const endereco = info?.endereco || "";
@@ -107,313 +233,486 @@ export default function LandingPage() {
   const conta = info?.conta || "";
   const pix = info?.pix || "";
 
+  const mapsUrl = endereco
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(endereco)}`
+    : "";
+  const wazeUrl = endereco
+    ? `https://waze.com/ul?q=${encodeURIComponent(endereco)}&navigate=yes`
+    : "";
+
   return (
-    <div className="min-h-dvh bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b border-border">
-        <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Logo className="h-6" />
-            <span className="font-medium text-sm">{nome}</span>
+    <div className={`site-v2 ${spectral.variable} ${sourceSans.variable}`}>
+      <RiseObserver />
+
+      {/* =========================== HEADER =========================== */}
+      <header className="site">
+        <div className="site-inner">
+          <a href="#top" className="brand" aria-label="Igreja Presbiteriana do Caminho">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.png" alt="IPC" />
+            <span className="bar" />
+            <span className="name">
+              <span className="l1">Igreja Presbiteriana</span>
+              <span className="l2">do Caminho</span>
+            </span>
+          </a>
+          <nav className="primary" aria-label="Principal">
+            <a href="#cremos">Cremos</a>
+            <a href="#vivemos">Vivemos</a>
+            <a href="#mundo">Mundo</a>
+            <a href="#visite">Visite</a>
+          </nav>
+          <div className="header-cta">
+            <Link href="/signin" className="btn btn-outline">
+              Área de Membros&nbsp;→
+            </Link>
           </div>
-          <Button asChild size="sm" variant="outline">
-            <Link href="/signin">Area do membro</Link>
-          </Button>
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-4 py-8 space-y-12">
-        {/* Hero */}
-        <section className="text-center space-y-4">
-          {foto ? (
-            <img
-              src={foto}
-              alt={nome}
-              className="w-full max-h-80 object-cover rounded-xl border border-border"
-            />
-          ) : (
-            <div className="w-full h-48 bg-muted rounded-xl border border-border flex items-center justify-center">
-              <Church className="h-16 w-16 text-muted-foreground" />
+      <main id="top">
+        {/* =========================== HERO =========================== */}
+        <section className="hero">
+          <div className="wrap-wide">
+            <p className="eyebrow">São Paulo · Comunidade Presbiteriana</p>
+            <h1>
+              <span className="ln">Uma comunidade bíblica de discipulado,</span>
+              <span className="ln">participando da missão de Deus neste mundo.</span>
+            </h1>
+            <p className="sub">Presbiteriana. No centro de São Paulo. Pequena por escolha.</p>
+            <p className="refs">
+              <span>Reformada</span>
+              <span className="sep">·</span>
+              <span>Westminster</span>
+              <span className="sep">·</span>
+              <span>Desde 2024</span>
+            </p>
+            <div className="cta-row">
+              <a href="#visite" className="btn btn-primary">
+                Venha visitar
+              </a>
+              <a href="#eixos" className="link-quiet">
+                Conheça nossa comunidade
+              </a>
             </div>
-          )}
-          <h1 className="text-2xl font-medium text-foreground">{nome}</h1>
-          {descricao && (
-            <p className="text-muted-foreground max-w-2xl mx-auto">{descricao}</p>
-          )}
+          </div>
         </section>
 
-        {/* Boletim dominical — apenas aos domingos */}
-        {new Date().getDay() === 0 && (
-          <section className="text-center">
-            <Button asChild size="lg" className="gap-2">
-              <Link href="/culto">
-                <Church className="h-4 w-4" />
-                Boletim do Culto Dominical
-              </Link>
-            </Button>
-          </section>
-        )}
-
-        {/* Horários dos cultos */}
-        {horarios.length > 0 && (
-          <section className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-muted-foreground" />
-              <h2 className="text-lg font-medium">Horários dos cultos</h2>
+        {/* =========================== EIXOS =========================== */}
+        <section id="eixos">
+          <div className="wrap-wide">
+            <div className="section-head" data-rise>
+              <p className="eyebrow">O que nos define em quatro palavras</p>
+              <h2>Cada palavra tem peso.</h2>
+              <span className="title-rule" />
             </div>
-            <div className="border border-border rounded-xl overflow-hidden">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-border bg-muted/50">
-                    <th className="text-left text-xs font-medium text-muted-foreground px-4 py-2">Dia</th>
-                    <th className="text-left text-xs font-medium text-muted-foreground px-4 py-2">Horario</th>
-                    <th className="text-left text-xs font-medium text-muted-foreground px-4 py-2">Culto</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {horarios.map((h, i) => (
-                    <tr key={i} className="border-b border-border last:border-0">
-                      <td className="px-4 py-2.5 text-sm">{h.dia}</td>
-                      <td className="px-4 py-2.5 text-sm font-medium">{h.horario}</td>
-                      <td className="px-4 py-2.5 text-sm text-muted-foreground">{h.tipo}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        )}
-
-        {/* Departamento Educacional */}
-        {educacional.length > 0 && (
-          <section className="space-y-3">
-            <div className="flex items-center gap-2">
-              <GraduationCap className="h-4 w-4 text-muted-foreground" />
-              <h2 className="text-lg font-medium">Departamento Educacional</h2>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-              {educacional.map((e, i) => (
-                <div key={i} className="border border-border rounded-xl p-4">
-                  <p className="text-sm font-medium">{e.turma}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{e.responsavel}</p>
+            <div className="eixos">
+              {EIXOS.map((e, i) => (
+                <div key={e.num} className="eixo" data-rise style={{ "--i": i } as React.CSSProperties}>
+                  <div className="num">{e.num}</div>
+                  <div className="key">{e.key}</div>
+                  <div className="body">
+                    <p>{e.body}</p>
+                    <span className="bref">{e.bref}</span>
+                  </div>
                 </div>
               ))}
             </div>
+          </div>
+        </section>
+
+        {/* =========================== CONTRASTE =========================== */}
+        <section className="inverse" id="contraste">
+          <div className="wrap">
+            <div className="section-head" data-rise>
+              <p className="eyebrow">Antes de qualquer outra conversa</p>
+              <h2>O que você não vai encontrar aqui.</h2>
+              <span className="title-rule" />
+            </div>
+            <div className="negatives">
+              <p data-rise style={{ "--i": 0 } as React.CSSProperties}>
+                Não somos uma igreja performática. Não temos iluminação cênica, fumaça, palco, banda
+                buscando viralizar.
+              </p>
+              <p data-rise style={{ "--i": 1 } as React.CSSProperties}>
+                Não somos descolados, não estamos competindo por atenção com o algoritmo, não estamos
+                preocupados em parecer relevantes pra uma geração específica.
+              </p>
+              <p data-rise style={{ "--i": 2 } as React.CSSProperties}>
+                Não somos influentes — nem queremos ser. Não temos pastor-celebridade, programa de TV,
+                linha de produtos, nem estratégia de marca.
+              </p>
+              <p data-rise style={{ "--i": 3 } as React.CSSProperties}>
+                Não somos um evento dominical produzido pra você consumir, e depois voltar pra casa.
+              </p>
+            </div>
+          </div>
+        </section>
+        <div className="contraste-solo">
+          <p className="emphasis" data-rise>
+            Somos uma comunidade aprendendo, junto, a se parecer com <span className="hl">Cristo</span>{" "}
+            — começando pela segunda-feira.
+          </p>
+        </div>
+
+        {/* =========================== CREMOS =========================== */}
+        <section id="cremos">
+          <div className="wrap">
+            <div className="section-head" data-rise>
+              <p className="eyebrow">O que cremos — e por quê</p>
+              <h2>O que cremos.</h2>
+              <span className="title-rule" />
+            </div>
+            <div className="creed">
+              {CREMOS.map((c) => (
+                <div key={c.roman} className="article" data-rise>
+                  <div className="roman">{c.roman}</div>
+                  <p className="thesis">{c.thesis}</p>
+                  <p>{c.body}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* =========================== VIVEMOS =========================== */}
+        <section id="vivemos">
+          <div className="wrap-wide">
+            <div className="section-head" data-rise>
+              <p className="eyebrow">Como isso vira semana</p>
+              <h2>Como vivemos em comunidade.</h2>
+              <span className="title-rule" />
+            </div>
+            <div className="practice">
+              {VIVEMOS.map((v) => (
+                <div key={v.label} className="row" data-rise>
+                  <div className="label">{v.label}</div>
+                  <p className="body">{v.body}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* =========================== MUNDO =========================== */}
+        <section id="mundo">
+          <div className="wrap-wide">
+            <div className="section-head" data-rise>
+              <p className="eyebrow">A cidade, o prédio, a mesa</p>
+              <h2>O que fazemos no mundo.</h2>
+              <span className="title-rule" />
+            </div>
+            <div className="practice">
+              {MUNDO.map((m) => (
+                <div key={m.label} className="row" data-rise>
+                  <div className="label">{m.label}</div>
+                  <p className="body">{m.body}</p>
+                </div>
+              ))}
+            </div>
+            <p className="closing" data-rise>
+              Tudo isso com os olhos no horizonte: um dia o Rei volta, enxuga toda lágrima, e a cidade
+              inteira — não só a igreja — é feita nova. Trabalhamos, esperamos e descansamos dentro
+              dessa promessa.
+            </p>
+          </div>
+        </section>
+
+        {/* =========================== EDUCACIONAL =========================== */}
+        {educacional.length > 0 && (
+          <section id="formacao">
+            <div className="wrap-wide">
+              <div className="section-head" data-rise>
+                <p className="eyebrow">Departamento educacional</p>
+                <h2>Formação.</h2>
+                <span className="title-rule" />
+              </div>
+              <div className="practice">
+                {educacional.map((e, i) => (
+                  <div key={i} className="row" data-rise>
+                    <div className="label">{e.turma}</div>
+                    <p className="body">{e.responsavel}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
           </section>
         )}
 
-        {/* Turmas e cursos abertos */}
-        {turmas && turmas.length > 0 && (
-          <section className="space-y-3">
-            <div className="flex items-center gap-2">
-              <BookOpen className="h-4 w-4 text-muted-foreground" />
-              <h2 className="text-lg font-medium">Cursos abertos</h2>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {turmas.map((t: any) => {
-                const encontros = calcularEncontros(t.dataInicio, t.dataFim, t.diaSemana);
-                return (
-                  <div key={t._id} className="border border-border rounded-xl p-5 space-y-4 flex flex-col">
-                    <div className="flex-1 space-y-3">
+        {/* =========================== CURSOS ABERTOS =========================== */}
+        {turmas.length > 0 && (
+          <section id="cursos">
+            <div className="wrap-wide">
+              <div className="section-head" data-rise>
+                <p className="eyebrow">Inscrições abertas</p>
+                <h2>Cursos e turmas.</h2>
+                <span className="title-rule" />
+              </div>
+              <div className="cursos-grid">
+                {turmas.map((t) => {
+                  const encontros = calcularEncontros(t.dataInicio, t.dataFim, t.diaSemana);
+                  return (
+                    <div key={t._id} className="curso-card" data-rise>
                       <div>
-                        <h3 className="text-base font-medium">{t.nome}</h3>
-                        {t.descricao && (
-                          <p className="text-sm text-muted-foreground mt-1">{t.descricao}</p>
-                        )}
+                        <h3>{t.nome}</h3>
+                        {t.descricao && <p className="desc">{t.descricao}</p>}
                       </div>
-
-                      <div className="space-y-1.5 text-sm">
-                        <div className="flex items-start gap-2">
-                          <Clock className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
-                          <div className="text-muted-foreground">
-                            <div>
-                              <span className="font-medium text-foreground">Início:</span>{" "}
-                              {formatDate(t.dataInicio)}
-                              {t.dataFim && ` · Fim: ${formatDate(t.dataFim)}`}
-                            </div>
-                            {t.diaSemana && (
-                              <div>
-                                {DIA_LABELS[t.diaSemana]}{t.horario && `s às ${t.horario}`}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
+                      <p className="meta">
+                        <strong>Início:</strong> {formatDate(t.dataInicio)}
+                        {t.dataFim && (
+                          <>
+                            {" "}
+                            · <strong>Fim:</strong> {formatDate(t.dataFim)}
+                          </>
+                        )}
+                        {t.diaSemana && (
+                          <>
+                            <br />
+                            {DIA_LABELS[t.diaSemana]}
+                            {t.horario && `s às ${t.horario}`}
+                          </>
+                        )}
                         {t.local && (
-                          <div className="flex items-center gap-2 text-muted-foreground">
-                            <MapPin className="h-4 w-4 shrink-0" />
-                            <span>{t.local}</span>
-                          </div>
+                          <>
+                            <br />
+                            {t.local}
+                          </>
                         )}
-
                         {t.instrutorNome && (
-                          <div className="flex items-center gap-2 text-muted-foreground">
-                            <GraduationCap className="h-4 w-4 shrink-0" />
-                            <span>{t.instrutorNome}</span>
-                          </div>
+                          <>
+                            <br />
+                            Com {t.instrutorNome}
+                          </>
                         )}
-
-                        {t.vagasRestantes !== null && t.vagasRestantes > 0 && t.vagasRestantes < 5 && (
-                          <div className="text-yellow-600 dark:text-yellow-500 font-medium text-xs">
-                            ⚠ Apenas {t.vagasRestantes} vagas restantes
-                          </div>
+                      </p>
+                      {t.vagasRestantes !== null &&
+                        t.vagasRestantes !== undefined &&
+                        t.vagasRestantes > 0 &&
+                        t.vagasRestantes < 5 && (
+                          <p className="vagas">Apenas {t.vagasRestantes} vagas restantes</p>
                         )}
-                      </div>
-
                       {encontros.length > 0 && (
-                        <div className="border-t border-border pt-3">
-                          <p className="text-xs font-medium text-muted-foreground mb-2">
-                            Encontros previstos ({encontros.length})
-                          </p>
-                          <div className="flex flex-wrap gap-1.5">
+                        <div>
+                          <p className="chips-label">Encontros previstos ({encontros.length})</p>
+                          <div className="chips">
                             {encontros.map((data) => (
-                              <span
-                                key={data}
-                                className="text-xs px-2 py-1 rounded-md bg-muted text-muted-foreground"
-                              >
-                                {formatDateShort(data)}
-                              </span>
+                              <span key={data}>{formatDateShort(data)}</span>
                             ))}
                           </div>
                         </div>
                       )}
+                      {t.token && (
+                        <div className="cta">
+                          <Link href={`/inscricao/${t.token}`} className="btn btn-primary">
+                            Inscreva-se
+                          </Link>
+                        </div>
+                      )}
                     </div>
-                    {t.token && (
-                      <Button asChild size="sm" className="w-full">
-                        <Link href={`/inscricao/${t.token}`}>Inscreva-se</Link>
-                      </Button>
-                    )}
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
           </section>
         )}
 
-        {/* Endereço + Google Maps */}
-        {endereco && (
-          <section className="space-y-3">
-            <div className="flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-muted-foreground" />
-              <h2 className="text-lg font-medium">Endereço</h2>
+        {/* =========================== VISITE =========================== */}
+        <section id="visite" className="visite">
+          <div className="wrap">
+            <div className="section-head" data-rise>
+              <p className="eyebrow">Porta aberta, domingo de manhã</p>
+              <h2>Venha visitar.</h2>
+              <span className="title-rule" />
             </div>
-            <p className="text-sm text-muted-foreground">{endereco}</p>
+            <p className="lead" data-rise>
+              Sem cadastro, sem formulário, sem crachá de visitante. A porta está aberta no domingo de
+              manhã. Chega, senta onde quiser, fica o tempo que precisar. Se quiser conversar, a gente
+              conversa; se preferir só observar, tudo bem também.
+            </p>
+
+            <dl className="visite-meta" data-rise>
+              <dt>Quando</dt>
+              <dd>
+                {horarios.length > 0 ? (
+                  horarios.map((h, i) =>
+                    i === 0 ? (
+                      <div key={i}>
+                        <p className="big">
+                          {h.dia}, {h.horario}
+                        </p>
+                        {h.tipo && <p className="tipo">{h.tipo}</p>}
+                      </div>
+                    ) : (
+                      <p key={i} className="place" style={{ marginTop: "var(--space-4)" }}>
+                        {h.dia}, {h.horario}
+                        {h.tipo && ` — ${h.tipo}`}
+                      </p>
+                    ),
+                  )
+                ) : (
+                  <p className="big">Domingos pela manhã</p>
+                )}
+              </dd>
+
+              <dt>Onde</dt>
+              <dd className="place">{endereco || "São Paulo, SP"}</dd>
+
+              {endereco && (
+                <div className="map-row">
+                  <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary">
+                    Ver no Google Maps
+                  </a>
+                  <a href={wazeUrl} target="_blank" rel="noopener noreferrer" className="link-quiet">
+                    Ver no Waze →
+                  </a>
+                </div>
+              )}
+            </dl>
+
             {googleMapsEmbed && (
-              <div className="border border-border rounded-xl overflow-hidden">
+              <div className="map-embed" data-rise>
                 <iframe
                   src={googleMapsEmbed}
-                  width="100%"
-                  height="300"
-                  style={{ border: 0 }}
                   allowFullScreen
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
-                  title="Localizacao da igreja"
+                  title="Localização da igreja"
                 />
               </div>
             )}
-          </section>
-        )}
 
-        {/* Contato */}
-        {(whatsapp || telefone || email) && (
-          <section className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Phone className="h-4 w-4 text-muted-foreground" />
-              <h2 className="text-lg font-medium">Contato</h2>
+            <div className="first-sunday" data-rise>
+              <h3>No seu primeiro domingo</h3>
+              <p>
+                O culto dura cerca de 90 minutos. Cantamos, lemos a Bíblia em voz alta, oramos, ouvimos
+                um sermão expositivo — normalmente entre 35 e 45 minutos sobre um texto específico — e
+                terminamos com uma oração final. Não há passagem de pauta, não há momento constrangedor
+                pra visitantes se identificarem, não há pressão pra participar de nada.
+              </p>
+              <p>
+                Vista-se como estiver confortável. Calça jeans, camisa, vestido, tênis — todas as opções
+                estão certas. A gente se importa que você esteja ali; o resto é detalhe.
+              </p>
+              <p>
+                Crianças são bem-vindas no culto inteiro. Se o bebê chorar, a mãe chora junto, a igreja
+                ri junto, e o sermão continua. Há um espaço tranquilo pra amamentação e troca, se
+                precisar.
+              </p>
+              <p>Depois do culto, tem café. Fique, se quiser. Se não puder, a gente te vê no próximo domingo.</p>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {whatsapp && (
-                <a
-                  href={formatWhatsappLink(whatsapp)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 border border-border rounded-xl p-4 hover:bg-muted transition-colors"
-                >
-                  <MessageCircle className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">WhatsApp</p>
-                    <p className="text-sm font-medium">{whatsapp}</p>
-                  </div>
-                </a>
-              )}
-              {telefone && (
-                <a
-                  href={`tel:${telefone.replace(/\D/g, "")}`}
-                  className="flex items-center gap-3 border border-border rounded-xl p-4 hover:bg-muted transition-colors"
-                >
-                  <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Telefone</p>
-                    <p className="text-sm font-medium">{telefone}</p>
-                  </div>
-                </a>
-              )}
-              {email && (
-                <a
-                  href={`mailto:${email}`}
-                  className="flex items-center gap-3 border border-border rounded-xl p-4 hover:bg-muted transition-colors"
-                >
-                  <Mail className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Email</p>
-                    <p className="text-sm font-medium">{email}</p>
-                  </div>
-                </a>
-              )}
-            </div>
-          </section>
-        )}
 
-        {/* Dados bancarios */}
+            <p className="ceia" data-rise>
+              Celebramos a Ceia do Senhor todos os domingos, e a mesa é do Senhor — não da IPC. Se você
+              é cristão batizado e em comunhão com alguma igreja, você é bem-vindo a participar. Se não
+              é, escute, observe, pense — e converse com um dos presbíteros depois, se quiser.
+            </p>
+
+            <p className="visite-wait" data-rise>
+              Estamos esperando você.
+            </p>
+          </div>
+        </section>
+
+        {/* =========================== DADOS BANCÁRIOS =========================== */}
         {(banco || pix) && (
-          <section className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Landmark className="h-4 w-4 text-muted-foreground" />
-              <h2 className="text-lg font-medium">Dados bancarios</h2>
-            </div>
-            <div className="border border-border rounded-xl p-4 space-y-2">
-              {banco && (
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Banco</span>
-                  <span className="font-medium">{banco}</span>
-                </div>
-              )}
-              {agencia && (
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Agencia</span>
-                  <span className="font-medium">{agencia}</span>
-                </div>
-              )}
-              {conta && (
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Conta</span>
-                  <span className="font-medium">{conta}</span>
-                </div>
-              )}
-              {pix && (
-                <div className="flex justify-between text-sm border-t border-border pt-2">
-                  <span className="text-muted-foreground">PIX</span>
-                  <span className="font-medium">{pix}</span>
-                </div>
-              )}
+          <section id="ofertas">
+            <div className="wrap">
+              <div className="section-head" data-rise>
+                <p className="eyebrow">Dízimos e ofertas</p>
+                <h2>Dados bancários.</h2>
+                <span className="title-rule" />
+              </div>
+              <dl className="bank" data-rise>
+                {banco && (
+                  <div className="row">
+                    <dt>Banco</dt>
+                    <dd>{banco}</dd>
+                  </div>
+                )}
+                {agencia && (
+                  <div className="row">
+                    <dt>Agência</dt>
+                    <dd>{agencia}</dd>
+                  </div>
+                )}
+                {conta && (
+                  <div className="row">
+                    <dt>Conta</dt>
+                    <dd>{conta}</dd>
+                  </div>
+                )}
+                {pix && (
+                  <div className="row pix">
+                    <dt>PIX</dt>
+                    <dd>{pix}</dd>
+                  </div>
+                )}
+              </dl>
             </div>
           </section>
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-border mt-12">
-        <div className="max-w-5xl mx-auto px-4 py-6 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <p className="text-xs text-muted-foreground">
-            {new Date().getFullYear()} {nome}
-          </p>
-          <Link
-            href="/signin"
-            className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground transition-colors"
-          >
-            Area do membro
-          </Link>
+      {/* =========================== FOOTER =========================== */}
+      <footer className="site">
+        <div className="foot-wrap">
+          <div className="foot-cols">
+            <div className="foot-brand">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo.png" alt="IPC" />
+              <p className="tag">
+                Uma comunidade aprendendo, junto, a se parecer com Cristo — começando pela
+                segunda-feira.
+              </p>
+            </div>
+            <div className="foot-contato">
+              <div>
+                <h4>Contato</h4>
+                {endereco && <p>{endereco}</p>}
+                {whatsapp && (
+                  <p>
+                    <a
+                      href={formatWhatsappLink(whatsapp)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="foot-link"
+                    >
+                      WhatsApp {whatsapp}
+                    </a>
+                  </p>
+                )}
+                {telefone && (
+                  <p>
+                    <a href={`tel:${telefone.replace(/\D/g, "")}`} className="foot-link">
+                      {telefone}
+                    </a>
+                  </p>
+                )}
+                {email && (
+                  <p>
+                    <a href={`mailto:${email}`} className="foot-link">
+                      {email}
+                    </a>
+                  </p>
+                )}
+              </div>
+              <div>
+                <h4>Tradição</h4>
+                <p>Presbiteriana reformada. Alinhados à Confissão de Fé de Westminster (1647).</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="foot-bottom">
+            <Link href="/signin" className="members-link">
+              Área de Membros →
+            </Link>
+            <div className="colofao">
+              Composto em <span className="hl">Spectral</span> &amp;{" "}
+              <span className="hl">Source Sans 3</span>. São Paulo, {new Date().getFullYear()}.
+              <br />© {new Date().getFullYear()} Igreja Presbiteriana do Caminho.
+            </div>
+          </div>
         </div>
       </footer>
     </div>
