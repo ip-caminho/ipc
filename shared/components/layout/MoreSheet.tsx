@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -33,6 +34,16 @@ interface Props {
 
 export function MoreSheet({ open, onOpenChange }: Props) {
   const pathname = usePathname();
+
+  // Protecao contra tap-through: o sheet desliza e o rodape (Modo escuro/Sair)
+  // para exatamente debaixo do dedo que tocou o "Mais" na bottom bar — um
+  // ghost click ou segundo toque durante a animacao (500ms) disparava esses
+  // itens. Bloqueia pointer-events do conteudo ate a animacao terminar.
+  const [armed, setArmed] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setArmed(open), open ? 550 : 0);
+    return () => clearTimeout(t);
+  }, [open]);
   const { name, role, foto } = useAuth();
   const { mode, setMode, canToggle } = useNavigationMode();
   const { theme, setTheme } = useTheme();
@@ -63,7 +74,11 @@ export function MoreSheet({ open, onOpenChange }: Props) {
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-[85vh] rounded-t-2xl px-0">
+      {/* z-[60] fica acima da FloatingBottomBar (z-[56]) — sem isso o rodape do
+          sheet (Modo escuro/Sair) ficava escondido atras da barra flutuante */}
+      <SheetContent side="bottom" className="z-[60] h-[85vh] rounded-t-2xl px-0">
+        {/* Escudo anti tap-through: captura toques enquanto o sheet desliza */}
+        {!armed && <div className="absolute inset-0 z-50" aria-hidden />}
         <SheetHeader className="px-5 pb-3">
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10">
