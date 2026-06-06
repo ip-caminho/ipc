@@ -273,6 +273,10 @@ export default async function LandingPage() {
       <main id="top">
         {/* =========================== HERO =========================== */}
         <section className="hero">
+          {/* TROCAR por foto real da igreja (public/landing/hero.jpg) */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="hero-bg" src="/landing/hero.jpg" alt="" aria-hidden="true" />
+          <div className="hero-overlay" />
           <div className="wrap-wide">
             <p className="eyebrow">São Paulo · Comunidade Presbiteriana</p>
             <h1>
@@ -355,6 +359,16 @@ export default async function LandingPage() {
           </p>
         </div>
 
+        {/* =========================== FAIXA DE FOTO =========================== */}
+        {/* TROCAR por foto real da igreja (public/landing/comunidade.jpg) */}
+        <div className="photo-band">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/landing/comunidade.jpg" alt="Comunidade reunida" />
+          <div className="cap">
+            <p>Gente conhecida pelo nome, ao longo dos anos.</p>
+          </div>
+        </div>
+
         {/* =========================== CREMOS =========================== */}
         <section id="cremos">
           <div className="wrap">
@@ -362,6 +376,11 @@ export default async function LandingPage() {
               <p className="eyebrow">O que cremos — e por quê</p>
               <h2>O que cremos.</h2>
               <span className="title-rule" />
+            </div>
+            {/* TROCAR por foto real da igreja (public/landing/culto.jpg) */}
+            <div className="figure" data-rise>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/landing/culto.jpg" alt="Comunidade no culto" />
             </div>
             <div className="creed">
               {CREMOS.map((c) => (
@@ -382,6 +401,11 @@ export default async function LandingPage() {
               <p className="eyebrow">Como isso vira semana</p>
               <h2>Como vivemos em comunidade.</h2>
               <span className="title-rule" />
+            </div>
+            {/* TROCAR por foto real da igreja (public/landing/grupos.jpg) */}
+            <div className="figure" data-rise>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/landing/grupos.jpg" alt="Encontro de pequeno grupo" />
             </div>
             <div className="practice">
               {VIVEMOS.map((v) => (
@@ -523,6 +547,11 @@ export default async function LandingPage() {
               <p className="eyebrow">Porta aberta, domingo de manhã</p>
               <h2>Venha visitar.</h2>
               <span className="title-rule" />
+            </div>
+            {/* TROCAR por foto real da igreja (public/landing/adoracao.jpg) */}
+            <div className="figure" data-rise>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/landing/adoracao.jpg" alt="Culto de adoração" />
             </div>
             <p className="lead" data-rise>
               Sem cadastro, sem formulário, sem crachá de visitante. A porta está aberta no domingo de
