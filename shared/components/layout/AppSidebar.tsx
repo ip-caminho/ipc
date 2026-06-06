@@ -34,7 +34,8 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { Button } from "@/shared/components/ui/button";
 import { Switch } from "@/shared/components/ui/switch";
-import { Church, LogOut, ChevronRight } from "lucide-react";
+import { LogOut, ChevronRight } from "lucide-react";
+import { Logo } from "@shared/components/layout/Logo";
 import { api } from "@/convex/_generated/api";
 import { useAuth } from "@shared/providers/PermissionsProvider";
 import { useNavigationMode } from "@shared/providers/NavigationModeProvider";
@@ -103,8 +104,7 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarHeader className="border-b px-4 py-3">
         <div className="flex items-center gap-2">
-          <Church className="h-6 w-6" />
-          <span className="font-bold text-lg">IPC</span>
+          <Logo className="h-8" />
         </div>
       </SidebarHeader>
 

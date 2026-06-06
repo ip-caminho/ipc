@@ -6,7 +6,7 @@ import { api } from "@/convex/_generated/api";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
-import { Church } from "lucide-react";
+import { Logo } from "@shared/components/layout/Logo";
 
 import { useAuth } from "@shared/providers/PermissionsProvider";
 import { Button } from "@shared/components/ui/button";
@@ -53,7 +53,7 @@ function BootstrapForm() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-2">
-            <Church className="h-10 w-10" />
+            <Logo className="h-12" />
           </div>
           <CardTitle>Configuração Inicial</CardTitle>
           <CardDescription>
