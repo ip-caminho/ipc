@@ -8,7 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/sha
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
-import { Church, AlertTriangle } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
+import { Logo } from "@shared/components/layout/Logo";
 import { toast } from "sonner";
 
 export default function ConvitePage() {
@@ -73,7 +74,7 @@ export default function ConvitePage() {
     <Card className="w-full max-w-md">
       <CardHeader className="text-center">
         <div className="flex justify-center mb-2">
-          <Church className="h-10 w-10" />
+          <Logo className="h-12" />
         </div>
         <CardTitle>Bem-vindo a IPC</CardTitle>
         <CardDescription>Preencha seus dados para completar o cadastro</CardDescription>

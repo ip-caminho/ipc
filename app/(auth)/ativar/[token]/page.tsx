@@ -16,7 +16,7 @@ import {
   CardTitle,
 } from "@/shared/components/ui/card";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import { Church } from "lucide-react";
+import { Logo } from "@shared/components/layout/Logo";
 
 export default function AtivarPage() {
   const { token } = useParams<{ token: string }>();
@@ -80,7 +80,7 @@ export default function AtivarPage() {
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-2">
-            <Church className="h-10 w-10" />
+            <Logo className="h-12" />
           </div>
           <CardTitle>Ativar acesso</CardTitle>
         </CardHeader>
@@ -131,7 +131,7 @@ export default function AtivarPage() {
     <Card className="w-full max-w-sm">
       <CardHeader className="text-center">
         <div className="flex justify-center mb-2">
-          <Church className="h-10 w-10" />
+          <Logo className="h-12" />
         </div>
         <CardTitle>Ola, {dados.nome.split(" ")[0]}</CardTitle>
         <CardDescription>Crie uma senha para acessar o sistema</CardDescription>

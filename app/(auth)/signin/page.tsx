@@ -14,10 +14,9 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
 } from "@/shared/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
-import { Church } from "lucide-react";
+import { Logo } from "@shared/components/layout/Logo";
 
 function normalizePhone(raw: string): string {
   let p = raw.replace(/[^\d+]/g, "");
@@ -104,9 +103,8 @@ export default function SignIn() {
     <Card className="w-full max-w-sm">
       <CardHeader className="text-center">
         <div className="flex justify-center mb-2">
-          <Church className="h-10 w-10" />
+          <Logo className="h-12" />
         </div>
-        <CardTitle>IPC</CardTitle>
         <CardDescription>
           {bypassMode ? "Login direto (modo dev)" : "Acesso ao sistema"}
         </CardDescription>

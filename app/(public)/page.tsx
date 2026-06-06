@@ -15,6 +15,7 @@ import {
   BookOpen,
 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
+import { Logo } from "@shared/components/layout/Logo";
 
 function formatWhatsappLink(phone: string): string {
   const digits = phone.replace(/\D/g, "");
@@ -112,7 +113,7 @@ export default function LandingPage() {
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b border-border">
         <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Church className="h-5 w-5" />
+            <Logo className="h-6" />
             <span className="font-medium text-sm">{nome}</span>
           </div>
           <Button asChild size="sm" variant="outline">
