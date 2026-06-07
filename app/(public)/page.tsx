@@ -4,6 +4,7 @@ import { Spectral, Source_Sans_3 } from "next/font/google";
 import { fetchQuery } from "convex/nextjs";
 import { api } from "@/convex/_generated/api";
 import { RiseObserver } from "./RiseObserver";
+import { HeroFX } from "./HeroFX";
 import "./landing.css";
 
 const spectral = Spectral({
@@ -248,6 +249,7 @@ export default async function LandingPage() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="hero-bg" src="/landing/hero.jpg" alt="" aria-hidden="true" />
           <div className="hero-overlay" />
+          <HeroFX />
           <div className="wrap-wide">
             <p className="eyebrow">São Paulo · Comunidade Presbiteriana</p>
             <h1>
