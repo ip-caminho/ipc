@@ -140,41 +140,41 @@ const CREMOS = [
   {
     roman: "I.",
     thesis: "O evangelho é o centro.",
-    body: "Não um dos temas, não o ponto de partida pra temas melhores — o centro. Que Deus, em Cristo, reconcilia consigo um povo que não tinha como se reconciliar. Tudo que fazemos como igreja deriva disso, ou é decoração.",
+    body: "Deus, em Cristo, reconcilia consigo um povo que não tinha como se reconciliar. Tudo que fazemos como igreja deriva disso, ou é decoração.",
   },
   {
     roman: "II.",
     thesis: "A Escritura é a voz mais clara disponível.",
-    body: "Existem outras vozes — tradição, experiência, cultura — e todas importam. Mas só a Bíblia fala com autoridade final sobre quem Deus é, quem somos e pra onde as coisas vão. Ler bem, juntos e devagar, é o trabalho de uma vida.",
+    body: "Só a Bíblia fala com autoridade final sobre quem Deus é, quem somos e pra onde as coisas vão. Ler bem, juntos e devagar, é o trabalho de uma vida.",
   },
   {
     roman: "III.",
     thesis: "A igreja é povo, não lugar.",
-    body: "A igreja não é o prédio onde nos encontramos, nem o horário do culto, nem a denominação no papel. É um povo chamado por Deus, reunido por Ele, enviado por Ele. O prédio serve; o povo é que é.",
+    body: "Não é o prédio, nem o horário do culto. É um povo chamado, reunido e enviado por Deus. O prédio serve; o povo é que é.",
   },
   {
     roman: "IV.",
     thesis: "A história tem um destino.",
-    body: "O mundo não está em colapso aleatório nem em progresso inevitável. Vai em direção a um momento concreto: a volta de Cristo, céus novos e terra nova. Isso muda como a gente trabalha, chora, descansa e espera — hoje.",
+    body: "O mundo vai em direção a um momento concreto: a volta de Cristo, céus novos e terra nova. Isso muda como a gente trabalha, chora, descansa e espera — hoje.",
   },
 ];
 
 const VIVEMOS = [
   {
     label: "No culto, aos domingos",
-    body: "Nos reunimos pra ouvir a Palavra pregada, cantar juntos, orar juntos, confessar juntos, comer juntos ao redor da mesa do Senhor. É o centro da semana, não um apêndice dela. O culto não existe pra nos entreter; existe pra nos formar.",
+    body: "Palavra pregada, canto, oração e a mesa do Senhor. É o centro da semana. O culto não existe pra nos entreter; existe pra nos formar.",
   },
   {
     label: "Nos Pequenos Grupos, durante a semana",
-    body: "O culto nos reúne; o Pequeno Grupo nos conhece. Em casas, em mesas, em grupos de oito a doze pessoas, conversamos sobre o texto bíblico, sobre a semana real, sobre os tropeços e as alegrias concretas. É onde a teologia deixa de ser abstrata.",
+    body: "O culto nos reúne; o Pequeno Grupo nos conhece. Em casas, ao redor do texto bíblico e da semana real. É onde a teologia deixa de ser abstrata.",
   },
   {
     label: "À mesa, sempre que possível",
-    body: "Comer junto é um ato teológico. Abrimos a casa, dividimos o pão, ouvimos as histórias uns dos outros. Boa parte do discipulado da comunidade acontece entre o prato e o cafezinho, sem pauta, sem liturgia — só com tempo.",
+    body: "Comer junto é um ato teológico. Boa parte do discipulado acontece entre o prato e o cafezinho — sem pauta, só com tempo.",
   },
   {
     label: "Em casa, onde tudo se prova",
-    body: "A fé que não toca a cozinha, o quarto do filho, a planilha do mês, o argumento com o vizinho — essa fé ainda não chegou. A casa é o laboratório onde o que cremos vira o que somos.",
+    body: "A fé que não toca a cozinha, a planilha do mês e o argumento com o vizinho ainda não chegou. A casa é onde o que cremos vira o que somos.",
   },
 ];
 
@@ -189,15 +189,15 @@ const EDUCACIONAL = [
 const MUNDO = [
   {
     label: "A segunda-feira é o maior campo missionário",
-    body: "A maior parte da vida cristã não acontece no culto — acontece no trabalho, no trânsito, na reunião das 10h, na conversa com o colega de mesa. Formamos uns aos outros pra pensar vocacionalmente sobre o expediente: o ofício é adoração.",
+    body: "A maior parte da vida cristã acontece no trabalho, no trânsito, na reunião das 10h. O ofício é adoração.",
   },
   {
     label: "Antes da cidade, o prédio",
-    body: "Queremos amar a cidade, mas começamos pelo quarteirão. Pelo porteiro, pela padaria da esquina, pelos vizinhos de elevador. A missão global passa pelo nome do síndico.",
+    body: "Queremos amar a cidade, mas começamos pelo quarteirão. A missão global passa pelo nome do síndico.",
   },
   {
     label: "São Paulo é nosso endereço",
-    body: "Não somos uma igreja genérica que poderia estar em qualquer cidade. Estamos aqui, neste fuso, neste trânsito, nesta densidade, nesta desigualdade. A cidade não é pano de fundo — é o lugar concreto pra onde fomos enviados.",
+    body: "Estamos aqui — neste fuso, neste trânsito, nesta densidade. A cidade não é pano de fundo; é pra onde fomos enviados.",
   },
 ];
 
@@ -251,7 +251,7 @@ export default async function LandingPage() {
           <div className="hero-overlay" />
           <HeroFX />
           <div className="wrap-wide">
-            <p className="eyebrow">São Paulo · Comunidade Presbiteriana</p>
+            <p className="eyebrow">Igreja Presbiteriana do Caminho</p>
             <h1>
               <span className="ln">Uma comunidade bíblica de discipulado,</span>
               <span className="ln">participando da missão de Deus neste mundo.</span>
@@ -553,34 +553,36 @@ export default async function LandingPage() {
               Estamos esperando você.
             </p>
 
-            <dl className="visite-meta" data-rise>
-              <dt>Quando</dt>
-              <dd>
-                <p className="big">Domingos, 10h</p>
-                <p className="tipo">Culto dominical</p>
-              </dd>
+            <div className="visite-bottom" data-rise>
+              <dl className="visite-meta">
+                <dt>Quando</dt>
+                <dd>
+                  <p className="big">Domingos, 10h</p>
+                  <p className="tipo">Culto dominical</p>
+                </dd>
 
-              <dt>Onde</dt>
-              <dd className="place">{endereco}</dd>
+                <dt>Onde</dt>
+                <dd className="place">{endereco}</dd>
 
-              <div className="map-row">
-                <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="btn btn-outline">
-                  Ver no Google Maps
-                </a>
-                <a href={wazeUrl} target="_blank" rel="noopener noreferrer" className="btn btn-outline">
-                  Ver no Waze
-                </a>
+                <div className="map-row">
+                  <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="btn btn-outline">
+                    Ver no Google Maps
+                  </a>
+                  <a href={wazeUrl} target="_blank" rel="noopener noreferrer" className="btn btn-outline">
+                    Ver no Waze
+                  </a>
+                </div>
+              </dl>
+
+              <div className="map-embed">
+                <iframe
+                  src={mapEmbed}
+                  allowFullScreen
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  title="Localização da igreja"
+                />
               </div>
-            </dl>
-
-            <div className="map-embed" data-rise>
-              <iframe
-                src={mapEmbed}
-                allowFullScreen
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-                title="Localização da igreja"
-              />
             </div>
           </div>
         </section>
