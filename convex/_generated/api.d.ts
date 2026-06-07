@@ -56,6 +56,7 @@ import type * as escalas_importLiturgia from "../escalas/importLiturgia.js";
 import type * as escalas_migrateLegacyLouvores from "../escalas/migrateLegacyLouvores.js";
 import type * as escalas_mutations from "../escalas/mutations.js";
 import type * as escalas_queries from "../escalas/queries.js";
+import type * as files_authz from "../files/authz.js";
 import type * as files_helpers from "../files/helpers.js";
 import type * as files_signing from "../files/signing.js";
 import type * as files_upload from "../files/upload.js";
@@ -185,6 +186,7 @@ declare const fullApi: ApiFromModules<{
   "escalas/migrateLegacyLouvores": typeof escalas_migrateLegacyLouvores;
   "escalas/mutations": typeof escalas_mutations;
   "escalas/queries": typeof escalas_queries;
+  "files/authz": typeof files_authz;
   "files/helpers": typeof files_helpers;
   "files/signing": typeof files_signing;
   "files/upload": typeof files_upload;

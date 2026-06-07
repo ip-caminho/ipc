@@ -748,9 +748,9 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "features/gravacoes/components/IaStatusBadge.tsx",
     ],
     queries: ["gravacoes.queries.list"],
-    componentes: ["GravacaoAdminCard (inline)", "AdminGate", "IaStatusBadge"],
+    componentes: ["GravacaoAdminCard (inline)", "AnyPermissionGate", "IaStatusBadge"],
     notas: [
-      "Somente admin",
+      "Acesso: gravacoes:create OU gravacoes:update (equipe multimidia entra via permissao individual)",
       "Lista todas as gravacoes com filtros de status e status IA",
       "Link Gerenciar → /gravacoes/[id]/admin",
     ],

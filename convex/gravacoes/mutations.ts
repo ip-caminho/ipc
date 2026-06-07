@@ -1,4 +1,5 @@
 import { mutation } from "../_generated/server";
+import { internal } from "../_generated/api";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { createFieldAuditLogs, createActionAuditLog } from "../_shared/auditHelpers";
@@ -93,8 +94,7 @@ export const remove = mutation({
 
     // Delete audio file from B2
     if (gravacao.audioUrl) {
-      const { api } = require("../_generated/api");
-      await ctx.scheduler.runAfter(0, api.files.upload.deleteFile, {
+      await ctx.scheduler.runAfter(0, internal.files.upload.deleteFile, {
         url: gravacao.audioUrl,
       });
     }
