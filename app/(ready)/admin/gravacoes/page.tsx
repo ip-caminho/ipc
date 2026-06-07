@@ -8,7 +8,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import { AdminGate } from "@shared/components/auth/RoleGate";
+import { AnyPermissionGate } from "@shared/components/auth/PermissionGate";
 import { IaStatusBadge } from "@features/gravacoes/components/IaStatusBadge";
 import { useIsMobile } from "@shared/hooks/use-mobile";
 import {
@@ -261,7 +261,10 @@ export default function AdminGravacoesPage() {
   }, [gravacoes, iaFilter, tipoFilter, sortField, sortDir]);
 
   return (
-    <AdminGate fallback={<p className="text-muted-foreground">Acesso restrito a administradores</p>}>
+    <AnyPermissionGate
+      permissions={["gravacoes:create", "gravacoes:update"]}
+      fallback={<p className="text-muted-foreground">Acesso restrito à equipe de gravações</p>}
+    >
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
@@ -370,6 +373,6 @@ export default function AdminGravacoesPage() {
           </div>
         )}
       </div>
-    </AdminGate>
+    </AnyPermissionGate>
   );
 }
