@@ -3,6 +3,7 @@ import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { internalMutation } from "../_generated/server";
 import { INITIAL_ROLE_PERMISSIONS as ROLE_DEFAULTS, resolvePermissions, VOLUNTEER_PERMISSION_SETS } from "./rbacHelpers";
+import { ouvinteExpirado, naoEhOuvinte } from "../membros/ouvinteHelpers";
 
 // ===== PERMISSION DEFINITIONS =====
 
@@ -267,6 +268,9 @@ export const getUserPermissionContext = query({
     const entidade = await ctx.db.get(membro.entidadeId);
     if (!entidade || entidade.status !== "ATIVO") return null;
 
+    // Ouvinte com acesso vencido = sem contexto (mesmo efeito de status inativo)
+    if (ouvinteExpirado(membro, Date.now())) return null;
+
     // Use membro-level permissions if set, else fall back to role
     const rolePermsRecord = await ctx.db
       .query("rolePermissions")
@@ -355,7 +359,8 @@ export const getAllMembrosWithPermissions = query({
 
     if (!callerMembro || callerMembro.role !== "admin") return [];
 
-    const membros = await ctx.db.query("membros").collect();
+    // Ouvintes tem permissao fixa — fora da matriz de gestao de membros
+    const membros = (await ctx.db.query("membros").collect()).filter(naoEhOuvinte);
     const results = [];
     for (const m of membros) {
       if (m.role === "admin") continue; // admin has wildcard, skip
