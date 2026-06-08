@@ -5,7 +5,7 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useState } from "react";
 import Link from "next/link";
-import { Play, Headphones } from "lucide-react";
+import { Play, Pause, Headphones } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Card, CardContent } from "@/shared/components/ui/card";
@@ -76,40 +76,29 @@ export default function ConvidadoPage() {
         </div>
       </header>
 
-      {/* Player do item selecionado (fixo no topo) */}
-      {sel && sel.audioUrl && (
-        <div className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur">
-          <div className="mx-auto max-w-2xl px-4 py-3 space-y-2">
-            <p className="text-sm font-medium leading-tight">{sel.titulo}</p>
-            <SecureAudioPlayer
-              url={sel.audioUrl}
-              inicioSermao={sel.inicioConteudo ?? sel.inicioSermao}
-              fimSermao={sel.fimConteudo ?? sel.fimSermao}
-            />
-          </div>
-        </div>
-      )}
-
       <main className="mx-auto max-w-2xl px-4 py-4">
         {gravacoes.length === 0 ? (
           <p className="py-12 text-center text-sm text-muted-foreground">
             Nenhuma pregação publicada ainda.
           </p>
         ) : (
-          <ul className="divide-y">
+          <ul className="space-y-1">
             {gravacoes.map((g) => {
               const ativo = sel?._id === g._id;
               const meta = [g.pregadorNome, dataCurta(g.data)].filter(Boolean).join(" · ");
               return (
-                <li key={g._id}>
+                <li
+                  key={g._id}
+                  className={`overflow-hidden rounded-lg transition-colors ${ativo ? "bg-muted/60" : ""}`}
+                >
                   <button
                     type="button"
                     onClick={() => setSel(ativo ? null : g)}
                     disabled={!g.audioUrl}
-                    className="flex w-full items-center gap-3 py-3 text-left active:opacity-80 disabled:opacity-50"
+                    className="flex w-full items-center gap-3 px-2 py-3 text-left active:opacity-80 disabled:opacity-50"
                   >
-                    <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${ativo ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
-                      <Play className="h-4 w-4" fill="currentColor" strokeWidth={0} />
+                    <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors ${ativo ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+                      {ativo ? <Pause className="h-4 w-4" fill="currentColor" strokeWidth={0} /> : <Play className="h-4 w-4" fill="currentColor" strokeWidth={0} />}
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
@@ -119,6 +108,16 @@ export default function ConvidadoPage() {
                       {meta && <p className="mt-0.5 truncate text-xs text-muted-foreground">{meta}</p>}
                     </div>
                   </button>
+
+                  {ativo && g.audioUrl && (
+                    <div className="px-3 pb-3">
+                      <SecureAudioPlayer
+                        url={g.audioUrl}
+                        inicioSermao={g.inicioConteudo ?? g.inicioSermao}
+                        fimSermao={g.fimConteudo ?? g.fimSermao}
+                      />
+                    </div>
+                  )}
                 </li>
               );
             })}
