@@ -13,6 +13,7 @@ import {
 } from "@/shared/components/ui/input-group";
 import { Copy, MessageCircle, Headphones, RefreshCw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { RelatorioAcessosDialog } from "./RelatorioAcessosDialog";
 
 export function LinkConvidadoCard() {
   const data = useQuery(api.appConfig.queries.getConvidadoToken, {});
@@ -97,6 +98,7 @@ export function LinkConvidadoCard() {
                 <RefreshCw className="mr-1.5 h-4 w-4" />
                 Gerar novo
               </Button>
+              <RelatorioAcessosDialog />
               <Button size="sm" variant="outline" className="h-9 text-destructive" onClick={handleRevogar} disabled={busy}>
                 <Trash2 className="mr-1.5 h-4 w-4" />
                 Revogar
