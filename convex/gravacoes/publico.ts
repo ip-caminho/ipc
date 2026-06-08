@@ -21,8 +21,10 @@ export const listConvidado = query({
       return { valido: false as const, gravacoes: [] };
     }
 
+    // Convidado ouve apenas as PREGACOES (sermoes) publicadas — nao estudos,
+    // palestras, etc.
     const publicadas = (await ctx.db.query("gravacoes").order("desc").collect())
-      .filter((g) => g.status === "PUBLICADO")
+      .filter((g) => g.status === "PUBLICADO" && g.tipo === "SERMAO")
       .sort((a, b) => b.data.localeCompare(a.data));
 
     const gravacoes = await Promise.all(
