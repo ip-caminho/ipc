@@ -1019,6 +1019,9 @@ export default defineSchema({
   configApp: defineTable({
     modoQuiosque: v.boolean(),
     atualizadoEm: v.number(),
+    // Codigo do link publico de convidado (/convidado/<codigo>) para ouvir as
+    // gravacoes sem login. Vazio = acesso de convidado desativado.
+    convidadoToken: v.optional(v.string()),
   }),
 
   // ===== Campanhas de WhatsApp (envio em massa) =====

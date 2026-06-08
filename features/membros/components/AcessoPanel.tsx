@@ -35,6 +35,7 @@ import {
 import { Copy, MessageCircle, History } from "lucide-react";
 import { toast } from "sonner";
 import { AtividadeMembroDrawer } from "./AtividadeMembroDrawer";
+import { LinkConvidadoCard } from "@features/gravacoes/components/LinkConvidadoCard";
 
 type Row = {
   membroId: Id<"membros">;
@@ -161,6 +162,9 @@ export function AcessoPanel() {
 
   return (
     <div className="space-y-4">
+      {/* Link publico de convidado (so admin) */}
+      <LinkConvidadoCard />
+
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
         <ResumoCard label="Membros ativos" valor={data.resumo.total} ativo={filtro === "todos"} onClick={() => setFiltro("todos")} />
         <ResumoCard label="Com acesso" valor={data.resumo.ativados} ativo={filtro === "ativados"} onClick={() => alternarFiltro("ativados")} />

@@ -59,24 +59,32 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "features/membros/components/MembrosFilterBar.tsx",
       "features/membros/components/AcessoPanel.tsx",
       "features/membros/components/AtividadeMembroDrawer.tsx",
+      "features/gravacoes/components/LinkConvidadoCard.tsx",
     ],
     queries: [
       "membros.queries.list",
       "membros.acesso.getAcessosOverview",
       "membros.acesso.getAtividadeMembro",
+      "appConfig.queries.getConvidadoToken",
     ],
-    mutations: ["membros.acesso.gerarLink"],
+    mutations: [
+      "membros.acesso.gerarLink",
+      "appConfig.mutations.gerarTokenConvidado",
+      "appConfig.mutations.revogarTokenConvidado",
+    ],
     componentes: [
       "MembroTable",
       "MembrosFilterBar",
       "AcessoPanel",
       "AtividadeMembroDrawer",
+      "LinkConvidadoCard",
       "PermissionGate",
     ],
     notas: [
       "Permissao: membros:read",
       "Filtros via nuqs URL state: status, cargo, q",
       "Switch de view via nuqs (?view=acesso): aba Acesso (membros:update) = painel de status + resumo + historico + wa.me",
+      "Aba Acesso tem o LinkConvidadoCard (so admin): gera/copia/revoga o link publico /convidado/<codigo>",
     ],
   },
   "/membros/novo": {
@@ -723,6 +731,22 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "Link Gerenciar → /gravacoes/[id]/admin",
     ],
   },
+  "/convidado/[codigo]": {
+    nome: "Convidado (publico) — Pregacoes",
+    pagina: "app/(public)/convidado/[codigo]/page.tsx",
+    arquivos: [
+      "app/(public)/convidado/[codigo]/page.tsx",
+      "convex/gravacoes/publico.ts",
+      "shared/files/components/SecureAudioPlayer.tsx",
+    ],
+    queries: ["gravacoes.publico.listConvidado"],
+    componentes: ["SecureAudioPlayer"],
+    notas: [
+      "Rota PUBLICA (sem login) — listada em isPublicRoute no middleware.ts",
+      "Valida <codigo> contra configApp.convidadoToken; invalido/revogado → tela 'Link indisponivel'",
+      "Lista so gravacoes PUBLICADO; player restrito ao trecho do sermao",
+    ],
+  },
   "/admin/modulos": {
     nome: "Gerenciar Modulos",
     pagina: "app/(ready)/admin/modulos/page.tsx",
@@ -1017,6 +1041,8 @@ function resolveRoute(pathname: string): PageContext | null {
   if (/^\/tarefas\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/tarefas/[id]"];
   // /convite/[token]
   if (/^\/convite\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/signin"];
+  // /convidado/[codigo]
+  if (/^\/convidado\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/convidado/[codigo]"];
   // /educacional/turma/[id]
   if (/^\/educacional\/turma\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/educacional/turma/[id]"];
   // /admin/campanhas/[id] (mas nao /admin/campanhas/nova)
