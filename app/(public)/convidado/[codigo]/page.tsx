@@ -5,7 +5,7 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useState } from "react";
 import Link from "next/link";
-import { Play, Pause, Headphones } from "lucide-react";
+import { Play, Headphones } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Card, CardContent } from "@/shared/components/ui/card";
@@ -98,7 +98,7 @@ export default function ConvidadoPage() {
                     className="flex w-full items-center gap-3 px-2 py-3 text-left active:opacity-80 disabled:opacity-50"
                   >
                     <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors ${ativo ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
-                      {ativo ? <Pause className="h-4 w-4" fill="currentColor" strokeWidth={0} /> : <Play className="h-4 w-4" fill="currentColor" strokeWidth={0} />}
+                      {ativo ? <Headphones className="h-4 w-4" /> : <Play className="h-4 w-4" fill="currentColor" strokeWidth={0} />}
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
