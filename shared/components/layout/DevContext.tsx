@@ -289,10 +289,11 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "features/gravacoes/components/IaProcessarButton.tsx",
       "features/gravacoes/components/IaProgressPanel.tsx",
       "features/gravacoes/components/IaStatusBadge.tsx",
+      "features/gravacoes/components/ShareGravacaoButton.tsx",
       "features/gravacoes/hooks/useEscutaTracker.ts",
     ],
-    queries: ["gravacoes.queries.getById", "gravacoes.escutas.getMyProgress"],
-    mutations: ["gravacoes.mutations.update", "gravacoes.mutations.publish", "gravacoes.mutations.remove", "gravacoes.escutas.heartbeat"],
+    queries: ["gravacoes.queries.getById", "gravacoes.escutas.getMyProgress", "gravacoes.share.getShareInfo"],
+    mutations: ["gravacoes.mutations.update", "gravacoes.mutations.publish", "gravacoes.mutations.remove", "gravacoes.escutas.heartbeat", "gravacoes.share.gerarShareLink", "gravacoes.share.revogarShareLink"],
     componentes: [
       "useAudioPlayer (player global)",
       "DadosEditor (inline)",
@@ -302,12 +303,30 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "IaProcessarButton",
       "IaProgressPanel",
       "IaStatusBadge",
+      "ShareGravacaoButton",
     ],
     notas: [
       "Header com controles: status IA, processar, publicar/despublicar, excluir",
       "Tabs: Dados, Avisos, Resultado IA, Segmentos, Audio completo",
       "Edicao inline com permissao gravacoes:update ou gravacoes:process_ai",
       "Audio via player global persistente (botao Ouvir sermao / Audio completo)",
+      "Botao Compartilhar (ShareGravacaoButton): so com gravacoes:share e gravacao PUBLICADO; gera link publico /g/<codigo> (revogavel)",
+    ],
+  },
+  "/g/[token]": {
+    nome: "Gravacao compartilhada (publico)",
+    pagina: "app/(public)/g/[token]/page.tsx",
+    arquivos: [
+      "app/(public)/g/[token]/page.tsx",
+      "convex/gravacoes/share.ts",
+      "shared/files/components/SecureAudioPlayer.tsx",
+    ],
+    queries: ["gravacoes.share.getCompartilhada"],
+    componentes: ["SecureAudioPlayer"],
+    notas: [
+      "Rota PUBLICA (sem login) — listada em isPublicRoute no middleware.ts",
+      "Mostra UMA gravacao por shareToken; so PUBLICADO; revogada/rascunho -> 'Link indisponivel'",
+      "Permissao de gerar/revogar: gravacoes:share (nenhum papel concede; admin via wildcard; demais via matriz)",
     ],
   },
   "/gravacoes/[id]/admin": {
@@ -1050,6 +1069,8 @@ function resolveRoute(pathname: string): PageContext | null {
   if (/^\/convite\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/signin"];
   // /convidado/[codigo]
   if (/^\/convidado\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/convidado/[codigo]"];
+  // /g/[token] (gravacao compartilhada)
+  if (/^\/g\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/g/[token]"];
   // /educacional/turma/[id]
   if (/^\/educacional\/turma\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/educacional/turma/[id]"];
   // /admin/campanhas/[id] (mas nao /admin/campanhas/nova)

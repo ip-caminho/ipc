@@ -4,6 +4,7 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useAudioPlayer } from "@shared/audio/useAudioPlayer";
 import { Reacoes } from "@features/gravacoes/components/Reacoes";
+import { ShareGravacaoButton } from "@features/gravacoes/components/ShareGravacaoButton";
 import { ComentarioInput, ComentariosList } from "@features/gravacoes/components/Comentarios";
 import { useParams } from "next/navigation";
 import { Skeleton } from "@/shared/components/ui/skeleton";
@@ -169,8 +170,11 @@ export default function GravacaoDetailPage() {
             </button>
           )}
 
-          {/* 5. Reações */}
-          <Reacoes gravacaoId={gravacao._id} />
+          {/* 5. Reações + compartilhar */}
+          <div className="flex items-center justify-between gap-3">
+            <Reacoes gravacaoId={gravacao._id} />
+            <ShareGravacaoButton gravacaoId={gravacao._id} titulo={gravacao.titulo} />
+          </div>
 
           {/* 6. Comentários */}
           <div>
