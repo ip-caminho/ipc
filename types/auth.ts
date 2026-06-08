@@ -5,9 +5,7 @@ export type Role =
   | "obreiro"
   | "secretaria"
   | "secretario_executivo"
-  | "membro"
-  // Acesso externo: nao-membro, so ouve gravacoes. Nao entra no Rol.
-  | "ouvinte";
+  | "membro";
 
 export type Permission =
   // Membros

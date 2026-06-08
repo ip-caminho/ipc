@@ -1,7 +1,6 @@
 import { query } from "../_generated/server";
 import { v } from "convex/values";
 import { checkPermission, requireAnyPermission } from "../_shared/requirePermission";
-import { naoEhOuvinte } from "./ouvinteHelpers";
 
 export const list = query({
   args: {
@@ -11,7 +10,7 @@ export const list = query({
   },
   handler: async (ctx, args) => {
     await requireAnyPermission(ctx, ["diretorio:read", "membros:read"]);
-    const membros = (await ctx.db.query("membros").collect()).filter(naoEhOuvinte);
+    const membros = await ctx.db.query("membros").collect();
 
     const results = await Promise.all(
       membros.map(async (m) => {
@@ -120,7 +119,7 @@ export const birthdaysThisMonth = query({
     const currentDay = now.getDate();
     const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
 
-    const membros = (await ctx.db.query("membros").collect()).filter(naoEhOuvinte);
+    const membros = await ctx.db.query("membros").collect();
 
     const aniversariantes: Array<{
       _id: string;
@@ -191,7 +190,7 @@ export const birthdaysThisWeek = query({
     const endOfWeek = new Date(today);
     endOfWeek.setDate(today.getDate() + 6);
 
-    const membros = (await ctx.db.query("membros").collect()).filter(naoEhOuvinte);
+    const membros = await ctx.db.query("membros").collect();
     const results = await Promise.all(
       membros.map(async (m) => {
         const entidade = await ctx.db.get(m.entidadeId);

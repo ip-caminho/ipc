@@ -121,11 +121,6 @@ export const INITIAL_ROLE_PERMISSIONS: Record<string, string[]> = {
     "pedidos_oracao:create", "pedidos_oracao:read",
   ],
 
-  // Ouvinte: acesso externo (nao-membro). So ouve gravacoes — nada mais.
-  ouvinte: [
-    "gravacoes:read",
-  ],
-
   // Secretario executivo: read em tudo do membro/entidade, write apenas em
   // dados eclesiasticos. Nao cria/exclui, nao edita dados pessoais.
   secretario_executivo: [
