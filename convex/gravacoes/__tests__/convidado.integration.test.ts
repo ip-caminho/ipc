@@ -44,6 +44,16 @@ describe("link de convidado", () => {
         status: "RASCUNHO",
       } as any)
     );
+    // estudo biblico publicado NAO deve aparecer (so pregacoes)
+    await t.run(async (ctx) =>
+      ctx.db.insert("gravacoes", {
+        titulo: "Estudo Publicado",
+        tipo: "ESTUDO_BIBLICO",
+        data: "2026-06-03",
+        status: "PUBLICADO",
+        audioUrl: "https://cdn.yhc.com.br/gravacoes-audio/e.mp3",
+      } as any)
+    );
 
     // Sem token configurado → nega
     const semToken = await t.query(api.gravacoes.publico.listConvidado, { codigo: "qualquer" });
