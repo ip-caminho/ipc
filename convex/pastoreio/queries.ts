@@ -2,6 +2,7 @@ import { query } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { resolvePermissions } from "../preferencias/rbacHelpers";
+import { naoEhOuvinte } from "../membros/ouvinteHelpers";
 
 async function resolveMembroNome(ctx: any, membroId: any): Promise<string> {
   if (!membroId) return "";
@@ -327,7 +328,7 @@ export const listMembrosResumo = query({
     const auth = await getAuthContext(ctx);
     if (!auth || !auth.can("pastoreio:read")) return [];
 
-    const membros = await ctx.db.query("membros").collect();
+    const membros = (await ctx.db.query("membros").collect()).filter(naoEhOuvinte);
 
     const results = await Promise.all(
       membros.map(async (m) => {

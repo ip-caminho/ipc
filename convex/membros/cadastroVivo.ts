@@ -2,6 +2,7 @@ import { query } from "../_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { requireAnyPermission } from "../_shared/requirePermission";
 import { calculateCompleteness, isStale } from "./completeness";
+import { naoEhOuvinte } from "./ouvinteHelpers";
 
 export const getMyCompleteness = query({
   args: {},
@@ -35,7 +36,7 @@ export const getRegistryVitality = query({
   handler: async (ctx) => {
     await requireAnyPermission(ctx, ["membros:read"]);
 
-    const membros = await ctx.db.query("membros").collect();
+    const membros = (await ctx.db.query("membros").collect()).filter(naoEhOuvinte);
     const now = Date.now();
 
     const results = await Promise.all(

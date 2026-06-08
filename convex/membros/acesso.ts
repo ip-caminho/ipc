@@ -3,6 +3,7 @@ import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { requirePermission } from "../_shared/requirePermission";
 import { normalizeToE164 } from "../messaging/phoneUtils";
+import { naoEhOuvinte, ehOuvinte } from "./ouvinteHelpers";
 import type { Doc } from "../_generated/dataModel";
 
 const SETE_DIAS_MS = 7 * 24 * 60 * 60 * 1000;
@@ -209,7 +210,8 @@ export const concluirAtivacao = mutation({
 
     await ctx.db.patch(membro._id, {
       userId,
-      onboardingCompleto: false, // forca confirmacao de dados em /bem-vindo
+      // Ouvinte (nao-membro) nao confirma dados; membro vai a /bem-vindo
+      onboardingCompleto: ehOuvinte(membro),
     });
     await ctx.db.patch(convite._id, {
       status: "ACEITO",
@@ -334,7 +336,8 @@ export const getAcessosOverview = query({
   handler: async (ctx): Promise<AcessosOverview> => {
     await requirePermission(ctx, "membros:read");
 
-    const membros = await ctx.db.query("membros").collect();
+    // Ouvintes tem painel proprio — nao entram na visao de acessos de membros
+    const membros = (await ctx.db.query("membros").collect()).filter(naoEhOuvinte);
     const rows: AcessoRow[] = [];
 
     for (const membro of membros) {
