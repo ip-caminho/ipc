@@ -67,6 +67,13 @@ export function PermissionsProvider({
     }
   }, [data, pathname, router]);
 
+  // Ouvinte (acesso externo) so navega em gravacoes; qualquer outra rota volta la
+  useEffect(() => {
+    if (data && data.role === "ouvinte" && !pathname.startsWith("/gravacoes")) {
+      router.replace("/gravacoes");
+    }
+  }, [data, pathname, router]);
+
   const value = useMemo<AuthContext>(() => {
     const isLoading = data === undefined;
     const isAuthenticated = data !== null && data !== undefined;

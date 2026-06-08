@@ -79,6 +79,30 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "Switch de view via nuqs (?view=acesso): aba Acesso (membros:update) = painel de status + resumo + historico + wa.me",
     ],
   },
+  "/admin/ouvintes": {
+    nome: "Ouvintes (acesso externo)",
+    pagina: "app/(ready)/admin/ouvintes/page.tsx",
+    arquivos: [
+      "app/(ready)/admin/ouvintes/page.tsx",
+      "features/membros/components/OuvintesPanel.tsx",
+      "convex/membros/ouvinte.ts",
+      "convex/membros/ouvinteHelpers.ts",
+    ],
+    queries: ["membros.ouvinte.listar"],
+    mutations: [
+      "membros.ouvinte.criarOuvinte",
+      "membros.ouvinte.renovarAcesso",
+      "membros.acesso.gerarLink",
+    ],
+    componentes: ["OuvintesPanel", "PermissionGate"],
+    notas: [
+      "Permissao: membros:create (admin + secretaria)",
+      "Ouvinte = nao-membro, role 'ouvinte', so gravacoes:read; entidade vinculoIgreja=FREQUENTADOR",
+      "Excluido do Rol/diretorio/pastoreio/PG via naoEhOuvinte (ouvinteHelpers)",
+      "Acesso expira no fim do ano (acessoExpiraEm); botao Renovar estende; gate em getUserPermissionContext",
+      "Pos-login o ouvinte e redirecionado para /gravacoes (PermissionsProvider)",
+    ],
+  },
   "/membros/novo": {
     nome: "Novo Membro",
     pagina: "app/(ready)/membros/novo/page.tsx",

@@ -212,6 +212,14 @@ export const GESTAO_SECTIONS: NavSection[] = [
         modulo: "membros",
       },
       {
+        label: "Ouvintes",
+        href: "/admin/ouvintes",
+        icon: Ear,
+        description: "Acesso externo (não-membros) só às gravações",
+        permission: "membros:create",
+        modulo: "gravacoes",
+      },
+      {
         label: "Entidades",
         href: "/entidades",
         icon: UserCircle,
