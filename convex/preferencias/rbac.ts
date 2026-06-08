@@ -16,7 +16,7 @@ export const ALL_PERMISSIONS = [
   // Diretorio
   "diretorio:read",
   // Gravacoes
-  "gravacoes:read", "gravacoes:create", "gravacoes:update", "gravacoes:delete", "gravacoes:process_ai",
+  "gravacoes:read", "gravacoes:create", "gravacoes:update", "gravacoes:delete", "gravacoes:process_ai", "gravacoes:share",
   // Escalas
   "escalas:read", "escalas:create", "escalas:update", "escalas:delete",
   // Louvor
@@ -71,6 +71,7 @@ function getPermissionLabel(perm: string): string {
     "gravacoes:update": "Editar Gravacoes",
     "gravacoes:delete": "Excluir Gravacoes",
     "gravacoes:process_ai": "Processar com IA",
+    "gravacoes:share": "Compartilhar Gravacao (link publico)",
     "escalas:read": "Ver Escalas",
     "escalas:create": "Criar Escalas",
     "escalas:update": "Editar Escalas",
@@ -170,6 +171,7 @@ function getPermissionDescription(perm: string): string {
     "gravacoes:update": "Editar gravacoes existentes",
     "gravacoes:delete": "Excluir gravacoes",
     "gravacoes:process_ai": "Processar gravacoes com inteligencia artificial (transcricao e analise)",
+    "gravacoes:share": "Gerar link publico de uma gravacao para compartilhar (nenhum papel concede — so pessoas adicionadas aqui)",
     "escalas:read": "Ver escala de liturgia e cultos",
     "escalas:create": "Criar cultos e escalas de liturgia",
     "escalas:update": "Editar escalas e atribuicoes de liturgia",

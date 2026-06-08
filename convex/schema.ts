@@ -245,12 +245,16 @@ export default defineSchema({
       contatoNome: v.optional(v.union(v.string(), v.null())),
       contatoWhatsapp: v.optional(v.union(v.string(), v.null())),
     }))),
+    // Codigo do link publico individual desta gravacao (/g/<codigo>). Vazio =
+    // nao compartilhada. Gerado por quem tem gravacoes:share.
+    shareToken: v.optional(v.string()),
   })
     .index("by_tipo", ["tipo"])
     .index("by_status", ["status"])
     .index("by_data", ["data"])
     .index("by_pregador", ["pregadorId"])
-    .index("by_serie", ["serieId"]),
+    .index("by_serie", ["serieId"])
+    .index("by_share_token", ["shareToken"]),
 
   reacoesGravacao: defineTable({
     gravacaoId: v.id("gravacoes"),

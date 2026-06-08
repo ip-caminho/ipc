@@ -68,6 +68,7 @@ import type * as gravacoes_mutations from "../gravacoes/mutations.js";
 import type * as gravacoes_publico from "../gravacoes/publico.js";
 import type * as gravacoes_queries from "../gravacoes/queries.js";
 import type * as gravacoes_series from "../gravacoes/series.js";
+import type * as gravacoes_share from "../gravacoes/share.js";
 import type * as gravacoes_youtubeAction from "../gravacoes/youtubeAction.js";
 import type * as http from "../http.js";
 import type * as lgpd_index from "../lgpd/index.js";
@@ -195,6 +196,7 @@ declare const fullApi: ApiFromModules<{
   "gravacoes/publico": typeof gravacoes_publico;
   "gravacoes/queries": typeof gravacoes_queries;
   "gravacoes/series": typeof gravacoes_series;
+  "gravacoes/share": typeof gravacoes_share;
   "gravacoes/youtubeAction": typeof gravacoes_youtubeAction;
   http: typeof http;
   "lgpd/index": typeof lgpd_index;

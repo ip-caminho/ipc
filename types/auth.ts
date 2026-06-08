@@ -17,7 +17,7 @@ export type Permission =
   // Diretorio
   | "diretorio:read"
   // Gravacoes
-  | "gravacoes:read" | "gravacoes:create" | "gravacoes:update" | "gravacoes:delete" | "gravacoes:process_ai"
+  | "gravacoes:read" | "gravacoes:create" | "gravacoes:update" | "gravacoes:delete" | "gravacoes:process_ai" | "gravacoes:share"
   // Escalas
   | "escalas:read" | "escalas:create" | "escalas:update" | "escalas:delete"
   // Louvor
