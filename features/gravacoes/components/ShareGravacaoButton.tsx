@@ -53,13 +53,13 @@ export function ShareGravacaoButton({
   }
 
   async function handleRevogar() {
-    if (!confirm("Revogar o link? Quem tiver o link atual perde o acesso a esta gravação.")) return;
+    if (!confirm("Desativar o link? Quem tiver o link atual perde o acesso a esta gravação.")) return;
     setBusy(true);
     try {
       await revogar({ gravacaoId });
       setOpen(false);
       setUrl(null);
-      toast.success("Link revogado");
+      toast.success("Link desativado");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao revogar");
     } finally {
@@ -119,7 +119,7 @@ export function ShareGravacaoButton({
                   disabled={busy}
                 >
                   <Trash2 className="mr-1.5 h-4 w-4" />
-                  Revogar
+                  Desativar link
                 </Button>
               </div>
             </div>

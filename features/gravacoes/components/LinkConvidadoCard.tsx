@@ -40,11 +40,11 @@ export function LinkConvidadoCard() {
   }
 
   async function handleRevogar() {
-    if (!confirm("Revogar o link? Quem tiver o link atual perde o acesso.")) return;
+    if (!confirm("Desativar o link? Quem tiver o link atual perde o acesso.")) return;
     setBusy(true);
     try {
       await revogar({});
-      toast.success("Link revogado");
+      toast.success("Link desativado");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao revogar");
     } finally {
@@ -101,7 +101,7 @@ export function LinkConvidadoCard() {
               <RelatorioAcessosDialog />
               <Button size="sm" variant="outline" className="h-9 text-destructive" onClick={handleRevogar} disabled={busy}>
                 <Trash2 className="mr-1.5 h-4 w-4" />
-                Revogar
+                Desativar link
               </Button>
             </div>
           </>
