@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation, useConvexAuth } from "convex/react";
+import { useMutation, useQuery, useConvexAuth } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -23,7 +23,6 @@ import { ProfileCompletenessCard } from "@features/dashboard/components/ProfileC
 import { ProfileNudgeDialog } from "@features/dashboard/components/ProfileNudgeDialog";
 
 function BootstrapForm() {
-  // @ts-expect-error Convex TS2589
   const bootstrap = useMutation(api.membros.bootstrap.bootstrapAdmin);
   const relinkAdmin = useMutation(api.debug.relinkAdmin);
   const [loading, setLoading] = useState(false);
@@ -109,9 +108,21 @@ function BootstrapForm() {
 export default function DashboardPage() {
   const { isAuthenticated } = useConvexAuth();
   const { name, isLoading, role } = useAuth();
+  const precisaBootstrap = useQuery(api.membros.bootstrap.precisaBootstrap);
 
   if (!isLoading && isAuthenticated && !role) {
-    return <BootstrapForm />;
+    // So mostra "criar primeiro admin" se o sistema realmente nao tem membros.
+    if (precisaBootstrap === true) {
+      return <BootstrapForm />;
+    }
+    // Logado sem role mas o sistema TEM membros: contexto ainda resolvendo
+    // (reconexao/refresh de auth) ou conta sem vinculo. Mostra loader em vez
+    // da tela de bootstrap (que assustava usuarios existentes).
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <p className="text-sm text-muted-foreground">Carregando...</p>
+      </div>
+    );
   }
 
   const primeiroNome = name?.split(" ")[0] || "Usuário";

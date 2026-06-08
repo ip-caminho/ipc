@@ -1,6 +1,20 @@
-import { mutation } from "../_generated/server";
+import { mutation, query } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
+
+/**
+ * Indica se o sistema ainda precisa do bootstrap (nenhum membro cadastrado).
+ * A tela "criar primeiro admin" so deve aparecer quando isto for true — nunca
+ * apenas porque o usuario atual esta sem role (contexto pode estar nulo
+ * transitoriamente em reconexoes/refresh de auth).
+ */
+export const precisaBootstrap = query({
+  args: {},
+  handler: async (ctx) => {
+    const algum = await ctx.db.query("membros").first();
+    return algum === null;
+  },
+});
 
 /**
  * Bootstrap: creates the first admin member linked to the currently logged-in user.
