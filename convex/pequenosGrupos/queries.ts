@@ -1,7 +1,6 @@
 import { query } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { naoEhOuvinte } from "../membros/ouvinteHelpers";
 
 async function resolveMembroNome(ctx: any, membroId: any): Promise<string> {
   if (!membroId) return "";
@@ -111,8 +110,8 @@ export const listAllWithMembros = query({
       })
     );
 
-    // Membros ativos sem PG (ouvintes nao sao membros)
-    const todosMembros = (await ctx.db.query("membros").collect()).filter(naoEhOuvinte);
+    // Membros ativos sem PG
+    const todosMembros = await ctx.db.query("membros").collect();
     const semGrupo = await Promise.all(
       todosMembros
         .filter((m) => !membrosComPg.has(m._id))

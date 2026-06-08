@@ -84,8 +84,6 @@ import type * as membros_import from "../membros/import.js";
 import type * as membros_migrations from "../membros/migrations.js";
 import type * as membros_mutations from "../membros/mutations.js";
 import type * as membros_onboarding from "../membros/onboarding.js";
-import type * as membros_ouvinte from "../membros/ouvinte.js";
-import type * as membros_ouvinteHelpers from "../membros/ouvinteHelpers.js";
 import type * as membros_queries from "../membros/queries.js";
 import type * as membros_selfService from "../membros/selfService.js";
 import type * as membros_selfServiceHelpers from "../membros/selfServiceHelpers.js";
@@ -211,8 +209,6 @@ declare const fullApi: ApiFromModules<{
   "membros/migrations": typeof membros_migrations;
   "membros/mutations": typeof membros_mutations;
   "membros/onboarding": typeof membros_onboarding;
-  "membros/ouvinte": typeof membros_ouvinte;
-  "membros/ouvinteHelpers": typeof membros_ouvinteHelpers;
   "membros/queries": typeof membros_queries;
   "membros/selfService": typeof membros_selfService;
   "membros/selfServiceHelpers": typeof membros_selfServiceHelpers;

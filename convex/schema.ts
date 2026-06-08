@@ -132,10 +132,6 @@ export default defineSchema({
     permissions: v.optional(v.array(v.string())),
     onboardingCompleto: v.optional(v.boolean()),
 
-    // Acesso ouvinte (nao-membro): timestamp de expiracao do acesso.
-    // Expira na virada do ano; admin renova. Vazio = sem expiracao.
-    acessoExpiraEm: v.optional(v.number()),
-
     // Church-specific fields
     rol: v.optional(v.string()),
     dataMembresia: v.optional(v.string()),

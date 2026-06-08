@@ -15,7 +15,6 @@ import { requireAnyPermission } from "../_shared/requirePermission";
 import { espelharConjuge, vincularCriancaAoConjuge } from "./familiaHelpers";
 import { createFieldAuditLogs, createActionAuditLog } from "../_shared/auditHelpers";
 import { getTipoRol, type CargoEclesiastico, type StatusEntidade, type TipoRol } from "./tipoRolHelpers";
-import { naoEhOuvinte } from "./ouvinteHelpers";
 import type { Doc } from "../_generated/dataModel";
 
 export type RolCategoria = "PRINCIPAL" | "SEPARADO" | "AUSENTE" | "ARQUIVO";
@@ -275,8 +274,7 @@ function temPendencia(
  * pendencia, sobre toda a base. Reusado pela lista e pelo resumo.
  */
 async function montarLinhasSecretario(ctx: QueryCtx): Promise<LinhaSecretario[]> {
-  // Ouvintes (acesso externo) nao entram no Rol
-  const membros = (await ctx.db.query("membros").collect()).filter(naoEhOuvinte);
+  const membros = await ctx.db.query("membros").collect();
   const membroPorEnt = new Map<string, Doc<"membros">>();
   const entPorId = new Map<string, Doc<"entidades">>();
   for (const m of membros) {
