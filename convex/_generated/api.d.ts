@@ -36,6 +36,7 @@ import type * as cargosEclesiasticosHistorico_mutations from "../cargosEclesiast
 import type * as cargosEclesiasticosHistorico_queries from "../cargosEclesiasticosHistorico/queries.js";
 import type * as comentarios_mutations from "../comentarios/mutations.js";
 import type * as comentarios_queries from "../comentarios/queries.js";
+import type * as convidado from "../convidado.js";
 import type * as cron_paradeiroIgnorado from "../cron/paradeiroIgnorado.js";
 import type * as crons from "../crons.js";
 import type * as debug from "../debug.js";
@@ -162,6 +163,7 @@ declare const fullApi: ApiFromModules<{
   "cargosEclesiasticosHistorico/queries": typeof cargosEclesiasticosHistorico_queries;
   "comentarios/mutations": typeof comentarios_mutations;
   "comentarios/queries": typeof comentarios_queries;
+  convidado: typeof convidado;
   "cron/paradeiroIgnorado": typeof cron_paradeiroIgnorado;
   crons: typeof crons;
   debug: typeof debug;

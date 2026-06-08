@@ -3,7 +3,7 @@
 import { useParams } from "next/navigation";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Play, Headphones } from "lucide-react";
 import { format, parseISO } from "date-fns";
@@ -37,6 +37,19 @@ export default function ConvidadoPage() {
   const { codigo } = useParams<{ codigo: string }>();
   const data = useQuery(api.gravacoes.publico.listConvidado, { codigo });
   const [sel, setSel] = useState<Gravacao | null>(null);
+
+  // Registra o acesso (uma vez) quando o link e valido — captura IP server-side
+  const registrado = useRef(false);
+  useEffect(() => {
+    if (data?.valido && !registrado.current) {
+      registrado.current = true;
+      fetch("/api/convidado-acesso", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ codigo }),
+      }).catch(() => {});
+    }
+  }, [data, codigo]);
 
   if (data === undefined) {
     return (

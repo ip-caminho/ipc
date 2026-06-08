@@ -60,12 +60,14 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "features/membros/components/AcessoPanel.tsx",
       "features/membros/components/AtividadeMembroDrawer.tsx",
       "features/gravacoes/components/LinkConvidadoCard.tsx",
+      "features/gravacoes/components/RelatorioAcessosDialog.tsx",
     ],
     queries: [
       "membros.queries.list",
       "membros.acesso.getAcessosOverview",
       "membros.acesso.getAtividadeMembro",
       "appConfig.queries.getConvidadoToken",
+      "convidado.relatorioAcessos",
     ],
     mutations: [
       "membros.acesso.gerarLink",
@@ -78,13 +80,14 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "AcessoPanel",
       "AtividadeMembroDrawer",
       "LinkConvidadoCard",
+      "RelatorioAcessosDialog",
       "PermissionGate",
     ],
     notas: [
       "Permissao: membros:read",
       "Filtros via nuqs URL state: status, cargo, q",
       "Switch de view via nuqs (?view=acesso): aba Acesso (membros:update) = painel de status + resumo + historico + wa.me",
-      "Aba Acesso tem o LinkConvidadoCard (so admin): gera/copia/revoga o link publico /convidado/<codigo>",
+      "Aba Acesso tem o LinkConvidadoCard (so admin): gera/copia/revoga o link publico /convidado/<codigo> + botao Acessos (RelatorioAcessosDialog: total, IPs unicos, lista com IP/dispositivo)",
     ],
   },
   "/membros/novo": {
@@ -736,15 +739,19 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     pagina: "app/(public)/convidado/[codigo]/page.tsx",
     arquivos: [
       "app/(public)/convidado/[codigo]/page.tsx",
+      "app/api/convidado-acesso/route.ts",
       "convex/gravacoes/publico.ts",
+      "convex/convidado.ts",
       "shared/files/components/SecureAudioPlayer.tsx",
     ],
     queries: ["gravacoes.publico.listConvidado"],
+    mutations: ["convidado.registrarAcesso (via route handler /api/convidado-acesso)"],
     componentes: ["SecureAudioPlayer"],
     notas: [
       "Rota PUBLICA (sem login) — listada em isPublicRoute no middleware.ts",
       "Valida <codigo> contra configApp.convidadoToken; invalido/revogado → tela 'Link indisponivel'",
-      "Lista so gravacoes PUBLICADO; player restrito ao trecho do sermao",
+      "Lista so gravacoes PUBLICADO tipo SERMAO; player inline restrito ao trecho do sermao",
+      "No carregamento, registra acesso via /api/convidado-acesso (captura IP server-side) → tabela convidadoAcessos",
     ],
   },
   "/admin/modulos": {

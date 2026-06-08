@@ -1024,6 +1024,14 @@ export default defineSchema({
     convidadoToken: v.optional(v.string()),
   }),
 
+  // Log de acessos ao link publico de convidado (auditoria). IP capturado
+  // server-side (Next route handler) — dado pessoal, uso de auditoria (LGPD).
+  convidadoAcessos: defineTable({
+    em: v.number(),
+    ip: v.optional(v.string()),
+    userAgent: v.optional(v.string()),
+  }).index("by_em", ["em"]),
+
   // ===== Campanhas de WhatsApp (envio em massa) =====
   // Cada campanha enfileira um lote de envios; pipeline `_processarProximo`
   // pega um por vez e auto-reagenda com jitter aleatorio.
