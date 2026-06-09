@@ -125,8 +125,15 @@ export function EclesiasticoForm({
   }, [form, initial]);
 
   const handleSave = async () => {
-    // Carta de transferencia obrigatoria quando forma de demissao = transferencia
-    if (form.formaDemissao === "TRANSFERENCIA" && !form.cartaTransferencia) {
+    // Carta obrigatoria ao registrar/alterar transferencia — mas nao trava
+    // registros legados que ja eram transferencia sem carta (so impede piorar)
+    const eraTransferenciaSemCarta =
+      initial.formaDemissao === "TRANSFERENCIA" && !initial.cartaTransferencia;
+    if (
+      form.formaDemissao === "TRANSFERENCIA" &&
+      !form.cartaTransferencia &&
+      !eraTransferenciaSemCarta
+    ) {
       toast.error("Anexe a carta de transferencia antes de salvar");
       return;
     }
@@ -384,7 +391,15 @@ export function EclesiasticoForm({
             <Select
               value={form.formaDemissao}
               onValueChange={(v) =>
-                setForm((p) => ({ ...p, formaDemissao: v }))
+                setForm((p) => ({
+                  ...p,
+                  formaDemissao: v,
+                  // limpa campos especificos da forma anterior para nao orfanar
+                  cartaTransferencia:
+                    v === "TRANSFERENCIA" ? p.cartaTransferencia : "",
+                  motivoDemissao: v === "EXCLUSAO" ? p.motivoDemissao : "",
+                  motivoDemissaoObs: v === "EXCLUSAO" ? p.motivoDemissaoObs : "",
+                }))
               }
             >
               <SelectTrigger>

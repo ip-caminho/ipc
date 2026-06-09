@@ -75,9 +75,6 @@ export const membroFormSchema = z.object({
     .enum(["DISCIPLINA", "AUSENCIA_PROLONGADA", "ABANDONO", "PEDIDO_PROPRIO", "OUTRO"])
     .optional(),
   motivoDemissaoObs: z.string().optional(),
-}).refine(
-  (d) => d.formaDemissao !== "TRANSFERENCIA" || !!d.cartaTransferencia,
-  { message: "Anexe a carta de transferencia", path: ["cartaTransferencia"] },
-);
+});
 
 export type MembroFormValues = z.infer<typeof membroFormSchema>;

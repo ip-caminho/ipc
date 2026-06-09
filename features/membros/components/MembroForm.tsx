@@ -42,6 +42,18 @@ export function MembroForm({ defaultValues, onSubmit, isEditing, entityId }: Mem
   });
 
   const handleSubmit = async (data: MembroFormValues) => {
+    // Carta obrigatoria ao registrar/alterar transferencia — sem travar
+    // registros legados que ja eram transferencia sem carta
+    const eraTransferenciaSemCarta =
+      defaultValues?.formaDemissao === "TRANSFERENCIA" && !defaultValues?.cartaTransferencia;
+    if (
+      data.formaDemissao === "TRANSFERENCIA" &&
+      !data.cartaTransferencia &&
+      !eraTransferenciaSemCarta
+    ) {
+      form.setError("cartaTransferencia", { message: "Anexe a carta de transferencia" });
+      return;
+    }
     setLoading(true);
     try {
       await onSubmit(data);
@@ -186,7 +198,30 @@ export function MembroForm({ defaultValues, onSubmit, isEditing, entityId }: Mem
           </Section>
 
           <Section title="Demissao / Saida do Rol" defaultOpen={false}>
-            <SelectField name="formaDemissao" label="Forma de Demissao" options={FORMA_DEMISSAO_OPTIONS} />
+            <div className="space-y-1">
+              <Label>Forma de Demissao</Label>
+              <Select
+                value={form.watch("formaDemissao") || ""}
+                onValueChange={(v) => {
+                  form.setValue("formaDemissao", v as MembroFormValues["formaDemissao"]);
+                  // limpa campos especificos da forma anterior para nao orfanar
+                  if (v !== "TRANSFERENCIA") form.setValue("cartaTransferencia", "");
+                  if (v !== "EXCLUSAO") {
+                    form.setValue("motivoDemissao", undefined);
+                    form.setValue("motivoDemissaoObs", "");
+                  }
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {FORMA_DEMISSAO_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <Field name="dataDemissao" label="Data da Demissao" type="date" />
             <Field name="igrejaDestino" label="Igreja de Destino (transferencia)" />
             <Field name="dataFalecimento" label="Data de Falecimento" type="date" />
