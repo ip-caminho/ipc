@@ -13,7 +13,7 @@ export function BrandLoader({ className }: { className?: string }) {
         className,
       )}
     >
-      <Logo className="h-12 w-auto animate-pulse motion-reduce:animate-none" />
+      <Logo className="h-16 w-auto animate-pulse motion-reduce:animate-none" />
     </div>
   );
 }
