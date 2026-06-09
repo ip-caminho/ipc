@@ -15,10 +15,11 @@ export function PageHeader({ title, subtitle }: PageHeaderProps) {
   return (
     <div
       className={cn(
-        "md:pt-4 md:pb-3 md:pr-14",
-        // Mobile: o titulo grande sai (fica na barra). Mostra so se houver
-        // subtitulo; senao colapsa para nao deixar espaco vazio.
-        subtitle ? "pt-4 pb-3" : "max-md:hidden",
+        "md:pt-4 md:pr-14 pb-3",
+        // Mobile: o titulo grande sai (fica na barra). O subtitulo encosta
+        // logo abaixo da barra (pt menor) para ler como continuacao do titulo;
+        // sem subtitulo, colapsa para nao deixar espaco vazio.
+        subtitle ? "max-md:pt-1" : "max-md:hidden",
       )}
     >
       <h1 className="hidden font-display text-2xl font-semibold leading-tight tracking-tight md:block">
