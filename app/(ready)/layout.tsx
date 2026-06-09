@@ -15,6 +15,7 @@ import { GlobalAudioPlayer } from "@shared/audio/GlobalAudioPlayer";
 import { PlayerAwareMain } from "@shared/audio/PlayerAwareMain";
 import { useAuth } from "@shared/providers/PermissionsProvider";
 import { NavigationModeProvider } from "@shared/providers/NavigationModeProvider";
+import { PageTitleProvider } from "@shared/providers/PageTitleProvider";
 
 function NormalShell({ children }: { children: React.ReactNode }) {
   return (
@@ -61,9 +62,11 @@ export default function ReadyLayout({
     <AuthGuard>
       <AudioPlayerProvider>
         <NavigationModeProvider>
-          <ErrorBoundary fallback={<NormalShell>{children}</NormalShell>}>
-            <ShellSelector>{children}</ShellSelector>
-          </ErrorBoundary>
+          <PageTitleProvider>
+            <ErrorBoundary fallback={<NormalShell>{children}</NormalShell>}>
+              <ShellSelector>{children}</ShellSelector>
+            </ErrorBoundary>
+          </PageTitleProvider>
         </NavigationModeProvider>
       </AudioPlayerProvider>
     </AuthGuard>
