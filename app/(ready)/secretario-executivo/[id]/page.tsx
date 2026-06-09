@@ -105,6 +105,9 @@ export default function SecretarioExecutivoDetalhePage() {
                 dataDemissao: membro.dataDemissao,
                 igrejaDestino: membro.igrejaDestino,
                 dataFalecimento: membro.dataFalecimento,
+                cartaTransferencia: membro.cartaTransferencia,
+                motivoDemissao: membro.motivoDemissao,
+                motivoDemissaoObs: membro.motivoDemissaoObs,
               }}
               camposVerificados={camposVerificados}
             />

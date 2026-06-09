@@ -70,6 +70,14 @@ export const membroFormSchema = z.object({
   dataDemissao: z.string().optional(),
   igrejaDestino: z.string().optional(),
   dataFalecimento: z.string().optional(),
-});
+  cartaTransferencia: z.string().optional(),
+  motivoDemissao: z
+    .enum(["DISCIPLINA", "AUSENCIA_PROLONGADA", "ABANDONO", "PEDIDO_PROPRIO", "OUTRO"])
+    .optional(),
+  motivoDemissaoObs: z.string().optional(),
+}).refine(
+  (d) => d.formaDemissao !== "TRANSFERENCIA" || !!d.cartaTransferencia,
+  { message: "Anexe a carta de transferencia", path: ["cartaTransferencia"] },
+);
 
 export type MembroFormValues = z.infer<typeof membroFormSchema>;

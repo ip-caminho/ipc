@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import { DatePickerField } from "@shared/components/DatePickerField";
+import { FileUpload } from "@/shared/files/components/FileUpload";
 import { Church, BookMarked, LogOut, Save, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -26,6 +27,7 @@ import {
   CARGO_ECLESIASTICO_OPTIONS,
   FORMA_ADMISSAO_OPTIONS,
   FORMA_DEMISSAO_OPTIONS,
+  MOTIVO_DEMISSAO_OPTIONS,
 } from "@features/membros/lib/constants";
 
 const TIPO_ROL_OPTIONS = [
@@ -63,6 +65,9 @@ type Props = {
     dataDemissao?: string;
     igrejaDestino?: string;
     dataFalecimento?: string;
+    cartaTransferencia?: string;
+    motivoDemissao?: string;
+    motivoDemissaoObs?: string;
   };
   camposVerificados: CampoVerificado[];
 };
@@ -91,6 +96,9 @@ export function EclesiasticoForm({
     dataDemissao: initial.dataDemissao ?? "",
     igrejaDestino: initial.igrejaDestino ?? "",
     dataFalecimento: initial.dataFalecimento ?? "",
+    cartaTransferencia: initial.cartaTransferencia ?? "",
+    motivoDemissao: initial.motivoDemissao ?? "",
+    motivoDemissaoObs: initial.motivoDemissaoObs ?? "",
   });
   const [saving, setSaving] = useState(false);
 
@@ -109,11 +117,19 @@ export function EclesiasticoForm({
       form.formaDemissao !== (initial.formaDemissao ?? "") ||
       form.dataDemissao !== (initial.dataDemissao ?? "") ||
       form.igrejaDestino !== (initial.igrejaDestino ?? "") ||
-      form.dataFalecimento !== (initial.dataFalecimento ?? "")
+      form.dataFalecimento !== (initial.dataFalecimento ?? "") ||
+      form.cartaTransferencia !== (initial.cartaTransferencia ?? "") ||
+      form.motivoDemissao !== (initial.motivoDemissao ?? "") ||
+      form.motivoDemissaoObs !== (initial.motivoDemissaoObs ?? "")
     );
   }, [form, initial]);
 
   const handleSave = async () => {
+    // Carta de transferencia obrigatoria quando forma de demissao = transferencia
+    if (form.formaDemissao === "TRANSFERENCIA" && !form.cartaTransferencia) {
+      toast.error("Anexe a carta de transferencia antes de salvar");
+      return;
+    }
     setSaving(true);
     try {
       const data: Record<string, string | undefined> = {};
@@ -136,6 +152,9 @@ export function EclesiasticoForm({
       k("dataDemissao");
       k("igrejaDestino");
       k("dataFalecimento");
+      k("cartaTransferencia");
+      k("motivoDemissao");
+      k("motivoDemissaoObs");
 
       await updateEclesiastico({ membroId, data });
       toast.success("Dados eclesiasticos atualizados");
@@ -394,16 +413,69 @@ export function EclesiasticoForm({
                 />
               </div>
               {form.formaDemissao === "TRANSFERENCIA" && (
-                <div className="space-y-1">
-                  <Label className="text-xs">Igreja de destino</Label>
-                  <Input
-                    value={form.igrejaDestino}
-                    onChange={(e) =>
-                      setForm((p) => ({ ...p, igrejaDestino: e.target.value }))
-                    }
-                    placeholder="Nome da nova igreja"
-                  />
-                </div>
+                <>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Igreja de destino</Label>
+                    <Input
+                      value={form.igrejaDestino}
+                      onChange={(e) =>
+                        setForm((p) => ({ ...p, igrejaDestino: e.target.value }))
+                      }
+                      placeholder="Nome da nova igreja"
+                    />
+                  </div>
+                  <div className="space-y-1 sm:col-span-2">
+                    <Label className="text-xs">Carta de transferencia *</Label>
+                    <FileUpload
+                      folder="membros/cartas-transferencia"
+                      entityId={entidadeId}
+                      accept="application/pdf,image/*"
+                      value={form.cartaTransferencia || undefined}
+                      onChange={(url) =>
+                        setForm((p) => ({ ...p, cartaTransferencia: url ?? "" }))
+                      }
+                      label="Anexar carta (PDF ou imagem)"
+                    />
+                  </div>
+                </>
+              )}
+              {form.formaDemissao === "EXCLUSAO" && (
+                <>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Motivo da exclusao</Label>
+                    <Select
+                      value={form.motivoDemissao}
+                      onValueChange={(v) =>
+                        setForm((p) => ({ ...p, motivoDemissao: v }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {MOTIVO_DEMISSAO_OPTIONS.map((o) => (
+                          <SelectItem key={o.value} value={o.value}>
+                            {o.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1 sm:col-span-2">
+                    <Label className="text-xs">Observacao do motivo</Label>
+                    <Textarea
+                      rows={2}
+                      value={form.motivoDemissaoObs}
+                      onChange={(e) =>
+                        setForm((p) => ({
+                          ...p,
+                          motivoDemissaoObs: e.target.value,
+                        }))
+                      }
+                      placeholder="Detalhe o motivo da exclusao (opcional)"
+                    />
+                  </div>
+                </>
               )}
               {form.formaDemissao === "FALECIMENTO" && (
                 <div className="space-y-1">

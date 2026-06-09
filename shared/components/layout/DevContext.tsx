@@ -118,6 +118,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     notas: [
       "Permissao: membros:read, membros:update",
       "AcessoSection (membros:update): status de acesso + gerar magic link + enviar via wa.me",
+      "Secao Demissao: TRANSFERENCIA exige carta de transferencia (FileUpload -> B2, obrigatoria no zod); EXCLUSAO captura motivo (lista) + observacao",
     ],
   },
   "/secretario-executivo": {
@@ -179,6 +180,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "Permissao: membros:read (visualizar), rol:update (editar)",
       "Edita apenas campos eclesiasticos: cargo, rol, sacramentos, admissao, demissao, observacoes pastorais",
       "Permite marcar campos sacramentais como 'verificados pelo livro fisico' (camposVerificados em entidades)",
+      "Demissao: TRANSFERENCIA exige upload da carta de transferencia (FileUpload -> B2, obrigatoria); EXCLUSAO captura motivo (lista) + observacao (membros.motivoDemissao/motivoDemissaoObs/cartaTransferencia)",
     ],
   },
   "/entidades": {

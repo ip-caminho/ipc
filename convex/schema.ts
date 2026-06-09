@@ -182,6 +182,17 @@ export default defineSchema({
     dataDemissao: v.optional(v.string()),
     igrejaDestino: v.optional(v.string()),
     dataFalecimento: v.optional(v.string()),
+    // Carta de transferencia (arquivo B2) — quando formaDemissao = TRANSFERENCIA
+    cartaTransferencia: v.optional(v.string()),
+    // Motivo da exclusao — quando formaDemissao = EXCLUSAO
+    motivoDemissao: v.optional(v.union(
+      v.literal("DISCIPLINA"),
+      v.literal("AUSENCIA_PROLONGADA"),
+      v.literal("ABANDONO"),
+      v.literal("PEDIDO_PROPRIO"),
+      v.literal("OUTRO"),
+    )),
+    motivoDemissaoObs: v.optional(v.string()),
   })
     .index("by_entidade", ["entidadeId"])
     .index("by_user_id", ["userId"])

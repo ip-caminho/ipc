@@ -86,6 +86,9 @@ export default function MembroDetailPage() {
     dataDemissao: membro.dataDemissao || "",
     igrejaDestino: membro.igrejaDestino || "",
     dataFalecimento: membro.dataFalecimento || "",
+    cartaTransferencia: membro.cartaTransferencia || "",
+    motivoDemissao: membro.motivoDemissao,
+    motivoDemissaoObs: membro.motivoDemissaoObs || "",
   };
 
   const handleSubmit = async (data: MembroFormValues) => {
@@ -143,6 +146,9 @@ export default function MembroDetailPage() {
           dataDemissao: data.dataDemissao || undefined,
           igrejaDestino: data.igrejaDestino || undefined,
           dataFalecimento: data.dataFalecimento || undefined,
+          cartaTransferencia: data.cartaTransferencia || undefined,
+          motivoDemissao: data.motivoDemissao || undefined,
+          motivoDemissaoObs: data.motivoDemissaoObs || undefined,
         },
       });
 
