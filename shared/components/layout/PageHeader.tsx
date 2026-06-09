@@ -1,32 +1,16 @@
-"use client";
-
-import { cn } from "@shared/lib/utils/cn";
-import { useSetPageTitle } from "@shared/providers/PageTitleProvider";
-
 interface PageHeaderProps {
   title: string;
   subtitle?: string;
 }
 
 export function PageHeader({ title, subtitle }: PageHeaderProps) {
-  // Alimenta o header global — no mobile o titulo vive na barra de cima.
-  useSetPageTitle(title);
-
   return (
-    <div
-      className={cn(
-        "md:pt-4 md:pr-14 pb-3",
-        // Mobile: o titulo grande sai (fica na barra). O subtitulo encosta
-        // logo abaixo da barra (pt menor) para ler como continuacao do titulo;
-        // sem subtitulo, colapsa para nao deixar espaco vazio.
-        subtitle ? "max-md:pt-1" : "max-md:hidden",
-      )}
-    >
-      <h1 className="hidden font-display text-2xl font-semibold leading-tight tracking-tight md:block">
+    <div className="pt-4 pb-3 md:pr-14">
+      <h1 className="font-display text-2xl font-semibold leading-tight tracking-tight">
         {title}
       </h1>
       {subtitle && (
-        <p className="text-sm text-muted-foreground md:mt-1">{subtitle}</p>
+        <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
       )}
     </div>
   );
