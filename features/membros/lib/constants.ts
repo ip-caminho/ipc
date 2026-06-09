@@ -33,6 +33,14 @@ export const FORMA_DEMISSAO_OPTIONS = [
   { value: "JURISDICAO", label: "Mudanca de Jurisdicao" },
 ] as const;
 
+export const MOTIVO_DEMISSAO_OPTIONS = [
+  { value: "DISCIPLINA", label: "Disciplina" },
+  { value: "AUSENCIA_PROLONGADA", label: "Ausencia prolongada" },
+  { value: "ABANDONO", label: "Abandono" },
+  { value: "PEDIDO_PROPRIO", label: "Pedido proprio" },
+  { value: "OUTRO", label: "Outro" },
+] as const;
+
 export const TIPO_DOCUMENTO_OPTIONS = [
   { value: "RG", label: "RG" },
   { value: "RNE", label: "RNE" },

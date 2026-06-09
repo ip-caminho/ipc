@@ -15,10 +15,11 @@ import {
   SEXO_OPTIONS, ESTADO_CIVIL_OPTIONS, FORMACAO_OPTIONS,
   CARGO_ECLESIASTICO_OPTIONS, FORMA_ADMISSAO_OPTIONS, ROLE_OPTIONS,
   CBCM_OPTIONS, TIPO_DOCUMENTO_OPTIONS, VINCULO_IGREJA_OPTIONS,
-  FORMA_DEMISSAO_OPTIONS,
+  FORMA_DEMISSAO_OPTIONS, MOTIVO_DEMISSAO_OPTIONS,
 } from "../lib/constants";
 import { useState, useRef } from "react";
 import { PhotoUpload } from "@/shared/files/components/PhotoUpload";
+import { FileUpload } from "@/shared/files/components/FileUpload";
 
 interface MembroFormProps {
   defaultValues?: Partial<MembroFormValues>;
@@ -189,6 +190,38 @@ export function MembroForm({ defaultValues, onSubmit, isEditing, entityId }: Mem
             <Field name="dataDemissao" label="Data da Demissao" type="date" />
             <Field name="igrejaDestino" label="Igreja de Destino (transferencia)" />
             <Field name="dataFalecimento" label="Data de Falecimento" type="date" />
+            {form.watch("formaDemissao") === "TRANSFERENCIA" && (
+              <div className="space-y-1 sm:col-span-2 lg:col-span-3">
+                <Label>Carta de Transferencia *</Label>
+                <FileUpload
+                  folder="membros/cartas-transferencia"
+                  entityId={uploadEntityId}
+                  accept="application/pdf,image/*"
+                  value={form.watch("cartaTransferencia") || undefined}
+                  onChange={(url) => form.setValue("cartaTransferencia", url || "")}
+                  label="Anexar carta (PDF ou imagem)"
+                />
+                {form.formState.errors.cartaTransferencia && (
+                  <p className="text-xs text-destructive">
+                    {form.formState.errors.cartaTransferencia.message}
+                  </p>
+                )}
+              </div>
+            )}
+            {form.watch("formaDemissao") === "EXCLUSAO" && (
+              <>
+                <SelectField name="motivoDemissao" label="Motivo da Exclusao" options={MOTIVO_DEMISSAO_OPTIONS} />
+                <div className="space-y-1 sm:col-span-2 lg:col-span-3">
+                  <Label htmlFor="motivoDemissaoObs">Observacao do Motivo</Label>
+                  <Textarea
+                    id="motivoDemissaoObs"
+                    rows={2}
+                    placeholder="Detalhe o motivo da exclusao (opcional)"
+                    {...form.register("motivoDemissaoObs")}
+                  />
+                </div>
+              </>
+            )}
           </Section>
         </CardContent>
       </Card>

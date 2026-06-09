@@ -54,6 +54,9 @@ const ECLESIASTICO_FIELDS = new Set([
   "dataDemissao",
   "igrejaDestino",
   "dataFalecimento",
+  "cartaTransferencia",
+  "motivoDemissao",
+  "motivoDemissaoObs",
 ]);
 
 export const updateEclesiastico = mutation({
@@ -469,6 +472,9 @@ const FIELD_LABELS: Record<string, string> = {
   dataDemissao: "Data de demissao",
   igrejaDestino: "Igreja destino",
   dataFalecimento: "Data de falecimento",
+  cartaTransferencia: "Carta de transferencia",
+  motivoDemissao: "Motivo da exclusao",
+  motivoDemissaoObs: "Observacao do motivo",
 };
 
 type HistoricoItem = {
