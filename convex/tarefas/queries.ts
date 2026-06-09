@@ -1,4 +1,5 @@
 import { query } from "../_generated/server";
+import { getSaoPauloDateString } from "../_shared/datetime";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { hasPermission, resolvePermissions, INITIAL_ROLE_PERMISSIONS } from "../preferencias/rbacHelpers";
@@ -179,7 +180,7 @@ export const dashboardStats = query({
       .withIndex("by_responsavel", (q) => q.eq("responsavelId", membro._id))
       .collect();
 
-    const hoje = new Date().toISOString().split("T")[0];
+    const hoje = getSaoPauloDateString();
     const pendentes = minhas.filter((t) => t.status === "ABERTA" || t.status === "EM_ANDAMENTO");
     const atrasadas = pendentes.filter((t) => t.dataVencimento && t.dataVencimento < hoje);
 

@@ -1,4 +1,5 @@
 import { query, mutation } from "../_generated/server";
+import { getSaoPauloDate, getSaoPauloDateString } from "../_shared/datetime";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { requirePermission } from "../_shared/requirePermission";
@@ -19,7 +20,8 @@ async function requireAuth(ctx: any) {
 // Retorna proximos N domingos a partir de hoje
 function getProximosDomingos(semanas: number): string[] {
   const datas: string[] = [];
-  const hoje = new Date();
+  const sp = getSaoPauloDate();
+  const hoje = new Date(sp.year, sp.month - 1, sp.day);
   const dia = new Date(hoje);
 
   // Avançar para o proximo domingo
@@ -47,7 +49,7 @@ export const minhasIndisponibilidades = query({
       .first();
     if (!membro) return [];
 
-    const hoje = new Date().toISOString().split("T")[0];
+    const hoje = getSaoPauloDateString();
     const limite = ateData || `${new Date().getFullYear()}-12-31`;
 
     const indisps = await ctx.db
@@ -92,7 +94,7 @@ export const minhasDatasEscaladas = query({
       .first();
     if (!membro) return [];
 
-    const hoje = new Date().toISOString().split("T")[0];
+    const hoje = getSaoPauloDateString();
 
     const escalas = await ctx.db
       .query("cultoEscalas")

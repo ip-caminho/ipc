@@ -1,4 +1,5 @@
 import { internalMutation, internalQuery, mutation } from "../_generated/server";
+import { getSaoPauloDateString } from "../_shared/datetime";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 
@@ -139,7 +140,7 @@ export const createFromAudio = mutation({
     const id = await ctx.db.insert("gravacoes", {
       titulo: "Processando...",
       tipo: args.tipo || "SERMAO",
-      data: args.data || new Date().toISOString().split("T")[0],
+      data: args.data || getSaoPauloDateString(),
       audioUrl: args.audioUrl,
       status: "RASCUNHO",
       iaStatus: "PENDENTE",
@@ -183,7 +184,7 @@ export const createFromYouTube = mutation({
     const id = await ctx.db.insert("gravacoes", {
       titulo: "Importando do YouTube...",
       tipo: args.tipo || "SERMAO",
-      data: args.data || new Date().toISOString().split("T")[0],
+      data: args.data || getSaoPauloDateString(),
       youtubeUrl: args.youtubeUrl,
       status: "RASCUNHO",
       iaStatus: "BAIXANDO",

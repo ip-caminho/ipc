@@ -9,6 +9,7 @@
  */
 
 import type * as _shared_auditHelpers from "../_shared/auditHelpers.js";
+import type * as _shared_datetime from "../_shared/datetime.js";
 import type * as _shared_llm_anthropic from "../_shared/llm/anthropic.js";
 import type * as _shared_llm_gemini from "../_shared/llm/gemini.js";
 import type * as _shared_llm_groq from "../_shared/llm/groq.js";
@@ -137,6 +138,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   "_shared/auditHelpers": typeof _shared_auditHelpers;
+  "_shared/datetime": typeof _shared_datetime;
   "_shared/llm/anthropic": typeof _shared_llm_anthropic;
   "_shared/llm/gemini": typeof _shared_llm_gemini;
   "_shared/llm/groq": typeof _shared_llm_groq;

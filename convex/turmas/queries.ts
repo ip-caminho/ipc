@@ -1,4 +1,5 @@
 import { query } from "../_generated/server";
+import { getSaoPauloDateString, getSaoPauloWeekday } from "../_shared/datetime";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 
@@ -31,8 +32,8 @@ export const minhasTurmasInstrutor = query({
       (t) => t.instrutorId === membro._id && (t.status === "ABERTA" || t.status === "EM_ANDAMENTO")
     );
 
-    const hoje = new Date().toISOString().split("T")[0];
-    const diaSemanaHoje = ["DOMINGO", "SEGUNDA", "TERCA", "QUARTA", "QUINTA", "SEXTA", "SABADO"][new Date().getDay()];
+    const hoje = getSaoPauloDateString();
+    const diaSemanaHoje = ["DOMINGO", "SEGUNDA", "TERCA", "QUARTA", "QUINTA", "SEXTA", "SABADO"][getSaoPauloWeekday()];
     const agora = Date.now();
     const limite48h = agora - 48 * 60 * 60 * 1000;
 
