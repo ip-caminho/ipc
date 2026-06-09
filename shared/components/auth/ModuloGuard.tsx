@@ -4,6 +4,7 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { BrandLoader } from "@shared/components/layout/BrandLoader";
 
 interface ModuloGuardProps {
   modulo: string;
@@ -24,14 +25,7 @@ export function ModuloGuard({ modulo, children }: ModuloGuardProps) {
   }, [isLoading, isAtivo, router]);
 
   if (isLoading) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Carregando...</p>
-        </div>
-      </div>
-    );
+    return <BrandLoader />;
   }
 
   if (!isAtivo) return null;
