@@ -1,6 +1,7 @@
 import { query } from "../_generated/server";
 import { v } from "convex/values";
 import { checkPermission, requireAnyPermission } from "../_shared/requirePermission";
+import { getSaoPauloDate } from "../_shared/datetime";
 
 export const list = query({
   args: {
@@ -114,9 +115,8 @@ export const birthdaysThisMonth = query({
     const temDiretorio = !!(await checkPermission(ctx, "diretorio:read"));
     const podeVer = temDiretorio || !!(await checkPermission(ctx, "membros:self_service"));
     if (!podeVer) return [];
-    const now = new Date();
-    const currentMonth = now.getMonth() + 1;
-    const currentDay = now.getDate();
+    // "Hoje" no fuso da igreja (America/Sao_Paulo), nao no UTC do servidor.
+    const { month: currentMonth, day: currentDay } = getSaoPauloDate();
     const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
 
     const membros = await ctx.db.query("membros").collect();
@@ -185,10 +185,12 @@ export const birthdaysThisWeek = query({
   args: {},
   handler: async (ctx) => {
     if (!(await checkPermission(ctx, "diretorio:read"))) return [];
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    // "Hoje" no fuso da igreja (America/Sao_Paulo). Ancorado em UTC para
+    // comparacao consistente (todas as datas usam Date.UTC do mesmo calendario).
+    const sp = getSaoPauloDate();
+    const today = new Date(Date.UTC(sp.year, sp.month - 1, sp.day));
     const endOfWeek = new Date(today);
-    endOfWeek.setDate(today.getDate() + 6);
+    endOfWeek.setUTCDate(today.getUTCDate() + 6);
 
     const membros = await ctx.db.query("membros").collect();
     const results = await Promise.all(
@@ -202,13 +204,13 @@ export const birthdaysThisWeek = query({
       .filter((r): r is NonNullable<typeof r> => {
         if (!r || !r.entidade.dataNascimento || r.entidade.status !== "ATIVO") return false;
         const [, month, day] = r.entidade.dataNascimento.split("-").map(Number);
-        const bday = new Date(now.getFullYear(), month - 1, day);
+        const bday = new Date(Date.UTC(sp.year, month - 1, day));
         return bday >= today && bday <= endOfWeek;
       })
       .sort((a, b) => {
         const [, mA, dA] = a.entidade.dataNascimento!.split("-").map(Number);
         const [, mB, dB] = b.entidade.dataNascimento!.split("-").map(Number);
-        return new Date(now.getFullYear(), mA - 1, dA).getTime() - new Date(now.getFullYear(), mB - 1, dB).getTime();
+        return new Date(Date.UTC(sp.year, mA - 1, dA)).getTime() - new Date(Date.UTC(sp.year, mB - 1, dB)).getTime();
       });
   },
 });
