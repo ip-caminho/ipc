@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useConvexAuth } from "convex/react";
 import { useEffect } from "react";
+import { BrandLoader } from "@shared/components/layout/BrandLoader";
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -23,14 +24,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
   }, [isAuthenticated, isLoading, isPublicRoute, router]);
 
   if (isLoading) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Carregando...</p>
-        </div>
-      </div>
-    );
+    return <BrandLoader />;
   }
 
   if (!isAuthenticated && !isPublicRoute) {
