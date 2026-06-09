@@ -1,4 +1,5 @@
 import { query, mutation, type MutationCtx } from "../_generated/server";
+import { getSaoPauloDate } from "../_shared/datetime";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { createFieldAuditLogs } from "../_shared/auditHelpers";
@@ -412,13 +413,12 @@ export const adicionarFilho = mutation({
  */
 function turmaFromDataNascimento(dataNascimento: string | undefined): string | null {
   if (!dataNascimento) return null;
-  const birth = new Date(dataNascimento);
-  if (Number.isNaN(birth.getTime())) return null;
-  const now = new Date();
-  let age = now.getFullYear() - birth.getFullYear();
-  const beforeBirthday =
-    now.getMonth() < birth.getMonth() ||
-    (now.getMonth() === birth.getMonth() && now.getDate() < birth.getDate());
+  const [by, bm, bd] = dataNascimento.split("-").map(Number);
+  if ([by, bm, bd].some((n) => Number.isNaN(n))) return null;
+  // Idade "hoje" no fuso da igreja (Sao Paulo), nao no UTC do servidor.
+  const sp = getSaoPauloDate();
+  let age = sp.year - by;
+  const beforeBirthday = sp.month < bm || (sp.month === bm && sp.day < bd);
   if (beforeBirthday) age--;
   if (age < 0) return null;
   if (age <= 2) return "0-2";

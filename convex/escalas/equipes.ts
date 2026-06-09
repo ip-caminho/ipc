@@ -1,4 +1,5 @@
 import { query, mutation } from "../_generated/server";
+import { getSaoPauloDateString } from "../_shared/datetime";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { requirePermission } from "../_shared/requirePermission";
@@ -92,7 +93,7 @@ export const getEscalasProximasPorEquipe = query({
     const minhasFuncoes = equipes.filter((e) => e.ativo).map((e) => e.funcao);
     if (minhasFuncoes.length === 0) return [];
 
-    const today = new Date().toISOString().split("T")[0];
+    const today = getSaoPauloDateString();
     const cultos = await ctx.db.query("cultos").order("asc").collect();
     const proximosCultos = cultos.filter((c) => c.data >= today).slice(0, 8);
 

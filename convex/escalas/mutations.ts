@@ -1,4 +1,5 @@
 import { mutation } from "../_generated/server";
+import { getSaoPauloDate } from "../_shared/datetime";
 import { v } from "convex/values";
 import { createActionAuditLog, createFieldAuditLogs } from "../_shared/auditHelpers";
 import { requirePermission } from "../_shared/requirePermission";
@@ -7,7 +8,8 @@ import { requirePermission } from "../_shared/requirePermission";
 export const garantirCultosFuturos = mutation({
   args: {},
   handler: async (ctx) => {
-    const hoje = new Date();
+    const sp = getSaoPauloDate();
+    const hoje = new Date(sp.year, sp.month - 1, sp.day);
     const limite = new Date(hoje.getFullYear(), 11, 31);
     const limiteStr = limite.toISOString().split("T")[0];
 

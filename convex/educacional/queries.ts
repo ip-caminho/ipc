@@ -1,4 +1,5 @@
 import { query } from "../_generated/server";
+import { getSaoPauloDateString } from "../_shared/datetime";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { resolvePermissions } from "../preferencias/rbacHelpers";
@@ -431,7 +432,7 @@ export const dashboardPais = query({
         if (!criancaEntidade || !perfil) return null;
 
         // Buscar proxima escala do educacional para esta turma
-        const hoje = new Date().toISOString().slice(0, 10);
+        const hoje = getSaoPauloDateString();
         const escalas = await ctx.db
           .query("ministerioEscalas")
           .withIndex("by_data")

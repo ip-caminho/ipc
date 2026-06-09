@@ -1,4 +1,5 @@
 import { query } from "../_generated/server";
+import { getSaoPauloDateString } from "../_shared/datetime";
 
 /**
  * Extrai {weekday, hour} do Date atual no fuso America/Sao_Paulo.
@@ -34,7 +35,7 @@ export const getLiveStatus = query({
   handler: async (ctx) => {
     const isLive = isDomingoWindowBrasil();
 
-    const today = new Date().toISOString().split("T")[0];
+    const today = getSaoPauloDateString();
     const cultos = await ctx.db
       .query("cultos")
       .withIndex("by_data")

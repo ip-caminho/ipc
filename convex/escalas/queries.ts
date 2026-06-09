@@ -1,6 +1,7 @@
 import { query } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { getSaoPauloDateString, getSaoPauloWeekday } from "../_shared/datetime";
 
 function primeiroNome(nomeCompleto: string): string {
   return nomeCompleto.split(" ")[0];
@@ -147,7 +148,7 @@ export const minhasEscalas = query({
       .withIndex("by_membro", (q) => q.eq("membroId", membro._id))
       .collect();
 
-    const today = new Date().toISOString().split("T")[0];
+    const today = getSaoPauloDateString();
 
     const results = await Promise.all(
       escalas.map(async (e) => {
@@ -190,7 +191,7 @@ export const minhasEscalas = query({
 export const listProximosCultos = query({
   args: { limit: v.optional(v.number()) },
   handler: async (ctx, { limit = 3 }) => {
-    const today = new Date().toISOString().split("T")[0];
+    const today = getSaoPauloDateString();
 
     const cultos = await ctx.db
       .query("cultos")
@@ -225,7 +226,7 @@ export const listProximosCultos = query({
 export const getProximoDomingo = query({
   args: { data: v.optional(v.string()) },
   handler: async (ctx, { data }) => {
-    const today = new Date().toISOString().split("T")[0];
+    const today = getSaoPauloDateString();
 
     const cultos = await ctx.db.query("cultos").order("asc").collect();
     const dominicais = cultos
@@ -298,7 +299,7 @@ export const getProximoDomingo = query({
 export const getBoletim = query({
   args: { data: v.optional(v.string()) },
   handler: async (ctx, { data }) => {
-    const today = new Date().toISOString().split("T")[0];
+    const today = getSaoPauloDateString();
 
     const cultos = await ctx.db
       .query("cultos")
@@ -315,7 +316,7 @@ export const getBoletim = query({
       culto = dominicais.find((c) => c.data === data);
     }
     if (!culto) {
-      const isDomingo = new Date().getDay() === 0;
+      const isDomingo = getSaoPauloWeekday() === 0;
       if (isDomingo) {
         // No domingo, mostra o culto de hoje
         culto = dominicais.find((c) => c.data === today);
@@ -388,7 +389,7 @@ export const minhaProximaEscala = query({
       .withIndex("by_membro", (q) => q.eq("membroId", membro._id))
       .collect();
 
-    const today = new Date().toISOString().split("T")[0];
+    const today = getSaoPauloDateString();
 
     const escalasComCulto = await Promise.all(
       escalas.map(async (e) => {
