@@ -41,3 +41,26 @@ export const deleteFile = internalAction({
     return await deleteFromB2(args.url);
   },
 });
+
+// Upload PUBLICO de audio (sem login) — protegido por token no link e restrito a
+// pasta de audio + mimetype audio/*. Usado pela pagina /subir-audio (voluntarios
+// de multimidia). Ver convex/gravacoes/publicUpload.ts para a criacao do rascunho.
+export const getPublicAudioUploadUrl = action({
+  args: {
+    token: v.string(),
+    mimeType: v.string(),
+    fileName: v.string(),
+  },
+  handler: async (_ctx, args) => {
+    const expected = process.env.AUDIO_UPLOAD_TOKEN;
+    if (!expected || args.token !== expected) {
+      throw new Error("Link invalido ou expirado");
+    }
+    if (!args.mimeType.startsWith("audio/")) {
+      throw new Error("Apenas arquivos de audio sao aceitos");
+    }
+    const ext = args.fileName.split(".").pop() || "mp3";
+    const key = generateObjectKey("gravacoes-audio", "publico", ext);
+    return await generatePresignedUploadUrl(key, args.mimeType);
+  },
+});
