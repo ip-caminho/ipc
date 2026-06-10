@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAction, useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -61,8 +61,20 @@ function SubirAudioForm() {
   const [nome, setNome] = useState("");
   const [observacao, setObservacao] = useState("");
   const [step, setStep] = useState<"idle" | "comprimindo" | "enviando" | "ok">("idle");
+  const [dragOver, setDragOver] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const busy = step === "comprimindo" || step === "enviando" || isCompressing;
+
+  // Aceita arquivo do drop ou do seletor — exige tipo de audio
+  function aceitarArquivo(f: File | undefined | null) {
+    if (!f) return;
+    if (!f.type.startsWith("audio/")) {
+      toast.error("Selecione um arquivo de áudio");
+      return;
+    }
+    setFile(f);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -184,19 +196,50 @@ function SubirAudioForm() {
           <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
             <div className="space-y-2">
               <Label htmlFor="audio">Arquivo de áudio</Label>
-              <Input
+              <input
+                ref={inputRef}
                 id="audio"
                 type="file"
                 accept="audio/*"
+                className="sr-only"
                 disabled={busy}
-                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-                required
+                onChange={(e) => aceitarArquivo(e.target.files?.[0])}
               />
-              {file && (
-                <p className="text-xs text-muted-foreground">
-                  {file.name} ({(file.size / 1024 / 1024).toFixed(1)} MB)
-                </p>
-              )}
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => inputRef.current?.click()}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  if (!busy) setDragOver(true);
+                }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setDragOver(false);
+                  if (!busy) aceitarArquivo(e.dataTransfer.files?.[0]);
+                }}
+                className={`flex w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed px-4 py-8 text-center transition-colors ${
+                  dragOver
+                    ? "border-primary bg-primary/5"
+                    : "border-input hover:border-primary/50 hover:bg-accent/40"
+                } ${busy ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
+              >
+                <UploadCloud className="h-6 w-6 text-muted-foreground" />
+                {file ? (
+                  <span className="text-sm font-medium break-all">
+                    {file.name}{" "}
+                    <span className="text-muted-foreground">
+                      ({(file.size / 1024 / 1024).toFixed(1)} MB)
+                    </span>
+                  </span>
+                ) : (
+                  <span className="text-sm text-muted-foreground">
+                    Arraste o áudio aqui ou{" "}
+                    <span className="font-medium text-foreground">toque para escolher</span>
+                  </span>
+                )}
+              </button>
             </div>
 
             <div className="space-y-2">
