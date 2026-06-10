@@ -7,6 +7,7 @@ import { requireAnyPermission } from "../_shared/requirePermission";
 const FOLDER_PERMISSIONS: Record<string, string[]> = {
   "gravacoes-audio": ["gravacoes:create", "gravacoes:update"],
   "membros/fotos": ["membros:create", "membros:update", "membros:self_service"],
+  "membros/cartas-transferencia": ["membros:create", "membros:update", "rol:update"],
   "educacional/fotos": ["educacional:write", "criancas:manage"],
   "biblioteca-capas": ["biblioteca:create", "biblioteca:update"],
 };
