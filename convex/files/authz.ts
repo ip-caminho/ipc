@@ -8,6 +8,7 @@ const FOLDER_PERMISSIONS: Record<string, string[]> = {
   "gravacoes-audio": ["gravacoes:create", "gravacoes:update"],
   "membros/fotos": ["membros:create", "membros:update", "membros:self_service"],
   "educacional/fotos": ["educacional:write", "criancas:manage"],
+  "biblioteca-capas": ["biblioteca:create", "biblioteca:update"],
 };
 
 // Chamada pelo action getUploadUrl (Node) via runQuery — actions nao tem ctx.db.
