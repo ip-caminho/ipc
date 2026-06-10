@@ -66,6 +66,8 @@ import type * as gravacoes_avisosLeituras from "../gravacoes/avisosLeituras.js";
 import type * as gravacoes_comentarios from "../gravacoes/comentarios.js";
 import type * as gravacoes_escutas from "../gravacoes/escutas.js";
 import type * as gravacoes_escutasHelpers from "../gravacoes/escutasHelpers.js";
+import type * as gravacoes_iaHelpers from "../gravacoes/iaHelpers.js";
+import type * as gravacoes_migrations from "../gravacoes/migrations.js";
 import type * as gravacoes_mutations from "../gravacoes/mutations.js";
 import type * as gravacoes_publicUpload from "../gravacoes/publicUpload.js";
 import type * as gravacoes_publico from "../gravacoes/publico.js";
@@ -197,6 +199,8 @@ declare const fullApi: ApiFromModules<{
   "gravacoes/comentarios": typeof gravacoes_comentarios;
   "gravacoes/escutas": typeof gravacoes_escutas;
   "gravacoes/escutasHelpers": typeof gravacoes_escutasHelpers;
+  "gravacoes/iaHelpers": typeof gravacoes_iaHelpers;
+  "gravacoes/migrations": typeof gravacoes_migrations;
   "gravacoes/mutations": typeof gravacoes_mutations;
   "gravacoes/publicUpload": typeof gravacoes_publicUpload;
   "gravacoes/publico": typeof gravacoes_publico;

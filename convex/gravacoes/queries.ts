@@ -3,6 +3,15 @@ import type { Doc } from "../_generated/dataModel";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { checkPermission, requirePermission } from "../_shared/requirePermission";
+import { extrairFrases } from "./iaHelpers";
+
+// Remove os campos pesados legados (pre-migracao) do payload das listas
+function semCamposPesados<T extends { iaTranscricao?: unknown; iaResultado?: unknown }>(g: T) {
+  const { iaTranscricao, iaResultado, ...leve } = g;
+  void iaTranscricao;
+  void iaResultado;
+  return leve;
+}
 
 async function isQuiosqueAtivo(ctx: any): Promise<boolean> {
   const config = await ctx.db.query("configApp").first();
@@ -85,7 +94,7 @@ export const list = query({
           )
           .collect();
 
-        return { ...g, pregadorInfo, serieInfo, reacoesSummary, comentarioCount: comentarios.length };
+        return { ...semCamposPesados(g), pregadorInfo, serieInfo, reacoesSummary, comentarioCount: comentarios.length };
       })
     );
   },
@@ -124,7 +133,7 @@ export const listRecentesByTipo = query({
             pregadorInfo = { nome: entidade?.nomeCompleto || "" };
           }
         }
-        return { ...g, pregadorInfo };
+        return { ...semCamposPesados(g), pregadorInfo };
       }),
     );
   },
@@ -154,7 +163,20 @@ export const getById = query({
       }
     }
 
-    return { ...gravacao, pregadorInfo, serieInfo };
+    // Transcricao/resultado moram em gravacoesIA; fallback aos campos legados
+    // do proprio doc enquanto a migracao nao roda
+    const ia = await ctx.db
+      .query("gravacoesIA")
+      .withIndex("by_gravacao", (q) => q.eq("gravacaoId", id))
+      .first();
+
+    return {
+      ...gravacao,
+      iaTranscricao: ia?.transcricao ?? gravacao.iaTranscricao,
+      iaResultado: ia?.resultado ?? gravacao.iaResultado,
+      pregadorInfo,
+      serieInfo,
+    };
   },
 });
 
@@ -202,31 +224,19 @@ export const listFrases = query({
       if (g.status !== "PUBLICADO" || g.iaStatus !== "CONCLUIDO") continue;
       // Frases apenas de sermões e palestras
       if (g.tipo !== "SERMAO" && g.tipo !== "PALESTRA") continue;
-      const resultado = g.iaResultado as any;
-      if (!resultado) continue;
 
-      // fraseChave (1 por gravação)
-      if (resultado.fraseChave) {
+      // iaFrases denormalizado (fraseChave + frasesRedesSociais); fallback ao
+      // iaResultado legado enquanto a migracao nao roda
+      const frasesDaGravacao = g.iaFrases ?? extrairFrases(g.iaResultado);
+      if (!frasesDaGravacao) continue;
+
+      for (const f of frasesDaGravacao) {
         frases.push({
-          frase: resultado.fraseChave,
+          frase: f,
           pregador: g.pregadorNome || "Pregador",
           titulo: g.titulo,
           gravacaoId: g._id,
         });
-      }
-
-      // frasesRedesSociais (várias por gravação)
-      if (Array.isArray(resultado.frasesRedesSociais)) {
-        for (const f of resultado.frasesRedesSociais) {
-          if (typeof f === "string" && f.trim()) {
-            frases.push({
-              frase: f,
-              pregador: g.pregadorNome || "Pregador",
-              titulo: g.titulo,
-              gravacaoId: g._id,
-            });
-          }
-        }
       }
     }
 

@@ -1,5 +1,6 @@
 import { internalMutation, internalQuery, mutation } from "../_generated/server";
 import { getSaoPauloDateString } from "../_shared/datetime";
+import { extrairFrases } from "./iaHelpers";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 
@@ -102,13 +103,34 @@ export const updateIaStatus = internalMutation({
     }))),
   },
   handler: async (ctx, args) => {
-    const { id, ...data } = args;
+    // Transcricao e resultado brutos vao para gravacoesIA (tabela separada),
+    // para os docs de gravacoes ficarem leves nas listagens
+    const { id, iaTranscricao, iaResultado, ...data } = args;
     const patch: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(data)) {
       if (value !== undefined) {
         patch[key] = value;
       }
     }
+
+    if (iaTranscricao !== undefined || iaResultado !== undefined) {
+      const pesado: Record<string, unknown> = {};
+      if (iaTranscricao !== undefined) pesado.transcricao = iaTranscricao;
+      if (iaResultado !== undefined) {
+        pesado.resultado = iaResultado;
+        patch.iaFrases = extrairFrases(iaResultado);
+      }
+      const existente = await ctx.db
+        .query("gravacoesIA")
+        .withIndex("by_gravacao", (q) => q.eq("gravacaoId", id))
+        .first();
+      if (existente) {
+        await ctx.db.patch(existente._id, pesado);
+      } else {
+        await ctx.db.insert("gravacoesIA", { gravacaoId: id, ...pesado });
+      }
+    }
+
     await ctx.db.patch(id, patch);
   },
 });
@@ -262,10 +284,15 @@ export const startProcessing = mutation({
     if (!gravacao.audioUrl) throw new Error("Gravacao sem audio para processar");
 
     // Retry from analysis: skip Deepgram, reuse existing transcription
-    const skipTranscription =
-      retryFrom === "ANALISANDO" && gravacao.iaTranscricao
-        ? gravacao.iaTranscricao
-        : undefined;
+    // (gravacoesIA; fallback ao campo legado pre-migracao)
+    let skipTranscription: string | undefined;
+    if (retryFrom === "ANALISANDO") {
+      const ia = await ctx.db
+        .query("gravacoesIA")
+        .withIndex("by_gravacao", (q) => q.eq("gravacaoId", id))
+        .first();
+      skipTranscription = ia?.transcricao || gravacao.iaTranscricao || undefined;
+    }
 
     await ctx.db.patch(id, {
       iaStatus: "PENDENTE",

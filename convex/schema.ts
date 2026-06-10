@@ -233,8 +233,14 @@ export default defineSchema({
       v.literal("ERRO")
     )),
     iaErro: v.optional(v.string()),
+    // LEGADO: transcricao/resultado agora moram em gravacoesIA (tabela separada,
+    // para as listagens nao pagarem bandwidth pelos campos pesados). Mantidos
+    // aqui ate a migracao gravacoes/migrations:migrarIaParaTabela limpar prod.
     iaTranscricao: v.optional(v.string()),
     iaResultado: v.optional(v.any()),
+    // Frases denormalizadas do resultado IA (fraseChave + frasesRedesSociais)
+    // — pequenas, para listFrases nao depender do iaResultado pesado
+    iaFrases: v.optional(v.array(v.string())),
     iaProcessadoEm: v.optional(v.number()),
     iaProcessadoPor: v.optional(v.id("membros")),
     // Sermon boundaries (seconds) — detected by IA, só para SERMAO (culto completo)
@@ -266,6 +272,14 @@ export default defineSchema({
     .index("by_pregador", ["pregadorId"])
     .index("by_serie", ["serieId"])
     .index("by_share_token", ["shareToken"]),
+
+  // Conteudo pesado de IA (1:1 com gravacoes), lido apenas no detalhe e no
+  // pipeline de IA. Separado para o full scan das listagens ler docs leves.
+  gravacoesIA: defineTable({
+    gravacaoId: v.id("gravacoes"),
+    transcricao: v.optional(v.string()),
+    resultado: v.optional(v.any()),
+  }).index("by_gravacao", ["gravacaoId"]),
 
   reacoesGravacao: defineTable({
     gravacaoId: v.id("gravacoes"),
