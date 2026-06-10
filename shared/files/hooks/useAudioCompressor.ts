@@ -70,7 +70,9 @@ export function useAudioCompressor() {
           "-i", inputName,
           "-vn",               // strip album art
           "-ac", "1",          // mono
-          "-af", "dynaudnorm=f=150:g=15", // normalizar volume dinâmico
+          // Cadeia de fala: corta ronco/AC (<85Hz) -> comprime picos (voz mais
+          // audivel no fone) -> normaliza volume dinamico. Ordem importa.
+          "-af", "highpass=f=85,acompressor=threshold=-18dB:ratio=3:attack=20:release=250,dynaudnorm=f=150:g=15",
           "-ab", bitrate,
           "-acodec", "libmp3lame",
           "output.mp3",
