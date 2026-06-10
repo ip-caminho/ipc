@@ -38,7 +38,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "features/dashboard/components/AniversariantesCard.tsx",
       "features/gravacoes/components/AvisosWidget.tsx",
     ],
-    queries: ["gravacoes.queries.list", "gravacoes.queries.getLatestAvisos", "membros.selfService.getMyProfile", "membros.queries.birthdaysThisMonth", "membros.cadastroVivo.getMyCompleteness"],
+    queries: ["gravacoes.queries.listRecentesByTipo (tipo=SERMAO, limit=1)", "gravacoes.queries.getLatestAvisos", "membros.selfService.getMyProfile", "membros.queries.birthdaysThisMonth", "membros.cadastroVivo.getMyCompleteness"],
     mutations: ["membros.bootstrap.bootstrapAdmin"],
     componentes: ["UltimoSermaoCard", "ProfileCompletenessCard", "TodaySection", "BirthdayList", "SectionLabel", "AvisosWidget (drawer)", "BootstrapForm"],
     notas: [

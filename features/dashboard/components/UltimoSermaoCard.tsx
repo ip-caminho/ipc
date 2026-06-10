@@ -10,10 +10,12 @@ import { useAuth } from "@shared/providers/PermissionsProvider";
 
 export function UltimoSermaoCard() {
   const { can } = useAuth();
+  // listRecentesByTipo ja filtra PUBLICADO e ordena por data desc — evita
+  // baixar a tabela inteira para mostrar 1 card
   const sermoes = useQuery(
-    api.gravacoes.queries.list,
+    api.gravacoes.queries.listRecentesByTipo,
     can("gravacoes:read")
-      ? { tipo: "SERMAO", status: "PUBLICADO" }
+      ? { tipo: "SERMAO", limit: 1 }
       : "skip",
   );
 
@@ -24,10 +26,7 @@ export function UltimoSermaoCard() {
     pregadorNome?: string | null;
   };
 
-  const sorted = [...sermoes].sort((a, b) =>
-    (b.data as string).localeCompare(a.data as string),
-  );
-  const ultimo = sorted[0] as Gravacao;
+  const ultimo = sermoes[0] as Gravacao;
   const pregador = ultimo.pregadorInfo?.nome || ultimo.pregadorNome || null;
 
   let dataFormatada = "";

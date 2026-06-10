@@ -11,17 +11,19 @@ const LIMIT = 6;
 
 export function RecentSermonsScroll() {
   const { can } = useAuth();
+  // listRecentesByTipo ja filtra PUBLICADO, ordena por data desc e limita no
+  // servidor — evita baixar a tabela inteira para mostrar 6 itens
   const sermoes = useQuery(
-    api.gravacoes.queries.list,
+    api.gravacoes.queries.listRecentesByTipo,
     can("gravacoes:read")
-      ? { tipo: "SERMAO", status: "PUBLICADO" }
+      ? { tipo: "SERMAO", limit: LIMIT }
       : "skip",
   );
 
   if (sermoes === undefined) return null;
   if (sermoes.length === 0) return null;
 
-  const recentes = (sermoes as AudioListItemData[]).slice(0, LIMIT);
+  const recentes = sermoes as AudioListItemData[];
 
   return (
     <section className="px-4">
