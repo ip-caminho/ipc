@@ -41,7 +41,7 @@ O modulo permite que a igreja gerencie gravacoes de cultos. O fluxo principal e:
 | `SERMAO`         | Sermao          |
 | `ESTUDO_BIBLICO` | Estudo Biblico  |
 | `PALESTRA`       | Palestra        |
-| `TESTEMUNHO`     | Testemunho      |
+| `OUTRO`          | Outro           |
 
 ### Status
 
@@ -61,7 +61,7 @@ Tabela principal. Campos:
 | Campo                     | Tipo                                | Descricao                                   |
 |---------------------------|-------------------------------------|---------------------------------------------|
 | `titulo`                  | `string`                            | Titulo da gravacao                           |
-| `tipo`                    | `SERMAO\|ESTUDO_BIBLICO\|PALESTRA\|TESTEMUNHO` | Tipo da gravacao           |
+| `tipo`                    | `SERMAO\|ESTUDO_BIBLICO\|PALESTRA\|OUTRO` | Tipo da gravacao           |
 | `serieId`                 | `Id<serieGravacoes>?`              | Referencia a serie                           |
 | `pregadorId`              | `Id<membros>?`                     | Pregador (se for membro)                     |
 | `pregadorNome`            | `string?`                           | Nome do pregador (texto livre ou auto-fill IA) |

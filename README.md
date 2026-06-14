@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# IPC — Sistema de Gestão de Igreja
 
-## Getting Started
+Sistema de gestão da Igreja Presbiteriana do Caminho (membros, gravações de
+sermões, escalas, calendário, etc.).
 
-First, run the development server:
+**Stack:** Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS 4 ·
+shadcn/ui · Convex (backend real-time) · Convex Auth (OTP WhatsApp) ·
+Backblaze B2 + Cloudflare (arquivos/áudio) · Vercel (deploy).
+
+## Setup
 
 ```bash
+# 1. Instalar dependências (npm é o gerenciador do projeto)
+npm install
+
+# 2. Configurar variáveis de ambiente
+cp .env.example .env.local
+# preencher os valores (pedir ao time os reais; CONVEX_DEPLOYMENT vem do convex dev)
+
+# 3. Rodar frontend + backend Convex juntos
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+App em http://localhost:3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+> Segredos de backend (B2, Deepgram, chaves de LLM, VAPID privado) **não** ficam
+> no `.env.local` — moram nas env vars do Convex (dashboard ou `npx convex env`).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Comandos
 
-## Learn More
+```bash
+npm run dev            # frontend (Next) + backend (Convex) em paralelo
+npm run dev:frontend   # só Next.js
+npm run dev:backend    # só Convex
+npm run build          # build de produção
+npm run lint           # ESLint
+npm run typecheck      # tsc --noEmit
+npm test               # Vitest
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Documentação
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- [CLAUDE.md](./CLAUDE.md) — stack, decisões arquiteturais, pipeline de áudio, convenções
+- [CONTRIBUTING.md](./CONTRIBUTING.md) — padrões de código e fluxo de contribuição
+- [docs/architecture/](./docs/architecture/) — modular monolith, merge strategy
+- [docs/modules/](./docs/modules/) — documentação por módulo
+- [.claude/rules/](./.claude/rules/) — workflows (worktree, rebase, análise pré-implementação)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Deploy
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Frontend:** Vercel (automático no push para `main`)
+- **Backend:** Convex Cloud — `npx convex deploy` (não roda no build do Vercel)

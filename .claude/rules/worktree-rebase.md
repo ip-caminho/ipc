@@ -24,8 +24,8 @@ npm run lint
 # 5. Rodar testes
 npm test
 
-# 6. Voltar ao main e integrar
-cd /Users/andre/projects/ipc
+# 6. Voltar ao main e integrar (a partir da raiz do repo)
+cd "$(git rev-parse --show-toplevel)"
 git checkout main
 git merge --ff-only feature/<nome-feature>
 # Se nao for fast-forward: git rebase feature/<nome-feature> no main
