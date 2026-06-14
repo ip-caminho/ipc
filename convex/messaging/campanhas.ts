@@ -484,22 +484,29 @@ export const listCampanhas = query({
       .order("desc")
       .collect();
 
-    // Stats por campanha
+    // Stats por campanha. A contagem exige ler os envios (sem contador
+    // denormalizado / aggregate component) — ja e 1 collect por campanha, o
+    // minimo p/ contagem exata. Reduzir alem disso so com denormalizacao (ver
+    // PRD: backlog). Aqui apenas contamos numa unica passada (em vez de 5).
     const result = [];
     for (const c of campanhas) {
       const envios = await ctx.db
         .query("campanhasEnvios")
         .withIndex("by_campanha", (q) => q.eq("campanhaId", c._id))
         .collect();
+      let enviados = 0;
+      let falhados = 0;
+      let atualizaram = 0;
+      let pendentes = 0;
+      for (const e of envios) {
+        if (e.status === "ENVIADO" || e.status === "ATUALIZOU") enviados++;
+        if (e.status === "ATUALIZOU") atualizaram++;
+        if (e.status === "FALHOU") falhados++;
+        if (e.status === "PENDENTE" || e.status === "PROCESSANDO") pendentes++;
+      }
       result.push({
         ...c,
-        stats: {
-          total: envios.length,
-          enviados: envios.filter((e) => e.status === "ENVIADO" || e.status === "ATUALIZOU").length,
-          falhados: envios.filter((e) => e.status === "FALHOU").length,
-          atualizaram: envios.filter((e) => e.status === "ATUALIZOU").length,
-          pendentes: envios.filter((e) => e.status === "PENDENTE" || e.status === "PROCESSANDO").length,
-        },
+        stats: { total: envios.length, enviados, falhados, atualizaram, pendentes },
       });
     }
     return result;
