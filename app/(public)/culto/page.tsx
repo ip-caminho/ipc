@@ -1,5 +1,3 @@
-"use client";
-
 import { BoletimContent } from "@features/boletim/components/BoletimContent";
 import Link from "next/link";
 import { Logo } from "@shared/components/layout/Logo";
