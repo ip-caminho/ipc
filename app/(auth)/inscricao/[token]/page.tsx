@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
+import Link from "next/link";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useForm } from "react-hook-form";
@@ -63,7 +64,7 @@ export default function InscricaoPublicPage() {
               </p>
             )}
             <Button asChild className="w-full">
-              <a href="/">Voltar para o site</a>
+              <Link href="/">Voltar para o site</Link>
             </Button>
           </CardContent>
         </Card>

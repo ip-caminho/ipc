@@ -219,7 +219,7 @@ export const getByUserId = query({
   args: {},
   handler: async (ctx) => {
     const { auth } = ctx;
-    // @ts-ignore
+    // @ts-ignore tipagem do auth no ctx
     const identity = await auth.getUserIdentity();
     if (!identity) return null;
     // Try to find by subject (userId)

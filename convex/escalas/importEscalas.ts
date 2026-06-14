@@ -21,7 +21,7 @@ export const importar = mutation({
   handler: async (ctx, { items }) => {
     let updated = 0;
     let created = 0;
-    let convidadosCriados = 0;
+    const convidadosCriados = 0;
 
     // Cache de convidados já criados nesta execução
     const convidadosCache = new Map<string, string>(); // nome → membroId
