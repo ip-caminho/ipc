@@ -1,5 +1,3 @@
-"use client";
-
 import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
 import { PageHeader } from "@shared/components/layout/PageHeader";
 import { ContinueListeningCard } from "@features/comunidade/components/ContinueListeningCard";
