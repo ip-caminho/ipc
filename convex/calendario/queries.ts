@@ -1,4 +1,5 @@
 import { query } from "../_generated/server";
+import type { Doc } from "../_generated/dataModel";
 import { v } from "convex/values";
 import { requirePermission } from "../_shared/requirePermission";
 
@@ -11,7 +12,29 @@ export const list = query({
   handler: async (ctx, args) => {
     await requirePermission(ctx, "calendario:read");
 
-    let eventos = await ctx.db.query("calendarioEventos").collect();
+    // Os consumidores sempre passam um intervalo de data (mes / a partir de
+    // hoje), entao o by_data e o caminho mais seletivo. Filtros restantes rodam
+    // em memoria sobre o subconjunto — sem varrer a tabela toda.
+    let eventos: Doc<"calendarioEventos">[];
+    if (args.dataInicio || args.dataFim) {
+      const { dataInicio, dataFim } = args;
+      eventos = await ctx.db
+        .query("calendarioEventos")
+        .withIndex("by_data", (q) => {
+          if (dataInicio && dataFim) return q.gte("data", dataInicio).lte("data", dataFim);
+          if (dataInicio) return q.gte("data", dataInicio);
+          return q.lte("data", dataFim!);
+        })
+        .collect();
+    } else if (args.ministerioId) {
+      const ministerioId = args.ministerioId;
+      eventos = await ctx.db
+        .query("calendarioEventos")
+        .withIndex("by_ministerio", (q) => q.eq("ministerioId", ministerioId))
+        .collect();
+    } else {
+      eventos = await ctx.db.query("calendarioEventos").collect();
+    }
 
     if (args.ministerioId) {
       eventos = eventos.filter((e) => e.ministerioId === args.ministerioId);
