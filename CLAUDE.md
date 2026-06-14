@@ -4,7 +4,7 @@ Regras e contexto para o projeto. Rules em `.claude/rules/` sao carregadas autom
 
 ## Stack
 
-- **Frontend**: Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS 4
+- **Frontend**: Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4
 - **UI**: shadcn/ui (New York) + Sonner (obrigatorio, sem HTML cru)
 - **Backend**: Convex (real-time serverless)
 - **Auth**: Convex Auth + WhatsApp OTP (bypass em dev via NODE_ENV !== 'production')
