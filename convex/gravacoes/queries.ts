@@ -28,7 +28,35 @@ export const list = query({
   },
   handler: async (ctx, args) => {
     if (!(await checkPermission(ctx, "gravacoes:read"))) return [];
-    let results = await ctx.db.query("gravacoes").order("desc").collect();
+
+    // Usa o indice mais seletivo disponivel para nao varrer a tabela toda.
+    // Os demais filtros (abaixo) rodam em memoria sobre o subconjunto — sao
+    // idempotentes, entao o resultado e identico ao scan + filter original.
+    let results: Doc<"gravacoes">[];
+    if (args.pregadorId) {
+      const pregadorId = args.pregadorId;
+      results = await ctx.db
+        .query("gravacoes")
+        .withIndex("by_pregador", (q) => q.eq("pregadorId", pregadorId))
+        .order("desc")
+        .collect();
+    } else if (args.tipo) {
+      const tipo = args.tipo as Doc<"gravacoes">["tipo"];
+      results = await ctx.db
+        .query("gravacoes")
+        .withIndex("by_tipo", (q) => q.eq("tipo", tipo))
+        .order("desc")
+        .collect();
+    } else if (args.status) {
+      const status = args.status as Doc<"gravacoes">["status"];
+      results = await ctx.db
+        .query("gravacoes")
+        .withIndex("by_status", (q) => q.eq("status", status))
+        .order("desc")
+        .collect();
+    } else {
+      results = await ctx.db.query("gravacoes").order("desc").collect();
+    }
 
     if (args.tipo) {
       results = results.filter((g) => g.tipo === args.tipo);
@@ -217,11 +245,16 @@ export const listFrases = query({
   args: {},
   handler: async (ctx) => {
     if (!(await checkPermission(ctx, "gravacoes:read"))) return [];
-    const gravacoes = await ctx.db.query("gravacoes").order("desc").collect();
+    // So frases de gravacoes publicadas: filtra pelo indice em vez de varrer tudo
+    const gravacoes = await ctx.db
+      .query("gravacoes")
+      .withIndex("by_status", (q) => q.eq("status", "PUBLICADO"))
+      .order("desc")
+      .collect();
     const frases: { frase: string; pregador: string; titulo: string; gravacaoId: string }[] = [];
 
     for (const g of gravacoes) {
-      if (g.status !== "PUBLICADO" || g.iaStatus !== "CONCLUIDO") continue;
+      if (g.iaStatus !== "CONCLUIDO") continue;
       // Frases apenas de sermões e palestras
       if (g.tipo !== "SERMAO" && g.tipo !== "PALESTRA") continue;
 
@@ -248,10 +281,20 @@ export const listTags = query({
   args: {},
   handler: async (ctx) => {
     if (!(await checkPermission(ctx, "gravacoes:read"))) return [];
-    const gravacoes = await ctx.db.query("gravacoes").collect();
+    // Tags so de PUBLICADO/RASCUNHO: duas buscas por indice em vez de scan total
+    const [publicados, rascunhos] = await Promise.all([
+      ctx.db
+        .query("gravacoes")
+        .withIndex("by_status", (q) => q.eq("status", "PUBLICADO"))
+        .collect(),
+      ctx.db
+        .query("gravacoes")
+        .withIndex("by_status", (q) => q.eq("status", "RASCUNHO"))
+        .collect(),
+    ]);
+    const gravacoes = [...publicados, ...rascunhos];
     const counts: Record<string, number> = {};
     for (const g of gravacoes) {
-      if (g.status !== "PUBLICADO" && g.status !== "RASCUNHO") continue;
       for (const tag of g.tags || []) {
         counts[tag] = (counts[tag] || 0) + 1;
       }
