@@ -26,7 +26,7 @@ export const sendPushToAll = action({
 
     // Get all subscriptions
     const subscriptions = await ctx.runQuery(
-      // @ts-ignore
+      // @ts-ignore referencia de funcao por string
       "notifications/queries:listAllSubscriptions",
       {}
     );
@@ -51,7 +51,7 @@ export const sendPushToAll = action({
         // Remove invalid subscriptions (410 Gone or 404)
         if (error.statusCode === 410 || error.statusCode === 404) {
           await ctx.runMutation(
-            // @ts-ignore
+            // @ts-ignore referencia de funcao por string
             "notifications/mutations:removePushSubscription",
             { endpoint: sub.endpoint }
           );

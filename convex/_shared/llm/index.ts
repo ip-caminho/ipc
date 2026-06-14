@@ -55,13 +55,18 @@ async function withRetry(
 export function createLlmProvider(): LlmProvider {
   const providers: LlmProvider[] = [];
 
+  // require() lazy proposital: so carrega o SDK do provider cujo env var existe
+  // (evita inicializar SDKs nao usados).
   if (process.env.GOOGLE_API_KEY) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     providers.push(require("./gemini").createGeminiProvider());
   }
   if (process.env.GROQ_API_KEY) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     providers.push(require("./groq").createGroqProvider());
   }
   if (process.env.ANTHROPIC_API_KEY) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     providers.push(require("./anthropic").createAnthropicProvider());
   }
 
