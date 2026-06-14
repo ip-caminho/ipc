@@ -11,6 +11,10 @@ export const list = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    // Logs de auditoria sao restritos (mesma regra das demais queries do modulo)
+    const membro = await checkAuditRead(ctx);
+    if (!membro) return [];
+
     const limit = args.limit || 50;
 
     // Trilha de um registro especifico: usa o indice dedicado (point lookup)
