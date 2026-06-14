@@ -3,8 +3,8 @@
 ## Passos
 
 ```bash
-# 1. Garantir que main esta atualizado
-cd /Users/andre/projects/ipc
+# 1. Garantir que main esta atualizado (a partir da raiz do repo)
+cd "$(git rev-parse --show-toplevel)"
 git checkout main
 git pull
 
