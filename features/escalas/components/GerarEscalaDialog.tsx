@@ -131,8 +131,9 @@ function GerarContent({
         dataFim: periodo.dataFim,
       });
       setResultado(result);
-      if (result.alertas?.length > 0) {
-        toast.warning(`${result.alertas.length} culto(s) sem condutor disponível`);
+      const numAlertas = result.alertas?.length ?? 0;
+      if (numAlertas > 0) {
+        toast.warning(`${numAlertas} culto(s) sem condutor disponível`);
       } else {
         toast.success(`${result.totalAtribuidos} atribuições geradas para ${result.cultosProcessados} cultos`);
       }

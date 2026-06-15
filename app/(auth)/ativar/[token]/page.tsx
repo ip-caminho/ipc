@@ -22,7 +22,7 @@ export default function AtivarPage() {
   const { token } = useParams<{ token: string }>();
   const { signIn } = useAuthActions();
   const router = useRouter();
-  // @ts-expect-error Convex TS2589
+  // @ts-ignore Convex TS2589
   const dados = useQuery(api.membros.acesso.getAtivacaoByToken, { token });
   const concluir = useMutation(api.membros.acesso.concluirAtivacao);
   const logLogin = useMutation(api.audit.mutations.logLogin);
