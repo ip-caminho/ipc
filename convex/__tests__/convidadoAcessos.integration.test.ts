@@ -22,6 +22,7 @@ describe("acessos do convidado", () => {
   it("registra so com codigo valido e relatorio agrega (admin)", async () => {
     const t = convexTest(schema, modules);
     const admin = await seedAdmin(t);
+    // @ts-ignore Convex TS2589 (instanciacao de tipo profunda)
     const { token } = await admin.mutation(api.appConfig.mutations.gerarTokenConvidado, {});
 
     // Codigo invalido → nao registra
