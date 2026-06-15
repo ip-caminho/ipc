@@ -31,7 +31,7 @@ export default function SignIn() {
   const [loading, setLoading] = useState(false);
 
   const bypassMode = process.env.NEXT_PUBLIC_AUTH_BYPASS_MODE === "true";
-  // @ts-expect-error Convex TS2589
+  // @ts-ignore Convex TS2589
   const logLogin = useMutation(api.audit.mutations.logLogin);
   const verificarAcessoDireto = useMutation(api.membros.acesso.verificarAcessoDireto);
 

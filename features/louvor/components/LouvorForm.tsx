@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { louvorFormSchema, type LouvorFormValues } from "../lib/validations";
 import { TOM_OPTIONS, TAG_SUGGESTIONS, ESTRUTURA_SECOES } from "../lib/constants";
@@ -64,7 +64,8 @@ export function LouvorForm({
   };
 
   const form = useForm<LouvorFormValues>({
-    resolver: zodResolver(louvorFormSchema),
+    // cast: zod v4 coerce faz input/output divergirem do tipo do form
+    resolver: zodResolver(louvorFormSchema) as Resolver<LouvorFormValues>,
     defaultValues: defaults,
   });
 

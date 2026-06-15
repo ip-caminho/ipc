@@ -26,7 +26,7 @@ export default function MembrosPage() {
   const debouncedSearch = useDebounce(search, 300);
 
   const queryStatus = status === "TODOS" ? "TODOS" : status || undefined;
-  // @ts-expect-error Convex TS2589
+  // @ts-ignore Convex TS2589
   const membros = useQuery(api.membros.queries.list, {
     search: debouncedSearch || undefined,
     status: queryStatus,
