@@ -31,9 +31,6 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
   experimental: {
     optimizeCss: false,
     viewTransition: true,
