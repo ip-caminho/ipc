@@ -16,6 +16,7 @@ export const getUploadUrl = action({
   },
   handler: async (ctx, args) => {
     // Login + permissao compativel com a pasta (ver files/authz.ts)
+    // @ts-ignore Convex TS2589 (instanciacao de tipo profunda)
     await ctx.runQuery(internal.files.authz.checkUploadAccess, { folder: args.folder });
     const ext = args.fileName.split(".").pop() || "bin";
     const key = generateObjectKey(args.folder, args.entityId, ext);
