@@ -60,7 +60,7 @@ function GravacaoRow({ g }: { g: any }) {
   return (
     <tr className="border-b hover:bg-accent/50 transition-colors group">
       <td className="py-2 px-3 w-8">
-        <TipoIcon className={`h-4 w-4 ${tipo.color}`} title={tipo.label} />
+        <span title={tipo.label}><TipoIcon className={`h-4 w-4 ${tipo.color}`} /></span>
       </td>
       <td className="py-2 px-3">
         <Link href={`/gravacoes/${g._id}/admin`} className="block group-hover:underline">

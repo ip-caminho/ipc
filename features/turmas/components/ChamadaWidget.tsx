@@ -49,7 +49,7 @@ export function ChamadaWidget() {
 
   if (!turmas || turmas.length === 0) return null;
 
-  async function handleAbrir(item: typeof turmas[0]) {
+  async function handleAbrir(item: NonNullable<typeof turmas>[number]) {
     const key = `${item._id}-${item.encontroData}`;
     if (chamadaAberta === key) {
       setChamadaAberta(null);

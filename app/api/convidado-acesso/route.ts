@@ -22,6 +22,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const client = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+    // @ts-ignore Convex TS2589 (instanciacao de tipo profunda)
     await client.mutation(api.convidado.registrarAcesso, { codigo, ip, userAgent });
   } catch {
     // Falha no registro nao deve quebrar o acesso do visitante

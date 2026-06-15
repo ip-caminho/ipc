@@ -25,7 +25,7 @@ function formatDate(d: string) {
 export default function MultimidiaPage() {
   const { can } = useAuth();
   // Buscar cultos
-  // @ts-expect-error Convex TS2589
+  // @ts-ignore Convex TS2589
   const cultos = useQuery(api.escalas.queries.listCultos, {});
   const [cultoIndex, setCultoIndex] = useState(0);
 

@@ -89,7 +89,7 @@ export function LouvorDetalhe({ louvorId, onBack }: LouvorDetalheProps) {
         tom: data.tom || undefined,
         tomHomem: data.tomHomem || undefined,
         tomMulher: data.tomMulher || undefined,
-        bpm: data.bpm && data.bpm !== "" ? Number(data.bpm) : undefined,
+        bpm: data.bpm ? Number(data.bpm) : undefined,
         tags: data.tags ? data.tags.split(",").map((t) => t.trim()).filter(Boolean) : undefined,
         conteudo: data.conteudo || undefined,
         youtubeUrl: data.youtubeUrl || undefined,

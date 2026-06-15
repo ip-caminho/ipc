@@ -82,7 +82,7 @@ export function useAudioCompressor() {
         await ffmpeg.deleteFile(inputName);
         await ffmpeg.deleteFile("output.mp3");
 
-        const blob = new Blob([data], { type: "audio/mpeg" });
+        const blob = new Blob([data as BlobPart], { type: "audio/mpeg" });
         return new File([blob], file.name.replace(/\.[^.]+$/, ".mp3"), {
           type: "audio/mpeg",
         });
