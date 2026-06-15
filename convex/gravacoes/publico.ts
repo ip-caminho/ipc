@@ -23,8 +23,14 @@ export const listConvidado = query({
 
     // Convidado ouve apenas as PREGACOES (sermoes) publicadas — nao estudos,
     // palestras, etc.
-    const publicadas = (await ctx.db.query("gravacoes").order("desc").collect())
-      .filter((g) => g.status === "PUBLICADO" && g.tipo === "SERMAO")
+    // So sermoes publicados: filtra pelo indice by_tipo em vez de varrer tudo
+    const publicadas = (
+      await ctx.db
+        .query("gravacoes")
+        .withIndex("by_tipo", (q) => q.eq("tipo", "SERMAO"))
+        .collect()
+    )
+      .filter((g) => g.status === "PUBLICADO")
       .sort((a, b) => b.data.localeCompare(a.data));
 
     const gravacoes = await Promise.all(
