@@ -130,6 +130,7 @@ import type * as preferencias_rbac from "../preferencias/rbac.js";
 import type * as preferencias_rbacHelpers from "../preferencias/rbacHelpers.js";
 import type * as salas_mutations from "../salas/mutations.js";
 import type * as salas_queries from "../salas/queries.js";
+import type * as tarefas_migrations from "../tarefas/migrations.js";
 import type * as tarefas_mutations from "../tarefas/mutations.js";
 import type * as tarefas_queries from "../tarefas/queries.js";
 import type * as turmas_mutations from "../turmas/mutations.js";
@@ -264,6 +265,7 @@ declare const fullApi: ApiFromModules<{
   "preferencias/rbacHelpers": typeof preferencias_rbacHelpers;
   "salas/mutations": typeof salas_mutations;
   "salas/queries": typeof salas_queries;
+  "tarefas/migrations": typeof tarefas_migrations;
   "tarefas/mutations": typeof tarefas_mutations;
   "tarefas/queries": typeof tarefas_queries;
   "turmas/mutations": typeof turmas_mutations;

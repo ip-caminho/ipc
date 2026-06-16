@@ -1,6 +1,18 @@
 import { mutation } from "../_generated/server";
+import type { Id } from "../_generated/dataModel";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
+
+// Ajusta o contador denormalizado de comentarios da tarefa (so entidadeTipo
+// "tarefas" tem contador; gravacoes usa gravacoes/comentarios.ts).
+async function bumpTarefaComentarios(ctx: any, entidadeTipo: string, entidadeId: string, delta: number) {
+  if (entidadeTipo !== "tarefas") return;
+  const tarefa = await ctx.db.get(entidadeId as Id<"tarefas">);
+  if (!tarefa) return;
+  await ctx.db.patch(tarefa._id, {
+    qtdComentarios: Math.max(0, (tarefa.qtdComentarios ?? 0) + delta),
+  });
+}
 
 async function requireAuth(ctx: any) {
   const userId = await getAuthUserId(ctx);
@@ -30,7 +42,7 @@ export const create = mutation({
   handler: async (ctx, { entidadeTipo, entidadeId, texto, parentId, tipo }) => {
     const { membro } = await requireAuth(ctx);
 
-    return await ctx.db.insert("comentarios", {
+    const id = await ctx.db.insert("comentarios", {
       entidadeTipo,
       entidadeId,
       membroId: membro._id,
@@ -39,6 +51,8 @@ export const create = mutation({
       tipo: tipo ?? "COMENTARIO",
       criadoEm: Date.now(),
     });
+    await bumpTarefaComentarios(ctx, entidadeTipo, entidadeId, 1);
+    return id;
   },
 });
 
@@ -65,5 +79,11 @@ export const remove = mutation({
     }
 
     await ctx.db.delete(id);
+    await bumpTarefaComentarios(
+      ctx,
+      comentario.entidadeTipo,
+      comentario.entidadeId,
+      -(1 + replies.length),
+    );
   },
 });
