@@ -301,15 +301,22 @@ export const listMuralRequests = query({
 
     return Promise.all(
       slice.map(async (pedido) => {
-        const intercessores = await ctx.db
+        // euOrando: 1 doc pelo indice composto (nao coleta todos os orantes)
+        const meuOrando = await ctx.db
+          .query("pedidoOracaoIntercessores")
+          .withIndex("by_pedido_membro", (q) =>
+            q.eq("pedidoId", pedido._id).eq("membroId", membro._id),
+          )
+          .first();
+        const euOrando = !!meuOrando;
+
+        // 3 avatares: take(3) em vez de coletar a colecao inteira
+        const tresOrantes = await ctx.db
           .query("pedidoOracaoIntercessores")
           .withIndex("by_pedido", (q) => q.eq("pedidoId", pedido._id))
-          .collect();
-
-        const euOrando = intercessores.some((i) => i.membroId === membro._id);
-
+          .take(3);
         const primeiros = await Promise.all(
-          intercessores.slice(0, 3).map(async (i) => {
+          tresOrantes.map(async (i) => {
             const pessoa = await resolveMembroResumo(ctx, i.membroId);
             return { nome: pessoa?.nome || "", foto: pessoa?.foto || null };
           }),
@@ -362,7 +369,7 @@ export const listMuralRequests = query({
           ultimaAtividadeEm: resolveLastActivity(pedido),
           isOwner: pedido.membroId === membro._id,
           autor: autorResumo,
-          qtdOrando: intercessores.length,
+          qtdOrando: pedido.qtdOrando ?? 0,
           euOrando,
           primeirosOrantes: primeiros,
           atualizacoes,
@@ -402,26 +409,17 @@ export const listMyRequests = query({
 
     pedidos.sort((a, b) => resolveLastActivity(b) - resolveLastActivity(a));
 
-    return Promise.all(
-      pedidos.map(async (pedido) => {
-        const intercessores = await ctx.db
-          .query("pedidoOracaoIntercessores")
-          .withIndex("by_pedido", (q) => q.eq("pedidoId", pedido._id))
-          .collect();
-
-        return {
-          _id: pedido._id,
-          descricao: pedido.descricao,
-          status: pedido.status,
-          scope: resolveScope(pedido),
-          pgId: pedido.pgId ?? null,
-          anonimo: !!pedido.anonimo,
-          criadoEm: pedido.criadoEm,
-          ultimaAtividadeEm: resolveLastActivity(pedido),
-          qtdOrando: intercessores.length,
-        };
-      }),
-    );
+    return pedidos.map((pedido) => ({
+      _id: pedido._id,
+      descricao: pedido.descricao,
+      status: pedido.status,
+      scope: resolveScope(pedido),
+      pgId: pedido.pgId ?? null,
+      anonimo: !!pedido.anonimo,
+      criadoEm: pedido.criadoEm,
+      ultimaAtividadeEm: resolveLastActivity(pedido),
+      qtdOrando: pedido.qtdOrando ?? 0,
+    }));
   },
 });
 
