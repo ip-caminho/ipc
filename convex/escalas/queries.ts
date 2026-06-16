@@ -253,11 +253,15 @@ export const getProximoDomingo = query({
       }))
     );
 
-    // Avisos validos para esta data
-    const todosAvisos = await ctx.db.query("avisos").collect();
+    // Avisos validos para esta data. Indice corta dataInicio <= data;
+    // dataFim (optional) filtrado em memoria.
+    const todosAvisos = await ctx.db
+      .query("avisos")
+      .withIndex("by_dataInicio", (q: any) => q.lte("dataInicio", culto!.data))
+      .collect();
     const avisos = todosAvisos.filter((a) => {
       const fim = a.dataFim || a.dataInicio;
-      return a.dataInicio <= culto!.data && fim >= culto!.data;
+      return fim >= culto!.data;
     });
 
     // Indisponibilidades
@@ -354,10 +358,14 @@ export const getBoletim = query({
     // Avisos validos para esta data
     // dataInicio = domingo em que o aviso comeca a aparecer
     // dataFim = ultimo domingo em que aparece (se omitido, aparece so no dataInicio)
-    const todosAvisos = await ctx.db.query("avisos").collect();
+    // Indice corta dataInicio <= data; dataFim (optional) filtrado em memoria.
+    const todosAvisos = await ctx.db
+      .query("avisos")
+      .withIndex("by_dataInicio", (q: any) => q.lte("dataInicio", culto!.data))
+      .collect();
     const avisos = todosAvisos.filter((a) => {
       const fim = a.dataFim || a.dataInicio;
-      return a.dataInicio <= culto!.data && fim >= culto!.data;
+      return fim >= culto!.data;
     });
 
     const louvoresDetalhados = await enrichCultoLouvores(ctx, culto!._id);

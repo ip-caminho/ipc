@@ -96,11 +96,11 @@ export const minhasDatasEscaladas = query({
 
     const hoje = getSaoPauloDateString();
 
-    const escalas = await ctx.db
+    const minhasEscalas = await ctx.db
       .query("cultoEscalas")
+      .withIndex("by_membro", (q: any) => q.eq("membroId", membro._id))
       .collect();
 
-    const minhasEscalas = escalas.filter((e) => e.membroId === membro._id);
     const datas: string[] = [];
 
     for (const e of minhasEscalas) {
@@ -120,8 +120,10 @@ export const toggleIndisponibilidade = mutation({
     const { membro } = await requireAuth(ctx);
 
     // Verificar se já está escalado nessa data
-    const cultos = await ctx.db.query("cultos").collect();
-    const cultosNaData = cultos.filter((c) => c.data === data);
+    const cultosNaData = await ctx.db
+      .query("cultos")
+      .withIndex("by_data", (q: any) => q.eq("data", data))
+      .collect();
 
     for (const culto of cultosNaData) {
       const escala = await ctx.db

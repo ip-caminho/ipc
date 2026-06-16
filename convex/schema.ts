@@ -310,6 +310,7 @@ export default defineSchema({
   })
     .index("by_gravacao", ["gravacaoId"])
     .index("by_membro", ["membroId"])
+    .index("by_membro_atualizado", ["membroId", "atualizadoEm"])
     .index("by_gravacao_membro", ["gravacaoId", "membroId"]),
 
   membroConvites: defineTable({
@@ -401,6 +402,7 @@ export default defineSchema({
   })
     .index("by_culto", ["cultoId"])
     .index("by_membro", ["membroId"])
+    .index("by_funcao", ["funcao"])
     .index("by_culto_funcao", ["cultoId", "funcao"]),
 
   // ===== Equipes de Escalas =====
@@ -485,6 +487,7 @@ export default defineSchema({
     status: v.union(v.literal("ATIVO"), v.literal("INATIVO")),
   })
     .index("by_lider", ["liderId"])
+    .index("by_colider", ["coliderId"])
     .index("by_status", ["status"]),
 
   pgMembros: defineTable({
@@ -526,6 +529,7 @@ export default defineSchema({
     criadoEm: v.number(),
   })
     .index("by_membro", ["membroId"])
+    .index("by_membro_criadoEm", ["membroId", "criadoEm"])
     .index("by_visitante", ["visitanteId"])
     .index("by_data", ["data"]),
 
@@ -557,7 +561,8 @@ export default defineSchema({
     .index("by_membro", ["membroId"])
     .index("by_status", ["status"])
     .index("by_criadoEm", ["criadoEm"])
-    .index("by_ultimaAtividadeEm", ["ultimaAtividadeEm"]),
+    .index("by_ultimaAtividadeEm", ["ultimaAtividadeEm"])
+    .index("by_pg_ultimaAtividade", ["pgId", "ultimaAtividadeEm"]),
 
   pedidoOracaoIntercessores: defineTable({
     pedidoId: v.id("pedidosOracao"),
@@ -616,6 +621,8 @@ export default defineSchema({
     atualizadoEm: v.optional(v.number()),
   })
     .index("by_membro", ["membroId"])
+    .index("by_membro_criadoEm", ["membroId", "criadoEm"])
+    .index("by_criadoEm", ["criadoEm"])
     .index("by_autor", ["autorId"]),
 
   // ===== Ministerios =====
@@ -871,6 +878,7 @@ export default defineSchema({
     criadoEm: v.number(),
   })
     .index("by_status", ["status"])
+    .index("by_instrutor", ["instrutorId"])
     .index("by_token", ["token"]),
 
   inscricoes: defineTable({
