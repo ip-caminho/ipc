@@ -45,18 +45,22 @@ export const gerarEscalaPorEquipe = mutation({
       return { totalAtribuidos: 0, cultosProcessados: 0, detalhes: [] };
     }
 
-    // 3. Buscar todas as indisponibilidades no período
-    const allIndisps = await ctx.db.query("indisponibilidades").collect();
+    // 3. Buscar indisponibilidades do período direto pelo índice
+    const indispsNoPeriodo = await ctx.db
+      .query("indisponibilidades")
+      .withIndex("by_data", (q: any) => q.gte("data", dataInicio).lte("data", dataFim))
+      .collect();
     const indispPorData = new Map<string, Set<string>>();
-    for (const i of allIndisps) {
-      if (i.data >= dataInicio && i.data <= dataFim) {
-        if (!indispPorData.has(i.data)) indispPorData.set(i.data, new Set());
-        indispPorData.get(i.data)!.add(i.membroId);
-      }
+    for (const i of indispsNoPeriodo) {
+      if (!indispPorData.has(i.data)) indispPorData.set(i.data, new Set());
+      indispPorData.get(i.data)!.add(i.membroId);
     }
 
-    // 4. Buscar histórico de escalas para scores
-    const allEscalas = await ctx.db.query("cultoEscalas").collect();
+    // 4. Histórico de escalas DESTA função para scores (sem ler outras funções)
+    const allEscalas = await ctx.db
+      .query("cultoEscalas")
+      .withIndex("by_funcao", (q: any) => q.eq("funcao", funcao))
+      .collect();
     const cultoMap = new Map<string, string>(); // cultoId -> data
     for (const c of allCultos) {
       cultoMap.set(c._id, c.data);
@@ -65,7 +69,7 @@ export const gerarEscalaPorEquipe = mutation({
     // Stats iniciais
     const statsMap = new Map<string, { total: number; ultima: number | null }>();
     for (const e of allEscalas) {
-      if (!e.membroId || e.funcao !== funcao) continue;
+      if (!e.membroId) continue;
       const key = e.membroId;
       const cultoData = cultoMap.get(e.cultoId);
       const ts = cultoData ? new Date(cultoData).getTime() : 0;

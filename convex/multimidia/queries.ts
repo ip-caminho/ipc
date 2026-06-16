@@ -57,11 +57,13 @@ export const getPainelCulto = query({
         })
     );
 
-    // Avisos ativos para a data do culto
-    const avisos = await ctx.db.query("avisos").collect();
-    const avisosValidos = avisos.filter((a) => {
-      return a.dataInicio <= culto.data && (!a.dataFim || a.dataFim >= culto.data);
-    });
+    // Avisos ativos para a data do culto. Indice corta dataInicio <= data;
+    // dataFim (optional) nao e coberto pelo indice — filtrado em memoria.
+    const avisos = await ctx.db
+      .query("avisos")
+      .withIndex("by_dataInicio", (q: any) => q.lte("dataInicio", culto.data))
+      .collect();
+    const avisosValidos = avisos.filter((a) => !a.dataFim || a.dataFim >= culto.data);
 
     // Arquivos
     const arquivos = await ctx.db

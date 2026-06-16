@@ -35,11 +35,16 @@ async function getPgIdsDoMembro(ctx: any, membroId: any): Promise<Set<string>> {
   const set = new Set<string>();
   for (const pm of pgMembros) set.add(pm.pgId);
 
-  // Liderança também conta
-  const allPgs = await ctx.db.query("pequenosGrupos").collect();
-  for (const pg of allPgs) {
-    if (pg.liderId === membroId || pg.coliderId === membroId) set.add(pg._id);
-  }
+  // Liderança também conta — por indice (lider + colider), sem varrer a tabela
+  const liderados = await ctx.db
+    .query("pequenosGrupos")
+    .withIndex("by_lider", (q: any) => q.eq("liderId", membroId))
+    .collect();
+  const colideres = await ctx.db
+    .query("pequenosGrupos")
+    .withIndex("by_colider", (q: any) => q.eq("coliderId", membroId))
+    .collect();
+  for (const pg of [...liderados, ...colideres]) set.add(pg._id);
   return set;
 }
 

@@ -421,6 +421,14 @@ export const dashboardPais = query({
 
     if (resps.length === 0) return null;
 
+    // Escalas futuras uma unica vez (range por indice), reutilizadas para
+    // todos os filhos — antes ficava um full scan por filho dentro do loop.
+    const hoje = getSaoPauloDateString();
+    const escalasFuturas = await ctx.db
+      .query("ministerioEscalas")
+      .withIndex("by_data", (q) => q.gte("data", hoje))
+      .collect();
+
     const criancas = await Promise.all(
       resps.map(async (r) => {
         const criancaEntidade = await ctx.db.get(r.criancaEntidadeId);
@@ -431,14 +439,9 @@ export const dashboardPais = query({
 
         if (!criancaEntidade || !perfil) return null;
 
-        // Buscar proxima escala do educacional para esta turma
-        const hoje = getSaoPauloDateString();
-        const escalas = await ctx.db
-          .query("ministerioEscalas")
-          .withIndex("by_data")
-          .collect();
-        const proximaEscala = escalas
-          .filter((e) => e.data >= hoje && e.subgrupo === perfil.turma)
+        // Proxima escala do educacional para esta turma
+        const proximaEscala = escalasFuturas
+          .filter((e) => e.subgrupo === perfil.turma)
           .sort((a, b) => a.data.localeCompare(b.data))[0];
 
         let professores: string[] = [];

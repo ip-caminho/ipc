@@ -36,15 +36,15 @@ export const getLiveStatus = query({
     const isLive = isDomingoWindowBrasil();
 
     const today = getSaoPauloDateString();
-    const cultos = await ctx.db
+    // Proximo culto publicado a partir de hoje — direto pelo indice composto,
+    // sem varrer todo o historico de cultos.
+    const proximo = await ctx.db
       .query("cultos")
-      .withIndex("by_data")
+      .withIndex("by_status_data", (q: any) =>
+        q.eq("status", "PUBLICADO").gte("data", today)
+      )
       .order("asc")
-      .collect();
-
-    const proximo = cultos.find(
-      (c) => c.data >= today && c.status === "PUBLICADO"
-    );
+      .first();
 
     return {
       isLive,

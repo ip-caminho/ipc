@@ -1,5 +1,6 @@
 import { query } from "../_generated/server";
 import { v } from "convex/values";
+import { getAuthUserId } from "@convex-dev/auth/server";
 import { checkPermission, requireAnyPermission } from "../_shared/requirePermission";
 import { getSaoPauloDate } from "../_shared/datetime";
 
@@ -218,18 +219,15 @@ export const birthdaysThisWeek = query({
 export const getByUserId = query({
   args: {},
   handler: async (ctx) => {
-    const { auth } = ctx;
-    // @ts-ignore tipagem do auth no ctx
-    const identity = await auth.getUserIdentity();
-    if (!identity) return null;
-    // Try to find by subject (userId)
-    const userId = identity.subject;
-    const membro = await ctx.db
+    // Invariante do sistema: no maximo 1 membro por userId (by_user_id).
+    // getAuthUserId retorna o Id<"users"> puro — identity.subject vem como
+    // "userId|sessionId" e nao casaria no indice.
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return null;
+    const match = await ctx.db
       .query("membros")
-      .withIndex("by_user_id")
-      .filter((q) => q.neq(q.field("userId"), undefined))
-      .collect();
-    const match = membro.find((m) => m.userId === userId as any);
+      .withIndex("by_user_id", (q) => q.eq("userId", userId))
+      .first();
     if (!match) return null;
     const entidade = await ctx.db.get(match.entidadeId);
     return { ...match, entidade };
