@@ -2,13 +2,7 @@ import { query } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 
-async function resolveMembroNome(ctx: any, membroId: any): Promise<string> {
-  if (!membroId) return "";
-  const membro = await ctx.db.get(membroId);
-  if (!membro) return "";
-  const entidade = await ctx.db.get(membro.entidadeId);
-  return entidade?.nomeCompleto || "";
-}
+import { resolveMembroNome } from "../_shared/membroResolver";
 
 export const list = query({
   args: {
