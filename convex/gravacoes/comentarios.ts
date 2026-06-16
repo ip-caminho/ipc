@@ -1,4 +1,5 @@
 import { query, mutation } from "../_generated/server";
+import type { Id } from "../_generated/dataModel";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 
@@ -52,7 +53,7 @@ export const create = mutation({
   },
   handler: async (ctx, { gravacaoId, texto, parentId }) => {
     const membroId = await getMembroId(ctx);
-    return await ctx.db.insert("comentarios", {
+    const id = await ctx.db.insert("comentarios", {
       entidadeTipo: "gravacoes",
       entidadeId: gravacaoId,
       membroId,
@@ -61,6 +62,14 @@ export const create = mutation({
       tipo: "COMENTARIO",
       criadoEm: Date.now(),
     });
+    // Contador denormalizado (+1)
+    const gravacao = await ctx.db.get(gravacaoId);
+    if (gravacao) {
+      await ctx.db.patch(gravacaoId, {
+        comentariosCount: (gravacao.comentariosCount ?? 0) + 1,
+      });
+    }
+    return id;
   },
 });
 
@@ -92,6 +101,20 @@ export const remove = mutation({
     }
 
     await ctx.db.delete(id);
+
+    // Contador denormalizado: decrementa pelo comentario + suas replies
+    if (comentario.entidadeTipo === "gravacoes") {
+      const gravacaoId = comentario.entidadeId as Id<"gravacoes">;
+      const gravacao = await ctx.db.get(gravacaoId);
+      if (gravacao) {
+        await ctx.db.patch(gravacaoId, {
+          comentariosCount: Math.max(
+            0,
+            (gravacao.comentariosCount ?? 0) - (1 + replies.length),
+          ),
+        });
+      }
+    }
   },
 });
 
@@ -141,8 +164,18 @@ export const toggleReacao = mutation({
       .collect();
 
     const myReaction = existing.find((r) => r.tipo === tipo);
+    const gravacao = await ctx.db.get(gravacaoId);
+    const resumo = [...(gravacao?.reacoesResumo ?? [])];
+    const idx = resumo.findIndex((r) => r.tipo === tipo);
+
     if (myReaction) {
       await ctx.db.delete(myReaction._id);
+      if (idx >= 0) {
+        const novo = resumo[idx].count - 1;
+        if (novo > 0) resumo[idx] = { tipo, count: novo };
+        else resumo.splice(idx, 1);
+      }
+      if (gravacao) await ctx.db.patch(gravacaoId, { reacoesResumo: resumo });
       return { action: "removed" };
     }
 
@@ -152,6 +185,9 @@ export const toggleReacao = mutation({
       tipo,
       createdAt: Date.now(),
     });
+    if (idx >= 0) resumo[idx] = { tipo, count: resumo[idx].count + 1 };
+    else resumo.push({ tipo, count: 1 });
+    if (gravacao) await ctx.db.patch(gravacaoId, { reacoesResumo: resumo });
     return { action: "added" };
   },
 });

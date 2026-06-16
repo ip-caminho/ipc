@@ -100,29 +100,17 @@ export const list = query({
             serieInfo = { nome: serie.nome };
           }
         }
-        // Reacoes summary
-        const reacoes = await ctx.db
-          .query("reacoesGravacao")
-          .withIndex("by_gravacao", (q) => q.eq("gravacaoId", g._id))
-          .collect();
-        const reacoesSummary: { tipo: string; count: number }[] = [];
-        const counts: Record<string, number> = {};
-        for (const r of reacoes) {
-          counts[r.tipo] = (counts[r.tipo] || 0) + 1;
-        }
-        for (const [tipo, count] of Object.entries(counts)) {
-          reacoesSummary.push({ tipo, count });
-        }
+        // Reacoes/comentarios vem dos contadores denormalizados — sem ler
+        // todas as reacoes/comentarios de cada gravacao na lista reativa.
+        const reacoesSummary = g.reacoesResumo ?? [];
 
-        // Comment count (tabela unificada)
-        const comentarios = await ctx.db
-          .query("comentarios")
-          .withIndex("by_entidade", (q) =>
-            q.eq("entidadeTipo", "gravacoes").eq("entidadeId", g._id)
-          )
-          .collect();
-
-        return { ...semCamposPesados(g), pregadorInfo, serieInfo, reacoesSummary, comentarioCount: comentarios.length };
+        return {
+          ...semCamposPesados(g),
+          pregadorInfo,
+          serieInfo,
+          reacoesSummary,
+          comentarioCount: g.comentariosCount ?? 0,
+        };
       })
     );
   },
