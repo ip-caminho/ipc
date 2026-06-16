@@ -48,14 +48,6 @@ async function getPgIdsDoMembro(ctx: any, membroId: any): Promise<Set<string>> {
   return set;
 }
 
-async function resolveMembroNome(ctx: any, membroId: any): Promise<string> {
-  if (!membroId) return "";
-  const membro = await ctx.db.get(membroId);
-  if (!membro) return "";
-  const entidade = await ctx.db.get(membro.entidadeId);
-  return entidade?.nomeCompleto || "";
-}
-
 async function resolveMembroResumo(ctx: any, membroId: any) {
   if (!membroId) return null;
   const membro = await ctx.db.get(membroId);
@@ -68,118 +60,6 @@ async function resolveMembroResumo(ctx: any, membroId: any) {
     foto: entidade.foto || null,
   };
 }
-
-async function enrichPedido(ctx: any, pedido: any, membroId: any) {
-  const intercessores = await ctx.db
-    .query("pedidoOracaoIntercessores")
-    .withIndex("by_pedido", (q: any) => q.eq("pedidoId", pedido._id))
-    .collect();
-
-  const euOrando = intercessores.some((i: any) => i.membroId === membroId);
-
-  const comentarios = await ctx.db
-    .query("comentarios")
-    .withIndex("by_entidade", (q: any) =>
-      q.eq("entidadeTipo", "pedidos-oracao").eq("entidadeId", pedido._id)
-    )
-    .collect();
-
-  const intercessoresResumo = await Promise.all(
-    intercessores.slice(0, 5).map(async (i: any) => {
-      const pessoa = await resolveMembroResumo(ctx, i.membroId);
-      return {
-        nome: pessoa?.nome || "",
-        foto: pessoa?.foto || null,
-      };
-    })
-  );
-
-  return {
-    ...pedido,
-    membroNome: await resolveMembroNome(ctx, pedido.membroId),
-    isOwner: pedido.membroId === membroId,
-    qtdIntercessores: intercessores.length,
-    euOrando,
-    intercessoresResumo,
-    qtdComentarios: comentarios.length,
-  };
-}
-
-export const listPublicos = query({
-  args: {
-    filtro: v.optional(v.union(
-      v.literal("MEUS"),
-      v.literal("MEU_PG"),
-      v.literal("TODOS"),
-    )),
-  },
-  handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) return [];
-
-    const membro = await ctx.db
-      .query("membros")
-      .withIndex("by_user_id", (q) => q.eq("userId", userId))
-      .first();
-    if (!membro) return [];
-
-    const filtro = args.filtro ?? "TODOS";
-
-    let pedidos: any[];
-
-    if (filtro === "MEUS") {
-      pedidos = await ctx.db
-        .query("pedidosOracao")
-        .withIndex("by_membro", (q) => q.eq("membroId", membro._id))
-        .order("desc")
-        .collect();
-    } else if (filtro === "MEU_PG") {
-      // Encontrar PGs do membro
-      const pgMembros = await ctx.db
-        .query("pgMembros")
-        .withIndex("by_membro", (q) => q.eq("membroId", membro._id))
-        .collect();
-      const pgIds = pgMembros.map((pm) => pm.pgId);
-
-      if (pgIds.length === 0) return [];
-
-      // Encontrar todos membros dos mesmos PGs
-      const pgMembroIds = new Set<string>();
-      for (const pgId of pgIds) {
-        const membros = await ctx.db
-          .query("pgMembros")
-          .withIndex("by_pg", (q) => q.eq("pgId", pgId))
-          .collect();
-        for (const m of membros) {
-          pgMembroIds.add(m.membroId);
-        }
-      }
-      // Incluir lideres/colideres dos PGs
-      for (const pgId of pgIds) {
-        const pg = await ctx.db.get(pgId);
-        if (pg) {
-          pgMembroIds.add(pg.liderId);
-          if (pg.coliderId) pgMembroIds.add(pg.coliderId);
-        }
-      }
-
-      const todosPedidos = await ctx.db
-        .query("pedidosOracao")
-        .order("desc")
-        .collect();
-      pedidos = todosPedidos.filter((p) => pgMembroIds.has(p.membroId));
-    } else {
-      pedidos = await ctx.db
-        .query("pedidosOracao")
-        .order("desc")
-        .collect();
-    }
-
-    return Promise.all(
-      pedidos.map((pedido) => enrichPedido(ctx, pedido, membro._id))
-    );
-  },
-});
 
 export const getById = query({
   args: { id: v.id("pedidosOracao") },
