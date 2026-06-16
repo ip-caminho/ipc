@@ -112,20 +112,12 @@ export const list = query({
         const responsavel = await resolveMembroResumo(ctx, t.responsavelId);
         const criador = await resolveMembroResumo(ctx, t.criadoPor);
 
-        // Contar comentarios
-        const comentarios = await ctx.db
-          .query("comentarios")
-          .withIndex("by_entidade", (q) =>
-            q.eq("entidadeTipo", "tarefas").eq("entidadeId", t._id)
-          )
-          .collect();
-
         return {
           ...t,
           responsavelNome: responsavel?.nome || "",
           responsavelFoto: responsavel?.foto || null,
           criadorNome: criador?.nome || "",
-          qtdComentarios: comentarios.length,
+          qtdComentarios: t.qtdComentarios ?? 0,
           isOwner: t.criadoPor === membro._id,
           isResponsavel: t.responsavelId === membro._id,
         };

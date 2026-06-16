@@ -830,6 +830,9 @@ export default defineSchema({
     // Timestamps
     criadoEm: v.number(),
     atualizadoEm: v.optional(v.number()),
+    // Contador denormalizado — evita N+1 de comentarios na listagem reativa.
+    // Mantido em comentarios/mutations.ts; backfill em tarefas/migrations.
+    qtdComentarios: v.optional(v.number()),
   })
     .index("by_responsavel", ["responsavelId"])
     .index("by_criador", ["criadoPor"])
