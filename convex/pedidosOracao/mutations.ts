@@ -174,49 +174,53 @@ export const removeComentario = mutation({
   },
 });
 
-export const toggleOrando = mutation({
-  args: {
-    pedidoId: v.id("pedidosOracao"),
-  },
-  handler: async (ctx, { pedidoId }) => {
-    const { membro } = await requireAuth(ctx);
+/**
+ * Liga/desliga "estou orando" do membro num pedido. Mantem `qtdOrando`
+ * denormalizado via delta ±1 (nao recontamos a colecao de intercessores —
+ * isso pagaria bandwidth a cada toque, e o toggle e o evento mais frequente
+ * do mural reativo).
+ */
+async function toggleOrandoImpl(ctx: any, pedidoId: any) {
+  const { membro } = await requireAuth(ctx);
 
-    const pedido = await ctx.db.get(pedidoId);
-    if (!pedido) throw new Error("Pedido nao encontrado");
+  const pedido = await ctx.db.get(pedidoId);
+  if (!pedido) throw new Error("Pedido nao encontrado");
 
-    const existing = await ctx.db
-      .query("pedidoOracaoIntercessores")
-      .withIndex("by_pedido_membro", (q) =>
-        q.eq("pedidoId", pedidoId).eq("membroId", membro._id)
-      )
-      .first();
+  const existing = await ctx.db
+    .query("pedidoOracaoIntercessores")
+    .withIndex("by_pedido_membro", (q: any) =>
+      q.eq("pedidoId", pedidoId).eq("membroId", membro._id),
+    )
+    .first();
 
-    const now = Date.now();
-    let orando: boolean;
-    if (existing) {
-      await ctx.db.delete(existing._id);
-      orando = false;
-    } else {
-      await ctx.db.insert("pedidoOracaoIntercessores", {
-        pedidoId,
-        membroId: membro._id,
-        criadoEm: now,
-      });
-      orando = true;
-    }
-
-    // Mantem contagem denormalizada + timestamp de atividade
-    const total = await ctx.db
-      .query("pedidoOracaoIntercessores")
-      .withIndex("by_pedido", (q) => q.eq("pedidoId", pedidoId))
-      .collect();
-    await ctx.db.patch(pedidoId, {
-      qtdOrando: total.length,
-      ultimaAtividadeEm: now,
+  const now = Date.now();
+  let orando: boolean;
+  let delta: number;
+  if (existing) {
+    await ctx.db.delete(existing._id);
+    orando = false;
+    delta = -1;
+  } else {
+    await ctx.db.insert("pedidoOracaoIntercessores", {
+      pedidoId,
+      membroId: membro._id,
+      criadoEm: now,
     });
+    orando = true;
+    delta = 1;
+  }
 
-    return { orando };
-  },
+  await ctx.db.patch(pedidoId, {
+    qtdOrando: Math.max(0, (pedido.qtdOrando ?? 0) + delta),
+    ultimaAtividadeEm: now,
+  });
+
+  return { orando };
+}
+
+export const toggleOrando = mutation({
+  args: { pedidoId: v.id("pedidosOracao") },
+  handler: async (ctx, { pedidoId }) => toggleOrandoImpl(ctx, pedidoId),
 });
 
 /**
@@ -224,44 +228,7 @@ export const toggleOrando = mutation({
  */
 export const togglePrayer = mutation({
   args: { pedidoId: v.id("pedidosOracao") },
-  handler: async (ctx, { pedidoId }) => {
-    const { membro } = await requireAuth(ctx);
-
-    const pedido = await ctx.db.get(pedidoId);
-    if (!pedido) throw new Error("Pedido nao encontrado");
-
-    const existing = await ctx.db
-      .query("pedidoOracaoIntercessores")
-      .withIndex("by_pedido_membro", (q) =>
-        q.eq("pedidoId", pedidoId).eq("membroId", membro._id),
-      )
-      .first();
-
-    const now = Date.now();
-    let orando: boolean;
-    if (existing) {
-      await ctx.db.delete(existing._id);
-      orando = false;
-    } else {
-      await ctx.db.insert("pedidoOracaoIntercessores", {
-        pedidoId,
-        membroId: membro._id,
-        criadoEm: now,
-      });
-      orando = true;
-    }
-
-    const total = await ctx.db
-      .query("pedidoOracaoIntercessores")
-      .withIndex("by_pedido", (q) => q.eq("pedidoId", pedidoId))
-      .collect();
-    await ctx.db.patch(pedidoId, {
-      qtdOrando: total.length,
-      ultimaAtividadeEm: now,
-    });
-
-    return { orando };
-  },
+  handler: async (ctx, { pedidoId }) => toggleOrandoImpl(ctx, pedidoId),
 });
 
 /**
