@@ -629,13 +629,27 @@ export const buscarEntidadesFamilia = query({
   args: { termo: v.string(), excluirEntidadeId: v.optional(v.id("entidades")) },
   handler: async (ctx, { termo, excluirEntidadeId }) => {
     await requireAnyPermission(ctx, PERM_FAMILIA);
-    const t = termo.trim().toLowerCase();
+    const termTrim = termo.trim();
+    const t = termTrim.toLowerCase();
     if (t.length < 2) return [];
-    const entidades = await ctx.db.query("entidades").collect();
+
+    // Caminho comum: searchIndex (prefixo por token) — sem varrer entidades.
+    const porPrefixo = await ctx.db
+      .query("entidades")
+      .withSearchIndex("search_entidades", (q) => q.search("nomeCompleto", termTrim))
+      .take(40);
+    let candidatos = porPrefixo.filter((e) => e._id !== excluirEntidadeId);
+
+    // Fallback substring (termo no meio da palavra) — raro.
+    if (candidatos.length === 0) {
+      const entidades = await ctx.db.query("entidades").collect();
+      candidatos = entidades
+        .filter((e) => e._id !== excluirEntidadeId)
+        .filter((e) => (e.nomeCompleto ?? "").toLowerCase().includes(t));
+    }
+
     const out: Array<{ entidadeId: string; nomeCompleto: string; ehMembro: boolean }> = [];
-    for (const e of entidades) {
-      if (e._id === excluirEntidadeId) continue;
-      if (!(e.nomeCompleto ?? "").toLowerCase().includes(t)) continue;
+    for (const e of candidatos) {
       const m = await ctx.db
         .query("membros")
         .withIndex("by_entidade", (q) => q.eq("entidadeId", e._id))
