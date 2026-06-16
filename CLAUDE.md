@@ -99,6 +99,39 @@ npm test                 # Vitest
 - Feature-based organization, nao table-based
 - Convex mutations para writes, queries para reads
 
+## Convex — regras de eficiencia (bandwidth)
+
+Convex cobra bandwidth pelos BYTES de documentos lidos/escritos, nao pelo
+que a funcao usa depois. Documento tocado = documento pago, inteiro.
+
+### Leitura
+- NUNCA usar `.filter()` para reduzir resultado. `.filter()` roda em memoria
+  DEPOIS de ler tudo — nao economiza bandwidth. Use `.withIndex()`.
+- Todo acesso recorrente a uma tabela deve passar por um indice definido no
+  schema. Se for filtrar/ordenar por um campo, crie `.index("by_x", ["x"])`.
+- Proibido `.collect()` sem range de indice em tabela que cresce. Para listas:
+  `.withIndex(...).order(...).take(n)` ou `.paginate()`. Nunca
+  `collect()` + `.slice()` / `.sort()` em memoria.
+- Buscou 1 registro? Use `.unique()` ou `.first()`, nao `.collect()[0]`.
+
+### Reatividade
+- Queries re-executam (e re-leem) a cada mudanca em documento que tocaram.
+  Evite queries de leitura ampla em tabelas com escrita frequente.
+- Nao fazer `collect()` "defensivo" de tabela inteira em query reativa.
+
+### Modelagem
+- Nao armazenar blobs/base64/payloads grandes em documentos lidos com
+  frequencia. Usar `ctx.storage` e guardar so o `storageId`.
+- Documento lido em loop/lista deve ser enxuto. Campos pesados ficam em
+  tabela separada, carregada sob demanda.
+- Denormalizar um contador/campo computado e preferivel a ler N documentos
+  para calcular o mesmo valor em toda query.
+
+### Antes de finalizar
+- Toda nova query: confirmar que existe indice cobrindo o filtro/ordenacao.
+- Se aparecer `.filter()` numa query de banco, parar e justificar ou trocar
+  por indice.
+
 ## DevContext
 
 Ao criar ou modificar uma pagina, **sempre** atualizar o `CONTEXT_MAP` em `shared/components/layout/DevContext.tsx`:
