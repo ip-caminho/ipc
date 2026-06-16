@@ -40,7 +40,7 @@ import { PermissionGate } from "@shared/components/auth/PermissionGate";
 import { useAuth } from "@shared/providers/PermissionsProvider";
 import { TIPO_GRAVACAO_OPTIONS } from "@features/gravacoes/lib/constants";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/shared/components/ui/dropdown-menu";
-import { ArrowLeft, Save, Plus, Trash2, Megaphone, Globe, GlobeLock, Play, Pause, MoreVertical, Sparkles } from "lucide-react";
+import { ArrowLeft, Save, Plus, Trash2, Megaphone, Globe, GlobeLock, Play, Pause, MoreVertical, Sparkles, Download } from "lucide-react";
 import type { Id } from "@/convex/_generated/dataModel";
 import Link from "next/link";
 import { useIsMobile } from "@shared/hooks/use-mobile";
@@ -259,6 +259,77 @@ function AvisosEditor({ gravacaoId, avisos: initial }: { gravacaoId: Id<"gravaco
   );
 }
 
+function AudioTab({ gravacao }: { gravacao: any }) {
+  const globalPlayer = useAudioPlayer();
+  const [baixando, setBaixando] = useState(false);
+
+  const isFullTrack = globalPlayer.track?.gravacaoId === gravacao._id
+    && globalPlayer.track?.inicioSermao == null
+    && globalPlayer.track?.fimSermao == null;
+  const isFullPlaying = isFullTrack && globalPlayer.isPlaying;
+
+  const handlePlay = () => {
+    if (isFullPlaying) {
+      globalPlayer.pause();
+    } else if (isFullTrack) {
+      globalPlayer.resume();
+    } else {
+      globalPlayer.play({
+        url: gravacao.audioUrl!,
+        title: `${gravacao.titulo} (completo)`,
+        artist: gravacao.pregadorNome || undefined,
+        gravacaoId: gravacao._id,
+      });
+    }
+  };
+
+  const handleDownload = async () => {
+    if (!gravacao.audioUrl) return;
+    setBaixando(true);
+    try {
+      const res = await fetch(gravacao.audioUrl);
+      if (!res.ok) throw new Error();
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      // nome amigavel: titulo + data, sanitizado, .mp3
+      const slug = `${gravacao.titulo}-${gravacao.data}`
+        .normalize("NFD").replace(/[̀-ͯ]/g, "")
+        .replace(/[^a-zA-Z0-9-_]+/g, "-").replace(/-+/g, "-").toLowerCase();
+      a.download = `${slug || "audio"}.mp3`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error("Erro ao baixar audio");
+    } finally {
+      setBaixando(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base">Audio completo</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" size="sm" onClick={handlePlay}>
+            {isFullPlaying ? <Pause className="h-4 w-4 mr-1.5" /> : <Play className="h-4 w-4 mr-1.5" />}
+            {isFullPlaying ? "Pausar" : "Ouvir audio completo"}
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleDownload} disabled={baixando}>
+            <Download className="h-4 w-4 mr-1.5" />
+            {baixando ? "Baixando..." : "Baixar audio"}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function GravacaoAdminPage() {
   const params = useParams();
   const router = useRouter();
@@ -268,7 +339,6 @@ export default function GravacaoAdminPage() {
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   const gravacao = useQuery(api.gravacoes.queries.getById, { id: id as Id<"gravacoes"> });
-  const globalPlayer = useAudioPlayer();
   const publishGravacao = useMutation(api.gravacoes.mutations.publish);
   // @ts-ignore Convex TS2589
   const unpublishGravacao = useMutation(api.gravacoes.mutations.update);
@@ -477,43 +547,7 @@ export default function GravacaoAdminPage() {
 
         {gravacao.audioUrl && (
           <TabsContent value="audio" className="mt-4">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Audio completo</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {(() => {
-                  const isFullTrack = globalPlayer.track?.gravacaoId === gravacao._id
-                    && globalPlayer.track?.inicioSermao == null
-                    && globalPlayer.track?.fimSermao == null;
-                  const isFullPlaying = isFullTrack && globalPlayer.isPlaying;
-
-                  return (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        if (isFullPlaying) {
-                          globalPlayer.pause();
-                        } else if (isFullTrack) {
-                          globalPlayer.resume();
-                        } else {
-                          globalPlayer.play({
-                            url: gravacao.audioUrl!,
-                            title: `${gravacao.titulo} (completo)`,
-                            artist: gravacao.pregadorNome || undefined,
-                            gravacaoId: gravacao._id,
-                          });
-                        }
-                      }}
-                    >
-                      {isFullPlaying ? <Pause className="h-4 w-4 mr-1.5" /> : <Play className="h-4 w-4 mr-1.5" />}
-                      {isFullPlaying ? "Pausar" : "Ouvir audio completo"}
-                    </Button>
-                  );
-                })()}
-              </CardContent>
-            </Card>
+            <AudioTab gravacao={gravacao} />
           </TabsContent>
         )}
       </Tabs>
