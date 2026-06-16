@@ -9,10 +9,22 @@ export const list = query({
     search: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    let results = args.tipo
-      ? await ctx.db.query("entidades").withIndex("by_tipo", (q) => q.eq("tipoEntidade", args.tipo!)).collect()
-      : await ctx.db.query("entidades").collect();
+    let results;
+    if (args.tipo) {
+      results = await ctx.db
+        .query("entidades")
+        .withIndex("by_tipo", (q) => q.eq("tipoEntidade", args.tipo!))
+        .collect();
+    } else if (args.status) {
+      results = await ctx.db
+        .query("entidades")
+        .withIndex("by_status", (q) => q.eq("status", args.status as any))
+        .collect();
+    } else {
+      results = await ctx.db.query("entidades").collect();
+    }
 
+    // Mantem o filtro em memoria para cobrir o caso tipo+status juntos.
     if (args.status) {
       results = results.filter((e) => e.status === args.status);
     }

@@ -181,18 +181,32 @@ export const searchMembersForFamily = query({
       .withIndex("by_user_id", (q) => q.eq("userId", userId))
       .first();
 
-    const entidades = await ctx.db.query("entidades").collect();
-    const result = entidades
-      .filter((e) => e.status === "ATIVO")
-      .filter((e) => e._id !== myMembro?.entidadeId)
-      .filter((e) => (e.nomeCompleto || "").toLowerCase().includes(term))
-      .slice(0, 20)
-      .map((e) => ({
-        entidadeId: e._id,
-        nomeCompleto: e.nomeCompleto ?? "",
-        foto: e.foto,
-      }));
-    return result;
+    // Caminho comum: searchIndex (prefixo por token, status ATIVO) — sem scan.
+    const termTrim = search.trim();
+    const porPrefixo = await ctx.db
+      .query("entidades")
+      .withSearchIndex("search_entidades", (q) =>
+        q.search("nomeCompleto", termTrim).eq("status", "ATIVO"),
+      )
+      .take(40);
+    let candidatos = porPrefixo.filter((e) => e._id !== myMembro?.entidadeId);
+
+    // Fallback substring (termo casa no meio da palavra) — raro.
+    if (candidatos.length === 0) {
+      const ativos = await ctx.db
+        .query("entidades")
+        .withIndex("by_status", (q) => q.eq("status", "ATIVO"))
+        .collect();
+      candidatos = ativos
+        .filter((e) => e._id !== myMembro?.entidadeId)
+        .filter((e) => (e.nomeCompleto || "").toLowerCase().includes(term));
+    }
+
+    return candidatos.slice(0, 20).map((e) => ({
+      entidadeId: e._id,
+      nomeCompleto: e.nomeCompleto ?? "",
+      foto: e.foto,
+    }));
   },
 });
 
