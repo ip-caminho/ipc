@@ -45,14 +45,13 @@ export const listVisitas = query({
     const auth = await getAuthContext(ctx);
     if (!auth || !auth.can("pastoreio:read")) return [];
 
-    let visitas = await ctx.db
-      .query("visitasPastorais")
-      .order("desc")
-      .collect();
-
-    if (args.membroId) {
-      visitas = visitas.filter((v) => v.membroId === args.membroId);
-    }
+    const visitas = args.membroId
+      ? await ctx.db
+          .query("visitasPastorais")
+          .withIndex("by_membro", (q: any) => q.eq("membroId", args.membroId))
+          .order("desc")
+          .collect()
+      : await ctx.db.query("visitasPastorais").order("desc").collect();
 
     return Promise.all(
       visitas.map(async (visita) => ({
@@ -77,18 +76,25 @@ export const listPedidosOracao = query({
 
     if (!canReadAll && !canReadOwn) return [];
 
-    let pedidos = await ctx.db
-      .query("pedidosOracao")
-      .order("desc")
-      .collect();
-
-    // Membro so ve os proprios
+    // Membro comum so ve os proprios — varre por indice, nao a tabela toda
+    let pedidos;
     if (!canReadAll) {
-      pedidos = pedidos.filter((p) => p.membroId === auth.membro._id);
-    }
-
-    if (args.status) {
-      pedidos = pedidos.filter((p) => p.status === args.status);
+      pedidos = await ctx.db
+        .query("pedidosOracao")
+        .withIndex("by_membro", (q: any) => q.eq("membroId", auth.membro._id))
+        .order("desc")
+        .collect();
+      if (args.status) {
+        pedidos = pedidos.filter((p) => p.status === args.status);
+      }
+    } else if (args.status) {
+      pedidos = await ctx.db
+        .query("pedidosOracao")
+        .withIndex("by_status", (q: any) => q.eq("status", args.status))
+        .order("desc")
+        .collect();
+    } else {
+      pedidos = await ctx.db.query("pedidosOracao").order("desc").collect();
     }
 
     return Promise.all(
@@ -108,14 +114,13 @@ export const listAnotacoes = query({
     const auth = await getAuthContext(ctx);
     if (!auth || !auth.can("pastoreio:read")) return [];
 
-    let anotacoes = await ctx.db
-      .query("anotacoesPastorais")
-      .order("desc")
-      .collect();
-
-    if (args.membroId) {
-      anotacoes = anotacoes.filter((a) => a.membroId === args.membroId);
-    }
+    const anotacoes = args.membroId
+      ? await ctx.db
+          .query("anotacoesPastorais")
+          .withIndex("by_membro", (q: any) => q.eq("membroId", args.membroId))
+          .order("desc")
+          .collect()
+      : await ctx.db.query("anotacoesPastorais").order("desc").collect();
 
     return Promise.all(
       anotacoes.map(async (anotacao) => ({
@@ -163,22 +168,20 @@ export const getMembroPerfil = query({
       })
     );
 
-    // Visitas recebidas
+    // Visitas recebidas — 10 mais recentes direto pelo indice
     const visitas = await ctx.db
       .query("visitasPastorais")
-      .withIndex("by_membro", (q) => q.eq("membroId", membroId))
-      .collect();
+      .withIndex("by_membro_criadoEm", (q) => q.eq("membroId", membroId))
+      .order("desc")
+      .take(10);
     const visitasEnriched = await Promise.all(
-      visitas
-        .sort((a, b) => b.criadoEm - a.criadoEm)
-        .slice(0, 10)
-        .map(async (v) => ({
-          _id: v._id,
-          data: v.data,
-          tipo: v.tipo,
-          observacoes: v.observacoes,
-          visitanteNome: await resolveMembroNome(ctx, v.visitanteId),
-        }))
+      visitas.map(async (v) => ({
+        _id: v._id,
+        data: v.data,
+        tipo: v.tipo,
+        observacoes: v.observacoes,
+        visitanteNome: await resolveMembroNome(ctx, v.visitanteId),
+      }))
     );
 
     // Pedidos de oracao
@@ -190,21 +193,19 @@ export const getMembroPerfil = query({
       .sort((a, b) => b.criadoEm - a.criadoEm)
       .slice(0, 10);
 
-    // Anotacoes pastorais
+    // Anotacoes pastorais — 10 mais recentes direto pelo indice
     const anotacoes = await ctx.db
       .query("anotacoesPastorais")
-      .withIndex("by_membro", (q) => q.eq("membroId", membroId))
-      .collect();
+      .withIndex("by_membro_criadoEm", (q) => q.eq("membroId", membroId))
+      .order("desc")
+      .take(10);
     const anotacoesEnriched = await Promise.all(
-      anotacoes
-        .sort((a, b) => b.criadoEm - a.criadoEm)
-        .slice(0, 10)
-        .map(async (a) => ({
-          _id: a._id,
-          texto: a.texto,
-          criadoEm: a.criadoEm,
-          autorNome: await resolveMembroNome(ctx, a.autorId),
-        }))
+      anotacoes.map(async (a) => ({
+        _id: a._id,
+        texto: a.texto,
+        criadoEm: a.criadoEm,
+        autorNome: await resolveMembroNome(ctx, a.autorId),
+      }))
     );
 
     // Escalas — onde serve
@@ -228,16 +229,14 @@ export const getMembroPerfil = query({
     // Funcoes distintas em que serve
     const funcoesSet = new Set(escalas.map((e) => e.funcao));
 
-    // Escutas de gravacoes
+    // Escutas de gravacoes — 10 mais recentes direto pelo indice
     const escutas = await ctx.db
       .query("escutasGravacao")
-      .withIndex("by_membro", (q) => q.eq("membroId", membroId))
-      .collect();
+      .withIndex("by_membro_atualizado", (q) => q.eq("membroId", membroId))
+      .order("desc")
+      .take(10);
     const escutasEnriched = await Promise.all(
-      escutas
-        .sort((a, b) => b.atualizadoEm - a.atualizadoEm)
-        .slice(0, 10)
-        .map(async (e) => {
+      escutas.map(async (e) => {
           const gravacao = await ctx.db.get(e.gravacaoId);
           return {
             titulo: gravacao?.titulo || "—",
@@ -368,17 +367,21 @@ export const dashboardStats = query({
     const now = new Date();
     const mesAtual = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 
+    // totalVisitas exige a contagem total, entao o scan e inerente aqui.
     const visitas = await ctx.db.query("visitasPastorais").collect();
     const visitasMes = visitas.filter((v) => v.data.startsWith(mesAtual));
 
-    const pedidos = await ctx.db.query("pedidosOracao").collect();
-    const pedidosAtivos = pedidos.filter((p) => p.status === "ATIVO");
+    // Ativos por indice — evita varrer o mural inteiro (tabela quente)
+    const pedidosAtivos = await ctx.db
+      .query("pedidosOracao")
+      .withIndex("by_status", (q: any) => q.eq("status", "ATIVO"))
+      .collect();
 
-    const anotacoes = await ctx.db.query("anotacoesPastorais").collect();
     const umaSemanaAtras = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    const anotacoesRecentes = anotacoes.filter(
-      (a) => a.criadoEm > umaSemanaAtras
-    );
+    const anotacoesRecentes = await ctx.db
+      .query("anotacoesPastorais")
+      .withIndex("by_criadoEm", (q: any) => q.gt("criadoEm", umaSemanaAtras))
+      .collect();
 
     return {
       visitasMes: visitasMes.length,

@@ -27,9 +27,12 @@ export const minhasTurmasInstrutor = query({
       .first();
     if (!membro) return [];
 
-    const turmas = await ctx.db.query("turmas").collect();
-    const minhas = turmas.filter(
-      (t) => t.instrutorId === membro._id && (t.status === "ABERTA" || t.status === "EM_ANDAMENTO")
+    const turmasInstrutor = await ctx.db
+      .query("turmas")
+      .withIndex("by_instrutor", (q) => q.eq("instrutorId", membro._id))
+      .collect();
+    const minhas = turmasInstrutor.filter(
+      (t) => t.status === "ABERTA" || t.status === "EM_ANDAMENTO"
     );
 
     const hoje = getSaoPauloDateString();

@@ -15,16 +15,17 @@ async function requireAuth(ctx: any) {
 }
 
 async function gerarCodigo(ctx: any): Promise<string> {
-  // Buscar ultimo codigo
-  const exemplares = await ctx.db.query("exemplares").collect();
-  let maxNum = 0;
-  for (const e of exemplares) {
-    const match = e.codigo.match(/^BIB-(\d+)$/);
-    if (match) {
-      const num = parseInt(match[1], 10);
-      if (num > maxNum) maxNum = num;
-    }
-  }
+  // Codigos sao sempre BIB-NNNN com padding de 4 digitos, entao a ordem
+  // lexicografica do indice by_codigo == ordem numerica (ate BIB-9999).
+  // Le 1 doc em vez de varrer a tabela inteira (importante no createBatch).
+  const ultimo = await ctx.db
+    .query("exemplares")
+    .withIndex("by_codigo")
+    .order("desc")
+    .first();
+  const maxNum = ultimo
+    ? parseInt(ultimo.codigo.match(/^BIB-(\d+)$/)?.[1] ?? "0", 10) || 0
+    : 0;
   return `BIB-${String(maxNum + 1).padStart(4, "0")}`;
 }
 
