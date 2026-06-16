@@ -123,7 +123,14 @@ export default defineSchema({
     .index("by_whatsapp", ["whatsapp"])
     .index("by_cpf", ["cpf"])
     .index("by_cnpj", ["cnpj"])
-    .index("by_vinculo", ["vinculoIgreja"]),
+    .index("by_vinculo", ["vinculoIgreja"])
+    // Busca por nome (autocomplete de familia). Auto-mantido pelo Convex —
+    // sem campo derivado/backfill. Full-text por token (prefixo), com fallback
+    // substring nos call-sites para o caso de termo no meio da palavra.
+    .searchIndex("search_entidades", {
+      searchField: "nomeCompleto",
+      filterFields: ["status"],
+    }),
 
   membros: defineTable({
     entidadeId: v.id("entidades"),
