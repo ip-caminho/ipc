@@ -15,6 +15,7 @@ import type * as _shared_llm_gemini from "../_shared/llm/gemini.js";
 import type * as _shared_llm_groq from "../_shared/llm/groq.js";
 import type * as _shared_llm_index from "../_shared/llm/index.js";
 import type * as _shared_llm_types from "../_shared/llm/types.js";
+import type * as _shared_membroResolver from "../_shared/membroResolver.js";
 import type * as _shared_requirePermission from "../_shared/requirePermission.js";
 import type * as appConfig_mutations from "../appConfig/mutations.js";
 import type * as appConfig_queries from "../appConfig/queries.js";
@@ -148,6 +149,7 @@ declare const fullApi: ApiFromModules<{
   "_shared/llm/groq": typeof _shared_llm_groq;
   "_shared/llm/index": typeof _shared_llm_index;
   "_shared/llm/types": typeof _shared_llm_types;
+  "_shared/membroResolver": typeof _shared_membroResolver;
   "_shared/requirePermission": typeof _shared_requirePermission;
   "appConfig/mutations": typeof appConfig_mutations;
   "appConfig/queries": typeof appConfig_queries;

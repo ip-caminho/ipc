@@ -265,6 +265,15 @@ export default defineSchema({
     // Codigo do link publico individual desta gravacao (/g/<codigo>). Vazio =
     // nao compartilhada. Gerado por quem tem gravacoes:share.
     shareToken: v.optional(v.string()),
+    // Contadores denormalizados — evitam ler todas as reacoes/comentarios de
+    // cada gravacao na listagem reativa. Mantidos em gravacoes/comentarios.ts
+    // e recalculados pelo backfill gravacoes/migrations:backfillContadores.
+    // Array (nao record): o tipo da reacao e um emoji, e nomes de campo no
+    // Convex so aceitam ASCII — emoji so vale como VALOR de string.
+    reacoesResumo: v.optional(
+      v.array(v.object({ tipo: v.string(), count: v.number() })),
+    ),
+    comentariosCount: v.optional(v.number()),
   })
     .index("by_tipo", ["tipo"])
     .index("by_status", ["status"])
