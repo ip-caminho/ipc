@@ -20,7 +20,7 @@ import { MembroCombobox } from "@features/escalas/components/MembroCombobox";
 import { LouvorOrdemSection } from "@features/escalas/components/LouvorOrdemSection";
 import { CeiaCheckbox } from "@features/escalas/components/CeiaCheckbox";
 import { cn } from "@/shared/lib/utils/cn";
-import { BiblePassageInput } from "@/shared/bible/components/BiblePassageInput";
+import { PassagemModal } from "@features/escalas/components/PassagemModal";
 import { CultosMobileView } from "@features/escalas/components/CultosMobileView";
 import type { Id } from "@/convex/_generated/dataModel";
 
@@ -132,11 +132,13 @@ function MultiCell({
 function PassagemCell({
   cultoId,
   funcao,
+  funcaoLabel,
   assignment,
   membros,
 }: {
   cultoId: Id<"cultos">;
   funcao: string;
+  funcaoLabel?: string;
   assignment?: { _id: Id<"cultoEscalas">; membroId?: string; membroNome: string; nomeCustom?: string; passagemBiblica?: string };
   membros: any[];
 }) {
@@ -144,8 +146,7 @@ function PassagemCell({
   const upsertEscala = useMutation(api.escalas.mutations.upsertEscala);
   const updatePassagem = useMutation(api.escalas.mutations.updatePassagem);
   const removeEscala = useMutation(api.escalas.mutations.removeEscala);
-  const [editingPassagem, setEditingPassagem] = useState(false);
-  const [passagem, setPassagem] = useState(assignment?.passagemBiblica || "");
+  const [passagemModalOpen, setPassagemModalOpen] = useState(false);
   const [showCustom, setShowCustom] = useState(false);
   const [customName, setCustomName] = useState("");
 
@@ -168,21 +169,21 @@ function PassagemCell({
     }
   };
 
-  const handleSavePassagem = async () => {
-    setEditingPassagem(false);
+  const handleSavePassagem = async (novaPassagem: string) => {
+    const valor = novaPassagem.trim();
     if (!assignment) {
-      if (passagem.trim()) {
+      if (valor) {
         try {
-          await upsertEscala({ cultoId, funcao, passagemBiblica: passagem.trim() });
+          await upsertEscala({ cultoId, funcao, passagemBiblica: valor });
         } catch (e) {
           toast.error(e instanceof Error ? e.message : "Erro");
         }
       }
       return;
     }
-    if (passagem.trim() === (assignment.passagemBiblica || "")) return;
+    if (valor === (assignment.passagemBiblica || "")) return;
     try {
-      await updatePassagem({ id: assignment._id, passagemBiblica: passagem.trim() });
+      await updatePassagem({ id: assignment._id, passagemBiblica: valor });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro");
     }
@@ -247,35 +248,19 @@ function PassagemCell({
           )}
         </MembroCombobox>
       </div>
-      {editingPassagem ? (
-        <div className="flex items-center gap-0.5">
-          <BiblePassageInput
-            variant="inline"
-            className="h-6 text-[11px] px-1.5 italic flex-1"
-            placeholder="Ex: Sl 23; Rm 8:28"
-            value={passagem}
-            onChange={setPassagem}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleSavePassagem();
-              if (e.key === "Escape") { setEditingPassagem(false); setPassagem(assignment?.passagemBiblica || ""); }
-            }}
-            autoFocus
-          />
-          <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0 text-primary" onClick={handleSavePassagem}>
-            <Check className="h-3 w-3" />
-          </Button>
-          <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0" onClick={() => { setEditingPassagem(false); setPassagem(assignment?.passagemBiblica || ""); }}>
-            <X className="h-3 w-3" />
-          </Button>
-        </div>
-      ) : (
-        <button
-          onClick={() => { setPassagem(assignment?.passagemBiblica || ""); setEditingPassagem(true); }}
-          className="text-[11px] px-1.5 h-6 w-full text-left rounded hover:bg-accent/50 truncate italic text-muted-foreground"
-        >
-          {assignment?.passagemBiblica || "Passagem..."}
-        </button>
-      )}
+      <button
+        onClick={() => setPassagemModalOpen(true)}
+        className="text-[11px] px-1.5 h-6 w-full text-left rounded hover:bg-accent/50 truncate italic text-muted-foreground"
+      >
+        {assignment?.passagemBiblica || "Passagem..."}
+      </button>
+      <PassagemModal
+        open={passagemModalOpen}
+        onOpenChange={setPassagemModalOpen}
+        initialValue={assignment?.passagemBiblica || ""}
+        contexto={funcaoLabel}
+        onSave={handleSavePassagem}
+      />
     </div>
   );
 }
@@ -419,6 +404,7 @@ function CultosTable({
                             <PassagemCell
                               cultoId={culto._id}
                               funcao={f.value}
+                              funcaoLabel={f.label}
                               assignment={assignments[0]}
                               membros={membros}
                             />
