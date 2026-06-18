@@ -5,6 +5,7 @@ import { api } from "@/convex/_generated/api";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { Button } from "@/shared/components/ui/button";
 import { ChevronLeft, ChevronRight, Church, Printer, BookOpen, Copy, Check, AArrowUp, AArrowDown } from "lucide-react";
+import { Logo } from "@shared/components/layout/Logo";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -198,7 +199,7 @@ export function BoletimContent() {
       <div className="w-full max-w-lg overflow-hidden rounded-xl border bg-card shadow-sm">
         {/* Cabecalho com gradiente */}
         <div className="text-center py-8 px-6 bg-gradient-to-b from-accent/60 to-transparent border-b">
-          <Church className="h-10 w-10 mx-auto mb-3 text-primary" />
+          <Logo className="h-12 mx-auto mb-3" />
           <h1 className="text-lg font-semibold tracking-wide uppercase text-primary">
             Igreja Presbiteriana do Caminho
           </h1>
