@@ -221,6 +221,55 @@ export function BoletimContent() {
           {(() => {
             const louvores = boletim.louvores || [];
             const items: React.ReactNode[] = [];
+            const hasMarkers = louvores.some((l) => l.startsWith("---"));
+
+            // Item de liturgia a partir da escala (inclui a passagem, se houver).
+            const liturgiaEscala = (funcao: string, label: string) => {
+              const e = getEscala(funcao)[0];
+              if (!e) return null;
+              return (
+                <div key={funcao} className="py-3 px-6 border-b border-border">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-base font-semibold text-foreground">{label}</h3>
+                    <p className="text-sm text-muted-foreground">{e.membroNomeCompleto || e.membroNome}</p>
+                  </div>
+                  {e.passagemBiblica && (
+                    <div className="mt-1">
+                      <PalavraDrawer referencia={e.passagemBiblica} />
+                    </div>
+                  )}
+                </div>
+              );
+            };
+
+            // Sem ordem de musicas definida (cultos.louvores vazio/sem
+            // marcadores): monta a liturgia direto das escalas, com as
+            // passagens. Musicas avulsas (se houver) entram no meio.
+            if (!hasMarkers) {
+              const push = (node: React.ReactNode) => { if (node) items.push(node); };
+              push(liturgiaEscala("ABERTURA", "Abertura"));
+              push(liturgiaEscala("CONFISSAO", "Confissão"));
+              louvores.forEach((l, i) => {
+                items.push(<LouvorDrawer key={`m-${i}`} titulo={l} louvoresData={louvoresData} />);
+              });
+              push(liturgiaEscala("PREGACAO", "Palavra"));
+              push(liturgiaEscala("ORACAO", "Oração"));
+              items.push(
+                <div key="avisos" className="py-3 px-6 border-b border-border text-left space-y-2">
+                  <h3 className="text-base font-semibold text-foreground">Avisos</h3>
+                  {boletim.avisos && boletim.avisos.length > 0 &&
+                    boletim.avisos.map((aviso: any) => (
+                      <p key={aviso._id} className="text-sm text-muted-foreground">• {aviso.titulo}</p>
+                    ))}
+                </div>
+              );
+              items.push(
+                <div key="bencao" className="py-3 px-6">
+                  <h3 className="text-base font-semibold text-foreground">Bênção Final</h3>
+                </div>
+              );
+              return items;
+            }
 
             const ESCALA_MAP: Record<string, { label: string; funcao: string }> = {
               "Abertura": { label: "Abertura", funcao: "ABERTURA" },
@@ -344,16 +393,6 @@ export function BoletimContent() {
                     )}
                   </div>
                 );
-              }
-            }
-
-            if (!louvores.some((l) => l.startsWith("---")) && louvores.length > 0) {
-              for (const l of louvores) {
-                if (!l.startsWith("---")) {
-                  items.push(
-                    <LouvorDrawer key={`fb-${l}`} titulo={l} louvoresData={louvoresData} />
-                  );
-                }
               }
             }
 
