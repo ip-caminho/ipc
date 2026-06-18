@@ -11,17 +11,13 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/shared/components/ui/sheet";
-import { Switch } from "@/shared/components/ui/switch";
 import { Avatar, AvatarImage, AvatarFallback } from "@/shared/components/ui/avatar";
 import { Separator } from "@/shared/components/ui/separator";
 import { LogOut, User, Moon, Sun } from "lucide-react";
 import { useAuth } from "@shared/providers/PermissionsProvider";
-import { useNavigationMode } from "@shared/providers/NavigationModeProvider";
 import {
-  MORE_MEMBER_SECTIONS,
-  MORE_ADMIN_SECTIONS,
+  GESTAO_SECTIONS,
   type NavItem,
-  type NavSection,
 } from "@shared/constants/navigation";
 import { cn } from "@shared/lib/utils/cn";
 import { useTheme } from "next-themes";
@@ -44,18 +40,18 @@ export function MoreSheet({ open, onOpenChange }: Props) {
     const t = setTimeout(() => setArmed(open), open ? 550 : 0);
     return () => clearTimeout(t);
   }, [open]);
-  const { name, role, foto } = useAuth();
-  const { mode, setMode, canToggle } = useNavigationMode();
+  const { name, role, foto, can, hasAnyRole } = useAuth();
   const { theme, setTheme } = useTheme();
   const { signOut } = useAuthActions();
   const modulosAtivos = useQuery(api.modulos.queries.listModulosAtivos);
-  const { can } = useAuth();
 
-  const sections: NavSection[] = mode === "admin" ? MORE_ADMIN_SECTIONS : MORE_MEMBER_SECTIONS;
+  // Mesma lista do sidebar desktop, filtrada por RBAC. Sem "modo gestao".
+  const sections = GESTAO_SECTIONS;
 
   const isVisible = (item: NavItem) => {
     if (item.modulo && modulosAtivos && !modulosAtivos.includes(item.modulo)) return false;
     if (item.permission && !can(item.permission)) return false;
+    if (item.roles && !hasAnyRole(item.roles)) return false;
     return true;
   };
 
@@ -91,16 +87,6 @@ export function MoreSheet({ open, onOpenChange }: Props) {
             </div>
           </div>
         </SheetHeader>
-
-        {canToggle && (
-          <div className="px-5 py-3 flex items-center justify-between">
-            <span className="text-sm">Modo gestão</span>
-            <Switch
-              checked={mode === "admin"}
-              onCheckedChange={(checked) => setMode(checked ? "admin" : "member")}
-            />
-          </div>
-        )}
 
         <Separator />
 
