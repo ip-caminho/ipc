@@ -6,10 +6,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useAuth } from "@shared/providers/PermissionsProvider";
-import { useNavigationMode } from "@shared/providers/NavigationModeProvider";
 import {
-  MEMBER_TABS,
-  ADMIN_TABS,
+  MOBILE_PRIMARY_TABS,
   MORE_TAB,
   BOLETIM_TAB,
   isDomingoWindow,
@@ -23,8 +21,7 @@ import { cn } from "@shared/lib/utils/cn";
 
 export function FloatingBottomBar() {
   const pathname = usePathname();
-  const { can, isLoading } = useAuth();
-  const { isAdminMode } = useNavigationMode();
+  const { can, hasAnyRole, isLoading } = useAuth();
   const { isActive: audioActive } = useAudioPlayer();
   const [pendingHref, setPendingHref] = useState<string | null>(null);
   const [moreOpen, setMoreOpen] = useState(false);
@@ -41,17 +38,18 @@ export function FloatingBottomBar() {
   }, [pathname, pendingHref]);
 
   const tabs: NavItem[] = useMemo(() => {
-    const base = isAdminMode ? [...ADMIN_TABS] : [...MEMBER_TABS];
+    const base = [...MOBILE_PRIMARY_TABS];
     if (isDomingoWindow()) {
-      base.splice(base.length - 1, 0, BOLETIM_TAB);
+      base.push(BOLETIM_TAB);
     }
-    return base.filter((item) => {
-      if (item.href === MORE_TAB.href) return true;
+    const filtered = base.filter((item) => {
       if (item.modulo && modulosAtivos && !modulosAtivos.includes(item.modulo)) return false;
       if (item.permission && !can(item.permission)) return false;
+      if (item.roles && !hasAnyRole(item.roles)) return false;
       return true;
     });
-  }, [isAdminMode, modulosAtivos, can]);
+    return [...filtered, MORE_TAB];
+  }, [modulosAtivos, can, hasAnyRole]);
 
   const isActive = (href: string) => {
     if (href === MORE_TAB.href) return moreOpen;

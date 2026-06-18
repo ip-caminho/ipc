@@ -936,23 +936,6 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "Cada RecentByTipo so renderiza com permissao gravacoes:read e se houver itens",
     ],
   },
-  "/gestao": {
-    nome: "Gestão (aggregator)",
-    pagina: "app/(ready)/gestao/page.tsx",
-    arquivos: [
-      "app/(ready)/gestao/page.tsx",
-      "shared/constants/navigation.ts",
-      "features/navigation/components/NavSectionList.tsx",
-    ],
-    queries: ["modulos.queries.listModulosAtivos"],
-    componentes: ["NavSectionList"],
-    notas: [
-      "Visivel apenas para roles elevados (admin, secretaria, pastor, presbitero)",
-      "Redireciona para /dashboard se usuario nao tiver role elevada",
-      "5 secoes: Culto, Pessoas, Educacional, Operacao, Admin",
-      "Fonte dos itens: GESTAO_SECTIONS em shared/constants/navigation.ts",
-    ],
-  },
   "/educacional/turma/[id]": {
     nome: "Turma do Professor (Educacional)",
     pagina: "app/(ready)/educacional/turma/[id]/page.tsx",

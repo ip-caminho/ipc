@@ -2,7 +2,6 @@ import {
   Home,
   Users,
   HandHeart,
-  Settings,
   FileText,
   Ear,
   Music,
@@ -26,18 +25,9 @@ import {
   History,
   ClipboardCheck,
   MoreHorizontal,
-  User,
   type LucideIcon,
 } from "lucide-react";
 import type { Permission, Role } from "@/types/auth";
-
-export const ELEVATED_ROLES: Role[] = [
-  "admin",
-  "secretaria",
-  "secretario_executivo",
-  "pastor",
-  "presbitero",
-];
 
 export type NavItem = {
   label: string;
@@ -46,6 +36,9 @@ export type NavItem = {
   description?: string;
   permission?: Permission;
   modulo?: string;
+  // Restringe o item a papeis especificos. Usado para itens administrativos
+  // que nao tem uma permission natural no catalogo (Permissoes, Modulos).
+  roles?: Role[];
 };
 
 export type NavSection = {
@@ -53,10 +46,19 @@ export type NavSection = {
   items: NavItem[];
 };
 
+// Tabs primarias do sidebar desktop (sempre no topo, fora dos grupos).
 export const PRIMARY_TABS: NavItem[] = [
   { label: "Início", href: "/dashboard", icon: Home },
   { label: "Gravações", href: "/comunidade", icon: Ear, modulo: "gravacoes" },
   { label: "Orar", href: "/pedidos-oracao", icon: HandHeart, modulo: "pedidos-oracao" },
+];
+
+// Tabs candidatas da bottom bar mobile (filtradas por RBAC/modulo; "Membros"
+// so aparece para quem tem membros:read).
+export const MOBILE_PRIMARY_TABS: NavItem[] = [
+  { label: "Início", href: "/dashboard", icon: Home },
+  { label: "Gravações", href: "/comunidade", icon: Ear, modulo: "gravacoes" },
+  { label: "Membros", href: "/membros", icon: Users, permission: "membros:read", modulo: "membros" },
 ];
 
 export const BOLETIM_TAB: NavItem = {
@@ -67,29 +69,27 @@ export const BOLETIM_TAB: NavItem = {
   modulo: "boletim",
 };
 
-export const GESTAO_TAB: NavItem = {
-  label: "Gestão",
-  href: "/gestao",
-  icon: Settings,
+export const MORE_TAB: NavItem = {
+  label: "Mais",
+  href: "/__more__",
+  icon: MoreHorizontal,
 };
 
-// Aparece no nivel primario (fora de agrupamento) para quem tem rol:read —
-// ex.: membro comum que recebeu acesso ao Rol via permissao individual.
-export const ROL_TAB: NavItem = {
-  label: "Rol de Membros",
-  href: "/secretario-executivo",
-  icon: BookOpen,
-  permission: "rol:read",
-  modulo: "membros",
-};
-
-export const COMUNIDADE_SECTIONS: NavSection[] = [
+// Secoes do sidebar/MoreSheet. Visibilidade 100% por RBAC: cada item aparece
+// se can(permission) (ou roles) e o modulo estiver ativo. Uma secao vazia
+// (sem itens visiveis) some sozinha. Sem "modo gestao".
+export const GESTAO_SECTIONS: NavSection[] = [
   {
-    titulo: "Conteúdo",
+    titulo: "Cultos e Louvor",
     items: [
-      // "Ouvir" (/gravacoes) saiu daqui: duplicava a tab "Gravações"
-      // (/comunidade) com outro nome; a lista segue acessivel pelos
-      // "Ver todos" do hub.
+      {
+        label: "Planejamento",
+        href: "/cultos",
+        icon: Church,
+        description: "Planejamento, liturgia e escalas",
+        permission: "escalas:read",
+        modulo: "escalas",
+      },
       {
         label: "Repertório",
         href: "/louvor",
@@ -106,58 +106,12 @@ export const COMUNIDADE_SECTIONS: NavSection[] = [
         permission: "escalas:read",
         modulo: "boletim",
       },
-    ],
-  },
-  {
-    titulo: "Pessoas e espaços",
-    items: [
       {
-        label: "Diretório",
-        href: "/diretorio",
-        icon: BookOpen,
-        description: "Contatos, aniversários e famílias",
-        permission: "diretorio:read",
-        modulo: "diretorio",
-      },
-      {
-        label: "Calendário",
-        href: "/calendario",
-        icon: CalendarDays,
-        description: "Eventos e datas da igreja",
-        permission: "calendario:read",
-        modulo: "calendario",
-      },
-      {
-        label: "Biblioteca",
-        href: "/biblioteca",
-        icon: Library,
-        description: "Acervo de livros para empréstimo",
-        permission: "biblioteca:read",
-        modulo: "biblioteca",
-      },
-      {
-        label: "Salas",
-        href: "/salas",
-        icon: DoorOpen,
-        description: "Reserva de salas e espaços",
-        permission: "salas:read",
-        modulo: "salas",
-      },
-    ],
-  },
-];
-
-export const GESTAO_SECTIONS: NavSection[] = [
-  {
-    titulo: "Culto",
-    items: [
-      {
-        label: "Planejamento",
-        href: "/cultos",
-        icon: Church,
-        description: "Planejamento, liturgia e escalas",
-        permission: "escalas:read",
-        modulo: "escalas",
+        label: "Avisos",
+        href: "/avisos",
+        icon: Megaphone,
+        description: "Comunicados semanais",
+        permission: "escalas:create",
       },
       {
         label: "Multimídia",
@@ -174,21 +128,6 @@ export const GESTAO_SECTIONS: NavSection[] = [
         description: "Upload, processamento IA e publicação",
         permission: "gravacoes:update",
         modulo: "gravacoes",
-      },
-      {
-        label: "Avisos",
-        href: "/avisos",
-        icon: Megaphone,
-        description: "Comunicados semanais",
-        permission: "escalas:create",
-      },
-      {
-        label: "Boletim (edição)",
-        href: "/boletim",
-        icon: FileText,
-        description: "Editar boletim dominical",
-        permission: "escalas:update",
-        modulo: "boletim",
       },
     ],
   },
@@ -210,6 +149,14 @@ export const GESTAO_SECTIONS: NavSection[] = [
         description: "Rol IPB, família, dados eclesiásticos e impressão para assembleia",
         permission: "rol:read",
         modulo: "membros",
+      },
+      {
+        label: "Diretório",
+        href: "/diretorio",
+        icon: BookOpen,
+        description: "Contatos, aniversários e famílias",
+        permission: "diretorio:read",
+        modulo: "diretorio",
       },
       {
         label: "Entidades",
@@ -242,13 +189,8 @@ export const GESTAO_SECTIONS: NavSection[] = [
         permission: "ministerios:read",
         modulo: "ministerios",
       },
-    ],
-  },
-  {
-    titulo: "Educacional",
-    items: [
       {
-        label: "Turmas e relatórios",
+        label: "Educacional",
         href: "/educacional",
         icon: Baby,
         description: "Crianças, escalas e relatórios de aula",
@@ -263,19 +205,6 @@ export const GESTAO_SECTIONS: NavSection[] = [
         permission: "educacional:write",
         modulo: "educacional",
       },
-    ],
-  },
-  {
-    titulo: "Operação",
-    items: [
-      {
-        label: "Tarefas",
-        href: "/tarefas",
-        icon: ListTodo,
-        description: "Acompanhamento e TODO",
-        permission: "tarefas:read",
-        modulo: "tarefas",
-      },
       {
         label: "Turmas e cursos",
         href: "/turmas",
@@ -284,30 +213,42 @@ export const GESTAO_SECTIONS: NavSection[] = [
         permission: "turmas:read",
         modulo: "turmas",
       },
-      {
-        label: "Biblioteca (admin)",
-        href: "/biblioteca",
-        icon: Library,
-        description: "Acervo, exemplares e empréstimos",
-        permission: "biblioteca:update",
-        modulo: "biblioteca",
-      },
     ],
   },
   {
-    titulo: "Admin",
+    titulo: "Administração",
     items: [
       {
-        label: "Permissões",
-        href: "/admin/permissoes",
-        icon: Shield,
-        description: "Roles, convites e matriz de acesso",
+        label: "Calendário",
+        href: "/calendario",
+        icon: CalendarDays,
+        description: "Eventos e datas da igreja",
+        permission: "calendario:read",
+        modulo: "calendario",
       },
       {
-        label: "Módulos",
-        href: "/admin/modulos",
-        icon: LayoutGrid,
-        description: "Ligar e desligar funcionalidades",
+        label: "Salas",
+        href: "/salas",
+        icon: DoorOpen,
+        description: "Reserva de salas e espaços",
+        permission: "salas:read",
+        modulo: "salas",
+      },
+      {
+        label: "Biblioteca",
+        href: "/biblioteca",
+        icon: Library,
+        description: "Acervo, exemplares e empréstimos",
+        permission: "biblioteca:read",
+        modulo: "biblioteca",
+      },
+      {
+        label: "Tarefas",
+        href: "/tarefas",
+        icon: ListTodo,
+        description: "Acompanhamento e TODO",
+        permission: "tarefas:read",
+        modulo: "tarefas",
       },
       {
         label: "Cadastro Vivo",
@@ -331,6 +272,20 @@ export const GESTAO_SECTIONS: NavSection[] = [
         permission: "atos_pastorais:manage",
       },
       {
+        label: "Permissões",
+        href: "/admin/permissoes",
+        icon: Shield,
+        description: "Roles, convites e matriz de acesso",
+        roles: ["admin"],
+      },
+      {
+        label: "Módulos",
+        href: "/admin/modulos",
+        icon: LayoutGrid,
+        description: "Ligar e desligar funcionalidades",
+        roles: ["admin"],
+      },
+      {
         label: "Auditoria",
         href: "/admin/auditoria",
         icon: History,
@@ -340,37 +295,6 @@ export const GESTAO_SECTIONS: NavSection[] = [
     ],
   },
 ];
-
-export const MORE_TAB: NavItem = {
-  label: "Mais",
-  href: "/__more__",
-  icon: MoreHorizontal,
-};
-
-export const MEMBER_TABS: NavItem[] = [
-  { label: "Início", href: "/dashboard", icon: Home },
-  { label: "Gravações", href: "/comunidade", icon: Ear, modulo: "gravacoes" },
-  MORE_TAB,
-];
-
-export const ADMIN_TABS: NavItem[] = [
-  { label: "Início", href: "/dashboard", icon: Home },
-  { label: "Membros", href: "/membros", icon: Users, permission: "membros:read", modulo: "membros" },
-  MORE_TAB,
-];
-
-export const MORE_MEMBER_SECTIONS: NavSection[] = [
-  {
-    titulo: "Acesso rapido",
-    items: [
-      { label: "Meu perfil", href: "/meu-perfil", icon: User, description: "Editar seus dados pessoais" },
-      ROL_TAB,
-      ...COMUNIDADE_SECTIONS.flatMap((s) => s.items),
-    ],
-  },
-];
-
-export const MORE_ADMIN_SECTIONS: NavSection[] = GESTAO_SECTIONS;
 
 export function isDomingoWindow(date: Date = new Date()): boolean {
   const day = date.getDay(); // 0 = domingo, 6 = sábado
