@@ -1,7 +1,7 @@
 import { query } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { getSaoPauloDateString, getSaoPauloWeekday } from "../_shared/datetime";
+import { getSaoPauloDateString } from "../_shared/datetime";
 
 function primeiroNome(nomeCompleto: string): string {
   return nomeCompleto.split(" ")[0];
@@ -314,25 +314,18 @@ export const getBoletim = query({
       .filter((c) => c.tipo === "DOMINICAL")
       .sort((a, b) => a.data.localeCompare(b.data));
 
-    // Culto selecionado por data, ou ultimo domingo (no domingo mostra o de hoje)
+    // Culto selecionado por data, ou o PROXIMO domingo (no domingo, o de hoje).
     let culto;
     if (data) {
       culto = dominicais.find((c) => c.data === data);
     }
     if (!culto) {
-      const isDomingo = getSaoPauloWeekday() === 0;
-      if (isDomingo) {
-        // No domingo, mostra o culto de hoje
-        culto = dominicais.find((c) => c.data === today);
-      }
-      if (!culto) {
-        // De segunda a sábado, mostra o último domingo passado
-        const passados = dominicais.filter((c) => c.data <= today);
-        culto = passados.length > 0 ? passados[passados.length - 1] : undefined;
-      }
+      // Primeiro domingo a partir de hoje (inclui hoje quando e domingo).
+      culto = dominicais.find((c) => c.data >= today);
     }
     if (!culto && dominicais.length > 0) {
-      culto = dominicais[0]; // primeiro disponível como fallback
+      // Sem domingo futuro: cai no mais recente passado.
+      culto = dominicais[dominicais.length - 1];
     }
     if (!culto) return null;
 
