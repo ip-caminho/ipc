@@ -115,7 +115,7 @@ function LouvorDrawer({ titulo, louvoresData }: { titulo: string; louvoresData: 
 
   if (!data?.conteudo) {
     return (
-      <p className="text-sm text-blue-600/60 dark:text-blue-400/60 italic px-6 py-2.5 bg-blue-50/40 dark:bg-blue-950/10">
+      <p className="text-sm text-primary/70 italic text-center px-6 py-2.5 bg-accent/40">
         ♪ {titulo}
       </p>
     );
@@ -127,7 +127,7 @@ function LouvorDrawer({ titulo, louvoresData }: { titulo: string; louvoresData: 
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger
         onClick={() => setOpen(true)}
-        className="w-full flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 italic px-6 py-2.5 min-h-[44px] bg-blue-50/60 dark:bg-blue-950/20 hover:bg-blue-50 dark:hover:bg-blue-950/30 transition-colors"
+        className="w-full flex items-center justify-center gap-2 text-sm text-primary italic px-6 py-2.5 min-h-[44px] bg-accent/50 hover:bg-accent transition-colors"
       >
         ♪ {titulo}
       </DrawerTrigger>
@@ -140,7 +140,7 @@ function LouvorDrawer({ titulo, louvoresData }: { titulo: string; louvoresData: 
         <div className="px-4 pb-6 max-h-[70vh] overflow-y-auto text-center">
           {lines.map((line, i) => {
             if (line.type === "empty") return <div key={i} className="h-4" />;
-            if (line.type === "section") return <p key={i} className="font-semibold text-blue-500/70 mt-3 uppercase tracking-wider" style={{ fontSize: fontSize * 0.75 }}>{line.text}</p>;
+            if (line.type === "section") return <p key={i} className="font-semibold text-primary/70 mt-3 uppercase tracking-wider" style={{ fontSize: fontSize * 0.75 }}>{line.text}</p>;
             return <p key={i} className="leading-relaxed" style={{ fontSize }}>{line.text}</p>;
           })}
         </div>
@@ -195,15 +195,15 @@ export function BoletimContent() {
     <div className="flex flex-col items-center gap-4 pb-8 -mx-4 -mt-4 md:mx-0 md:mt-0">
 
       {/* Boletim */}
-      <div className="w-full max-w-lg overflow-hidden">
+      <div className="w-full max-w-lg overflow-hidden rounded-xl border bg-card shadow-sm">
         {/* Cabecalho com gradiente */}
-        <div className="text-center py-8 px-6 bg-gradient-to-b from-blue-50 to-transparent dark:from-blue-950/30 dark:to-transparent border-b">
-          <Church className="h-10 w-10 mx-auto mb-3 text-blue-600 dark:text-blue-400" />
-          <h1 className="text-lg font-semibold tracking-wide uppercase text-blue-800 dark:text-blue-200">
+        <div className="text-center py-8 px-6 bg-gradient-to-b from-accent/60 to-transparent border-b">
+          <Church className="h-10 w-10 mx-auto mb-3 text-primary" />
+          <h1 className="text-lg font-semibold tracking-wide uppercase text-primary">
             Igreja Presbiteriana do Caminho
           </h1>
           <div className="mt-4">
-            <p className="text-sm font-medium text-blue-600/70 dark:text-blue-400/70 uppercase tracking-wider">
+            <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
               Culto Dominical
             </p>
             <p className="text-lg mt-1 capitalize text-foreground">{dataFormatada}</p>
@@ -213,7 +213,7 @@ export function BoletimContent() {
 
         {/* Liturgia */}
         <div className="py-6 space-y-5 text-center">
-          <h2 className="text-sm font-semibold uppercase tracking-widest text-blue-600/70 dark:text-blue-400/70 px-6">
+          <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground px-6">
             Ordem do Culto
           </h2>
           <p className="text-xs text-muted-foreground/40">Toque nos itens destacados para ler o texto completo</p>
@@ -432,7 +432,7 @@ export function BoletimContent() {
                   <div key={i} className="flex flex-col items-center gap-1.5">
                     <Avatar className="h-12 w-12">
                       {p.foto && <AvatarImage src={p.foto} />}
-                      <AvatarFallback className="text-sm bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-300">
+                      <AvatarFallback className="text-sm bg-accent text-primary">
                         {p.nome?.charAt(0)?.toUpperCase() || "?"}
                       </AvatarFallback>
                     </Avatar>
@@ -446,7 +446,7 @@ export function BoletimContent() {
         })()}
 
         {/* Rodape */}
-        <div className="text-center py-4 border-t bg-gradient-to-t from-blue-50/50 to-transparent dark:from-blue-950/20 dark:to-transparent">
+        <div className="text-center py-4 border-t bg-gradient-to-t from-accent/40 to-transparent">
           <p className="text-xs text-muted-foreground">
             &ldquo;Alegrei-me quando me disseram: Vamos à Casa do Senhor&rdquo; — Salmo 122:1
           </p>
