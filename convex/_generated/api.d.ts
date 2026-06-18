@@ -55,6 +55,7 @@ import type * as escalas_gerarEscalaHelpers from "../escalas/gerarEscalaHelpers.
 import type * as escalas_importEscalas from "../escalas/importEscalas.js";
 import type * as escalas_importLiturgia from "../escalas/importLiturgia.js";
 import type * as escalas_migrateLegacyLouvores from "../escalas/migrateLegacyLouvores.js";
+import type * as escalas_migrations from "../escalas/migrations.js";
 import type * as escalas_mutations from "../escalas/mutations.js";
 import type * as escalas_queries from "../escalas/queries.js";
 import type * as files_authz from "../files/authz.js";
@@ -190,6 +191,7 @@ declare const fullApi: ApiFromModules<{
   "escalas/importEscalas": typeof escalas_importEscalas;
   "escalas/importLiturgia": typeof escalas_importLiturgia;
   "escalas/migrateLegacyLouvores": typeof escalas_migrateLegacyLouvores;
+  "escalas/migrations": typeof escalas_migrations;
   "escalas/mutations": typeof escalas_mutations;
   "escalas/queries": typeof escalas_queries;
   "files/authz": typeof files_authz;
