@@ -101,7 +101,7 @@ function PalavraDrawer({ referencia }: { referencia: string }) {
           <DrawerTitle className="text-lg text-center">{nomeCompleto}</DrawerTitle>
           <FontSizeControls fontSize={fontSize} setFontSize={setFontSize} />
         </DrawerHeader>
-        <div className="px-4 pb-6 max-h-[70vh] overflow-y-auto">
+        <div data-vaul-no-drag="true" className="px-4 pb-6 max-h-[70vh] overflow-y-auto">
           <BibleVersePreview loading={loading} results={results} error={error} maxHeight="none" fontSize={fontSize} />
         </div>
       </DrawerContent>
@@ -138,7 +138,7 @@ function LouvorDrawer({ titulo, louvoresData }: { titulo: string; louvoresData: 
           {data.artista && <p className="text-base text-muted-foreground text-center">{data.artista}</p>}
           <FontSizeControls fontSize={fontSize} setFontSize={setFontSize} />
         </DrawerHeader>
-        <div className="px-4 pb-6 max-h-[70vh] overflow-y-auto text-center">
+        <div data-vaul-no-drag="true" className="px-4 pb-6 max-h-[70vh] overflow-y-auto text-center">
           {lines.map((line, i) => {
             if (line.type === "empty") return <div key={i} className="h-4" />;
             if (line.type === "section") return <p key={i} className="font-semibold text-primary/70 mt-3 uppercase tracking-wider" style={{ fontSize: fontSize * 0.75 }}>{line.text}</p>;
