@@ -152,7 +152,7 @@ export const GESTAO_SECTIONS: NavSection[] = [
     titulo: "Culto",
     items: [
       {
-        label: "Cultos e escalas",
+        label: "Planejamento de Cultos",
         href: "/cultos",
         icon: Church,
         description: "Planejamento, liturgia e escalas",
