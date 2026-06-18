@@ -254,15 +254,16 @@ export function BoletimContent() {
               });
               push(liturgiaEscala("PREGACAO", "Palavra"));
               push(liturgiaEscala("ORACAO", "Oração"));
-              items.push(
-                <div key="avisos" className="py-3 px-6 border-b border-border text-left space-y-2">
-                  <h3 className="text-base font-semibold text-foreground">Avisos</h3>
-                  {boletim.avisos && boletim.avisos.length > 0 &&
-                    boletim.avisos.map((aviso: any) => (
+              if (boletim.avisos && boletim.avisos.length > 0) {
+                items.push(
+                  <div key="avisos" className="py-3 px-6 border-b border-border text-left space-y-2">
+                    <h3 className="text-base font-semibold text-foreground">Avisos</h3>
+                    {boletim.avisos.map((aviso: any) => (
                       <p key={aviso._id} className="text-sm text-muted-foreground">• {aviso.titulo}</p>
                     ))}
-                </div>
-              );
+                  </div>
+                );
+              }
               items.push(
                 <div key="bencao" className="py-3 px-6">
                   <h3 className="text-base font-semibold text-foreground">Bênção Final</h3>
@@ -354,16 +355,16 @@ export function BoletimContent() {
                   }
                   i = j - 1;
 
-                  items.push(
-                    <div key="liturgia-avisos" className="py-3 px-6 border-b border-border text-left space-y-2">
-                      <h3 className="text-base font-semibold text-foreground">Avisos</h3>
-                      {boletim.avisos && boletim.avisos.length > 0 && (
-                        boletim.avisos.map((aviso: any) => (
+                  if (boletim.avisos && boletim.avisos.length > 0) {
+                    items.push(
+                      <div key="liturgia-avisos" className="py-3 px-6 border-b border-border text-left space-y-2">
+                        <h3 className="text-base font-semibold text-foreground">Avisos</h3>
+                        {boletim.avisos.map((aviso: any) => (
                           <p key={aviso._id} className="text-sm text-muted-foreground">• {aviso.titulo}</p>
-                        ))
-                      )}
-                    </div>
-                  );
+                        ))}
+                      </div>
+                    );
+                  }
                   items.push(
                     <div key="bencao" className="py-3 px-6">
                       <h3 className="text-base font-semibold text-foreground">Bênção Final</h3>
