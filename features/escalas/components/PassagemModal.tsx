@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { BiblePassageInput } from "@/shared/bible/components/BiblePassageInput";
 import {
@@ -16,18 +17,29 @@ import {
 interface PassagemModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** Referencia atual (ex: "Sl 23; Rm 8:28"). */
+  /** Referencia atual; pode conter varias passagens separadas por ";". */
   initialValue: string;
   /** Contexto exibido no header (ex: o label da funcao). */
   contexto?: string;
-  /** Persiste a referencia (ja com trim). String vazia = limpar. */
+  /** Persiste a referencia ja unificada ("Sl 23; Rm 8:28"). Vazio = limpar. */
   onSave: (passagem: string) => void | Promise<void>;
 }
 
+// Uma string com varias passagens (separadas por ";") vira uma linha por
+// passagem. Sempre mantem ao menos uma linha (vazia).
+function splitPassagens(valor: string): string[] {
+  const partes = valor
+    .split(";")
+    .map((p) => p.trim())
+    .filter(Boolean);
+  return partes.length > 0 ? partes : [""];
+}
+
 /**
- * Modal para editar a passagem biblica de uma escala liturgica, com
- * pre-visualizacao ao vivo do texto (BiblePassageInput variant="form").
- * Dialog no desktop, Drawer no mobile (ResponsiveDialog).
+ * Modal para editar a(s) passagem(ns) biblica(s) de uma escala liturgica.
+ * Lista de passagens (adicionar/remover), cada uma com pre-visualizacao ao
+ * vivo do texto. Ao salvar, junta tudo numa unica string ("; "), preservando
+ * o modelo atual (passagemBiblica). Dialog no desktop, Drawer no mobile.
  */
 export function PassagemModal({
   open,
@@ -36,19 +48,34 @@ export function PassagemModal({
   contexto,
   onSave,
 }: PassagemModalProps) {
-  const [value, setValue] = useState(initialValue);
+  const [rows, setRows] = useState<string[]>(() => splitPassagens(initialValue));
   const [saving, setSaving] = useState(false);
 
-  // Sincroniza o valor sempre que (re)abrir.
+  // Sincroniza as linhas sempre que (re)abrir.
   useEffect(() => {
-    if (open) setValue(initialValue);
+    if (open) setRows(splitPassagens(initialValue));
   }, [open, initialValue]);
+
+  const updateRow = (index: number, valor: string) =>
+    setRows((prev) => prev.map((r, i) => (i === index ? valor : r)));
+
+  const addRow = () => setRows((prev) => [...prev, ""]);
+
+  const removeRow = (index: number) =>
+    setRows((prev) => {
+      const next = prev.filter((_, i) => i !== index);
+      return next.length > 0 ? next : [""];
+    });
 
   const handleSave = async () => {
     if (saving) return;
     setSaving(true);
     try {
-      await onSave(value.trim());
+      const unificado = rows
+        .map((r) => r.trim())
+        .filter(Boolean)
+        .join("; ");
+      await onSave(unificado);
       onOpenChange(false);
     } finally {
       setSaving(false);
@@ -65,21 +92,46 @@ export function PassagemModal({
           )}
         </ResponsiveDialogHeader>
 
-        <ResponsiveDialogBody className="space-y-2">
-          <p className="text-xs font-medium text-muted-foreground">Referência</p>
-          <BiblePassageInput
-            variant="form"
-            value={value}
-            onChange={setValue}
-            placeholder="Ex: Sl 23; Rm 8:28"
-            autoFocus
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                handleSave();
-              }
-            }}
-          />
+        <ResponsiveDialogBody className="space-y-3">
+          {rows.map((row, index) => (
+            <div key={index} className="space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-muted-foreground">
+                  {rows.length > 1 ? `Passagem ${index + 1}` : "Referência"}
+                </span>
+                {rows.length > 1 && (
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                    onClick={() => removeRow(index)}
+                    aria-label={`Remover passagem ${index + 1}`}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+              <BiblePassageInput
+                variant="form"
+                value={row}
+                onChange={(v) => updateRow(index, v)}
+                placeholder="Ex: Sl 23; Rm 8:28"
+                autoFocus={index === 0}
+              />
+            </div>
+          ))}
+
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="w-full"
+            onClick={addRow}
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            Adicionar passagem
+          </Button>
         </ResponsiveDialogBody>
 
         <ResponsiveDialogFooter>
