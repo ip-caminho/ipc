@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
 import { useQuery } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import {
@@ -33,24 +32,18 @@ import {
 } from "@/shared/components/ui/tooltip";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { Button } from "@/shared/components/ui/button";
-import { Switch } from "@/shared/components/ui/switch";
 import { LogOut, ChevronRight } from "lucide-react";
 import { Logo } from "@shared/components/layout/Logo";
 import { api } from "@/convex/_generated/api";
 import { useAuth } from "@shared/providers/PermissionsProvider";
-import { useNavigationMode } from "@shared/providers/NavigationModeProvider";
 import {
   PRIMARY_TABS,
-  BOLETIM_TAB,
-  ROL_TAB,
   GESTAO_SECTIONS,
-  ELEVATED_ROLES,
-  isDomingoWindow,
   type NavItem,
 } from "@shared/constants/navigation";
 
 function useIsItemVisible() {
-  const { can } = useAuth();
+  const { can, hasAnyRole } = useAuth();
   // @ts-ignore Convex TS2589
   const modulosAtivos = useQuery(api.modulos.queries.listModulosAtivos);
 
@@ -61,39 +54,29 @@ function useIsItemVisible() {
     if (item.permission && !can(item.permission)) {
       return false;
     }
+    if (item.roles && !hasAnyRole(item.roles)) {
+      return false;
+    }
     return true;
   };
 }
 
 export function AppSidebar() {
   const pathname = usePathname();
-  const { name, role, foto, hasAnyRole } = useAuth();
+  const { name, role, foto } = useAuth();
   const { signOut } = useAuthActions();
-  const { mode, setMode, canToggle, isAdminMode } = useNavigationMode();
   const isItemVisible = useIsItemVisible();
-  const [isBoletim, setIsBoletim] = useState(false);
-
-  useEffect(() => {
-    setIsBoletim(isDomingoWindow());
-  }, []);
 
   const isActive = (href: string) => {
     if (href === "/dashboard") return pathname === "/dashboard";
     return pathname === href || pathname.startsWith(href + "/");
   };
 
-  const primaryItems: NavItem[] = [
-    ...PRIMARY_TABS,
-    ...(isBoletim ? [BOLETIM_TAB] : []),
-    // Rol de Membros no nivel primario para quem tem rol:read (ex.: membro
-    // com permissao individual). No modo admin sai daqui — ja esta no grupo
-    // de gestao "Pessoas" (evita duplicar).
-    ...(!isAdminMode ? [ROL_TAB] : []),
-  ].filter(isItemVisible);
+  const primaryItems: NavItem[] = [...PRIMARY_TABS].filter(isItemVisible);
 
-  // Secoes colapsaveis aparecem so no modo admin (Gestao). No modo membro,
-  // a navegacao fica nas tabs primarias (Inicio, Gravacoes, Orar).
-  const visibleSections = (isAdminMode ? GESTAO_SECTIONS : [])
+  // Secoes colapsaveis filtradas por RBAC: um item aparece se can(permission)
+  // (ou roles) e o modulo estiver ativo. Secao sem itens visiveis some.
+  const visibleSections = GESTAO_SECTIONS
     .map((section) => ({
       ...section,
       items: section.items.filter(isItemVisible),
@@ -183,15 +166,6 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="border-t p-4 space-y-3">
-        {canToggle && (
-          <div className="flex items-center justify-between px-1">
-            <span className="text-xs text-muted-foreground">Modo gestão</span>
-            <Switch
-              checked={mode === "admin"}
-              onCheckedChange={(checked) => setMode(checked ? "admin" : "member")}
-            />
-          </div>
-        )}
         <div className="flex items-center gap-3">
           <Avatar className="h-8 w-8">
             {foto && <AvatarImage src={foto} alt={name || "Usuario"} />}
