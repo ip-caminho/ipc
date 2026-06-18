@@ -524,7 +524,7 @@ export default function CultosPage() {
       <ModuloGuard modulo="escalas">
       <HeaderLayout>
       <div className="space-y-4">
-        <PageHeader title="Cultos" />
+        <PageHeader title="Planejamento de Cultos" />
         <Skeleton className="h-96" />
       </div>
       </HeaderLayout>
@@ -536,7 +536,7 @@ export default function CultosPage() {
     <ModuloGuard modulo="escalas">
     <HeaderLayout>
     <div className="space-y-4">
-      <PageHeader title="Planejamento" />
+      <PageHeader title="Planejamento de Cultos" />
 
       {/* Mobile */}
       <div className="md:hidden">

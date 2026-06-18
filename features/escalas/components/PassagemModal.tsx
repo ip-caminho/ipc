@@ -82,6 +82,10 @@ export function PassagemModal({
     }
   };
 
+  const temConteudo = rows.some((r) => r.trim() !== "");
+  // Permite salvar vazio apenas para LIMPAR uma passagem que ja existia.
+  const podeSalvar = temConteudo || initialValue.trim() !== "";
+
   return (
     <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
       <ResponsiveDialogContent>
@@ -142,7 +146,7 @@ export function PassagemModal({
           >
             Cancelar
           </Button>
-          <Button onClick={handleSave} disabled={saving}>
+          <Button onClick={handleSave} disabled={saving || !podeSalvar}>
             {saving ? "Salvando..." : "Salvar"}
           </Button>
         </ResponsiveDialogFooter>
