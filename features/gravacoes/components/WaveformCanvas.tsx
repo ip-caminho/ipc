@@ -20,6 +20,15 @@ interface WaveformCanvasProps {
   className?: string;
 }
 
+interface DragState {
+  startClientX: number;
+  startClientY: number;
+  startCanvasX: number;
+  startViewStart: number;
+  startViewDuration: number;
+  moved: boolean;
+}
+
 const PLAYED_COLOR = "hsl(215, 70%, 55%)";
 const UNPLAYED_COLOR = "hsl(215, 15%, 60%)";
 const PLAYHEAD_COLOR = "hsl(0, 85%, 55%)";
@@ -35,16 +44,21 @@ export function WaveformCanvas({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number>(0);
+  const dragRef = useRef<DragState | null>(null);
 
-  // Zoom: viewStart e viewEnd em segundos
   const [viewStart, setViewStart] = useState(0);
   const [viewEnd, setViewEnd] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
 
-  // Se viewEnd não foi inicializado, usar duration
   const effectiveViewEnd = viewEnd > 0 ? viewEnd : duration || 1;
-
   const viewDuration = Math.max(effectiveViewEnd - viewStart, 1);
   const zoomLevel = duration > 0 ? duration / viewDuration : 1;
+
+  // Ref para evitar stale closures no listener nativo de wheel
+  const stateRef = useRef({ viewStart, viewDuration, duration, zoomLevel });
+  useEffect(() => {
+    stateRef.current = { viewStart, viewDuration, duration, zoomLevel };
+  });
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
@@ -69,13 +83,31 @@ export function WaveformCanvas({
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, width, height);
 
-    // Calcular quais peaks estão visíveis
     const startRatio = viewStart / duration;
     const endRatio = effectiveViewEnd / duration;
     const startPeak = Math.floor(startRatio * peaks.length);
     const endPeak = Math.ceil(endRatio * peaks.length);
     const visiblePeaks = peaks.slice(startPeak, endPeak);
-    const barCount = visiblePeaks.length;
+
+    // Downsample para não exceder pixels disponíveis — evita barras sub-pixel ("gominhos")
+    const maxBars = Math.floor(width);
+    let sampledPeaks: number[];
+    if (visiblePeaks.length > maxBars) {
+      const step = visiblePeaks.length / maxBars;
+      sampledPeaks = Array.from({ length: maxBars }, (_, i) => {
+        const from = Math.floor(i * step);
+        const to = Math.min(Math.ceil((i + 1) * step), visiblePeaks.length);
+        let max = 0;
+        for (let j = from; j < to; j++) {
+          if (visiblePeaks[j] > max) max = visiblePeaks[j];
+        }
+        return max;
+      });
+    } else {
+      sampledPeaks = visiblePeaks;
+    }
+
+    const barCount = sampledPeaks.length;
     if (barCount === 0) return;
 
     const barWidth = width / barCount;
@@ -83,7 +115,6 @@ export function WaveformCanvas({
     const playedX = Math.max(0, Math.min(width, playedRatio * width));
     const centerY = height / 2;
 
-    // Regiões (fundo colorido)
     for (const region of regions) {
       const x1 = Math.max(0, ((region.start - viewStart) / viewDuration) * width);
       const x2 = Math.min(width, ((region.end - viewStart) / viewDuration) * width);
@@ -93,26 +124,22 @@ export function WaveformCanvas({
       }
     }
 
-    // Barras da waveform
     const gap = barWidth > 3 ? Math.max(0.5, barWidth * 0.15) : 0;
     const barDrawWidth = Math.max(0.5, barWidth - gap);
 
     for (let i = 0; i < barCount; i++) {
       const x = i * barWidth + gap / 2;
-      const peakHeight = visiblePeaks[i] * (height * 0.88);
+      const peakHeight = sampledPeaks[i] * (height * 0.88);
       const halfHeight = peakHeight / 2;
-
       ctx.fillStyle = x + barDrawWidth <= playedX ? PLAYED_COLOR : UNPLAYED_COLOR;
       ctx.fillRect(x, centerY - halfHeight, barDrawWidth, peakHeight || 0.5);
     }
 
-    // Playhead
     if (currentTime >= viewStart && currentTime <= effectiveViewEnd) {
       ctx.fillStyle = PLAYHEAD_COLOR;
       ctx.fillRect(playedX - 1, 0, 2, height);
     }
 
-    // Timestamps nas bordas da view (zoom)
     if (zoomLevel > 1.5) {
       ctx.fillStyle = "hsl(215, 15%, 45%)";
       ctx.font = "10px monospace";
@@ -124,7 +151,6 @@ export function WaveformCanvas({
     }
   }, [peaks, duration, currentTime, regions, viewStart, effectiveViewEnd, viewDuration, zoomLevel]);
 
-  // Animar playhead
   useEffect(() => {
     let lastTime = 0;
     const animate = () => {
@@ -138,7 +164,6 @@ export function WaveformCanvas({
     return () => cancelAnimationFrame(rafRef.current);
   }, [currentTime, draw]);
 
-  // Resize
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -147,64 +172,158 @@ export function WaveformCanvas({
     return () => observer.disconnect();
   }, [draw]);
 
-  const handleClick = useCallback(
-    (e: React.MouseEvent<HTMLCanvasElement>) => {
+  // Listener nativo de wheel (passive: false para poder chamar preventDefault)
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const { viewStart, viewDuration, duration, zoomLevel } = stateRef.current;
+
+      if (e.ctrlKey) {
+        // Ctrl+scroll = zoom centrado no cursor
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const centerRatio = mouseX / rect.width;
+        const centerTime = viewStart + centerRatio * viewDuration;
+        const factor = e.deltaY > 0 ? 1.3 : 1 / 1.3;
+        const newDuration = Math.max(10, Math.min(duration, viewDuration * factor));
+        const newStart = Math.max(0, Math.min(duration - newDuration, centerTime - centerRatio * newDuration));
+        setViewStart(newStart);
+        setViewEnd(newStart + newDuration);
+      } else {
+        // Scroll horizontal (só quando em zoom)
+        if (zoomLevel <= 1.05) return;
+        const shift = (e.deltaY / 500) * viewDuration;
+        const newStart = Math.max(0, Math.min(duration - viewDuration, viewStart + shift));
+        setViewStart(newStart);
+        setViewEnd(newStart + viewDuration);
+      }
+    };
+
+    canvas.addEventListener("wheel", onWheel, { passive: false });
+    return () => canvas.removeEventListener("wheel", onWheel);
+  }, []);
+
+  // Libera drag se o mouse soltar fora do canvas
+  useEffect(() => {
+    const onMouseUp = () => {
+      if (dragRef.current) {
+        dragRef.current = null;
+        setIsDragging(false);
+      }
+    };
+    window.addEventListener("mouseup", onMouseUp);
+    return () => window.removeEventListener("mouseup", onMouseUp);
+  }, []);
+
+  // Drag Ableton-style: X = scroll, Y = zoom (cima = zoom in, baixo = zoom out)
+  // Clique curto (<4px de movimento total) continua sendo seek
+  const handleMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const { viewStart, viewDuration } = stateRef.current;
+    dragRef.current = {
+      startClientX: e.clientX,
+      startClientY: e.clientY,
+      startCanvasX: e.clientX - rect.left,
+      startViewStart: viewStart,
+      startViewDuration: viewDuration,
+      moved: false,
+    };
+  }, []);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    const drag = dragRef.current;
+    if (!drag) return;
+
+    const totalDx = e.clientX - drag.startClientX;
+    const totalDy = e.clientY - drag.startClientY;
+
+    if (!drag.moved && Math.abs(totalDx) + Math.abs(totalDy) > 4) {
+      drag.moved = true;
+      setIsDragging(true);
+    }
+    if (!drag.moved) return;
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const { duration } = stateRef.current;
+
+    // Zoom pelo eixo Y: 200px = 2× zoom. Centrado na posição X do clique inicial.
+    const zoomFactor = Math.pow(2, totalDy / 200);
+    const newDuration = Math.max(10, Math.min(duration, drag.startViewDuration * zoomFactor));
+    const centerRatio = drag.startCanvasX / rect.width;
+    const centerTime = drag.startViewStart + centerRatio * drag.startViewDuration;
+    const zoomedStart = centerTime - centerRatio * newDuration;
+
+    // Scroll pelo eixo X
+    const timePerPixel = drag.startViewDuration / rect.width;
+    const scrollShift = -totalDx * timePerPixel;
+
+    const finalStart = Math.max(0, Math.min(duration - newDuration, zoomedStart + scrollShift));
+    setViewStart(finalStart);
+    setViewEnd(finalStart + newDuration);
+  }, []);
+
+  const handleMouseUp = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    const drag = dragRef.current;
+    dragRef.current = null;
+    setIsDragging(false);
+
+    if (!drag || !drag.moved) {
+      // Clique curto = seek
       const canvas = canvasRef.current;
-      if (!canvas || duration <= 0) return;
+      if (!canvas) return;
       const rect = canvas.getBoundingClientRect();
+      const { viewStart, viewDuration, duration } = stateRef.current;
+      if (duration <= 0) return;
       const x = e.clientX - rect.left;
       const ratio = x / rect.width;
       const time = viewStart + ratio * viewDuration;
       onSeek(Math.max(0, Math.min(duration, time)));
-    },
-    [duration, onSeek, viewStart, viewDuration]
-  );
+    }
+  }, [onSeek]);
 
-  // Zoom centrado no playhead ou no centro da view
   const zoomIn = useCallback(() => {
-    const center = currentTime >= viewStart && currentTime <= effectiveViewEnd
+    const { viewStart, viewDuration, duration } = stateRef.current;
+    const effectiveEnd = viewStart + viewDuration;
+    const center = currentTime >= viewStart && currentTime <= effectiveEnd
       ? currentTime
-      : (viewStart + effectiveViewEnd) / 2;
+      : (viewStart + effectiveEnd) / 2;
     const newDuration = viewDuration / 2;
-    const minDuration = 10; // Mínimo 10 segundos de view
-    if (newDuration < minDuration) return;
+    if (newDuration < 10) return;
     setViewStart(Math.max(0, center - newDuration / 2));
     setViewEnd(Math.min(duration, center + newDuration / 2));
-  }, [currentTime, viewStart, effectiveViewEnd, viewDuration, duration]);
+  }, [currentTime]);
 
   const zoomOut = useCallback(() => {
-    const center = (viewStart + effectiveViewEnd) / 2;
+    const { viewStart, viewDuration, duration } = stateRef.current;
+    const effectiveEnd = viewStart + viewDuration;
+    const center = (viewStart + effectiveEnd) / 2;
     const newDuration = Math.min(duration, viewDuration * 2);
     setViewStart(Math.max(0, center - newDuration / 2));
     setViewEnd(Math.min(duration, center + newDuration / 2));
-  }, [viewStart, effectiveViewEnd, viewDuration, duration]);
+  }, []);
 
   const resetZoom = useCallback(() => {
+    const { duration } = stateRef.current;
     setViewStart(0);
     setViewEnd(duration);
-  }, [duration]);
-
-  // Scroll horizontal com wheel quando em zoom
-  const handleWheel = useCallback(
-    (e: React.WheelEvent<HTMLCanvasElement>) => {
-      if (zoomLevel <= 1.05) return;
-      e.preventDefault();
-      const shift = (e.deltaY / 500) * viewDuration;
-      const newStart = Math.max(0, Math.min(duration - viewDuration, viewStart + shift));
-      setViewStart(newStart);
-      setViewEnd(newStart + viewDuration);
-    },
-    [zoomLevel, viewDuration, viewStart, duration]
-  );
+  }, []);
 
   return (
     <div className="space-y-1">
       <div ref={containerRef} className={className} style={{ position: "relative" }}>
         <canvas
           ref={canvasRef}
-          onClick={handleClick}
-          onWheel={handleWheel}
-          className="cursor-crosshair w-full h-full"
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          className={`w-full h-full select-none ${isDragging ? "cursor-grabbing" : "cursor-crosshair"}`}
         />
       </div>
       <div className="flex items-center gap-1">
@@ -241,11 +360,11 @@ export function WaveformCanvas({
         >
           <Maximize2 className="h-3.5 w-3.5" />
         </Button>
-        {zoomLevel > 1.05 && (
-          <span className="text-[10px] text-muted-foreground ml-1">
-            {zoomLevel.toFixed(1)}x zoom — scroll para navegar
-          </span>
-        )}
+        <span className="text-[10px] text-muted-foreground ml-1">
+          {zoomLevel > 1.05
+            ? `${zoomLevel.toFixed(1)}x zoom`
+            : "arrastar ↕ zoom · ↔ scrolla · ctrl+scroll zoom"}
+        </span>
       </div>
     </div>
   );
