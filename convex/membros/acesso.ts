@@ -1,7 +1,7 @@
 import { mutation, query, type QueryCtx } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { requirePermission } from "../_shared/requirePermission";
+import { requireAdmin } from "../_shared/requirePermission";
 import { normalizeToE164 } from "../messaging/phoneUtils";
 import type { Doc } from "../_generated/dataModel";
 
@@ -35,7 +35,7 @@ function telefoneDoMembro(entidade: Doc<"entidades">): string | null {
 export const gerarLink = mutation({
   args: { membroId: v.id("membros") },
   handler: async (ctx, { membroId }) => {
-    const { membro: caller } = await requirePermission(ctx, "membros:update");
+    const { membro: caller } = await requireAdmin(ctx);
 
     const membro = await ctx.db.get(membroId);
     if (!membro) throw new Error("Membro nao encontrado");
@@ -220,34 +220,6 @@ export const concluirAtivacao = mutation({
   },
 });
 
-/** Status de acesso de um membro, para o painel admin. */
-export const getStatusAcesso = query({
-  args: { membroId: v.id("membros") },
-  handler: async (ctx, { membroId }) => {
-    await requirePermission(ctx, "membros:read");
-
-    const membro = await ctx.db.get(membroId);
-    if (!membro) return null;
-    const entidade = await ctx.db.get(membro.entidadeId);
-
-    const convites = await ctx.db
-      .query("membroConvites")
-      .withIndex("by_membro", (q) => q.eq("membroId", membroId))
-      .collect();
-    const pendente = convites.find(
-      (c) => c.status === "PENDENTE" && c.expiraEm >= Date.now()
-    );
-
-    return {
-      ativado: !!membro.userId,
-      onboardingCompleto: membro.onboardingCompleto ?? false,
-      temLinkPendente: !!pendente,
-      whatsapp: entidade?.whatsapp || entidade?.telefone || null,
-      nome: entidade?.nomeCompleto || "",
-    };
-  },
-});
-
 /**
  * Reseta o acesso de um membro: desvincula o usuario, expira convites
  * pendentes e remove a conta de login (authAccounts + sessoes), permitindo
@@ -256,7 +228,7 @@ export const getStatusAcesso = query({
 export const resetarAcesso = mutation({
   args: { membroId: v.id("membros") },
   handler: async (ctx, { membroId }) => {
-    await requirePermission(ctx, "membros:update");
+    await requireAdmin(ctx);
     const membro = await ctx.db.get(membroId);
     if (!membro) throw new Error("Membro nao encontrado");
 
@@ -332,7 +304,7 @@ type AcessosOverview = {
 export const getAcessosOverview = query({
   args: {},
   handler: async (ctx): Promise<AcessosOverview> => {
-    await requirePermission(ctx, "membros:read");
+    await requireAdmin(ctx);
 
     const membros = await ctx.db.query("membros").collect();
     const rows: AcessoRow[] = [];
@@ -399,7 +371,7 @@ type AtividadeItem = {
 export const getAtividadeMembro = query({
   args: { membroId: v.id("membros"), limit: v.optional(v.number()) },
   handler: async (ctx, { membroId, limit }): Promise<AtividadeItem[]> => {
-    await requirePermission(ctx, "membros:read");
+    await requireAdmin(ctx);
 
     const logs = await ctx.db
       .query("auditLogs")

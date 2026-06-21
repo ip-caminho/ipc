@@ -47,6 +47,23 @@ export async function requirePermission(ctx: any, permission: string) {
 }
 
 /**
+ * Exige que o caller seja admin (role === "admin"), nao apenas que tenha uma
+ * permissao. Use para acoes restritas ao admin — ex: gestao de acesso/login,
+ * que vive em /admin/permissoes.
+ */
+export async function requireAdmin(ctx: any) {
+  const ctxData = await loadAuthAndPerms(ctx);
+  if (!ctxData) throw new Error("Not authenticated");
+  const { userId, membro } = ctxData;
+
+  if (membro.role !== "admin") {
+    throw new Error("Apenas administradores");
+  }
+
+  return { userId, membro };
+}
+
+/**
  * Variante silenciosa de requirePermission: retorna null em vez de lançar.
  * Use em queries que devem degradar graciosamente (ex: widget de dashboard
  * que precisa retornar [] quando o usuário não tem a permissão).

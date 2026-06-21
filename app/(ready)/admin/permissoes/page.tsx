@@ -24,10 +24,11 @@ import { Checkbox } from "@/shared/components/ui/checkbox";
 import { AdminGate } from "@shared/components/auth/RoleGate";
 import { ErrorBoundary } from "@shared/components/ErrorBoundary";
 import { PermissionMatrix } from "@features/preferencias/components/PermissionMatrix";
+import { AcessoPanel } from "@features/membros/components/AcessoPanel";
 import { useAuth } from "@shared/providers/PermissionsProvider";
 import { toast } from "sonner";
 import { Input } from "@/shared/components/ui/input";
-import { Copy, Link as LinkIcon, Users, Settings, UserPlus, Search, Eye, MonitorSmartphone } from "lucide-react";
+import { Copy, Link as LinkIcon, Users, Settings, UserPlus, Search, Eye, MonitorSmartphone, KeyRound } from "lucide-react";
 import { Switch } from "@/shared/components/ui/switch";
 import type { Id } from "@/convex/_generated/dataModel";
 import type { Role } from "@/types/auth";
@@ -346,10 +347,14 @@ export default function PermissoesPage() {
         </div>
 
         <Tabs defaultValue="membros">
-          <TabsList className="w-full grid grid-cols-3 sm:inline-flex sm:w-auto">
+          <TabsList className="w-full grid grid-cols-2 sm:inline-flex sm:w-auto">
             <TabsTrigger value="membros" className="gap-1.5">
               <Users className="h-3.5 w-3.5" />
               Membros
+            </TabsTrigger>
+            <TabsTrigger value="acesso" className="gap-1.5">
+              <KeyRound className="h-3.5 w-3.5" />
+              Acesso
             </TabsTrigger>
             <TabsTrigger value="papeis" className="gap-1.5">
               <Settings className="h-3.5 w-3.5" />
@@ -367,6 +372,10 @@ export default function PermissoesPage() {
 
           <TabsContent value="membros" className="mt-4">
             <MembrosTab />
+          </TabsContent>
+
+          <TabsContent value="acesso" className="mt-4">
+            <AcessoPanel />
           </TabsContent>
 
           <TabsContent value="papeis" className="mt-4">
