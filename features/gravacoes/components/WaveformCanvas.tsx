@@ -206,17 +206,47 @@ export function WaveformCanvas({
     return () => canvas.removeEventListener("wheel", onWheel);
   }, []);
 
-  // Libera drag se o mouse soltar fora do canvas
+  // Continua o drag mesmo quando o mouse sai do canvas
   useEffect(() => {
-    const onMouseUp = () => {
-      if (dragRef.current) {
-        dragRef.current = null;
-        setIsDragging(false);
-      }
+    if (!isDragging) return;
+
+    const onMouseMove = (e: MouseEvent) => {
+      const drag = dragRef.current;
+      if (!drag) return;
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const { duration } = stateRef.current;
+
+      const totalDx = e.clientX - drag.startClientX;
+      const totalDy = e.clientY - drag.startClientY;
+
+      const zoomFactor = Math.pow(2, totalDy / 200);
+      const newDuration = Math.max(10, Math.min(duration, drag.startViewDuration * zoomFactor));
+      const centerRatio = drag.startCanvasX / rect.width;
+      const centerTime = drag.startViewStart + centerRatio * drag.startViewDuration;
+      const zoomedStart = centerTime - centerRatio * newDuration;
+
+      const timePerPixel = drag.startViewDuration / rect.width;
+      const scrollShift = -totalDx * timePerPixel;
+
+      const finalStart = Math.max(0, Math.min(duration - newDuration, zoomedStart + scrollShift));
+      setViewStart(finalStart);
+      setViewEnd(finalStart + newDuration);
     };
+
+    const onMouseUp = () => {
+      dragRef.current = null;
+      setIsDragging(false);
+    };
+
+    window.addEventListener("mousemove", onMouseMove);
     window.addEventListener("mouseup", onMouseUp);
-    return () => window.removeEventListener("mouseup", onMouseUp);
-  }, []);
+    return () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+    };
+  }, [isDragging]);
 
   // Drag Ableton-style: X = scroll, Y = zoom (cima = zoom in, baixo = zoom out)
   // Clique curto (<4px de movimento total) continua sendo seek
@@ -235,38 +265,16 @@ export function WaveformCanvas({
     };
   }, []);
 
+  // Detecta início do drag enquanto o mouse ainda está no canvas
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     const drag = dragRef.current;
-    if (!drag) return;
-
+    if (!drag || drag.moved) return;
     const totalDx = e.clientX - drag.startClientX;
     const totalDy = e.clientY - drag.startClientY;
-
-    if (!drag.moved && Math.abs(totalDx) + Math.abs(totalDy) > 4) {
+    if (Math.abs(totalDx) + Math.abs(totalDy) > 4) {
       drag.moved = true;
-      setIsDragging(true);
+      setIsDragging(true); // aciona o useEffect que adiciona listener global
     }
-    if (!drag.moved) return;
-
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
-    const { duration } = stateRef.current;
-
-    // Zoom pelo eixo Y: 200px = 2× zoom. Centrado na posição X do clique inicial.
-    const zoomFactor = Math.pow(2, totalDy / 200);
-    const newDuration = Math.max(10, Math.min(duration, drag.startViewDuration * zoomFactor));
-    const centerRatio = drag.startCanvasX / rect.width;
-    const centerTime = drag.startViewStart + centerRatio * drag.startViewDuration;
-    const zoomedStart = centerTime - centerRatio * newDuration;
-
-    // Scroll pelo eixo X
-    const timePerPixel = drag.startViewDuration / rect.width;
-    const scrollShift = -totalDx * timePerPixel;
-
-    const finalStart = Math.max(0, Math.min(duration - newDuration, zoomedStart + scrollShift));
-    setViewStart(finalStart);
-    setViewEnd(finalStart + newDuration);
   }, []);
 
   const handleMouseUp = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
