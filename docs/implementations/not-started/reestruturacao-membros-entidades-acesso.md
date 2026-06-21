@@ -168,12 +168,15 @@ Gates atuais confirmados:
    - Independente de A/B/C; pode rodar em paralelo. Faz par natural com D
      (ambos limpam representacao redundante).
 
+## Decisoes tomadas
+
+- **Ativar login e admin-only.** Confirmado pelo Andre. Item A eleva
+  `gerarLink`/`resetarAcesso` (`acesso.ts`) de `membros:update` para admin;
+  obreiro/secretaria deixam de poder ativar membros.
+
 ## Perguntas em aberto
 
-1. **Ativar login deixa de ser obreiro/secretaria?** Hoje obreiro+ gera link de
-   acesso. Item A eleva para admin. Confirmar que isso nao trava o fluxo
-   operacional (ex: secretaria que ativava membros). (Decisao do Andre.)
-2. Vale renomear `entidades.papeis` (ex: `tiposEntidade`) para eliminar a
+1. Vale renomear `entidades.papeis` (ex: `tiposEntidade`) para eliminar a
    colisao com `ministerios.papeis`, ou so limpar o valor `MEMBRO`?
 
 ### Respondidas pela investigacao
