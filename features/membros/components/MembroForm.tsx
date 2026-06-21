@@ -13,7 +13,7 @@ import { ChevronDown } from "lucide-react";
 import { membroFormSchema, type MembroFormValues } from "../lib/validations";
 import {
   SEXO_OPTIONS, ESTADO_CIVIL_OPTIONS, FORMACAO_OPTIONS,
-  CARGO_ECLESIASTICO_OPTIONS, FORMA_ADMISSAO_OPTIONS, ROLE_OPTIONS,
+  CARGO_ECLESIASTICO_OPTIONS, FORMA_ADMISSAO_OPTIONS,
   CBCM_OPTIONS, TIPO_DOCUMENTO_OPTIONS, VINCULO_IGREJA_OPTIONS,
   FORMA_DEMISSAO_OPTIONS, MOTIVO_DEMISSAO_OPTIONS,
 } from "../lib/constants";
@@ -176,7 +176,6 @@ export function MembroForm({ defaultValues, onSubmit, isEditing, entityId }: Mem
 
           <Section title="Dados Eclesiasticos" defaultOpen={false}>
             <SelectField name="vinculoIgreja" label="Vinculo com a Igreja" options={VINCULO_IGREJA_OPTIONS} />
-            <SelectField name="role" label="Perfil no Sistema" options={ROLE_OPTIONS} />
             <Field name="rol" label="Numero do Rol" />
             <Field name="numeroMatricula" label="Numero de Matricula (IPB)" />
             <Field name="dataMembresia" label="Data da Membresia" type="date" />

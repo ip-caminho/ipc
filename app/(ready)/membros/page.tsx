@@ -5,8 +5,6 @@ import { parseAsString, useQueryState } from "nuqs";
 import { api } from "@/convex/_generated/api";
 import { MembroTable, type MembroRow } from "@features/membros/components/MembroTable";
 import { MembrosFilterBar } from "@features/membros/components/MembrosFilterBar";
-import { AcessoPanel } from "@features/membros/components/AcessoPanel";
-import { cn } from "@shared/lib/utils/cn";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Plus, Search } from "lucide-react";
@@ -22,7 +20,6 @@ export default function MembrosPage() {
   const [search, setSearch] = useQueryState("q", parseAsString.withDefault(""));
   const [status, setStatus] = useQueryState("status", parseAsString.withDefault(""));
   const [cargo, setCargo] = useQueryState("cargo", parseAsString.withDefault(""));
-  const [view, setView] = useQueryState("view", parseAsString.withDefault("cadastro"));
   const debouncedSearch = useDebounce(search, 300);
 
   const queryStatus = status === "TODOS" ? "TODOS" : status || undefined;
@@ -39,35 +36,6 @@ export default function MembrosPage() {
     <div className="space-y-4">
       <PageHeader title="Membros" />
 
-      <PermissionGate permission="membros:update">
-        <div className="flex items-center gap-2" role="tablist" aria-label="Visualizacao">
-          {[
-            { value: "cadastro", label: "Cadastro" },
-            { value: "acesso", label: "Acesso" },
-          ].map((tab) => (
-            <button
-              key={tab.value}
-              type="button"
-              role="tab"
-              aria-selected={view === tab.value}
-              onClick={() => setView(tab.value === "cadastro" ? null : tab.value)}
-              className={cn(
-                "rounded-full px-4 py-1.5 text-xs font-medium transition-colors min-h-[32px]",
-                view === tab.value ? "bg-foreground text-background" : "border text-foreground",
-              )}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </PermissionGate>
-
-      {view === "acesso" ? (
-        <PermissionGate permission="membros:read" fallback={null}>
-          <AcessoPanel />
-        </PermissionGate>
-      ) : (
-      <>
       <div className="flex items-center justify-between gap-2">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -111,8 +79,6 @@ export default function MembrosPage() {
         </div>
       ) : (
         <MembroTable data={membros as MembroRow[]} />
-      )}
-      </>
       )}
     </div>
     </HeaderLayout>

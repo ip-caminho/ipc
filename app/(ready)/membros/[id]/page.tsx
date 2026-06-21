@@ -5,8 +5,6 @@ import { api } from "@/convex/_generated/api";
 import { MembroForm } from "@features/membros/components/MembroForm";
 import { AtosPastoraisSection } from "@features/membros/components/AtosPastoraisSection";
 import { CargosHistoricoSection } from "@features/membros/components/CargosHistoricoSection";
-import { AcessoSection } from "@features/membros/components/AcessoSection";
-import { PermissionGate } from "@shared/components/auth/PermissionGate";
 import { useRouter, useParams } from "next/navigation";
 import { toast } from "sonner";
 import { Skeleton } from "@/shared/components/ui/skeleton";
@@ -69,7 +67,6 @@ export default function MembroDetailPage() {
     cidade: membro.entidade?.endereco?.cidade || "",
     estado: membro.entidade?.endereco?.estado || "",
     cep: membro.entidade?.endereco?.cep || "",
-    role: membro.role,
     rol: membro.rol || "",
     dataMembresia: membro.dataMembresia || "",
     formaAdmissao: membro.formaAdmissao as any,
@@ -132,7 +129,6 @@ export default function MembroDetailPage() {
           vinculoIgreja: data.vinculoIgreja || undefined,
         },
         membroData: {
-          role: data.role,
           rol: data.rol || undefined,
           dataMembresia: data.dataMembresia || undefined,
           formaAdmissao: data.formaAdmissao || undefined,
@@ -164,9 +160,6 @@ export default function MembroDetailPage() {
       <DetailHeader backHref="/membros" />
       <div className="max-w-4xl space-y-4">
         <MembroForm defaultValues={defaultValues} onSubmit={handleSubmit} isEditing entityId={membro.entidadeId} />
-        <PermissionGate permission="membros:update">
-          <AcessoSection membroId={membro._id as Id<"membros">} />
-        </PermissionGate>
         <AtosPastoraisSection membroId={membro._id as Id<"membros">} />
         <CargosHistoricoSection membroId={membro._id as Id<"membros">} />
       </div>
