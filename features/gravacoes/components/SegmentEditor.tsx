@@ -8,13 +8,83 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
-import { Slider } from "@/shared/components/ui/slider";
 import { Play, Pause, Save, Scissors, RotateCcw, Volume2 } from "lucide-react";
 import { Spinner } from "@/shared/components/ui/spinner";
 import { toast } from "sonner";
 import { useAudioPlayer } from "@shared/audio/useAudioPlayer";
 import { useWaveformPeaks } from "../hooks/useWaveformPeaks";
 import { WaveformCanvas, type WaveformRegion } from "./WaveformCanvas";
+
+// Slider com bandas coloridas para regiões (sermão/avisos) — usado no fallback mobile
+function RegionSlider({
+  value,
+  max,
+  regions,
+  onChange,
+}: {
+  value: number;
+  max: number;
+  regions: WaveformRegion[];
+  onChange: (v: number) => void;
+}) {
+  const trackRef = useRef<HTMLDivElement>(null);
+
+  const getRatio = (e: React.PointerEvent) => {
+    const track = trackRef.current;
+    if (!track || max <= 0) return null;
+    const rect = track.getBoundingClientRect();
+    return Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+  };
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    e.currentTarget.setPointerCapture(e.pointerId);
+    const ratio = getRatio(e);
+    if (ratio !== null) onChange(ratio * max);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.buttons === 0) return;
+    const ratio = getRatio(e);
+    if (ratio !== null) onChange(ratio * max);
+  };
+
+  const pct = max > 0 ? (value / max) * 100 : 0;
+
+  return (
+    <div
+      ref={trackRef}
+      className="relative h-12 flex items-center cursor-pointer touch-none select-none"
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+    >
+      {/* Trilha base */}
+      <div className="absolute inset-x-0 h-2 rounded-full bg-muted-foreground/20 overflow-hidden">
+        {/* Bandas de regiões com opacidade aumentada para o contexto do slider */}
+        {regions.map((r) => (
+          <div
+            key={r.label}
+            className="absolute inset-y-0"
+            style={{
+              left: `${(r.start / max) * 100}%`,
+              width: `${((r.end - r.start) / max) * 100}%`,
+              background: r.color.replace(/[\d.]+\)$/, "0.55)"),
+            }}
+          />
+        ))}
+        {/* Progresso tocado */}
+        <div
+          className="absolute inset-y-0 left-0 bg-primary/40 rounded-full"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      {/* Thumb */}
+      <div
+        className="absolute w-5 h-5 rounded-full bg-primary shadow-md border-2 border-background pointer-events-none"
+        style={{ left: `${pct}%`, transform: "translateX(-50%)" }}
+      />
+    </div>
+  );
+}
 
 interface SegmentEditorProps {
   gravacaoId: Id<"gravacoes">;
@@ -233,18 +303,12 @@ export function SegmentEditor({
               className="h-24 rounded"
             />
           ) : (
-            <div className="space-y-2">
-              {waveformError && (
-                <p className="text-[10px] text-muted-foreground">Waveform indisponivel: {waveformError}</p>
-              )}
-              <Slider
-                min={0}
-                max={duration || 1}
-                step={0.5}
-                value={[currentTime]}
-                onValueChange={handleSlider}
-              />
-            </div>
+            <RegionSlider
+              value={currentTime}
+              max={duration || 1}
+              regions={regions}
+              onChange={handleSeek}
+            />
           )}
 
           {/* Controles */}
