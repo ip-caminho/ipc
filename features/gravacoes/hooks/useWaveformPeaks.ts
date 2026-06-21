@@ -12,6 +12,13 @@ interface WaveformPeaksResult {
 
 const DEFAULT_SAMPLES = 2000; // Mais samples para suportar zoom
 
+// decodeAudioData aloca >600MB de RAM para sermões de 1h — mata a tab em mobile.
+// maxTouchPoints > 1 detecta iOS/Android/tablets de forma confiável.
+function isTouchDevice(): boolean {
+  if (typeof window === "undefined") return false;
+  return navigator.maxTouchPoints > 1;
+}
+
 function calculatePeaks(channelData: Float32Array, samplesCount: number): number[] {
   const bucketSize = Math.max(1, Math.floor(channelData.length / samplesCount));
   const peaks: number[] = [];
@@ -45,6 +52,7 @@ export function useWaveformPeaks(
 
   useEffect(() => {
     if (!audioUrl || cachedUrlRef.current === audioUrl) return;
+    if (isTouchDevice()) return;
 
     let cancelled = false;
     cachedUrlRef.current = audioUrl;
