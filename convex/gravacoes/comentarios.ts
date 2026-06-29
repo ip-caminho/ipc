@@ -14,6 +14,14 @@ async function getMembroId(ctx: any) {
   return membro._id;
 }
 
+// Resolve o nome de exibicao do autor de um comentario (membro -> entidade).
+async function getAutorNome(ctx: any, membroId: Id<"membros">): Promise<string> {
+  const membro = await ctx.db.get(membroId);
+  if (!membro) return "Usuario";
+  const entidade = await ctx.db.get(membro.entidadeId);
+  return entidade?.nomeCompleto || entidade?.nomeRazaoSocial || "Usuario";
+}
+
 // ===== COMENTARIOS (usa tabela unificada 'comentarios') =====
 
 export const listByGravacao = query({
@@ -27,18 +35,61 @@ export const listByGravacao = query({
       .collect();
 
     return Promise.all(
-      comentarios.map(async (c) => {
-        const membro = await ctx.db.get(c.membroId);
-        let autorNome = "Usuario";
-        if (membro) {
-          const entidade = await ctx.db.get(membro.entidadeId);
-          autorNome = entidade?.nomeCompleto || entidade?.nomeRazaoSocial || "Usuario";
-        }
+      comentarios.map(async (c) => ({
+        ...c,
+        autorNome: await getAutorNome(ctx, c.membroId),
+        // Manter compatibilidade com o frontend existente
+        createdAt: c.criadoEm,
+      }))
+    );
+  },
+});
+
+// Widget do dashboard (admin): gravacoes com comentario recente, agrupadas.
+// Custo fixo — le no maximo 6 gravacoes (via indice by_ultimo_comentario) + o
+// ultimo comentario de cada uma. Nao varre a tabela comentarios.
+export const listGravacoesComComentariosRecentes = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return [];
+    const membro = await ctx.db
+      .query("membros")
+      .withIndex("by_user_id", (q) => q.eq("userId", userId))
+      .first();
+    if (!membro || membro.role !== "admin") return [];
+
+    const gravacoes = await ctx.db
+      .query("gravacoes")
+      .withIndex("by_ultimo_comentario")
+      .order("desc")
+      .take(6);
+
+    const gravacoesComComentario = gravacoes.filter(
+      (g) => g.ultimoComentarioEm != null
+    );
+
+    return Promise.all(
+      gravacoesComComentario.map(async (g) => {
+        const ultimo = await ctx.db
+          .query("comentarios")
+          .withIndex("by_entidade", (q) =>
+            q.eq("entidadeTipo", "gravacoes").eq("entidadeId", g._id)
+          )
+          .order("desc")
+          .first();
+
         return {
-          ...c,
-          autorNome,
-          // Manter compatibilidade com o frontend existente
-          createdAt: c.criadoEm,
+          gravacaoId: g._id,
+          titulo: g.titulo,
+          comentariosCount: g.comentariosCount ?? 0,
+          ultimoComentario: ultimo
+            ? {
+                texto: ultimo.texto,
+                autorNome: await getAutorNome(ctx, ultimo.membroId),
+                criadoEm: ultimo.criadoEm,
+              }
+            : null,
         };
       })
     );
@@ -53,6 +104,7 @@ export const create = mutation({
   },
   handler: async (ctx, { gravacaoId, texto, parentId }) => {
     const membroId = await getMembroId(ctx);
+    const agora = Date.now();
     const id = await ctx.db.insert("comentarios", {
       entidadeTipo: "gravacoes",
       entidadeId: gravacaoId,
@@ -60,13 +112,14 @@ export const create = mutation({
       texto: texto.trim(),
       parentId,
       tipo: "COMENTARIO",
-      criadoEm: Date.now(),
+      criadoEm: agora,
     });
-    // Contador denormalizado (+1)
+    // Contadores denormalizados (+1 e timestamp do ultimo) no mesmo patch
     const gravacao = await ctx.db.get(gravacaoId);
     if (gravacao) {
       await ctx.db.patch(gravacaoId, {
         comentariosCount: (gravacao.comentariosCount ?? 0) + 1,
+        ultimoComentarioEm: agora,
       });
     }
     return id;
@@ -102,16 +155,26 @@ export const remove = mutation({
 
     await ctx.db.delete(id);
 
-    // Contador denormalizado: decrementa pelo comentario + suas replies
+    // Contadores denormalizados: decrementa pelo comentario + suas replies e
+    // recalcula o timestamp do ultimo comentario remanescente (leitura leve via
+    // indice, so no remove). Se zerou, limpa o campo.
     if (comentario.entidadeTipo === "gravacoes") {
       const gravacaoId = comentario.entidadeId as Id<"gravacoes">;
       const gravacao = await ctx.db.get(gravacaoId);
       if (gravacao) {
+        const ultimo = await ctx.db
+          .query("comentarios")
+          .withIndex("by_entidade", (q) =>
+            q.eq("entidadeTipo", "gravacoes").eq("entidadeId", gravacaoId)
+          )
+          .order("desc")
+          .first();
         await ctx.db.patch(gravacaoId, {
           comentariosCount: Math.max(
             0,
             (gravacao.comentariosCount ?? 0) - (1 + replies.length),
           ),
+          ultimoComentarioEm: ultimo?.criadoEm,
         });
       }
     }
