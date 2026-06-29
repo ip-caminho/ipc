@@ -101,12 +101,39 @@ function calcularEncontros(dataInicio: string, dataFim?: string, diaSemana?: str
 
 async function getTurmas(): Promise<Turma[]> {
   try {
+    // @ts-ignore Convex TS2589 (instanciacao de tipo profunda)
     const turmas = (await fetchQuery(api.turmas.queries.listTurmasAbertas)) as Turma[];
     return turmas ?? [];
   } catch {
     // Convex indisponivel (ex.: build sem env) — renderiza so o conteudo estatico
     return [];
   }
+}
+
+type InscricaoEvento = {
+  _id: string;
+  slug: string;
+  titulo: string;
+  descricao: string;
+  dataLimite?: number;
+  vagas?: number;
+  vagasOcupadas: number;
+};
+
+async function getInscricoesEvento(): Promise<InscricaoEvento[]> {
+  try {
+    // @ts-ignore Convex TS2589 (instanciacao de tipo profunda)
+    const insc = (await fetchQuery(api.public.inscricoesEvento.listAtivas)) as InscricaoEvento[];
+    return insc ?? [];
+  } catch {
+    return [];
+  }
+}
+
+function tsToBr(ts?: number): string | null {
+  if (ts == null) return null;
+  const d = new Date(ts);
+  return Number.isNaN(d.getTime()) ? null : d.toLocaleDateString("pt-BR");
 }
 
 const EIXOS = [
@@ -202,7 +229,7 @@ const MUNDO = [
 ];
 
 export default async function LandingPage() {
-  const turmas = await getTurmas();
+  const [turmas, inscricoesEvento] = await Promise.all([getTurmas(), getInscricoesEvento()]);
 
   // Informações fixas da igreja (o banco ainda tem dados antigos de teste)
   const endereco = "Rua Pedra Azul, 674A (esquina com Rua Ximbó) — Vila Mariana, São Paulo, SP";
@@ -428,15 +455,52 @@ export default async function LandingPage() {
         </section>
 
         {/* =========================== CURSOS ABERTOS =========================== */}
-        {turmas.length > 0 && (
+        {(turmas.length > 0 || inscricoesEvento.length > 0) && (
           <section id="cursos">
             <div className="wrap-wide">
               <div className="section-head" data-rise>
                 <p className="eyebrow">Inscrições abertas</p>
-                <h2>Cursos e turmas.</h2>
+                <h2>Cursos e inscrições.</h2>
                 <span className="title-rule" />
               </div>
               <div className="cursos-grid">
+                {inscricoesEvento.map((insc) => {
+                  const limite = tsToBr(insc.dataLimite);
+                  const restantes =
+                    insc.vagas != null ? insc.vagas - insc.vagasOcupadas : null;
+                  return (
+                    <div key={insc._id} className="curso-card" data-rise>
+                      <div>
+                        <h3>{insc.titulo}</h3>
+                        {insc.descricao && <p className="desc">{insc.descricao}</p>}
+                      </div>
+                      <p className="meta">
+                        {limite && (
+                          <>
+                            <strong>Inscrições até:</strong> {limite}
+                          </>
+                        )}
+                        {restantes != null && restantes > 0 && (
+                          <>
+                            <br />
+                            {restantes} vagas
+                          </>
+                        )}
+                        {restantes != null && restantes <= 0 && (
+                          <>
+                            <br />
+                            Lista de espera
+                          </>
+                        )}
+                      </p>
+                      <div className="cta">
+                        <Link href={`/inscricoes/${insc.slug}`} className="btn btn-primary">
+                          Inscreva-se
+                        </Link>
+                      </div>
+                    </div>
+                  );
+                })}
                 {turmas.map((t) => {
                   const encontros = calcularEncontros(t.dataInicio, t.dataFim, t.diaSemana);
                   return (
