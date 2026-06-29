@@ -89,6 +89,7 @@ function CalendarioContent() {
           ? (data.ministerioId as Id<"ministerios">)
           : undefined,
         descricao: data.descricao || undefined,
+        tipo: data.tipo,
       });
       toast.success("Evento criado");
     } catch (error) {
@@ -108,6 +109,7 @@ function CalendarioContent() {
           ? (data.ministerioId as Id<"ministerios">)
           : undefined,
         descricao: data.descricao || undefined,
+        tipo: data.tipo,
       });
       toast.success("Evento atualizado");
       setEditEvento(null);
@@ -224,6 +226,7 @@ function CalendarioContent() {
               dataFim: editEvento.dataFim || "",
               ministerioId: editEvento.ministerioId || "",
               descricao: editEvento.descricao || "",
+              tipo: editEvento.tipo ?? "evento",
             }}
           />
         )}

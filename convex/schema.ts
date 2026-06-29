@@ -771,6 +771,8 @@ export default defineSchema({
     ministerioId: v.optional(v.id("ministerios")),
     descricao: v.optional(v.string()),
     origem: v.optional(v.string()), // "aviso-ia" = criado automaticamente a partir de aviso
+    // Categoria para a agenda publica (default 'evento' quando ausente)
+    tipo: v.optional(v.union(v.literal("pg"), v.literal("evento"), v.literal("reuniao"))),
     criadoEm: v.number(),
   })
     .index("by_data", ["data"])
