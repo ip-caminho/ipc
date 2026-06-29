@@ -281,13 +281,19 @@ export default defineSchema({
       v.array(v.object({ tipo: v.string(), count: v.number() })),
     ),
     comentariosCount: v.optional(v.number()),
+    // Timestamp do comentario mais recente — denormalizado (mantido em
+    // gravacoes/comentarios.ts no mesmo patch do count) para o widget de
+    // "Comentarios recentes" do dashboard ler so as gravacoes ativas via
+    // indice, sem varrer a tabela comentarios.
+    ultimoComentarioEm: v.optional(v.number()),
   })
     .index("by_tipo", ["tipo"])
     .index("by_status", ["status"])
     .index("by_data", ["data"])
     .index("by_pregador", ["pregadorId"])
     .index("by_serie", ["serieId"])
-    .index("by_share_token", ["shareToken"]),
+    .index("by_share_token", ["shareToken"])
+    .index("by_ultimo_comentario", ["ultimoComentarioEm"]),
 
   // Conteudo pesado de IA (1:1 com gravacoes), lido apenas no detalhe e no
   // pipeline de IA. Separado para o full scan das listagens ler docs leves.
