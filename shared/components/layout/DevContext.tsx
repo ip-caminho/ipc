@@ -1026,6 +1026,123 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "Reenviar reabre FALHOU como PENDENTE",
     ],
   },
+
+  // ===== Site Publico (rotas sem auth) =====
+  "/quem-somos": {
+    nome: "Quem somos (publico)",
+    pagina: "app/(public)/(site)/quem-somos/page.tsx",
+    arquivos: [
+      "app/(public)/(site)/quem-somos/page.tsx",
+      "content/quem-somos.mdx",
+      "features/site-publico/components/MDXLayout.tsx",
+    ],
+    notas: ["Pagina MDX estatica (full-bleed). Sem auth. Chrome via (site)/layout.tsx"],
+  },
+  "/trajetoria": {
+    nome: "Trajetoria (publico)",
+    pagina: "app/(public)/(site)/trajetoria/page.tsx",
+    arquivos: ["app/(public)/(site)/trajetoria/page.tsx", "content/trajetoria.mdx"],
+    notas: ["MDX estatica (placeholder). Sem auth"],
+  },
+  "/agenda": {
+    nome: "Agenda (publico)",
+    pagina: "app/(public)/(site)/agenda/page.tsx",
+    arquivos: [
+      "app/(public)/(site)/agenda/page.tsx",
+      "features/site-publico/components/AgendaClient.tsx",
+      "features/site-publico/components/EventoLinha.tsx",
+      "features/site-publico/lib/data.ts",
+      "convex/public/agenda.ts",
+    ],
+    queries: ["public.agenda.list (cultos PUBLICADO + calendarioEventos futuros)"],
+    notas: [
+      "ISR 900s via getAgendaPublic (unstable_cache + ConvexHttpClient)",
+      "Filtro por tipo via nuqs (?tipo=). Payload sem escalas/fotos",
+    ],
+  },
+  "/visite": {
+    nome: "Visite (publico)",
+    pagina: "app/(public)/(site)/visite/page.tsx",
+    arquivos: [
+      "app/(public)/(site)/visite/page.tsx",
+      "content/visite.mdx",
+      "features/site-publico/components/CeiaQuote.tsx",
+      "features/site-publico/lib/data.ts",
+    ],
+    queries: ["preferencias.queries.getIgrejaInfo (via getIgrejaInfoPublic)"],
+    notas: ["MDX + dados da igreja (endereco/horario). Sem auth"],
+  },
+  "/privacidade": {
+    nome: "Privacidade (publico)",
+    pagina: "app/(public)/(site)/privacidade/page.tsx",
+    arquivos: ["app/(public)/(site)/privacidade/page.tsx", "content/privacidade.mdx"],
+    notas: ["Texto LGPD. Linkada pelo checkbox do form de inscricao"],
+  },
+  "/inscricoes": {
+    nome: "Inscricoes (publico, hub)",
+    pagina: "app/(public)/(site)/inscricoes/page.tsx",
+    arquivos: [
+      "app/(public)/(site)/inscricoes/page.tsx",
+      "features/site-publico/components/InscricaoCard.tsx",
+      "features/site-publico/lib/data.ts",
+      "convex/public/inscricoesEvento.ts",
+    ],
+    queries: ["public.inscricoesEvento.listAtivas (via getInscricoesAtivas, ISR 300s)"],
+    notas: ["Grid de inscricoes ativas. Card -> /inscricoes/[slug]"],
+  },
+  "/inscricoes/[slug]": {
+    nome: "Inscricao - formulario publico",
+    pagina: "app/(public)/(site)/inscricoes/[slug]/page.tsx",
+    arquivos: [
+      "app/(public)/(site)/inscricoes/[slug]/page.tsx",
+      "features/site-publico/components/InscricaoForm.tsx",
+      "features/site-publico/components/LoginModalInline.tsx",
+      "features/site-publico/lib/data.ts",
+      "convex/public/inscricoesEvento.ts",
+      "app/api/inscricoes/responder/route.ts",
+    ],
+    queries: [
+      "public.inscricoesEvento.getBySlug (via getInscricaoBySlug, ISR 60s)",
+      "membros.selfService.getMyProfile (se logado, pre-preenche)",
+    ],
+    mutations: ["public.inscricoesEvento.responder (via route handler /api/inscricoes/responder)"],
+    componentes: ["InscricaoForm (RHF+Zod dinamico)", "LoginModalInline (telefone+senha)"],
+    notas: [
+      "Auth opcional: membro logado tem campos de sistema read-only (vazio vira editavel)",
+      "Honeypot 'website' + rate limit por ipHash (5/h) + LGPD obrigatorio",
+      "Submit via fetch POST /api/inscricoes/responder (captura IP -> ipHash)",
+      "Sucesso inline: CONFIRMADA ou LISTA_ESPERA",
+    ],
+  },
+  "/admin/site-publico/inscricoes": {
+    nome: "Admin - Inscricoes do site",
+    pagina: "app/(ready)/admin/site-publico/inscricoes/page.tsx",
+    arquivos: [
+      "app/(ready)/admin/site-publico/inscricoes/page.tsx",
+      "features/site-publico/components/InscricaoBuilder.tsx",
+      "convex/inscricoesEvento/mutations.ts",
+      "convex/inscricoesEvento/queries.ts",
+    ],
+    queries: ["inscricoesEvento.queries.listarTodas", "inscricoesEvento.queries.getById"],
+    mutations: [
+      "inscricoesEvento.mutations.criar",
+      "inscricoesEvento.mutations.atualizar",
+      "inscricoesEvento.mutations.encerrar",
+    ],
+    componentes: ["InscricaoBuilder (seletor camposSistema + editor camposCustom)"],
+    notas: ["Permissao: site_publico:manage (admin/pastor/sec.exec). Auditado"],
+  },
+  "/admin/site-publico/inscricoes/[id]/respostas": {
+    nome: "Admin - Respostas de inscricao",
+    pagina: "app/(ready)/admin/site-publico/inscricoes/[id]/respostas/page.tsx",
+    arquivos: [
+      "app/(ready)/admin/site-publico/inscricoes/[id]/respostas/page.tsx",
+      "convex/inscricoesEvento/queries.ts",
+    ],
+    queries: ["inscricoesEvento.queries.getById", "inscricoesEvento.queries.listarRespostas"],
+    componentes: ["TanStack/Table de respostas + export CSV client-side"],
+    notas: ["Permissao: site_publico:manage. Colunas dinamicas (camposSistema + camposCustom)"],
+  },
 };
 
 function resolveRoute(pathname: string): PageContext | null {
@@ -1063,6 +1180,12 @@ function resolveRoute(pathname: string): PageContext | null {
   // /admin/campanhas/[id] (mas nao /admin/campanhas/nova)
   if (/^\/admin\/campanhas\/[^/]+$/.test(pathname) && pathname !== "/admin/campanhas/nova") {
     return CONTEXT_MAP["/admin/campanhas/[id]"];
+  }
+  // /inscricoes/[slug] (formulario publico)
+  if (/^\/inscricoes\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/inscricoes/[slug]"];
+  // /admin/site-publico/inscricoes/[id]/respostas
+  if (/^\/admin\/site-publico\/inscricoes\/[^/]+\/respostas$/.test(pathname)) {
+    return CONTEXT_MAP["/admin/site-publico/inscricoes/[id]/respostas"];
   }
 
   return null;

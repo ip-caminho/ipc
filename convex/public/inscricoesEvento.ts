@@ -121,10 +121,9 @@ export const responder = mutation({
       throw new Error("Muitas inscrições recentes. Tente novamente mais tarde.");
     }
 
-    // Auth opcional: se logado, resolve membroId no servidor e deriva
-    // dadosSistema do perfil real (não confia no client).
+    // Auth opcional: resolve membroId no servidor (não confia em id do client).
     let membroId: InscricaoDoc["criadoPor"] | undefined = undefined;
-    let dadosSistema = args.dadosSistema ?? {};
+    let entidade: Record<string, unknown> | null = null;
     const userId = await getAuthUserId(ctx);
     if (userId) {
       const membro = await ctx.db
@@ -133,30 +132,32 @@ export const responder = mutation({
         .first();
       if (membro) {
         membroId = membro._id;
-        const ent = await ctx.db.get(membro.entidadeId);
-        if (ent) {
-          dadosSistema = {
-            nomeCompleto: ent.nomeCompleto,
-            whatsapp: ent.whatsapp,
-            email: ent.email,
-            telefone: ent.telefone,
-            dataNascimento: ent.dataNascimento,
-            sexo: ent.sexo,
-          };
-        }
+        entidade = (await ctx.db.get(membro.entidadeId)) as Record<string, unknown> | null;
       }
     }
 
-    // Validação dos campos de sistema (só p/ anônimo; logado vem do perfil).
-    if (!membroId) {
-      for (const campo of insc.camposSistema) {
-        const valor = (dadosSistema as Record<string, unknown>)[campo];
-        if (typeof valor !== "string" || valor.trim() === "") {
-          throw new Error(`Campo obrigatório não preenchido: ${campo}`);
-        }
-        if (campo === "email" && !EMAIL_RE.test(valor)) {
-          throw new Error("E-mail inválido");
-        }
+    // Monta dadosSistema só com os campos solicitados. Para membro logado, o
+    // valor do perfil é autoritativo; se ausente no perfil (campo vazio), aceita
+    // o que o inscrito digitou. Anônimo: usa só o que veio do client.
+    const entrada = (args.dadosSistema ?? {}) as Record<string, string | undefined>;
+    const dadosSistema: Record<string, string> = {};
+    for (const campo of insc.camposSistema) {
+      const doPerfil = entidade?.[campo];
+      const valor =
+        typeof doPerfil === "string" && doPerfil.trim() !== ""
+          ? doPerfil.trim()
+          : (entrada[campo] ?? "").trim();
+      if (valor) dadosSistema[campo] = valor;
+    }
+
+    // Validação dos campos de sistema solicitados (presença + formato de email).
+    for (const campo of insc.camposSistema) {
+      const valor = dadosSistema[campo];
+      if (!valor) {
+        throw new Error(`Campo obrigatório não preenchido: ${campo}`);
+      }
+      if (campo === "email" && !EMAIL_RE.test(valor)) {
+        throw new Error("E-mail inválido");
       }
     }
 
