@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { PlaceholderPagina } from "@features/site-publico/components/PlaceholderPagina";
+import Conteudo from "@/content/trajetoria.mdx";
+import { MDXLayout } from "@features/site-publico/components/MDXLayout";
 
 export const metadata: Metadata = {
   title: "Trajetória — IPC",
@@ -8,9 +9,8 @@ export const metadata: Metadata = {
 
 export default function TrajetoriaPage() {
   return (
-    <PlaceholderPagina
-      titulo="Trajetória"
-      descricao="Como chegamos até aqui — a história da nossa comunidade."
-    />
+    <MDXLayout>
+      <Conteudo />
+    </MDXLayout>
   );
 }

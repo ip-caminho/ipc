@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { PlaceholderPagina } from "@features/site-publico/components/PlaceholderPagina";
+import Conteudo from "@/content/quem-somos.mdx";
+import { MDXLayout } from "@features/site-publico/components/MDXLayout";
 
 export const metadata: Metadata = {
   title: "Quem somos — IPC",
@@ -9,9 +10,8 @@ export const metadata: Metadata = {
 
 export default function QuemSomosPage() {
   return (
-    <PlaceholderPagina
-      titulo="Quem somos"
-      descricao="Uma comunidade aprendendo, junto, a se parecer com Cristo — começando pela segunda-feira."
-    />
+    <MDXLayout>
+      <Conteudo />
+    </MDXLayout>
   );
 }

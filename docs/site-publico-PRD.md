@@ -818,6 +818,15 @@ Ajustes feitos após validar suposições no código real:
 9. **`/inscricao/*` (turmas) ≠ `/inscricoes` (novo)** [§4] — rotas distintas; evitar
    colisão de matcher.
 10. **`/privacidade` é MDX** [§4] — `content/privacidade.mdx`, não página solta.
+11. **Rotas públicas são dinâmicas (`ƒ`), não estáticas** [§4, §12] — descoberto na
+    implementação do PR 2: o `ConvexAuthNextjsServerProvider` no **root layout**
+    lê o cookie de auth, forçando SSR em todo o app (vale também p/ `/culto`,
+    `/subir-audio` etc. já existentes). Não dá p/ tornar SSG sem mexer no root
+    (fora de escopo). Mitigação aplicada: dados públicos (igreja) vêm via
+    `ConvexHttpClient` dentro de `unstable_cache` (`features/site-publico/lib/
+    data.ts`, revalidate 900) — a query Convex roda 1x/15min, não a cada request,
+    controlando o custo de bandwidth. Aplicar o mesmo padrão de cache às demais
+    leituras públicas (agenda, inscrições) nos PRs 3/5/6.
 
 **Confirmações que validaram o plano:** `getMyProfile` retorna `{...membro,
 entidade}` (`convex/membros/selfService.ts:20`); `turmas.registrar` já faz
