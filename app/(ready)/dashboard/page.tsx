@@ -19,6 +19,7 @@ import { PushPermissionBanner } from "@shared/notifications/PushPermissionBanner
 import { TodaySection } from "@features/dashboard/components/TodaySection";
 import { BirthdayList } from "@features/dashboard/components/BirthdayList";
 import { UltimoSermaoCard } from "@features/dashboard/components/UltimoSermaoCard";
+import { ComentariosRecentesCard } from "@features/dashboard/components/ComentariosRecentesCard";
 import { ProfileCompletenessCard } from "@features/dashboard/components/ProfileCompletenessCard";
 import { ProfileNudgeDialog } from "@features/dashboard/components/ProfileNudgeDialog";
 
@@ -140,6 +141,8 @@ export default function DashboardPage() {
         <ProfileCompletenessCard />
 
         <UltimoSermaoCard />
+
+        <ComentariosRecentesCard />
 
         <TodaySection />
 

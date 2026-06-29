@@ -16,10 +16,11 @@ function getBackfillContadoresRef() {
 }
 
 /**
- * Recalcula reacoesResumo + comentariosCount (valor absoluto, idempotente)
- * para cada gravacao. Rodar APOS deploy das mutations que mantem os campos
- * (gravacoes/comentarios.ts) — assim escritas concorrentes durante o backfill
- * sao absorvidas pelo delta e o backfill so corrige o baseline.
+ * Recalcula reacoesResumo + comentariosCount + ultimoComentarioEm (valor
+ * absoluto, idempotente) para cada gravacao. Rodar APOS deploy das mutations
+ * que mantem os campos (gravacoes/comentarios.ts) — assim escritas concorrentes
+ * durante o backfill sao absorvidas pelo delta e o backfill so corrige o
+ * baseline.
  *
  * Rodar: npx convex run gravacoes/migrations:backfillContadores --prod
  */
@@ -46,9 +47,16 @@ export const backfillContadores = internalMutation({
         )
         .collect();
 
+      // Timestamp do comentario mais recente (undefined se nao houver nenhum)
+      const ultimoComentarioEm = comentarios.reduce<number | undefined>(
+        (max, c) => (max == null || c.criadoEm > max ? c.criadoEm : max),
+        undefined,
+      );
+
       await ctx.db.patch(g._id, {
         reacoesResumo: resumo,
         comentariosCount: comentarios.length,
+        ultimoComentarioEm,
       });
     }
 
