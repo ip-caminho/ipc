@@ -1028,6 +1028,27 @@ const CONTEXT_MAP: Record<string, PageContext> = {
   },
 
   // ===== Site Publico (rotas sem auth) =====
+  "/": {
+    nome: "Landing (publico)",
+    pagina: "app/(public)/page.tsx",
+    arquivos: [
+      "app/(public)/page.tsx",
+      "app/(public)/landing.css",
+      "app/(public)/HeroFX.tsx",
+      "app/(public)/RiseObserver.tsx",
+      "app/(public)/opengraph-image.tsx",
+      "features/site-publico/lib/seo.ts",
+    ],
+    queries: [
+      "turmas.queries.listTurmasAbertas",
+      "public.inscricoesEvento.listAtivas (secao Inscricoes abertas)",
+    ],
+    notas: [
+      "One-pager editorial (site-v2). Header/footer proprios (NAO usa o chrome (site))",
+      "Secao #cursos renderiza turmas + inscricoes de evento (listAtivas)",
+      "JSON-LD Church via (public)/layout.tsx",
+    ],
+  },
   "/quem-somos": {
     nome: "Quem somos (publico)",
     pagina: "app/(public)/(site)/quem-somos/page.tsx",
