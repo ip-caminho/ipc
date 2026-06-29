@@ -52,6 +52,7 @@ export function EventoForm({
       dataFim: "",
       ministerioId: "",
       descricao: "",
+      tipo: "evento",
       ...defaultValues,
     },
   });
@@ -120,6 +121,25 @@ export function EventoForm({
                     {m.nome}
                   </SelectItem>
                 ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-1">
+            <Label>Tipo (agenda pública)</Label>
+            <Select
+              value={form.watch("tipo") || "evento"}
+              onValueChange={(val) =>
+                form.setValue("tipo", val as "evento" | "pg" | "reuniao")
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Evento" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="evento">Evento</SelectItem>
+                <SelectItem value="pg">Pequeno Grupo</SelectItem>
+                <SelectItem value="reuniao">Reunião</SelectItem>
               </SelectContent>
             </Select>
           </div>

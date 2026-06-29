@@ -6,6 +6,8 @@ export const eventoFormSchema = z.object({
   dataFim: z.string().optional(),
   ministerioId: z.string().optional(),
   descricao: z.string().optional(),
+  // Categoria exibida na agenda publica
+  tipo: z.enum(["evento", "pg", "reuniao"]).optional(),
 });
 
 export type EventoFormValues = z.infer<typeof eventoFormSchema>;
