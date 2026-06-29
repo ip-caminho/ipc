@@ -1,9 +1,7 @@
 import { Spectral, Source_Sans_3 } from "next/font/google";
-import { fetchQuery } from "convex/nextjs";
-import { api } from "@/convex/_generated/api";
 import { HeaderPublico } from "@features/site-publico/components/HeaderPublico";
 import { FooterPublico } from "@features/site-publico/components/FooterPublico";
-import type { IgrejaInfo } from "@features/site-publico/lib/nav";
+import { getIgrejaInfoPublic } from "@features/site-publico/lib/data";
 
 const spectral = Spectral({
   subsets: ["latin"],
@@ -20,17 +18,11 @@ const sourceSans = Source_Sans_3({
   display: "swap",
 });
 
-async function getIgreja(): Promise<IgrejaInfo> {
-  try {
-    return (await fetchQuery(api.preferencias.queries.getIgrejaInfo)) ?? {};
-  } catch {
-    // Convex indisponível (ex.: build sem env) — renderiza chrome sem dados
-    return {};
-  }
-}
+// Footer puxa dados da igreja (raramente mudam) — ISR a cada 15 min.
+export const revalidate = 900;
 
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
-  const igreja = await getIgreja();
+  const igreja = await getIgrejaInfoPublic();
 
   return (
     <div

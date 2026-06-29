@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
+import createMDX from "@next/mdx";
 
 const nextConfig: NextConfig = {
+  // inclui mdx para permitir conteudo estatico (site publico)
+  pageExtensions: ["ts", "tsx", "js", "jsx", "mdx"],
   images: {
     remotePatterns: [
       {
@@ -37,4 +40,8 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// Sem plugins remark/rehype: mantem compatibilidade com Turbopack (Next 16),
+// que exige plugins referenciados por string, nao funcao.
+const withMDX = createMDX({});
+
+export default withMDX(nextConfig);
