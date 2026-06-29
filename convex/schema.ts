@@ -1210,4 +1210,73 @@ export default defineSchema({
     .index("by_campanha_status", ["campanhaId", "status"])
     .index("by_membro_enviadoEm", ["membroId", "enviadoEm"])
     .index("by_membro_campanha", ["membroId", "campanhaId"]),
+
+  // ===== Site Publico — Inscricoes de Evento (genericas) =====
+  // Independente de `turmas` (que e especifico de cursos). Form arbitrario:
+  // camposSistema (dados de perfil, pre-preenchidos p/ membro logado) +
+  // camposCustom (campos livres montados no builder admin).
+  inscricoesEvento: defineTable({
+    slug: v.string(),
+    titulo: v.string(),
+    descricao: v.string(), // markdown
+    ativa: v.boolean(),
+    dataAbertura: v.optional(v.number()),
+    dataLimite: v.optional(v.number()),
+    vagas: v.optional(v.number()), // null/ausente = ilimitado
+    vagasOcupadas: v.number(), // contador denormalizado (padrao turmas)
+    camposSistema: v.array(
+      v.union(
+        v.literal("nomeCompleto"),
+        v.literal("whatsapp"),
+        v.literal("email"),
+        v.literal("telefone"),
+        v.literal("dataNascimento"),
+        v.literal("sexo"),
+      ),
+    ),
+    camposCustom: v.array(
+      v.object({
+        id: v.string(),
+        label: v.string(),
+        tipo: v.union(
+          v.literal("text"),
+          v.literal("email"),
+          v.literal("tel"),
+          v.literal("select"),
+          v.literal("textarea"),
+          v.literal("checkbox"),
+        ),
+        obrigatorio: v.boolean(),
+        opcoes: v.optional(v.array(v.string())),
+        placeholder: v.optional(v.string()),
+      }),
+    ),
+    criadoPor: v.optional(v.id("membros")),
+    criadoEm: v.number(),
+  })
+    .index("by_slug", ["slug"])
+    .index("by_ativa_dataAbertura", ["ativa", "dataAbertura"]),
+
+  respostasInscricaoEvento: defineTable({
+    inscricaoId: v.id("inscricoesEvento"),
+    membroId: v.optional(v.id("membros")), // resolvido no servidor (se logou)
+    dadosSistema: v.optional(
+      v.object({
+        nomeCompleto: v.optional(v.string()),
+        whatsapp: v.optional(v.string()),
+        email: v.optional(v.string()),
+        telefone: v.optional(v.string()),
+        dataNascimento: v.optional(v.string()),
+        sexo: v.optional(v.string()),
+      }),
+    ),
+    dadosCustom: v.any(), // { [campoId]: valor } — validado contra camposCustom
+    status: v.union(v.literal("CONFIRMADA"), v.literal("LISTA_ESPERA")),
+    lgpdConsentimento: v.boolean(),
+    ipHash: v.string(), // hash de IP (nunca IP cru) — rate limit anti-spam
+    criadoEm: v.number(),
+  })
+    .index("by_inscricao", ["inscricaoId"])
+    .index("by_inscricao_status", ["inscricaoId", "status"])
+    .index("by_ipHash_criadoEm", ["ipHash", "criadoEm"]),
 });

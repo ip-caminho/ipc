@@ -52,6 +52,8 @@ export type Permission =
   | "campanhas:manage"
   // Atos Pastorais
   | "atos_pastorais:manage"
+  // Site Publico (inscricoes de evento + conteudo publico)
+  | "site_publico:manage"
   // Wildcards
   | "*";
 
