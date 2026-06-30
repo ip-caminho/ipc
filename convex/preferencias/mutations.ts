@@ -1,6 +1,8 @@
 import { mutation } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { requirePermission } from "../_shared/requirePermission";
+import { createFieldAuditLogs } from "../_shared/auditHelpers";
 
 async function requireAdmin(ctx: any) {
   const userId = await getAuthUserId(ctx);
@@ -90,5 +92,60 @@ export const seedIgrejaInfo = mutation({
         });
       }
     }
+  },
+});
+
+// Lê todas as chaves `igreja.*` num objeto plano (mesma forma de getIgrejaInfo).
+async function lerIgrejaInfo(
+  ctx: { db: { query: (t: "preferencias") => { collect: () => Promise<Array<{ chave: string; valor: unknown }>> } } },
+): Promise<Record<string, unknown>> {
+  const prefs = await ctx.db.query("preferencias").collect();
+  const out: Record<string, unknown> = {};
+  for (const p of prefs) {
+    if (p.chave.startsWith("igreja.")) out[p.chave.replace("igreja.", "")] = p.valor;
+  }
+  return out;
+}
+
+// Editor de Informações da igreja (painel /admin/site-publico/informacoes).
+// Fonte única lida por getIgrejaInfo → rodapé, /visite e JSON-LD. Exige
+// `site_publico:manage` (admin tem "*"); audita o diff agregado por campo.
+export const updateIgrejaInfo = mutation({
+  args: {
+    nome: v.optional(v.string()),
+    descricao: v.optional(v.string()),
+    endereco: v.optional(v.string()),
+    googleMapsEmbed: v.optional(v.string()),
+    horarios: v.optional(
+      v.array(v.object({ dia: v.string(), horario: v.string(), tipo: v.string() })),
+    ),
+    whatsapp: v.optional(v.string()),
+    telefone: v.optional(v.string()),
+    email: v.optional(v.string()),
+    banco: v.optional(v.string()),
+    agencia: v.optional(v.string()),
+    conta: v.optional(v.string()),
+    pix: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const { membro } = await requirePermission(ctx, "site_publico:manage");
+    const antes = await lerIgrejaInfo(ctx);
+
+    for (const [campo, valor] of Object.entries(args)) {
+      if (valor === undefined) continue;
+      const chave = `igreja.${campo}`;
+      const existing = await ctx.db
+        .query("preferencias")
+        .withIndex("by_chave", (q) => q.eq("chave", chave))
+        .unique();
+      if (existing) {
+        await ctx.db.patch(existing._id, { valor, atualizadoPor: membro._id, atualizadoEm: Date.now() });
+      } else {
+        await ctx.db.insert("preferencias", { chave, valor, atualizadoPor: membro._id, atualizadoEm: Date.now() });
+      }
+    }
+
+    const depois = await lerIgrejaInfo(ctx);
+    await createFieldAuditLogs(ctx, antes, depois, "preferencias", "igreja");
   },
 });

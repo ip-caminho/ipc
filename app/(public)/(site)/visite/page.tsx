@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Conteudo from "@/content/visite.mdx";
 import { MDXLayout } from "@features/site-publico/components/MDXLayout";
 import { CeiaQuote } from "@features/site-publico/components/CeiaQuote";
+import { getIgrejaInfoPublic } from "@features/site-publico/lib/data";
+import { IGREJA_DEFAULTS, formatHorarios } from "@features/site-publico/lib/igreja";
 
 export const metadata: Metadata = {
   title: "Visite — IPC",
@@ -9,15 +11,16 @@ export const metadata: Metadata = {
     "Como nos visitar: endereço, horário e o que esperar de um culto na Igreja Presbiteriana do Caminho.",
 };
 
-// Dados fixos e corretos da igreja. O banco (preferencias.getIgrejaInfo) ainda
-// tem dados antigos de teste (endereço de Colombo/PR, horários inexistentes) —
-// usamos os valores corretos direto, como o rodapé (SiteFooter). Culto único:
-// domingo, 10h. Endereço idêntico ao do rodapé e do JSON-LD.
-const ENDERECO = "Rua Pedra Azul, 674A — Vila Mariana, São Paulo, SP";
-const ENDERECO_MAPA = "Rua Pedra Azul, 674A, Vila Mariana, São Paulo, SP";
-const HORARIO = "Domingos · 10h";
+// Dados da igreja mudam raramente; lê de getIgrejaInfo (editável no painel) com
+// fallback para IGREJA_DEFAULTS. Culto único: domingo, 10h.
+export const revalidate = 900;
 
-export default function VisitePage() {
+export default async function VisitePage() {
+  const i = await getIgrejaInfoPublic();
+  const endereco = i.endereco || IGREJA_DEFAULTS.endereco;
+  const enderecoMapa = i.endereco || IGREJA_DEFAULTS.enderecoMapa;
+  const horario = formatHorarios(i.horarios) || IGREJA_DEFAULTS.horario;
+
   return (
     <MDXLayout>
       <p className="eyebrow">Igreja Presbiteriana do Caminho · São Paulo</p>
@@ -32,16 +35,16 @@ export default function VisitePage() {
         <div>
           <dt className="eyebrow">Quando</dt>
           <dd className="mt-2 font-[family-name:var(--font-source-sans)] text-[length:var(--text-sm)] text-[color:var(--text-body)]">
-            {HORARIO}
+            {horario}
           </dd>
         </div>
         <div>
           <dt className="eyebrow">Onde</dt>
           <dd className="mt-2 font-[family-name:var(--font-source-sans)] text-[length:var(--text-sm)] text-[color:var(--text-body)]">
-            {ENDERECO}
+            {endereco}
           </dd>
           <a
-            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ENDERECO_MAPA)}`}
+            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(enderecoMapa)}`}
             target="_blank"
             rel="noopener noreferrer"
             className="link-quiet mt-2 inline-block"
