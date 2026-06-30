@@ -3,6 +3,7 @@ import { internal } from "../_generated/api";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { createFieldAuditLogs, createActionAuditLog } from "../_shared/auditHelpers";
+import { requirePermission } from "../_shared/requirePermission";
 
 export const create = mutation({
   args: {
@@ -94,6 +95,7 @@ export const remove = mutation({
 
     // Delete audio file from B2
     if (gravacao.audioUrl) {
+      // @ts-ignore Convex TS2589 (instanciacao de tipo profunda)
       await ctx.scheduler.runAfter(0, internal.files.upload.deleteFile, {
         url: gravacao.audioUrl,
       });
@@ -130,5 +132,35 @@ export const remove = mutation({
 
     await createActionAuditLog(ctx, "DELETE", "gravacoes", id);
     await ctx.db.delete(id);
+  },
+});
+
+// Curadoria dos avisos do site (painel /admin/site-publico/avisos). Escopada SO
+// ao campo iaAvisos — nao expoe os demais campos da gravacao ao papel comunicacao.
+// A tela recarrega e reenvia todos os campos de cada aviso (inclusive contato/
+// dataEvento) para nao apaga-los. Contato/WhatsApp seguem nao expostos no site
+// (public/avisos.ts ja omite). Exige site_publico:manage.
+export const corrigirAvisosCulto = mutation({
+  args: {
+    gravacaoId: v.id("gravacoes"),
+    avisos: v.array(
+      v.object({
+        titulo: v.string(),
+        descricao: v.string(),
+        quando: v.optional(v.union(v.string(), v.null())),
+        onde: v.optional(v.union(v.string(), v.null())),
+        dataEvento: v.optional(v.union(v.string(), v.null())),
+        contatoNome: v.optional(v.union(v.string(), v.null())),
+        contatoWhatsapp: v.optional(v.union(v.string(), v.null())),
+      }),
+    ),
+  },
+  handler: async (ctx, { gravacaoId, avisos }) => {
+    await requirePermission(ctx, "site_publico:manage");
+    const old = await ctx.db.get(gravacaoId);
+    if (!old) throw new Error("Gravacao nao encontrada");
+    await ctx.db.patch(gravacaoId, { iaAvisos: avisos });
+    const novo = await ctx.db.get(gravacaoId);
+    await createFieldAuditLogs(ctx, old, novo, "gravacoes", gravacaoId);
   },
 });
