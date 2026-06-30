@@ -44,3 +44,49 @@ export const migrateRolPermissions = internalMutation({
     return { rolesAtualizados, membrosAtualizados };
   },
 });
+
+/**
+ * Corrige os dados de igreja que vieram do seed de exemplo (seedIgrejaInfo, uma
+ * "Igreja Presbiteriana de Colombo" ficticia). Os valores corretos sao os mesmos
+ * usados no rodape (SiteFooter) e no JSON-LD do site publico.
+ *
+ * Rodar uma vez em prod:
+ *   npx convex run preferencias/migrations:corrigirIgrejaInfo --prod
+ *
+ * Campos sem valor confiavel (whatsapp, telefone, googleMapsEmbed, educacional)
+ * NAO sao tocados — preencher pela tela de Preferencias do chrMS.
+ */
+export const corrigirIgrejaInfo = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const correto: Record<string, unknown> = {
+      "igreja.nome": "Igreja Presbiteriana do Caminho",
+      "igreja.descricao":
+        "Uma comunidade bíblica de discipulado, participando da missão de Deus neste mundo. Presbiteriana, em São Paulo.",
+      "igreja.endereco": "Rua Pedra Azul, 674A — Vila Mariana, São Paulo, SP",
+      "igreja.horarios": [
+        { dia: "Domingo", horario: "10h", tipo: "Culto Dominical" },
+      ],
+      "igreja.email": "ipdocaminho@gmail.com",
+      "igreja.banco": "Santander (033)",
+      "igreja.agencia": "0108",
+      "igreja.conta": "13007643-7",
+      "igreja.pix": "48.792.102/0001-13",
+    };
+
+    const atualizados: string[] = [];
+    for (const [chave, valor] of Object.entries(correto)) {
+      const existing = await ctx.db
+        .query("preferencias")
+        .withIndex("by_chave", (q) => q.eq("chave", chave))
+        .unique();
+      if (existing) {
+        await ctx.db.patch(existing._id, { valor, atualizadoEm: Date.now() });
+      } else {
+        await ctx.db.insert("preferencias", { chave, valor, atualizadoEm: Date.now() });
+      }
+      atualizados.push(chave);
+    }
+    return { atualizados };
+  },
+});
