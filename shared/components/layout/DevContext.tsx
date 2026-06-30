@@ -1041,13 +1041,14 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "features/site-publico/lib/seo.ts",
     ],
     queries: [
-      "public.avisos.listVigentes (Esta semana, top 4)",
+      "public.avisos.listUltimoCulto (Esta semana = avisos do ultimo culto, via gravacoes.iaAvisos)",
       "public.agenda.list (Proximos eventos, slice 4 via getAgendaPublic)",
       "public.inscricoesEvento.listAtivas (Inscricoes abertas, top 3)",
     ],
     notas: [
       "Hub pratico. Usa o chrome (site) compartilhado (SiteHeader/SiteFooter, identidade landing)",
-      "Blocos somem quando vazios. Hero curto + Esta semana + Proximos eventos + Sobre/Inscricoes",
+      "Esta semana = avisos REALMENTE dados no culto de domingo (IA do audio), nao a tabela avisos manual. Contato/WhatsApp omitidos (LGPD)",
+      "Blocos somem quando vazios. Hero (+proximo culto) + Esta semana + Atalhos",
       "Conteudo editorial antigo migrou p/ /quem-somos. JSON-LD via (public)/layout.tsx",
     ],
   },
