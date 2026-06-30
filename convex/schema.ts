@@ -456,6 +456,9 @@ export default defineSchema({
     descricao: v.optional(v.string()),
     dataInicio: v.string(), // YYYY-MM-DD
     dataFim: v.optional(v.string()), // YYYY-MM-DD — se omitido, vale só dataInicio
+    // Prioridade editorial (default 'media' na leitura). 'alta' destaca o aviso
+    // na home (border-left azul) e o ordena primeiro em "Esta semana".
+    prioridade: v.optional(v.union(v.literal("alta"), v.literal("media"), v.literal("baixa"))),
     criadoPor: v.optional(v.id("membros")),
     criadoEm: v.number(),
     atualizadoEm: v.optional(v.number()),

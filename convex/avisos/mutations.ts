@@ -3,12 +3,15 @@ import { v } from "convex/values";
 import { requirePermission } from "../_shared/requirePermission";
 import { createActionAuditLog, createFieldAuditLogs } from "../_shared/auditHelpers";
 
+const prioridadeValidator = v.union(v.literal("alta"), v.literal("media"), v.literal("baixa"));
+
 export const create = mutation({
   args: {
     titulo: v.string(),
     descricao: v.optional(v.string()),
     dataInicio: v.string(),
     dataFim: v.optional(v.string()),
+    prioridade: v.optional(prioridadeValidator),
   },
   handler: async (ctx, args) => {
     const { membro } = await requirePermission(ctx, "escalas:create");
@@ -31,6 +34,7 @@ export const update = mutation({
     descricao: v.optional(v.string()),
     dataInicio: v.optional(v.string()),
     dataFim: v.optional(v.string()),
+    prioridade: v.optional(prioridadeValidator),
   },
   handler: async (ctx, { id, ...updates }) => {
     await requirePermission(ctx, "escalas:update");
