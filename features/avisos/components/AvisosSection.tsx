@@ -6,6 +6,14 @@ import { useAuth } from "@shared/providers/PermissionsProvider";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Textarea } from "@/shared/components/ui/textarea";
+import { Label } from "@/shared/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/components/ui/select";
 import { Plus, Trash2, X, Megaphone, Pencil, Check } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -13,14 +21,30 @@ import { toast } from "sonner";
 import { useState } from "react";
 import type { Id } from "@/convex/_generated/dataModel";
 
+type Prioridade = "alta" | "media" | "baixa";
+
+type AvisoFormData = {
+  titulo: string;
+  descricao?: string;
+  dataInicio: string;
+  dataFim?: string;
+  prioridade?: Prioridade;
+};
+
+const PRIORIDADE_LABEL: Record<Prioridade, string> = {
+  alta: "Alta (destaque)",
+  media: "Média",
+  baixa: "Baixa",
+};
+
 function AvisoForm({
   initial,
   onSave,
   onCancel,
   submitLabel,
 }: {
-  initial?: { titulo: string; descricao: string; dataInicio: string; dataFim: string };
-  onSave: (data: { titulo: string; descricao?: string; dataInicio: string; dataFim?: string }) => Promise<void>;
+  initial?: { titulo: string; descricao: string; dataInicio: string; dataFim: string; prioridade?: Prioridade };
+  onSave: (data: AvisoFormData) => Promise<void>;
   onCancel: () => void;
   submitLabel: string;
 }) {
@@ -28,6 +52,7 @@ function AvisoForm({
   const [descricao, setDescricao] = useState(initial?.descricao || "");
   const [dataInicio, setDataInicio] = useState(initial?.dataInicio || "");
   const [dataFim, setDataFim] = useState(initial?.dataFim || "");
+  const [prioridade, setPrioridade] = useState<Prioridade>(initial?.prioridade || "media");
   const [saving, setSaving] = useState(false);
 
   const handleSubmit = async () => {
@@ -39,6 +64,7 @@ function AvisoForm({
         descricao: descricao.trim() || undefined,
         dataInicio,
         dataFim: dataFim || undefined,
+        prioridade,
       });
     } finally {
       setSaving(false);
@@ -80,6 +106,19 @@ function AvisoForm({
             min={dataInicio}
           />
         </div>
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">Prioridade</Label>
+          <Select value={prioridade} onValueChange={(v) => setPrioridade(v as Prioridade)}>
+            <SelectTrigger className="w-40 text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="alta">{PRIORIDADE_LABEL.alta}</SelectItem>
+              <SelectItem value="media">{PRIORIDADE_LABEL.media}</SelectItem>
+              <SelectItem value="baixa">{PRIORIDADE_LABEL.baixa}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
       <div className="flex items-center gap-2">
         <Button size="sm" onClick={handleSubmit} disabled={!titulo.trim() || !dataInicio || saving}>
@@ -113,7 +152,7 @@ function AvisoCard({
     return `${i} — ${f}`;
   };
 
-  const handleUpdate = async (data: { titulo: string; descricao?: string; dataInicio: string; dataFim?: string }) => {
+  const handleUpdate = async (data: AvisoFormData) => {
     try {
       await updateAviso({ id: aviso._id, ...data });
       setEditing(false);
@@ -141,6 +180,7 @@ function AvisoCard({
           descricao: aviso.descricao || "",
           dataInicio: aviso.dataInicio,
           dataFim: aviso.dataFim || "",
+          prioridade: aviso.prioridade || "media",
         }}
         onSave={handleUpdate}
         onCancel={() => setEditing(false)}
@@ -153,6 +193,11 @@ function AvisoCard({
     <div className="flex items-start gap-3 border rounded-lg px-3 py-2.5">
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
+          {aviso.prioridade === "alta" && (
+            <span className="shrink-0 rounded bg-[#1E3A5F]/10 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[#1E3A5F]">
+              Importante
+            </span>
+          )}
           <span className="text-sm font-medium">{aviso.titulo}</span>
           <span className="text-xs text-muted-foreground shrink-0">
             {formatData(aviso.dataInicio, aviso.dataFim)}
@@ -205,7 +250,7 @@ export function AvisosSection({ showForm, setShowForm }: { showForm: boolean; se
   const canEdit = can("escalas:update");
   const canDelete = can("escalas:delete");
 
-  const handleCreate = async (data: { titulo: string; descricao?: string; dataInicio: string; dataFim?: string }) => {
+  const handleCreate = async (data: AvisoFormData) => {
     try {
       await createAviso(data);
       setShowForm(false);
