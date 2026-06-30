@@ -8,8 +8,7 @@ function formatData(ts?: number): string | null {
   return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
 
-// Linha de meta: "Até DD/MM/AAAA · N vagas" / "Lista de espera". Campos ausentes
-// são omitidos (deadline e/ou vagas podem não existir).
+// "Até DD/MM/AAAA · N vagas" / "Lista de espera". Campos ausentes são omitidos.
 function meta(insc: InscricaoEventoPublica): string {
   const partes: string[] = [];
   const limite = formatData(insc.dataLimite);
@@ -21,8 +20,8 @@ function meta(insc: InscricaoEventoPublica): string {
   return partes.join(" · ");
 }
 
-// Card de inscrição. Card inteiro é link para /inscricoes/[slug].
-// `compact` (home): sem descrição. Sem compact (hub): com descrição curta.
+// Card de inscrição (estilo .site-v2). Card inteiro é link p/ /inscricoes/[slug].
+// `compact` (home): sem descrição nem "Inscrever-se".
 export function InscricaoCard({
   inscricao,
   compact = false,
@@ -32,28 +31,11 @@ export function InscricaoCard({
 }) {
   const linha = meta(inscricao);
   return (
-    <Link
-      href={`/inscricoes/${inscricao.slug}`}
-      className="block border border-[#E5E3DC] bg-white px-4 py-4 transition-colors hover:border-[#1A1A1A] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1E3A5F] md:px-[18px]"
-    >
-      <p className="font-[family-name:var(--font-spectral)] text-[15px] font-medium text-[#1A1A1A]">
-        {inscricao.titulo}
-      </p>
-      {!compact && inscricao.descricao && (
-        <p className="mt-1.5 line-clamp-2 font-[family-name:var(--font-source-sans)] text-[13px] leading-[1.5] text-[#595959]">
-          {inscricao.descricao}
-        </p>
-      )}
-      {linha && (
-        <p className="mt-2 font-[family-name:var(--font-source-sans)] text-[11px] uppercase tracking-[0.04em] text-[#595959]">
-          {linha}
-        </p>
-      )}
-      {!compact && (
-        <span className="mt-3 inline-block font-[family-name:var(--font-source-sans)] text-[12px] text-[#1A1A1A] underline-offset-4 group-hover:underline">
-          Inscrever-se →
-        </span>
-      )}
+    <Link href={`/inscricoes/${inscricao.slug}`} className="insc-card">
+      <h3>{inscricao.titulo}</h3>
+      {!compact && inscricao.descricao && <p className="desc">{inscricao.descricao}</p>}
+      {linha && <p className="meta">{linha}</p>}
+      {!compact && <span className="go">Inscrever-se →</span>}
     </Link>
   );
 }

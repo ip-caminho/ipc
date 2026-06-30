@@ -16,27 +16,19 @@ function formatData(data: string): string {
   return `${DIAS[d.getDay()]} · ${dia}/${m}`;
 }
 
-// Uma linha da agenda. Apresentação pura (usada em /agenda e na home).
+// Uma linha da agenda (apresentação pura). Estilo .site-v2 (landing.css).
 export function EventoLinha({ evento }: { evento: EventoPublico }) {
   return (
-    <div className="grid grid-cols-[88px_1fr_auto] items-start gap-4 border-b border-[#E5E3DC] py-3.5 md:grid-cols-[100px_1fr_auto] md:gap-6">
-      <div className="font-[family-name:var(--font-source-sans)] text-[12px] uppercase tracking-[0.05em] text-[#595959]">
+    <div className="evento-linha">
+      <div className="quando">
         {formatData(evento.data)}
-        {evento.horario && <div className="mt-0.5 normal-case">{evento.horario}</div>}
+        {evento.horario && <span className="hora">{evento.horario}</span>}
       </div>
       <div>
-        <p className="font-[family-name:var(--font-spectral)] text-[15px] text-[#1A1A1A]">
-          {evento.titulo}
-        </p>
-        {evento.subtitulo && (
-          <p className="mt-0.5 font-[family-name:var(--font-source-sans)] text-[12px] text-[#595959]">
-            {evento.subtitulo}
-          </p>
-        )}
+        <p className="titulo">{evento.titulo}</p>
+        {evento.subtitulo && <p className="sub">{evento.subtitulo}</p>}
       </div>
-      <span className="border border-[#E5E3DC] px-2 py-0.5 font-[family-name:var(--font-source-sans)] text-[11px] text-[#595959]">
-        {TIPO_LABEL[evento.tipo]}
-      </span>
+      <span className="tag">{TIPO_LABEL[evento.tipo]}</span>
     </div>
   );
 }

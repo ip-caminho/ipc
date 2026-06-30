@@ -28,30 +28,18 @@ export default async function HomePage() {
   const inscricoesTop = inscricoes.slice(0, 3);
 
   return (
-    <>
+    <div className="site-v2">
       {/* =========================== HERO =========================== */}
-      <section className="border-b border-[#E5E3DC] px-5 py-16 md:px-8 md:py-24">
-        <div className="mx-auto max-w-5xl">
-          <p className="font-[family-name:var(--font-source-sans)] text-[11px] uppercase tracking-[0.1em] text-[#595959]">
-            Igreja Presbiteriana do Caminho · São Paulo
-          </p>
-          <h1 className="mt-4 max-w-[620px] font-[family-name:var(--font-spectral)] text-[32px] leading-[1.15] tracking-[-0.02em] text-[#1A1A1A] md:text-[44px]">
-            Uma comunidade bíblica de discipulado, participando da missão de Deus neste mundo.
-          </h1>
-          <p className="mt-5 max-w-[480px] font-[family-name:var(--font-spectral)] text-[16px] italic text-[#595959] md:text-[18px]">
-            Presbiteriana. Pequena por escolha. No centro de São Paulo.
-          </p>
-          <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
-            <Link
-              href="/visite"
-              className="inline-flex h-11 items-center border border-[#1A1A1A] px-5 font-[family-name:var(--font-source-sans)] text-[13px] text-[#1A1A1A] transition-colors hover:bg-[#1A1A1A] hover:text-[#FAFAF7]"
-            >
+      <section className="hub-hero">
+        <div className="wrap-wide">
+          <p className="eyebrow">Igreja Presbiteriana do Caminho · São Paulo</p>
+          <h1>Uma comunidade bíblica de discipulado, participando da missão de Deus neste mundo.</h1>
+          <p className="sub">Presbiteriana. Pequena por escolha. No centro de São Paulo.</p>
+          <div className="cta-row">
+            <Link href="/visite" className="btn btn-primary">
               Quero conhecer →
             </Link>
-            <Link
-              href="/dashboard"
-              className="border-b border-[#1A1A1A] pb-0.5 font-[family-name:var(--font-source-sans)] text-[13px] text-[#1A1A1A]"
-            >
+            <Link href="/dashboard" className="link-quiet">
               Sou membro
             </Link>
           </div>
@@ -60,12 +48,12 @@ export default async function HomePage() {
 
       {/* =========================== ESTA SEMANA =========================== */}
       {avisos.length > 0 && (
-        <section className="border-b border-[#E5E3DC] px-5 py-12 md:px-8 md:py-14">
-          <div className="mx-auto max-w-5xl">
-            <h2 className="font-[family-name:var(--font-spectral)] text-[22px] text-[#1A1A1A]">
-              Esta semana
-            </h2>
-            <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <section className="hub-section tight">
+          <div className="wrap-wide">
+            <div className="hub-head">
+              <h2>Esta semana</h2>
+            </div>
+            <div className="grid-avisos">
               {avisos.map((a) => (
                 <AvisoCard key={a._id} aviso={a} />
               ))}
@@ -76,20 +64,15 @@ export default async function HomePage() {
 
       {/* =========================== PRÓXIMOS EVENTOS =========================== */}
       {proximos.length > 0 && (
-        <section className="border-b border-[#E5E3DC] px-5 py-12 md:px-8 md:py-14">
-          <div className="mx-auto max-w-5xl">
-            <div className="flex items-baseline justify-between">
-              <h2 className="font-[family-name:var(--font-spectral)] text-[22px] text-[#1A1A1A]">
-                Próximos eventos
-              </h2>
-              <Link
-                href="/agenda"
-                className="font-[family-name:var(--font-source-sans)] text-[12px] text-[#595959] underline-offset-4 hover:text-[#1A1A1A] hover:underline"
-              >
+        <section className="hub-section tight">
+          <div className="wrap-wide">
+            <div className="hub-head">
+              <h2>Próximos eventos</h2>
+              <Link href="/agenda" className="link-quiet">
                 Agenda completa →
               </Link>
             </div>
-            <div className="mt-6">
+            <div>
               {proximos.map((e) => (
                 <EventoLinha key={e.id} evento={e} />
               ))}
@@ -99,44 +82,43 @@ export default async function HomePage() {
       )}
 
       {/* =========================== SOBRE + INSCRIÇÕES =========================== */}
-      <section className="bg-[#F4F0E8] px-5 py-14 md:px-8 md:py-16">
-        <div className="mx-auto grid max-w-5xl grid-cols-1 gap-10 md:grid-cols-2 md:gap-12">
+      <section className="hub-section sunken">
+        <div className="wrap-wide two-col">
           <div>
-            <p className="font-[family-name:var(--font-source-sans)] text-[11px] uppercase tracking-[0.1em] text-[#595959]">
-              Sobre nós
-            </p>
-            <p className="mt-4 max-w-[400px] font-[family-name:var(--font-spectral)] text-[18px] leading-[1.5] text-[#1A1A1A]">
+            <p className="eyebrow">Sobre nós</p>
+            <p
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: "var(--text-base)",
+                lineHeight: "var(--leading-normal)",
+                color: "var(--text-strong)",
+                maxWidth: "42ch",
+                margin: "var(--space-4) 0 0",
+              }}
+            >
               Somos uma comunidade aprendendo, junto, a se parecer com Cristo — começando pela
               segunda-feira.
             </p>
-            <Link
-              href="/quem-somos"
-              className="mt-5 inline-block border-b border-[#1A1A1A] pb-0.5 font-[family-name:var(--font-source-sans)] text-[13px] text-[#1A1A1A]"
-            >
+            <Link href="/quem-somos" className="link-quiet" style={{ marginTop: "var(--space-5)", display: "inline-block" }}>
               Conheça nossa comunidade →
             </Link>
           </div>
 
           {inscricoesTop.length > 0 && (
             <div>
-              <p className="font-[family-name:var(--font-source-sans)] text-[11px] uppercase tracking-[0.1em] text-[#595959]">
-                Inscrições abertas
-              </p>
-              <div className="mt-4 flex flex-col gap-3">
+              <p className="eyebrow">Inscrições abertas</p>
+              <div className="stack" style={{ marginTop: "var(--space-4)" }}>
                 {inscricoesTop.map((insc) => (
                   <InscricaoCard key={insc._id} inscricao={insc} compact />
                 ))}
               </div>
-              <Link
-                href="/inscricoes"
-                className="mt-4 inline-block font-[family-name:var(--font-source-sans)] text-[12px] text-[#595959] underline-offset-4 hover:text-[#1A1A1A] hover:underline"
-              >
+              <Link href="/inscricoes" className="link-quiet" style={{ marginTop: "var(--space-4)", display: "inline-block" }}>
                 Ver todas →
               </Link>
             </div>
           )}
         </div>
       </section>
-    </>
+    </div>
   );
 }

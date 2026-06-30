@@ -24,43 +24,54 @@ export default async function InscricaoSlugPage({ params }: Props) {
 
   if (!insc) {
     return (
-      <section className="mx-auto max-w-2xl px-5 py-20 text-center md:px-8">
-        <h1 className="font-[family-name:var(--font-spectral)] text-[28px] text-[#1A1A1A]">
-          Inscrição não encontrada
-        </h1>
-        <p className="mt-4 font-[family-name:var(--font-source-sans)] text-[14px] text-[#595959]">
-          Esta inscrição não existe ou já foi encerrada.
-        </p>
-        <Link
-          href="/inscricoes"
-          className="mt-6 inline-block font-[family-name:var(--font-source-sans)] text-[13px] text-[#1A1A1A] underline underline-offset-4"
-        >
-          ← Ver inscrições abertas
-        </Link>
-      </section>
+      <div className="site-v2">
+        <section className="hub-section">
+          <div className="wrap" style={{ maxWidth: "640px", textAlign: "center" }}>
+            <h1 className="page-intro" style={{ padding: 0 }}>
+              Inscrição não encontrada
+            </h1>
+            <p style={{ color: "var(--text-muted)", marginTop: "var(--space-4)" }}>
+              Esta inscrição não existe ou já foi encerrada.
+            </p>
+            <Link href="/inscricoes" className="link-quiet" style={{ marginTop: "var(--space-6)", display: "inline-block" }}>
+              ← Ver inscrições abertas
+            </Link>
+          </div>
+        </section>
+      </div>
     );
   }
 
   return (
-    <section className="mx-auto max-w-2xl px-5 py-16 md:px-8 md:py-20">
-      <Link
-        href="/inscricoes"
-        className="font-[family-name:var(--font-source-sans)] text-[12px] text-[#595959] underline-offset-4 hover:underline"
-      >
-        ← Inscrições
-      </Link>
-      <h1 className="mt-4 font-[family-name:var(--font-spectral)] text-[30px] leading-[1.15] tracking-[-0.02em] text-[#1A1A1A] md:text-[36px]">
-        {insc.titulo}
-      </h1>
-      {insc.descricao && (
-        <div className="mt-4 whitespace-pre-line font-[family-name:var(--font-source-sans)] text-[15px] leading-[1.6] text-[#595959]">
-          {insc.descricao}
-        </div>
-      )}
+    <div className="site-v2">
+      <section className="hub-section">
+        <div className="wrap" style={{ maxWidth: "680px" }}>
+          <Link href="/inscricoes" className="link-quiet">
+            ← Inscrições
+          </Link>
+          <div className="page-intro" style={{ paddingTop: "var(--space-4)", paddingBottom: 0 }}>
+            <h1>{insc.titulo}</h1>
+          </div>
+          {insc.descricao && (
+            <div
+              style={{
+                whiteSpace: "pre-line",
+                fontFamily: "var(--font-body)",
+                fontSize: "var(--text-base)",
+                lineHeight: "var(--leading-relaxed)",
+                color: "var(--text-muted)",
+                marginTop: "var(--space-4)",
+              }}
+            >
+              {insc.descricao}
+            </div>
+          )}
 
-      <div className="mt-10">
-        <InscricaoForm inscricao={insc} />
-      </div>
-    </section>
+          <div style={{ marginTop: "var(--space-10)" }}>
+            <InscricaoForm inscricao={insc} />
+          </div>
+        </div>
+      </section>
+    </div>
   );
 }
