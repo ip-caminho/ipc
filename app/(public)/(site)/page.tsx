@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
-  getAvisosVigentes,
+  getAvisosUltimoCulto,
   getAgendaPublic,
   getInscricoesAtivas,
 } from "@features/site-publico/lib/data";
@@ -26,8 +26,8 @@ function formatCulto(data: string, horario?: string): string {
 }
 
 export default async function HomePage() {
-  const [avisos, agenda, inscricoes] = await Promise.all([
-    getAvisosVigentes(4),
+  const [avisosCulto, agenda, inscricoes] = await Promise.all([
+    getAvisosUltimoCulto(),
     getAgendaPublic(),
     getInscricoesAtivas(),
   ]);
@@ -59,15 +59,16 @@ export default async function HomePage() {
       </section>
 
       {/* =========================== ESTA SEMANA =========================== */}
-      {avisos.length > 0 && (
+      {avisosCulto && avisosCulto.avisos.length > 0 && (
         <section className="hub-section tight">
           <div className="wrap-wide">
             <div className="hub-head">
               <h2>Esta semana</h2>
+              <span className="aside">Avisos do culto · {formatCulto(avisosCulto.data)}</span>
             </div>
             <div className="grid-avisos">
-              {avisos.map((a) => (
-                <AvisoCard key={a._id} aviso={a} />
+              {avisosCulto.avisos.map((a, i) => (
+                <AvisoCard key={i} aviso={a} />
               ))}
             </div>
           </div>
