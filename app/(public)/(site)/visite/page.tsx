@@ -19,22 +19,18 @@ export default async function VisitePage() {
 
   return (
     <MDXLayout>
-      <p className="font-[family-name:var(--font-source-sans)] text-[11px] uppercase tracking-[0.1em] text-[#595959]">
-        Igreja Presbiteriana do Caminho · São Paulo
-      </p>
-      <h1 className="mt-3 font-[family-name:var(--font-spectral)] text-[34px] leading-[1.15] tracking-[-0.02em] text-[#1A1A1A] md:text-[40px]">
+      <p className="eyebrow">Igreja Presbiteriana do Caminho · São Paulo</p>
+      <h1 className="mt-3 font-[family-name:var(--font-spectral)] text-[length:clamp(1.9rem,4.5vw,2.5rem)] font-semibold leading-[1.14] tracking-[-0.015em] text-[color:var(--text-strong)]">
         Visite
       </h1>
-      <p className="mt-4 max-w-[480px] font-[family-name:var(--font-spectral)] text-[16px] italic text-[#595959]">
+      <p className="mt-4 max-w-[46ch] font-[family-name:var(--font-spectral)] text-[length:var(--text-lg)] italic text-[color:var(--text-muted)]">
         Estamos esperando você.
       </p>
 
-      <dl className="mt-8 grid grid-cols-1 gap-6 border-y border-[#E5E3DC] py-8 sm:grid-cols-2">
+      <dl className="mt-8 grid grid-cols-1 gap-6 border-y border-[color:var(--border-subtle)] py-8 sm:grid-cols-2">
         <div>
-          <dt className="font-[family-name:var(--font-source-sans)] text-[11px] uppercase tracking-[0.1em] text-[#595959]">
-            Quando
-          </dt>
-          <dd className="mt-2 font-[family-name:var(--font-source-sans)] text-[15px] text-[#1A1A1A]">
+          <dt className="eyebrow">Quando</dt>
+          <dd className="mt-2 font-[family-name:var(--font-source-sans)] text-[length:var(--text-sm)] text-[color:var(--text-body)]">
             {horarios.length > 0 ? (
               <ul className="space-y-1">
                 {horarios.map((h, i) => (
@@ -50,10 +46,8 @@ export default async function VisitePage() {
           </dd>
         </div>
         <div>
-          <dt className="font-[family-name:var(--font-source-sans)] text-[11px] uppercase tracking-[0.1em] text-[#595959]">
-            Onde
-          </dt>
-          <dd className="mt-2 font-[family-name:var(--font-source-sans)] text-[15px] text-[#1A1A1A]">
+          <dt className="eyebrow">Onde</dt>
+          <dd className="mt-2 font-[family-name:var(--font-source-sans)] text-[length:var(--text-sm)] text-[color:var(--text-body)]">
             {igreja.endereco ?? "[PREENCHER endereço]"}
           </dd>
           {igreja.endereco && (
@@ -61,7 +55,7 @@ export default async function VisitePage() {
               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(igreja.endereco)}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-2 inline-block font-[family-name:var(--font-source-sans)] text-[13px] text-[#1E3A5F] underline-offset-2 hover:underline"
+              className="link-quiet mt-2 inline-block"
             >
               Ver no mapa →
             </a>

@@ -1,54 +1,57 @@
 import type { MDXComponents } from "mdx/types";
 
-// Mapeia os elementos do MDX para a tipografia editorial do site público
-// (Spectral nos títulos/citações, Source Sans no corpo). Obrigatório p/ @next/mdx.
+// Mapeia os elementos do MDX para a tipografia editorial .site-v2 (Spectral nos
+// títulos/citações, Source Sans no corpo, paleta navy+laranja). As páginas MDX
+// renderizam dentro de .site-v2 (ver MDXLayout). Obrigatório p/ @next/mdx.
 export function useMDXComponents(components: MDXComponents): MDXComponents {
   return {
     h1: ({ children }) => (
-      <h1 className="font-[family-name:var(--font-spectral)] text-[34px] leading-[1.15] tracking-[-0.02em] text-[#1A1A1A] md:text-[40px]">
+      <h1 className="font-[family-name:var(--font-spectral)] text-[length:clamp(1.9rem,4.5vw,2.5rem)] font-semibold leading-[1.14] tracking-[-0.015em] text-[color:var(--text-strong)]">
         {children}
       </h1>
     ),
     h2: ({ children }) => (
-      <h2 className="mt-14 font-[family-name:var(--font-spectral)] text-[24px] leading-tight text-[#1A1A1A]">
+      <h2 className="mt-14 font-[family-name:var(--font-spectral)] text-[length:var(--text-xl)] font-semibold leading-tight text-[color:var(--text-strong)]">
         {children}
       </h2>
     ),
     h3: ({ children }) => (
-      <h3 className="mt-8 font-[family-name:var(--font-spectral)] text-[18px] font-medium text-[#1A1A1A]">
+      <h3 className="mt-8 font-[family-name:var(--font-spectral)] text-[length:var(--text-lg)] font-medium text-[color:var(--text-strong)]">
         {children}
       </h3>
     ),
     p: ({ children }) => (
-      <p className="mt-4 font-[family-name:var(--font-source-sans)] text-[16px] leading-[1.6] text-[#1A1A1A]/90">
+      <p className="mt-4 font-[family-name:var(--font-source-sans)] text-[length:var(--text-base)] leading-[var(--leading-relaxed)] text-[color:var(--text-body)]">
         {children}
       </p>
     ),
     a: ({ children, href }) => (
       <a
         href={href}
-        className="text-[#1E3A5F] underline underline-offset-2 hover:text-[#1A1A1A]"
+        className="text-[color:var(--accent-ink)] underline underline-offset-2 hover:text-[color:var(--navy-700)]"
       >
         {children}
       </a>
     ),
     ul: ({ children }) => (
-      <ul className="mt-4 list-disc space-y-1 pl-5 font-[family-name:var(--font-source-sans)] text-[16px] leading-[1.6] text-[#1A1A1A]/90">
+      <ul className="mt-4 list-disc space-y-1 pl-5 font-[family-name:var(--font-source-sans)] text-[length:var(--text-base)] leading-[var(--leading-relaxed)] text-[color:var(--text-body)]">
         {children}
       </ul>
     ),
     ol: ({ children }) => (
-      <ol className="mt-4 list-decimal space-y-1 pl-5 font-[family-name:var(--font-source-sans)] text-[16px] leading-[1.6] text-[#1A1A1A]/90">
+      <ol className="mt-4 list-decimal space-y-1 pl-5 font-[family-name:var(--font-source-sans)] text-[length:var(--text-base)] leading-[var(--leading-relaxed)] text-[color:var(--text-body)]">
         {children}
       </ol>
     ),
     blockquote: ({ children }) => (
-      <blockquote className="mt-6 border-l-2 border-[#1E3A5F] pl-6 font-[family-name:var(--font-spectral)] text-[18px] italic text-[#595959]">
+      <blockquote className="mt-6 border-l-2 border-[color:var(--accent-rule)] pl-6 font-[family-name:var(--font-spectral)] text-[length:var(--text-lg)] italic text-[color:var(--text-muted)]">
         {children}
       </blockquote>
     ),
-    hr: () => <hr className="my-12 border-t border-[#E5E3DC]" />,
-    strong: ({ children }) => <strong className="font-semibold text-[#1A1A1A]">{children}</strong>,
+    hr: () => <hr className="my-12 border-t border-[color:var(--border-subtle)]" />,
+    strong: ({ children }) => (
+      <strong className="font-semibold text-[color:var(--text-strong)]">{children}</strong>
+    ),
     ...components,
   };
 }
