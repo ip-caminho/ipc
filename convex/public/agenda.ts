@@ -19,6 +19,28 @@ export type EventoPublico = {
   tipo: TipoAgenda;
 };
 
+// Culto fixo da igreja: todo domingo às 10h. Quantos domingos futuros gerar
+// (rola pra frente a cada consulta — "para sempre", sem registros no banco).
+const CULTO_HORARIO = "10h";
+const DOMINGOS_FUTUROS = 12;
+
+// Gera as datas (YYYY-MM-DD) dos próximos N domingos a partir de `hoje`
+// (inclusive, se hoje for domingo). Cálculo em UTC = aritmética de calendário
+// pura sobre a string de data, sem conversão de fuso.
+function proximosDomingos(hoje: string, n: number): string[] {
+  const base = new Date(`${hoje}T12:00:00Z`);
+  if (Number.isNaN(base.getTime())) return [];
+  const ateDomingo = (7 - base.getUTCDay()) % 7; // 0 = hoje é domingo
+  const d = new Date(base);
+  d.setUTCDate(d.getUTCDate() + ateDomingo);
+  const datas: string[] = [];
+  for (let i = 0; i < n; i++) {
+    datas.push(d.toISOString().slice(0, 10));
+    d.setUTCDate(d.getUTCDate() + 7);
+  }
+  return datas;
+}
+
 async function coletarAgenda(ctx: QueryCtx, tipoFiltro?: TipoAgenda): Promise<EventoPublico[]> {
   const hoje = getSaoPauloDateString();
   const eventos: EventoPublico[] = [];
@@ -29,7 +51,9 @@ async function coletarAgenda(ctx: QueryCtx, tipoFiltro?: TipoAgenda): Promise<Ev
       .query("cultos")
       .withIndex("by_status_data", (q) => q.eq("status", "PUBLICADO").gte("data", hoje))
       .collect();
+    const datasReais = new Set<string>();
     for (const c of cultos) {
+      datasReais.add(c.data);
       eventos.push({
         id: c._id,
         tipo: "culto",
@@ -37,6 +61,18 @@ async function coletarAgenda(ctx: QueryCtx, tipoFiltro?: TipoAgenda): Promise<Ev
         subtitulo: c.observacoes,
         data: c.data,
         horario: c.horario,
+      });
+    }
+    // Culto recorrente de domingo (10h). Gerado automaticamente; um registro
+    // real publicado naquele domingo tem prioridade (não duplica).
+    for (const data of proximosDomingos(hoje, DOMINGOS_FUTUROS)) {
+      if (datasReais.has(data)) continue;
+      eventos.push({
+        id: `culto-${data}`,
+        tipo: "culto",
+        titulo: "Culto Dominical",
+        data,
+        horario: CULTO_HORARIO,
       });
     }
   }
