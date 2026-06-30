@@ -835,3 +835,16 @@ html:has(.site-v2) {
 .site-v2 .page-intro h1 { font-family: var(--font-display); font-weight: var(--fw-semibold); font-size: clamp(1.9rem, 4.5vw, 2.5rem); line-height: 1.14; letter-spacing: var(--tracking-tight); color: var(--text-strong); margin: var(--space-3) 0 0; }
 .site-v2 .page-intro .sub { font-family: var(--font-display); font-style: italic; font-size: var(--text-lg); color: var(--text-muted); max-width: 46ch; margin: var(--space-4) 0 0; }
 .site-v2 .empty { border: 1px dashed var(--border-strong); border-radius: var(--radius-md); padding: var(--space-12); text-align: center; color: var(--text-muted); font-family: var(--font-body); font-size: var(--text-sm); }
+
+/* Linha "próximo culto" na hero + atalhos (home enxuta) */
+.site-v2 .culto-line { margin-top: var(--space-6); font-family: var(--font-body); font-size: var(--text-sm); color: var(--text-muted); }
+.site-v2 .culto-line strong { color: var(--accent-ink); font-weight: var(--fw-semibold); }
+
+.site-v2 .atalhos { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4); }
+@media (max-width: 860px) { .site-v2 .atalhos { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 460px) { .site-v2 .atalhos { grid-template-columns: 1fr; } }
+.site-v2 .atalho { display: block; text-decoration: none; background: var(--surface-card); border: var(--border-width) solid var(--border-subtle); border-radius: var(--radius-md); padding: var(--space-5); transition: border-color var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease); }
+.site-v2 .atalho:hover { border-color: var(--navy-300); box-shadow: var(--shadow-sm); }
+.site-v2 .atalho .t { font-family: var(--font-display); font-weight: var(--fw-semibold); font-size: var(--text-base); color: var(--text-strong); display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.site-v2 .atalho .d { font-family: var(--font-body); font-size: var(--text-sm); color: var(--text-muted); margin-top: var(--space-1); }
+.site-v2 .atalho .badge { font-family: var(--font-body); font-size: var(--text-xs); color: var(--accent-ink); border: var(--border-width) solid var(--accent-rule); border-radius: 999px; padding: 1px 8px; white-space: nowrap; }
