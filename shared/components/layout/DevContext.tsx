@@ -1156,6 +1156,24 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "Casa de manutencao do site. Agrega as fontes; cada card edita na fonte certa",
     ],
   },
+  "/admin/site-publico/informacoes": {
+    nome: "Site publico - Informacoes da igreja",
+    pagina: "app/(ready)/admin/site-publico/informacoes/page.tsx",
+    arquivos: [
+      "app/(ready)/admin/site-publico/informacoes/page.tsx",
+      "features/site-publico/components/InformacoesSiteForm.tsx",
+      "features/site-publico/lib/validations.ts",
+      "features/site-publico/lib/igreja.ts",
+      "convex/preferencias/mutations.ts",
+    ],
+    queries: ["preferencias.queries.getIgrejaInfo"],
+    mutations: ["preferencias.mutations.updateIgrejaInfo (site_publico:manage, audita)"],
+    componentes: ["InformacoesSiteForm (RHF: identidade/contato/horarios/financeiro)"],
+    notas: [
+      "Fonte unica das infos (igreja.* em preferencias). SiteFooter e /visite leem do banco",
+      "Fallback IGREJA_DEFAULTS (features/site-publico/lib/igreja.ts) se banco vazio",
+    ],
+  },
   "/admin/site-publico/inscricoes": {
     nome: "Admin - Inscricoes do site",
     pagina: "app/(ready)/admin/site-publico/inscricoes/page.tsx",
