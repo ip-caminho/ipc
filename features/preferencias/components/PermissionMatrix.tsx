@@ -44,6 +44,7 @@ const ROLE_LABELS: Record<string, string> = {
   obreiro: "Obreiro",
   secretaria: "Secretaria",
   membro: "Membro",
+  comunicacao: "Comunicação",
 };
 
 const ROLE_COLORS: Record<string, string> = {
@@ -52,9 +53,10 @@ const ROLE_COLORS: Record<string, string> = {
   obreiro: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
   secretaria: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
   membro: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+  comunicacao: "bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-300",
 };
 
-const VISIBLE_ROLES = ["membro", "obreiro", "secretaria", "presbitero", "pastor"];
+const VISIBLE_ROLES = ["membro", "obreiro", "secretaria", "presbitero", "pastor", "comunicacao"];
 
 type PermissionOption = {
   key: string;
@@ -205,6 +207,7 @@ function MembroPermissionPopover({
 }
 
 export function PermissionMatrix() {
+  // @ts-ignore Convex TS2589 (instanciacao de tipo profunda)
   const rolesWithPermissions = useQuery(api.preferencias.rbac.getAllRolesWithPermissions);
   const permissionOptions = useQuery(api.preferencias.rbac.getAllPermissionOptions);
   const membrosWithPermissions = useQuery(api.preferencias.rbac.getAllMembrosWithPermissions);

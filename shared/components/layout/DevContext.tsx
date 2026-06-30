@@ -1144,6 +1144,18 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "Sucesso inline: CONFIRMADA ou LISTA_ESPERA",
     ],
   },
+  "/admin/site-publico": {
+    nome: "Site publico - hub de manutencao",
+    pagina: "app/(ready)/admin/site-publico/page.tsx",
+    arquivos: ["app/(ready)/admin/site-publico/page.tsx"],
+    queries: [],
+    mutations: [],
+    componentes: ["Cards-link p/ Informacoes, Agenda, Avisos, Inscricoes + 'Ver o site'"],
+    notas: [
+      "Permissao: site_publico:manage (papel 'comunicacao' + admin/pastor/sec.exec)",
+      "Casa de manutencao do site. Agrega as fontes; cada card edita na fonte certa",
+    ],
+  },
   "/admin/site-publico/inscricoes": {
     nome: "Admin - Inscricoes do site",
     pagina: "app/(ready)/admin/site-publico/inscricoes/page.tsx",
