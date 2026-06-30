@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Spectral, Source_Sans_3 } from "next/font/google";
-import { fetchQuery } from "convex/nextjs";
-import { api } from "@/convex/_generated/api";
-import { RiseObserver } from "./RiseObserver";
-import { HeroFX } from "./HeroFX";
-import "./landing.css";
+import { RiseObserver } from "../RiseObserver";
+import { HeroFX } from "../HeroFX";
+import "../landing.css";
 
 const spectral = Spectral({
   subsets: ["latin"],
@@ -23,118 +21,13 @@ const sourceSans = Source_Sans_3({
 });
 
 export const metadata: Metadata = {
-  title: "Igreja Presbiteriana do Caminho — São Paulo",
+  title: "Quem somos — Igreja Presbiteriana do Caminho",
   description:
-    "Uma comunidade bíblica de discipulado, participando da missão de Deus neste mundo. Presbiteriana, em São Paulo, desde 2024.",
+    "Uma comunidade bíblica de discipulado, participando da missão de Deus neste mundo. O que cremos, como vivemos e nossa presença em São Paulo.",
 };
 
-// Dados da igreja mudam raramente — revalida a cada 5 minutos
-export const revalidate = 300;
-
-type Turma = {
-  _id: string;
-  nome: string;
-  descricao?: string;
-  dataInicio: string;
-  dataFim?: string;
-  diaSemana?: string;
-  horario?: string;
-  local?: string;
-  instrutorNome?: string;
-  vagasRestantes?: number | null;
-  token?: string;
-};
-
-function formatDate(d: string) {
-  const [y, m, day] = d.split("-");
-  return `${day}/${m}/${y}`;
-}
-
-function formatDateShort(d: string) {
-  const [, m, day] = d.split("-");
-  return `${day}/${m}`;
-}
-
-const DIA_LABELS: Record<string, string> = {
-  DOMINGO: "Domingo",
-  SEGUNDA: "Segunda",
-  TERCA: "Terça",
-  QUARTA: "Quarta",
-  QUINTA: "Quinta",
-  SEXTA: "Sexta",
-  SABADO: "Sábado",
-};
-
-const DIA_SEMANA_TO_INDEX: Record<string, number> = {
-  DOMINGO: 0,
-  SEGUNDA: 1,
-  TERCA: 2,
-  QUARTA: 3,
-  QUINTA: 4,
-  SEXTA: 5,
-  SABADO: 6,
-};
-
-// Calcula as datas previstas dos encontros entre dataInicio e dataFim no diaSemana
-function calcularEncontros(dataInicio: string, dataFim?: string, diaSemana?: string): string[] {
-  if (!diaSemana || !dataFim) return [];
-  const targetDay = DIA_SEMANA_TO_INDEX[diaSemana];
-  if (targetDay === undefined) return [];
-
-  const inicio = new Date(dataInicio + "T12:00:00");
-  const fim = new Date(dataFim + "T12:00:00");
-  if (isNaN(inicio.getTime()) || isNaN(fim.getTime())) return [];
-
-  const primeiro = new Date(inicio);
-  while (primeiro.getDay() !== targetDay) {
-    primeiro.setDate(primeiro.getDate() + 1);
-  }
-
-  const datas: string[] = [];
-  const atual = new Date(primeiro);
-  while (atual <= fim) {
-    datas.push(atual.toISOString().split("T")[0]);
-    atual.setDate(atual.getDate() + 7);
-  }
-  return datas;
-}
-
-async function getTurmas(): Promise<Turma[]> {
-  try {
-    // @ts-ignore Convex TS2589 (instanciacao de tipo profunda)
-    const turmas = (await fetchQuery(api.turmas.queries.listTurmasAbertas)) as Turma[];
-    return turmas ?? [];
-  } catch {
-    // Convex indisponivel (ex.: build sem env) — renderiza so o conteudo estatico
-    return [];
-  }
-}
-
-type InscricaoEvento = {
-  _id: string;
-  slug: string;
-  titulo: string;
-  descricao: string;
-  dataLimite?: number;
-  vagas?: number;
-  vagasOcupadas: number;
-};
-
-async function getInscricoesEvento(): Promise<InscricaoEvento[]> {
-  try {
-    // @ts-ignore Convex TS2589 (instanciacao de tipo profunda)
-    const insc = (await fetchQuery(api.public.inscricoesEvento.listAtivas)) as InscricaoEvento[];
-    return insc ?? [];
-  } catch {
-    return [];
-  }
-}
-
-function tsToBr(ts?: number): string | null {
-  if (ts == null) return null;
-  const d = new Date(ts);
-  return Number.isNaN(d.getTime()) ? null : d.toLocaleDateString("pt-BR");
-}
+// Conteúdo editorial estático — sem dados dinâmicos.
+export const revalidate = 3600;
 
 const EIXOS = [
   {
@@ -228,9 +121,7 @@ const MUNDO = [
   },
 ];
 
-export default async function LandingPage() {
-  const [turmas, inscricoesEvento] = await Promise.all([getTurmas(), getInscricoesEvento()]);
-
+export default function QuemSomosPage() {
   // Informações fixas da igreja (o banco ainda tem dados antigos de teste)
   const endereco = "Rua Pedra Azul, 674A (esquina com Rua Ximbó) — Vila Mariana, São Paulo, SP";
   const email = "ipdocaminho@gmail.com";
@@ -246,7 +137,7 @@ export default async function LandingPage() {
       {/* =========================== HEADER =========================== */}
       <header className="site">
         <div className="site-inner">
-          <a href="#top" className="brand" aria-label="Igreja Presbiteriana do Caminho">
+          <Link href="/" className="brand" aria-label="Igreja Presbiteriana do Caminho">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo.png" alt="IPC" />
             <span className="bar" />
@@ -254,15 +145,16 @@ export default async function LandingPage() {
               <span className="l1">Igreja Presbiteriana</span>
               <span className="l2">do Caminho</span>
             </span>
-          </a>
+          </Link>
           <nav className="primary" aria-label="Principal">
             <a href="#cremos">Cremos</a>
             <a href="#vivemos">Vivemos</a>
             <a href="#mundo">Mundo</a>
+            <Link href="/agenda">Agenda</Link>
             <a href="#visite">Visite</a>
           </nav>
           <div className="header-cta">
-            <Link href="/signin" className="btn btn-outline">
+            <Link href="/dashboard" className="btn btn-outline">
               Área de Membros&nbsp;→
             </Link>
           </div>
@@ -453,120 +345,6 @@ export default async function LandingPage() {
             </div>
           </div>
         </section>
-
-        {/* =========================== CURSOS ABERTOS =========================== */}
-        {(turmas.length > 0 || inscricoesEvento.length > 0) && (
-          <section id="cursos">
-            <div className="wrap-wide">
-              <div className="section-head" data-rise>
-                <p className="eyebrow">Inscrições abertas</p>
-                <h2>Cursos e inscrições.</h2>
-                <span className="title-rule" />
-              </div>
-              <div className="cursos-grid">
-                {inscricoesEvento.map((insc) => {
-                  const limite = tsToBr(insc.dataLimite);
-                  const restantes =
-                    insc.vagas != null ? insc.vagas - insc.vagasOcupadas : null;
-                  return (
-                    <div key={insc._id} className="curso-card" data-rise>
-                      <div>
-                        <h3>{insc.titulo}</h3>
-                        {insc.descricao && <p className="desc">{insc.descricao}</p>}
-                      </div>
-                      <p className="meta">
-                        {limite && (
-                          <>
-                            <strong>Inscrições até:</strong> {limite}
-                          </>
-                        )}
-                        {restantes != null && restantes > 0 && (
-                          <>
-                            <br />
-                            {restantes} vagas
-                          </>
-                        )}
-                        {restantes != null && restantes <= 0 && (
-                          <>
-                            <br />
-                            Lista de espera
-                          </>
-                        )}
-                      </p>
-                      <div className="cta">
-                        <Link href={`/inscricoes/${insc.slug}`} className="btn btn-primary">
-                          Inscreva-se
-                        </Link>
-                      </div>
-                    </div>
-                  );
-                })}
-                {turmas.map((t) => {
-                  const encontros = calcularEncontros(t.dataInicio, t.dataFim, t.diaSemana);
-                  return (
-                    <div key={t._id} className="curso-card" data-rise>
-                      <div>
-                        <h3>{t.nome}</h3>
-                        {t.descricao && <p className="desc">{t.descricao}</p>}
-                      </div>
-                      <p className="meta">
-                        <strong>Início:</strong> {formatDate(t.dataInicio)}
-                        {t.dataFim && (
-                          <>
-                            {" "}
-                            · <strong>Fim:</strong> {formatDate(t.dataFim)}
-                          </>
-                        )}
-                        {t.diaSemana && (
-                          <>
-                            <br />
-                            {DIA_LABELS[t.diaSemana]}
-                            {t.horario && `s às ${t.horario}`}
-                          </>
-                        )}
-                        {t.local && (
-                          <>
-                            <br />
-                            {t.local}
-                          </>
-                        )}
-                        {t.instrutorNome && (
-                          <>
-                            <br />
-                            Com {t.instrutorNome}
-                          </>
-                        )}
-                      </p>
-                      {t.vagasRestantes !== null &&
-                        t.vagasRestantes !== undefined &&
-                        t.vagasRestantes > 0 &&
-                        t.vagasRestantes < 5 && (
-                          <p className="vagas">Apenas {t.vagasRestantes} vagas restantes</p>
-                        )}
-                      {encontros.length > 0 && (
-                        <div>
-                          <p className="chips-label">Encontros previstos ({encontros.length})</p>
-                          <div className="chips">
-                            {encontros.map((data) => (
-                              <span key={data}>{formatDateShort(data)}</span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                      {t.token && (
-                        <div className="cta">
-                          <Link href={`/inscricao/${t.token}`} className="btn btn-primary">
-                            Inscreva-se
-                          </Link>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </section>
-        )}
 
         {/* =========================== VISITE =========================== */}
         <section id="visite" className="visite">
