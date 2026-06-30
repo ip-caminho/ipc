@@ -4,6 +4,7 @@ import { unstable_cache } from "next/cache";
 import { api } from "@/convex/_generated/api";
 import type { EventoPublico } from "@convex/public/agenda";
 import type { InscricaoEventoPublica } from "@convex/public/inscricoesEvento";
+import type { AvisoPublico } from "@convex/public/avisos";
 import type { IgrejaInfo } from "./nav";
 
 function httpClient(): ConvexHttpClient | null {
@@ -76,4 +77,19 @@ export const getInscricaoBySlug = unstable_cache(
   },
   ["public-inscricao-by-slug"],
   { revalidate: 60 },
+);
+
+// Avisos vigentes hoje (bloco "Esta semana" da home). Tolera 5 min de defasagem.
+export const getAvisosVigentes = unstable_cache(
+  async (limit = 4): Promise<AvisoPublico[]> => {
+    try {
+      const client = httpClient();
+      if (!client) return [];
+      return (await client.query(api.public.avisos.listVigentes, { limit })) ?? [];
+    } catch {
+      return [];
+    }
+  },
+  ["public-avisos-vigentes"],
+  { revalidate: 300 },
 );

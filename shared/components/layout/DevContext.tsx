@@ -1029,35 +1029,41 @@ const CONTEXT_MAP: Record<string, PageContext> = {
 
   // ===== Site Publico (rotas sem auth) =====
   "/": {
-    nome: "Landing (publico)",
-    pagina: "app/(public)/page.tsx",
+    nome: "Home / Hub (publico)",
+    pagina: "app/(public)/(site)/page.tsx",
     arquivos: [
-      "app/(public)/page.tsx",
-      "app/(public)/landing.css",
-      "app/(public)/HeroFX.tsx",
-      "app/(public)/RiseObserver.tsx",
+      "app/(public)/(site)/page.tsx",
+      "features/site-publico/components/AvisoCard.tsx",
+      "features/site-publico/components/EventoLinha.tsx",
+      "features/site-publico/components/InscricaoCard.tsx",
+      "features/site-publico/lib/data.ts",
       "app/(public)/opengraph-image.tsx",
       "features/site-publico/lib/seo.ts",
     ],
     queries: [
-      "turmas.queries.listTurmasAbertas",
-      "public.inscricoesEvento.listAtivas (secao Inscricoes abertas)",
+      "public.avisos.listVigentes (Esta semana, top 4)",
+      "public.agenda.list (Proximos eventos, slice 4 via getAgendaPublic)",
+      "public.inscricoesEvento.listAtivas (Inscricoes abertas, top 3)",
     ],
     notas: [
-      "One-pager editorial (site-v2). Header/footer proprios (NAO usa o chrome (site))",
-      "Secao #cursos renderiza turmas + inscricoes de evento (listAtivas)",
-      "JSON-LD Church via (public)/layout.tsx",
+      "Hub pratico. Usa o chrome (site) (HeaderPublico/FooterPublico)",
+      "Blocos somem quando vazios. Hero curto + Esta semana + Proximos eventos + Sobre/Inscricoes",
+      "Conteudo editorial antigo migrou p/ /quem-somos. JSON-LD via (public)/layout.tsx",
     ],
   },
   "/quem-somos": {
-    nome: "Quem somos (publico)",
-    pagina: "app/(public)/(site)/quem-somos/page.tsx",
+    nome: "Quem somos — editorial (publico)",
+    pagina: "app/(public)/quem-somos/page.tsx",
     arquivos: [
-      "app/(public)/(site)/quem-somos/page.tsx",
-      "content/quem-somos.mdx",
-      "features/site-publico/components/MDXLayout.tsx",
+      "app/(public)/quem-somos/page.tsx",
+      "app/(public)/landing.css",
+      "app/(public)/HeroFX.tsx",
+      "app/(public)/RiseObserver.tsx",
     ],
-    notas: ["Pagina MDX estatica (full-bleed). Sem auth. Chrome via (site)/layout.tsx"],
+    notas: [
+      "One-pager editorial imersivo (site-v2). Header/footer PROPRIOS — NAO usa chrome (site)",
+      "Estatico (revalidate 3600). Secoes: Hero/Eixos/Contraste/Cremos/Vivemos/Mundo/Educacional/Visite",
+    ],
   },
   "/trajetoria": {
     nome: "Trajetoria (publico)",

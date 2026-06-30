@@ -132,6 +132,7 @@ import type * as preferencias_queries from "../preferencias/queries.js";
 import type * as preferencias_rbac from "../preferencias/rbac.js";
 import type * as preferencias_rbacHelpers from "../preferencias/rbacHelpers.js";
 import type * as public_agenda from "../public/agenda.js";
+import type * as public_avisos from "../public/avisos.js";
 import type * as public_inscricoesEvento from "../public/inscricoesEvento.js";
 import type * as salas_mutations from "../salas/mutations.js";
 import type * as salas_queries from "../salas/queries.js";
@@ -272,6 +273,7 @@ declare const fullApi: ApiFromModules<{
   "preferencias/rbac": typeof preferencias_rbac;
   "preferencias/rbacHelpers": typeof preferencias_rbacHelpers;
   "public/agenda": typeof public_agenda;
+  "public/avisos": typeof public_avisos;
   "public/inscricoesEvento": typeof public_inscricoesEvento;
   "salas/mutations": typeof salas_mutations;
   "salas/queries": typeof salas_queries;
