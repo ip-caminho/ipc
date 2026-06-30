@@ -1,7 +1,6 @@
 // Navegação do site público (rotas sem auth)
 export const NAV_PUBLICO = [
   { label: "Quem somos", href: "/quem-somos" },
-  { label: "Trajetória", href: "/trajetoria" },
   { label: "Agenda", href: "/agenda" },
   { label: "Visite", href: "/visite" },
   { label: "Inscrições", href: "/inscricoes" },

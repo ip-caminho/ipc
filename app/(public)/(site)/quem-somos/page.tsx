@@ -1,24 +1,9 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { Spectral, Source_Sans_3 } from "next/font/google";
-import { RiseObserver } from "../RiseObserver";
-import { HeroFX } from "../HeroFX";
-import "../landing.css";
+import { RiseObserver } from "../../RiseObserver";
+import { HeroFX } from "../../HeroFX";
 
-const spectral = Spectral({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
-  style: ["normal", "italic"],
-  variable: "--font-spectral",
-  display: "swap",
-});
-
-const sourceSans = Source_Sans_3({
-  subsets: ["latin"],
-  style: ["normal", "italic"],
-  variable: "--font-source-sans",
-  display: "swap",
-});
+// Fontes e landing.css vêm do layout do (site). Esta página só compõe as
+// seções editoriais, envoltas em .site-v2 (o chrome é compartilhado).
 
 export const metadata: Metadata = {
   title: "Quem somos — Igreja Presbiteriana do Caminho",
@@ -124,44 +109,16 @@ const MUNDO = [
 export default function QuemSomosPage() {
   // Informações fixas da igreja (o banco ainda tem dados antigos de teste)
   const endereco = "Rua Pedra Azul, 674A (esquina com Rua Ximbó) — Vila Mariana, São Paulo, SP";
-  const email = "ipdocaminho@gmail.com";
   const mapsQuery = "Rua Pedra Azul, 674, Vila Mariana, São Paulo, SP";
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapsQuery)}`;
   const wazeUrl = `https://waze.com/ul?q=${encodeURIComponent(mapsQuery)}&navigate=yes`;
   const mapEmbed = `https://www.google.com/maps?q=${encodeURIComponent(mapsQuery)}&output=embed`;
 
   return (
-    <div className={`site-v2 ${spectral.variable} ${sourceSans.variable}`}>
+    <div className="site-v2">
       <RiseObserver />
 
-      {/* =========================== HEADER =========================== */}
-      <header className="site">
-        <div className="site-inner">
-          <Link href="/" className="brand" aria-label="Igreja Presbiteriana do Caminho">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo.png" alt="IPC" />
-            <span className="bar" />
-            <span className="name">
-              <span className="l1">Igreja Presbiteriana</span>
-              <span className="l2">do Caminho</span>
-            </span>
-          </Link>
-          <nav className="primary" aria-label="Principal">
-            <a href="#cremos">Cremos</a>
-            <a href="#vivemos">Vivemos</a>
-            <a href="#mundo">Mundo</a>
-            <Link href="/agenda">Agenda</Link>
-            <a href="#visite">Visite</a>
-          </nav>
-          <div className="header-cta">
-            <Link href="/dashboard" className="btn btn-outline">
-              Área de Membros&nbsp;→
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      <main id="top">
+      <div id="top">
         {/* =========================== HERO =========================== */}
         <section className="hero">
           {/* TROCAR por foto real da igreja (public/landing/hero.jpg) */}
@@ -428,65 +385,7 @@ export default function QuemSomosPage() {
             </div>
           </div>
         </section>
-
-      </main>
-
-      {/* =========================== FOOTER =========================== */}
-      <footer className="site">
-        <div className="foot-wrap">
-          <div className="foot-cols">
-            <div className="foot-brand">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo.png" alt="IPC" />
-              <p className="tag">
-                Uma comunidade bíblica de discipulado, participando da missão de Deus neste mundo.
-              </p>
-            </div>
-            <div className="foot-contato">
-              <div>
-                <h4>Contato</h4>
-                <p>{endereco}</p>
-                <p style={{ marginTop: "var(--space-3)" }}>
-                  <a href={`mailto:${email}`} className="foot-link">
-                    {email}
-                  </a>
-                </p>
-                <p>
-                  <a href="https://instagram.com/ip.docaminho" target="_blank" rel="noopener noreferrer" className="foot-link">
-                    @ip.docaminho
-                  </a>
-                </p>
-                <p>
-                  <a href="https://facebook.com/ip.docaminho" target="_blank" rel="noopener noreferrer" className="foot-link">
-                    facebook.com/ip.docaminho
-                  </a>
-                </p>
-              </div>
-              <div>
-                <h4>Tradição</h4>
-                <p>Presbiteriana reformada. Alinhados à Confissão de Fé de Westminster (1647).</p>
-                <p style={{ marginTop: "var(--space-3)" }}>
-                  Denominação: Igreja Presbiteriana do Brasil.
-                </p>
-              </div>
-              <div>
-                <h4>Dízimos e ofertas</h4>
-                <p>Santander (033)</p>
-                <p>Agência 0108</p>
-                <p>Conta 13007643-7</p>
-                <p style={{ marginTop: "var(--space-3)" }}>Igreja Presbiteriana do Caminho</p>
-                <p>CNPJ 48.792.102/0001-13</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="foot-bottom">
-            <Link href="/signin" className="members-link">
-              Área de Membros →
-            </Link>
-          </div>
-        </div>
-      </footer>
+      </div>
     </div>
   );
 }
