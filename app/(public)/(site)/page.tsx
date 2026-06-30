@@ -78,9 +78,17 @@ export default async function HomePage() {
       <section className="hub-section sunken">
         <div className="wrap-wide">
           <div className="atalhos">
+            <Link href="/quem-somos" className="atalho">
+              <span className="t">Quem somos →</span>
+              <span className="d">O que cremos e como vivemos.</span>
+            </Link>
             <Link href="/agenda" className="atalho">
               <span className="t">Agenda →</span>
               <span className="d">Cultos, PGs e eventos da comunidade.</span>
+            </Link>
+            <Link href="/visite" className="atalho">
+              <span className="t">Visite →</span>
+              <span className="d">Endereço, horário e o que esperar.</span>
             </Link>
             <Link href="/inscricoes" className="atalho">
               <span className="t">
@@ -88,14 +96,6 @@ export default async function HomePage() {
                 {numInscricoes > 0 && <span className="badge">{numInscricoes} aberta{numInscricoes > 1 ? "s" : ""}</span>}
               </span>
               <span className="d">Retiros, cursos e atividades.</span>
-            </Link>
-            <Link href="/visite" className="atalho">
-              <span className="t">Visite →</span>
-              <span className="d">Endereço, horário e o que esperar.</span>
-            </Link>
-            <Link href="/quem-somos" className="atalho">
-              <span className="t">Quem somos →</span>
-              <span className="d">O que cremos e como vivemos.</span>
             </Link>
           </div>
         </div>
