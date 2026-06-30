@@ -1174,6 +1174,40 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "Fallback IGREJA_DEFAULTS (features/site-publico/lib/igreja.ts) se banco vazio",
     ],
   },
+  "/admin/site-publico/agenda": {
+    nome: "Site publico - Agenda",
+    pagina: "app/(ready)/admin/site-publico/agenda/page.tsx",
+    arquivos: [
+      "app/(ready)/admin/site-publico/agenda/page.tsx",
+      "features/calendario/components/EventoForm.tsx",
+      "convex/public/agenda.ts",
+      "convex/calendario/mutations.ts",
+    ],
+    queries: ["public.agenda.list (cultos PUBLICADO + eventos futuros)"],
+    mutations: ["calendario.mutations.create (novo evento)"],
+    componentes: ["EventoForm (reuso do modulo calendario)"],
+    notas: [
+      "Lista consolidada. Cultos sao leitura (atalho /cultos); eventos criados aqui (calendario:create)",
+      "Culto de domingo 10h gerado automaticamente em public/agenda.ts",
+    ],
+  },
+  "/admin/site-publico/avisos": {
+    nome: "Site publico - Avisos (curadoria)",
+    pagina: "app/(ready)/admin/site-publico/avisos/page.tsx",
+    arquivos: [
+      "app/(ready)/admin/site-publico/avisos/page.tsx",
+      "features/site-publico/components/AvisosCuradoria.tsx",
+      "convex/site/queries.ts",
+      "convex/gravacoes/mutations.ts",
+    ],
+    queries: ["site.queries.getGravacaoDoSite (gravacao que alimenta 'Esta semana')"],
+    mutations: ["gravacoes.mutations.corrigirAvisosCulto (escopada a iaAvisos, site_publico:manage)"],
+    componentes: ["AvisosCuradoria (edita titulo/descricao/quando/onde; preserva contato)"],
+    notas: [
+      "Avisos do site = iaAvisos do ultimo culto (IA). Curadoria so corrige a transcricao",
+      "Tabela 'avisos' (/avisos) e pauta interna, NAO alimenta o site",
+    ],
+  },
   "/admin/site-publico/inscricoes": {
     nome: "Admin - Inscricoes do site",
     pagina: "app/(ready)/admin/site-publico/inscricoes/page.tsx",
