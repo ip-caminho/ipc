@@ -1,7 +1,6 @@
 "use client";
 
 import { useQueryState } from "nuqs";
-import { cn } from "@/shared/lib/utils/cn";
 import { EventoLinha } from "./EventoLinha";
 import type { EventoPublico } from "@convex/public/agenda";
 
@@ -20,8 +19,8 @@ export function AgendaClient({ eventos }: { eventos: EventoPublico[] }) {
   const filtrados = tipo ? eventos.filter((e) => e.tipo === tipo) : eventos;
 
   return (
-    <div className="mt-8">
-      <div className="flex flex-wrap gap-2">
+    <div style={{ marginTop: "var(--space-8)" }}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-2)" }}>
         {FILTROS.map((f) => {
           const ativo = (tipo ?? "") === f.value;
           return (
@@ -30,12 +29,7 @@ export function AgendaClient({ eventos }: { eventos: EventoPublico[] }) {
               type="button"
               aria-pressed={ativo}
               onClick={() => setTipo(f.value || null)}
-              className={cn(
-                "h-10 border px-3.5 font-[family-name:var(--font-source-sans)] text-[13px] transition-colors",
-                ativo
-                  ? "border-[#1A1A1A] bg-[#1A1A1A] text-[#FAFAF7]"
-                  : "border-[#E5E3DC] text-[#595959] hover:border-[#1A1A1A] hover:text-[#1A1A1A]",
-              )}
+              className={`btn ${ativo ? "btn-primary" : "btn-outline"}`}
             >
               {f.label}
             </button>
@@ -43,9 +37,9 @@ export function AgendaClient({ eventos }: { eventos: EventoPublico[] }) {
         })}
       </div>
 
-      <div className="mt-8">
+      <div style={{ marginTop: "var(--space-8)" }}>
         {filtrados.length === 0 ? (
-          <p className="py-12 text-center font-[family-name:var(--font-source-sans)] text-[14px] text-[#595959]">
+          <p className="empty" style={{ marginTop: 0 }}>
             Nenhum evento programado.
           </p>
         ) : (

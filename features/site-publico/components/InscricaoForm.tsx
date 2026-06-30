@@ -46,6 +46,7 @@ export function InscricaoForm({ inscricao }: { inscricao: InscricaoEventoPublica
   const { isAuthenticated } = useConvexAuth();
   const { signOut } = useAuthActions();
   const profile = useQuery(
+    // @ts-ignore Convex TS2589 (instanciacao de tipo profunda)
     api.membros.selfService.getMyProfile,
     isAuthenticated ? {} : "skip",
   );
@@ -372,7 +373,7 @@ export function InscricaoForm({ inscricao }: { inscricao: InscricaoEventoPublica
           <Button
             type="submit"
             disabled={status === "submitting"}
-            className="h-11 w-full bg-[#1A1A1A] text-[#FAFAF7] hover:bg-[#1A1A1A]/90 sm:w-auto sm:px-8"
+            className="h-11 w-full bg-[#F0732B] text-white hover:bg-[#DE5F18] sm:w-auto sm:px-8"
           >
             {status === "submitting" ? "Enviando..." : "Enviar inscrição"}
           </Button>
