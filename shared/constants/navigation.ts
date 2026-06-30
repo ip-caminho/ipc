@@ -24,6 +24,7 @@ import {
   LayoutGrid,
   History,
   ClipboardCheck,
+  Globe,
   MoreHorizontal,
   type LucideIcon,
 } from "lucide-react";
@@ -263,6 +264,13 @@ export const GESTAO_SECTIONS: NavSection[] = [
         icon: Megaphone,
         description: "WhatsApp em massa para atualização de cadastro",
         permission: "campanhas:manage",
+      },
+      {
+        label: "Site público",
+        href: "/admin/site-publico",
+        icon: Globe,
+        description: "Manutenção do site: informações, agenda, avisos, inscrições",
+        permission: "site_publico:manage",
       },
       {
         label: "Atos Pastorais",

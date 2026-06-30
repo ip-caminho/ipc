@@ -5,7 +5,8 @@ export type Role =
   | "obreiro"
   | "secretaria"
   | "secretario_executivo"
-  | "membro";
+  | "membro"
+  | "comunicacao";
 
 export type Permission =
   // Membros
