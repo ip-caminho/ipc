@@ -1046,22 +1046,24 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "public.inscricoesEvento.listAtivas (Inscricoes abertas, top 3)",
     ],
     notas: [
-      "Hub pratico. Usa o chrome (site) (HeaderPublico/FooterPublico)",
+      "Hub pratico. Usa o chrome (site) compartilhado (SiteHeader/SiteFooter, identidade landing)",
       "Blocos somem quando vazios. Hero curto + Esta semana + Proximos eventos + Sobre/Inscricoes",
       "Conteudo editorial antigo migrou p/ /quem-somos. JSON-LD via (public)/layout.tsx",
     ],
   },
   "/quem-somos": {
     nome: "Quem somos — editorial (publico)",
-    pagina: "app/(public)/quem-somos/page.tsx",
+    pagina: "app/(public)/(site)/quem-somos/page.tsx",
     arquivos: [
-      "app/(public)/quem-somos/page.tsx",
+      "app/(public)/(site)/quem-somos/page.tsx",
       "app/(public)/landing.css",
       "app/(public)/HeroFX.tsx",
       "app/(public)/RiseObserver.tsx",
+      "features/site-publico/components/SiteHeader.tsx",
+      "features/site-publico/components/SiteFooter.tsx",
     ],
     notas: [
-      "One-pager editorial imersivo (site-v2). Header/footer PROPRIOS — NAO usa chrome (site)",
+      "One-pager editorial imersivo (site-v2) AGORA no chrome compartilhado (site)",
       "Estatico (revalidate 3600). Secoes: Hero/Eixos/Contraste/Cremos/Vivemos/Mundo/Educacional/Visite",
     ],
   },

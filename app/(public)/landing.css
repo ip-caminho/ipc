@@ -759,3 +759,17 @@ html:has(.site-v2) {
   .site-v2 [data-rise] { opacity: 0; transform: translateY(24px); transition: opacity .9s var(--ease), transform .9s var(--ease); transition-delay: calc(var(--i, 0) * 80ms); }
   .site-v2 [data-rise].in { opacity: 1; transform: none; }
 }
+
+/* =========================== MENU MOBILE (chrome compartilhado) =========================== */
+.site-v2 .header-cta { display: flex; align-items: center; gap: var(--space-3); }
+.site-v2 .menu-toggle {
+  display: none;
+  align-items: center; justify-content: center;
+  width: 40px; height: 40px;
+  color: var(--text-strong);
+  background: transparent; border: none; cursor: pointer;
+}
+@media (max-width: 920px) {
+  .site-v2 .header-cta .btn { display: none; }
+  .site-v2 .menu-toggle { display: inline-flex; }
+}

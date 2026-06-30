@@ -1,7 +1,7 @@
 import { Spectral, Source_Sans_3 } from "next/font/google";
-import { HeaderPublico } from "@features/site-publico/components/HeaderPublico";
-import { FooterPublico } from "@features/site-publico/components/FooterPublico";
-import { getIgrejaInfoPublic } from "@features/site-publico/lib/data";
+import { SiteHeader } from "@features/site-publico/components/SiteHeader";
+import { SiteFooter } from "@features/site-publico/components/SiteFooter";
+import "../landing.css";
 
 const spectral = Spectral({
   subsets: ["latin"],
@@ -18,16 +18,14 @@ const sourceSans = Source_Sans_3({
   display: "swap",
 });
 
-// Footer puxa dados da igreja (raramente mudam) — ISR a cada 15 min.
-export const revalidate = 900;
-
-export default async function SiteLayout({ children }: { children: React.ReactNode }) {
-  const igreja = await getIgrejaInfoPublic();
-
+// Chrome público compartilhado (header/footer da identidade da landing).
+// landing.css é escopada em .site-v2 — só estiliza o chrome e o /quem-somos;
+// o corpo das páginas funcionais NÃO entra em .site-v2 (Fase 1: só chrome).
+export default function SiteLayout({ children }: { children: React.ReactNode }) {
   return (
     <div
       id="topo"
-      className={`${spectral.variable} ${sourceSans.variable} flex min-h-dvh flex-col bg-[#FAFAF7] font-[family-name:var(--font-source-sans)] text-[#1A1A1A]`}
+      className={`${spectral.variable} ${sourceSans.variable} flex min-h-dvh flex-col bg-[#FAF8F4] font-[family-name:var(--font-source-sans)] text-[#1A1A1A]`}
     >
       <a
         href="#conteudo"
@@ -35,11 +33,11 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       >
         Pular para o conteúdo
       </a>
-      <HeaderPublico />
+      <SiteHeader />
       <main id="conteudo" className="flex-1">
         {children}
       </main>
-      <FooterPublico igreja={igreja} />
+      <SiteFooter />
     </div>
   );
 }
