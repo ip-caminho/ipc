@@ -56,6 +56,9 @@ export const getAgendaAdmin = query({
       horario?: string;
       editavel: boolean;
       publicadoNoSite?: boolean;
+      // Status na agenda pública HOJE: visivel | oculto (despublicado) |
+      // agendado (janela ainda não começou) | expirado (janela terminou).
+      statusSite?: "visivel" | "oculto" | "agendado" | "expirado";
       evento?: {
         id: string;
         titulo: string;
@@ -65,6 +68,8 @@ export const getAgendaAdmin = query({
         descricao?: string;
         tipo: string;
         publicadoNoSite: boolean;
+        exibirNoSiteDe?: string;
+        exibirNoSiteAte?: string;
       };
     };
 
@@ -93,6 +98,15 @@ export const getAgendaAdmin = query({
     for (const e of eventos) {
       const tipo = e.tipo ?? "evento";
       const publicado = e.publicadoNoSite !== false;
+      const de = e.exibirNoSiteDe || "";
+      const ate = e.exibirNoSiteAte || "";
+      const statusSite: "visivel" | "oculto" | "agendado" | "expirado" = !publicado
+        ? "oculto"
+        : de && de > hoje
+          ? "agendado"
+          : ate && ate < hoje
+            ? "expirado"
+            : "visivel";
       itens.push({
         id: e._id,
         tipo,
@@ -101,6 +115,7 @@ export const getAgendaAdmin = query({
         data: e.data,
         editavel: true,
         publicadoNoSite: publicado,
+        statusSite,
         evento: {
           id: e._id,
           titulo: e.titulo,
@@ -110,6 +125,8 @@ export const getAgendaAdmin = query({
           descricao: e.descricao,
           tipo,
           publicadoNoSite: publicado,
+          exibirNoSiteDe: e.exibirNoSiteDe,
+          exibirNoSiteAte: e.exibirNoSiteAte,
         },
       });
     }

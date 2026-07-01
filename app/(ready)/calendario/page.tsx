@@ -92,6 +92,8 @@ function CalendarioContent() {
         descricao: data.descricao || undefined,
         tipo: data.tipo,
         publicadoNoSite: data.publicadoNoSite ?? true,
+        exibirNoSiteDe: data.exibirNoSiteDe || undefined,
+        exibirNoSiteAte: data.exibirNoSiteAte || undefined,
       });
       await revalidarSite("agenda");
       toast.success("Evento criado");
@@ -114,6 +116,8 @@ function CalendarioContent() {
         descricao: data.descricao || undefined,
         tipo: data.tipo,
         publicadoNoSite: data.publicadoNoSite ?? true,
+        exibirNoSiteDe: data.exibirNoSiteDe || undefined,
+        exibirNoSiteAte: data.exibirNoSiteAte || undefined,
       });
       await revalidarSite("agenda");
       toast.success("Evento atualizado");
@@ -234,6 +238,8 @@ function CalendarioContent() {
               descricao: editEvento.descricao || "",
               tipo: editEvento.tipo ?? "evento",
               publicadoNoSite: editEvento.publicadoNoSite ?? true,
+              exibirNoSiteDe: editEvento.exibirNoSiteDe ?? "",
+              exibirNoSiteAte: editEvento.exibirNoSiteAte ?? "",
             }}
           />
         )}

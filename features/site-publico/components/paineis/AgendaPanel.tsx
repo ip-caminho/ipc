@@ -24,7 +24,11 @@ type EventoEditavel = {
   descricao?: string;
   tipo: string;
   publicadoNoSite: boolean;
+  exibirNoSiteDe?: string;
+  exibirNoSiteAte?: string;
 };
+
+type StatusSite = "visivel" | "oculto" | "agendado" | "expirado";
 
 type AgendaItem = {
   id: string;
@@ -35,6 +39,7 @@ type AgendaItem = {
   horario?: string;
   editavel: boolean;
   publicadoNoSite?: boolean;
+  statusSite?: StatusSite;
   evento?: EventoEditavel;
 };
 
@@ -43,6 +48,12 @@ const TIPO_LABEL: Record<string, string> = {
   pg: "Pequeno Grupo",
   evento: "Evento",
   reuniao: "Reunião",
+};
+
+const STATUS_SITE_LABEL: Record<Exclude<StatusSite, "visivel">, string> = {
+  oculto: "Oculto no site",
+  agendado: "Agendado",
+  expirado: "Expirado",
 };
 
 function formatDataBR(data: string): string {
@@ -84,6 +95,8 @@ export function AgendaPanel() {
           descricao: data.descricao || undefined,
           tipo: data.tipo,
           publicadoNoSite: data.publicadoNoSite ?? true,
+          exibirNoSiteDe: data.exibirNoSiteDe || undefined,
+          exibirNoSiteAte: data.exibirNoSiteAte || undefined,
         });
         await revalidarSite("agenda");
         toast.success("Evento atualizado");
@@ -96,6 +109,8 @@ export function AgendaPanel() {
           descricao: data.descricao || undefined,
           tipo: data.tipo,
           publicadoNoSite: data.publicadoNoSite ?? true,
+          exibirNoSiteDe: data.exibirNoSiteDe || undefined,
+          exibirNoSiteAte: data.exibirNoSiteAte || undefined,
         });
         await revalidarSite("agenda");
         toast.success("Evento criado");
@@ -144,9 +159,9 @@ export function AgendaPanel() {
                 {e.subtitulo && <p className="text-xs text-muted-foreground">{e.subtitulo}</p>}
               </div>
               <Badge variant="secondary">{TIPO_LABEL[e.tipo] ?? e.tipo}</Badge>
-              {e.editavel && e.publicadoNoSite === false && (
+              {e.editavel && e.statusSite && e.statusSite !== "visivel" && (
                 <Badge variant="outline" className="text-muted-foreground">
-                  Oculto no site
+                  {STATUS_SITE_LABEL[e.statusSite]}
                 </Badge>
               )}
               {e.editavel && e.evento ? (
@@ -185,6 +200,8 @@ export function AgendaPanel() {
                   ? editing.tipo
                   : "evento") as "evento" | "pg" | "reuniao",
                 publicadoNoSite: editing.publicadoNoSite,
+                exibirNoSiteDe: editing.exibirNoSiteDe ?? "",
+                exibirNoSiteAte: editing.exibirNoSiteAte ?? "",
               }
             : undefined
         }

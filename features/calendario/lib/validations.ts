@@ -10,6 +10,9 @@ export const eventoFormSchema = z.object({
   tipo: z.enum(["evento", "pg", "reuniao"]).optional(),
   // Visibilidade na agenda publica (default true = aparece no site)
   publicadoNoSite: z.boolean().optional(),
+  // Janela de exibicao no site (YYYY-MM-DD, opcionais)
+  exibirNoSiteDe: z.string().optional(),
+  exibirNoSiteAte: z.string().optional(),
 });
 
 export type EventoFormValues = z.infer<typeof eventoFormSchema>;
