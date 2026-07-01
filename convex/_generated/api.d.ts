@@ -136,6 +136,7 @@ import type * as public_avisos from "../public/avisos.js";
 import type * as public_inscricoesEvento from "../public/inscricoesEvento.js";
 import type * as salas_mutations from "../salas/mutations.js";
 import type * as salas_queries from "../salas/queries.js";
+import type * as site_queries from "../site/queries.js";
 import type * as tarefas_migrations from "../tarefas/migrations.js";
 import type * as tarefas_mutations from "../tarefas/mutations.js";
 import type * as tarefas_queries from "../tarefas/queries.js";
@@ -277,6 +278,7 @@ declare const fullApi: ApiFromModules<{
   "public/inscricoesEvento": typeof public_inscricoesEvento;
   "salas/mutations": typeof salas_mutations;
   "salas/queries": typeof salas_queries;
+  "site/queries": typeof site_queries;
   "tarefas/migrations": typeof tarefas_migrations;
   "tarefas/mutations": typeof tarefas_mutations;
   "tarefas/queries": typeof tarefas_queries;
