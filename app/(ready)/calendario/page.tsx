@@ -2,8 +2,19 @@
 
 import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "convex/react";
+import {
+  startOfMonth,
+  endOfMonth,
+  startOfWeek,
+  endOfWeek,
+  addMonths,
+  addWeeks,
+  format,
+} from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
+import { useQueryState, parseAsStringLiteral } from "nuqs";
 import { useAuth } from "@shared/providers/PermissionsProvider";
 import { PermissionGate } from "@shared/components/auth/PermissionGate";
 import { SemPermissaoFallback } from "@shared/components/auth/SemPermissaoFallback";
@@ -11,6 +22,7 @@ import { ModuloGuard } from "@shared/components/auth/ModuloGuard";
 import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
 import { PageHeader } from "@shared/components/layout/PageHeader";
 import { Button } from "@/shared/components/ui/button";
+import { Skeleton } from "@/shared/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -18,66 +30,92 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
-import { Plus, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
+import { cn } from "@/shared/lib/utils/cn";
+import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { EventoForm } from "@features/calendario/components/EventoForm";
-import { EventoCard } from "@features/calendario/components/EventoCard";
+import { CalendarioMes } from "@features/calendario/components/CalendarioMes";
+import { CalendarioSemana } from "@features/calendario/components/CalendarioSemana";
+import { CalendarioLista } from "@features/calendario/components/CalendarioLista";
 import type { EventoFormValues } from "@features/calendario/lib/validations";
+import type { CalendarioEvento } from "@features/calendario/lib/types";
 import { revalidarSite } from "@features/site-publico/lib/revalidate";
 
-function getMonthRange(year: number, month: number) {
-  const dataInicio = `${year}-${String(month + 1).padStart(2, "0")}-01`;
-  const lastDay = new Date(year, month + 1, 0).getDate();
-  const dataFim = `${year}-${String(month + 1).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
-  return { dataInicio, dataFim };
-}
+const VIEWS = ["mes", "semana", "lista"] as const;
+type View = (typeof VIEWS)[number];
+const VIEW_LABEL: Record<View, string> = { mes: "Mês", semana: "Semana", lista: "Lista" };
 
-const MESES = [
-  "Janeiro", "Fevereiro", "Marco", "Abril", "Maio", "Junho",
-  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
-];
+function capitalizar(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
 
 function CalendarioContent() {
   const { can } = useAuth();
-  const now = new Date();
-  const [year, setYear] = useState(now.getFullYear());
-  const [month, setMonth] = useState(now.getMonth());
+  const [view, setView] = useQueryState(
+    "view",
+    parseAsStringLiteral(VIEWS).withDefault("mes"),
+  );
+  const [refDate, setRefDate] = useState<Date>(() => new Date());
   const [filtroMinisterio, setFiltroMinisterio] = useState<string>("");
   const [createOpen, setCreateOpen] = useState(false);
-  const [editEvento, setEditEvento] = useState<any>(null);
+  const [createData, setCreateData] = useState<string>("");
+  const [editEvento, setEditEvento] = useState<CalendarioEvento | null>(null);
 
-  const { dataInicio, dataFim } = useMemo(() => getMonthRange(year, month), [year, month]);
+  // Intervalo de datas a carregar conforme a visão.
+  const { inicio, fim } = useMemo(() => {
+    if (view === "semana") {
+      return {
+        inicio: startOfWeek(refDate, { weekStartsOn: 0 }),
+        fim: endOfWeek(refDate, { weekStartsOn: 0 }),
+      };
+    }
+    if (view === "mes") {
+      return {
+        inicio: startOfWeek(startOfMonth(refDate), { weekStartsOn: 0 }),
+        fim: endOfWeek(endOfMonth(refDate), { weekStartsOn: 0 }),
+      };
+    }
+    return { inicio: startOfMonth(refDate), fim: endOfMonth(refDate) };
+  }, [view, refDate]);
 
   const queryArgs = useMemo(() => {
-    const args: any = { dataInicio, dataFim };
-    if (filtroMinisterio) args.ministerioId = filtroMinisterio;
+    const args: { dataInicio: string; dataFim: string; ministerioId?: Id<"ministerios"> } = {
+      dataInicio: format(inicio, "yyyy-MM-dd"),
+      dataFim: format(fim, "yyyy-MM-dd"),
+    };
+    if (filtroMinisterio) args.ministerioId = filtroMinisterio as Id<"ministerios">;
     return args;
-  }, [dataInicio, dataFim, filtroMinisterio]);
+  }, [inicio, fim, filtroMinisterio]);
 
   // @ts-ignore Convex TS2589
-  const eventos = useQuery(api.calendario.queries.list, queryArgs);
+  const eventos = useQuery(api.calendario.queries.list, queryArgs) as
+    | CalendarioEvento[]
+    | undefined;
   // @ts-ignore Convex TS2589
   const ministerios = useQuery(api.ministerios.queries.list, { status: "ATIVO" });
+  // @ts-ignore Convex TS2589
   const createEvento = useMutation(api.calendario.mutations.create);
+  // @ts-ignore Convex TS2589
   const updateEvento = useMutation(api.calendario.mutations.update);
+  // @ts-ignore Convex TS2589
   const removeEvento = useMutation(api.calendario.mutations.remove);
 
-  const handlePrev = () => {
-    if (month === 0) {
-      setMonth(11);
-      setYear(year - 1);
-    } else {
-      setMonth(month - 1);
-    }
+  const navegar = (dir: 1 | -1) =>
+    setRefDate((d) => (view === "semana" ? addWeeks(d, dir) : addMonths(d, dir)));
+
+  const periodoLabel =
+    view === "semana"
+      ? `${format(inicio, "d", { locale: ptBR })}–${format(fim, "d 'de' MMM yyyy", { locale: ptBR })}`
+      : capitalizar(format(refDate, "MMMM yyyy", { locale: ptBR }));
+
+  const abrirNovo = (iso?: string) => {
+    if (!can("calendario:create")) return;
+    setCreateData(iso ?? "");
+    setCreateOpen(true);
   };
 
-  const handleNext = () => {
-    if (month === 11) {
-      setMonth(0);
-      setYear(year + 1);
-    } else {
-      setMonth(month + 1);
-    }
+  const abrirEvento = (ev: CalendarioEvento) => {
+    if (can("calendario:update")) setEditEvento(ev);
   };
 
   const handleCreate = async (data: EventoFormValues) => {
@@ -86,9 +124,7 @@ function CalendarioContent() {
         titulo: data.titulo,
         data: data.data,
         dataFim: data.dataFim || undefined,
-        ministerioId: data.ministerioId
-          ? (data.ministerioId as Id<"ministerios">)
-          : undefined,
+        ministerioId: data.ministerioId ? (data.ministerioId as Id<"ministerios">) : undefined,
         descricao: data.descricao || undefined,
         tipo: data.tipo,
         publicadoNoSite: data.publicadoNoSite ?? false,
@@ -110,9 +146,7 @@ function CalendarioContent() {
         titulo: data.titulo,
         data: data.data,
         dataFim: data.dataFim || undefined,
-        ministerioId: data.ministerioId
-          ? (data.ministerioId as Id<"ministerios">)
-          : undefined,
+        ministerioId: data.ministerioId ? (data.ministerioId as Id<"ministerios">) : undefined,
         descricao: data.descricao || undefined,
         tipo: data.tipo,
         publicadoNoSite: data.publicadoNoSite ?? false,
@@ -124,17 +158,6 @@ function CalendarioContent() {
       setEditEvento(null);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao atualizar");
-    }
-  };
-
-  const handleRemove = async (id: Id<"calendarioEventos">) => {
-    if (!confirm("Excluir este evento?")) return;
-    try {
-      await removeEvento({ id });
-      await revalidarSite("agenda");
-      toast.success("Evento excluido");
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao excluir");
     }
   };
 
@@ -153,110 +176,122 @@ function CalendarioContent() {
   return (
     <ModuloGuard modulo="calendario">
       <HeaderLayout>
-      <div className="space-y-4">
-        <PageHeader title="Calendario" />
-        <div className="flex items-center justify-end">
-          <PermissionGate permission="calendario:create">
-            <Button onClick={() => setCreateOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Novo Evento
-            </Button>
-          </PermissionGate>
-        </div>
+        <div className="space-y-4">
+          <PageHeader title="Calendario" />
 
-        {/* Navegacao de mes + filtro */}
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="icon" onClick={handlePrev}>
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <span className="text-sm font-medium min-w-[140px] text-center">
-              {MESES[month]} {year}
-            </span>
-            <Button variant="outline" size="icon" onClick={handleNext}>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-          <Select
-            value={filtroMinisterio}
-            onValueChange={(val) => setFiltroMinisterio(val === "__all__" ? "" : val)}
-          >
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Todos os ministerios" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__all__">Todos</SelectItem>
-              {ministerios?.map((m: any) => (
-                <SelectItem key={m._id} value={m._id}>
-                  {m.nome}
-                </SelectItem>
+          {/* Barra: navegação + período */}
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-1">
+              <Button variant="outline" size="icon" onClick={() => navegar(-1)}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button variant="outline" size="icon" onClick={() => navegar(1)}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setRefDate(new Date())}>
+                Hoje
+              </Button>
+              <span className="ml-2 text-sm font-medium">{periodoLabel}</span>
+            </div>
+
+            {/* Seletor de visão */}
+            <div className="inline-flex rounded-md border p-0.5">
+              {VIEWS.map((v) => (
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => setView(v)}
+                  className={cn(
+                    "rounded px-3 py-1 text-sm transition-colors",
+                    view === v
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {VIEW_LABEL[v]}
+                </button>
               ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Lista de eventos */}
-        {eventos === undefined ? (
-          <p className="text-sm text-muted-foreground">Carregando...</p>
-        ) : eventos.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            Nenhum evento neste periodo
-          </p>
-        ) : (
-          <div className="space-y-2">
-            {eventos.map((evento: any) => (
-              <div key={evento._id} className="relative group">
-                <EventoCard
-                  evento={evento}
-                  onClick={can("calendario:update") ? () => setEditEvento(evento) : undefined}
-                />
-                {can("calendario:delete") && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 h-7 w-7"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleRemove(evento._id);
-                    }}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
-                )}
-              </div>
-            ))}
+            </div>
           </div>
-        )}
 
-        {/* Dialog: Criar evento */}
-        <EventoForm
-          open={createOpen}
-          onOpenChange={setCreateOpen}
-          onSubmit={handleCreate}
-        />
+          {/* Barra: filtro + novo */}
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <Select
+              value={filtroMinisterio || "__all__"}
+              onValueChange={(val) => setFiltroMinisterio(val === "__all__" ? "" : val)}
+            >
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Todos os ministerios" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__all__">Todos os ministérios</SelectItem>
+                {ministerios?.map((m: any) => (
+                  <SelectItem key={m._id} value={m._id}>
+                    {m.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-        {/* Dialog: Editar evento */}
-        {editEvento && (
+            <PermissionGate permission="calendario:create">
+              <Button onClick={() => abrirNovo()}>
+                <Plus className="mr-1 h-4 w-4" /> Novo evento
+              </Button>
+            </PermissionGate>
+          </div>
+
+          {/* Conteúdo da visão */}
+          {eventos === undefined ? (
+            <Skeleton className="h-64 w-full" />
+          ) : view === "mes" ? (
+            <CalendarioMes
+              refDate={refDate}
+              eventos={eventos}
+              onDayClick={abrirNovo}
+              onEventClick={abrirEvento}
+            />
+          ) : view === "semana" ? (
+            <CalendarioSemana
+              refDate={refDate}
+              eventos={eventos}
+              onDayClick={abrirNovo}
+              onEventClick={abrirEvento}
+            />
+          ) : (
+            <CalendarioLista refDate={refDate} eventos={eventos} onEventClick={abrirEvento} />
+          )}
+
+          {/* Dialog: criar evento */}
           <EventoForm
-            open={!!editEvento}
-            onOpenChange={(open) => !open && setEditEvento(null)}
-            onSubmit={handleUpdate}
-            isEditing
-            onDelete={handleDeleteFromForm}
-            defaultValues={{
-              titulo: editEvento.titulo,
-              data: editEvento.data,
-              dataFim: editEvento.dataFim || "",
-              ministerioId: editEvento.ministerioId || "",
-              descricao: editEvento.descricao || "",
-              tipo: editEvento.tipo ?? "evento",
-              publicadoNoSite: editEvento.publicadoNoSite ?? true,
-              exibirNoSiteDe: editEvento.exibirNoSiteDe ?? "",
-              exibirNoSiteAte: editEvento.exibirNoSiteAte ?? "",
-            }}
+            key={createData || "novo"}
+            open={createOpen}
+            onOpenChange={setCreateOpen}
+            onSubmit={handleCreate}
+            defaultValues={createData ? { data: createData } : undefined}
           />
-        )}
-      </div>
+
+          {/* Dialog: editar evento */}
+          {editEvento && (
+            <EventoForm
+              open={!!editEvento}
+              onOpenChange={(open) => !open && setEditEvento(null)}
+              onSubmit={handleUpdate}
+              isEditing
+              onDelete={handleDeleteFromForm}
+              defaultValues={{
+                titulo: editEvento.titulo,
+                data: editEvento.data,
+                dataFim: editEvento.dataFim || "",
+                ministerioId: editEvento.ministerioId || "",
+                descricao: editEvento.descricao || "",
+                tipo: editEvento.tipo ?? "evento",
+                publicadoNoSite: editEvento.publicadoNoSite ?? true,
+                exibirNoSiteDe: editEvento.exibirNoSiteDe ?? "",
+                exibirNoSiteAte: editEvento.exibirNoSiteAte ?? "",
+              }}
+            />
+          )}
+        </div>
       </HeaderLayout>
     </ModuloGuard>
   );
