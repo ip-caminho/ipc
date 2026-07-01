@@ -1044,6 +1044,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "public.avisos.listUltimoCulto (Esta semana = avisos do ultimo culto, via gravacoes.iaAvisos)",
       "public.agenda.list (Proximos eventos, slice 4 via getAgendaPublic)",
       "public.inscricoesEvento.listAtivas (Inscricoes abertas, top 3)",
+      "preferencias.queries.getTextosSite (hero titulo/sub, via getTextosSitePublic + fallback)",
     ],
     notas: [
       "Hub pratico. Usa o chrome (site) compartilhado (SiteHeader/SiteFooter, identidade landing)",
@@ -1206,6 +1207,23 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     notas: [
       "Avisos do site = iaAvisos do ultimo culto (IA). Curadoria so corrige a transcricao",
       "Tabela 'avisos' (/avisos) e pauta interna, NAO alimenta o site",
+    ],
+  },
+  "/admin/site-publico/textos": {
+    nome: "Site publico - Textos",
+    pagina: "app/(ready)/admin/site-publico/textos/page.tsx",
+    arquivos: [
+      "app/(ready)/admin/site-publico/textos/page.tsx",
+      "features/site-publico/components/TextosSiteForm.tsx",
+      "convex/preferencias/mutations.ts",
+      "convex/preferencias/queries.ts",
+    ],
+    queries: ["preferencias.queries.getTextosSite (chaves site.*)"],
+    mutations: ["preferencias.mutations.updateTextosSite (site_publico:manage, audita)"],
+    componentes: ["TextosSiteForm (heroTitulo, heroSub)"],
+    notas: [
+      "Textos do hero da home (site.*). Home le com fallback SITE_TEXTOS_DEFAULTS",
+      "Editorial denso (quem-somos) fica em MDX, nao aqui",
     ],
   },
   "/admin/site-publico/inscricoes": {

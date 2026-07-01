@@ -4,8 +4,10 @@ import {
   getAvisosUltimoCulto,
   getAgendaPublic,
   getInscricoesAtivas,
+  getTextosSitePublic,
 } from "@features/site-publico/lib/data";
 import { AvisoCard } from "@features/site-publico/components/AvisoCard";
+import { SITE_TEXTOS_DEFAULTS } from "@features/site-publico/lib/igreja";
 
 export const metadata: Metadata = {
   title: "Igreja Presbiteriana do Caminho — São Paulo",
@@ -26,11 +28,14 @@ function formatCulto(data: string, horario?: string): string {
 }
 
 export default async function HomePage() {
-  const [avisosCulto, agenda, inscricoes] = await Promise.all([
+  const [avisosCulto, agenda, inscricoes, textos] = await Promise.all([
     getAvisosUltimoCulto(),
     getAgendaPublic(),
     getInscricoesAtivas(),
+    getTextosSitePublic(),
   ]);
+  const heroTitulo = textos.heroTitulo || SITE_TEXTOS_DEFAULTS.heroTitulo;
+  const heroSub = textos.heroSub || SITE_TEXTOS_DEFAULTS.heroSub;
   const proximoCulto = agenda.find((e) => e.tipo === "culto");
   const numInscricoes = inscricoes.length;
 
@@ -40,8 +45,8 @@ export default async function HomePage() {
       <section className="hub-hero">
         <div className="wrap-wide">
           <p className="eyebrow">Igreja Presbiteriana do Caminho · São Paulo</p>
-          <h1>Uma comunidade bíblica de discipulado, participando da missão de Deus neste mundo.</h1>
-          <p className="sub">Presbiteriana. Pequena por escolha. No centro de São Paulo.</p>
+          <h1>{heroTitulo}</h1>
+          <p className="sub">{heroSub}</p>
           {proximoCulto && (
             <p className="culto-line">
               <strong>Próximo culto</strong> · {formatCulto(proximoCulto.data, proximoCulto.horario)}

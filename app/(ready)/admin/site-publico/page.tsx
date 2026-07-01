@@ -5,7 +5,7 @@ import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
 import { PageHeader } from "@shared/components/layout/PageHeader";
 import { PermissionGate } from "@shared/components/auth/PermissionGate";
 import { Card, CardContent } from "@/shared/components/ui/card";
-import { Building2, CalendarDays, Megaphone, Users, ExternalLink, ArrowRight } from "lucide-react";
+import { Building2, CalendarDays, Megaphone, Users, Type, ExternalLink, ArrowRight } from "lucide-react";
 
 // Hub de manutenção do site público. Cada card leva à edição da fonte certa;
 // a visibilidade é controlada por `site_publico:manage` (papel comunicacao etc.).
@@ -33,6 +33,12 @@ const SECOES = [
     icon: Users,
     titulo: "Inscrições",
     descricao: "Crie e gerencie formulários de inscrição (retiros, cursos, eventos).",
+  },
+  {
+    href: "/admin/site-publico/textos",
+    icon: Type,
+    titulo: "Textos",
+    descricao: "Título e subtítulo do topo da home.",
   },
 ];
 

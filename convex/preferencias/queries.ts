@@ -34,3 +34,17 @@ export const getIgrejaInfo = query({
     };
   },
 });
+
+// Textos editáveis do site (chaves `site.*`) — público, sem auth. Hoje: hero da
+// home (heroTitulo, heroSub). Conteúdo editorial denso continua em MDX.
+export const getTextosSite = query({
+  args: {},
+  handler: async (ctx) => {
+    const prefs = await ctx.db.query("preferencias").collect();
+    const result: Record<string, string> = {};
+    for (const p of prefs) {
+      if (p.chave.startsWith("site.")) result[p.chave.replace("site.", "")] = String(p.valor ?? "");
+    }
+    return result as { heroTitulo?: string; heroSub?: string };
+  },
+});

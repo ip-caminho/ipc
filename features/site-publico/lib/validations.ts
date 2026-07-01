@@ -24,3 +24,11 @@ export const igrejaInfoSchema = z.object({
 });
 
 export type IgrejaInfoFormValues = z.infer<typeof igrejaInfoSchema>;
+
+// Textos editáveis do site (hero da home). Editorial denso fica em MDX.
+export const textosSiteSchema = z.object({
+  heroTitulo: z.string().optional(),
+  heroSub: z.string().optional(),
+});
+
+export type TextosSiteFormValues = z.infer<typeof textosSiteSchema>;
