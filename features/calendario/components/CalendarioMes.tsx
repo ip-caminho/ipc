@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   startOfMonth,
   endOfMonth,
@@ -10,10 +11,15 @@ import {
   isSameMonth,
   isToday,
   getDay,
+  parseISO,
 } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { Plus } from "lucide-react";
 import { cn } from "@/shared/lib/utils/cn";
+import { Badge } from "@/shared/components/ui/badge";
+import { Button } from "@/shared/components/ui/button";
 import { getFeriado } from "../lib/feriados";
-import { TIPO_EVENTO_COR, type CalendarioEvento } from "../lib/types";
+import { TIPO_EVENTO_COR, TIPO_EVENTO_LABEL, type CalendarioEvento } from "../lib/types";
 
 const DIAS_SEMANA = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
@@ -22,9 +28,22 @@ type Props = {
   eventos: CalendarioEvento[];
   onDayClick: (iso: string) => void;
   onEventClick: (e: CalendarioEvento) => void;
+  podeCriar?: boolean;
 };
 
-export function CalendarioMes({ refDate, eventos, onDayClick, onEventClick }: Props) {
+function capitalizar(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+export function CalendarioMes({
+  refDate,
+  eventos,
+  onDayClick,
+  onEventClick,
+  podeCriar = true,
+}: Props) {
+  const [sel, setSel] = useState<string | null>(null);
+
   const inicio = startOfWeek(startOfMonth(refDate), { weekStartsOn: 0 });
   const fim = endOfWeek(endOfMonth(refDate), { weekStartsOn: 0 });
   const dias = eachDayOfInterval({ start: inicio, end: fim });
@@ -36,92 +55,163 @@ export function CalendarioMes({ refDate, eventos, onDayClick, onEventClick }: Pr
     else porDia.set(ev.data, [ev]);
   }
 
-  return (
-    <div className="overflow-hidden rounded-md border">
-      <div className="grid grid-cols-7 border-b bg-muted/40 text-center text-xs font-medium text-muted-foreground">
-        {DIAS_SEMANA.map((d) => (
-          <div key={d} className="py-1.5">
-            {d}
-          </div>
-        ))}
-      </div>
-      <div className="grid grid-cols-7">
-        {dias.map((dia) => {
-          const iso = format(dia, "yyyy-MM-dd");
-          const doMes = isSameMonth(dia, refDate);
-          const domingo = getDay(dia) === 0;
-          const feriado = getFeriado(iso);
-          const hoje = isToday(dia);
-          const doDia = porDia.get(iso) ?? [];
+  // Dia selecionado (mostra os eventos no painel abaixo). Se o selecionado não
+  // for do mês visível (após navegar), cai em hoje-no-mês ou no dia 1.
+  const mesRef = format(refDate, "yyyy-MM");
+  const defaultDia = isSameMonth(new Date(), refDate)
+    ? format(new Date(), "yyyy-MM-dd")
+    : format(startOfMonth(refDate), "yyyy-MM-dd");
+  const selEfetivo = sel && sel.slice(0, 7) === mesRef ? sel : defaultDia;
 
-          return (
-            <button
-              key={iso}
-              type="button"
-              onClick={() => onDayClick(iso)}
-              className={cn(
-                "min-h-[84px] border-b border-r p-1 text-left align-top transition-colors last:border-r-0 hover:bg-accent/50 sm:min-h-[104px]",
-                !doMes && "bg-muted/20 text-muted-foreground",
-                domingo && doMes && "bg-muted/30",
-                feriado && "bg-amber-50 dark:bg-amber-950/20",
-              )}
-            >
-              <div className="flex items-center justify-between">
+  const eventosDoDia = porDia.get(selEfetivo) ?? [];
+  const feriadoSel = getFeriado(selEfetivo);
+
+  return (
+    <div className="space-y-3">
+      <div className="overflow-hidden rounded-md border">
+        <div className="grid grid-cols-7 border-b bg-muted/40 text-center text-xs font-medium text-muted-foreground">
+          {DIAS_SEMANA.map((d) => (
+            <div key={d} className="py-1.5">
+              {d}
+            </div>
+          ))}
+        </div>
+        <div className="grid grid-cols-7">
+          {dias.map((dia) => {
+            const iso = format(dia, "yyyy-MM-dd");
+            const doMes = isSameMonth(dia, refDate);
+            const domingo = getDay(dia) === 0;
+            const feriado = getFeriado(iso);
+            const hoje = isToday(dia);
+            const selecionado = iso === selEfetivo;
+            const doDia = porDia.get(iso) ?? [];
+
+            return (
+              <button
+                key={iso}
+                type="button"
+                onClick={() => setSel(iso)}
+                className={cn(
+                  "min-h-[60px] border-b border-r p-1 text-left align-top transition-colors last:border-r-0 hover:bg-accent/50 sm:min-h-[92px]",
+                  !doMes && "bg-muted/20 text-muted-foreground",
+                  domingo && doMes && "bg-muted/30",
+                  feriado && "bg-amber-50 dark:bg-amber-950/20",
+                  selecionado && "ring-2 ring-inset ring-primary",
+                )}
+              >
+                <div className="flex items-center justify-between">
+                  <span
+                    className={cn(
+                      "inline-flex h-6 w-6 items-center justify-center rounded-full text-xs",
+                      hoje && "bg-primary font-semibold text-primary-foreground",
+                      !hoje && feriado && "font-semibold text-amber-700 dark:text-amber-400",
+                      !hoje && !feriado && domingo && "font-medium text-foreground",
+                    )}
+                  >
+                    {format(dia, "d")}
+                  </span>
+                </div>
+
+                {feriado && (
+                  <p className="mt-0.5 hidden truncate text-[10px] leading-tight text-amber-700 dark:text-amber-400 sm:block">
+                    {feriado}
+                  </p>
+                )}
+
+                {/* Indicadores dos eventos (não interativos — o toque seleciona o
+                    dia e a lista grande aparece no painel abaixo). Mobile: dots;
+                    desktop: chips com título. */}
+                {doDia.length > 0 && (
+                  <>
+                    <div className="mt-1 flex flex-wrap gap-0.5 sm:hidden">
+                      {doDia.slice(0, 5).map((ev) => (
+                        <span
+                          key={ev._id}
+                          className={cn(
+                            "h-1.5 w-1.5 rounded-full",
+                            TIPO_EVENTO_COR[ev.tipo ?? "evento"] ?? "bg-sky-500",
+                          )}
+                        />
+                      ))}
+                    </div>
+                    <div className="mt-0.5 hidden space-y-0.5 sm:block">
+                      {doDia.slice(0, 4).map((ev) => (
+                        <div key={ev._id} className="flex items-center gap-1">
+                          <span
+                            className={cn(
+                              "h-1.5 w-1.5 shrink-0 rounded-full",
+                              TIPO_EVENTO_COR[ev.tipo ?? "evento"] ?? "bg-sky-500",
+                            )}
+                          />
+                          <span className="truncate text-[11px] leading-tight">{ev.titulo}</span>
+                        </div>
+                      ))}
+                      {doDia.length > 4 && (
+                        <p className="text-[10px] text-muted-foreground">+{doDia.length - 4}</p>
+                      )}
+                    </div>
+                  </>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Painel do dia selecionado — alvos grandes, fáceis de tocar no mobile */}
+      <div className="rounded-md border p-3">
+        <div className="mb-2 flex flex-wrap items-center gap-2">
+          <span className="text-sm font-medium">
+            {capitalizar(format(parseISO(selEfetivo), "EEEE, dd/MM", { locale: ptBR }))}
+          </span>
+          {feriadoSel && (
+            <Badge variant="outline" className="border-amber-300 text-amber-700 dark:text-amber-400">
+              {feriadoSel}
+            </Badge>
+          )}
+        </div>
+
+        {eventosDoDia.length === 0 ? (
+          <p className="py-1 text-sm text-muted-foreground">Nenhum evento neste dia.</p>
+        ) : (
+          <div className="space-y-1">
+            {eventosDoDia.map((ev) => (
+              <button
+                key={ev._id}
+                type="button"
+                onClick={() => onEventClick(ev)}
+                className="flex min-h-11 w-full items-center gap-2 rounded-md px-2 py-2 text-left hover:bg-accent"
+              >
                 <span
                   className={cn(
-                    "inline-flex h-6 w-6 items-center justify-center rounded-full text-xs",
-                    hoje && "bg-primary font-semibold text-primary-foreground",
-                    !hoje && feriado && "font-semibold text-amber-700 dark:text-amber-400",
-                    !hoje && !feriado && domingo && "font-medium text-foreground",
+                    "h-2.5 w-2.5 shrink-0 rounded-full",
+                    TIPO_EVENTO_COR[ev.tipo ?? "evento"] ?? "bg-sky-500",
                   )}
-                >
-                  {format(dia, "d")}
-                </span>
-              </div>
-
-              {feriado && (
-                <p className="mt-0.5 truncate text-[10px] leading-tight text-amber-700 dark:text-amber-400">
-                  {feriado}
-                </p>
-              )}
-
-              <div className="mt-0.5 space-y-0.5">
-                {doDia.slice(0, 3).map((ev) => (
-                  <div
-                    key={ev._id}
-                    role="button"
-                    tabIndex={0}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onEventClick(ev);
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.stopPropagation();
-                        onEventClick(ev);
-                      }
-                    }}
-                    className="flex items-center gap-1 rounded px-0.5 hover:bg-background"
-                    title={ev.titulo}
-                  >
-                    <span
-                      className={cn(
-                        "h-1.5 w-1.5 shrink-0 rounded-full",
-                        TIPO_EVENTO_COR[ev.tipo ?? "evento"] ?? "bg-sky-500",
-                      )}
-                    />
-                    <span className="hidden truncate text-[11px] leading-tight sm:inline">
-                      {ev.titulo}
-                    </span>
-                  </div>
-                ))}
-                {doDia.length > 3 && (
-                  <p className="px-0.5 text-[10px] text-muted-foreground">+{doDia.length - 3}</p>
+                />
+                <span className="truncate text-sm">{ev.titulo}</span>
+                {ev.ministerioNome && (
+                  <span className="truncate text-xs text-muted-foreground">
+                    · {ev.ministerioNome}
+                  </span>
                 )}
-              </div>
-            </button>
-          );
-        })}
+                <span className="ml-auto shrink-0 text-[10px] uppercase text-muted-foreground">
+                  {TIPO_EVENTO_LABEL[ev.tipo ?? "evento"]}
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {podeCriar && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-2 w-full"
+            onClick={() => onDayClick(selEfetivo)}
+          >
+            <Plus className="mr-1 h-4 w-4" /> Novo evento neste dia
+          </Button>
+        )}
       </div>
     </div>
   );

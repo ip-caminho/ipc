@@ -249,6 +249,7 @@ function CalendarioContent() {
               eventos={eventos}
               onDayClick={abrirNovo}
               onEventClick={abrirEvento}
+              podeCriar={can("calendario:create")}
             />
           ) : view === "semana" ? (
             <CalendarioSemana
