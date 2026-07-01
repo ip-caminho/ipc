@@ -70,6 +70,8 @@ export function AgendaPanel() {
   const createEvento = useMutation(api.calendario.mutations.create);
   // @ts-ignore Convex TS2589
   const updateEvento = useMutation(api.calendario.mutations.update);
+  // @ts-ignore Convex TS2589
+  const removeEvento = useMutation(api.calendario.mutations.remove);
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<EventoEditavel | null>(null);
@@ -94,7 +96,7 @@ export function AgendaPanel() {
           ministerioId: data.ministerioId ? (data.ministerioId as Id<"ministerios">) : undefined,
           descricao: data.descricao || undefined,
           tipo: data.tipo,
-          publicadoNoSite: data.publicadoNoSite ?? true,
+          publicadoNoSite: data.publicadoNoSite ?? false,
           exibirNoSiteDe: data.exibirNoSiteDe || undefined,
           exibirNoSiteAte: data.exibirNoSiteAte || undefined,
         });
@@ -108,7 +110,7 @@ export function AgendaPanel() {
           ministerioId: data.ministerioId ? (data.ministerioId as Id<"ministerios">) : undefined,
           descricao: data.descricao || undefined,
           tipo: data.tipo,
-          publicadoNoSite: data.publicadoNoSite ?? true,
+          publicadoNoSite: data.publicadoNoSite ?? false,
           exibirNoSiteDe: data.exibirNoSiteDe || undefined,
           exibirNoSiteAte: data.exibirNoSiteAte || undefined,
         });
@@ -117,6 +119,17 @@ export function AgendaPanel() {
       }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao salvar evento");
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!editing) return;
+    try {
+      await removeEvento({ id: editing.id as Id<"calendarioEventos"> });
+      await revalidarSite("agenda");
+      toast.success("Evento excluído");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao excluir evento");
     }
   };
 
@@ -188,6 +201,7 @@ export function AgendaPanel() {
         onOpenChange={setFormOpen}
         onSubmit={handleSubmit}
         isEditing={!!editing}
+        onDelete={editing ? handleDelete : undefined}
         defaultValues={
           editing
             ? {
