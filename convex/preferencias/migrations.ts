@@ -90,3 +90,27 @@ export const corrigirIgrejaInfo = internalMutation({
     return { atualizados };
   },
 });
+
+/**
+ * Limpa os contatos fake herdados do seed de Colombo (telefone/whatsapp).
+ * Setados como "" ate termos os numeros reais da igreja. Nao aparecem no site
+ * hoje; ficam visiveis no editor de Informacoes (/admin/site-publico/informacoes).
+ * Rodar: npx convex run preferencias/migrations:limparContatosFakeIgreja --prod
+ */
+export const limparContatosFakeIgreja = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const limpos: string[] = [];
+    for (const chave of ["igreja.telefone", "igreja.whatsapp"]) {
+      const existing = await ctx.db
+        .query("preferencias")
+        .withIndex("by_chave", (q) => q.eq("chave", chave))
+        .unique();
+      if (existing) {
+        await ctx.db.patch(existing._id, { valor: "", atualizadoEm: Date.now() });
+        limpos.push(chave);
+      }
+    }
+    return { limpos };
+  },
+});
