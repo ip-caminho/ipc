@@ -19,6 +19,13 @@ export const IGREJA_DEFAULTS = {
   pix: "48.792.102/0001-13",
 } as const;
 
+// Textos editáveis do hero da home (chaves `site.*`). Defaults = os valores
+// atuais hardcoded; o painel sobrescreve no banco.
+export const SITE_TEXTOS_DEFAULTS = {
+  heroTitulo: "Uma comunidade bíblica de discipulado, participando da missão de Deus neste mundo.",
+  heroSub: "Presbiteriana. Pequena por escolha. No centro de São Paulo.",
+} as const;
+
 // "Dom · 10h — Culto" a partir da lista de horários do banco (ou null).
 export function formatHorarios(
   horarios?: Array<{ dia: string; horario: string; tipo?: string }>,

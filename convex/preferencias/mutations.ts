@@ -149,3 +149,45 @@ export const updateIgrejaInfo = mutation({
     await createFieldAuditLogs(ctx, antes, depois, "preferencias", "igreja");
   },
 });
+
+// Lê as chaves `site.*` num objeto plano.
+async function lerSiteTextos(
+  ctx: { db: { query: (t: "preferencias") => { collect: () => Promise<Array<{ chave: string; valor: unknown }>> } } },
+): Promise<Record<string, unknown>> {
+  const prefs = await ctx.db.query("preferencias").collect();
+  const out: Record<string, unknown> = {};
+  for (const p of prefs) {
+    if (p.chave.startsWith("site.")) out[p.chave.replace("site.", "")] = p.valor;
+  }
+  return out;
+}
+
+// Editor de textos do site (painel /admin/site-publico/textos). Hoje: hero da
+// home. Conteúdo editorial denso continua em MDX. Exige site_publico:manage.
+export const updateTextosSite = mutation({
+  args: {
+    heroTitulo: v.optional(v.string()),
+    heroSub: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const { membro } = await requirePermission(ctx, "site_publico:manage");
+    const antes = await lerSiteTextos(ctx);
+
+    for (const [campo, valor] of Object.entries(args)) {
+      if (valor === undefined) continue;
+      const chave = `site.${campo}`;
+      const existing = await ctx.db
+        .query("preferencias")
+        .withIndex("by_chave", (q) => q.eq("chave", chave))
+        .unique();
+      if (existing) {
+        await ctx.db.patch(existing._id, { valor, atualizadoPor: membro._id, atualizadoEm: Date.now() });
+      } else {
+        await ctx.db.insert("preferencias", { chave, valor, atualizadoPor: membro._id, atualizadoEm: Date.now() });
+      }
+    }
+
+    const depois = await lerSiteTextos(ctx);
+    await createFieldAuditLogs(ctx, antes, depois, "preferencias", "site");
+  },
+});

@@ -94,3 +94,24 @@ export const getAvisosUltimoCulto = unstable_cache(
   ["public-avisos-ultimo-culto"],
   { revalidate: 300 },
 );
+
+// Textos editáveis do hero da home (chaves site.*). Tolera 5 min de defasagem.
+export const getTextosSitePublic = unstable_cache(
+  async (): Promise<{ heroTitulo?: string; heroSub?: string }> => {
+    try {
+      const client = httpClient();
+      if (!client) return {};
+      // @ts-ignore Convex TS2589 (instanciacao de tipo profunda)
+      return (
+        ((await client.query(api.preferencias.queries.getTextosSite)) as {
+          heroTitulo?: string;
+          heroSub?: string;
+        }) ?? {}
+      );
+    } catch {
+      return {};
+    }
+  },
+  ["public-site-textos"],
+  { revalidate: 300 },
+);
