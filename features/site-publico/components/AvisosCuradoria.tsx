@@ -11,6 +11,7 @@ import { Input } from "@/shared/components/ui/input";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Label } from "@/shared/components/ui/label";
 import { Megaphone, Plus, Save, Trash2 } from "lucide-react";
+import { revalidarSite } from "../lib/revalidate";
 
 // Um aviso do culto. Campos editáveis: titulo/descricao/quando/onde. Os demais
 // (contato/dataEvento) são preservados no estado e reenviados no save — não
@@ -47,6 +48,7 @@ export function AvisosCuradoria({
     setSaving(true);
     try {
       await corrigir({ gravacaoId, avisos: clean });
+      await revalidarSite("avisos");
       toast.success("Avisos atualizados");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao salvar");

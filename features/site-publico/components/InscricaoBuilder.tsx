@@ -5,6 +5,7 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { toast } from "sonner";
+import { revalidarSite } from "../lib/revalidate";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
@@ -212,6 +213,7 @@ export function InscricaoBuilder({
         });
         toast.success("Inscrição criada");
       }
+      await revalidarSite("inscricoes");
       onOpenChange(false);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao salvar");

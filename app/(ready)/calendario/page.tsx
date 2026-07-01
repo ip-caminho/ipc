@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import { EventoForm } from "@features/calendario/components/EventoForm";
 import { EventoCard } from "@features/calendario/components/EventoCard";
 import type { EventoFormValues } from "@features/calendario/lib/validations";
+import { revalidarSite } from "@features/site-publico/lib/revalidate";
 
 function getMonthRange(year: number, month: number) {
   const dataInicio = `${year}-${String(month + 1).padStart(2, "0")}-01`;
@@ -92,6 +93,7 @@ function CalendarioContent() {
         tipo: data.tipo,
         publicadoNoSite: data.publicadoNoSite ?? true,
       });
+      await revalidarSite("agenda");
       toast.success("Evento criado");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao criar evento");
@@ -113,6 +115,7 @@ function CalendarioContent() {
         tipo: data.tipo,
         publicadoNoSite: data.publicadoNoSite ?? true,
       });
+      await revalidarSite("agenda");
       toast.success("Evento atualizado");
       setEditEvento(null);
     } catch (error) {
@@ -124,6 +127,7 @@ function CalendarioContent() {
     if (!confirm("Excluir este evento?")) return;
     try {
       await removeEvento({ id });
+      await revalidarSite("agenda");
       toast.success("Evento excluido");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao excluir");

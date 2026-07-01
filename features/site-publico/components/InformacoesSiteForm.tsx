@@ -12,6 +12,7 @@ import { Textarea } from "@/shared/components/ui/textarea";
 import { Button } from "@/shared/components/ui/button";
 import { Plus, Trash2 } from "lucide-react";
 import { igrejaInfoSchema, type IgrejaInfoFormValues } from "../lib/validations";
+import { revalidarSite } from "../lib/revalidate";
 import type { IgrejaInfo } from "../lib/nav";
 
 function Field({ label, id, children }: { label: string; id: string; children: ReactNode }) {
@@ -65,6 +66,7 @@ export function InformacoesSiteForm({ initial }: { initial: IgrejaInfo }) {
           tipo: h.tipo ?? "",
         })),
       });
+      await revalidarSite("informacoes");
       toast.success("Informações salvas");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao salvar");
