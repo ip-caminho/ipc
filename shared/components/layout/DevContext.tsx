@@ -1149,13 +1149,25 @@ const CONTEXT_MAP: Record<string, PageContext> = {
   "/admin/site-publico": {
     nome: "Site publico - hub de manutencao",
     pagina: "app/(ready)/admin/site-publico/page.tsx",
-    arquivos: ["app/(ready)/admin/site-publico/page.tsx"],
+    arquivos: [
+      "app/(ready)/admin/site-publico/page.tsx",
+      "features/site-publico/components/paineis/InformacoesPanel.tsx",
+      "features/site-publico/components/paineis/AgendaPanel.tsx",
+      "features/site-publico/components/paineis/AvisosPanel.tsx",
+      "features/site-publico/components/paineis/InscricoesPanel.tsx",
+      "features/site-publico/components/paineis/TextosPanel.tsx",
+    ],
     queries: [],
     mutations: [],
-    componentes: ["Cards-link p/ Informacoes, Agenda, Avisos, Inscricoes + 'Ver o site'"],
+    componentes: [
+      "Tabs (abas): Informacoes, Agenda, Avisos, Inscricoes, Textos + 'Ver o site'",
+      "Cada aba = um Panel self-fetching (Radix desmonta aba inativa = query so quando aberta)",
+    ],
     notas: [
       "Permissao: site_publico:manage (papel 'comunicacao' + admin/pastor/sec.exec)",
-      "Casa de manutencao do site. Agrega as fontes; cada card edita na fonte certa",
+      "Pagina unica com abas; aba ativa na URL via nuqs (?secao=). Sem navegar entre paginas",
+      "As sub-rotas /informacoes|/agenda|/avisos|/inscricoes|/textos REDIRECIONAM p/ ?secao=",
+      "Respostas de inscricao seguem em sub-pagina propria (/inscricoes/[id]/respostas)",
     ],
   },
   "/admin/site-publico/informacoes": {
@@ -1170,8 +1182,9 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     ],
     queries: ["preferencias.queries.getIgrejaInfo"],
     mutations: ["preferencias.mutations.updateIgrejaInfo (site_publico:manage, audita)"],
-    componentes: ["InformacoesSiteForm (RHF: identidade/contato/horarios/financeiro)"],
+    componentes: ["InformacoesSiteForm (RHF: identidade/contato/horarios/financeiro), via InformacoesPanel"],
     notas: [
+      "Rota REDIRECIONA p/ o hub (/admin/site-publico?secao=informacoes); UI real em InformacoesPanel",
       "Fonte unica das infos (igreja.* em preferencias). SiteFooter e /visite leem do banco",
       "Fallback IGREJA_DEFAULTS (features/site-publico/lib/igreja.ts) se banco vazio",
     ],
@@ -1190,8 +1203,9 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "calendario.mutations.create (novo evento)",
       "calendario.mutations.update (editar evento inline)",
     ],
-    componentes: ["EventoForm (reuso do modulo calendario, abre inline p/ criar e editar)"],
+    componentes: ["EventoForm (reuso do modulo calendario, abre inline p/ criar e editar), via AgendaPanel"],
     notas: [
+      "Rota REDIRECIONA p/ o hub (/admin/site-publico?secao=agenda); UI real em AgendaPanel",
       "Lista consolidada. Cultos sao leitura (atalho /cultos); eventos criados/editados aqui inline (calendario:create/update)",
       "Editar abre o EventoForm na propria pagina (nao redireciona p/ /calendario)",
       "Switch 'Exibir no site publico' (publicadoNoSite) despublica um evento; badge 'Oculto no site' na lista",
@@ -1209,8 +1223,9 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     ],
     queries: ["site.queries.getGravacaoDoSite (gravacao que alimenta 'Esta semana')"],
     mutations: ["gravacoes.mutations.corrigirAvisosCulto (escopada a iaAvisos, site_publico:manage)"],
-    componentes: ["AvisosCuradoria (edita titulo/descricao/quando/onde; preserva contato)"],
+    componentes: ["AvisosCuradoria (edita titulo/descricao/quando/onde; preserva contato), via AvisosPanel"],
     notas: [
+      "Rota REDIRECIONA p/ o hub (/admin/site-publico?secao=avisos); UI real em AvisosPanel",
       "Avisos do site = iaAvisos do ultimo culto (IA). Curadoria so corrige a transcricao",
       "Tabela 'avisos' (/avisos) e pauta interna, NAO alimenta o site",
     ],
@@ -1226,8 +1241,9 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     ],
     queries: ["preferencias.queries.getTextosSite (chaves site.*)"],
     mutations: ["preferencias.mutations.updateTextosSite (site_publico:manage, audita)"],
-    componentes: ["TextosSiteForm (heroTitulo, heroSub)"],
+    componentes: ["TextosSiteForm (heroTitulo, heroSub), via TextosPanel"],
     notas: [
+      "Rota REDIRECIONA p/ o hub (/admin/site-publico?secao=textos); UI real em TextosPanel",
       "Textos do hero da home (site.*). Home le com fallback SITE_TEXTOS_DEFAULTS",
       "Editorial denso (quem-somos) fica em MDX, nao aqui",
     ],
@@ -1247,8 +1263,12 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "inscricoesEvento.mutations.atualizar",
       "inscricoesEvento.mutations.encerrar",
     ],
-    componentes: ["InscricaoBuilder (seletor camposSistema + editor camposCustom)"],
-    notas: ["Permissao: site_publico:manage (admin/pastor/sec.exec). Auditado"],
+    componentes: ["InscricaoBuilder (seletor camposSistema + editor camposCustom), via InscricoesPanel"],
+    notas: [
+      "Rota REDIRECIONA p/ o hub (/admin/site-publico?secao=inscricoes); UI real em InscricoesPanel",
+      "Permissao: site_publico:manage (admin/pastor/sec.exec). Auditado",
+      "Respostas de cada inscricao seguem em /admin/site-publico/inscricoes/[id]/respostas",
+    ],
   },
   "/admin/site-publico/inscricoes/[id]/respostas": {
     nome: "Admin - Respostas de inscricao",
