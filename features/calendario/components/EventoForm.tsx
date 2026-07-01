@@ -55,6 +55,8 @@ export function EventoForm({
       descricao: "",
       tipo: "evento",
       publicadoNoSite: true,
+      exibirNoSiteDe: "",
+      exibirNoSiteAte: "",
       ...defaultValues,
     },
   });
@@ -151,18 +153,43 @@ export function EventoForm({
             <Textarea id="descricao" {...form.register("descricao")} />
           </div>
 
-          <div className="flex items-center justify-between rounded-md border p-3">
-            <div className="space-y-0.5">
-              <Label htmlFor="publicadoNoSite">Exibir no site público</Label>
-              <p className="text-xs text-muted-foreground">
-                Desligue para despublicar só este evento (some da agenda pública, continua no calendário).
-              </p>
+          <div className="space-y-3 rounded-md border p-3">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="publicadoNoSite">Exibir no site público</Label>
+                <p className="text-xs text-muted-foreground">
+                  Desligue para despublicar só este evento (some da agenda pública, continua no calendário).
+                </p>
+              </div>
+              <Switch
+                id="publicadoNoSite"
+                checked={form.watch("publicadoNoSite") ?? true}
+                onCheckedChange={(val) => form.setValue("publicadoNoSite", val)}
+              />
             </div>
-            <Switch
-              id="publicadoNoSite"
-              checked={form.watch("publicadoNoSite") ?? true}
-              onCheckedChange={(val) => form.setValue("publicadoNoSite", val)}
-            />
+
+            {(form.watch("publicadoNoSite") ?? true) && (
+              <div className="space-y-2 border-t pt-3">
+                <p className="text-xs text-muted-foreground">
+                  Janela no site (opcional): controla quando o evento aparece. Em branco, aparece
+                  enquanto for futuro.
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label htmlFor="exibirNoSiteDe" className="text-xs">
+                      Aparecer a partir de
+                    </Label>
+                    <Input id="exibirNoSiteDe" type="date" {...form.register("exibirNoSiteDe")} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="exibirNoSiteAte" className="text-xs">
+                      Aparecer até
+                    </Label>
+                    <Input id="exibirNoSiteAte" type="date" {...form.register("exibirNoSiteAte")} />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <DialogFooter>

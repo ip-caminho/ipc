@@ -694,6 +694,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "Filtro por ministerio",
       "Click no evento abre dialog de edicao",
       "Switch 'Exibir no site publico' (publicadoNoSite) despublica o evento da agenda publica sem removê-lo do calendario",
+      "Janela de exibicao no site (exibirNoSiteDe/exibirNoSiteAte): controla quando o evento aparece/some na agenda publica",
     ],
   },
   "/louvor": {
@@ -1209,6 +1210,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "Lista consolidada. Cultos sao leitura (atalho /cultos); eventos criados/editados aqui inline (calendario:create/update)",
       "Editar abre o EventoForm na propria pagina (nao redireciona p/ /calendario)",
       "Switch 'Exibir no site publico' (publicadoNoSite) despublica um evento; badge 'Oculto no site' na lista",
+      "Janela de exibicao: exibirNoSiteDe/exibirNoSiteAte (YYYY-MM-DD) controlam quando aparece no site; badge Agendado/Expirado. Filtro em public/agenda.ts",
       "Culto de domingo 10h gerado automaticamente pelo agendador de cultos",
     ],
   },

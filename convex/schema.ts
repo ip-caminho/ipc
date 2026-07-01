@@ -779,6 +779,11 @@ export default defineSchema({
     // Visibilidade na agenda publica. Ausente ou true = aparece no site;
     // false = despublicado (some do site, continua no calendario interno).
     publicadoNoSite: v.optional(v.boolean()),
+    // Janela de exibicao no site (YYYY-MM-DD, ambos opcionais). Complementam o
+    // filtro padrao (evento futuro): so aparece a partir de `exibirNoSiteDe` e
+    // some depois de `exibirNoSiteAte`. Ausentes = aparece enquanto for futuro.
+    exibirNoSiteDe: v.optional(v.string()),
+    exibirNoSiteAte: v.optional(v.string()),
     criadoEm: v.number(),
   })
     .index("by_data", ["data"])
