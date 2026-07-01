@@ -1181,15 +1181,19 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     arquivos: [
       "app/(ready)/admin/site-publico/agenda/page.tsx",
       "features/calendario/components/EventoForm.tsx",
-      "convex/public/agenda.ts",
+      "convex/site/queries.ts",
       "convex/calendario/mutations.ts",
     ],
-    queries: ["public.agenda.list (cultos PUBLICADO + eventos futuros)"],
-    mutations: ["calendario.mutations.create (novo evento)"],
-    componentes: ["EventoForm (reuso do modulo calendario)"],
+    queries: ["site.queries.getAgendaAdmin (cultos PUBLICADO leitura + eventos futuros editaveis)"],
+    mutations: [
+      "calendario.mutations.create (novo evento)",
+      "calendario.mutations.update (editar evento inline)",
+    ],
+    componentes: ["EventoForm (reuso do modulo calendario, abre inline p/ criar e editar)"],
     notas: [
-      "Lista consolidada. Cultos sao leitura (atalho /cultos); eventos criados aqui (calendario:create)",
-      "Culto de domingo 10h gerado automaticamente em public/agenda.ts",
+      "Lista consolidada. Cultos sao leitura (atalho /cultos); eventos criados/editados aqui inline (calendario:create/update)",
+      "Editar abre o EventoForm na propria pagina (nao redireciona p/ /calendario)",
+      "Culto de domingo 10h gerado automaticamente pelo agendador de cultos",
     ],
   },
   "/admin/site-publico/avisos": {
