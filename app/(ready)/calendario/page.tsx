@@ -91,7 +91,7 @@ function CalendarioContent() {
           : undefined,
         descricao: data.descricao || undefined,
         tipo: data.tipo,
-        publicadoNoSite: data.publicadoNoSite ?? true,
+        publicadoNoSite: data.publicadoNoSite ?? false,
         exibirNoSiteDe: data.exibirNoSiteDe || undefined,
         exibirNoSiteAte: data.exibirNoSiteAte || undefined,
       });
@@ -115,7 +115,7 @@ function CalendarioContent() {
           : undefined,
         descricao: data.descricao || undefined,
         tipo: data.tipo,
-        publicadoNoSite: data.publicadoNoSite ?? true,
+        publicadoNoSite: data.publicadoNoSite ?? false,
         exibirNoSiteDe: data.exibirNoSiteDe || undefined,
         exibirNoSiteAte: data.exibirNoSiteAte || undefined,
       });
@@ -131,6 +131,18 @@ function CalendarioContent() {
     if (!confirm("Excluir este evento?")) return;
     try {
       await removeEvento({ id });
+      await revalidarSite("agenda");
+      toast.success("Evento excluido");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro ao excluir");
+    }
+  };
+
+  // Exclusão a partir do EventoForm (o form já confirma e fecha o dialog).
+  const handleDeleteFromForm = async () => {
+    if (!editEvento) return;
+    try {
+      await removeEvento({ id: editEvento._id as Id<"calendarioEventos"> });
       await revalidarSite("agenda");
       toast.success("Evento excluido");
     } catch (error) {
@@ -230,6 +242,7 @@ function CalendarioContent() {
             onOpenChange={(open) => !open && setEditEvento(null)}
             onSubmit={handleUpdate}
             isEditing
+            onDelete={handleDeleteFromForm}
             defaultValues={{
               titulo: editEvento.titulo,
               data: editEvento.data,
