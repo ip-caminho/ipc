@@ -25,6 +25,7 @@ type EventoEditavel = {
   ministerioId?: string;
   descricao?: string;
   tipo: string;
+  publicadoNoSite: boolean;
 };
 
 type AgendaItem = {
@@ -35,6 +36,7 @@ type AgendaItem = {
   data: string;
   horario?: string;
   editavel: boolean;
+  publicadoNoSite?: boolean;
   evento?: EventoEditavel;
 };
 
@@ -81,6 +83,7 @@ function AgendaAdmin() {
           ministerioId: data.ministerioId ? (data.ministerioId as Id<"ministerios">) : undefined,
           descricao: data.descricao || undefined,
           tipo: data.tipo,
+          publicadoNoSite: data.publicadoNoSite ?? true,
         });
         toast.success("Evento atualizado");
       } else {
@@ -91,6 +94,7 @@ function AgendaAdmin() {
           ministerioId: data.ministerioId ? (data.ministerioId as Id<"ministerios">) : undefined,
           descricao: data.descricao || undefined,
           tipo: data.tipo,
+          publicadoNoSite: data.publicadoNoSite ?? true,
         });
         toast.success("Evento criado");
       }
@@ -140,6 +144,11 @@ function AgendaAdmin() {
                   {e.subtitulo && <p className="text-xs text-muted-foreground">{e.subtitulo}</p>}
                 </div>
                 <Badge variant="secondary">{TIPO_LABEL[e.tipo] ?? e.tipo}</Badge>
+                {e.editavel && e.publicadoNoSite === false && (
+                  <Badge variant="outline" className="text-muted-foreground">
+                    Oculto no site
+                  </Badge>
+                )}
                 {e.editavel && e.evento ? (
                   <Button
                     variant="ghost"
@@ -176,6 +185,7 @@ function AgendaAdmin() {
                 tipo: (editing.tipo === "pg" || editing.tipo === "reuniao"
                   ? editing.tipo
                   : "evento") as "evento" | "pg" | "reuniao",
+                publicadoNoSite: editing.publicadoNoSite,
               }
             : undefined
         }

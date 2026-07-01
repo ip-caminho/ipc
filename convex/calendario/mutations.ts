@@ -11,6 +11,7 @@ export const create = mutation({
     ministerioId: v.optional(v.id("ministerios")),
     descricao: v.optional(v.string()),
     tipo: v.optional(v.union(v.literal("pg"), v.literal("evento"), v.literal("reuniao"))),
+    publicadoNoSite: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     await requirePermission(ctx, "calendario:create");
@@ -34,6 +35,7 @@ export const update = mutation({
     ministerioId: v.optional(v.id("ministerios")),
     descricao: v.optional(v.string()),
     tipo: v.optional(v.union(v.literal("pg"), v.literal("evento"), v.literal("reuniao"))),
+    publicadoNoSite: v.optional(v.boolean()),
   },
   handler: async (ctx, { id, ...updates }) => {
     await requirePermission(ctx, "calendario:update");

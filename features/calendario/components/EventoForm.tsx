@@ -10,6 +10,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Textarea } from "@/shared/components/ui/textarea";
+import { Switch } from "@/shared/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -53,6 +54,7 @@ export function EventoForm({
       ministerioId: "",
       descricao: "",
       tipo: "evento",
+      publicadoNoSite: true,
       ...defaultValues,
     },
   });
@@ -147,6 +149,20 @@ export function EventoForm({
           <div className="space-y-1">
             <Label htmlFor="descricao">Descricao</Label>
             <Textarea id="descricao" {...form.register("descricao")} />
+          </div>
+
+          <div className="flex items-center justify-between rounded-md border p-3">
+            <div className="space-y-0.5">
+              <Label htmlFor="publicadoNoSite">Exibir no site público</Label>
+              <p className="text-xs text-muted-foreground">
+                Desligue para despublicar só este evento (some da agenda pública, continua no calendário).
+              </p>
+            </div>
+            <Switch
+              id="publicadoNoSite"
+              checked={form.watch("publicadoNoSite") ?? true}
+              onCheckedChange={(val) => form.setValue("publicadoNoSite", val)}
+            />
           </div>
 
           <DialogFooter>
