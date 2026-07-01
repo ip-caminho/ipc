@@ -83,6 +83,8 @@ async function coletarAgenda(ctx: QueryCtx, tipoFiltro?: TipoAgenda): Promise<Ev
     .withIndex("by_data", (q) => q.gte("data", hoje))
     .collect();
   for (const e of eventosCalendario) {
+    // Despublicado individualmente → não aparece no site (continua no calendário interno)
+    if (e.publicadoNoSite === false) continue;
     const tipo: TipoAgenda = e.tipo ?? "evento";
     if (tipoFiltro && tipoFiltro !== tipo) continue;
     eventos.push({

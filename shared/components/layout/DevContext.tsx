@@ -693,6 +693,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "Navegacao por mes com setas",
       "Filtro por ministerio",
       "Click no evento abre dialog de edicao",
+      "Switch 'Exibir no site publico' (publicadoNoSite) despublica o evento da agenda publica sem removê-lo do calendario",
     ],
   },
   "/louvor": {
@@ -1193,6 +1194,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     notas: [
       "Lista consolidada. Cultos sao leitura (atalho /cultos); eventos criados/editados aqui inline (calendario:create/update)",
       "Editar abre o EventoForm na propria pagina (nao redireciona p/ /calendario)",
+      "Switch 'Exibir no site publico' (publicadoNoSite) despublica um evento; badge 'Oculto no site' na lista",
       "Culto de domingo 10h gerado automaticamente pelo agendador de cultos",
     ],
   },

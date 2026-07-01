@@ -55,6 +55,7 @@ export const getAgendaAdmin = query({
       data: string;
       horario?: string;
       editavel: boolean;
+      publicadoNoSite?: boolean;
       evento?: {
         id: string;
         titulo: string;
@@ -63,6 +64,7 @@ export const getAgendaAdmin = query({
         ministerioId?: string;
         descricao?: string;
         tipo: string;
+        publicadoNoSite: boolean;
       };
     };
 
@@ -90,6 +92,7 @@ export const getAgendaAdmin = query({
       .collect();
     for (const e of eventos) {
       const tipo = e.tipo ?? "evento";
+      const publicado = e.publicadoNoSite !== false;
       itens.push({
         id: e._id,
         tipo,
@@ -97,6 +100,7 @@ export const getAgendaAdmin = query({
         subtitulo: e.descricao,
         data: e.data,
         editavel: true,
+        publicadoNoSite: publicado,
         evento: {
           id: e._id,
           titulo: e.titulo,
@@ -105,6 +109,7 @@ export const getAgendaAdmin = query({
           ministerioId: e.ministerioId,
           descricao: e.descricao,
           tipo,
+          publicadoNoSite: publicado,
         },
       });
     }

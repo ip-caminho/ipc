@@ -776,6 +776,9 @@ export default defineSchema({
     origem: v.optional(v.string()), // "aviso-ia" = criado automaticamente a partir de aviso
     // Categoria para a agenda publica (default 'evento' quando ausente)
     tipo: v.optional(v.union(v.literal("pg"), v.literal("evento"), v.literal("reuniao"))),
+    // Visibilidade na agenda publica. Ausente ou true = aparece no site;
+    // false = despublicado (some do site, continua no calendario interno).
+    publicadoNoSite: v.optional(v.boolean()),
     criadoEm: v.number(),
   })
     .index("by_data", ["data"])
