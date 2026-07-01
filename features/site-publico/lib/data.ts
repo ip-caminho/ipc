@@ -29,7 +29,7 @@ export const getIgrejaInfoPublic = unstable_cache(
     }
   },
   ["public-igreja-info"],
-  { revalidate: 900 },
+  { revalidate: 900, tags: ["public-igreja-info"] },
 );
 
 // Agenda pública completa (futura). Cacheada 15 min — derivamos "próximos" via
@@ -45,7 +45,7 @@ export const getAgendaPublic = unstable_cache(
     }
   },
   ["public-agenda"],
-  { revalidate: 900 },
+  { revalidate: 900, tags: ["public-agenda"] },
 );
 
 // Inscrições ativas (hub /inscricoes e home). Tolera 5 min de defasagem.
@@ -60,7 +60,7 @@ export const getInscricoesAtivas = unstable_cache(
     }
   },
   ["public-inscricoes-ativas"],
-  { revalidate: 300 },
+  { revalidate: 300, tags: ["public-inscricoes-ativas"] },
 );
 
 // Detalhe de uma inscrição por slug (/inscricoes/[slug]). Cache curto: vagas
@@ -76,7 +76,7 @@ export const getInscricaoBySlug = unstable_cache(
     }
   },
   ["public-inscricao-by-slug"],
-  { revalidate: 60 },
+  { revalidate: 60, tags: ["public-inscricoes-ativas"] },
 );
 
 // Avisos do último culto (bloco "Esta semana" da home) — extraídos pela IA do
@@ -92,7 +92,7 @@ export const getAvisosUltimoCulto = unstable_cache(
     }
   },
   ["public-avisos-ultimo-culto"],
-  { revalidate: 300 },
+  { revalidate: 300, tags: ["public-avisos-ultimo-culto"] },
 );
 
 // Textos editáveis do hero da home (chaves site.*). Tolera 5 min de defasagem.
@@ -113,5 +113,5 @@ export const getTextosSitePublic = unstable_cache(
     }
   },
   ["public-site-textos"],
-  { revalidate: 300 },
+  { revalidate: 300, tags: ["public-site-textos"] },
 );

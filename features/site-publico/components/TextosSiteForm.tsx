@@ -10,6 +10,7 @@ import { Input } from "@/shared/components/ui/input";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Button } from "@/shared/components/ui/button";
 import { textosSiteSchema, type TextosSiteFormValues } from "../lib/validations";
+import { revalidarSite } from "../lib/revalidate";
 
 export function TextosSiteForm({
   initial,
@@ -30,6 +31,7 @@ export function TextosSiteForm({
   const onSubmit = async (values: TextosSiteFormValues) => {
     try {
       await updateTextos(values);
+      await revalidarSite("textos");
       toast.success("Textos salvos");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao salvar");

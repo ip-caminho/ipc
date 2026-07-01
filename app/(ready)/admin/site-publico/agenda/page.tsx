@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { Plus, Pencil } from "lucide-react";
 import { EventoForm } from "@features/calendario/components/EventoForm";
 import type { EventoFormValues } from "@features/calendario/lib/validations";
+import { revalidarSite } from "@features/site-publico/lib/revalidate";
 
 type EventoEditavel = {
   id: string;
@@ -85,6 +86,7 @@ function AgendaAdmin() {
           tipo: data.tipo,
           publicadoNoSite: data.publicadoNoSite ?? true,
         });
+        await revalidarSite("agenda");
         toast.success("Evento atualizado");
       } else {
         await createEvento({
@@ -96,6 +98,7 @@ function AgendaAdmin() {
           tipo: data.tipo,
           publicadoNoSite: data.publicadoNoSite ?? true,
         });
+        await revalidarSite("agenda");
         toast.success("Evento criado");
       }
     } catch (e) {

@@ -15,6 +15,7 @@ import { Skeleton } from "@/shared/components/ui/skeleton";
 import { toast } from "sonner";
 import { Plus, Users } from "lucide-react";
 import { InscricaoBuilder } from "@features/site-publico/components/InscricaoBuilder";
+import { revalidarSite } from "@features/site-publico/lib/revalidate";
 
 function formatData(ts?: number): string {
   if (ts == null) return "—";
@@ -41,6 +42,7 @@ function InscricoesAdmin() {
     if (!confirm("Encerrar esta inscrição? Ela deixa de aparecer no site.")) return;
     try {
       await encerrar({ id });
+      await revalidarSite("inscricoes");
       toast.success("Inscrição encerrada");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao encerrar");
