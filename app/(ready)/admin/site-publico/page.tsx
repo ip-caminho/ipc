@@ -1,84 +1,70 @@
 "use client";
 
-import Link from "next/link";
+import { useQueryState, parseAsStringLiteral } from "nuqs";
 import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
 import { PageHeader } from "@shared/components/layout/PageHeader";
 import { PermissionGate } from "@shared/components/auth/PermissionGate";
 import { Card, CardContent } from "@/shared/components/ui/card";
-import { Building2, CalendarDays, Megaphone, Users, Type, ExternalLink, ArrowRight } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/shared/components/ui/tabs";
+import { Building2, CalendarDays, Megaphone, Users, Type, ExternalLink } from "lucide-react";
+import { InformacoesPanel } from "@features/site-publico/components/paineis/InformacoesPanel";
+import { AgendaPanel } from "@features/site-publico/components/paineis/AgendaPanel";
+import { AvisosPanel } from "@features/site-publico/components/paineis/AvisosPanel";
+import { InscricoesPanel } from "@features/site-publico/components/paineis/InscricoesPanel";
+import { TextosPanel } from "@features/site-publico/components/paineis/TextosPanel";
 
-// Hub de manutenção do site público. Cada card leva à edição da fonte certa;
-// a visibilidade é controlada por `site_publico:manage` (papel comunicacao etc.).
+// Hub de manutenção do site público. Uma página com abas — cada seção edita a
+// fonte certa inline, sem navegar. Visibilidade por `site_publico:manage`.
 const SECOES = [
-  {
-    href: "/admin/site-publico/informacoes",
-    icon: Building2,
-    titulo: "Informações",
-    descricao: "Contato, endereço, horários e dados de ofertas — aparece no rodapé e na página Visite.",
-  },
-  {
-    href: "/admin/site-publico/agenda",
-    icon: CalendarDays,
-    titulo: "Agenda",
-    descricao: "Eventos, PGs e reuniões da agenda pública. O culto de domingo aparece automaticamente.",
-  },
-  {
-    href: "/admin/site-publico/avisos",
-    icon: Megaphone,
-    titulo: "Avisos da semana",
-    descricao: "Revise os avisos do último culto que aparecem em “Esta semana” na home.",
-  },
-  {
-    href: "/admin/site-publico/inscricoes",
-    icon: Users,
-    titulo: "Inscrições",
-    descricao: "Crie e gerencie formulários de inscrição (retiros, cursos, eventos).",
-  },
-  {
-    href: "/admin/site-publico/textos",
-    icon: Type,
-    titulo: "Textos",
-    descricao: "Título e subtítulo do topo da home.",
-  },
-];
+  { key: "informacoes", label: "Informações", icon: Building2, Panel: InformacoesPanel },
+  { key: "agenda", label: "Agenda", icon: CalendarDays, Panel: AgendaPanel },
+  { key: "avisos", label: "Avisos", icon: Megaphone, Panel: AvisosPanel },
+  { key: "inscricoes", label: "Inscrições", icon: Users, Panel: InscricoesPanel },
+  { key: "textos", label: "Textos", icon: Type, Panel: TextosPanel },
+] as const;
+
+const SECAO_KEYS = SECOES.map((s) => s.key);
 
 function SitePublicoHub() {
+  const [secao, setSecao] = useQueryState(
+    "secao",
+    parseAsStringLiteral(SECAO_KEYS).withDefault("informacoes"),
+  );
+
   return (
     <HeaderLayout>
       <PageHeader title="Site público" />
       <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">
-          Tudo que aparece no site da igreja é mantido aqui. Edite e as mudanças
-          refletem no site automaticamente.
-        </p>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {SECOES.map((s) => (
-            <Link key={s.href} href={s.href} className="group">
-              <Card className="h-full transition-colors hover:border-primary/40">
-                <CardContent className="flex items-start gap-3 p-4">
-                  <s.icon className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-medium">{s.titulo}</h3>
-                      <ArrowRight className="h-4 w-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
-                    </div>
-                    <p className="mt-1 text-sm text-muted-foreground">{s.descricao}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </div>
-        <div className="pt-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-sm text-muted-foreground">
+            Tudo que aparece no site da igreja é mantido aqui. Ao salvar, o site reflete
+            a mudança em segundos.
+          </p>
           <a
             href="/"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+            className="inline-flex shrink-0 items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
           >
             <ExternalLink className="h-4 w-4" /> Ver o site
           </a>
         </div>
+
+        <Tabs value={secao} onValueChange={(v) => setSecao(v as (typeof SECAO_KEYS)[number])}>
+          <TabsList className="grid h-auto w-full grid-cols-2 gap-1 sm:inline-flex sm:w-auto">
+            {SECOES.map((s) => (
+              <TabsTrigger key={s.key} value={s.key} className="gap-1.5">
+                <s.icon className="h-4 w-4" />
+                {s.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          {SECOES.map(({ key, Panel }) => (
+            <TabsContent key={key} value={key} className="mt-4">
+              <Panel />
+            </TabsContent>
+          ))}
+        </Tabs>
       </div>
     </HeaderLayout>
   );
