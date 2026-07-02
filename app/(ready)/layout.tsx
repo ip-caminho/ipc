@@ -35,7 +35,7 @@ function NormalShell({ children }: { children: React.ReactNode }) {
 function ShellSelector({ children }: { children: React.ReactNode }) {
   // @ts-ignore Convex TS2589
   const config = useQuery(api.appConfig.queries.get);
-  const { role, isLoading } = useAuth();
+  const { role, isLoading, isImpersonating } = useAuth();
 
   // Enquanto config ou role nao carregaram, renderiza o layout normal
   // (sem branching). Evita flash de loader e nao bloqueia paginas que
@@ -44,7 +44,10 @@ function ShellSelector({ children }: { children: React.ReactNode }) {
     return <NormalShell>{children}</NormalShell>;
   }
 
-  if (config?.modoQuiosque && role !== "admin") {
+  // Admin simulando um papel (impersonation) NAO deve cair no quiosque — o
+  // QuiosqueShell nao tem como sair da simulacao, prenderia o admin. `role`
+  // aqui e o papel simulado, por isso o guard extra com isImpersonating.
+  if (config?.modoQuiosque && role !== "admin" && !isImpersonating) {
     return <QuiosqueShell />;
   }
 
