@@ -97,7 +97,7 @@ export function CalendarioMes({
                   if (!doMes) onNavigate(dia); // clicar num dia vazante muda de mês
                 }}
                 className={cn(
-                  "min-h-[60px] border-b border-r p-1 text-left align-top transition-colors last:border-r-0 hover:bg-accent/50 sm:min-h-[92px]",
+                  "flex min-h-[60px] flex-col items-stretch border-b border-r p-1 text-left transition-colors last:border-r-0 hover:bg-accent/50 sm:min-h-[92px]",
                   !doMes && "bg-muted/20 text-muted-foreground",
                   domingo && doMes && "bg-muted/30",
                   feriado && "bg-amber-50 dark:bg-amber-950/20",
