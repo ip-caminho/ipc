@@ -523,6 +523,38 @@ export const syncRolePermissionsFromCode = internalMutation({
   },
 });
 
+/**
+ * Concede calendario:read aos papeis base (membro, obreiro, secretario_executivo)
+ * para o calendario ficar visivel a todos. Direcionada e idempotente: adiciona
+ * SO essa permissao, preservando o resto (nao reseta os papeis como o sync faz).
+ * Rodar em prod apos deploy:
+ * npx convex run preferencias/rbac:addCalendarioReadToBaseRoles
+ */
+export const addCalendarioReadToBaseRoles = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const roles = ["membro", "obreiro", "secretario_executivo"];
+    const updated: string[] = [];
+    for (const role of roles) {
+      const row = await ctx.db
+        .query("rolePermissions")
+        .withIndex("by_role", (q) => q.eq("role", role))
+        .first();
+      // Sem row: resolvePermissions cai no INITIAL do codigo (que ja tem
+      // calendario:read), entao nao precisa criar.
+      if (!row) continue;
+      if (!row.permissions.includes("calendario:read")) {
+        await ctx.db.patch(row._id, {
+          permissions: [...row.permissions, "calendario:read"],
+          updatedAt: Date.now(),
+        });
+        updated.push(role);
+      }
+    }
+    return { updated };
+  },
+});
+
 /** Query para listar conjuntos de permissões de voluntários */
 export const getVolunteerPermissionSets = query({
   args: {},

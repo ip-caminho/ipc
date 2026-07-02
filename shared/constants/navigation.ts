@@ -52,6 +52,7 @@ export const PRIMARY_TABS: NavItem[] = [
   { label: "Início", href: "/dashboard", icon: Home },
   { label: "Gravações", href: "/comunidade", icon: Ear, modulo: "gravacoes" },
   { label: "Orar", href: "/pedidos-oracao", icon: HandHeart, modulo: "pedidos-oracao" },
+  { label: "Calendário", href: "/calendario", icon: CalendarDays, permission: "calendario:read", modulo: "calendario" },
 ];
 
 // Tabs candidatas da bottom bar mobile (filtradas por RBAC/modulo; "Membros"
@@ -59,6 +60,7 @@ export const PRIMARY_TABS: NavItem[] = [
 export const MOBILE_PRIMARY_TABS: NavItem[] = [
   { label: "Início", href: "/dashboard", icon: Home },
   { label: "Gravações", href: "/comunidade", icon: Ear, modulo: "gravacoes" },
+  { label: "Calendário", href: "/calendario", icon: CalendarDays, permission: "calendario:read", modulo: "calendario" },
   { label: "Membros", href: "/membros", icon: Users, permission: "membros:read", modulo: "membros" },
 ];
 
@@ -219,14 +221,6 @@ export const GESTAO_SECTIONS: NavSection[] = [
   {
     titulo: "Administração",
     items: [
-      {
-        label: "Calendário",
-        href: "/calendario",
-        icon: CalendarDays,
-        description: "Eventos e datas da igreja",
-        permission: "calendario:read",
-        modulo: "calendario",
-      },
       {
         label: "Salas",
         href: "/salas",
