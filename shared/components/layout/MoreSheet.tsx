@@ -43,6 +43,7 @@ export function MoreSheet({ open, onOpenChange }: Props) {
   const { name, role, foto, can, hasAnyRole } = useAuth();
   const { theme, setTheme } = useTheme();
   const { signOut } = useAuthActions();
+  // @ts-ignore Convex TS2589
   const modulosAtivos = useQuery(api.modulos.queries.listModulosAtivos);
 
   // Mesma lista do sidebar desktop, filtrada por RBAC. Sem "modo gestao".
@@ -70,7 +71,7 @@ export function MoreSheet({ open, onOpenChange }: Props) {
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      {/* z-[60] fica acima da FloatingBottomBar (z-[56]) — sem isso o rodape do
+      {/* z-[60] fica acima da FloatingBottomBar (z-40) — sem isso o rodape do
           sheet (Modo escuro/Sair) ficava escondido atras da barra flutuante */}
       <SheetContent side="bottom" className="z-[60] h-[85vh] rounded-t-2xl px-0">
         {/* Escudo anti tap-through: captura toques enquanto o sheet desliza */}

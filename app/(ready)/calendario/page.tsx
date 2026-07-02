@@ -30,7 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
-import { cn } from "@/shared/lib/utils/cn";
+import { ToggleGroup, ToggleGroupItem } from "@/shared/components/ui/toggle-group";
 import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { EventoForm } from "@features/calendario/components/EventoForm";
@@ -195,23 +195,21 @@ function CalendarioContent() {
             </div>
 
             {/* Seletor de visão */}
-            <div className="inline-flex rounded-md border p-0.5">
+            <ToggleGroup
+              type="single"
+              size="sm"
+              variant="outline"
+              value={view}
+              onValueChange={(v) => {
+                if (v) setView(v as View);
+              }}
+            >
               {VIEWS.map((v) => (
-                <button
-                  key={v}
-                  type="button"
-                  onClick={() => setView(v)}
-                  className={cn(
-                    "rounded px-3 py-1 text-sm transition-colors",
-                    view === v
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
-                >
+                <ToggleGroupItem key={v} value={v} className="px-3">
                   {VIEW_LABEL[v]}
-                </button>
+                </ToggleGroupItem>
               ))}
-            </div>
+            </ToggleGroup>
           </div>
 
           {/* Barra: filtro + novo */}
@@ -249,6 +247,7 @@ function CalendarioContent() {
               eventos={eventos}
               onDayClick={abrirNovo}
               onEventClick={abrirEvento}
+              onNavigate={setRefDate}
               podeCriar={can("calendario:create")}
             />
           ) : view === "semana" ? (

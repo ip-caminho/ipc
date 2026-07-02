@@ -62,7 +62,7 @@ export function FloatingBottomBar() {
   return (
     <>
       <nav
-        className="md:hidden fixed bottom-4 left-4 right-4 z-[56]"
+        className="md:hidden fixed bottom-4 left-4 right-4 z-40"
         style={{ marginBottom: "env(safe-area-inset-bottom)" }}
         aria-label="Navegacao principal"
       >
