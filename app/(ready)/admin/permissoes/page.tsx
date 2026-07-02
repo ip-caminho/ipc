@@ -32,7 +32,7 @@ import { Switch } from "@/shared/components/ui/switch";
 import type { Id } from "@/convex/_generated/dataModel";
 import type { Role } from "@/types/auth";
 
-const AVAILABLE_ROLES = ["membro", "obreiro", "secretaria", "presbitero", "pastor", "comunicacao", "admin"] as const;
+const AVAILABLE_ROLES = ["membro", "obreiro", "secretaria", "presbitero", "pastor", "admin"] as const;
 
 const ROLE_LABELS: Record<string, string> = {
   admin: "Admin",
@@ -41,7 +41,6 @@ const ROLE_LABELS: Record<string, string> = {
   obreiro: "Obreiro",
   secretaria: "Secretaria",
   membro: "Membro",
-  comunicacao: "Comunicação",
 };
 
 const ROLE_COLORS: Record<string, string> = {
@@ -51,7 +50,6 @@ const ROLE_COLORS: Record<string, string> = {
   obreiro: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
   secretaria: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
   membro: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
-  comunicacao: "bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-300",
 };
 
 function MembrosTab() {

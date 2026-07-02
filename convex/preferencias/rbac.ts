@@ -234,7 +234,7 @@ function getPermissionDescription(perm: string): string {
 }
 
 // Visible roles in matrix (exclude admin — has wildcard *)
-const VISIBLE_ROLES = ["membro", "obreiro", "secretaria", "presbitero", "pastor", "comunicacao"];
+const VISIBLE_ROLES = ["membro", "obreiro", "secretaria", "presbitero", "pastor"];
 
 // ===== HELPER =====
 
