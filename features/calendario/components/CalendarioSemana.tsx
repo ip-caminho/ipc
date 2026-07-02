@@ -45,7 +45,7 @@ export function CalendarioSemana({ refDate, eventos, onDayClick, onEventClick }:
                 className={cn(
                   "mx-auto flex h-7 w-7 items-center justify-center rounded-full text-sm",
                   hoje && "bg-primary font-semibold text-primary-foreground",
-                  !hoje && feriado && "font-semibold text-amber-700 dark:text-amber-400",
+                  !hoje && feriado && "font-semibold text-red-600 dark:text-red-400",
                 )}
               >
                 {format(dia, "d")}
@@ -56,7 +56,7 @@ export function CalendarioSemana({ refDate, eventos, onDayClick, onEventClick }:
               {feriado && (
                 <Badge
                   variant="outline"
-                  className="border-amber-300 text-amber-700 dark:text-amber-400"
+                  className="border-red-300 text-red-600 dark:text-red-400"
                 >
                   {feriado}
                 </Badge>

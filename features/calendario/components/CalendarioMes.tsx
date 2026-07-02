@@ -10,15 +10,11 @@ import {
   isSameMonth,
   isToday,
   getDay,
-  parseISO,
 } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { Plus } from "lucide-react";
 import { cn } from "@/shared/lib/utils/cn";
-import { Badge } from "@/shared/components/ui/badge";
-import { Button } from "@/shared/components/ui/button";
 import { getFeriado } from "../lib/feriados";
-import { TIPO_EVENTO_COR, TIPO_EVENTO_LABEL, type CalendarioEvento } from "../lib/types";
+import { TIPO_EVENTO_COR, type CalendarioEvento } from "../lib/types";
+import { PainelDoDia } from "./PainelDoDia";
 
 const DIAS_SEMANA = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
@@ -33,10 +29,6 @@ type Props = {
   onNavigate: (date: Date) => void;
   podeCriar?: boolean;
 };
-
-function capitalizar(s: string): string {
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}
 
 export function CalendarioMes({
   refDate,
@@ -69,7 +61,6 @@ export function CalendarioMes({
     selecionado && selecionado.slice(0, 7) === mesRef ? selecionado : defaultDia;
 
   const eventosDoDia = porDia.get(selEfetivo) ?? [];
-  const feriadoSel = getFeriado(selEfetivo);
 
   return (
     <div className="space-y-3">
@@ -103,7 +94,7 @@ export function CalendarioMes({
                   "flex min-h-[60px] flex-col items-stretch border-b border-r p-1 text-left transition-colors last:border-r-0 hover:bg-accent/50 sm:min-h-[92px]",
                   !doMes && "bg-muted/20 text-muted-foreground",
                   domingo && doMes && "bg-muted/30",
-                  feriado && "bg-amber-50 dark:bg-amber-950/20",
+                  feriado && "bg-red-50 dark:bg-red-950/20",
                   selecionado && "ring-2 ring-inset ring-primary",
                 )}
               >
@@ -112,7 +103,7 @@ export function CalendarioMes({
                     className={cn(
                       "inline-flex h-6 w-6 items-center justify-center rounded-full text-xs",
                       hoje && "bg-primary font-semibold text-primary-foreground",
-                      !hoje && feriado && "font-semibold text-amber-700 dark:text-amber-400",
+                      !hoje && feriado && "font-semibold text-red-600 dark:text-red-400",
                       !hoje && !feriado && domingo && "font-medium text-foreground",
                     )}
                   >
@@ -121,7 +112,7 @@ export function CalendarioMes({
                 </div>
 
                 {feriado && (
-                  <p className="mt-0.5 hidden truncate text-[10px] leading-tight text-amber-700 dark:text-amber-400 sm:block">
+                  <p className="mt-0.5 hidden truncate text-[10px] leading-tight text-red-600 dark:text-red-400 sm:block">
                     {feriado}
                   </p>
                 )}
@@ -166,61 +157,13 @@ export function CalendarioMes({
         </div>
       </div>
 
-      {/* Painel do dia selecionado — alvos grandes, fáceis de tocar no mobile */}
-      <div className="rounded-md border p-4">
-        <div className="mb-3 flex flex-wrap items-center gap-2">
-          <span className="text-sm font-medium">
-            {capitalizar(format(parseISO(selEfetivo), "EEEE, dd/MM", { locale: ptBR }))}
-          </span>
-          {feriadoSel && (
-            <Badge variant="outline" className="border-amber-300 text-amber-700 dark:text-amber-400">
-              {feriadoSel}
-            </Badge>
-          )}
-        </div>
-
-        {eventosDoDia.length === 0 ? (
-          <p className="py-1 text-sm text-muted-foreground">Nenhum evento neste dia.</p>
-        ) : (
-          <div className="space-y-1">
-            {eventosDoDia.map((ev) => (
-              <button
-                key={ev._id}
-                type="button"
-                onClick={() => onEventClick(ev)}
-                className="flex min-h-11 w-full items-center gap-2 rounded-md px-2 py-2 text-left hover:bg-accent"
-              >
-                <span
-                  className={cn(
-                    "h-2.5 w-2.5 shrink-0 rounded-full",
-                    TIPO_EVENTO_COR[ev.tipo ?? "evento"] ?? "bg-sky-500",
-                  )}
-                />
-                <span className="truncate text-sm">{ev.titulo}</span>
-                {ev.ministerioNome && (
-                  <span className="truncate text-xs text-muted-foreground">
-                    · {ev.ministerioNome}
-                  </span>
-                )}
-                <span className="ml-auto shrink-0 text-[10px] uppercase text-muted-foreground">
-                  {TIPO_EVENTO_LABEL[ev.tipo ?? "evento"]}
-                </span>
-              </button>
-            ))}
-          </div>
-        )}
-
-        {podeCriar && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="mt-2 w-full"
-            onClick={() => onDayClick(selEfetivo)}
-          >
-            <Plus className="mr-1 h-4 w-4" /> Novo evento neste dia
-          </Button>
-        )}
-      </div>
+      <PainelDoDia
+        iso={selEfetivo}
+        eventos={eventosDoDia}
+        onEventClick={onEventClick}
+        onNovo={onDayClick}
+        podeCriar={podeCriar}
+      />
     </div>
   );
 }
