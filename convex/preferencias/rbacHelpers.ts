@@ -140,15 +140,6 @@ export const INITIAL_ROLE_PERMISSIONS: Record<string, string[]> = {
     // Operacao basica
     "pedidos_oracao:read",
   ],
-
-  // Equipe de comunicacao / manutencao do site publico. So o necessario p/ o
-  // painel /admin/site-publico: informacoes, inscricoes, curadoria de avisos
-  // (site_publico:manage), agenda-eventos (calendario:*) e ler gravacoes.
-  comunicacao: [
-    "site_publico:manage",
-    "calendario:read", "calendario:create", "calendario:update", "calendario:delete",
-    "gravacoes:read",
-  ],
 };
 
 // === Permissões extras para voluntários ===

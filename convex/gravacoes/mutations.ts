@@ -136,7 +136,7 @@ export const remove = mutation({
 });
 
 // Curadoria dos avisos do site (painel /admin/site-publico/avisos). Escopada SO
-// ao campo iaAvisos — nao expoe os demais campos da gravacao ao papel comunicacao.
+// ao campo iaAvisos — nao expoe os demais campos da gravacao a quem tem site_publico:manage.
 // A tela recarrega e reenvia todos os campos de cada aviso (inclusive contato/
 // dataEvento) para nao apaga-los. Contato/WhatsApp seguem nao expostos no site
 // (public/avisos.ts ja omite). Exige site_publico:manage.

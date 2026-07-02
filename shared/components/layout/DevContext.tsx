@@ -1176,7 +1176,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "Cada aba = um Panel self-fetching (Radix desmonta aba inativa = query so quando aberta)",
     ],
     notas: [
-      "Permissao: site_publico:manage (papel 'comunicacao' + admin/pastor/sec.exec)",
+      "Permissao: site_publico:manage (admin/pastor/sec.exec por padrao; liga por membro na pagina de permissoes)",
       "Pagina unica com abas; aba ativa na URL via nuqs (?secao=). Sem navegar entre paginas",
       "As sub-rotas /informacoes|/agenda|/avisos|/inscricoes|/textos REDIRECIONAM p/ ?secao=",
       "Respostas de inscricao seguem em sub-pagina propria (/inscricoes/[id]/respostas)",
