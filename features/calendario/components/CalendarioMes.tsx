@@ -11,8 +11,10 @@ import {
   isToday,
   getDay,
 } from "date-fns";
+import { Mic } from "lucide-react";
 import { cn } from "@/shared/lib/utils/cn";
 import { getFeriado } from "../lib/feriados";
+import { eventosPorDia } from "../lib/agrupar";
 import { TIPO_EVENTO_COR, type CalendarioEvento } from "../lib/types";
 import { PainelDoDia } from "./PainelDoDia";
 
@@ -28,6 +30,8 @@ type Props = {
   onEventClick: (e: CalendarioEvento) => void;
   onNavigate: (date: Date) => void;
   podeCriar?: boolean;
+  // Pregador do dia (iso -> nome), quando o toggle "Pregadores" está ligado.
+  pregadores?: Record<string, string>;
 };
 
 export function CalendarioMes({
@@ -39,17 +43,13 @@ export function CalendarioMes({
   onEventClick,
   onNavigate,
   podeCriar = true,
+  pregadores,
 }: Props) {
   const inicio = startOfWeek(startOfMonth(refDate), { weekStartsOn: 0 });
   const fim = endOfWeek(endOfMonth(refDate), { weekStartsOn: 0 });
   const dias = eachDayOfInterval({ start: inicio, end: fim });
 
-  const porDia = new Map<string, CalendarioEvento[]>();
-  for (const ev of eventos) {
-    const arr = porDia.get(ev.data);
-    if (arr) arr.push(ev);
-    else porDia.set(ev.data, [ev]);
-  }
+  const porDia = eventosPorDia(eventos);
 
   // Dia selecionado (mostra os eventos no painel abaixo). Se o selecionado não
   // for do mês visível (após navegar), cai em hoje-no-mês ou no dia 1.
@@ -151,6 +151,13 @@ export function CalendarioMes({
                     </div>
                   </>
                 )}
+
+                {pregadores?.[iso] && (
+                  <div className="mt-0.5 hidden items-center gap-1 text-[10px] text-indigo-600 dark:text-indigo-400 sm:flex">
+                    <Mic className="h-3 w-3 shrink-0" />
+                    <span className="truncate">{pregadores[iso]}</span>
+                  </div>
+                )}
               </button>
             );
           })}
@@ -163,6 +170,7 @@ export function CalendarioMes({
         onEventClick={onEventClick}
         onNovo={onDayClick}
         podeCriar={podeCriar}
+        pregador={pregadores?.[selEfetivo]}
       />
     </div>
   );

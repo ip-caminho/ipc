@@ -64,6 +64,47 @@ export const list = query({
   },
 });
 
+// Pregadores dos cultos num intervalo (para o toggle "Pregadores" do calendario).
+// Retorna [{ data, nome }] — nome vem do membro escalado em PREGACAO ou do
+// nomeCustom (pregador externo). Exige calendario:read (mesma da agenda).
+export const pregadores = query({
+  args: {
+    dataInicio: v.string(),
+    dataFim: v.string(),
+  },
+  handler: async (ctx, { dataInicio, dataFim }) => {
+    await requirePermission(ctx, "calendario:read");
+
+    const cultos = await ctx.db
+      .query("cultos")
+      .withIndex("by_data", (q) => q.gte("data", dataInicio).lte("data", dataFim))
+      .collect();
+
+    const resultado: { data: string; nome: string }[] = [];
+    for (const culto of cultos) {
+      const escala = await ctx.db
+        .query("cultoEscalas")
+        .withIndex("by_culto_funcao", (q) =>
+          q.eq("cultoId", culto._id).eq("funcao", "PREGACAO"),
+        )
+        .first();
+      if (!escala) continue;
+
+      let nome = escala.nomeCustom ?? "";
+      if (!nome && escala.membroId) {
+        const membro = await ctx.db.get(escala.membroId);
+        if (membro) {
+          const entidade = await ctx.db.get(membro.entidadeId);
+          nome = entidade?.nomeCompleto ?? entidade?.nomeRazaoSocial ?? "";
+        }
+      }
+      if (nome) resultado.push({ data: culto.data, nome });
+    }
+
+    return resultado;
+  },
+});
+
 export const getById = query({
   args: { id: v.id("calendarioEventos") },
   handler: async (ctx, { id }) => {
