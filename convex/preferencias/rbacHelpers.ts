@@ -76,6 +76,8 @@ export const INITIAL_ROLE_PERMISSIONS: Record<string, string[]> = {
   obreiro: [
     "membros:self_service", "membros:read",
     "pedidos_oracao:create", "pedidos_oracao:read",
+    // Calendario (visivel a todos)
+    "calendario:read",
     // Tarefas
     "tarefas:read", "tarefas:create", "tarefas:update",
   ],
@@ -121,6 +123,8 @@ export const INITIAL_ROLE_PERMISSIONS: Record<string, string[]> = {
     "membros:self_service",
     "gravacoes:read",
     "pedidos_oracao:create", "pedidos_oracao:read",
+    // Calendario (visivel a todos)
+    "calendario:read",
   ],
 
   // Secretario executivo: read em tudo do membro/entidade, write apenas em
@@ -133,6 +137,8 @@ export const INITIAL_ROLE_PERMISSIONS: Record<string, string[]> = {
     // Rol de membros (ver + editar)
     "rol:read", "rol:update",
     "atos_pastorais:manage",
+    // Calendario (visivel a todos)
+    "calendario:read",
     // Site Publico
     "site_publico:manage",
     // Auditoria
