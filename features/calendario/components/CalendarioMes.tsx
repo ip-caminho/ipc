@@ -28,6 +28,7 @@ type Props = {
   eventos: CalendarioEvento[];
   onDayClick: (iso: string) => void;
   onEventClick: (e: CalendarioEvento) => void;
+  onNavigate: (date: Date) => void;
   podeCriar?: boolean;
 };
 
@@ -40,6 +41,7 @@ export function CalendarioMes({
   eventos,
   onDayClick,
   onEventClick,
+  onNavigate,
   podeCriar = true,
 }: Props) {
   const [sel, setSel] = useState<string | null>(null);
@@ -90,7 +92,10 @@ export function CalendarioMes({
               <button
                 key={iso}
                 type="button"
-                onClick={() => setSel(iso)}
+                onClick={() => {
+                  setSel(iso);
+                  if (!doMes) onNavigate(dia); // clicar num dia vazante muda de mês
+                }}
                 className={cn(
                   "min-h-[60px] border-b border-r p-1 text-left align-top transition-colors last:border-r-0 hover:bg-accent/50 sm:min-h-[92px]",
                   !doMes && "bg-muted/20 text-muted-foreground",
@@ -159,8 +164,8 @@ export function CalendarioMes({
       </div>
 
       {/* Painel do dia selecionado — alvos grandes, fáceis de tocar no mobile */}
-      <div className="rounded-md border p-3">
-        <div className="mb-2 flex flex-wrap items-center gap-2">
+      <div className="rounded-md border p-4">
+        <div className="mb-3 flex flex-wrap items-center gap-2">
           <span className="text-sm font-medium">
             {capitalizar(format(parseISO(selEfetivo), "EEEE, dd/MM", { locale: ptBR }))}
           </span>

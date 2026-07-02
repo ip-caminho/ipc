@@ -102,11 +102,11 @@ export function EventoForm({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-h-[85dvh] max-w-md overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isEditing ? "Editar" : "Novo"} evento</DialogTitle>
         </DialogHeader>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-5">
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6 pt-1">
           {/* ===== Dados do evento (uso interno / calendário) ===== */}
           <div className="space-y-4">
             <SecaoTitulo>Dados do evento</SecaoTitulo>
