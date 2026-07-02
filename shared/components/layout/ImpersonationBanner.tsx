@@ -9,6 +9,7 @@ const ROLE_LABELS: Record<string, string> = {
   presbitero: "Presbítero",
   obreiro: "Obreiro",
   secretaria: "Secretária",
+  secretario_executivo: "Secretário Executivo",
   membro: "Membro",
 };
 

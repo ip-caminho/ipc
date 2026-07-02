@@ -16,7 +16,16 @@ export function PermissionsProvider({
   children: React.ReactNode;
 }) {
   const { isAuthenticated: isConvexAuthenticated } = useConvexAuth();
+  // @ts-ignore Convex TS2589
   const data = useQuery(api.preferencias.rbac.getUserPermissionContext);
+  // Permissoes reais por papel (tabela rolePermissions). So carrega p/ admin;
+  // usadas na simulacao para a previa refletir o banco, nao a constante do
+  // codigo (que pode divergir). getAllRolesWithPermissions ja retorna [] p/ nao-admin.
+  // @ts-ignore Convex TS2589
+  const rolesPerms = useQuery(
+    api.preferencias.rbac.getAllRolesWithPermissions,
+    data?.role === "admin" ? {} : "skip",
+  ) as { role: string; permissions: string[] }[] | undefined;
   const autoLink = useMutation(api.membros.autoLink.autoLinkByPhone);
   const autoLinkAttempted = useRef(false);
 
@@ -75,8 +84,11 @@ export function PermissionsProvider({
     const isImpersonating = isRealAdmin && impersonatedRole !== null;
 
     const role = isImpersonating ? impersonatedRole : realRole;
+    // Simulacao: usa as permissoes reais do papel (banco); cai na constante do
+    // codigo so como fallback (enquanto carrega ou papel nao retornado).
+    const dbPerms = rolesPerms?.find((r) => r.role === impersonatedRole)?.permissions;
     const permissions = isImpersonating
-      ? new Set(INITIAL_ROLE_PERMISSIONS[impersonatedRole] ?? [])
+      ? new Set(dbPerms ?? INITIAL_ROLE_PERMISSIONS[impersonatedRole] ?? [])
       : new Set(data?.permissions ?? []);
 
     return {
@@ -109,7 +121,7 @@ export function PermissionsProvider({
       impersonate,
       stopImpersonating,
     };
-  }, [data, impersonatedRole, impersonate, stopImpersonating]);
+  }, [data, rolesPerms, impersonatedRole, impersonate, stopImpersonating]);
 
   return (
     <PermissionsContext.Provider value={value}>
