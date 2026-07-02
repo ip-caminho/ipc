@@ -13,6 +13,7 @@ import {
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/shared/lib/utils/cn";
 import { getFeriado } from "../lib/feriados";
+import { eventosPorDia } from "../lib/agrupar";
 import type { CalendarioEvento } from "../lib/types";
 import { PainelDoDia } from "./PainelDoDia";
 
@@ -28,6 +29,7 @@ type Props = {
   onPickMonth: (date: Date) => void;
   onNovo?: (iso: string) => void;
   podeCriar?: boolean;
+  pregadores?: Record<string, string>;
 };
 
 function capitalizar(s: string): string {
@@ -43,16 +45,11 @@ export function CalendarioAno({
   onPickMonth,
   onNovo,
   podeCriar = true,
+  pregadores,
 }: Props) {
   const ano = refDate.getFullYear();
-  const comEvento = new Set(eventos.map((e) => e.data));
-
-  const porDia = new Map<string, CalendarioEvento[]>();
-  for (const ev of eventos) {
-    const arr = porDia.get(ev.data);
-    if (arr) arr.push(ev);
-    else porDia.set(ev.data, [ev]);
-  }
+  const porDia = eventosPorDia(eventos);
+  const comEvento = new Set(porDia.keys());
 
   // Dia do painel: usa o selecionado se for deste ano, senão hoje-no-ano ou 1º/jan.
   const anoStr = String(ano);
@@ -123,6 +120,7 @@ export function CalendarioAno({
         onEventClick={onEventClick}
         onNovo={onNovo}
         podeCriar={podeCriar}
+        pregador={pregadores?.[selEfetivo]}
       />
     </div>
   );

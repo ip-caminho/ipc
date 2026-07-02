@@ -34,7 +34,9 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/shared/components/ui/toggle-group";
-import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import { Switch } from "@/shared/components/ui/switch";
+import { Label } from "@/shared/components/ui/label";
+import { Plus, ChevronLeft, ChevronRight, Mic } from "lucide-react";
 import { toast } from "sonner";
 import { EventoForm } from "@features/calendario/components/EventoForm";
 import { CalendarioMes } from "@features/calendario/components/CalendarioMes";
@@ -68,6 +70,7 @@ function CalendarioContent() {
   const [refDate, setRefDate] = useState<Date>(() => new Date());
   const [diaSel, setDiaSel] = useState<string | null>(null);
   const [filtroMinisterio, setFiltroMinisterio] = useState<string>("");
+  const [verPregadores, setVerPregadores] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [createData, setCreateData] = useState<string>("");
   const [editEvento, setEditEvento] = useState<CalendarioEvento | null>(null);
@@ -114,6 +117,23 @@ function CalendarioContent() {
     setEventosCache(eventosRaw);
   }
   const eventos = eventosRaw ?? eventosCache;
+
+  // Pregadores dos cultos no intervalo (só busca quando o toggle está ligado).
+  // @ts-ignore Convex TS2589
+  const pregadoresRaw = useQuery(
+    api.calendario.queries.pregadores,
+    verPregadores
+      ? { dataInicio: format(inicio, "yyyy-MM-dd"), dataFim: format(fim, "yyyy-MM-dd") }
+      : "skip",
+  ) as { data: string; nome: string }[] | undefined;
+  const pregadores = useMemo(() => {
+    const m: Record<string, string> = {};
+    for (const p of pregadoresRaw ?? []) {
+      m[p.data] = m[p.data] ? `${m[p.data]} · ${p.nome}` : p.nome;
+    }
+    return m;
+  }, [pregadoresRaw]);
+  const pregadoresProp = verPregadores ? pregadores : undefined;
   // @ts-ignore Convex TS2589
   const ministerios = useQuery(api.ministerios.queries.list, { status: "ATIVO" });
   // @ts-ignore Convex TS2589
@@ -247,22 +267,31 @@ function CalendarioContent() {
 
           {/* Barra: filtro + novo */}
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <Select
-              value={filtroMinisterio || "__all__"}
-              onValueChange={(val) => setFiltroMinisterio(val === "__all__" ? "" : val)}
-            >
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Todos os ministerios" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__all__">Todos os ministérios</SelectItem>
-                {ministerios?.map((m: any) => (
-                  <SelectItem key={m._id} value={m._id}>
-                    {m.nome}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex flex-wrap items-center gap-3">
+              <Select
+                value={filtroMinisterio || "__all__"}
+                onValueChange={(val) => setFiltroMinisterio(val === "__all__" ? "" : val)}
+              >
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Todos os ministerios" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">Todos os ministérios</SelectItem>
+                  {ministerios?.map((m: any) => (
+                    <SelectItem key={m._id} value={m._id}>
+                      {m.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Label className="flex cursor-pointer items-center gap-2 text-sm font-normal">
+                <Switch checked={verPregadores} onCheckedChange={setVerPregadores} />
+                <span className="flex items-center gap-1">
+                  <Mic className="h-3.5 w-3.5" /> Pregadores
+                </span>
+              </Label>
+            </div>
 
             <PermissionGate permission="calendario:create">
               <Button onClick={() => abrirNovo()}>
@@ -294,6 +323,7 @@ function CalendarioContent() {
               onEventClick={abrirEvento}
               onNavigate={setRefDate}
               podeCriar={can("calendario:create")}
+              pregadores={pregadoresProp}
             />
           ) : view === "semana" ? (
             <CalendarioSemana
@@ -301,6 +331,7 @@ function CalendarioContent() {
               eventos={eventos}
               onDayClick={abrirNovo}
               onEventClick={abrirEvento}
+              pregadores={pregadoresProp}
             />
           ) : view === "ano" ? (
             <CalendarioAno
@@ -312,9 +343,15 @@ function CalendarioContent() {
               onPickMonth={abrirMes}
               onNovo={abrirNovo}
               podeCriar={can("calendario:create")}
+              pregadores={pregadoresProp}
             />
           ) : (
-            <CalendarioLista refDate={refDate} eventos={eventos} onEventClick={abrirEvento} />
+            <CalendarioLista
+              refDate={refDate}
+              eventos={eventos}
+              onEventClick={abrirEvento}
+              pregadores={pregadoresProp}
+            />
           )}
 
           {/* Dialog: criar evento */}

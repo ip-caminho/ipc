@@ -2,10 +2,11 @@
 
 import { startOfWeek, endOfWeek, eachDayOfInterval, format, isToday, getDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Plus } from "lucide-react";
+import { Plus, Mic } from "lucide-react";
 import { cn } from "@/shared/lib/utils/cn";
 import { Badge } from "@/shared/components/ui/badge";
 import { getFeriado } from "../lib/feriados";
+import { eventosPorDia } from "../lib/agrupar";
 import { TIPO_EVENTO_COR, TIPO_EVENTO_LABEL, type CalendarioEvento } from "../lib/types";
 
 type Props = {
@@ -13,18 +14,14 @@ type Props = {
   eventos: CalendarioEvento[];
   onDayClick: (iso: string) => void;
   onEventClick: (e: CalendarioEvento) => void;
+  pregadores?: Record<string, string>;
 };
 
-export function CalendarioSemana({ refDate, eventos, onDayClick, onEventClick }: Props) {
+export function CalendarioSemana({ refDate, eventos, onDayClick, onEventClick, pregadores }: Props) {
   const inicio = startOfWeek(refDate, { weekStartsOn: 0 });
   const dias = eachDayOfInterval({ start: inicio, end: endOfWeek(refDate, { weekStartsOn: 0 }) });
 
-  const porDia = new Map<string, CalendarioEvento[]>();
-  for (const ev of eventos) {
-    const arr = porDia.get(ev.data);
-    if (arr) arr.push(ev);
-    else porDia.set(ev.data, [ev]);
-  }
+  const porDia = eventosPorDia(eventos);
 
   return (
     <div className="divide-y rounded-md border">
@@ -61,7 +58,13 @@ export function CalendarioSemana({ refDate, eventos, onDayClick, onEventClick }:
                   {feriado}
                 </Badge>
               )}
-              {doDia.length === 0 && !feriado && (
+              {pregadores?.[iso] && (
+                <div className="flex items-center gap-1 text-xs text-indigo-600 dark:text-indigo-400">
+                  <Mic className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">Pregação: {pregadores[iso]}</span>
+                </div>
+              )}
+              {doDia.length === 0 && !feriado && !pregadores?.[iso] && (
                 <span className="text-sm text-muted-foreground">—</span>
               )}
               {doDia.map((ev) => (

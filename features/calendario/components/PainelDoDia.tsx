@@ -2,7 +2,7 @@
 
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Plus } from "lucide-react";
+import { Plus, Mic } from "lucide-react";
 import { cn } from "@/shared/lib/utils/cn";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
@@ -19,11 +19,13 @@ type Props = {
   onEventClick: (e: CalendarioEvento) => void;
   onNovo?: (iso: string) => void;
   podeCriar?: boolean;
+  // Quem prega neste dia (culto), quando o toggle "Pregadores" está ligado.
+  pregador?: string;
 };
 
 // Painel de detalhe do dia selecionado — alvos grandes, fáceis de tocar no
 // mobile. Reusado pelas visões Mês e Ano.
-export function PainelDoDia({ iso, eventos, onEventClick, onNovo, podeCriar = true }: Props) {
+export function PainelDoDia({ iso, eventos, onEventClick, onNovo, podeCriar = true, pregador }: Props) {
   const feriado = getFeriado(iso);
 
   return (
@@ -38,6 +40,14 @@ export function PainelDoDia({ iso, eventos, onEventClick, onNovo, podeCriar = tr
           </Badge>
         )}
       </div>
+
+      {pregador && (
+        <div className="mb-3 flex items-center gap-1.5 text-sm">
+          <Mic className="h-3.5 w-3.5 shrink-0 text-indigo-600 dark:text-indigo-400" />
+          <span className="text-muted-foreground">Pregação:</span>
+          <span className="truncate font-medium">{pregador}</span>
+        </div>
+      )}
 
       {eventos.length === 0 ? (
         <p className="py-1 text-sm text-muted-foreground">Nenhum evento neste dia.</p>
