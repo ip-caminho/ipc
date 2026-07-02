@@ -440,6 +440,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "Permissao: escalas:read, escalas:update, escalas:create, escalas:delete",
       "Escala unificada com liturgia (membro + passagem biblica ou membro simples)",
       "Preview de passagens biblicas inline (NAA) via BiblePassageInput",
+      "Desktop (CultosTable): container overflow-auto max-h-[calc(100vh-10rem)] com thead sticky top-0; coluna Data sticky left-0",
     ],
   },
   "/avisos": {

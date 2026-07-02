@@ -309,12 +309,12 @@ function CultosTable({
   emptyMessage: string;
 }) {
   return (
-    <div className="overflow-x-auto border rounded-lg">
+    <div className="overflow-auto border rounded-lg max-h-[calc(100vh-10rem)]">
       <table className="w-full text-sm">
-        <thead>
+        <thead className="sticky top-0 z-20 bg-muted">
           {grupos && (
             <tr className="border-b bg-muted/30">
-              <th className="sticky left-0 bg-muted/30" />
+              <th className="sticky left-0 z-10 bg-muted" />
               {grupos.map((g) => (
                 <th
                   key={g.titulo}
@@ -328,7 +328,7 @@ function CultosTable({
             </tr>
           )}
           <tr className="border-b bg-muted/50">
-            <th className="text-left p-2 font-medium sticky left-0 bg-muted/50 min-w-[100px]">Data</th>
+            <th className="text-left p-2 font-medium sticky left-0 z-10 bg-muted min-w-[100px]">Data</th>
             {funcoes.map((f) => (
               <th key={f.value} className="text-left p-2 font-medium min-w-[130px] whitespace-nowrap">
                 {f.label}
