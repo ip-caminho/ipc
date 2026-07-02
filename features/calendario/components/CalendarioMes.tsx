@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import {
   startOfMonth,
   endOfMonth,
@@ -26,6 +25,9 @@ const DIAS_SEMANA = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 type Props = {
   refDate: Date;
   eventos: CalendarioEvento[];
+  // Dia selecionado (controlado pelo page — sobrevive ao reload da query).
+  selecionado: string | null;
+  onSelect: (iso: string) => void;
   onDayClick: (iso: string) => void;
   onEventClick: (e: CalendarioEvento) => void;
   onNavigate: (date: Date) => void;
@@ -39,13 +41,13 @@ function capitalizar(s: string): string {
 export function CalendarioMes({
   refDate,
   eventos,
+  selecionado,
+  onSelect,
   onDayClick,
   onEventClick,
   onNavigate,
   podeCriar = true,
 }: Props) {
-  const [sel, setSel] = useState<string | null>(null);
-
   const inicio = startOfWeek(startOfMonth(refDate), { weekStartsOn: 0 });
   const fim = endOfWeek(endOfMonth(refDate), { weekStartsOn: 0 });
   const dias = eachDayOfInterval({ start: inicio, end: fim });
@@ -63,7 +65,8 @@ export function CalendarioMes({
   const defaultDia = isSameMonth(new Date(), refDate)
     ? format(new Date(), "yyyy-MM-dd")
     : format(startOfMonth(refDate), "yyyy-MM-dd");
-  const selEfetivo = sel && sel.slice(0, 7) === mesRef ? sel : defaultDia;
+  const selEfetivo =
+    selecionado && selecionado.slice(0, 7) === mesRef ? selecionado : defaultDia;
 
   const eventosDoDia = porDia.get(selEfetivo) ?? [];
   const feriadoSel = getFeriado(selEfetivo);
@@ -93,7 +96,7 @@ export function CalendarioMes({
                 key={iso}
                 type="button"
                 onClick={() => {
-                  setSel(iso);
+                  onSelect(iso);
                   if (!doMes) onNavigate(dia); // clicar num dia vazante muda de mês
                 }}
                 className={cn(

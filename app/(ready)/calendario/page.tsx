@@ -56,6 +56,7 @@ function CalendarioContent() {
     parseAsStringLiteral(VIEWS).withDefault("mes"),
   );
   const [refDate, setRefDate] = useState<Date>(() => new Date());
+  const [diaSel, setDiaSel] = useState<string | null>(null);
   const [filtroMinisterio, setFiltroMinisterio] = useState<string>("");
   const [createOpen, setCreateOpen] = useState(false);
   const [createData, setCreateData] = useState<string>("");
@@ -191,7 +192,7 @@ function CalendarioContent() {
               <Button variant="outline" size="sm" onClick={() => setRefDate(new Date())}>
                 Hoje
               </Button>
-              <span className="ml-2 text-sm font-medium">{periodoLabel}</span>
+              <span className="ml-2 text-lg font-semibold tracking-tight">{periodoLabel}</span>
             </div>
 
             {/* Seletor de visão */}
@@ -245,6 +246,8 @@ function CalendarioContent() {
             <CalendarioMes
               refDate={refDate}
               eventos={eventos}
+              selecionado={diaSel}
+              onSelect={setDiaSel}
               onDayClick={abrirNovo}
               onEventClick={abrirEvento}
               onNavigate={setRefDate}
