@@ -7,9 +7,13 @@ import {
   endOfMonth,
   startOfWeek,
   endOfWeek,
+  startOfYear,
+  endOfYear,
   addMonths,
   addWeeks,
+  addYears,
   format,
+  parseISO,
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { api } from "@/convex/_generated/api";
@@ -37,13 +41,20 @@ import { EventoForm } from "@features/calendario/components/EventoForm";
 import { CalendarioMes } from "@features/calendario/components/CalendarioMes";
 import { CalendarioSemana } from "@features/calendario/components/CalendarioSemana";
 import { CalendarioLista } from "@features/calendario/components/CalendarioLista";
+import { CalendarioAno } from "@features/calendario/components/CalendarioAno";
+import { TIPO_EVENTO_COR, TIPO_EVENTO_LABEL } from "@features/calendario/lib/types";
 import type { EventoFormValues } from "@features/calendario/lib/validations";
 import type { CalendarioEvento } from "@features/calendario/lib/types";
 import { revalidarSite } from "@features/site-publico/lib/revalidate";
 
-const VIEWS = ["mes", "semana", "lista"] as const;
+const VIEWS = ["mes", "semana", "lista", "ano"] as const;
 type View = (typeof VIEWS)[number];
-const VIEW_LABEL: Record<View, string> = { mes: "Mês", semana: "Semana", lista: "Lista" };
+const VIEW_LABEL: Record<View, string> = {
+  mes: "Mês",
+  semana: "Semana",
+  lista: "Lista",
+  ano: "Ano",
+};
 
 function capitalizar(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
@@ -76,6 +87,9 @@ function CalendarioContent() {
         fim: endOfWeek(endOfMonth(refDate), { weekStartsOn: 0 }),
       };
     }
+    if (view === "ano") {
+      return { inicio: startOfYear(refDate), fim: endOfYear(refDate) };
+    }
     return { inicio: startOfMonth(refDate), fim: endOfMonth(refDate) };
   }, [view, refDate]);
 
@@ -102,12 +116,27 @@ function CalendarioContent() {
   const removeEvento = useMutation(api.calendario.mutations.remove);
 
   const navegar = (dir: 1 | -1) =>
-    setRefDate((d) => (view === "semana" ? addWeeks(d, dir) : addMonths(d, dir)));
+    setRefDate((d) =>
+      view === "semana" ? addWeeks(d, dir) : view === "ano" ? addYears(d, dir) : addMonths(d, dir),
+    );
 
   const periodoLabel =
-    view === "semana"
-      ? `${format(inicio, "d", { locale: ptBR })}–${format(fim, "d 'de' MMM yyyy", { locale: ptBR })}`
-      : capitalizar(format(refDate, "MMMM yyyy", { locale: ptBR }));
+    view === "ano"
+      ? format(refDate, "yyyy")
+      : view === "semana"
+        ? `${format(inicio, "d", { locale: ptBR })}–${format(fim, "d 'de' MMM yyyy", { locale: ptBR })}`
+        : capitalizar(format(refDate, "MMMM yyyy", { locale: ptBR }));
+
+  // Ano → clicar num mês/dia leva à visão Mês daquele período.
+  const abrirMes = (date: Date) => {
+    setRefDate(date);
+    setView("mes");
+  };
+  const abrirDiaNoMes = (iso: string) => {
+    setDiaSel(iso);
+    setRefDate(parseISO(iso));
+    setView("mes");
+  };
 
   const abrirNovo = (iso?: string) => {
     if (!can("calendario:create")) return;
@@ -239,6 +268,16 @@ function CalendarioContent() {
             </PermissionGate>
           </div>
 
+          {/* Legenda de cores por tipo */}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+            {(["evento", "pg", "reuniao"] as const).map((t) => (
+              <span key={t} className="flex items-center gap-1.5">
+                <span className={`h-2 w-2 rounded-full ${TIPO_EVENTO_COR[t]}`} />
+                {TIPO_EVENTO_LABEL[t]}
+              </span>
+            ))}
+          </div>
+
           {/* Conteúdo da visão */}
           {eventos === undefined ? (
             <Skeleton className="h-64 w-full" />
@@ -259,6 +298,13 @@ function CalendarioContent() {
               eventos={eventos}
               onDayClick={abrirNovo}
               onEventClick={abrirEvento}
+            />
+          ) : view === "ano" ? (
+            <CalendarioAno
+              refDate={refDate}
+              eventos={eventos}
+              onPickMonth={abrirMes}
+              onPickDay={abrirDiaNoMes}
             />
           ) : (
             <CalendarioLista refDate={refDate} eventos={eventos} onEventClick={abrirEvento} />
