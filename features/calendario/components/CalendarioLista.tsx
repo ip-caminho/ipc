@@ -55,7 +55,7 @@ export function CalendarioLista({ refDate, eventos, onEventClick }: Props) {
               {feriado && (
                 <Badge
                   variant="outline"
-                  className="border-amber-300 text-amber-700 dark:text-amber-400"
+                  className="border-red-300 text-red-600 dark:text-red-400"
                 >
                   {feriado}
                 </Badge>

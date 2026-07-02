@@ -13,7 +13,6 @@ import {
   addWeeks,
   addYears,
   format,
-  parseISO,
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { api } from "@/convex/_generated/api";
@@ -103,9 +102,18 @@ function CalendarioContent() {
   }, [inicio, fim, filtroMinisterio]);
 
   // @ts-ignore Convex TS2589
-  const eventos = useQuery(api.calendario.queries.list, queryArgs) as
+  const eventosRaw = useQuery(api.calendario.queries.list, queryArgs) as
     | CalendarioEvento[]
     | undefined;
+  // Mantém os eventos anteriores visíveis enquanto a query recarrega (troca de
+  // mês/ano/visão/filtro). Sem isso, useQuery devolve undefined durante o
+  // refetch e o calendário "pisca" o Skeleton a cada clique. Padrão React de
+  // "armazenar info de renders anteriores" via setState condicional.
+  const [eventosCache, setEventosCache] = useState<CalendarioEvento[] | undefined>(undefined);
+  if (eventosRaw !== undefined && eventosRaw !== eventosCache) {
+    setEventosCache(eventosRaw);
+  }
+  const eventos = eventosRaw ?? eventosCache;
   // @ts-ignore Convex TS2589
   const ministerios = useQuery(api.ministerios.queries.list, { status: "ATIVO" });
   // @ts-ignore Convex TS2589
@@ -127,14 +135,9 @@ function CalendarioContent() {
         ? `${format(inicio, "d", { locale: ptBR })}–${format(fim, "d 'de' MMM yyyy", { locale: ptBR })}`
         : capitalizar(format(refDate, "MMMM yyyy", { locale: ptBR }));
 
-  // Ano → clicar num mês/dia leva à visão Mês daquele período.
+  // Ano → clicar no nome de um mês leva à visão Mês daquele período.
   const abrirMes = (date: Date) => {
     setRefDate(date);
-    setView("mes");
-  };
-  const abrirDiaNoMes = (iso: string) => {
-    setDiaSel(iso);
-    setRefDate(parseISO(iso));
     setView("mes");
   };
 
@@ -303,8 +306,12 @@ function CalendarioContent() {
             <CalendarioAno
               refDate={refDate}
               eventos={eventos}
+              selecionado={diaSel}
+              onSelect={setDiaSel}
+              onEventClick={abrirEvento}
               onPickMonth={abrirMes}
-              onPickDay={abrirDiaNoMes}
+              onNovo={abrirNovo}
+              podeCriar={can("calendario:create")}
             />
           ) : (
             <CalendarioLista refDate={refDate} eventos={eventos} onEventClick={abrirEvento} />
