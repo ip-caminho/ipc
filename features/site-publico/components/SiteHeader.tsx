@@ -11,11 +11,13 @@ import {
 } from "@/shared/components/ui/sheet";
 import { NAV_PUBLICO } from "@features/site-publico/lib/nav";
 
-// Header público compartilhado (identidade da landing, .site-v2). Sticky + blur
-// vêm da landing.css; o menu mobile (≤920px) usa Sheet.
+// Header público compartilhado (identidade da landing, .site-v2). Blur vem da
+// landing.css; o sticky fica NESTE wrapper — o position:sticky do header.site
+// interno nunca funcionou porque o wrapper tem a altura exata do header
+// (sticky só gruda dentro do pai). O menu mobile (≤920px) usa Sheet.
 export function SiteHeader() {
   return (
-    <div className="site-v2">
+    <div className="site-v2 sticky top-0 z-50">
       <header className="site">
         <div className="site-inner">
           <Link href="/" className="brand" aria-label="Igreja Presbiteriana do Caminho — início">

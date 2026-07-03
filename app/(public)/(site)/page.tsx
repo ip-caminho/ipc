@@ -7,6 +7,7 @@ import {
   getTextosSitePublic,
 } from "@features/site-publico/lib/data";
 import { AvisoCard } from "@features/site-publico/components/AvisoCard";
+import { CultoCountdown } from "@features/site-publico/components/CultoCountdown";
 import { SITE_TEXTOS_DEFAULTS } from "@features/site-publico/lib/igreja";
 
 export const metadata: Metadata = {
@@ -48,9 +49,11 @@ export default async function HomePage() {
           <h1>{heroTitulo}</h1>
           <p className="sub">{heroSub}</p>
           {proximoCulto && (
-            <p className="culto-line">
-              <strong>Próximo culto</strong> · {formatCulto(proximoCulto.data, proximoCulto.horario)}
-            </p>
+            <CultoCountdown
+              data={proximoCulto.data}
+              horario={proximoCulto.horario}
+              label={formatCulto(proximoCulto.data, proximoCulto.horario)}
+            />
           )}
           <div className="cta-row">
             <Link href="/visite" className="btn btn-primary">
