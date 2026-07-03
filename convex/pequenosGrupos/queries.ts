@@ -3,6 +3,12 @@ import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 
 import { resolveMembroNome } from "../_shared/membroResolver";
+import {
+  getTipoRol,
+  type CargoEclesiastico,
+  type StatusEntidade,
+  type TipoRol,
+} from "../membros/tipoRolHelpers";
 
 export const list = query({
   args: {
@@ -104,26 +110,39 @@ export const listAllWithMembros = query({
       })
     );
 
-    // Membros ativos sem PG
+    // Membros ativos. Numa passada: pool "sem grupo" (remanejamento) e pool
+    // de comungantes (disponiveis para adicionar — podem ja estar em PGs).
     const todosMembros = await ctx.db.query("membros").collect();
-    const semGrupo = await Promise.all(
-      todosMembros
-        .filter((m) => !membrosComPg.has(m._id))
-        .map(async (m) => {
-          const entidade = await ctx.db.get(m.entidadeId);
-          if (!entidade || entidade.status !== "ATIVO") return null;
-          return {
-            membroId: m._id,
-            nome: entidade.nomeCompleto || "",
-          };
-        })
+    const enriched = await Promise.all(
+      todosMembros.map(async (m) => {
+        const entidade = await ctx.db.get(m.entidadeId);
+        if (!entidade || entidade.status !== "ATIVO") return null;
+        const comungante =
+          getTipoRol(
+            m.cargoEclesiastico as CargoEclesiastico | undefined,
+            entidade.status as StatusEntidade,
+            m.tipoRolOverride as TipoRol | undefined,
+          ) === "COMUNGANTE";
+        return {
+          membroId: m._id,
+          nome: entidade.nomeCompleto || "",
+          semGrupo: !membrosComPg.has(m._id),
+          comungante,
+        };
+      })
+    );
+    const ativos = enriched.filter(
+      (m): m is NonNullable<typeof m> => m !== null
     );
 
     return {
       pgs: pgsWithMembros,
-      semGrupo: semGrupo.filter(
-        (m): m is NonNullable<typeof m> => m !== null
-      ),
+      semGrupo: ativos
+        .filter((m) => m.semGrupo)
+        .map(({ membroId, nome }) => ({ membroId, nome })),
+      comungantes: ativos
+        .filter((m) => m.comungante)
+        .map(({ membroId, nome }) => ({ membroId, nome })),
     };
   },
 });

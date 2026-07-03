@@ -117,7 +117,7 @@ export default function PequenosGruposPage() {
       ) : (
         <PGGrid
           pgs={pgs}
-          semGrupo={allData?.semGrupo ?? []}
+          disponiveis={allData?.comungantes ?? []}
           onOpen={setSelectedPgId}
           canManage={can("pequenos_grupos:update")}
         />

@@ -22,7 +22,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui
 import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
 import { Badge } from "@/shared/components/ui/badge";
 import { Input } from "@/shared/components/ui/input";
-import { GripVertical, UserX } from "lucide-react";
+import { GripVertical, Users } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@shared/lib/utils/cn";
 import { PGCard } from "./PGCard";
@@ -114,12 +114,13 @@ function DroppablePGCard({
 
 interface PGGridProps {
   pgs: PG[];
-  semGrupo: SemGrupoItem[];
+  disponiveis: SemGrupoItem[];
   onOpen: (id: Id<"pequenosGrupos">) => void;
   canManage: boolean;
 }
 
-export function PGGrid({ pgs, semGrupo, onOpen, canManage }: PGGridProps) {
+export function PGGrid({ pgs, disponiveis, onOpen, canManage }: PGGridProps) {
+  // @ts-ignore Convex TS2589
   const moveMembro = useMutation(api.pequenosGrupos.mutations.moveMembro);
   const [busca, setBusca] = useState("");
   const [activeMembro, setActiveMembro] = useState<SemGrupoItem | null>(null);
@@ -131,10 +132,10 @@ export function PGGrid({ pgs, semGrupo, onOpen, canManage }: PGGridProps) {
 
   const nomesFiltrados = useMemo(() => {
     const termo = normalizeBusca(busca);
-    return semGrupo
+    return disponiveis
       .filter((m) => !termo || normalizeBusca(m.nome).includes(termo))
       .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
-  }, [semGrupo, busca]);
+  }, [disponiveis, busca]);
 
   function handleDragStart(event: DragStartEvent) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -173,13 +174,13 @@ export function PGGrid({ pgs, semGrupo, onOpen, canManage }: PGGridProps) {
     </div>
   );
 
-  const semGrupoCard = semGrupo.length > 0 && (
+  const disponiveisCard = disponiveis.length > 0 && (
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-base flex items-center gap-2">
-          <UserX className="h-4 w-4" />
-          Sem grupo
-          <Badge variant="secondary">{semGrupo.length}</Badge>
+          <Users className="h-4 w-4" />
+          Comungantes
+          <Badge variant="secondary">{disponiveis.length}</Badge>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -216,7 +217,7 @@ export function PGGrid({ pgs, semGrupo, onOpen, canManage }: PGGridProps) {
     return (
       <>
         {grid}
-        {semGrupoCard}
+        {disponiveisCard}
       </>
     );
   }
@@ -229,7 +230,7 @@ export function PGGrid({ pgs, semGrupo, onOpen, canManage }: PGGridProps) {
       onDragEnd={handleDragEnd}
     >
       {grid}
-      {semGrupoCard}
+      {disponiveisCard}
       <DragOverlay>
         {activeMembro ? <NomeChip membro={activeMembro} dragging /> : null}
       </DragOverlay>
