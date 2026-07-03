@@ -7,8 +7,10 @@ import { toast } from "sonner";
 import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
 import { DetailHeader } from "@shared/components/layout/DetailHeader";
 import { PermissionGate } from "@shared/components/auth/PermissionGate";
+import { ModuloGuard } from "@shared/components/auth/ModuloGuard";
 import { MembroForm } from "@features/membros/components/MembroForm";
 import type { MembroFormValues } from "@features/membros/lib/validations";
+import { mapFormToEntidadeData } from "@features/membros/lib/mappers";
 
 export default function NovoMembroPage() {
   const createMembro = useMutation(api.membros.mutations.create);
@@ -16,38 +18,10 @@ export default function NovoMembroPage() {
 
   const handleSubmit = async (data: MembroFormValues) => {
     try {
-      const endereco =
-        data.logradouro || data.cidade
-          ? {
-              logradouro: data.logradouro || "",
-              numero: data.numero || "",
-              complemento: data.complemento,
-              bairro: data.bairro || "",
-              cidade: data.cidade || "",
-              estado: data.estado || "",
-              cep: data.cep || "",
-            }
-          : undefined;
-
       await createMembro({
-        nomeCompleto: data.nomeCompleto,
-        apelido: data.apelido || undefined,
-        foto: data.foto || undefined,
-        cpf: data.cpf || undefined,
-        tipoDocumento: data.tipoDocumento || undefined,
-        rg: data.rg || undefined,
-        dataNascimento: data.dataNascimento || undefined,
-        sexo: data.sexo || undefined,
-        estadoCivil: data.estadoCivil || undefined,
-        nacionalidade: data.nacionalidade || undefined,
-        pai: data.pai || undefined,
-        mae: data.mae || undefined,
-        profissao: data.profissao || undefined,
-        formacao: data.formacao || undefined,
-        whatsapp: data.whatsapp || undefined,
-        telefone: data.telefone || undefined,
-        email: data.email || undefined,
-        endereco,
+        // dados pessoais (entidade) — mapeamento compartilhado com a edicao
+        ...mapFormToEntidadeData(data),
+        // dados eclesiasticos (membro)
         role: data.role || "membro",
         rol: data.rol || undefined,
         dataMembresia: data.dataMembresia || undefined,
@@ -56,8 +30,6 @@ export default function NovoMembroPage() {
         dataConversao: data.dataConversao || undefined,
         dataBatismo: data.dataBatismo || undefined,
         igrejaProcedencia: data.igrejaProcedencia || undefined,
-        cbcm: data.cbcm || undefined,
-        atestadoAntecedentes: data.atestadoAntecedentes || undefined,
       });
 
       toast.success("Membro criado com sucesso");
@@ -68,6 +40,7 @@ export default function NovoMembroPage() {
   };
 
   return (
+    <ModuloGuard modulo="membros">
     <PermissionGate
       permission="membros:create"
       fallback={
@@ -83,5 +56,6 @@ export default function NovoMembroPage() {
         </div>
       </HeaderLayout>
     </PermissionGate>
+    </ModuloGuard>
   );
 }

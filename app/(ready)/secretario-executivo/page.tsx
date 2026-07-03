@@ -17,6 +17,7 @@ import { useDebounce } from "@shared/hooks/useDebounce";
 import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
 import { PageHeader } from "@shared/components/layout/PageHeader";
 import { AnyPermissionGate, PermissionGate } from "@shared/components/auth/PermissionGate";
+import { ModuloGuard } from "@shared/components/auth/ModuloGuard";
 import { cn } from "@shared/lib/utils/cn";
 import {
   Tooltip,
@@ -105,6 +106,7 @@ export default function SecretarioExecutivoPage() {
   const [categoria, setCategoria] = useState<string | null>(null);
   const [maisOpen, setMaisOpen] = useState(false);
   const debouncedSearch = useDebounce(search, 300);
+  // @ts-ignore Convex TS2589
   const membros = useQuery(api.membros.eclesiastico.listParaSecretario, {
     search: debouncedSearch || undefined,
   });
@@ -115,13 +117,15 @@ export default function SecretarioExecutivoPage() {
   }
 
   return (
+    <ModuloGuard modulo="membros">
     <AnyPermissionGate permissions={["rol:read", "rol:update"]}>
       <HeaderLayout>
         <div className="space-y-4">
           <div className="flex items-start justify-between gap-2">
             <PageHeader title="Rol de Membros" subtitle="Rol, familia e dados eclesiasticos" />
             <PermissionGate permission="membros:create">
-              <Button asChild size="sm" className="mt-4 shrink-0">
+              {/* h-11 no mobile = tap target >=44px (regra mobile-ux) */}
+              <Button asChild size="sm" className="mt-4 shrink-0 h-11 md:h-8">
                 <Link href="/secretario-executivo/novo">
                   <Plus className="h-4 w-4 mr-1.5" />
                   <span className="hidden sm:inline">Novo membro</span>
@@ -247,5 +251,6 @@ export default function SecretarioExecutivoPage() {
         )}
       </HeaderLayout>
     </AnyPermissionGate>
+    </ModuloGuard>
   );
 }

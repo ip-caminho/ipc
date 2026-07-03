@@ -75,7 +75,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     ],
     componentes: ["AcessoPanel", "AtividadeMembroDrawer", "LinkConvidadoCard", "RelatorioAcessosDialog", "PermissionGate"],
     notas: [
-      "Permissao: acesso:manage (admin/pastor/secretaria). Pagina dedicada de acesso ao sistema (era a aba Acesso de /membros, agora removida)",
+      "Permissao: acesso:manage (admin/pastor/secretaria), tambem exigida no BACKEND (convex/membros/acesso.ts). ModuloGuard modulo=membros. Pagina dedicada de acesso ao sistema (era a aba Acesso de /membros, agora removida)",
       "AcessoPanel: resumo (com acesso/pendente/sem/adesao) + gerar links de ativacao (individual e lote) + resetar + atividade + LinkConvidadoCard (so admin: /convidado/<codigo>)",
     ],
   },
@@ -89,7 +89,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     ],
     mutations: ["membros.mutations.create"],
     componentes: ["MembroForm", "PermissionGate"],
-    notas: ["Permissao: membros:create. MembroForm completo (pessoal + eclesiastico)"],
+    notas: ["Permissao: membros:create + ModuloGuard modulo=membros. MembroForm completo (pessoal + eclesiastico); dados pessoais via mapFormToEntidadeData (features/membros/lib/mappers.ts)"],
   },
   "/secretario-executivo": {
     nome: "Rol de Membros",
@@ -115,7 +115,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     notas: [
       "Permissao: rol:read (ver pagina/tabela), rol:update (editar — sem ela a tabela fica somente-leitura)",
       "Roles: admin, pastor, secretaria, secretario_executivo",
-      "Pagina UNICA de membros (a antiga /membros foi removida). Botao 'Novo membro' (membros:create) -> /secretario-executivo/novo",
+      "Pagina UNICA de membros (a antiga /membros foi removida). ModuloGuard modulo=membros. Botao 'Novo membro' (membros:create) -> /secretario-executivo/novo",
       "Edicao tabular inline (auto-save no blur): cargo, rol, tipoRol, matricula, datas sacramentais",
       "Dashboard de cards clicaveis (getResumoSecretario): comungantes/nao-comungantes/ausentes/arquivo/total/familias/dependentes/pendencias + oficiais (pastores/presbiteros/diaconos) + alertas de mandatos vencidos e a vencer em 90 dias (cargosEclesiasticosHistorico ATIVO) — filtram a tabela",
       "Impressao A4 com assinatura para assembleia (RolExportView, window.print) respeitando o filtro atual — movida de /membros pra ca",
@@ -141,8 +141,8 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     mutations: ["membros.mutations.update", "membros.eclesiastico.updateEclesiastico", "membros.eclesiastico.marcarCampoVerificado", "membros.acesso.gerarLink", "membros.acesso.resetarAcesso"],
     componentes: ["DadosBasicosSection", "EclesiasticoForm", "MembroForm", "AcessoSection", "AtosPastoraisSection", "CargosHistoricoSection", "PermissionGate"],
     notas: [
-      "Detalhe UNICO do membro (fold de /membros/[id]). Gate externo: rol:read",
-      "Dados pessoais: DadosBasicosSection (somente leitura) + botao 'Editar dados pessoais' (membros:update) abre Drawer com MembroForm personalOnly (so entidadeData no submit; eclesiastico fica no EclesiasticoForm)",
+      "Detalhe UNICO do membro (fold de /membros/[id]). Gate externo: rol:read + ModuloGuard modulo=membros",
+      "Dados pessoais: DadosBasicosSection (somente leitura) + botao 'Editar dados pessoais' (membros:update) abre Drawer com MembroForm personalOnly (so entidadeData via mapFormToEntidadeData de features/membros/lib/mappers.ts; eclesiastico fica no EclesiasticoForm; vinculoIgreja/cbcm em secao propria do personalOnly)",
       "Eclesiastico (rol:update): EclesiasticoForm (auto-save) + AtosPastoraisSection + CargosHistoricoSection",
       "Acesso per-membro (acesso:manage): AcessoSection = status + gerar magic link + resetar + wa.me",
     ],

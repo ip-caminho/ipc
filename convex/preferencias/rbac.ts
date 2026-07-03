@@ -637,6 +637,31 @@ export const addAcessoManageToRoles = internalMutation({
   },
 });
 
+/**
+ * Complemento da addAcessoManageToRoles para membros com snapshot
+ * personalizado (membro.permissions[]): quem tinha membros:update no
+ * snapshot gerenciava acesso antes do desacoplamento e deve ganhar
+ * acesso:manage. Idempotente; one-off (collect aceitavel).
+ * npx convex run preferencias/rbac:addAcessoManageToSnapshots --prod
+ */
+export const addAcessoManageToSnapshots = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const membros = await ctx.db.query("membros").collect();
+    let updated = 0;
+    for (const m of membros) {
+      if (!m.permissions || m.permissions.length === 0) continue;
+      if (m.permissions.includes("acesso:manage")) continue;
+      if (!m.permissions.includes("membros:update")) continue;
+      await ctx.db.patch(m._id, {
+        permissions: [...m.permissions, "acesso:manage"],
+      });
+      updated++;
+    }
+    return { updated };
+  },
+});
+
 /** Query para listar conjuntos de permissões de voluntários */
 export const getVolunteerPermissionSets = query({
   args: {},

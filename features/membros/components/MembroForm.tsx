@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useForm, type UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
@@ -20,6 +20,59 @@ import {
 import { useState, useRef } from "react";
 import { PhotoUpload } from "@/shared/files/components/PhotoUpload";
 import { FileUpload } from "@/shared/files/components/FileUpload";
+
+// Helpers FORA do componente: identidade estavel entre renders evita que o
+// React remonte a subarvore (perda de foco no input e colapso das secoes)
+// a cada re-render disparado por form.watch/setValue.
+
+function Field({ form, name, label, type = "text", placeholder = "" }: { form: UseFormReturn<MembroFormValues>; name: keyof MembroFormValues; label: string; type?: string; placeholder?: string }) {
+  return (
+    <div className="space-y-1">
+      <Label htmlFor={name}>{label}</Label>
+      <Input id={name} type={type} placeholder={placeholder} {...form.register(name)} />
+      {form.formState.errors[name] && (
+        <p className="text-xs text-destructive">{form.formState.errors[name]?.message}</p>
+      )}
+    </div>
+  );
+}
+
+function SelectField({ form, name, label, options }: { form: UseFormReturn<MembroFormValues>; name: keyof MembroFormValues; label: string; options: readonly { value: string; label: string }[] }) {
+  return (
+    <div className="space-y-1">
+      <Label>{label}</Label>
+      <Select value={form.watch(name) as string || ""} onValueChange={(v) => form.setValue(name, v)}>
+        <SelectTrigger>
+          <SelectValue placeholder="Selecione..." />
+        </SelectTrigger>
+        <SelectContent>
+          {options.map((opt) => (
+            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
+function Section({ title, children, defaultOpen = true }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <Collapsible open={open} onOpenChange={setOpen}>
+      <CollapsibleTrigger asChild>
+        <Button variant="ghost" className="w-full justify-between p-0 h-auto">
+          <h3 className="text-sm font-semibold">{title}</h3>
+          <ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} />
+        </Button>
+      </CollapsibleTrigger>
+      <CollapsibleContent className="pt-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {children}
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}
 
 interface MembroFormProps {
   defaultValues?: Partial<MembroFormValues>;
@@ -45,10 +98,12 @@ export function MembroForm({ defaultValues, onSubmit, isEditing, entityId, perso
 
   const handleSubmit = async (data: MembroFormValues) => {
     // Carta obrigatoria ao registrar/alterar transferencia — sem travar
-    // registros legados que ja eram transferencia sem carta
+    // registros legados que ja eram transferencia sem carta. Nao se aplica
+    // ao personalOnly (secao de demissao oculta; erro seria invisivel).
     const eraTransferenciaSemCarta =
       defaultValues?.formaDemissao === "TRANSFERENCIA" && !defaultValues?.cartaTransferencia;
     if (
+      !personalOnly &&
       data.formaDemissao === "TRANSFERENCIA" &&
       !data.cartaTransferencia &&
       !eraTransferenciaSemCarta
@@ -62,54 +117,6 @@ export function MembroForm({ defaultValues, onSubmit, isEditing, entityId, perso
     } finally {
       setLoading(false);
     }
-  };
-
-  // Helper for form field
-  const Field = ({ name, label, type = "text", placeholder = "" }: { name: keyof MembroFormValues; label: string; type?: string; placeholder?: string }) => (
-    <div className="space-y-1">
-      <Label htmlFor={name}>{label}</Label>
-      <Input id={name} type={type} placeholder={placeholder} {...form.register(name)} />
-      {form.formState.errors[name] && (
-        <p className="text-xs text-destructive">{form.formState.errors[name]?.message}</p>
-      )}
-    </div>
-  );
-
-  // Helper for select field
-  const SelectField = ({ name, label, options }: { name: keyof MembroFormValues; label: string; options: readonly { value: string; label: string }[] }) => (
-    <div className="space-y-1">
-      <Label>{label}</Label>
-      <Select value={form.watch(name) as string || ""} onValueChange={(v) => form.setValue(name, v)}>
-        <SelectTrigger>
-          <SelectValue placeholder="Selecione..." />
-        </SelectTrigger>
-        <SelectContent>
-          {options.map((opt) => (
-            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
-  );
-
-  // Section component
-  const Section = ({ title, children, defaultOpen = true }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) => {
-    const [open, setOpen] = useState(defaultOpen);
-    return (
-      <Collapsible open={open} onOpenChange={setOpen}>
-        <CollapsibleTrigger asChild>
-          <Button variant="ghost" className="w-full justify-between p-0 h-auto">
-            <h3 className="text-sm font-semibold">{title}</h3>
-            <ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} />
-          </Button>
-        </CollapsibleTrigger>
-        <CollapsibleContent className="pt-3">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {children}
-          </div>
-        </CollapsibleContent>
-      </Collapsible>
-    );
   };
 
   return (
@@ -130,10 +137,10 @@ export function MembroForm({ defaultValues, onSubmit, isEditing, entityId, perso
               />
             </div>
             <div className="sm:col-span-2">
-              <Field name="nomeCompleto" label="Nome Completo *" />
+              <Field form={form} name="nomeCompleto" label="Nome Completo *" />
             </div>
-            <Field name="apelido" label="Apelido" placeholder="Como e conhecido" />
-            <Field name="cpf" label="CPF" placeholder="000.000.000-00" />
+            <Field form={form} name="apelido" label="Apelido" placeholder="Como e conhecido" />
+            <Field form={form} name="cpf" label="CPF" placeholder="000.000.000-00" />
             <div className="space-y-1">
               <Label>Documento</Label>
               <div className="flex gap-2">
@@ -150,30 +157,30 @@ export function MembroForm({ defaultValues, onSubmit, isEditing, entityId, perso
                 <Input placeholder="Numero do documento" {...form.register("rg")} />
               </div>
             </div>
-            <Field name="dataNascimento" label="Data de Nascimento" type="date" />
-            <SelectField name="sexo" label="Sexo" options={SEXO_OPTIONS} />
-            <SelectField name="estadoCivil" label="Estado Civil" options={ESTADO_CIVIL_OPTIONS} />
-            <Field name="nacionalidade" label="Nacionalidade" />
-            <Field name="pai" label="Nome do Pai" />
-            <Field name="mae" label="Nome da Mae" />
-            <Field name="profissao" label="Profissao" />
-            <SelectField name="formacao" label="Formacao" options={FORMACAO_OPTIONS} />
+            <Field form={form} name="dataNascimento" label="Data de Nascimento" type="date" />
+            <SelectField form={form} name="sexo" label="Sexo" options={SEXO_OPTIONS} />
+            <SelectField form={form} name="estadoCivil" label="Estado Civil" options={ESTADO_CIVIL_OPTIONS} />
+            <Field form={form} name="nacionalidade" label="Nacionalidade" />
+            <Field form={form} name="pai" label="Nome do Pai" />
+            <Field form={form} name="mae" label="Nome da Mae" />
+            <Field form={form} name="profissao" label="Profissao" />
+            <SelectField form={form} name="formacao" label="Formacao" options={FORMACAO_OPTIONS} />
           </Section>
 
           <Section title="Contato">
-            <Field name="whatsapp" label="WhatsApp" placeholder="11999991111" />
-            <Field name="telefone" label="Telefone" />
-            <Field name="email" label="Email" type="email" />
+            <Field form={form} name="whatsapp" label="WhatsApp" placeholder="11999991111" />
+            <Field form={form} name="telefone" label="Telefone" />
+            <Field form={form} name="email" label="Email" type="email" />
           </Section>
 
           <Section title="Endereço" defaultOpen={false}>
-            <Field name="logradouro" label="Logradouro" />
-            <Field name="numero" label="Número" />
-            <Field name="complemento" label="Complemento" />
-            <Field name="bairro" label="Bairro" />
-            <Field name="cidade" label="Cidade" />
-            <Field name="estado" label="Estado" />
-            <Field name="cep" label="CEP" placeholder="00000-000" />
+            <Field form={form} name="logradouro" label="Logradouro" />
+            <Field form={form} name="numero" label="Número" />
+            <Field form={form} name="complemento" label="Complemento" />
+            <Field form={form} name="bairro" label="Bairro" />
+            <Field form={form} name="cidade" label="Cidade" />
+            <Field form={form} name="estado" label="Estado" />
+            <Field form={form} name="cep" label="CEP" placeholder="00000-000" />
           </Section>
 
           {personalOnly && (
@@ -181,25 +188,25 @@ export function MembroForm({ defaultValues, onSubmit, isEditing, entityId, perso
                ficariam ineditaveis (a secao eclesiastica completa fica oculta
                e o EclesiasticoForm nao os possui) */
             <Section title="Vinculo com a Igreja" defaultOpen={false}>
-              <SelectField name="vinculoIgreja" label="Vinculo com a Igreja" options={VINCULO_IGREJA_OPTIONS} />
-              <SelectField name="cbcm" label="CBCM" options={CBCM_OPTIONS} />
+              <SelectField form={form} name="vinculoIgreja" label="Vinculo com a Igreja" options={VINCULO_IGREJA_OPTIONS} />
+              <SelectField form={form} name="cbcm" label="CBCM" options={CBCM_OPTIONS} />
             </Section>
           )}
 
           {!personalOnly && (
           <>
           <Section title="Dados Eclesiasticos" defaultOpen={false}>
-            <SelectField name="vinculoIgreja" label="Vinculo com a Igreja" options={VINCULO_IGREJA_OPTIONS} />
-            <SelectField name="role" label="Perfil no Sistema" options={ROLE_OPTIONS} />
-            <Field name="rol" label="Numero do Rol" />
-            <Field name="numeroMatricula" label="Numero de Matricula (IPB)" />
-            <Field name="dataMembresia" label="Data da Membresia" type="date" />
-            <SelectField name="formaAdmissao" label="Forma de Admissao" options={FORMA_ADMISSAO_OPTIONS} />
-            <SelectField name="cargoEclesiastico" label="Cargo Eclesiastico" options={CARGO_ECLESIASTICO_OPTIONS} />
-            <Field name="dataConversao" label="Data de Conversao" type="date" />
-            <Field name="dataBatismo" label="Data de Batismo" type="date" />
-            <Field name="igrejaProcedencia" label="Igreja de Procedencia" />
-            <SelectField name="cbcm" label="CBCM" options={CBCM_OPTIONS} />
+            <SelectField form={form} name="vinculoIgreja" label="Vinculo com a Igreja" options={VINCULO_IGREJA_OPTIONS} />
+            <SelectField form={form} name="role" label="Perfil no Sistema" options={ROLE_OPTIONS} />
+            <Field form={form} name="rol" label="Numero do Rol" />
+            <Field form={form} name="numeroMatricula" label="Numero de Matricula (IPB)" />
+            <Field form={form} name="dataMembresia" label="Data da Membresia" type="date" />
+            <SelectField form={form} name="formaAdmissao" label="Forma de Admissao" options={FORMA_ADMISSAO_OPTIONS} />
+            <SelectField form={form} name="cargoEclesiastico" label="Cargo Eclesiastico" options={CARGO_ECLESIASTICO_OPTIONS} />
+            <Field form={form} name="dataConversao" label="Data de Conversao" type="date" />
+            <Field form={form} name="dataBatismo" label="Data de Batismo" type="date" />
+            <Field form={form} name="igrejaProcedencia" label="Igreja de Procedencia" />
+            <SelectField form={form} name="cbcm" label="CBCM" options={CBCM_OPTIONS} />
             <div className="space-y-1 sm:col-span-2 lg:col-span-3">
               <Label htmlFor="observacoesPastorais">Observacoes Pastorais</Label>
               <Textarea
@@ -236,9 +243,9 @@ export function MembroForm({ defaultValues, onSubmit, isEditing, entityId, perso
                 </SelectContent>
               </Select>
             </div>
-            <Field name="dataDemissao" label="Data da Demissao" type="date" />
-            <Field name="igrejaDestino" label="Igreja de Destino (transferencia)" />
-            <Field name="dataFalecimento" label="Data de Falecimento" type="date" />
+            <Field form={form} name="dataDemissao" label="Data da Demissao" type="date" />
+            <Field form={form} name="igrejaDestino" label="Igreja de Destino (transferencia)" />
+            <Field form={form} name="dataFalecimento" label="Data de Falecimento" type="date" />
             {form.watch("formaDemissao") === "TRANSFERENCIA" && (
               <div className="space-y-1 sm:col-span-2 lg:col-span-3">
                 <Label>Carta de Transferencia *</Label>
@@ -259,7 +266,7 @@ export function MembroForm({ defaultValues, onSubmit, isEditing, entityId, perso
             )}
             {form.watch("formaDemissao") === "EXCLUSAO" && (
               <>
-                <SelectField name="motivoDemissao" label="Motivo da Exclusao" options={MOTIVO_DEMISSAO_OPTIONS} />
+                <SelectField form={form} name="motivoDemissao" label="Motivo da Exclusao" options={MOTIVO_DEMISSAO_OPTIONS} />
                 <div className="space-y-1 sm:col-span-2 lg:col-span-3">
                   <Label htmlFor="motivoDemissaoObs">Observacao do Motivo</Label>
                   <Textarea
