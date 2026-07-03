@@ -23,6 +23,7 @@ export function FloatingBottomBar() {
   const { isActive: audioActive } = useAudioPlayer();
   const [pendingHref, setPendingHref] = useState<string | null>(null);
   const [moreOpen, setMoreOpen] = useState(false);
+  // @ts-ignore Convex TS2589
   const modulosAtivos = useQuery(api.modulos.queries.listModulosAtivos);
 
   useEffect(() => {
