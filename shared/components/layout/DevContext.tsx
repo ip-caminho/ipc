@@ -471,8 +471,9 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     notas: [
       "Permissao: pequenos_grupos:read, pequenos_grupos:create, pequenos_grupos:update",
       "2 views: grid de PGs e remanejamento de membros entre grupos",
-      "PGGrid (view grid): busca nos membros sem grupo (ordem alfabetica) + drag-and-drop de um nome para cima de um card de PG (moveMembro). DnD so com pequenos_grupos:update",
-      "PGDetalhe: dialog Adicionar membro usa busca + lista alfabetica (nao combobox)",
+      "Um membro pode estar em varios PGs. Pool 'disponiveis' = comungantes (getTipoRol via listAllWithMembros.comungantes)",
+      "PGGrid (view grid): busca nos comungantes (ordem alfabetica) + drag-and-drop de um nome para cima de um card de PG (moveMembro). DnD so com pequenos_grupos:update",
+      "PGDetalhe: dialog Adicionar membro usa busca + lista alfabetica (comungantes ainda nao neste PG)",
     ],
   },
   "/pedidos-oracao": {

@@ -57,16 +57,18 @@ export function PGDetalhe({ pgId, onBack }: PGDetalheProps) {
   const [selectedMembroId, setSelectedMembroId] = useState("");
   const [busca, setBusca] = useState("");
 
-  // Membros sem nenhum PG (um membro so pode estar em um grupo por vez),
+  // Comungantes que ainda nao estao neste PG (um membro pode estar em varios),
   // filtrados pela busca e em ordem alfabetica.
   const membrosDisponiveis = useMemo(() => {
-    const lista = disponiveis?.semGrupo ?? [];
+    const lista = disponiveis?.comungantes ?? [];
+    const jaNoGrupo = new Set((pg?.membros ?? []).map((m) => m.membroId));
     const termo = normalizeBusca(busca);
     return lista
+      .filter((m: any) => !jaNoGrupo.has(m.membroId))
       .filter((m: any) => !termo || normalizeBusca(m.nome).includes(termo))
       .map((m: any) => ({ id: m.membroId as string, nome: (m.nome as string) || "—" }))
       .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
-  }, [disponiveis?.semGrupo, busca]);
+  }, [disponiveis?.comungantes, pg?.membros, busca]);
 
   if (pg === undefined) {
     return <p className="text-sm text-muted-foreground">Carregando...</p>;
