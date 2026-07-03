@@ -353,7 +353,7 @@ function CultosTable({
               return (
                 <Fragment key={culto._id}>
                 <tr className="border-b hover:bg-accent/30">
-                  <td className="p-2 font-medium sticky left-0 bg-background capitalize whitespace-nowrap text-xs">
+                  <td className="p-2 font-medium sticky left-0 z-10 bg-background capitalize whitespace-nowrap text-xs">
                     {dataFormatada}
                   </td>
                   {funcoes.map((f) => {
