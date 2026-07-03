@@ -841,6 +841,50 @@ html:has(.site-v2) {
 .site-v2 .culto-line { margin-top: var(--space-6); font-family: var(--font-body); font-size: var(--text-sm); color: var(--text-muted); }
 .site-v2 .culto-line strong { color: var(--accent-ink); font-weight: var(--fw-semibold); }
 
+/* Contagem regressiva do próximo culto (CultoCountdown) */
+.site-v2 .culto-countdown .culto-line { margin-top: var(--space-6); }
+.site-v2 .cc-row { display: flex; gap: var(--space-3); margin-top: var(--space-4); }
+.site-v2 .cc-unit { display: flex; flex-direction: column; align-items: center; min-width: 2.4ch; }
+.site-v2 .cc-num {
+  font-family: var(--font-display); font-weight: var(--fw-semibold);
+  font-size: clamp(1.75rem, 4.5vw, 2.25rem); line-height: 1;
+  color: var(--text-strong); font-variant-numeric: tabular-nums;
+  display: inline-block;
+  animation: cc-tick 320ms var(--ease);
+}
+.site-v2 .cc-label {
+  margin-top: var(--space-1);
+  font-family: var(--font-body); font-size: var(--text-xs);
+  text-transform: uppercase; letter-spacing: var(--tracking-caps);
+  color: var(--text-subtle);
+}
+.site-v2 .cc-sep {
+  font-family: var(--font-display); font-weight: var(--fw-semibold);
+  font-size: clamp(1.75rem, 4.5vw, 2.25rem); line-height: 1;
+  color: var(--paper-400); align-self: flex-start;
+}
+@keyframes cc-tick {
+  from { opacity: 0; transform: translateY(0.3em); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.site-v2 .cc-live {
+  display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-3);
+  font-family: var(--font-body); font-size: var(--text-sm); font-weight: var(--fw-semibold);
+  color: var(--orange-600);
+}
+.site-v2 .cc-dot {
+  width: 8px; height: 8px; border-radius: 999px; background: var(--orange-500);
+  animation: cc-pulse 1.6s ease-in-out infinite;
+}
+@keyframes cc-pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 color-mix(in srgb, var(--orange-500) 45%, transparent); }
+  50% { opacity: 0.75; box-shadow: 0 0 0 6px transparent; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .site-v2 .cc-num { animation: none; }
+  .site-v2 .cc-dot { animation: none; }
+}
+
 .site-v2 .atalhos { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4); }
 @media (max-width: 860px) { .site-v2 .atalhos { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 460px) { .site-v2 .atalhos { grid-template-columns: 1fr; } }
