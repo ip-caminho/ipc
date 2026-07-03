@@ -149,7 +149,7 @@ export function MoreSheet({ open, onOpenChange }: Props) {
 
           {/* Site publico em nova aba (nao perde o estado do sistema) */}
           <a
-            href="/"
+            href="/?site=1"
             target="_blank"
             rel="noopener"
             onClick={() => onOpenChange(false)}

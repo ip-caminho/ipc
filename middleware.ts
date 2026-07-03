@@ -53,7 +53,9 @@ export default convexAuthNextjsMiddleware(async (request, { convexAuth }) => {
   }
 
   // Authed user on landing or signin → redirect to dashboard
-  if (authed && (isLandingPage(pathname) || isSignInPage(request))) {
+  // (exceto ?site=1 — links "Ver o site" de dentro do sistema)
+  const verSite = request.nextUrl.searchParams.has("site");
+  if (authed && ((isLandingPage(pathname) && !verSite) || isSignInPage(request))) {
     return nextjsMiddlewareRedirect(request, "/dashboard");
   }
 
