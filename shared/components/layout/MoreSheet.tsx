@@ -13,7 +13,7 @@ import {
 } from "@/shared/components/ui/sheet";
 import { Avatar, AvatarImage, AvatarFallback } from "@/shared/components/ui/avatar";
 import { Separator } from "@/shared/components/ui/separator";
-import { LogOut, User, Moon, Sun } from "lucide-react";
+import { LogOut, User, Moon, Sun, Globe } from "lucide-react";
 import { useAuth } from "@shared/providers/PermissionsProvider";
 import {
   GESTAO_SECTIONS,
@@ -146,6 +146,18 @@ export function MoreSheet({ open, onOpenChange }: Props) {
             <User className="h-5 w-5" strokeWidth={1.75} />
             <span className="text-sm">Meu perfil</span>
           </Link>
+
+          {/* Site publico em nova aba (nao perde o estado do sistema) */}
+          <a
+            href="/"
+            target="_blank"
+            rel="noopener"
+            onClick={() => onOpenChange(false)}
+            className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-foreground active:bg-muted"
+          >
+            <Globe className="h-5 w-5" strokeWidth={1.75} />
+            <span className="text-sm">Ver o site</span>
+          </a>
 
           <button
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
