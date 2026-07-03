@@ -181,7 +181,7 @@ export function AppSidebar() {
           </div>
           {/* Site publico em nova aba (nao perde o estado do sistema) */}
           <Button variant="ghost" size="icon" asChild title="Ver o site">
-            <a href="/" target="_blank" rel="noopener">
+            <a href="/?site=1" target="_blank" rel="noopener">
               <Globe className="h-4 w-4" />
             </a>
           </Button>

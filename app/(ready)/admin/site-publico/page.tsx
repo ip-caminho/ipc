@@ -41,7 +41,7 @@ function SitePublicoHub() {
             a mudança em segundos.
           </p>
           <a
-            href="/"
+            href="/?site=1"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex shrink-0 items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
