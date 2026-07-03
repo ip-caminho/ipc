@@ -370,7 +370,10 @@ export default defineSchema({
     .index("by_referencia", ["referenciaTabela", "referenciaId"])
     .index("by_user", ["userId"])
     .index("by_created_at", ["createdAt"])
-    .index("by_membro", ["membroId", "createdAt"]),
+    .index("by_membro", ["membroId", "createdAt"])
+    // ultimoLogin: 1 doc por membro e o range so invalida em novo LOGIN
+    // (nao em qualquer audit write)
+    .index("by_membro_action", ["membroId", "action", "createdAt"]),
 
   rolePermissions: defineTable({
     role: v.string(),

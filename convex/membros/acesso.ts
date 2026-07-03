@@ -288,17 +288,22 @@ export const resetarAcesso = mutation({
   },
 });
 
-/** Ultimo login (LOGIN no auditLogs) de um membro, via indice by_membro. */
+/**
+ * Ultimo login (LOGIN no auditLogs) de um membro, via indice by_membro_action.
+ * Le 1 doc (nao 50) e o range (membroId, "LOGIN") so e invalidado por novo
+ * login — audit writes comuns nao re-executam o getAcessosOverview.
+ */
 async function ultimoLogin(
   ctx: QueryCtx,
   membroId: Doc<"membros">["_id"]
 ): Promise<{ em: number; metodo: string | null } | null> {
-  const logs = await ctx.db
+  const [login] = await ctx.db
     .query("auditLogs")
-    .withIndex("by_membro", (q) => q.eq("membroId", membroId))
+    .withIndex("by_membro_action", (q) =>
+      q.eq("membroId", membroId).eq("action", "LOGIN")
+    )
     .order("desc")
-    .take(50);
-  const login = logs.find((l) => l.action === "LOGIN");
+    .take(1);
   if (!login) return null;
   return { em: login.createdAt, metodo: (login.to as string) ?? null };
 }
