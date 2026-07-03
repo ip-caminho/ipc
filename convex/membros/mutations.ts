@@ -28,6 +28,7 @@ export const create = mutation({
     endereco: v.optional(v.any()),
     cbcm: v.optional(v.string()),
     atestadoAntecedentes: v.optional(v.string()),
+    vinculoIgreja: v.optional(v.string()),
 
     // Membro fields
     role: v.optional(v.string()),
@@ -75,6 +76,7 @@ export const create = mutation({
       endereco: args.endereco,
       cbcm: args.cbcm as any,
       atestadoAntecedentes: args.atestadoAntecedentes,
+      vinculoIgreja: args.vinculoIgreja as any,
     });
 
     const membroId = await ctx.db.insert("membros", {

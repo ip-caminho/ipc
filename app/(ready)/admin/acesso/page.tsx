@@ -1,12 +1,14 @@
 "use client";
 
 import { PermissionGate } from "@shared/components/auth/PermissionGate";
+import { ModuloGuard } from "@shared/components/auth/ModuloGuard";
 import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
 import { PageHeader } from "@shared/components/layout/PageHeader";
 import { AcessoPanel } from "@features/membros/components/AcessoPanel";
 
 export default function AcessoPage() {
   return (
+    <ModuloGuard modulo="membros">
     <PermissionGate
       permission="acesso:manage"
       fallback={
@@ -30,5 +32,6 @@ export default function AcessoPage() {
         </div>
       </HeaderLayout>
     </PermissionGate>
+    </ModuloGuard>
   );
 }

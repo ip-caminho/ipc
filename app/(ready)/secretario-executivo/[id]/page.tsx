@@ -17,8 +17,10 @@ import { Pencil } from "lucide-react";
 import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
 import { DetailHeader } from "@shared/components/layout/DetailHeader";
 import { PermissionGate } from "@shared/components/auth/PermissionGate";
+import { ModuloGuard } from "@shared/components/auth/ModuloGuard";
 import type { Id } from "@/convex/_generated/dataModel";
 import type { MembroFormValues } from "@features/membros/lib/validations";
+import { mapFormToEntidadeData } from "@features/membros/lib/mappers";
 import { MembroForm } from "@features/membros/components/MembroForm";
 import { AcessoSection } from "@features/membros/components/AcessoSection";
 import { DadosBasicosSection } from "@features/secretarioExecutivo/components/DadosBasicosSection";
@@ -102,44 +104,7 @@ export default function SecretarioExecutivoDetalhePage() {
 
   const handlePersonalSubmit = async (data: MembroFormValues) => {
     try {
-      const endereco =
-        data.logradouro || data.cidade
-          ? {
-              logradouro: data.logradouro || "",
-              numero: data.numero || "",
-              complemento: data.complemento,
-              bairro: data.bairro || "",
-              cidade: data.cidade || "",
-              estado: data.estado || "",
-              cep: data.cep || "",
-            }
-          : undefined;
-
-      await updateMembro({
-        id,
-        entidadeData: {
-          nomeCompleto: data.nomeCompleto,
-          apelido: data.apelido || undefined,
-          foto: data.foto || undefined,
-          cpf: data.cpf || undefined,
-          tipoDocumento: data.tipoDocumento || undefined,
-          rg: data.rg || undefined,
-          dataNascimento: data.dataNascimento || undefined,
-          sexo: data.sexo || undefined,
-          estadoCivil: data.estadoCivil || undefined,
-          nacionalidade: data.nacionalidade || undefined,
-          pai: data.pai || undefined,
-          mae: data.mae || undefined,
-          profissao: data.profissao || undefined,
-          formacao: data.formacao || undefined,
-          whatsapp: data.whatsapp || undefined,
-          telefone: data.telefone || undefined,
-          email: data.email || undefined,
-          endereco,
-          vinculoIgreja: data.vinculoIgreja || undefined,
-          cbcm: data.cbcm || undefined,
-        },
-      });
+      await updateMembro({ id, entidadeData: mapFormToEntidadeData(data) });
       toast.success("Dados pessoais atualizados");
       setEditOpen(false);
     } catch (error) {
@@ -148,6 +113,7 @@ export default function SecretarioExecutivoDetalhePage() {
   };
 
   return (
+    <ModuloGuard modulo="membros">
     <PermissionGate permission="rol:read">
       <HeaderLayout>
         <DetailHeader backHref="/secretario-executivo" />
@@ -180,10 +146,11 @@ export default function SecretarioExecutivoDetalhePage() {
               />
             </div>
             <PermissionGate permission="membros:update">
+              {/* h-11 no mobile = tap target >=44px (regra mobile-ux) */}
               <Button
                 variant="outline"
                 size="sm"
-                className="shrink-0"
+                className="shrink-0 h-11 md:h-8"
                 onClick={() => setEditOpen(true)}
               >
                 <Pencil className="h-4 w-4 mr-1.5" />
@@ -244,5 +211,6 @@ export default function SecretarioExecutivoDetalhePage() {
         </Drawer>
       </HeaderLayout>
     </PermissionGate>
+    </ModuloGuard>
   );
 }
