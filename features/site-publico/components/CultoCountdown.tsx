@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 // Janela em que o culto e considerado "acontecendo agora" apos o horario
@@ -11,6 +12,17 @@ function parseAlvo(data: string, horario?: string): number {
   const hh = (m?.[1] ?? "10").padStart(2, "0");
   const mm = m?.[2] ?? "00";
   return new Date(`${data}T${hh}:${mm}:00`).getTime();
+}
+
+// Hoje é domingo no fuso da igreja (America/Sao_Paulo)? Independe do alvo — no
+// domingo à tarde o alvo já aponta pro próximo domingo, mas o boletim de hoje
+// segue disponível o dia todo.
+function ehDomingoSP(ts: number): boolean {
+  const wd = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Sao_Paulo",
+    weekday: "short",
+  }).format(new Date(ts));
+  return wd === "Sun";
 }
 
 function calcRestante(alvo: number, agora: number) {
@@ -66,6 +78,8 @@ export function CultoCountdown({
     valido && agora !== null && agora >= alvo && agora < alvo + DURACAO_CULTO_MS;
   const contando = valido && agora !== null && agora < alvo;
   const r = contando ? calcRestante(alvo, agora) : null;
+  // Boletim de hoje fica acessível o domingo inteiro (não só na janela ao vivo).
+  const ehDomingo = agora !== null && ehDomingoSP(agora);
 
   return (
     <div className="culto-countdown">
@@ -76,6 +90,13 @@ export function CultoCountdown({
         <p className="cc-live">
           <span className="cc-dot" aria-hidden />
           Estamos reunidos agora — venha como está
+        </p>
+      )}
+      {ehDomingo && (
+        <p className="cc-boletim-row">
+          <Link href="/culto" className="cc-boletim">
+            Ver o boletim de hoje →
+          </Link>
         </p>
       )}
       {r && (

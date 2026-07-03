@@ -1,7 +1,11 @@
 import { query } from "../_generated/server";
 import type { QueryCtx } from "../_generated/server";
 import { v } from "convex/values";
-import { getSaoPauloDateString } from "../_shared/datetime";
+import {
+  getSaoPauloDateString,
+  getSaoPauloHour,
+  getSaoPauloWeekday,
+} from "../_shared/datetime";
 
 // Agenda pública (sem auth). Agrega cultos PUBLICADOS + eventos do calendário,
 // ambos a partir de hoje. Retorno enxuto: NÃO inclui escalas, nomes de membros
@@ -22,15 +26,22 @@ export type EventoPublico = {
 // Culto fixo da igreja: todo domingo às 10h. Quantos domingos futuros gerar
 // (rola pra frente a cada consulta — "para sempre", sem registros no banco).
 const CULTO_HORARIO = "10h";
+const CULTO_HORA = 10; // hora do culto dominical recorrente
+// "Ao vivo" por 2h apos o inicio (espelha DURACAO_CULTO_MS do CultoCountdown).
+// Passado esse corte no domingo, a agenda ja aponta pro proximo domingo — assim
+// o contador nunca fica parado numa data cujo culto ja terminou.
+const CULTO_CORTE_HORA = CULTO_HORA + 2;
 const DOMINGOS_FUTUROS = 12;
 
-// Gera as datas (YYYY-MM-DD) dos próximos N domingos a partir de `hoje`
-// (inclusive, se hoje for domingo). Cálculo em UTC = aritmética de calendário
-// pura sobre a string de data, sem conversão de fuso.
-function proximosDomingos(hoje: string, n: number): string[] {
+// Gera as datas (YYYY-MM-DD) dos próximos N domingos a partir de `hoje`.
+// Inclui o domingo de hoje, exceto quando `pularHoje` (culto de hoje já
+// terminou). Cálculo em UTC = aritmética de calendário pura sobre a string de
+// data, sem conversão de fuso.
+function proximosDomingos(hoje: string, n: number, pularHoje: boolean): string[] {
   const base = new Date(`${hoje}T12:00:00Z`);
   if (Number.isNaN(base.getTime())) return [];
-  const ateDomingo = (7 - base.getUTCDay()) % 7; // 0 = hoje é domingo
+  let ateDomingo = (7 - base.getUTCDay()) % 7; // 0 = hoje é domingo
+  if (ateDomingo === 0 && pularHoje) ateDomingo = 7; // culto de hoje acabou → próximo
   const d = new Date(base);
   d.setUTCDate(d.getUTCDate() + ateDomingo);
   const datas: string[] = [];
@@ -64,8 +75,11 @@ async function coletarAgenda(ctx: QueryCtx, tipoFiltro?: TipoAgenda): Promise<Ev
       });
     }
     // Culto recorrente de domingo (10h). Gerado automaticamente; um registro
-    // real publicado naquele domingo tem prioridade (não duplica).
-    for (const data of proximosDomingos(hoje, DOMINGOS_FUTUROS)) {
+    // real publicado naquele domingo tem prioridade (não duplica). Se hoje é
+    // domingo e o culto já terminou (passou das 12h SP), pula pro próximo.
+    const cultoDeHojeAcabou =
+      getSaoPauloWeekday() === 0 && getSaoPauloHour() >= CULTO_CORTE_HORA;
+    for (const data of proximosDomingos(hoje, DOMINGOS_FUTUROS, cultoDeHojeAcabou)) {
       if (datasReais.has(data)) continue;
       eventos.push({
         id: `culto-${data}`,

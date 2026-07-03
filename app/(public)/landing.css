@@ -782,6 +782,17 @@ html:has(.site-v2) {
 .site-v2 .hub-section.sunken { background: var(--surface-sunken); border-bottom: none; }
 
 .site-v2 .hub-hero { padding: var(--space-20) 0 var(--space-16); border-bottom: var(--border-width) solid var(--border-subtle); }
+/* Hero em 2 colunas quando há avisos: conteúdo à esquerda, "Esta semana" à
+   direita (preenche o espaço vazio). Sem avisos = 1 coluna. Empilha no mobile. */
+.site-v2 .hub-hero-grid { display: grid; grid-template-columns: 1fr; gap: var(--space-12); align-items: start; }
+.site-v2 .hub-hero-grid[data-has-avisos="true"] { grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); }
+@media (max-width: 900px) {
+  .site-v2 .hub-hero-grid[data-has-avisos="true"] { grid-template-columns: 1fr; gap: var(--space-10); }
+}
+.site-v2 .hub-hero-aside { min-width: 0; }
+/* No hero a coluna é estreita — o título/sub não precisam do cap de largura */
+.site-v2 .hub-hero-main h1 { max-width: 16ch; }
+.site-v2 .hub-hero-main .sub { max-width: 42ch; }
 .site-v2 .hub-hero h1 {
   font-family: var(--font-display); font-weight: var(--fw-semibold);
   font-size: clamp(2rem, 5vw, 2.75rem); line-height: 1.12; letter-spacing: var(--tracking-tight);
@@ -880,6 +891,16 @@ html:has(.site-v2) {
   0%, 100% { opacity: 1; box-shadow: 0 0 0 0 color-mix(in srgb, var(--orange-500) 45%, transparent); }
   50% { opacity: 0.75; box-shadow: 0 0 0 6px transparent; }
 }
+.site-v2 .cc-boletim-row { margin-top: var(--space-3); }
+/* Acesso ao boletim de hoje (domingo o dia todo) — leva pra /culto */
+.site-v2 .cc-boletim {
+  display: inline-flex; align-items: center;
+  font-family: var(--font-body); font-size: var(--text-sm); font-weight: var(--fw-semibold);
+  color: var(--navy-700); text-decoration: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--navy-700) 35%, transparent);
+  padding-bottom: 1px; transition: color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+}
+.site-v2 .cc-boletim:hover { color: var(--orange-600); border-color: var(--orange-500); }
 @media (prefers-reduced-motion: reduce) {
   .site-v2 .cc-num { animation: none; }
   .site-v2 .cc-dot { animation: none; }

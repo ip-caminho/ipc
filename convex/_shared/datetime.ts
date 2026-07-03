@@ -28,6 +28,16 @@ export function getSaoPauloDateString(now: Date = new Date()): string {
   return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
+/** Hora do dia (0-23) no fuso America/Sao_Paulo. */
+export function getSaoPauloHour(now: Date = new Date()): number {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "America/Sao_Paulo",
+    hour: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(now);
+  return parseInt(parts.find((p) => p.type === "hour")?.value ?? "0", 10);
+}
+
 /** Dia da semana no fuso America/Sao_Paulo (0=Domingo .. 6=Sabado). */
 export function getSaoPauloWeekday(now: Date = new Date()): number {
   const wd = new Intl.DateTimeFormat("en-US", {
