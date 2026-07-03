@@ -40,8 +40,13 @@ export default async function HomePage() {
   const proximoCulto = agenda.find((e) => e.tipo === "culto");
   const numInscricoes = inscricoes.length;
   const temAvisos = !!avisosCulto && avisosCulto.avisos.length > 0;
-  // Agenda resumida no hero (não a completa — evita coluna longa demais).
-  const proximosEventos = agenda.slice(0, 5);
+  // Agenda resumida no hero: o próximo culto UMA vez + eventos especiais. O
+  // culto dominical é gerado pra 12 domingos (id "culto-*"); mostrá-los todos
+  // deixaria a lista repetitiva, já que há poucos eventos. Cultos reais
+  // publicados (id do banco) continuam aparecendo.
+  const proximosEventos = agenda
+    .filter((e) => e === proximoCulto || !e.id.startsWith("culto-"))
+    .slice(0, 5);
   const temAgenda = proximosEventos.length > 0;
 
   return (
