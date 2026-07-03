@@ -433,11 +433,11 @@ export function PermissionMatrix() {
           })}
         </div>
       </div>
-      <div className="hidden md:block overflow-x-auto border rounded-lg">
-        <Table>
-          <TableHeader>
+      <div className="hidden md:block">
+        <Table containerClassName="max-h-[calc(100vh-16rem)] overflow-y-auto border rounded-lg">
+          <TableHeader className="sticky top-0 z-20 bg-muted">
             <TableRow className="bg-muted/50">
-              <TableHead className="sticky left-0 bg-muted/50 z-10 min-w-[200px]">
+              <TableHead className="sticky left-0 bg-muted z-10 min-w-[200px]">
                 Permissao
               </TableHead>
               {VISIBLE_ROLES.map((role) => (
