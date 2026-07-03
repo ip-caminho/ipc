@@ -32,7 +32,7 @@ export function PainelDoDia({ iso, eventos, onEventClick, onNovo, podeCriar = tr
     <div className="rounded-md border p-4">
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <span className="text-sm font-medium">
-          {capitalizar(format(parseISO(iso), "EEEE, dd/MM", { locale: ptBR }))}
+          {capitalizar(format(parseISO(iso), "EEEE, dd/MM/yyyy", { locale: ptBR }))}
         </span>
         {feriado && (
           <Badge variant="outline" className="border-red-300 text-red-600 dark:text-red-400">

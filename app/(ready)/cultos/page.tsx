@@ -349,7 +349,7 @@ function CultosTable({
           ) : (
             cultos.map((culto) => {
               const parsedDate = parseISO(culto.data);
-              const dataFormatada = format(parsedDate, "dd/MM", { locale: ptBR });
+              const dataFormatada = format(parsedDate, "dd/MM/yyyy", { locale: ptBR });
               return (
                 <Fragment key={culto._id}>
                 <tr className="border-b hover:bg-accent/30">

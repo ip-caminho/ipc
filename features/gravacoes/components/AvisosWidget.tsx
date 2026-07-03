@@ -60,7 +60,7 @@ export function AvisosWidget({ variant = "card" }: AvisosWidgetProps) {
     } else {
       player.play({
         url: audioUrl!,
-        title: `Avisos do dia ${format(parseISO(dataGravacao), "dd/MM")}`,
+        title: `Avisos do dia ${format(parseISO(dataGravacao), "dd/MM/yyyy")}`,
         gravacaoId,
         inicioSermao: inicioAvisos,
         fimSermao: fimAvisos,
@@ -68,7 +68,7 @@ export function AvisosWidget({ variant = "card" }: AvisosWidgetProps) {
     }
   };
 
-  const dataFormatada = format(parseISO(dataGravacao), "dd/MM");
+  const dataFormatada = format(parseISO(dataGravacao), "dd/MM/yyyy");
 
   // Drawer variant — botão fixo, lista com fade e scroll
   if (variant === "drawer") {

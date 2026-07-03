@@ -150,12 +150,12 @@ export default function CampanhaDetalhePage({
             <Badge>{STATUS_LABEL[campanha.status]}</Badge>
             {campanha.iniciadoEm && (
               <Badge variant="outline">
-                Iniciada {format(campanha.iniciadoEm, "dd/MM 'as' HH:mm", { locale: ptBR })}
+                Iniciada {format(campanha.iniciadoEm, "dd/MM/yyyy 'as' HH:mm", { locale: ptBR })}
               </Badge>
             )}
             {campanha.concluidoEm && (
               <Badge variant="outline">
-                Concluida {format(campanha.concluidoEm, "dd/MM 'as' HH:mm", { locale: ptBR })}
+                Concluida {format(campanha.concluidoEm, "dd/MM/yyyy 'as' HH:mm", { locale: ptBR })}
               </Badge>
             )}
           </div>
@@ -229,10 +229,10 @@ export default function CampanhaDetalhePage({
                       )}
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">
-                      {e.enviadoEm ? format(e.enviadoEm, "dd/MM HH:mm", { locale: ptBR }) : "-"}
+                      {e.enviadoEm ? format(e.enviadoEm, "dd/MM/yyyy HH:mm", { locale: ptBR }) : "-"}
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">
-                      {e.atualizouEm ? format(e.atualizouEm, "dd/MM HH:mm", { locale: ptBR }) : "-"}
+                      {e.atualizouEm ? format(e.atualizouEm, "dd/MM/yyyy HH:mm", { locale: ptBR }) : "-"}
                     </TableCell>
                   </TableRow>
                 ))}

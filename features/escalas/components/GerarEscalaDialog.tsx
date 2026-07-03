@@ -218,7 +218,7 @@ function GerarContent({
               return (
                 <div key={culto._id} className="flex items-center gap-2 px-3 py-1.5 text-xs">
                   <span className="font-medium capitalize min-w-[80px]">
-                    {format(parsed, "dd/MM (EEE)", { locale: ptBR })}
+                    {format(parsed, "dd/MM/yyyy (EEE)", { locale: ptBR })}
                   </span>
                   <div className="flex-1 flex flex-wrap gap-1">
                     {temEscala ? (
