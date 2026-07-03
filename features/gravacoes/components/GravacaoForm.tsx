@@ -9,6 +9,7 @@ import { z } from "zod/v4";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
+import { DateFieldBR } from "@/shared/components/ui/date-picker-br";
 import { Label } from "@/shared/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
 import { TIPO_GRAVACAO_OPTIONS } from "../lib/constants";
@@ -109,7 +110,7 @@ export function GravacaoForm({ defaultValues, onSubmit, isEditing, entityId }: G
 
             <div className="space-y-1">
               <Label htmlFor="data">Data *</Label>
-              <Input id="data" type="date" {...form.register("data")} />
+              <DateFieldBR control={form.control} name="data" id="data" />
               {form.formState.errors.data && (
                 <p className="text-xs text-destructive">{form.formState.errors.data.message}</p>
               )}

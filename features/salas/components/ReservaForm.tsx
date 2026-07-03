@@ -4,6 +4,7 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
+import { DatePickerBR } from "@/shared/components/ui/date-picker-br";
 import { Label } from "@/shared/components/ui/label";
 import { toast } from "sonner";
 import { useState, useMemo } from "react";
@@ -152,11 +153,10 @@ export function ReservaForm({
       {/* Data */}
       <div className="space-y-1">
         <Label>Data</Label>
-        <Input
-          type="date"
+        <DatePickerBR
           value={data}
           min={hoje}
-          onChange={(e) => { setData(e.target.value); setSelectedSlots(new Set()); setShowMotivo(false); }}
+          onChange={(iso) => { setData(iso); setSelectedSlots(new Set()); setShowMotivo(false); }}
           className="text-base"
         />
       </div>

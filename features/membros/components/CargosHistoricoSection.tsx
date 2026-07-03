@@ -6,7 +6,7 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
-import { Input } from "@/shared/components/ui/input";
+import { DatePickerBR } from "@/shared/components/ui/date-picker-br";
 import { Label } from "@/shared/components/ui/label";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Badge } from "@/shared/components/ui/badge";
@@ -151,25 +151,23 @@ export function CargosHistoricoSection({ membroId }: { membroId: Id<"membros"> }
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs">Inicio do mandato *</Label>
-                  <Input
-                    type="date"
+                  <DatePickerBR
                     value={form.mandatoInicio}
-                    onChange={(e) =>
+                    onChange={(iso) =>
                       setForm((p) => ({
                         ...p,
-                        mandatoInicio: e.target.value,
+                        mandatoInicio: iso,
                         // sugere fim = inicio + 5 anos (limite IPB); editavel
-                        mandatoFim: maisCincoAnos(e.target.value),
+                        mandatoFim: maisCincoAnos(iso),
                       }))
                     }
                   />
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs">Fim do mandato (previsto)</Label>
-                  <Input
-                    type="date"
+                  <DatePickerBR
                     value={form.mandatoFim}
-                    onChange={(e) => setForm((p) => ({ ...p, mandatoFim: e.target.value }))}
+                    onChange={(iso) => setForm((p) => ({ ...p, mandatoFim: iso }))}
                   />
                 </div>
               </div>
@@ -242,7 +240,7 @@ export function CargosHistoricoSection({ membroId }: { membroId: Id<"membros"> }
           </DialogHeader>
           <div className="space-y-1 py-2">
             <Label className="text-xs">Data de encerramento</Label>
-            <Input type="date" value={encerrarData} onChange={(e) => setEncerrarData(e.target.value)} />
+            <DatePickerBR value={encerrarData} onChange={(iso) => setEncerrarData(iso)} />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEncerrarAlvo(null)}>Cancelar</Button>

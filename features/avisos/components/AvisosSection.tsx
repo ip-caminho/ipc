@@ -5,6 +5,7 @@ import { api } from "@/convex/_generated/api";
 import { useAuth } from "@shared/providers/PermissionsProvider";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
+import { DatePickerBR } from "@/shared/components/ui/date-picker-br";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Label } from "@/shared/components/ui/label";
 import {
@@ -89,19 +90,17 @@ function AvisoForm({
       <div className="flex items-center gap-3">
         <div className="space-y-1">
           <label className="text-xs text-muted-foreground">Data</label>
-          <Input
-            type="date"
+          <DatePickerBR
             value={dataInicio}
-            onChange={(e) => setDataInicio(e.target.value)}
+            onChange={(iso) => setDataInicio(iso)}
             className="w-40 text-sm"
           />
         </div>
         <div className="space-y-1">
           <label className="text-xs text-muted-foreground">Até (opcional)</label>
-          <Input
-            type="date"
+          <DatePickerBR
             value={dataFim}
-            onChange={(e) => setDataFim(e.target.value)}
+            onChange={(iso) => setDataFim(iso)}
             className="w-40 text-sm"
             min={dataInicio}
           />

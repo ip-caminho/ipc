@@ -2,6 +2,7 @@
 
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
+import { DatePickerBR } from "@/shared/components/ui/date-picker-br";
 import { Label } from "@/shared/components/ui/label";
 import {
   Select,
@@ -89,11 +90,10 @@ export function DataStep({ nomeCompleto, whatsapp, formData, onUpdate, onNext, o
           </div>
           <div className="space-y-1">
             <Label htmlFor="ob-nasc" className="text-xs">Data de nascimento *</Label>
-            <Input
+            <DatePickerBR
               id="ob-nasc"
-              type="date"
               value={formData.dataNascimento}
-              onChange={(e) => onUpdate({ dataNascimento: e.target.value })}
+              onChange={(iso) => onUpdate({ dataNascimento: iso })}
             />
           </div>
         </div>

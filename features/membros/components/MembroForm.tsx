@@ -4,6 +4,7 @@ import { useForm, type UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
+import { DateFieldBR } from "@/shared/components/ui/date-picker-br";
 import { Label } from "@/shared/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
@@ -29,7 +30,11 @@ function Field({ form, name, label, type = "text", placeholder = "" }: { form: U
   return (
     <div className="space-y-1">
       <Label htmlFor={name}>{label}</Label>
-      <Input id={name} type={type} placeholder={placeholder} {...form.register(name)} />
+      {type === "date" ? (
+        <DateFieldBR control={form.control} name={name} id={name} placeholder={placeholder} />
+      ) : (
+        <Input id={name} type={type} placeholder={placeholder} {...form.register(name)} />
+      )}
       {form.formState.errors[name] && (
         <p className="text-xs text-destructive">{form.formState.errors[name]?.message}</p>
       )}

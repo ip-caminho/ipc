@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
+import { DatePickerBR } from "@/shared/components/ui/date-picker-br";
 import { Label } from "@/shared/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Textarea } from "@/shared/components/ui/textarea";
@@ -125,7 +126,7 @@ function DadosEditor({ gravacao }: { gravacao: any }) {
           </div>
           <div className="space-y-1">
             <Label>Data</Label>
-            <Input type="date" value={form.data} onChange={(e) => set("data", e.target.value)} />
+            <DatePickerBR value={form.data} onChange={(iso) => set("data", iso)} />
           </div>
           <div className="space-y-1">
             <Label>Pregador</Label>

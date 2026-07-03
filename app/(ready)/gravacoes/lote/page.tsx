@@ -5,7 +5,7 @@ import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/shared/components/ui/card";
-import { Input } from "@/shared/components/ui/input";
+import { DatePickerBR } from "@/shared/components/ui/date-picker-br";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
@@ -224,10 +224,9 @@ export default function LoteGravacaoPage() {
                   </div>
 
                   {/* Data */}
-                  <Input
-                    type="date"
+                  <DatePickerBR
                     value={f.data}
-                    onChange={(e) => updateFile(f.id, { data: e.target.value })}
+                    onChange={(iso) => updateFile(f.id, { data: iso })}
                     disabled={f.status !== "pendente"}
                     className="w-[130px] h-7 text-xs shrink-0"
                   />

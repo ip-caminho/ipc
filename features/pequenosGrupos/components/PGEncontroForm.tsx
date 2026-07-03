@@ -6,6 +6,7 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
+import { DatePickerBR } from "@/shared/components/ui/date-picker-br";
 import { Label } from "@/shared/components/ui/label";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import {
@@ -126,7 +127,7 @@ export function PGEncontroForm({ open, onOpenChange, pgId, membros, editingEncon
         <div className="space-y-4">
           <div className="space-y-1">
             <Label>Data</Label>
-            <Input type="date" value={data} onChange={(e) => setData(e.target.value)} />
+            <DatePickerBR value={data} onChange={(iso) => setData(iso)} />
           </div>
 
           <div className="space-y-1">

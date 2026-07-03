@@ -16,6 +16,7 @@ import {
 } from "@/shared/components/ui/responsive-dialog";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
+import { DateFieldBR } from "@/shared/components/ui/date-picker-br";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Label } from "@/shared/components/ui/label";
 import {
@@ -128,11 +129,11 @@ export function TurmaFormDialog({ open, onOpenChange }: Props) {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="dataInicio">Inicio</Label>
-              <Input id="dataInicio" type="date" {...form.register("dataInicio")} />
+              <DateFieldBR control={form.control} name="dataInicio" id="dataInicio" />
             </div>
             <div>
               <Label htmlFor="dataFim">Fim</Label>
-              <Input id="dataFim" type="date" {...form.register("dataFim")} />
+              <DateFieldBR control={form.control} name="dataFim" id="dataFim" />
             </div>
           </div>
 

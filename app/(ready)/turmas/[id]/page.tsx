@@ -9,6 +9,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Badge } from "@/shared/components/ui/badge";
 import { Input } from "@/shared/components/ui/input";
+import { DatePickerBR } from "@/shared/components/ui/date-picker-br";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import {
@@ -255,10 +256,9 @@ export default function TurmaDetalhePage() {
                   <div className="flex gap-2 items-end flex-wrap">
                     <div>
                       <label className="text-xs text-muted-foreground">Data</label>
-                      <Input
-                        type="date"
+                      <DatePickerBR
                         value={novoEncontroData}
-                        onChange={(e) => setNovoEncontroData(e.target.value)}
+                        onChange={(iso) => setNovoEncontroData(iso)}
                         className="w-[160px]"
                       />
                     </div>

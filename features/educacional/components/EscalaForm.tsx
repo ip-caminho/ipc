@@ -14,7 +14,7 @@ import {
   ResponsiveDialogFooter,
 } from "@/shared/components/ui/responsive-dialog";
 import { Button } from "@/shared/components/ui/button";
-import { Input } from "@/shared/components/ui/input";
+import { DateFieldBR } from "@/shared/components/ui/date-picker-br";
 import { Label } from "@/shared/components/ui/label";
 import { Textarea } from "@/shared/components/ui/textarea";
 import {
@@ -85,7 +85,7 @@ export function EscalaForm({
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label>Data *</Label>
-              <Input type="date" {...form.register("data")} />
+              <DateFieldBR control={form.control} name="data" />
               {form.formState.errors.data && (
                 <p className="text-xs text-destructive">{form.formState.errors.data.message}</p>
               )}

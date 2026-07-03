@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { Label } from "@/shared/components/ui/label";
-import { Input } from "@/shared/components/ui/input";
+import { DatePickerBR } from "@/shared/components/ui/date-picker-br";
 import { Button } from "@/shared/components/ui/button";
 import { FileUpload } from "@/shared/files/components/FileUpload";
 import { TIPO_GRAVACAO_OPTIONS } from "@features/gravacoes/lib/constants";
@@ -156,11 +156,10 @@ export default function NovaGravacaoPage() {
 
             <div className="space-y-1">
               <Label htmlFor="data">Data</Label>
-              <Input
+              <DatePickerBR
                 id="data"
-                type="date"
                 value={data}
-                onChange={(e) => setData(e.target.value)}
+                onChange={(iso) => setData(iso)}
                 className="text-base"
               />
             </div>
