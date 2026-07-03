@@ -349,9 +349,9 @@ export default function AdminGravacoesPage() {
           </div>
         ) : (
           // Desktop: tabela com sort
-          <div className="border rounded-md overflow-hidden">
+          <div className="border rounded-md overflow-auto max-h-[calc(100vh-16rem)]">
             <table className="w-full">
-              <thead className="bg-muted/50">
+              <thead className="sticky top-0 z-20 bg-muted">
                 <tr className="border-b">
                   <th className="py-2 px-3 w-8" />
                   <SortHeader label="Titulo" field="titulo" currentField={sortField} currentDir={sortDir} onSort={handleSort} />

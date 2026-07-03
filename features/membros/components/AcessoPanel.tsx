@@ -185,8 +185,8 @@ export function AcessoPanel() {
       </div>
 
       <div className="rounded-md border">
-        <Table>
-          <TableHeader>
+        <Table containerClassName="max-h-[calc(100vh-16rem)] overflow-y-auto">
+          <TableHeader className="sticky top-0 z-20 bg-background">
             <TableRow>
               <TableHead>Nome</TableHead>
               <TableHead>Status</TableHead>

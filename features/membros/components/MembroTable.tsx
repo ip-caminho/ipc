@@ -147,6 +147,7 @@ export function MembroTable({ data }: MembroTableProps) {
       table={table}
       renderMobileCard={(row) => <MembroMobileCard row={row} />}
       emptyState="Nenhum membro encontrado"
+      stickyHeader
     />
   );
 }
