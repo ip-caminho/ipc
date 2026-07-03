@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -8,13 +8,8 @@ import { useAuth } from "@shared/providers/PermissionsProvider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/components/ui/select";
+import { Input } from "@/shared/components/ui/input";
+import { cn } from "@shared/lib/utils/cn";
 import {
   Dialog,
   DialogContent,
@@ -37,6 +32,15 @@ interface PGDetalheProps {
   onBack: () => void;
 }
 
+// Busca sem acento/caixa: casa "Joao" com "João".
+function normalizeBusca(s: string): string {
+  return s
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
 export function PGDetalhe({ pgId, onBack }: PGDetalheProps) {
   const { can } = useAuth();
   const pg = useQuery(api.pequenosGrupos.queries.getById, { id: pgId });
@@ -49,6 +53,22 @@ export function PGDetalhe({ pgId, onBack }: PGDetalheProps) {
   const [editOpen, setEditOpen] = useState(false);
   const [addMembroOpen, setAddMembroOpen] = useState(false);
   const [selectedMembroId, setSelectedMembroId] = useState("");
+  const [busca, setBusca] = useState("");
+
+  // Membros fora do PG, filtrados pela busca e em ordem alfabetica.
+  const membrosDisponiveis = useMemo(() => {
+    if (!membros) return [];
+    const jaNoGrupo = new Set((pg?.membros ?? []).map((m) => m.membroId));
+    const termo = normalizeBusca(busca);
+    return membros
+      .filter((m: any) => !jaNoGrupo.has(m._id))
+      .map((m: any) => ({
+        id: m._id as string,
+        nome: (m.entidade?.nomeCompleto as string) || "—",
+      }))
+      .filter((m) => !termo || normalizeBusca(m.nome).includes(termo))
+      .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+  }, [membros, pg?.membros, busca]);
 
   if (pg === undefined) {
     return <p className="text-sm text-muted-foreground">Carregando...</p>;
@@ -98,6 +118,7 @@ export function PGDetalhe({ pgId, onBack }: PGDetalheProps) {
       toast.success("Membro adicionado");
       setAddMembroOpen(false);
       setSelectedMembroId("");
+      setBusca("");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao adicionar");
     }
@@ -235,26 +256,56 @@ export function PGDetalhe({ pgId, onBack }: PGDetalheProps) {
       />
 
       {/* Dialog: Adicionar Membro */}
-      <Dialog open={addMembroOpen} onOpenChange={setAddMembroOpen}>
+      <Dialog
+        open={addMembroOpen}
+        onOpenChange={(open) => {
+          setAddMembroOpen(open);
+          if (!open) {
+            setSelectedMembroId("");
+            setBusca("");
+          }
+        }}
+      >
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>Adicionar membro ao PG</DialogTitle>
           </DialogHeader>
-          <Select
-            value={selectedMembroId}
-            onValueChange={setSelectedMembroId}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione um membro" />
-            </SelectTrigger>
-            <SelectContent>
-              {membros?.map((m: any) => (
-                <SelectItem key={m._id} value={m._id}>
-                  {m.entidade?.nomeCompleto || "—"}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Input
+            autoFocus
+            placeholder="Buscar membro pelo nome"
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+          />
+          <div className="max-h-64 overflow-y-auto">
+            {membros === undefined ? (
+              <p className="py-6 text-center text-sm text-muted-foreground">
+                Carregando...
+              </p>
+            ) : membrosDisponiveis.length === 0 ? (
+              <p className="py-6 text-center text-sm text-muted-foreground">
+                {busca ? "Nenhum membro encontrado" : "Nenhum membro disponivel"}
+              </p>
+            ) : (
+              <ul className="space-y-0.5">
+                {membrosDisponiveis.map((m) => (
+                  <li key={m.id}>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedMembroId(m.id)}
+                      className={cn(
+                        "flex min-h-[44px] w-full items-center rounded-md px-3 py-2.5 text-left text-sm transition-colors",
+                        selectedMembroId === m.id
+                          ? "bg-primary/10 text-primary"
+                          : "hover:bg-muted active:bg-muted",
+                      )}
+                    >
+                      {m.nome}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
           <DialogFooter>
             <Button
               variant="outline"
