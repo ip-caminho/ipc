@@ -1,6 +1,6 @@
 import { mutation } from "../_generated/server";
 import { v } from "convex/values";
-import { getAuthUserId } from "@convex-dev/auth/server";
+import { requirePermission } from "../_shared/requirePermission";
 import { createFieldAuditLogs, createActionAuditLog } from "../_shared/auditHelpers";
 import { espelharConjuge, limparEspelhoConjuge } from "./familiaHelpers";
 
@@ -42,8 +42,12 @@ export const create = mutation({
     filhos: v.optional(v.array(v.any())),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+    const { membro: caller } = await requirePermission(ctx, "membros:create");
+
+    // Papel admin so pode ser atribuido por outro admin
+    if (args.role === "admin" && caller.role !== "admin") {
+      throw new Error("Somente admin pode criar membro com papel admin");
+    }
 
     // Atomic: create entidade + membro together
     const entidadeId = await ctx.db.insert("entidades", {
@@ -104,8 +108,20 @@ export const update = mutation({
     membroData: v.optional(v.any()),
   },
   handler: async (ctx, { id, entidadeData, membroData }) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+    // Dados pessoais (entidade) exigem membros:update
+    const { membro: caller } = await requirePermission(ctx, "membros:update");
+
+    if (membroData) {
+      // Troca de papel so via preferencias/rbac.updateMembroRole (admin),
+      // que tambem limpa o snapshot de permissions[]
+      if ("role" in membroData) {
+        throw new Error("Papel (role) e alterado apenas na tela de Permissoes");
+      }
+      // Dados eclesiasticos (membro) exigem rol:update
+      if (caller.role !== "admin") {
+        await requirePermission(ctx, "rol:update");
+      }
+    }
 
     const membro = await ctx.db.get(id);
     if (!membro) throw new Error("Membro not found");
@@ -152,8 +168,7 @@ export const updateStatus = mutation({
     ),
   },
   handler: async (ctx, { id, status }) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+    await requirePermission(ctx, "membros:update");
 
     const membro = await ctx.db.get(id);
     if (!membro) throw new Error("Membro not found");

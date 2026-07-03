@@ -56,6 +56,8 @@ export type Permission =
   | "atos_pastorais:manage"
   // Site Publico (inscricoes de evento + conteudo publico)
   | "site_publico:manage"
+  // Acesso ao sistema (links de ativacao, reset de senha, link de convidado)
+  | "acesso:manage"
   // Wildcards
   | "*";
 

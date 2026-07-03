@@ -11,11 +11,27 @@ async function seedUser(t: ReturnType<typeof convexTest>) {
   return { userId, identity };
 }
 
+/** Helper: user + membro admin (mutations exigem permissao; admin tem "*") */
+async function seedAdmin(t: ReturnType<typeof convexTest>) {
+  const { userId, identity } = await seedUser(t);
+  await t.run(async (ctx) => {
+    const eid = await ctx.db.insert("entidades", {
+      tipoEntidade: "PF",
+      papeis: ["MEMBRO"],
+      status: "ATIVO",
+      nomeCompleto: "Admin",
+    });
+    await ctx.db.insert("membros", { entidadeId: eid, role: "admin", userId });
+  });
+  return { userId, identity };
+}
+
 describe("membros — criação atômica", () => {
   it("cria entidade + membro na mesma mutation", async () => {
     const t = convexTest(schema, modules);
-    const { identity } = await seedUser(t);
+    const { identity } = await seedAdmin(t);
 
+    // @ts-ignore Convex TS2589
     const membroId = await identity.mutation(api.membros.mutations.create, {
       nomeCompleto: "João da Silva",
       cpf: "529.982.247-25",
@@ -48,7 +64,7 @@ describe("membros — criação atômica", () => {
 
   it("usa role padrão 'membro' quando não especificado", async () => {
     const t = convexTest(schema, modules);
-    const { identity } = await seedUser(t);
+    const { identity } = await seedAdmin(t);
 
     const membroId = await identity.mutation(api.membros.mutations.create, {
       nomeCompleto: "Maria Santos",
@@ -56,6 +72,52 @@ describe("membros — criação atômica", () => {
 
     const membro = await t.run(async (ctx) => ctx.db.get(membroId));
     expect(membro?.role).toBe("membro");
+  });
+
+  it("bloqueia criação sem membros:create", async () => {
+    const t = convexTest(schema, modules);
+    const { userId, identity } = await seedUser(t);
+    // membro comum, sem snapshot de permissoes nem row de rolePermissions
+    await t.run(async (ctx) => {
+      const eid = await ctx.db.insert("entidades", {
+        tipoEntidade: "PF",
+        papeis: ["MEMBRO"],
+        status: "ATIVO",
+        nomeCompleto: "Comum",
+      });
+      await ctx.db.insert("membros", { entidadeId: eid, role: "membro", userId });
+    });
+
+    await expect(
+      identity.mutation(api.membros.mutations.create, { nomeCompleto: "Novo" })
+    ).rejects.toThrow("Sem permissao");
+  });
+
+  it("bloqueia não-admin de criar membro com papel admin", async () => {
+    const t = convexTest(schema, modules);
+    const { userId, identity } = await seedUser(t);
+    // secretaria com membros:create via snapshot, mas nao e admin
+    await t.run(async (ctx) => {
+      const eid = await ctx.db.insert("entidades", {
+        tipoEntidade: "PF",
+        papeis: ["MEMBRO"],
+        status: "ATIVO",
+        nomeCompleto: "Secretaria",
+      });
+      await ctx.db.insert("membros", {
+        entidadeId: eid,
+        role: "secretaria",
+        userId,
+        permissions: ["membros:create"],
+      });
+    });
+
+    await expect(
+      identity.mutation(api.membros.mutations.create, {
+        nomeCompleto: "Golpe",
+        role: "admin",
+      })
+    ).rejects.toThrow("Somente admin");
   });
 
   it("cria audit log de criação", async () => {
@@ -138,9 +200,54 @@ describe("membros — update", () => {
     });
   });
 
-  it("atualiza dados do membro", async () => {
+  it("atualiza dados do membro (admin, sem role)", async () => {
     const t = convexTest(schema, modules);
-    const { userId } = await seedUser(t);
+    const { identity } = await seedAdmin(t);
+
+    const membroId = await t.run(async (ctx) => {
+      const eid = await ctx.db.insert("entidades", {
+        tipoEntidade: "PF",
+        papeis: ["MEMBRO"],
+        status: "ATIVO",
+        nomeCompleto: "Membro",
+      });
+      return await ctx.db.insert("membros", { entidadeId: eid, role: "membro" });
+    });
+
+    await identity.mutation(api.membros.mutations.update, {
+      id: membroId,
+      membroData: { dataMembresia: "2026-02-01" },
+    });
+
+    const membro = await t.run(async (ctx) => ctx.db.get(membroId));
+    expect(membro?.dataMembresia).toBe("2026-02-01");
+  });
+
+  it("bloqueia troca de role via update (mesmo admin)", async () => {
+    const t = convexTest(schema, modules);
+    const { identity } = await seedAdmin(t);
+
+    const membroId = await t.run(async (ctx) => {
+      const eid = await ctx.db.insert("entidades", {
+        tipoEntidade: "PF",
+        papeis: ["MEMBRO"],
+        status: "ATIVO",
+        nomeCompleto: "Membro",
+      });
+      return await ctx.db.insert("membros", { entidadeId: eid, role: "membro" });
+    });
+
+    await expect(
+      identity.mutation(api.membros.mutations.update, {
+        id: membroId,
+        membroData: { role: "admin" },
+      })
+    ).rejects.toThrow("Permissoes");
+  });
+
+  it("bloqueia membro comum de editar (auto-escalação)", async () => {
+    const t = convexTest(schema, modules);
+    const { userId, identity } = await seedUser(t);
 
     const membroId = await t.run(async (ctx) => {
       const eid = await ctx.db.insert("entidades", {
@@ -152,14 +259,12 @@ describe("membros — update", () => {
       return await ctx.db.insert("membros", { entidadeId: eid, role: "membro", userId });
     });
 
-    const asUser = t.withIdentity({ subject: `${userId}|session-1` });
-    await asUser.mutation(api.membros.mutations.update, {
-      id: membroId,
-      membroData: { role: "secretaria" },
-    });
-
-    const membro = await t.run(async (ctx) => ctx.db.get(membroId));
-    expect(membro?.role).toBe("secretaria");
+    await expect(
+      identity.mutation(api.membros.mutations.update, {
+        id: membroId,
+        membroData: { role: "secretaria" },
+      })
+    ).rejects.toThrow("Sem permissao");
   });
 });
 

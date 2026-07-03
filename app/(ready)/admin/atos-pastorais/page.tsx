@@ -30,6 +30,7 @@ function initials(name: string): string {
 
 export default function AtosPastoraisDashboard() {
   const { isAdmin, isLoading } = useAuth();
+  // @ts-ignore Convex TS2589
   const pendentes = useQuery(api.atosPastorais.queries.pendentesVerificacao);
 
   if (isLoading) return <Skeleton className="h-64 w-full" />;
@@ -72,7 +73,7 @@ export default function AtosPastoraisDashboard() {
                 {pendentes.map((p) => (
                   <li key={p.membroId}>
                     <Link
-                      href={`/membros/${p.membroId}`}
+                      href={`/secretario-executivo/${p.membroId}`}
                       className="flex items-center gap-3 p-2 hover:bg-muted/50 rounded-md"
                     >
                       <Avatar className="h-9 w-9">

@@ -5,7 +5,8 @@ import { api } from "@/convex/_generated/api";
 import { Input } from "@/shared/components/ui/input";
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import { Search, Users, Printer, ChevronRight } from "lucide-react";
+import Link from "next/link";
+import { Search, Users, Printer, ChevronRight, Plus } from "lucide-react";
 import {
   Collapsible,
   CollapsibleContent,
@@ -15,7 +16,7 @@ import { useState } from "react";
 import { useDebounce } from "@shared/hooks/useDebounce";
 import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
 import { PageHeader } from "@shared/components/layout/PageHeader";
-import { AnyPermissionGate } from "@shared/components/auth/PermissionGate";
+import { AnyPermissionGate, PermissionGate } from "@shared/components/auth/PermissionGate";
 import { cn } from "@shared/lib/utils/cn";
 import {
   Tooltip,
@@ -117,7 +118,17 @@ export default function SecretarioExecutivoPage() {
     <AnyPermissionGate permissions={["rol:read", "rol:update"]}>
       <HeaderLayout>
         <div className="space-y-4">
-          <PageHeader title="Rol de Membros" subtitle="Rol, familia e dados eclesiasticos" />
+          <div className="flex items-start justify-between gap-2">
+            <PageHeader title="Rol de Membros" subtitle="Rol, familia e dados eclesiasticos" />
+            <PermissionGate permission="membros:create">
+              <Button asChild size="sm" className="mt-4 shrink-0">
+                <Link href="/secretario-executivo/novo">
+                  <Plus className="h-4 w-4 mr-1.5" />
+                  <span className="hidden sm:inline">Novo membro</span>
+                </Link>
+              </Button>
+            </PermissionGate>
+          </div>
 
           {/* Dashboard — essenciais sempre visiveis; demais no colapsavel */}
           {resumo === undefined ? (

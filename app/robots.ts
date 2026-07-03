@@ -18,7 +18,6 @@ export default function robots(): MetadataRoute.Robots {
         "/subir-audio",
         "/inscricao/",
         "/dashboard",
-        "/membros",
         "/entidades",
         "/diretorio",
         "/gravacoes",

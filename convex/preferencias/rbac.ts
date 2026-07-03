@@ -54,6 +54,8 @@ export const ALL_PERMISSIONS = [
   "atos_pastorais:manage",
   // Site Publico
   "site_publico:manage",
+  // Acesso ao sistema
+  "acesso:manage",
 ] as const;
 
 function getPermissionLabel(perm: string): string {
@@ -133,6 +135,7 @@ function getPermissionLabel(perm: string): string {
     "turmas:update": "Editar Turmas",
     "turmas:delete": "Excluir Turmas",
     "turmas:manage_inscricoes": "Gerenciar Inscricoes",
+    "acesso:manage": "Gerenciar Acesso ao Sistema",
   };
   return labels[perm] ?? perm;
 }
@@ -158,6 +161,7 @@ function getPermissionModule(perm: string): string {
   if (perm.startsWith("salas:")) return "Salas";
   if (perm.startsWith("tarefas:")) return "Tarefas";
   if (perm.startsWith("turmas:")) return "Turmas";
+  if (perm.startsWith("acesso:")) return "Acesso";
   return "Geral";
 }
 
@@ -236,6 +240,7 @@ function getPermissionDescription(perm: string): string {
     "turmas:update": "Editar turmas existentes",
     "turmas:delete": "Excluir turmas",
     "turmas:manage_inscricoes": "Gerenciar inscricoes de alunos",
+    "acesso:manage": "Gerenciar acesso ao sistema: links de ativacao, reset de senha, link de convidado e atividade",
   };
   return descriptions[perm] ?? "";
 }
@@ -592,6 +597,37 @@ export const addAvisosPermissions = internalMutation({
       if (missing.length > 0) {
         await ctx.db.patch(row._id, {
           permissions: [...row.permissions, ...missing],
+          updatedAt: Date.now(),
+        });
+        updated.push(role);
+      }
+    }
+    return { updated };
+  },
+});
+
+/**
+ * Concede acesso:manage a pastor e secretaria (papeis que gerenciavam acesso ao
+ * sistema via a antiga aba Acesso de /membros, agora em /admin/acesso).
+ * Direcionada e idempotente: adiciona SO essa permissao, preservando o resto.
+ * Rodar em prod apos deploy:
+ * npx convex run preferencias/rbac:addAcessoManageToRoles --prod
+ */
+export const addAcessoManageToRoles = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const roles = ["pastor", "secretaria"];
+    const updated: string[] = [];
+    for (const role of roles) {
+      const row = await ctx.db
+        .query("rolePermissions")
+        .withIndex("by_role", (q) => q.eq("role", role))
+        .first();
+      // Sem row: resolvePermissions cai no INITIAL do codigo (ja atualizado).
+      if (!row) continue;
+      if (!row.permissions.includes("acesso:manage")) {
+        await ctx.db.patch(row._id, {
+          permissions: [...row.permissions, "acesso:manage"],
           updatedAt: Date.now(),
         });
         updated.push(role);

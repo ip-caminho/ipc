@@ -97,7 +97,7 @@ export function MembrosTable({ membros }: Props) {
         {filtered.map((m) => (
           <Link
             key={m.membroId}
-            href={`/membros/${m.membroId}`}
+            href={`/secretario-executivo/${m.membroId}`}
             className="flex items-center gap-3 rounded-xl border bg-card p-3 active:opacity-80 transition-opacity"
           >
             <Avatar className="h-9 w-9">
