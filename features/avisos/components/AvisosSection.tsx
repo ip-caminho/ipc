@@ -147,9 +147,9 @@ function AvisoCard({
   const [editing, setEditing] = useState(false);
 
   const formatData = (inicio: string, fim?: string) => {
-    const i = format(parseISO(inicio), "dd/MM", { locale: ptBR });
+    const i = format(parseISO(inicio), "dd/MM/yyyy", { locale: ptBR });
     if (!fim || fim === inicio) return i;
-    const f = format(parseISO(fim), "dd/MM", { locale: ptBR });
+    const f = format(parseISO(fim), "dd/MM/yyyy", { locale: ptBR });
     return `${i} — ${f}`;
   };
 
@@ -211,8 +211,8 @@ function AvisoCard({
         )}
         <p className="text-[11px] text-muted-foreground/50 mt-1">
           {aviso.criadoPorNome && `por ${aviso.criadoPorNome}`}
-          {aviso.criadoEm && `${aviso.criadoPorNome ? " · " : ""}criado ${format(new Date(aviso.criadoEm), "dd/MM 'às' HH:mm", { locale: ptBR })}`}
-          {aviso.atualizadoEm && ` · editado ${format(new Date(aviso.atualizadoEm), "dd/MM 'às' HH:mm", { locale: ptBR })}`}
+          {aviso.criadoEm && `${aviso.criadoPorNome ? " · " : ""}criado ${format(new Date(aviso.criadoEm), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}`}
+          {aviso.atualizadoEm && ` · editado ${format(new Date(aviso.atualizadoEm), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}`}
         </p>
       </div>
       <div className="flex items-center gap-0.5 shrink-0">

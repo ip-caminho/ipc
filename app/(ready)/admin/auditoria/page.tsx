@@ -194,7 +194,7 @@ function AuditoriaContent() {
                   className="border-b last:border-0 hover:bg-muted/40 cursor-pointer"
                 >
                   <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
-                    {format(new Date(log.createdAt), "dd/MM/yy HH:mm", { locale: ptBR })}
+                    {format(new Date(log.createdAt), "dd/MM/yyyy HH:mm", { locale: ptBR })}
                   </td>
                   <td className="px-4 py-3">{log.autorNome || "—"}</td>
                   <td className="px-4 py-3 font-medium">{log.action}</td>

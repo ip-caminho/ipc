@@ -72,7 +72,7 @@ function GravacaoRow({ g }: { g: any }) {
         </div>
       </td>
       <td className="py-2 px-3 text-sm text-muted-foreground whitespace-nowrap">
-        {format(parseISO(g.data), "dd/MM/yy", { locale: ptBR })}
+        {format(parseISO(g.data), "dd/MM/yyyy", { locale: ptBR })}
       </td>
       <td className="py-2 px-3">
         <Badge
@@ -147,7 +147,7 @@ function GravacaoMobileCard({ g }: { g: any }) {
         <p className="text-sm font-medium leading-tight line-clamp-1">{g.titulo}</p>
         <div className="flex items-center gap-2 mt-0.5">
           <span className="text-xs text-muted-foreground">
-            {format(parseISO(g.data), "dd/MM/yy", { locale: ptBR })}
+            {format(parseISO(g.data), "dd/MM/yyyy", { locale: ptBR })}
           </span>
           {pregador && (
             <span className="text-xs text-muted-foreground truncate">{pregador}</span>

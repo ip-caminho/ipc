@@ -59,7 +59,7 @@ export function CalendarioLista({ refDate, eventos, onEventClick, pregadores }: 
           <div key={iso}>
             <div className="mb-1 flex items-center gap-2 border-b pb-1">
               <span className="text-sm font-medium">
-                {capitalizar(format(d, "EEEE, dd/MM", { locale: ptBR }))}
+                {capitalizar(format(d, "EEEE, dd/MM/yyyy", { locale: ptBR }))}
               </span>
               {feriado && (
                 <Badge

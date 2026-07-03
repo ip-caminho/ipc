@@ -32,7 +32,7 @@ export function EducacionalPaisWidget() {
               </div>
               {c.proximaEscalaData && c.professores.length > 0 && (
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Proxima aula ({format(parseISO(c.proximaEscalaData), "dd/MM", { locale: ptBR })}): {c.professores.join(", ")}
+                  Proxima aula ({format(parseISO(c.proximaEscalaData), "dd/MM/yyyy", { locale: ptBR })}): {c.professores.join(", ")}
                 </p>
               )}
             </div>

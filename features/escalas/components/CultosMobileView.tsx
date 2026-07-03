@@ -620,7 +620,7 @@ export function CultosMobileView({
                 louvores: culto.louvores || [],
                 temCeia: culto.temCeia !== false,
                 canEdit,
-                dataLabel: format(parseISO(culto.data), "dd/MM", { locale: ptBR }),
+                dataLabel: format(parseISO(culto.data), "dd/MM/yyyy", { locale: ptBR }),
               } : undefined}
             />
           );
