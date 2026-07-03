@@ -90,14 +90,17 @@ export const addMembro = mutation({
     const pg = await ctx.db.get(pgId);
     if (!pg) throw new Error("Pequeno grupo nao encontrado");
 
-    // Check if already exists
-    const existing = await ctx.db
+    // Um membro so pode estar em um PG por vez.
+    const memberships = await ctx.db
       .query("pgMembros")
-      .withIndex("by_pg", (q) => q.eq("pgId", pgId))
+      .withIndex("by_membro", (q) => q.eq("membroId", membroId))
       .collect();
 
-    if (existing.some((e) => e.membroId === membroId)) {
+    if (memberships.some((e) => e.pgId === pgId)) {
       throw new Error("Membro ja esta neste PG");
+    }
+    if (memberships.length > 0) {
+      throw new Error("Membro ja esta em outro PG");
     }
 
     const id = await ctx.db.insert("pgMembros", { pgId, membroId });
@@ -117,32 +120,28 @@ export const moveMembro = mutation({
 
     if (fromPgId === toPgId) return;
 
-    // Remove do PG de origem
-    if (fromPgId) {
-      const existing = await ctx.db
-        .query("pgMembros")
-        .withIndex("by_pg", (q) => q.eq("pgId", fromPgId))
-        .collect();
-      const record = existing.find((e) => e.membroId === membroId);
-      if (record) {
-        await ctx.db.delete(record._id);
+    // Todas as filiacoes atuais do membro (invariante: no maximo uma).
+    const memberships = await ctx.db
+      .query("pgMembros")
+      .withIndex("by_membro", (q) => q.eq("membroId", membroId))
+      .collect();
+
+    const jaNoDestino = toPgId
+      ? memberships.some((m) => m.pgId === toPgId)
+      : false;
+
+    // Remove de todo PG que nao seja o destino (garante 1 membro = 1 PG).
+    for (const m of memberships) {
+      if (!toPgId || m.pgId !== toPgId) {
+        await ctx.db.delete(m._id);
       }
     }
 
     // Adiciona ao PG de destino
-    if (toPgId) {
+    if (toPgId && !jaNoDestino) {
       const pg = await ctx.db.get(toPgId);
       if (!pg) throw new Error("PG de destino nao encontrado");
-
-      // Verifica duplicidade
-      const existingInTarget = await ctx.db
-        .query("pgMembros")
-        .withIndex("by_pg", (q) => q.eq("pgId", toPgId))
-        .collect();
-
-      if (!existingInTarget.some((e) => e.membroId === membroId)) {
-        await ctx.db.insert("pgMembros", { pgId: toPgId, membroId });
-      }
+      await ctx.db.insert("pgMembros", { pgId: toPgId, membroId });
     }
   },
 });
