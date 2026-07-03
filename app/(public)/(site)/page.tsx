@@ -39,49 +39,50 @@ export default async function HomePage() {
   const heroSub = textos.heroSub || SITE_TEXTOS_DEFAULTS.heroSub;
   const proximoCulto = agenda.find((e) => e.tipo === "culto");
   const numInscricoes = inscricoes.length;
+  const temAvisos = !!avisosCulto && avisosCulto.avisos.length > 0;
 
   return (
     <div className="site-v2">
       {/* =========================== HERO =========================== */}
       <section className="hub-hero">
-        <div className="wrap-wide">
-          <p className="eyebrow">Igreja Presbiteriana do Caminho · São Paulo</p>
-          <h1>{heroTitulo}</h1>
-          <p className="sub">{heroSub}</p>
-          {proximoCulto && (
-            <CultoCountdown
-              data={proximoCulto.data}
-              horario={proximoCulto.horario}
-              label={formatCulto(proximoCulto.data, proximoCulto.horario)}
-            />
-          )}
-          <div className="cta-row">
-            <Link href="/visite" className="btn btn-primary">
-              Quero conhecer →
-            </Link>
-            <Link href="/dashboard" className="link-quiet">
-              Sou membro
-            </Link>
+        <div className="wrap-wide hub-hero-grid" data-has-avisos={temAvisos}>
+          <div className="hub-hero-main">
+            <p className="eyebrow">Igreja Presbiteriana do Caminho · São Paulo</p>
+            <h1>{heroTitulo}</h1>
+            <p className="sub">{heroSub}</p>
+            {proximoCulto && (
+              <CultoCountdown
+                data={proximoCulto.data}
+                horario={proximoCulto.horario}
+                label={formatCulto(proximoCulto.data, proximoCulto.horario)}
+              />
+            )}
+            <div className="cta-row">
+              <Link href="/visite" className="btn btn-primary">
+                Quero conhecer →
+              </Link>
+              <Link href="/dashboard" className="link-quiet">
+                Sou membro
+              </Link>
+            </div>
           </div>
+
+          {/* Esta semana — coluna direita no desktop, empilha no mobile */}
+          {temAvisos && (
+            <aside className="hub-hero-aside">
+              <div className="hub-head">
+                <h2>Esta semana</h2>
+                <span className="aside">Avisos · {formatCulto(avisosCulto!.data)}</span>
+              </div>
+              <div className="stack">
+                {avisosCulto!.avisos.map((a, i) => (
+                  <AvisoCard key={i} aviso={a} />
+                ))}
+              </div>
+            </aside>
+          )}
         </div>
       </section>
-
-      {/* =========================== ESTA SEMANA =========================== */}
-      {avisosCulto && avisosCulto.avisos.length > 0 && (
-        <section className="hub-section tight">
-          <div className="wrap-wide">
-            <div className="hub-head">
-              <h2>Esta semana</h2>
-              <span className="aside">Avisos do culto · {formatCulto(avisosCulto.data)}</span>
-            </div>
-            <div className="grid-avisos">
-              {avisosCulto.avisos.map((a, i) => (
-                <AvisoCard key={i} aviso={a} />
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
 
       {/* =========================== ATALHOS =========================== */}
       <section className="hub-section sunken">
