@@ -43,32 +43,30 @@ function normalizeBusca(s: string): string {
 
 export function PGDetalhe({ pgId, onBack }: PGDetalheProps) {
   const { can } = useAuth();
+  // @ts-ignore Convex TS2589
   const pg = useQuery(api.pequenosGrupos.queries.getById, { id: pgId });
   const updatePG = useMutation(api.pequenosGrupos.mutations.update);
   const removePG = useMutation(api.pequenosGrupos.mutations.remove);
   const addMembro = useMutation(api.pequenosGrupos.mutations.addMembro);
   const removeMembro = useMutation(api.pequenosGrupos.mutations.removeMembro);
-  const membros = useQuery(api.membros.queries.list, {});
+  // @ts-ignore Convex TS2589
+  const disponiveis = useQuery(api.pequenosGrupos.queries.listAllWithMembros, {});
 
   const [editOpen, setEditOpen] = useState(false);
   const [addMembroOpen, setAddMembroOpen] = useState(false);
   const [selectedMembroId, setSelectedMembroId] = useState("");
   const [busca, setBusca] = useState("");
 
-  // Membros fora do PG, filtrados pela busca e em ordem alfabetica.
+  // Membros sem nenhum PG (um membro so pode estar em um grupo por vez),
+  // filtrados pela busca e em ordem alfabetica.
   const membrosDisponiveis = useMemo(() => {
-    if (!membros) return [];
-    const jaNoGrupo = new Set((pg?.membros ?? []).map((m) => m.membroId));
+    const lista = disponiveis?.semGrupo ?? [];
     const termo = normalizeBusca(busca);
-    return membros
-      .filter((m: any) => !jaNoGrupo.has(m._id))
-      .map((m: any) => ({
-        id: m._id as string,
-        nome: (m.entidade?.nomeCompleto as string) || "—",
-      }))
-      .filter((m) => !termo || normalizeBusca(m.nome).includes(termo))
+    return lista
+      .filter((m: any) => !termo || normalizeBusca(m.nome).includes(termo))
+      .map((m: any) => ({ id: m.membroId as string, nome: (m.nome as string) || "—" }))
       .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
-  }, [membros, pg?.membros, busca]);
+  }, [disponiveis?.semGrupo, busca]);
 
   if (pg === undefined) {
     return <p className="text-sm text-muted-foreground">Carregando...</p>;
@@ -277,7 +275,7 @@ export function PGDetalhe({ pgId, onBack }: PGDetalheProps) {
             onChange={(e) => setBusca(e.target.value)}
           />
           <div className="max-h-64 overflow-y-auto">
-            {membros === undefined ? (
+            {disponiveis === undefined ? (
               <p className="py-6 text-center text-sm text-muted-foreground">
                 Carregando...
               </p>
