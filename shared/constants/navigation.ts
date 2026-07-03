@@ -13,7 +13,6 @@ import {
   Monitor,
   Mic,
   Megaphone,
-  UserCircle,
   Heart,
   UsersRound,
   Baby,
@@ -160,13 +159,6 @@ export const GESTAO_SECTIONS: NavSection[] = [
         description: "Contatos, aniversários e famílias",
         permission: "diretorio:read",
         modulo: "diretorio",
-      },
-      {
-        label: "Entidades",
-        href: "/entidades",
-        icon: UserCircle,
-        description: "Pessoas físicas e jurídicas vinculadas",
-        permission: "entidades:read",
       },
       {
         label: "Pastoreio",
