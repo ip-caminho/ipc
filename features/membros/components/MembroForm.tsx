@@ -26,9 +26,11 @@ interface MembroFormProps {
   onSubmit: (data: MembroFormValues) => Promise<void>;
   isEditing?: boolean;
   entityId?: string;
+  /** Oculta as secoes eclesiasticas (editadas separadamente pelo EclesiasticoForm no Rol). */
+  personalOnly?: boolean;
 }
 
-export function MembroForm({ defaultValues, onSubmit, isEditing, entityId }: MembroFormProps) {
+export function MembroForm({ defaultValues, onSubmit, isEditing, entityId, personalOnly }: MembroFormProps) {
   const [loading, setLoading] = useState(false);
   const tempIdRef = useRef(crypto.randomUUID());
   const uploadEntityId = entityId || tempIdRef.current;
@@ -174,6 +176,18 @@ export function MembroForm({ defaultValues, onSubmit, isEditing, entityId }: Mem
             <Field name="cep" label="CEP" placeholder="00000-000" />
           </Section>
 
+          {personalOnly && (
+            /* vinculoIgreja e cbcm sao campos de entidade — sem esta secao
+               ficariam ineditaveis (a secao eclesiastica completa fica oculta
+               e o EclesiasticoForm nao os possui) */
+            <Section title="Vinculo com a Igreja" defaultOpen={false}>
+              <SelectField name="vinculoIgreja" label="Vinculo com a Igreja" options={VINCULO_IGREJA_OPTIONS} />
+              <SelectField name="cbcm" label="CBCM" options={CBCM_OPTIONS} />
+            </Section>
+          )}
+
+          {!personalOnly && (
+          <>
           <Section title="Dados Eclesiasticos" defaultOpen={false}>
             <SelectField name="vinculoIgreja" label="Vinculo com a Igreja" options={VINCULO_IGREJA_OPTIONS} />
             <SelectField name="role" label="Perfil no Sistema" options={ROLE_OPTIONS} />
@@ -258,6 +272,8 @@ export function MembroForm({ defaultValues, onSubmit, isEditing, entityId }: Mem
               </>
             )}
           </Section>
+          </>
+          )}
         </CardContent>
       </Card>
 

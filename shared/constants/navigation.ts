@@ -20,6 +20,7 @@ import {
   ListTodo,
   GraduationCap,
   Shield,
+  KeyRound,
   LayoutGrid,
   History,
   ClipboardCheck,
@@ -55,12 +56,12 @@ export const PRIMARY_TABS: NavItem[] = [
 ];
 
 // Tabs candidatas da bottom bar mobile (filtradas por RBAC/modulo; "Membros"
-// so aparece para quem tem membros:read).
+// aponta pro Rol consolidado e so aparece para quem tem rol:read).
 export const MOBILE_PRIMARY_TABS: NavItem[] = [
   { label: "Início", href: "/dashboard", icon: Home },
   { label: "Gravações", href: "/comunidade", icon: Ear, modulo: "gravacoes" },
   { label: "Calendário", href: "/calendario", icon: CalendarDays, permission: "calendario:read", modulo: "calendario" },
-  { label: "Membros", href: "/membros", icon: Users, permission: "membros:read", modulo: "membros" },
+  { label: "Membros", href: "/secretario-executivo", icon: Users, permission: "rol:read", modulo: "membros" },
 ];
 
 export const BOLETIM_TAB: NavItem = {
@@ -138,18 +139,18 @@ export const GESTAO_SECTIONS: NavSection[] = [
     items: [
       {
         label: "Membros",
-        href: "/membros",
+        href: "/secretario-executivo",
         icon: Users,
-        description: "Cadastro e gestão da membresia",
-        permission: "membros:read",
+        description: "Membresia: rol IPB, dados pessoais e eclesiásticos, família e impressão",
+        permission: "rol:read",
         modulo: "membros",
       },
       {
-        label: "Rol de Membros",
-        href: "/secretario-executivo",
-        icon: BookOpen,
-        description: "Rol IPB, família, dados eclesiásticos e impressão para assembleia",
-        permission: "rol:read",
+        label: "Acesso ao sistema",
+        href: "/admin/acesso",
+        icon: KeyRound,
+        description: "Links de ativação, reset de senha, link de convidado e atividade",
+        permission: "acesso:manage",
         modulo: "membros",
       },
       {

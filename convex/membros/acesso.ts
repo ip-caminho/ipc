@@ -35,7 +35,7 @@ function telefoneDoMembro(entidade: Doc<"entidades">): string | null {
 export const gerarLink = mutation({
   args: { membroId: v.id("membros") },
   handler: async (ctx, { membroId }) => {
-    const { membro: caller } = await requirePermission(ctx, "membros:update");
+    const { membro: caller } = await requirePermission(ctx, "acesso:manage");
 
     const membro = await ctx.db.get(membroId);
     if (!membro) throw new Error("Membro nao encontrado");
@@ -224,7 +224,7 @@ export const concluirAtivacao = mutation({
 export const getStatusAcesso = query({
   args: { membroId: v.id("membros") },
   handler: async (ctx, { membroId }) => {
-    await requirePermission(ctx, "membros:read");
+    await requirePermission(ctx, "acesso:manage");
 
     const membro = await ctx.db.get(membroId);
     if (!membro) return null;
@@ -256,7 +256,7 @@ export const getStatusAcesso = query({
 export const resetarAcesso = mutation({
   args: { membroId: v.id("membros") },
   handler: async (ctx, { membroId }) => {
-    await requirePermission(ctx, "membros:update");
+    await requirePermission(ctx, "acesso:manage");
     const membro = await ctx.db.get(membroId);
     if (!membro) throw new Error("Membro nao encontrado");
 
@@ -332,7 +332,7 @@ type AcessosOverview = {
 export const getAcessosOverview = query({
   args: {},
   handler: async (ctx): Promise<AcessosOverview> => {
-    await requirePermission(ctx, "membros:read");
+    await requirePermission(ctx, "acesso:manage");
 
     const membros = await ctx.db.query("membros").collect();
     const rows: AcessoRow[] = [];
@@ -399,7 +399,7 @@ type AtividadeItem = {
 export const getAtividadeMembro = query({
   args: { membroId: v.id("membros"), limit: v.optional(v.number()) },
   handler: async (ctx, { membroId, limit }): Promise<AtividadeItem[]> => {
-    await requirePermission(ctx, "membros:read");
+    await requirePermission(ctx, "acesso:manage");
 
     const logs = await ctx.db
       .query("auditLogs")

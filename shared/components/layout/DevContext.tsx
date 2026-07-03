@@ -51,21 +51,17 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "BirthdayList: scroll horizontal, avatares com tempo relativo",
     ],
   },
-  "/membros": {
-    nome: "Lista de Membros",
-    pagina: "app/(ready)/membros/page.tsx",
-    doc: "docs/modules/membros.md",
+  "/admin/acesso": {
+    nome: "Acesso ao Sistema",
+    pagina: "app/(ready)/admin/acesso/page.tsx",
     arquivos: [
-      "app/(ready)/membros/page.tsx",
-      "features/membros/components/MembroTable.tsx",
-      "features/membros/components/MembrosFilterBar.tsx",
+      "app/(ready)/admin/acesso/page.tsx",
       "features/membros/components/AcessoPanel.tsx",
       "features/membros/components/AtividadeMembroDrawer.tsx",
       "features/gravacoes/components/LinkConvidadoCard.tsx",
       "features/gravacoes/components/RelatorioAcessosDialog.tsx",
     ],
     queries: [
-      "membros.queries.list",
       "membros.acesso.getAcessosOverview",
       "membros.acesso.getAtividadeMembro",
       "appConfig.queries.getConvidadoToken",
@@ -73,55 +69,27 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     ],
     mutations: [
       "membros.acesso.gerarLink",
+      "membros.acesso.resetarAcesso",
       "appConfig.mutations.gerarTokenConvidado",
       "appConfig.mutations.revogarTokenConvidado",
     ],
-    componentes: [
-      "MembroTable",
-      "MembrosFilterBar",
-      "AcessoPanel",
-      "AtividadeMembroDrawer",
-      "LinkConvidadoCard",
-      "RelatorioAcessosDialog",
-      "PermissionGate",
-    ],
+    componentes: ["AcessoPanel", "AtividadeMembroDrawer", "LinkConvidadoCard", "RelatorioAcessosDialog", "PermissionGate"],
     notas: [
-      "Permissao: membros:read",
-      "Filtros via nuqs URL state: status, cargo, q",
-      "Switch de view via nuqs (?view=acesso): aba Acesso (membros:update) = painel de status + resumo + historico + wa.me",
-      "Aba Acesso tem o LinkConvidadoCard (so admin): gera/copia/revoga o link publico /convidado/<codigo> + botao Acessos (RelatorioAcessosDialog: total, IPs unicos, lista com IP/dispositivo)",
+      "Permissao: acesso:manage (admin/pastor/secretaria). Pagina dedicada de acesso ao sistema (era a aba Acesso de /membros, agora removida)",
+      "AcessoPanel: resumo (com acesso/pendente/sem/adesao) + gerar links de ativacao (individual e lote) + resetar + atividade + LinkConvidadoCard (so admin: /convidado/<codigo>)",
     ],
   },
-  "/membros/novo": {
+  "/secretario-executivo/novo": {
     nome: "Novo Membro",
-    pagina: "app/(ready)/membros/novo/page.tsx",
-    doc: "docs/modules/membros.md",
+    pagina: "app/(ready)/secretario-executivo/novo/page.tsx",
     arquivos: [
-      "app/(ready)/membros/novo/page.tsx",
+      "app/(ready)/secretario-executivo/novo/page.tsx",
       "features/membros/components/MembroForm.tsx",
       "features/membros/lib/validations.ts",
     ],
     mutations: ["membros.mutations.create"],
-    componentes: ["MembroForm"],
-    notas: ["Permissao: membros:create"],
-  },
-  "/membros/[id]": {
-    nome: "Detalhe do Membro",
-    pagina: "app/(ready)/membros/[id]/page.tsx",
-    doc: "docs/modules/membros.md",
-    arquivos: [
-      "app/(ready)/membros/[id]/page.tsx",
-      "features/membros/components/MembroForm.tsx",
-      "features/membros/components/AcessoSection.tsx",
-    ],
-    queries: ["membros.queries.getById", "membros.acesso.getStatusAcesso"],
-    mutations: ["membros.mutations.update", "membros.acesso.gerarLink"],
-    componentes: ["MembroForm", "AcessoSection"],
-    notas: [
-      "Permissao: membros:read, membros:update",
-      "AcessoSection (membros:update): status de acesso + gerar magic link + enviar via wa.me",
-      "Secao Demissao: TRANSFERENCIA exige carta de transferencia (FileUpload -> B2, obrigatoria no zod); EXCLUSAO captura motivo (lista) + observacao",
-    ],
+    componentes: ["MembroForm", "PermissionGate"],
+    notas: ["Permissao: membros:create. MembroForm completo (pessoal + eclesiastico)"],
   },
   "/secretario-executivo": {
     nome: "Rol de Membros",
@@ -147,6 +115,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     notas: [
       "Permissao: rol:read (ver pagina/tabela), rol:update (editar — sem ela a tabela fica somente-leitura)",
       "Roles: admin, pastor, secretaria, secretario_executivo",
+      "Pagina UNICA de membros (a antiga /membros foi removida). Botao 'Novo membro' (membros:create) -> /secretario-executivo/novo",
       "Edicao tabular inline (auto-save no blur): cargo, rol, tipoRol, matricula, datas sacramentais",
       "Dashboard de cards clicaveis (getResumoSecretario): comungantes/nao-comungantes/ausentes/arquivo/total/familias/dependentes/pendencias + oficiais (pastores/presbiteros/diaconos) + alertas de mandatos vencidos e a vencer em 90 dias (cargosEclesiasticosHistorico ATIVO) — filtram a tabela",
       "Impressao A4 com assinatura para assembleia (RolExportView, window.print) respeitando o filtro atual — movida de /membros pra ca",
@@ -157,32 +126,25 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     ],
   },
   "/secretario-executivo/[id]": {
-    nome: "Detalhe Eclesiastico",
+    nome: "Detalhe do Membro (Rol)",
     pagina: "app/(ready)/secretario-executivo/[id]/page.tsx",
     arquivos: [
       "app/(ready)/secretario-executivo/[id]/page.tsx",
       "features/secretarioExecutivo/components/DadosBasicosSection.tsx",
       "features/secretarioExecutivo/components/EclesiasticoForm.tsx",
+      "features/membros/components/MembroForm.tsx",
+      "features/membros/components/AcessoSection.tsx",
+      "features/membros/components/AtosPastoraisSection.tsx",
+      "features/membros/components/CargosHistoricoSection.tsx",
     ],
-    queries: [
-      "membros.queries.getById",
-      "membros.eclesiastico.getFamily",
-    ],
-    mutations: [
-      "membros.eclesiastico.updateEclesiastico",
-      "membros.eclesiastico.marcarCampoVerificado",
-    ],
-    componentes: [
-      "DadosBasicosSection (read-only)",
-      "EclesiasticoForm",
-      "AtosPastoraisSection",
-      "CargosHistoricoSection",
-    ],
+    queries: ["membros.queries.getById", "membros.eclesiastico.getFamily", "membros.acesso.getStatusAcesso"],
+    mutations: ["membros.mutations.update", "membros.eclesiastico.updateEclesiastico", "membros.eclesiastico.marcarCampoVerificado", "membros.acesso.gerarLink", "membros.acesso.resetarAcesso"],
+    componentes: ["DadosBasicosSection", "EclesiasticoForm", "MembroForm", "AcessoSection", "AtosPastoraisSection", "CargosHistoricoSection", "PermissionGate"],
     notas: [
-      "Permissao: membros:read (visualizar), rol:update (editar)",
-      "Edita apenas campos eclesiasticos: cargo, rol, sacramentos, admissao, demissao, observacoes pastorais",
-      "Permite marcar campos sacramentais como 'verificados pelo livro fisico' (camposVerificados em entidades)",
-      "Demissao: TRANSFERENCIA exige upload da carta de transferencia (FileUpload -> B2, obrigatoria); EXCLUSAO captura motivo (lista) + observacao (membros.motivoDemissao/motivoDemissaoObs/cartaTransferencia)",
+      "Detalhe UNICO do membro (fold de /membros/[id]). Gate externo: rol:read",
+      "Dados pessoais: DadosBasicosSection (somente leitura) + botao 'Editar dados pessoais' (membros:update) abre Drawer com MembroForm personalOnly (so entidadeData no submit; eclesiastico fica no EclesiasticoForm)",
+      "Eclesiastico (rol:update): EclesiasticoForm (auto-save) + AtosPastoraisSection + CargosHistoricoSection",
+      "Acesso per-membro (acesso:manage): AcessoSection = status + gerar magic link + resetar + wa.me",
     ],
   },
   "/entidades": {
@@ -1311,8 +1273,7 @@ function resolveRoute(pathname: string): PageContext | null {
   if (/^\/louvor\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/louvor/[id]"];
   // /ministerios/[id]
   if (/^\/ministerios\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/ministerios/[id]"];
-  // /membros/[id]
-  if (/^\/membros\/[^/]+$/.test(pathname) && pathname !== "/membros/novo") return CONTEXT_MAP["/membros/[id]"];
+  // /secretario-executivo/novo e /secretario-executivo/[id] resolvem via exact match + regex abaixo
   // /ativar/[token]
   if (/^\/ativar\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/ativar/[token]"];
   // /secretario-executivo/[id]

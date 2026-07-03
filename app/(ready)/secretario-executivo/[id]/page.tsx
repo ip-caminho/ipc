@@ -1,13 +1,26 @@
 "use client";
 
-import { useQuery } from "convex/react";
+import { useState } from "react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useParams } from "next/navigation";
+import { toast } from "sonner";
+import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/shared/components/ui/drawer";
+import { Pencil } from "lucide-react";
 import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
 import { DetailHeader } from "@shared/components/layout/DetailHeader";
 import { PermissionGate } from "@shared/components/auth/PermissionGate";
 import type { Id } from "@/convex/_generated/dataModel";
+import type { MembroFormValues } from "@features/membros/lib/validations";
+import { MembroForm } from "@features/membros/components/MembroForm";
+import { AcessoSection } from "@features/membros/components/AcessoSection";
 import { DadosBasicosSection } from "@features/secretarioExecutivo/components/DadosBasicosSection";
 import { EclesiasticoForm } from "@features/secretarioExecutivo/components/EclesiasticoForm";
 import { AtosPastoraisSection } from "@features/membros/components/AtosPastoraisSection";
@@ -19,6 +32,8 @@ export default function SecretarioExecutivoDetalhePage() {
 
   const membro = useQuery(api.membros.queries.getById, { id });
   const familia = useQuery(api.membros.eclesiastico.getFamily, { membroId: id });
+  const updateMembro = useMutation(api.membros.mutations.update);
+  const [editOpen, setEditOpen] = useState(false);
 
   if (membro === undefined) {
     return (
@@ -56,35 +71,126 @@ export default function SecretarioExecutivoDetalhePage() {
     verificadoEm: c.verificadoEm,
   }));
 
+  const defaultValues: Partial<MembroFormValues> = {
+    foto: entidade.foto || "",
+    nomeCompleto: entidade.nomeCompleto || "",
+    apelido: entidade.apelido || "",
+    cpf: entidade.cpf || "",
+    tipoDocumento: entidade.tipoDocumento as MembroFormValues["tipoDocumento"],
+    rg: entidade.rg || "",
+    dataNascimento: entidade.dataNascimento || "",
+    sexo: entidade.sexo as MembroFormValues["sexo"],
+    estadoCivil: entidade.estadoCivil as MembroFormValues["estadoCivil"],
+    nacionalidade: entidade.nacionalidade || "",
+    pai: entidade.pai || "",
+    mae: entidade.mae || "",
+    profissao: entidade.profissao || "",
+    formacao: entidade.formacao as MembroFormValues["formacao"],
+    whatsapp: entidade.whatsapp || "",
+    telefone: entidade.telefone || "",
+    email: entidade.email || "",
+    logradouro: entidade.endereco?.logradouro || "",
+    numero: entidade.endereco?.numero || "",
+    complemento: entidade.endereco?.complemento || "",
+    bairro: entidade.endereco?.bairro || "",
+    cidade: entidade.endereco?.cidade || "",
+    estado: entidade.endereco?.estado || "",
+    cep: entidade.endereco?.cep || "",
+    vinculoIgreja: entidade.vinculoIgreja as MembroFormValues["vinculoIgreja"],
+    cbcm: entidade.cbcm as MembroFormValues["cbcm"],
+  };
+
+  const handlePersonalSubmit = async (data: MembroFormValues) => {
+    try {
+      const endereco =
+        data.logradouro || data.cidade
+          ? {
+              logradouro: data.logradouro || "",
+              numero: data.numero || "",
+              complemento: data.complemento,
+              bairro: data.bairro || "",
+              cidade: data.cidade || "",
+              estado: data.estado || "",
+              cep: data.cep || "",
+            }
+          : undefined;
+
+      await updateMembro({
+        id,
+        entidadeData: {
+          nomeCompleto: data.nomeCompleto,
+          apelido: data.apelido || undefined,
+          foto: data.foto || undefined,
+          cpf: data.cpf || undefined,
+          tipoDocumento: data.tipoDocumento || undefined,
+          rg: data.rg || undefined,
+          dataNascimento: data.dataNascimento || undefined,
+          sexo: data.sexo || undefined,
+          estadoCivil: data.estadoCivil || undefined,
+          nacionalidade: data.nacionalidade || undefined,
+          pai: data.pai || undefined,
+          mae: data.mae || undefined,
+          profissao: data.profissao || undefined,
+          formacao: data.formacao || undefined,
+          whatsapp: data.whatsapp || undefined,
+          telefone: data.telefone || undefined,
+          email: data.email || undefined,
+          endereco,
+          vinculoIgreja: data.vinculoIgreja || undefined,
+          cbcm: data.cbcm || undefined,
+        },
+      });
+      toast.success("Dados pessoais atualizados");
+      setEditOpen(false);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro ao atualizar");
+    }
+  };
+
   return (
-    <PermissionGate permission="membros:read">
+    <PermissionGate permission="rol:read">
       <HeaderLayout>
         <DetailHeader backHref="/secretario-executivo" />
         <div className="max-w-4xl space-y-6 pb-24">
-          <DadosBasicosSection
-            entidade={{
-              _id: entidade._id,
-              nomeCompleto: entidade.nomeCompleto,
-              apelido: entidade.apelido,
-              nomeSocial: entidade.nomeSocial,
-              cpf: entidade.cpf,
-              rg: entidade.rg,
-              dataNascimento: entidade.dataNascimento,
-              sexo: entidade.sexo,
-              estadoCivil: entidade.estadoCivil,
-              pai: entidade.pai,
-              mae: entidade.mae,
-              profissao: entidade.profissao,
-              formacao: entidade.formacao,
-              foto: entidade.foto,
-              whatsapp: entidade.whatsapp,
-              telefone: entidade.telefone,
-              email: entidade.email,
-              endereco: entidade.endereco,
-              status: entidade.status,
-            }}
-            familia={familia}
-          />
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex-1">
+              <DadosBasicosSection
+                entidade={{
+                  _id: entidade._id,
+                  nomeCompleto: entidade.nomeCompleto,
+                  apelido: entidade.apelido,
+                  nomeSocial: entidade.nomeSocial,
+                  cpf: entidade.cpf,
+                  rg: entidade.rg,
+                  dataNascimento: entidade.dataNascimento,
+                  sexo: entidade.sexo,
+                  estadoCivil: entidade.estadoCivil,
+                  pai: entidade.pai,
+                  mae: entidade.mae,
+                  profissao: entidade.profissao,
+                  formacao: entidade.formacao,
+                  foto: entidade.foto,
+                  whatsapp: entidade.whatsapp,
+                  telefone: entidade.telefone,
+                  email: entidade.email,
+                  endereco: entidade.endereco,
+                  status: entidade.status,
+                }}
+                familia={familia}
+              />
+            </div>
+            <PermissionGate permission="membros:update">
+              <Button
+                variant="outline"
+                size="sm"
+                className="shrink-0"
+                onClick={() => setEditOpen(true)}
+              >
+                <Pencil className="h-4 w-4 mr-1.5" />
+                Editar dados pessoais
+              </Button>
+            </PermissionGate>
+          </div>
 
           <PermissionGate permission="rol:update">
             <EclesiasticoForm
@@ -114,7 +220,28 @@ export default function SecretarioExecutivoDetalhePage() {
             <AtosPastoraisSection membroId={membro._id} />
             <CargosHistoricoSection membroId={membro._id} />
           </PermissionGate>
+
+          <PermissionGate permission="acesso:manage">
+            <AcessoSection membroId={membro._id} />
+          </PermissionGate>
         </div>
+
+        <Drawer open={editOpen} onOpenChange={setEditOpen}>
+          <DrawerContent className="max-h-[92vh]">
+            <DrawerHeader>
+              <DrawerTitle>Editar dados pessoais</DrawerTitle>
+            </DrawerHeader>
+            <div className="overflow-y-auto px-4 pb-8">
+              <MembroForm
+                personalOnly
+                isEditing
+                entityId={entidade._id}
+                defaultValues={defaultValues}
+                onSubmit={handlePersonalSubmit}
+              />
+            </div>
+          </DrawerContent>
+        </Drawer>
       </HeaderLayout>
     </PermissionGate>
   );

@@ -2,9 +2,12 @@
 
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { MembroForm } from "@features/membros/components/MembroForm";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
+import { DetailHeader } from "@shared/components/layout/DetailHeader";
+import { PermissionGate } from "@shared/components/auth/PermissionGate";
+import { MembroForm } from "@features/membros/components/MembroForm";
 import type { MembroFormValues } from "@features/membros/lib/validations";
 
 export default function NovoMembroPage() {
@@ -58,15 +61,27 @@ export default function NovoMembroPage() {
       });
 
       toast.success("Membro criado com sucesso");
-      router.push("/membros");
+      router.push("/secretario-executivo");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao criar membro");
     }
   };
 
   return (
-    <div className="max-w-4xl">
-      <MembroForm onSubmit={handleSubmit} />
-    </div>
+    <PermissionGate
+      permission="membros:create"
+      fallback={
+        <HeaderLayout>
+          <p className="text-muted-foreground">Sem permissão para criar membros.</p>
+        </HeaderLayout>
+      }
+    >
+      <HeaderLayout>
+        <DetailHeader title="Novo membro" backHref="/secretario-executivo" />
+        <div className="max-w-4xl">
+          <MembroForm onSubmit={handleSubmit} />
+        </div>
+      </HeaderLayout>
+    </PermissionGate>
   );
 }

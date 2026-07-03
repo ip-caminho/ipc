@@ -46,6 +46,8 @@ export const INITIAL_ROLE_PERMISSIONS: Record<string, string[]> = {
     "turmas:read", "turmas:create", "turmas:update",
     // Site Publico
     "site_publico:manage",
+    // Acesso ao sistema
+    "acesso:manage",
     // Auditoria
     "audit:read",
   ],
@@ -121,6 +123,8 @@ export const INITIAL_ROLE_PERMISSIONS: Record<string, string[]> = {
     "tarefas:read", "tarefas:create", "tarefas:update", "tarefas:delete",
     // Turmas
     "turmas:read", "turmas:create", "turmas:update", "turmas:manage_inscricoes",
+    // Acesso ao sistema
+    "acesso:manage",
     // Auditoria
     "audit:read",
   ],
