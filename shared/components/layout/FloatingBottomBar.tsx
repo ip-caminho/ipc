@@ -9,8 +9,6 @@ import { useAuth } from "@shared/providers/PermissionsProvider";
 import {
   MOBILE_PRIMARY_TABS,
   MORE_TAB,
-  BOLETIM_TAB,
-  isDomingoWindow,
   type NavItem,
 } from "@shared/constants/navigation";
 import { haptic } from "@shared/lib/haptic";
@@ -39,9 +37,6 @@ export function FloatingBottomBar() {
 
   const tabs: NavItem[] = useMemo(() => {
     const base = [...MOBILE_PRIMARY_TABS];
-    if (isDomingoWindow()) {
-      base.push(BOLETIM_TAB);
-    }
     const filtered = base.filter((item) => {
       if (item.modulo && modulosAtivos && !modulosAtivos.includes(item.modulo)) return false;
       if (item.permission && !can(item.permission)) return false;
@@ -97,13 +92,13 @@ export function FloatingBottomBar() {
                       haptic(15);
                       setMoreOpen(true);
                     }}
+                    aria-label={tab.label}
                     className={cn(
-                      "flex flex-1 flex-col items-center justify-center gap-0.5 py-2 min-h-[56px] rounded-2xl transition-colors",
+                      "flex flex-1 flex-col items-center justify-center py-2 min-h-[56px] rounded-2xl transition-colors",
                       moreOpen ? "text-primary" : "text-muted-foreground",
                     )}
                   >
-                    <Icon className="h-[22px] w-[22px]" strokeWidth={moreOpen ? 2.25 : 1.75} />
-                    <span className="text-xs font-medium">{tab.label}</span>
+                    <Icon className="h-6 w-6" strokeWidth={moreOpen ? 2.25 : 1.75} />
                   </button>
                 );
               }
@@ -118,8 +113,9 @@ export function FloatingBottomBar() {
                       setPendingHref(tab.href);
                     }
                   }}
+                  aria-label={tab.label}
                   className={cn(
-                    "flex flex-1 flex-col items-center justify-center gap-0.5 py-2 min-h-[56px] rounded-2xl transition-colors",
+                    "flex flex-1 flex-col items-center justify-center gap-1 py-2 min-h-[56px] rounded-2xl transition-colors",
                     active
                       ? "text-primary"
                       : loading
@@ -129,10 +125,9 @@ export function FloatingBottomBar() {
                   aria-current={active ? "page" : undefined}
                 >
                   <Icon
-                    className={cn("h-[22px] w-[22px]", loading && "animate-pulse")}
+                    className={cn("h-6 w-6", loading && "animate-pulse")}
                     strokeWidth={active ? 2.25 : 1.75}
                   />
-                  <span className="text-xs font-medium">{tab.label}</span>
                   {active && (
                     <span className="h-1 w-1 rounded-full bg-primary" />
                   )}

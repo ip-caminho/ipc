@@ -30,6 +30,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     doc: "docs/modules/dashboard.md",
     arquivos: [
       "app/(ready)/dashboard/page.tsx",
+      "features/dashboard/components/BoletimCard.tsx",
       "features/dashboard/components/UltimoSermaoCard.tsx",
       "features/dashboard/components/ProfileCompletenessCard.tsx",
       "features/dashboard/components/TodaySection.tsx",
@@ -39,11 +40,12 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "features/dashboard/components/ComentariosRecentesCard.tsx",
       "features/gravacoes/components/AvisosWidget.tsx",
     ],
-    queries: ["gravacoes.queries.listRecentesByTipo (tipo=SERMAO, limit=1)", "gravacoes.queries.getLatestAvisos", "gravacoes.comentarios.listGravacoesComComentariosRecentes (admin)", "membros.selfService.getMyProfile", "membros.queries.birthdaysThisMonth", "membros.cadastroVivo.getMyCompleteness"],
+    queries: ["gravacoes.queries.listRecentesByTipo (tipo=SERMAO, limit=1)", "gravacoes.queries.getLatestAvisos", "gravacoes.comentarios.listGravacoesComComentariosRecentes (admin)", "boletim.queries.getLiveStatus", "membros.selfService.getMyProfile", "membros.queries.birthdaysThisMonth", "membros.cadastroVivo.getMyCompleteness"],
     mutations: ["membros.bootstrap.bootstrapAdmin"],
-    componentes: ["UltimoSermaoCard", "ComentariosRecentesCard", "ProfileCompletenessCard", "TodaySection", "BirthdayList", "SectionLabel", "AvisosWidget (drawer)", "BootstrapForm"],
+    componentes: ["BoletimCard", "UltimoSermaoCard", "ComentariosRecentesCard", "ProfileCompletenessCard", "TodaySection", "BirthdayList", "SectionLabel", "AvisosWidget (drawer)", "BootstrapForm"],
     notas: [
-      "Hierarquia: saudacao → ProfileCompletenessCard (condicional, progress bar) → ultimo sermao → Comentarios recentes (admin) → Hoje (avisos) → aniversariantes",
+      "Hierarquia: saudacao → ProfileCompletenessCard (condicional, progress bar) → BoletimCard → ultimo sermao → Comentarios recentes (admin) → Hoje (avisos) → aniversariantes",
+      "BoletimCard: atalho para /boletim (item saiu do sidebar). Estado 'ao vivo agora' na janela do culto, senao 'proximo culto'. So com can(escalas:read)",
       "UltimoSermaoCard: link para pregacao mais recente publicada",
       "ComentariosRecentesCard: admin-only. Gravacoes com comentario recente agrupadas (titulo + count + preview do ultimo), link p/ /gravacoes/[id]. Usa denormalizado gravacoes.ultimoComentarioEm (indice by_ultimo_comentario) — custo fixo, nao varre comentarios",
       "ProfileCompletenessCard: mostra % completude do perfil + campos faltantes. Desaparece se 100% e atualizado <6m",

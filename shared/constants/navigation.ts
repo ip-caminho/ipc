@@ -2,7 +2,6 @@ import {
   Home,
   Users,
   HandHeart,
-  FileText,
   Ear,
   Music,
   BookOpen,
@@ -51,8 +50,10 @@ export type NavSection = {
 export const PRIMARY_TABS: NavItem[] = [
   { label: "Início", href: "/dashboard", icon: Home },
   { label: "Gravações", href: "/comunidade", icon: Ear, modulo: "gravacoes" },
-  { label: "Orar", href: "/pedidos-oracao", icon: HandHeart, modulo: "pedidos-oracao" },
+  { label: "Louvor", href: "/louvor", icon: Music, permission: "louvor:read", modulo: "louvor" },
+  { label: "Diretório", href: "/diretorio", icon: BookOpen, permission: "diretorio:read", modulo: "diretorio" },
   { label: "Calendário", href: "/calendario", icon: CalendarDays, permission: "calendario:read", modulo: "calendario" },
+  { label: "Orar", href: "/pedidos-oracao", icon: HandHeart, modulo: "pedidos-oracao" },
 ];
 
 // Tabs candidatas da bottom bar mobile (filtradas por RBAC/modulo; "Membros"
@@ -60,17 +61,11 @@ export const PRIMARY_TABS: NavItem[] = [
 export const MOBILE_PRIMARY_TABS: NavItem[] = [
   { label: "Início", href: "/dashboard", icon: Home },
   { label: "Gravações", href: "/comunidade", icon: Ear, modulo: "gravacoes" },
+  { label: "Louvor", href: "/louvor", icon: Music, permission: "louvor:read", modulo: "louvor" },
+  { label: "Diretório", href: "/diretorio", icon: BookOpen, permission: "diretorio:read", modulo: "diretorio" },
   { label: "Calendário", href: "/calendario", icon: CalendarDays, permission: "calendario:read", modulo: "calendario" },
-  { label: "Membros", href: "/secretario-executivo", icon: Users, permission: "rol:read", modulo: "membros" },
+  { label: "Orar", href: "/pedidos-oracao", icon: HandHeart, modulo: "pedidos-oracao" },
 ];
-
-export const BOLETIM_TAB: NavItem = {
-  label: "Boletim",
-  href: "/boletim",
-  icon: FileText,
-  permission: "escalas:read",
-  modulo: "boletim",
-};
 
 export const MORE_TAB: NavItem = {
   label: "Mais",
@@ -83,59 +78,7 @@ export const MORE_TAB: NavItem = {
 // (sem itens visiveis) some sozinha. Sem "modo gestao".
 export const GESTAO_SECTIONS: NavSection[] = [
   {
-    titulo: "Cultos e Louvor",
-    items: [
-      {
-        label: "Planejamento",
-        href: "/cultos",
-        icon: Church,
-        description: "Planejamento, liturgia e escalas",
-        permission: "escalas:read",
-        modulo: "escalas",
-      },
-      {
-        label: "Repertório",
-        href: "/louvor",
-        icon: Music,
-        description: "Cifras, letras e tons do louvor",
-        permission: "louvor:read",
-        modulo: "louvor",
-      },
-      {
-        label: "Boletim",
-        href: "/boletim",
-        icon: FileText,
-        description: "Boletim do próximo culto dominical",
-        permission: "escalas:read",
-        modulo: "boletim",
-      },
-      {
-        label: "Cadastrar Aviso",
-        href: "/avisos",
-        icon: Megaphone,
-        description: "Comunicados semanais",
-        permission: "avisos:create",
-      },
-      {
-        label: "Multimídia",
-        href: "/multimidia",
-        icon: Monitor,
-        description: "Painel operacional do culto",
-        permission: "multimidia:read",
-        modulo: "multimidia",
-      },
-      {
-        label: "Gravações",
-        href: "/admin/gravacoes",
-        icon: Mic,
-        description: "Upload, processamento IA e publicação",
-        permission: "gravacoes:update",
-        modulo: "gravacoes",
-      },
-    ],
-  },
-  {
-    titulo: "Pessoas",
+    titulo: "Pastoral",
     items: [
       {
         label: "Membros",
@@ -146,20 +89,12 @@ export const GESTAO_SECTIONS: NavSection[] = [
         modulo: "membros",
       },
       {
-        label: "Acesso ao sistema",
-        href: "/admin/acesso",
-        icon: KeyRound,
-        description: "Links de ativação, reset de senha, link de convidado e atividade",
-        permission: "acesso:manage",
-        modulo: "membros",
-      },
-      {
-        label: "Diretório",
-        href: "/diretorio",
-        icon: BookOpen,
-        description: "Contatos, aniversários e famílias",
-        permission: "diretorio:read",
-        modulo: "diretorio",
+        label: "Pequenos Grupos",
+        href: "/pequenos-grupos",
+        icon: UsersRound,
+        description: "PGs, encontros e remanejamento",
+        permission: "pequenos_grupos:read",
+        modulo: "pequenos-grupos",
       },
       {
         label: "Pastoreio",
@@ -170,65 +105,11 @@ export const GESTAO_SECTIONS: NavSection[] = [
         modulo: "pastoreio",
       },
       {
-        label: "Pequenos Grupos",
-        href: "/pequenos-grupos",
-        icon: UsersRound,
-        description: "PGs, encontros e remanejamento",
-        permission: "pequenos_grupos:read",
-        modulo: "pequenos-grupos",
-      },
-      {
-        label: "Ministérios",
-        href: "/ministerios",
-        icon: Users,
-        description: "Equipes, papéis e escalas",
-        permission: "ministerios:read",
-        modulo: "ministerios",
-      },
-      {
-        label: "Educacional",
-        href: "/educacional",
-        icon: Baby,
-        description: "Crianças, escalas e relatórios de aula",
-        permission: "educacional:read",
-        modulo: "educacional",
-      },
-      {
-        label: "Presença",
-        href: "/educacional/presenca",
-        icon: ClipboardList,
-        description: "Registro de presença das crianças",
-        permission: "educacional:write",
-        modulo: "educacional",
-      },
-      {
-        label: "Turmas e cursos",
-        href: "/turmas",
-        icon: GraduationCap,
-        description: "Catecúmenos, novos membros e inscrições",
-        permission: "turmas:read",
-        modulo: "turmas",
-      },
-    ],
-  },
-  {
-    titulo: "Administração",
-    items: [
-      {
-        label: "Salas",
-        href: "/salas",
-        icon: DoorOpen,
-        description: "Reserva de salas e espaços",
-        permission: "salas:read",
-        modulo: "salas",
-      },
-      {
-        label: "Biblioteca",
-        href: "/biblioteca",
-        icon: Library,
-        description: "Acervo, exemplares e empréstimos",
-        permission: "biblioteca:read",
-        modulo: "biblioteca",
+        label: "Atos Pastorais",
+        href: "/admin/atos-pastorais",
+        icon: BookOpen,
+        description: "Registro de sacramentos e verificação do livro físico",
+        permission: "atos_pastorais:manage",
       },
       {
         label: "Tarefas",
@@ -238,6 +119,11 @@ export const GESTAO_SECTIONS: NavSection[] = [
         permission: "tarefas:read",
         modulo: "tarefas",
       },
+    ],
+  },
+  {
+    titulo: "Secretaria",
+    items: [
       {
         label: "Cadastro Vivo",
         href: "/admin/cadastro-vivo",
@@ -260,11 +146,106 @@ export const GESTAO_SECTIONS: NavSection[] = [
         permission: "site_publico:manage",
       },
       {
-        label: "Atos Pastorais",
-        href: "/admin/atos-pastorais",
-        icon: BookOpen,
-        description: "Registro de sacramentos e verificação do livro físico",
-        permission: "atos_pastorais:manage",
+        label: "Salas",
+        href: "/salas",
+        icon: DoorOpen,
+        description: "Reserva de salas e espaços",
+        permission: "salas:read",
+        modulo: "salas",
+      },
+      {
+        label: "Biblioteca",
+        href: "/biblioteca",
+        icon: Library,
+        description: "Acervo, exemplares e empréstimos",
+        permission: "biblioteca:read",
+        modulo: "biblioteca",
+      },
+    ],
+  },
+  {
+    titulo: "Culto",
+    items: [
+      {
+        label: "Planejamento",
+        href: "/cultos",
+        icon: Church,
+        description: "Planejamento, liturgia e escalas",
+        permission: "escalas:read",
+        modulo: "escalas",
+      },
+      {
+        label: "Cadastrar Aviso",
+        href: "/avisos",
+        icon: Megaphone,
+        description: "Comunicados semanais",
+        permission: "avisos:create",
+      },
+      {
+        label: "Multimídia",
+        href: "/multimidia",
+        icon: Monitor,
+        description: "Painel operacional do culto",
+        permission: "multimidia:read",
+        modulo: "multimidia",
+      },
+    ],
+  },
+  {
+    titulo: "Ensino",
+    items: [
+      {
+        label: "Turmas e cursos",
+        href: "/turmas",
+        icon: GraduationCap,
+        description: "Catecúmenos, novos membros e inscrições",
+        permission: "turmas:read",
+        modulo: "turmas",
+      },
+      {
+        label: "Educacional",
+        href: "/educacional",
+        icon: Baby,
+        description: "Crianças, escalas e relatórios de aula",
+        permission: "educacional:read",
+        modulo: "educacional",
+      },
+      {
+        label: "Presença",
+        href: "/educacional/presenca",
+        icon: ClipboardList,
+        description: "Registro de presença das crianças",
+        permission: "educacional:write",
+        modulo: "educacional",
+      },
+    ],
+  },
+  {
+    titulo: "Sistema",
+    items: [
+      {
+        label: "Acesso ao sistema",
+        href: "/admin/acesso",
+        icon: KeyRound,
+        description: "Links de ativação, reset de senha, link de convidado e atividade",
+        permission: "acesso:manage",
+        modulo: "membros",
+      },
+      {
+        label: "Ministérios",
+        href: "/ministerios",
+        icon: Users,
+        description: "Equipes, papéis e escalas",
+        permission: "ministerios:read",
+        modulo: "ministerios",
+      },
+      {
+        label: "Gerenciar gravações",
+        href: "/admin/gravacoes",
+        icon: Mic,
+        description: "Upload, processamento IA e publicação",
+        permission: "gravacoes:update",
+        modulo: "gravacoes",
       },
       {
         label: "Permissões",
@@ -290,11 +271,3 @@ export const GESTAO_SECTIONS: NavSection[] = [
     ],
   },
 ];
-
-export function isDomingoWindow(date: Date = new Date()): boolean {
-  const day = date.getDay(); // 0 = domingo, 6 = sábado
-  const hour = date.getHours();
-  if (day === 0) return true;
-  if (day === 6 && hour >= 18) return true;
-  return false;
-}
