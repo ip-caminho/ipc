@@ -10,6 +10,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
+import { DateFieldBR } from "@/shared/components/ui/date-picker-br";
 import { Label } from "@/shared/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Checkbox } from "@/shared/components/ui/checkbox";
@@ -145,7 +146,7 @@ export default function InscricaoPublicPage() {
             {turma.camposSistema.includes("dataNascimento") && (
               <div>
                 <Label htmlFor="dataNascimento">Data de nascimento</Label>
-                <Input id="dataNascimento" type="date" {...form.register("dataNascimento")} />
+                <DateFieldBR control={form.control} name="dataNascimento" id="dataNascimento" />
               </div>
             )}
 

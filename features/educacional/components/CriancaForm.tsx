@@ -11,6 +11,7 @@ import {
 } from "@/shared/components/ui/dialog";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
+import { DateFieldBR } from "@/shared/components/ui/date-picker-br";
 import { Label } from "@/shared/components/ui/label";
 import { Textarea } from "@/shared/components/ui/textarea";
 import {
@@ -82,7 +83,7 @@ export function CriancaForm({
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label>Data de nascimento</Label>
-              <Input type="date" {...form.register("dataNascimento")} />
+              <DateFieldBR control={form.control} name="dataNascimento" />
             </div>
             <div className="space-y-1">
               <Label>Sexo</Label>

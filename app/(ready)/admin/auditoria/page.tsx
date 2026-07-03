@@ -7,6 +7,7 @@ import { parseAsInteger, parseAsString, useQueryState } from "nuqs";
 import { PermissionGate } from "@shared/components/auth/PermissionGate";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
+import { DatePickerBR } from "@/shared/components/ui/date-picker-br";
 import { Label } from "@/shared/components/ui/label";
 import {
   Select,
@@ -139,20 +140,18 @@ function AuditoriaContent() {
           </div>
           <div className="space-y-1">
             <Label htmlFor="de" className="text-xs">De</Label>
-            <Input
+            <DatePickerBR
               id="de"
-              type="date"
               value={dataInicio}
-              onChange={(e) => setDataInicio(e.target.value)}
+              onChange={(iso) => setDataInicio(iso)}
             />
           </div>
           <div className="space-y-1">
             <Label htmlFor="ate" className="text-xs">Até</Label>
-            <Input
+            <DatePickerBR
               id="ate"
-              type="date"
               value={dataFim}
-              onChange={(e) => setDataFim(e.target.value)}
+              onChange={(iso) => setDataFim(iso)}
             />
           </div>
         </div>

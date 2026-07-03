@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { revalidarSite } from "../lib/revalidate";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
+import { DatePickerBR } from "@/shared/components/ui/date-picker-br";
 import { Label } from "@/shared/components/ui/label";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Checkbox } from "@/shared/components/ui/checkbox";
@@ -266,20 +267,18 @@ export function InscricaoBuilder({
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div className="space-y-1">
               <Label htmlFor="b-abertura">Abre em</Label>
-              <Input
+              <DatePickerBR
                 id="b-abertura"
-                type="date"
                 value={dataAbertura}
-                onChange={(e) => setDataAbertura(e.target.value)}
+                onChange={(iso) => setDataAbertura(iso)}
               />
             </div>
             <div className="space-y-1">
               <Label htmlFor="b-limite">Encerra em</Label>
-              <Input
+              <DatePickerBR
                 id="b-limite"
-                type="date"
                 value={dataLimite}
-                onChange={(e) => setDataLimite(e.target.value)}
+                onChange={(iso) => setDataLimite(iso)}
               />
             </div>
             <div className="space-y-1">

@@ -5,6 +5,7 @@ import { api } from "@/convex/_generated/api";
 import { useState, useMemo } from "react";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
+import { DatePickerBR } from "@/shared/components/ui/date-picker-br";
 import { Badge } from "@/shared/components/ui/badge";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
@@ -168,10 +169,9 @@ export default function PresencaPage() {
         </div>
 
         {/* Data */}
-        <Input
-          type="date"
+        <DatePickerBR
           value={data}
-          onChange={(e) => setData(e.target.value)}
+          onChange={(iso) => setData(iso)}
           className="text-base"
         />
 

@@ -7,6 +7,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
+import { DatePickerBR } from "@/shared/components/ui/date-picker-br";
 import { Label } from "@/shared/components/ui/label";
 import { AlertTriangle } from "lucide-react";
 import { Logo } from "@shared/components/layout/Logo";
@@ -17,7 +18,9 @@ export default function ConvitePage() {
   const token = params.token as string;
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [dataNasc, setDataNasc] = useState("");
 
+  // @ts-ignore Convex TS2589
   const convite = useQuery(api.membros.convites.getByToken, { token });
   const acceptInvite = useMutation(api.membros.convites.acceptInvite);
 
@@ -99,7 +102,8 @@ export default function ConvitePage() {
           </div>
           <div className="space-y-1">
             <Label htmlFor="dataNascimento">Data de Nascimento</Label>
-            <Input id="dataNascimento" name="dataNascimento" type="date" />
+            <DatePickerBR id="dataNascimento" value={dataNasc} onChange={setDataNasc} />
+            <input type="hidden" name="dataNascimento" value={dataNasc} />
           </div>
           <Button type="submit" disabled={loading} className="w-full">
             {loading ? "Cadastrando..." : "Completar Cadastro"}

@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { eventoFormSchema, type EventoFormValues } from "../lib/validations";
-import { DatePickerBR } from "./DatePickerBR";
+import { DatePickerBR } from "@/shared/components/ui/date-picker-br";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";

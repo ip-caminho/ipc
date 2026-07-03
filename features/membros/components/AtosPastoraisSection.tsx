@@ -7,6 +7,7 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
+import { DatePickerBR } from "@/shared/components/ui/date-picker-br";
 import { Label } from "@/shared/components/ui/label";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Badge } from "@/shared/components/ui/badge";
@@ -147,10 +148,9 @@ export function AtosPastoraisSection({ membroId }: { membroId: Id<"membros"> }) 
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs">Data *</Label>
-                  <Input
-                    type="date"
+                  <DatePickerBR
                     value={form.data}
-                    onChange={(e) => setForm((p) => ({ ...p, data: e.target.value }))}
+                    onChange={(iso) => setForm((p) => ({ ...p, data: iso }))}
                   />
                 </div>
               </div>

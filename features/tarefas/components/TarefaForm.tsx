@@ -16,6 +16,7 @@ import {
 } from "@/shared/components/ui/responsive-dialog";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
+import { DateFieldBR } from "@/shared/components/ui/date-picker-br";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Label } from "@/shared/components/ui/label";
 import {
@@ -141,7 +142,7 @@ export function TarefaForm({ open, onOpenChange, defaultValues, tarefaId }: Tare
 
               <div>
                 <Label htmlFor="dataVencimento">Prazo</Label>
-                <Input id="dataVencimento" type="date" {...form.register("dataVencimento")} />
+                <DateFieldBR control={form.control} name="dataVencimento" id="dataVencimento" />
               </div>
             </div>
 
