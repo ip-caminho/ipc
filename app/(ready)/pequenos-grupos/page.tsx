@@ -10,12 +10,9 @@ import { ModuloGuard } from "@shared/components/auth/ModuloGuard";
 import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
 import { PageHeader } from "@shared/components/layout/PageHeader";
 import { Button } from "@/shared/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
-import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
-import { Badge } from "@/shared/components/ui/badge";
-import { Plus, ArrowLeftRight, ArrowLeft, UserX } from "lucide-react";
+import { Plus, ArrowLeftRight, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
-import { PGCard } from "@features/pequenosGrupos/components/PGCard";
+import { PGGrid } from "@features/pequenosGrupos/components/PGGrid";
 import { PGForm } from "@features/pequenosGrupos/components/PGForm";
 import { PGDetalhe } from "@features/pequenosGrupos/components/PGDetalhe";
 import { PGRemanejamento } from "@features/pequenosGrupos/components/PGRemanejamento";
@@ -118,47 +115,12 @@ export default function PequenosGruposPage() {
           Nenhum pequeno grupo cadastrado
         </p>
       ) : (
-        <>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {pgs.map((pg: any) => (
-              <PGCard
-                key={pg._id}
-                pg={pg}
-                onClick={() => setSelectedPgId(pg._id)}
-              />
-            ))}
-          </div>
-
-          {/* Membros sem grupo */}
-          {allData && allData.semGrupo.length > 0 && (
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <UserX className="h-4 w-4" />
-                  Sem grupo
-                  <Badge variant="secondary">{allData.semGrupo.length}</Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  {allData.semGrupo.map((m: any) => (
-                    <div
-                      key={m.membroId}
-                      className="flex items-center gap-1.5 rounded-md border px-2 py-1 text-sm"
-                    >
-                      <Avatar className="h-5 w-5">
-                        <AvatarFallback className="text-[10px]">
-                          {m.nome?.charAt(0)?.toUpperCase() || "?"}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span>{m.nome}</span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </>
+        <PGGrid
+          pgs={pgs}
+          semGrupo={allData?.semGrupo ?? []}
+          onOpen={setSelectedPgId}
+          canManage={can("pequenos_grupos:update")}
+        />
       )}
 
       <PGForm

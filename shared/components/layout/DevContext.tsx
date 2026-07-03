@@ -459,18 +459,20 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     doc: "docs/modules/pequenos-grupos.md",
     arquivos: [
       "app/(ready)/pequenos-grupos/page.tsx",
+      "features/pequenosGrupos/components/PGGrid.tsx",
       "features/pequenosGrupos/components/PGCard.tsx",
       "features/pequenosGrupos/components/PGForm.tsx",
       "features/pequenosGrupos/components/PGDetalhe.tsx",
       "features/pequenosGrupos/components/PGRemanejamento.tsx",
     ],
     queries: ["pequenosGrupos.queries.list", "pequenosGrupos.queries.listAllWithMembros"],
-    mutations: ["pequenosGrupos.mutations.create"],
-    componentes: ["PGCard", "PGForm", "PGDetalhe", "PGRemanejamento", "PermissionGate", "ModuloGuard"],
+    mutations: ["pequenosGrupos.mutations.create", "pequenosGrupos.mutations.moveMembro"],
+    componentes: ["PGGrid", "PGCard", "PGForm", "PGDetalhe", "PGRemanejamento", "PermissionGate", "ModuloGuard"],
     notas: [
       "Permissao: pequenos_grupos:read, pequenos_grupos:create, pequenos_grupos:update",
       "2 views: grid de PGs e remanejamento de membros entre grupos",
-      "Mostra membros sem grupo na parte inferior",
+      "PGGrid (view grid): busca nos membros sem grupo (ordem alfabetica) + drag-and-drop de um nome para cima de um card de PG (moveMembro). DnD so com pequenos_grupos:update",
+      "PGDetalhe: dialog Adicionar membro usa busca + lista alfabetica (nao combobox)",
     ],
   },
   "/pedidos-oracao": {
