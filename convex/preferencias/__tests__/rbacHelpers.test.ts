@@ -27,11 +27,12 @@ describe("INITIAL_ROLE_PERMISSIONS", () => {
     expect(perms).toContain("gravacoes:read"); // ouvir pregacoes/estudos
     expect(perms).toContain("pedidos_oracao:create");
     expect(perms).toContain("pedidos_oracao:read");
+    // Calendario ficou visivel a todos (commit 6f91b98)
+    expect(perms).toContain("calendario:read");
     // Diretorio/Pessoas e espacos seguem restritos para o membro
     expect(perms).not.toContain("diretorio:read");
     expect(perms).not.toContain("escalas:read");
     expect(perms).not.toContain("louvor:read");
-    expect(perms).not.toContain("calendario:read");
     expect(perms).not.toContain("biblioteca:read");
     expect(perms).not.toContain("salas:read");
   });
