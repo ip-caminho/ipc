@@ -32,7 +32,7 @@ import {
 } from "@/shared/components/ui/tooltip";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { Button } from "@/shared/components/ui/button";
-import { LogOut, ChevronRight } from "lucide-react";
+import { LogOut, ChevronRight, Globe } from "lucide-react";
 import { Logo } from "@shared/components/layout/Logo";
 import { api } from "@/convex/_generated/api";
 import { useAuth } from "@shared/providers/PermissionsProvider";
@@ -179,7 +179,13 @@ export function AppSidebar() {
               {role || ""}
             </p>
           </div>
-          <Button variant="ghost" size="icon" onClick={() => signOut()}>
+          {/* Site publico em nova aba (nao perde o estado do sistema) */}
+          <Button variant="ghost" size="icon" asChild title="Ver o site">
+            <a href="/" target="_blank" rel="noopener">
+              <Globe className="h-4 w-4" />
+            </a>
+          </Button>
+          <Button variant="ghost" size="icon" onClick={() => signOut()} title="Sair">
             <LogOut className="h-4 w-4" />
           </Button>
         </div>
