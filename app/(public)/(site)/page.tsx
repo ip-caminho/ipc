@@ -40,12 +40,15 @@ export default async function HomePage() {
   const proximoCulto = agenda.find((e) => e.tipo === "culto");
   const numInscricoes = inscricoes.length;
   const temAvisos = !!avisosCulto && avisosCulto.avisos.length > 0;
+  // Agenda resumida no hero (não a completa — evita coluna longa demais).
+  const proximosEventos = agenda.slice(0, 5);
+  const temAgenda = proximosEventos.length > 0;
 
   return (
     <div className="site-v2">
       {/* =========================== HERO =========================== */}
       <section className="hub-hero">
-        <div className="wrap-wide hub-hero-grid" data-has-avisos={temAvisos}>
+        <div className="wrap-wide hub-hero-grid" data-has-aside={temAgenda}>
           <div className="hub-hero-main">
             <p className="eyebrow">Igreja Presbiteriana do Caminho · São Paulo</p>
             <h1>{heroTitulo}</h1>
@@ -67,18 +70,25 @@ export default async function HomePage() {
             </div>
           </div>
 
-          {/* Esta semana — coluna direita no desktop, empilha no mobile */}
-          {temAvisos && (
+          {/* Agenda resumida — coluna direita no desktop, empilha no mobile */}
+          {temAgenda && (
             <aside className="hub-hero-aside">
               <div className="hub-head">
-                <h2>Esta semana</h2>
-                <span className="aside">Avisos · {formatCulto(avisosCulto!.data)}</span>
+                <h2>Agenda</h2>
+                <Link href="/agenda" className="aside-link">
+                  Ver tudo →
+                </Link>
               </div>
-              <div className="stack">
-                {avisosCulto!.avisos.map((a, i) => (
-                  <AvisoCard key={i} aviso={a} />
+              <ul className="hero-agenda">
+                {proximosEventos.map((e) => (
+                  <li key={e.id} className="ha-item">
+                    <span className="ha-quando">
+                      {formatCulto(e.data, e.horario)}
+                    </span>
+                    <span className="ha-titulo">{e.titulo}</span>
+                  </li>
                 ))}
-              </div>
+              </ul>
             </aside>
           )}
         </div>
@@ -110,6 +120,23 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ===================== AVISOS DO ÚLTIMO CULTO ===================== */}
+      {temAvisos && (
+        <section className="hub-section tight">
+          <div className="wrap-wide">
+            <div className="hub-head">
+              <h2>Avisos do último culto</h2>
+              <span className="aside">Domingo · {formatCulto(avisosCulto!.data)}</span>
+            </div>
+            <div className="grid-avisos">
+              {avisosCulto!.avisos.map((a, i) => (
+                <AvisoCard key={i} aviso={a} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
     </div>
   );
 }
