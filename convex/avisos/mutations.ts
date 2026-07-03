@@ -14,7 +14,7 @@ export const create = mutation({
     prioridade: v.optional(prioridadeValidator),
   },
   handler: async (ctx, args) => {
-    const { membro } = await requirePermission(ctx, "escalas:create");
+    const { membro } = await requirePermission(ctx, "avisos:create");
 
     const id = await ctx.db.insert("avisos", {
       ...args,
@@ -37,7 +37,7 @@ export const update = mutation({
     prioridade: v.optional(prioridadeValidator),
   },
   handler: async (ctx, { id, ...updates }) => {
-    await requirePermission(ctx, "escalas:update");
+    await requirePermission(ctx, "avisos:manage");
 
     const aviso = await ctx.db.get(id);
     if (!aviso) throw new Error("Aviso nao encontrado");
@@ -58,7 +58,7 @@ export const update = mutation({
 export const remove = mutation({
   args: { id: v.id("avisos") },
   handler: async (ctx, { id }) => {
-    await requirePermission(ctx, "escalas:delete");
+    await requirePermission(ctx, "avisos:manage");
 
     const aviso = await ctx.db.get(id);
     if (!aviso) throw new Error("Aviso nao encontrado");

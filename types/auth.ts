@@ -20,6 +20,8 @@ export type Permission =
   | "gravacoes:read" | "gravacoes:create" | "gravacoes:update" | "gravacoes:delete" | "gravacoes:process_ai" | "gravacoes:share"
   // Escalas
   | "escalas:read" | "escalas:create" | "escalas:update" | "escalas:delete"
+  // Avisos
+  | "avisos:create" | "avisos:manage"
   // Louvor
   | "louvor:read" | "louvor:create" | "louvor:update" | "louvor:delete" | "louvor:metricas"
   // Pastoreio

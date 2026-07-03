@@ -454,7 +454,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     mutations: ["avisos.mutations.create", "avisos.mutations.update", "avisos.mutations.remove"],
     componentes: ["AvisosSection", "ModuloGuard"],
     notas: [
-      "Permissao: escalas:read, escalas:create, escalas:update, escalas:delete",
+      "Permissao: avisos:create (lancar) e avisos:manage (editar/excluir). Desacoplado de escalas: obreiro lanca avisos; pastor/secretaria gerenciam",
       "Avisos ativos e expirados",
       "Criacao e edicao inline",
     ],

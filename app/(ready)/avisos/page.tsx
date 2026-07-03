@@ -19,7 +19,7 @@ export default function AvisosPage() {
         <div className="space-y-4">
           <PageHeader title="Avisos" />
           <div className="flex items-center justify-end">
-            {can("escalas:create") && !showForm && (
+            {can("avisos:create") && !showForm && (
               <Button size="sm" variant="outline" onClick={() => setShowForm(true)}>
                 <Plus className="h-4 w-4 mr-1" />
                 Novo aviso

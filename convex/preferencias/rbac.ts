@@ -19,6 +19,8 @@ export const ALL_PERMISSIONS = [
   "gravacoes:read", "gravacoes:create", "gravacoes:update", "gravacoes:delete", "gravacoes:process_ai", "gravacoes:share",
   // Escalas
   "escalas:read", "escalas:create", "escalas:update", "escalas:delete",
+  // Avisos
+  "avisos:create", "avisos:manage",
   // Louvor
   "louvor:read", "louvor:create", "louvor:update", "louvor:delete", "louvor:metricas",
   // Pastoreio
@@ -78,6 +80,8 @@ function getPermissionLabel(perm: string): string {
     "escalas:create": "Criar Escalas",
     "escalas:update": "Editar Escalas",
     "escalas:delete": "Excluir Escalas",
+    "avisos:create": "Lançar Avisos",
+    "avisos:manage": "Gerenciar Avisos (editar/excluir)",
     "audit:read": "Ver Auditoria",
     "pastoreio:read": "Ver Pastoreio",
     "pastoreio:create": "Criar Pastoreio",
@@ -139,6 +143,7 @@ function getPermissionModule(perm: string): string {
   if (perm.startsWith("diretorio:")) return "Diretorio";
   if (perm.startsWith("gravacoes:")) return "Gravacoes";
   if (perm.startsWith("escalas:")) return "Escalas";
+  if (perm.startsWith("avisos:")) return "Avisos";
   if (perm.startsWith("audit:")) return "Auditoria";
   if (perm.startsWith("pastoreio:")) return "Pastoreio";
   if (perm.startsWith("pequenos_grupos:")) return "Pequenos Grupos";
@@ -178,6 +183,8 @@ function getPermissionDescription(perm: string): string {
     "escalas:create": "Criar cultos e escalas de liturgia",
     "escalas:update": "Editar escalas e atribuicoes de liturgia",
     "escalas:delete": "Excluir cultos e escalas",
+    "avisos:create": "Lancar avisos/comunicados exibidos no domingo",
+    "avisos:manage": "Editar e excluir avisos de qualquer autor",
     "audit:read": "Ver logs de auditoria do sistema",
     "pastoreio:read": "Ver visitas pastorais e anotacoes",
     "pastoreio:create": "Registrar visitas e anotacoes pastorais",
@@ -546,6 +553,45 @@ export const addCalendarioReadToBaseRoles = internalMutation({
       if (!row.permissions.includes("calendario:read")) {
         await ctx.db.patch(row._id, {
           permissions: [...row.permissions, "calendario:read"],
+          updatedAt: Date.now(),
+        });
+        updated.push(role);
+      }
+    }
+    return { updated };
+  },
+});
+
+/**
+ * Habilita o obreiro a lancar avisos e desacopla avisos de escalas.
+ * Concede avisos:create ao obreiro; avisos:create + avisos:manage a pastor e
+ * secretaria (que criavam/editavam avisos via escalas:* antes do desacoplamento,
+ * e perderiam o acesso quando as mutations passassem a exigir avisos:*).
+ * Direcionada e idempotente: adiciona SO essas permissoes, preservando o resto.
+ * Rodar em prod apos deploy:
+ * npx convex run preferencias/rbac:addAvisosPermissions --prod
+ */
+export const addAvisosPermissions = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const grants: Record<string, string[]> = {
+      obreiro: ["avisos:create"],
+      pastor: ["avisos:create", "avisos:manage"],
+      secretaria: ["avisos:create", "avisos:manage"],
+    };
+    const updated: string[] = [];
+    for (const [role, perms] of Object.entries(grants)) {
+      const row = await ctx.db
+        .query("rolePermissions")
+        .withIndex("by_role", (q) => q.eq("role", role))
+        .first();
+      // Sem row: resolvePermissions cai no INITIAL do codigo (ja atualizado),
+      // entao nao precisa criar.
+      if (!row) continue;
+      const missing = perms.filter((p) => !row.permissions.includes(p));
+      if (missing.length > 0) {
+        await ctx.db.patch(row._id, {
+          permissions: [...row.permissions, ...missing],
           updatedAt: Date.now(),
         });
         updated.push(role);
