@@ -115,9 +115,9 @@ function RespostasContent({ inscricaoId }: { inscricaoId: Id<"inscricoesEvento">
             </CardContent>
           </Card>
         ) : (
-          <div className="overflow-x-auto rounded-md border">
-            <Table>
-              <TableHeader>
+          <div className="rounded-md border">
+            <Table containerClassName="max-h-[calc(100vh-16rem)] overflow-y-auto">
+              <TableHeader className="sticky top-0 z-20 bg-background">
                 <TableRow>
                   {camposSistema.map((c) => (
                     <TableHead key={c}>{SISTEMA_LABEL[c] ?? c}</TableHead>

@@ -203,8 +203,8 @@ export default function CampanhaDetalhePage({
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
+            <Table containerClassName="max-h-[calc(100vh-18rem)] overflow-y-auto rounded-b-xl">
+              <TableHeader className="sticky top-0 z-20 bg-background">
                 <TableRow>
                   <TableHead>Membro</TableHead>
                   <TableHead>Telefone</TableHead>

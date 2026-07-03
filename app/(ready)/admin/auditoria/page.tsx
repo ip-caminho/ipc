@@ -160,9 +160,9 @@ function AuditoriaContent() {
 
       {/* Tabela */}
       <div className="rounded-xl border bg-card overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="overflow-auto max-h-[calc(100vh-16rem)]">
           <table className="w-full text-sm">
-            <thead>
+            <thead className="sticky top-0 z-20 bg-muted">
               <tr className="border-b bg-muted/50">
                 <th className="text-left px-4 py-3 font-medium">Quando</th>
                 <th className="text-left px-4 py-3 font-medium">Autor</th>

@@ -21,6 +21,8 @@ interface ResponsiveDataListProps<TData> {
   emptyState?: React.ReactNode
   mobileClassName?: string
   desktopClassName?: string
+  // Congela o cabecalho ao rolar (desktop). A tabela passa a rolar internamente.
+  stickyHeader?: boolean
 }
 
 export function ResponsiveDataList<TData>({
@@ -29,6 +31,7 @@ export function ResponsiveDataList<TData>({
   emptyState = "Nenhum item encontrado",
   mobileClassName,
   desktopClassName,
+  stickyHeader,
 }: ResponsiveDataListProps<TData>) {
   const isMobile = useIsMobile()
   const rows = table.getRowModel().rows
@@ -61,8 +64,12 @@ export function ResponsiveDataList<TData>({
 
   return (
     <div className={cn("rounded-md border", desktopClassName)}>
-      <Table>
-        <TableHeader>
+      <Table
+        containerClassName={
+          stickyHeader ? "max-h-[calc(100vh-16rem)] overflow-y-auto" : undefined
+        }
+      >
+        <TableHeader className={cn(stickyHeader && "sticky top-0 z-20 bg-background")}>
           {headerGroups.map((hg) => (
             <TableRow key={hg.id}>
               {hg.headers.map((header) => (
