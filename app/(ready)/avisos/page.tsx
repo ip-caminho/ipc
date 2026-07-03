@@ -17,7 +17,7 @@ export default function AvisosPage() {
     <ModuloGuard modulo="escalas">
       <HeaderLayout>
         <div className="space-y-4">
-          <PageHeader title="Avisos" />
+          <PageHeader title="Cadastrar Aviso" />
           <div className="flex items-center justify-end">
             {can("avisos:create") && !showForm && (
               <Button size="sm" variant="outline" onClick={() => setShowForm(true)}>

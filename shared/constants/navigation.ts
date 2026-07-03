@@ -110,7 +110,7 @@ export const GESTAO_SECTIONS: NavSection[] = [
         modulo: "boletim",
       },
       {
-        label: "Avisos",
+        label: "Cadastrar Aviso",
         href: "/avisos",
         icon: Megaphone,
         description: "Comunicados semanais",
