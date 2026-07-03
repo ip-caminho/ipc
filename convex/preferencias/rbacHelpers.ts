@@ -26,6 +26,8 @@ export const INITIAL_ROLE_PERMISSIONS: Record<string, string[]> = {
     "gravacoes:read", "gravacoes:create", "gravacoes:update", "gravacoes:process_ai",
     // Escalas
     "escalas:read", "escalas:create", "escalas:update",
+    // Avisos
+    "avisos:create", "avisos:manage",
     // Louvor
     "louvor:read", "louvor:create", "louvor:update",
     // Ministerios
@@ -78,6 +80,8 @@ export const INITIAL_ROLE_PERMISSIONS: Record<string, string[]> = {
     "pedidos_oracao:create", "pedidos_oracao:read",
     // Calendario (visivel a todos)
     "calendario:read",
+    // Avisos (obreiro lanca avisos do domingo)
+    "avisos:create",
     // Tarefas
     "tarefas:read", "tarefas:create", "tarefas:update",
   ],
@@ -92,6 +96,8 @@ export const INITIAL_ROLE_PERMISSIONS: Record<string, string[]> = {
     "gravacoes:read", "gravacoes:create", "gravacoes:update", "gravacoes:delete", "gravacoes:process_ai",
     // Escalas
     "escalas:read", "escalas:create", "escalas:update", "escalas:delete",
+    // Avisos
+    "avisos:create", "avisos:manage",
     // Louvor
     "louvor:read", "louvor:create", "louvor:update",
     // Ministerios

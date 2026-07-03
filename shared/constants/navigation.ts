@@ -114,7 +114,7 @@ export const GESTAO_SECTIONS: NavSection[] = [
         href: "/avisos",
         icon: Megaphone,
         description: "Comunicados semanais",
-        permission: "escalas:create",
+        permission: "avisos:create",
       },
       {
         label: "Multimídia",

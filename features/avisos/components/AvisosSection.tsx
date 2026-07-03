@@ -141,6 +141,7 @@ function AvisoCard({
   canEdit: boolean;
   canDelete: boolean;
 }) {
+  // @ts-ignore Convex TS2589
   const updateAviso = useMutation(api.avisos.mutations.update);
   const removeAviso = useMutation(api.avisos.mutations.remove);
   const [editing, setEditing] = useState(false);
@@ -247,8 +248,8 @@ export function AvisosSection({ showForm, setShowForm }: { showForm: boolean; se
   const avisos = useQuery(api.avisos.queries.list, {});
   const createAviso = useMutation(api.avisos.mutations.create);
 
-  const canEdit = can("escalas:update");
-  const canDelete = can("escalas:delete");
+  const canEdit = can("avisos:manage");
+  const canDelete = can("avisos:manage");
 
   const handleCreate = async (data: AvisoFormData) => {
     try {
