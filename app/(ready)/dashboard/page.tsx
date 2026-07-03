@@ -18,6 +18,7 @@ import { PageHeader } from "@shared/components/layout/PageHeader";
 import { PushPermissionBanner } from "@shared/notifications/PushPermissionBanner";
 import { TodaySection } from "@features/dashboard/components/TodaySection";
 import { BirthdayList } from "@features/dashboard/components/BirthdayList";
+import { BoletimCard } from "@features/dashboard/components/BoletimCard";
 import { UltimoSermaoCard } from "@features/dashboard/components/UltimoSermaoCard";
 import { ComentariosRecentesCard } from "@features/dashboard/components/ComentariosRecentesCard";
 import { ProfileCompletenessCard } from "@features/dashboard/components/ProfileCompletenessCard";
@@ -139,6 +140,8 @@ export default function DashboardPage() {
         <PushPermissionBanner />
 
         <ProfileCompletenessCard />
+
+        <BoletimCard />
 
         <UltimoSermaoCard />
 
