@@ -94,7 +94,7 @@ function RespostasContent({ inscricaoId }: { inscricaoId: Id<"inscricoesEvento">
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <Button asChild variant="ghost" size="sm">
-            <Link href="/admin/site-publico/inscricoes">
+            <Link href="/admin/inscricoes">
               <ArrowLeft className="mr-1 h-4 w-4" /> Voltar
             </Link>
           </Button>

@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
-// A listagem/edição migrou para o hub com abas (/admin/site-publico?secao=inscricoes).
-// As respostas de cada inscrição seguem em /admin/site-publico/inscricoes/[id]/respostas.
+// Inscricoes saiu do hub do site e virou item de Secretaria (/admin/inscricoes).
+// Mantido como redirect para links/bookmarks antigos.
 export default function InscricoesRedirect() {
-  redirect("/admin/site-publico?secao=inscricoes");
+  redirect("/admin/inscricoes");
 }

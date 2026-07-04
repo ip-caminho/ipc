@@ -6,11 +6,10 @@ import { PageHeader } from "@shared/components/layout/PageHeader";
 import { PermissionGate } from "@shared/components/auth/PermissionGate";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/shared/components/ui/tabs";
-import { Building2, CalendarDays, Megaphone, Users, Type, ExternalLink } from "lucide-react";
+import { Building2, CalendarDays, Megaphone, Type, ExternalLink } from "lucide-react";
 import { InformacoesPanel } from "@features/site-publico/components/paineis/InformacoesPanel";
 import { AgendaPanel } from "@features/site-publico/components/paineis/AgendaPanel";
 import { AvisosPanel } from "@features/site-publico/components/paineis/AvisosPanel";
-import { InscricoesPanel } from "@features/site-publico/components/paineis/InscricoesPanel";
 import { TextosPanel } from "@features/site-publico/components/paineis/TextosPanel";
 
 // Hub de manutenção do site público. Uma página com abas — cada seção edita a
@@ -19,7 +18,6 @@ const SECOES = [
   { key: "informacoes", label: "Informações", icon: Building2, Panel: InformacoesPanel },
   { key: "agenda", label: "Agenda", icon: CalendarDays, Panel: AgendaPanel },
   { key: "avisos", label: "Avisos", icon: Megaphone, Panel: AvisosPanel },
-  { key: "inscricoes", label: "Inscrições", icon: Users, Panel: InscricoesPanel },
   { key: "textos", label: "Textos", icon: Type, Panel: TextosPanel },
 ] as const;
 

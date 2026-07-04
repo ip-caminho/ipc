@@ -651,7 +651,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     arquivos: [
       "app/(ready)/calendario/page.tsx",
       "features/calendario/components/EventoForm.tsx",
-      "features/calendario/components/DatePickerBR.tsx",
+      "shared/components/ui/date-picker-br.tsx",
       "features/calendario/components/CalendarioMes.tsx",
       "features/calendario/components/CalendarioSemana.tsx",
       "features/calendario/components/CalendarioLista.tsx",
@@ -1133,20 +1133,19 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "features/site-publico/components/paineis/InformacoesPanel.tsx",
       "features/site-publico/components/paineis/AgendaPanel.tsx",
       "features/site-publico/components/paineis/AvisosPanel.tsx",
-      "features/site-publico/components/paineis/InscricoesPanel.tsx",
       "features/site-publico/components/paineis/TextosPanel.tsx",
     ],
     queries: [],
     mutations: [],
     componentes: [
-      "Tabs (abas): Informacoes, Agenda, Avisos, Inscricoes, Textos + 'Ver o site'",
+      "Tabs (abas): Informacoes, Agenda, Avisos, Textos + 'Ver o site'",
       "Cada aba = um Panel self-fetching (Radix desmonta aba inativa = query so quando aberta)",
     ],
     notas: [
       "Permissao: site_publico:manage (admin/pastor/sec.exec por padrao; liga por membro na pagina de permissoes)",
       "Pagina unica com abas; aba ativa na URL via nuqs (?secao=). Sem navegar entre paginas",
-      "As sub-rotas /informacoes|/agenda|/avisos|/inscricoes|/textos REDIRECIONAM p/ ?secao=",
-      "Respostas de inscricao seguem em sub-pagina propria (/inscricoes/[id]/respostas)",
+      "As sub-rotas /informacoes|/agenda|/avisos|/textos REDIRECIONAM p/ ?secao=",
+      "Inscricoes saiu do hub e virou item de Secretaria (/admin/inscricoes)",
     ],
   },
   "/admin/site-publico/informacoes": {
@@ -1174,7 +1173,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     arquivos: [
       "app/(ready)/admin/site-publico/agenda/page.tsx",
       "features/calendario/components/EventoForm.tsx",
-      "features/calendario/components/DatePickerBR.tsx",
+      "shared/components/ui/date-picker-br.tsx",
       "convex/site/queries.ts",
       "convex/calendario/mutations.ts",
     ],
@@ -1231,11 +1230,12 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "Editorial denso (quem-somos) fica em MDX, nao aqui",
     ],
   },
-  "/admin/site-publico/inscricoes": {
-    nome: "Admin - Inscricoes do site",
-    pagina: "app/(ready)/admin/site-publico/inscricoes/page.tsx",
+  "/admin/inscricoes": {
+    nome: "Secretaria - Inscricoes",
+    pagina: "app/(ready)/admin/inscricoes/page.tsx",
     arquivos: [
-      "app/(ready)/admin/site-publico/inscricoes/page.tsx",
+      "app/(ready)/admin/inscricoes/page.tsx",
+      "features/site-publico/components/paineis/InscricoesPanel.tsx",
       "features/site-publico/components/InscricaoBuilder.tsx",
       "convex/inscricoesEvento/mutations.ts",
       "convex/inscricoesEvento/queries.ts",
@@ -1246,18 +1246,18 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "inscricoesEvento.mutations.atualizar",
       "inscricoesEvento.mutations.encerrar",
     ],
-    componentes: ["InscricaoBuilder (seletor camposSistema + editor camposCustom), via InscricoesPanel"],
+    componentes: ["InscricoesPanel (lista + builder)", "InscricaoBuilder (seletor camposSistema + editor camposCustom)"],
     notas: [
-      "Rota REDIRECIONA p/ o hub (/admin/site-publico?secao=inscricoes); UI real em InscricoesPanel",
-      "Permissao: site_publico:manage (admin/pastor/sec.exec). Auditado",
-      "Respostas de cada inscricao seguem em /admin/site-publico/inscricoes/[id]/respostas",
+      "Item de Secretaria (saiu do hub do site). Permissao: site_publico:manage. Auditado",
+      "/admin/site-publico/inscricoes redireciona p/ ca (bookmarks antigos)",
+      "Respostas de cada inscricao em /admin/inscricoes/[id]/respostas",
     ],
   },
-  "/admin/site-publico/inscricoes/[id]/respostas": {
-    nome: "Admin - Respostas de inscricao",
-    pagina: "app/(ready)/admin/site-publico/inscricoes/[id]/respostas/page.tsx",
+  "/admin/inscricoes/[id]/respostas": {
+    nome: "Secretaria - Respostas de inscricao",
+    pagina: "app/(ready)/admin/inscricoes/[id]/respostas/page.tsx",
     arquivos: [
-      "app/(ready)/admin/site-publico/inscricoes/[id]/respostas/page.tsx",
+      "app/(ready)/admin/inscricoes/[id]/respostas/page.tsx",
       "convex/inscricoesEvento/queries.ts",
     ],
     queries: ["inscricoesEvento.queries.getById", "inscricoesEvento.queries.listarRespostas"],
@@ -1303,9 +1303,9 @@ function resolveRoute(pathname: string): PageContext | null {
   }
   // /inscricoes/[slug] (formulario publico)
   if (/^\/inscricoes\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/inscricoes/[slug]"];
-  // /admin/site-publico/inscricoes/[id]/respostas
-  if (/^\/admin\/site-publico\/inscricoes\/[^/]+\/respostas$/.test(pathname)) {
-    return CONTEXT_MAP["/admin/site-publico/inscricoes/[id]/respostas"];
+  // /admin/inscricoes/[id]/respostas
+  if (/^\/admin\/inscricoes\/[^/]+\/respostas$/.test(pathname)) {
+    return CONTEXT_MAP["/admin/inscricoes/[id]/respostas"];
   }
 
   return null;
