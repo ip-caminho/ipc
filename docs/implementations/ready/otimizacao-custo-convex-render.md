@@ -94,3 +94,13 @@ Nenhum índice novo previsto → `schema.ts` intocado → frentes A e B paraleli
 ## Backlog (fora desta rodada)
 
 - Denormalizar nome/foto da entidade em `membros`/`escutas` e contadores em `campanhas` para eliminar os N+1 de `ctx.db.get` — exige migração; reavaliar se o custo persistir.
+
+---
+
+## Status final (03/07/2026)
+
+Concluído em 2 rodadas:
+- **Rodada 1** (junho): gravações `list`/`listFrases`/`listTags` via `by_status`; auditoria (`list`/`listFiltered` via `by_created_at` + paginação, `listTabelas` com cap); calendário via `by_data`; frente B (`use client` descido em subir-audio/culto/comunidade, `generateMetadata` no livro).
+- **Rodada 2** (03/07): `escutas.continuarOuvindo` via `by_membro_atualizado` + early-exit (era o maior fluxo contínuo — reexecutado a cada heartbeat de 15s relendo o histórico inteiro); `gravacoes.list` sem N+1 de pregador (usa `pregadorNome` denormalizado) + cache de séries; `listSermoesQuiosque` via `by_tipo`; remoção de código morto que lia pesado (`listFrases`, `listTags`, `birthdaysThisWeek`, `escutas.listByGravacao`/`listByMembro`, `FrasesCarrossel`, exports mortos de `AniversariantesCard`).
+
+Backlog (denormalizações — `birthdaysThisMonth`, stats de campanhas, `pequenosGrupos.listAllWithMembros`) permanece fora de escopo; reavaliar se o custo persistir.
