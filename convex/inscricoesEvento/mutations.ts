@@ -43,7 +43,7 @@ export const criar = mutation({
     camposCustom: v.array(campoCustomValidator),
   },
   handler: async (ctx, args) => {
-    const { membro } = await requirePermission(ctx, "site_publico:manage");
+    const { membro } = await requirePermission(ctx, "inscricoes:manage");
 
     const slug = args.slug.trim().toLowerCase();
     if (!slug) throw new Error("Slug obrigatório");
@@ -78,7 +78,7 @@ export const atualizar = mutation({
     camposCustom: v.optional(v.array(campoCustomValidator)),
   },
   handler: async (ctx, { id, ...updates }) => {
-    await requirePermission(ctx, "site_publico:manage");
+    await requirePermission(ctx, "inscricoes:manage");
 
     const antes = await ctx.db.get(id);
     if (!antes) throw new Error("Inscrição não encontrada");
@@ -98,7 +98,7 @@ export const atualizar = mutation({
 export const encerrar = mutation({
   args: { id: v.id("inscricoesEvento") },
   handler: async (ctx, { id }) => {
-    await requirePermission(ctx, "site_publico:manage");
+    await requirePermission(ctx, "inscricoes:manage");
     const antes = await ctx.db.get(id);
     if (!antes) throw new Error("Inscrição não encontrada");
     await ctx.db.patch(id, { ativa: false });
