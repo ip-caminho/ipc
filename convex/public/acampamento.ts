@@ -40,6 +40,57 @@ export const getBySlug = query({
   },
 });
 
+// Pre-preenchimento p/ membro logado: ele + conjuge + filhos, com nascimento
+// vindo da base (resolve o problema das datas invalidas do form antigo).
+// Retorna null se nao logado — o form segue em branco.
+export const minhaFamilia = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return null;
+    const membro = await ctx.db
+      .query("membros")
+      .withIndex("by_user_id", (q) => q.eq("userId", userId))
+      .first();
+    if (!membro) return null;
+    const eu = await ctx.db.get(membro.entidadeId);
+    if (!eu) return null;
+
+    const participantes: { nome: string; dataNascimento: string | null }[] = [
+      { nome: eu.nomeCompleto ?? "", dataNascimento: eu.dataNascimento ?? null },
+    ];
+
+    if (membro.conjugeId) {
+      const conjuge = await ctx.db.get(membro.conjugeId);
+      if (conjuge) {
+        participantes.push({
+          nome: conjuge.nomeCompleto ?? "",
+          dataNascimento: conjuge.dataNascimento ?? null,
+        });
+      }
+    }
+
+    const vinculos = await ctx.db
+      .query("responsaveis")
+      .withIndex("by_responsavel", (q) => q.eq("responsavelEntidadeId", membro.entidadeId))
+      .collect();
+    for (const vinc of vinculos) {
+      const filho = await ctx.db.get(vinc.criancaEntidadeId);
+      if (filho) {
+        participantes.push({
+          nome: filho.nomeCompleto ?? "",
+          dataNascimento: filho.dataNascimento ?? null,
+        });
+      }
+    }
+
+    return {
+      responsavel: { nome: eu.nomeCompleto ?? "", whatsapp: eu.whatsapp ?? "" },
+      participantes: participantes.filter((p) => p.nome),
+    };
+  },
+});
+
 const participanteValidator = v.object({
   nome: v.string(),
   dataNascimento: v.string(),

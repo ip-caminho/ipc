@@ -1101,6 +1101,32 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     queries: ["public.inscricoesEvento.listAtivas (via getInscricoesAtivas, ISR 300s)"],
     notas: ["Grid de inscricoes ativas. Card -> /inscricoes/[slug]"],
   },
+  "/acampamento/[slug]": {
+    nome: "Acampamento - inscricao publica",
+    pagina: "app/(public)/(site)/acampamento/[slug]/page.tsx",
+    arquivos: [
+      "app/(public)/(site)/acampamento/[slug]/page.tsx",
+      "features/acampamento/components/AcampamentoForm.tsx",
+      "features/acampamento/lib/data.ts",
+      "convex/public/acampamento.ts",
+      "convex/acampamento/calculoHelpers.ts",
+      "app/api/acampamento/responder/route.ts",
+    ],
+    queries: [
+      "public.acampamento.getBySlug (ISR 60s via unstable_cache)",
+      "public.acampamento.minhaFamilia (logado: pre-preenchimento)",
+    ],
+    mutations: ["public.acampamento.responder (via /api/acampamento/responder, ipHash)"],
+    componentes: [
+      "AcampamentoForm (grupo: participantes dinamicos + resumo do valor ao vivo)",
+      "CampoNumero (stepper mobile-first)",
+      "LoginModalInline (reuso do site publico)",
+    ],
+    notas: [
+      "Inscricao POR GRUPO com calculo ao vivo (calculoHelpers compartilhado com o backend)",
+      "Estoque esgotado -> LISTA_ESPERA; dedupe por whatsapp; honeypot + LGPD + rate-limit",
+    ],
+  },
   "/inscricoes/[slug]": {
     nome: "Inscricao - formulario publico",
     pagina: "app/(public)/(site)/inscricoes/[slug]/page.tsx",
@@ -1312,6 +1338,8 @@ function resolveRoute(pathname: string): PageContext | null {
     return CONTEXT_MAP["/admin/campanhas/[id]"];
   }
   // /inscricoes/[slug] (formulario publico)
+  // /acampamento/[slug]
+  if (/^\/acampamento\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/acampamento/[slug]"];
   if (/^\/inscricoes\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/inscricoes/[slug]"];
   // /admin/inscricoes/[id]/respostas
   if (/^\/admin\/inscricoes\/[^/]+\/respostas$/.test(pathname)) {
