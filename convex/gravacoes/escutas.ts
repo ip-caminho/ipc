@@ -74,54 +74,14 @@ export const getMyProgress = query({
   },
 });
 
-export const listByGravacao = query({
-  args: { gravacaoId: v.id("gravacoes") },
-  handler: async (ctx, { gravacaoId }) => {
-    const escutas = await ctx.db
-      .query("escutasGravacao")
-      .withIndex("by_gravacao", (q) => q.eq("gravacaoId", gravacaoId))
-      .collect();
-
-    return Promise.all(
-      escutas.map(async (e) => {
-        const membro = await ctx.db.get(e.membroId);
-        let nome = "Usuario";
-        let foto = null;
-        if (membro) {
-          const entidade = await ctx.db.get(membro.entidadeId);
-          nome = entidade?.nomeCompleto || entidade?.nomeRazaoSocial || "Usuario";
-          foto = entidade?.foto || null;
-        }
-        return { ...e, nome, foto };
-      })
-    );
-  },
-});
-
-export const listByMembro = query({
-  args: { membroId: v.optional(v.id("membros")) },
-  handler: async (ctx, { membroId }) => {
-    const id = membroId || (await getMembroId(ctx));
-    if (!id) return [];
-
-    const escutas = await ctx.db
-      .query("escutasGravacao")
-      .withIndex("by_membro", (q) => q.eq("membroId", id))
-      .collect();
-
-    return Promise.all(
-      escutas.map(async (e) => {
-        const gravacao = await ctx.db.get(e.gravacaoId);
-        return { ...e, titulo: gravacao?.titulo || "Gravacao removida" };
-      })
-    );
-  },
-});
-
 /**
  * Último sermão em progresso do usuário atual.
  * Filtra por: sermão publicado, progresso entre 5% e 95%, não completado.
  * Ordena por atualizadoEm desc e retorna o primeiro.
+ *
+ * Itera lazy pelo indice by_membro_atualizado (desc) com early-exit — essa
+ * query e invalidada pelo heartbeat do player a cada 15s durante a escuta,
+ * entao cada re-execucao precisa ler poucos docs, nao o historico inteiro.
  */
 export const continuarOuvindo = query({
   args: {},
@@ -129,16 +89,13 @@ export const continuarOuvindo = query({
     const membroId = await getMembroId(ctx);
     if (!membroId) return null;
 
-    const escutas = await ctx.db
+    const iter = ctx.db
       .query("escutasGravacao")
-      .withIndex("by_membro", (q) => q.eq("membroId", membroId))
-      .collect();
+      .withIndex("by_membro_atualizado", (q) => q.eq("membroId", membroId))
+      .order("desc");
 
-    const candidatas = escutas
-      .filter((e) => !e.completou && e.progresso > 0.05 && e.progresso < 0.95)
-      .sort((a, b) => b.atualizadoEm - a.atualizadoEm);
-
-    for (const e of candidatas) {
+    for await (const e of iter) {
+      if (e.completou || e.progresso <= 0.05 || e.progresso >= 0.95) continue;
       const gravacao = await ctx.db.get(e.gravacaoId);
       if (!gravacao) continue;
       if (gravacao.tipo !== "SERMAO") continue;

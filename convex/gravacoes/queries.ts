@@ -3,7 +3,6 @@ import type { Doc } from "../_generated/dataModel";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { checkPermission, requirePermission } from "../_shared/requirePermission";
-import { extrairFrases } from "./iaHelpers";
 
 // Remove os campos pesados legados (pre-migracao) do payload das listas
 function semCamposPesados<T extends { iaTranscricao?: unknown; iaResultado?: unknown }>(g: T) {
@@ -82,11 +81,18 @@ export const list = query({
       });
     }
 
-    // Enrich with pregador info + serie info
+    // Enrich with pregador info + serie info.
+    // pregadorNome ja e denormalizado no doc — o lookup membro→entidade so
+    // roda p/ registros legados sem o campo (evita 2 gets por gravacao na
+    // query mais assinada do sistema). Series repetidas sao cacheadas por
+    // request (poucas series, muitas gravacoes).
+    const serieCache = new Map<string, { nome: string } | null>();
     return Promise.all(
       results.map(async (g) => {
         let pregadorInfo = null;
-        if (g.pregadorId) {
+        if (g.pregadorNome) {
+          pregadorInfo = { nome: g.pregadorNome };
+        } else if (g.pregadorId) {
           const membro = await ctx.db.get(g.pregadorId);
           if (membro) {
             const entidade = await ctx.db.get(membro.entidadeId);
@@ -95,10 +101,11 @@ export const list = query({
         }
         let serieInfo = null;
         if (g.serieId) {
-          const serie = await ctx.db.get(g.serieId);
-          if (serie) {
-            serieInfo = { nome: serie.nome };
+          if (!serieCache.has(g.serieId)) {
+            const serie = await ctx.db.get(g.serieId);
+            serieCache.set(g.serieId, serie ? { nome: serie.nome } : null);
           }
+          serieInfo = serieCache.get(g.serieId) ?? null;
         }
         // Reacoes/comentarios vem dos contadores denormalizados — sem ler
         // todas as reacoes/comentarios de cada gravacao na lista reativa.
@@ -229,70 +236,6 @@ export const getLatestAvisos = query({
   },
 });
 
-export const listFrases = query({
-  args: {},
-  handler: async (ctx) => {
-    if (!(await checkPermission(ctx, "gravacoes:read"))) return [];
-    // So frases de gravacoes publicadas: filtra pelo indice em vez de varrer tudo
-    const gravacoes = await ctx.db
-      .query("gravacoes")
-      .withIndex("by_status", (q) => q.eq("status", "PUBLICADO"))
-      .order("desc")
-      .collect();
-    const frases: { frase: string; pregador: string; titulo: string; gravacaoId: string }[] = [];
-
-    for (const g of gravacoes) {
-      if (g.iaStatus !== "CONCLUIDO") continue;
-      // Frases apenas de sermões e palestras
-      if (g.tipo !== "SERMAO" && g.tipo !== "PALESTRA") continue;
-
-      // iaFrases denormalizado (fraseChave + frasesRedesSociais); fallback ao
-      // iaResultado legado enquanto a migracao nao roda
-      const frasesDaGravacao = g.iaFrases ?? extrairFrases(g.iaResultado);
-      if (!frasesDaGravacao) continue;
-
-      for (const f of frasesDaGravacao) {
-        frases.push({
-          frase: f,
-          pregador: g.pregadorNome || "Pregador",
-          titulo: g.titulo,
-          gravacaoId: g._id,
-        });
-      }
-    }
-
-    return frases;
-  },
-});
-
-export const listTags = query({
-  args: {},
-  handler: async (ctx) => {
-    if (!(await checkPermission(ctx, "gravacoes:read"))) return [];
-    // Tags so de PUBLICADO/RASCUNHO: duas buscas por indice em vez de scan total
-    const [publicados, rascunhos] = await Promise.all([
-      ctx.db
-        .query("gravacoes")
-        .withIndex("by_status", (q) => q.eq("status", "PUBLICADO"))
-        .collect(),
-      ctx.db
-        .query("gravacoes")
-        .withIndex("by_status", (q) => q.eq("status", "RASCUNHO"))
-        .collect(),
-    ]);
-    const gravacoes = [...publicados, ...rascunhos];
-    const counts: Record<string, number> = {};
-    for (const g of gravacoes) {
-      for (const tag of g.tags || []) {
-        counts[tag] = (counts[tag] || 0) + 1;
-      }
-    }
-    return Object.entries(counts)
-      .sort((a, b) => b[1] - a[1])
-      .map(([tag, count]) => ({ tag, count }));
-  },
-});
-
 // ===== Modo Quiosque =====
 // Queries dedicadas para o modo de visualizacao restrita (so sermoes).
 // Acessiveis apenas quando configApp.modoQuiosque = true.
@@ -304,16 +247,14 @@ export const listSermoesQuiosque = query({
     if (!userId) return [];
     if (!(await isQuiosqueAtivo(ctx))) return [];
 
-    let results = await ctx.db
+    // by_tipo restringe a leitura aos sermoes; status filtra em memoria sobre
+    // o subconjunto (sem indice composto tipo+status).
+    const doTipo = await ctx.db
       .query("gravacoes")
+      .withIndex("by_tipo", (q) => q.eq("tipo", "SERMAO"))
       .order("desc")
-      .filter((q) =>
-        q.and(
-          q.eq(q.field("tipo"), "SERMAO"),
-          q.eq(q.field("status"), "PUBLICADO"),
-        ),
-      )
       .collect();
+    let results = doTipo.filter((g) => g.status === "PUBLICADO");
 
     if (args.search) {
       const term = args.search.toLowerCase();

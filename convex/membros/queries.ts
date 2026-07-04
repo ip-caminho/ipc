@@ -182,40 +182,6 @@ export const birthdaysThisMonth = query({
   },
 });
 
-export const birthdaysThisWeek = query({
-  args: {},
-  handler: async (ctx) => {
-    if (!(await checkPermission(ctx, "diretorio:read"))) return [];
-    // "Hoje" no fuso da igreja (America/Sao_Paulo). Ancorado em UTC para
-    // comparacao consistente (todas as datas usam Date.UTC do mesmo calendario).
-    const sp = getSaoPauloDate();
-    const today = new Date(Date.UTC(sp.year, sp.month - 1, sp.day));
-    const endOfWeek = new Date(today);
-    endOfWeek.setUTCDate(today.getUTCDate() + 6);
-
-    const membros = await ctx.db.query("membros").collect();
-    const results = await Promise.all(
-      membros.map(async (m) => {
-        const entidade = await ctx.db.get(m.entidadeId);
-        return entidade ? { ...m, entidade } : null;
-      })
-    );
-
-    return results
-      .filter((r): r is NonNullable<typeof r> => {
-        if (!r || !r.entidade.dataNascimento || r.entidade.status !== "ATIVO") return false;
-        const [, month, day] = r.entidade.dataNascimento.split("-").map(Number);
-        const bday = new Date(Date.UTC(sp.year, month - 1, day));
-        return bday >= today && bday <= endOfWeek;
-      })
-      .sort((a, b) => {
-        const [, mA, dA] = a.entidade.dataNascimento!.split("-").map(Number);
-        const [, mB, dB] = b.entidade.dataNascimento!.split("-").map(Number);
-        return new Date(Date.UTC(sp.year, mA - 1, dA)).getTime() - new Date(Date.UTC(sp.year, mB - 1, dB)).getTime();
-      });
-  },
-});
-
 export const getByUserId = query({
   args: {},
   handler: async (ctx) => {
