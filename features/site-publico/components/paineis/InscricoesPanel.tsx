@@ -9,6 +9,16 @@ import { Card, CardContent } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { Skeleton } from "@/shared/components/ui/skeleton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/shared/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { Plus, Users } from "lucide-react";
 import { InscricaoBuilder } from "@features/site-publico/components/InscricaoBuilder";
@@ -28,6 +38,7 @@ export function InscricoesPanel() {
   const encerrar = useMutation(api.inscricoesEvento.mutations.encerrar);
   const [builderOpen, setBuilderOpen] = useState(false);
   const [editId, setEditId] = useState<Id<"inscricoesEvento"> | undefined>(undefined);
+  const [encerrarId, setEncerrarId] = useState<Id<"inscricoesEvento"> | null>(null);
 
   function novaInscricao() {
     setEditId(undefined);
@@ -37,8 +48,10 @@ export function InscricoesPanel() {
     setEditId(id);
     setBuilderOpen(true);
   }
-  async function handleEncerrar(id: Id<"inscricoesEvento">) {
-    if (!confirm("Encerrar esta inscrição? Ela deixa de aparecer no site.")) return;
+  async function confirmarEncerrar() {
+    if (!encerrarId) return;
+    const id = encerrarId;
+    setEncerrarId(null);
     try {
       await encerrar({ id });
       await revalidarSite("inscricoes");
@@ -94,7 +107,7 @@ export function InscricoesPanel() {
                     Editar
                   </Button>
                   {i.ativa && (
-                    <Button variant="ghost" size="sm" onClick={() => handleEncerrar(i._id)}>
+                    <Button variant="ghost" size="sm" onClick={() => setEncerrarId(i._id)}>
                       Encerrar
                     </Button>
                   )}
@@ -108,6 +121,21 @@ export function InscricoesPanel() {
       {builderOpen && (
         <InscricaoBuilder open={builderOpen} onOpenChange={setBuilderOpen} inscricaoId={editId} />
       )}
+
+      <AlertDialog open={encerrarId !== null} onOpenChange={(o) => !o && setEncerrarId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Encerrar inscrição?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Ela deixa de aparecer no site. As respostas já recebidas são mantidas.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmarEncerrar}>Encerrar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

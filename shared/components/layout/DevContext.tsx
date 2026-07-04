@@ -1246,9 +1246,9 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "inscricoesEvento.mutations.atualizar",
       "inscricoesEvento.mutations.encerrar",
     ],
-    componentes: ["InscricoesPanel (lista + builder)", "InscricaoBuilder (seletor camposSistema + editor camposCustom)"],
+    componentes: ["InscricoesPanel (lista + builder + AlertDialog encerrar)", "InscricaoBuilder (seletor camposSistema + editor camposCustom)"],
     notas: [
-      "Item de Secretaria (saiu do hub do site). Permissao: site_publico:manage. Auditado",
+      "Item de Secretaria (saiu do hub do site). Permissao: inscricoes:manage. Auditado",
       "/admin/site-publico/inscricoes redireciona p/ ca (bookmarks antigos)",
       "Respostas de cada inscricao em /admin/inscricoes/[id]/respostas",
     ],
@@ -1259,10 +1259,20 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     arquivos: [
       "app/(ready)/admin/inscricoes/[id]/respostas/page.tsx",
       "convex/inscricoesEvento/queries.ts",
+      "convex/inscricoesEvento/mutations.ts",
     ],
     queries: ["inscricoesEvento.queries.getById", "inscricoesEvento.queries.listarRespostas"],
-    componentes: ["TanStack/Table de respostas + export CSV client-side"],
-    notas: ["Permissao: site_publico:manage. Colunas dinamicas (camposSistema + camposCustom)"],
+    mutations: [
+      "inscricoesEvento.mutations.moverStatusResposta (CONFIRMADA<->LISTA_ESPERA, ajusta vagasOcupadas)",
+      "inscricoesEvento.mutations.excluirResposta (libera vaga se era CONFIRMADA)",
+    ],
+    componentes: [
+      "Tabela de respostas + resumo (total/confirmadas/espera)",
+      "Filtro por status + busca por nome/contato",
+      "Acoes por linha (promover/rebaixar/excluir) via DropdownMenu + AlertDialog",
+      "Export CSV client-side (respeita o filtro atual)",
+    ],
+    notas: ["Permissao: inscricoes:manage. Colunas dinamicas (camposSistema + camposCustom)"],
   },
 };
 
