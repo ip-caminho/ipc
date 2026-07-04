@@ -1293,4 +1293,139 @@ export default defineSchema({
     .index("by_inscricao", ["inscricaoId"])
     .index("by_inscricao_status", ["inscricaoId", "status"])
     .index("by_ipHash_criadoEm", ["ipHash", "criadoEm"]),
+
+  // ===== Acampamento anual (inscricao especial por grupo) =====
+  // PRD: docs/implementations/wip/inscricao-acampamento.md
+
+  acampamentos: defineTable({
+    slug: v.string(),
+    titulo: v.string(),
+    descricao: v.optional(v.string()), // markdown
+    ativa: v.boolean(),
+    dataInicio: v.string(), // YYYY-MM-DD — referencia p/ idade e nº de diarias
+    dataFim: v.string(),
+    inscricoesAbrem: v.optional(v.number()),
+    inscricoesFecham: v.optional(v.number()),
+    // Tabela de precos configuravel (valores em centavos p/ aritmetica exata)
+    precos: v.object({
+      faixas: v.array(
+        v.object({ idadeMin: v.number(), idadeMax: v.number(), valor: v.number() }),
+      ),
+      camaExtra: v.number(), // por periodo
+      petPorDia: v.number(),
+      palestra: v.number(), // por participante marcado
+    }),
+    // Estoque de quartos do hotel + contadores denormalizados de reservas
+    // de inscricoes ATIVAS (esgotou -> novas inscricoes viram LISTA_ESPERA)
+    estoqueDuplos: v.number(),
+    estoqueTriplos: v.number(),
+    duplosReservados: v.number(),
+    triplosReservados: v.number(),
+    // Entradas avulsas no fundo solidario (sem vinculo com inscricao)
+    aportesFundo: v.array(
+      v.object({
+        valor: v.number(),
+        descricao: v.string(),
+        criadoPor: v.optional(v.id("membros")),
+        em: v.number(),
+      }),
+    ),
+    criadoPor: v.optional(v.id("membros")),
+    criadoEm: v.number(),
+  })
+    .index("by_slug", ["slug"])
+    .index("by_ativa", ["ativa"]),
+
+  inscricoesAcampamento: defineTable({
+    acampamentoId: v.id("acampamentos"),
+    responsavel: v.object({
+      nome: v.string(),
+      whatsapp: v.string(), // E.164 — chave de dedupe por acampamento
+      membroId: v.optional(v.id("membros")),
+    }),
+    participantes: v.array(
+      v.object({
+        nome: v.string(),
+        dataNascimento: v.string(), // YYYY-MM-DD (validada: nao-futura)
+        membroId: v.optional(v.id("membros")), // matching confirmado pela secretaria
+        participaPalestras: v.boolean(),
+      }),
+    ),
+    hospedagem: v.object({
+      quartosDuplos: v.number(),
+      quartosTriplos: v.number(),
+      camasExtras: v.number(),
+      pets: v.number(),
+    }),
+    extras: v.optional(
+      v.object({
+        colegaDeQuarto: v.optional(v.string()),
+        berco: v.optional(v.boolean()),
+        necessidadesEspeciais: v.optional(v.string()),
+        observacao: v.optional(v.string()),
+      }),
+    ),
+    // O que o inscrito pediu no form (a gestao real e caso a caso, abaixo)
+    pagamentoPreferido: v.object({
+      forma: v.union(v.literal("A_VISTA"), v.literal("PARCELADO")),
+      parcelas: v.optional(v.number()),
+      cpfPagante: v.optional(v.string()),
+    }),
+    // Financeiro flexivel (valores em centavos)
+    valorTabela: v.number(), // snapshot do calculo na inscricao
+    precosSnapshot: v.object({
+      faixas: v.array(
+        v.object({ idadeMin: v.number(), idadeMax: v.number(), valor: v.number() }),
+      ),
+      camaExtra: v.number(),
+      petPorDia: v.number(),
+      palestra: v.number(),
+    }),
+    ajustes: v.array(
+      v.object({
+        tipo: v.union(v.literal("DESCONTO"), v.literal("CONTRIBUICAO_FUNDO")),
+        valor: v.number(),
+        motivo: v.optional(v.string()),
+        criadoPor: v.optional(v.id("membros")),
+        em: v.number(),
+      }),
+    ),
+    recebimentos: v.array(
+      v.object({
+        valor: v.number(),
+        data: v.string(), // YYYY-MM-DD
+        comprovanteUrl: v.optional(v.string()),
+        obs: v.optional(v.string()),
+        registradoPor: v.optional(v.id("membros")),
+        em: v.number(),
+      }),
+    ),
+    // Previsao editavel pela secretaria (acordos caso a caso) — nao trava nada
+    planoPagamento: v.array(v.object({ data: v.string(), valor: v.number() })),
+    status: v.union(
+      v.literal("ATIVA"),
+      v.literal("LISTA_ESPERA"),
+      v.literal("CANCELADA"),
+    ),
+    observacaoCancelamento: v.optional(v.string()),
+    lgpdConsentimento: v.boolean(),
+    ipHash: v.optional(v.string()), // ausente quando criada pela secretaria
+    criadoEm: v.number(),
+    atualizadoEm: v.optional(v.number()),
+  })
+    .index("by_acampamento", ["acampamentoId"])
+    .index("by_acampamento_status", ["acampamentoId", "status"])
+    .index("by_acampamento_whatsapp", ["acampamentoId", "responsavel.whatsapp"]),
+
+  quartosAcampamento: defineTable({
+    acampamentoId: v.id("acampamentos"),
+    tipo: v.union(v.literal("DUPLO"), v.literal("TRIPLO")),
+    identificacao: v.optional(v.string()), // ex: numero do quarto no hotel
+    ocupantes: v.array(
+      v.object({
+        inscricaoId: v.id("inscricoesAcampamento"),
+        participanteIndex: v.number(),
+      }),
+    ),
+  }).index("by_acampamento", ["acampamentoId"]),
 });
