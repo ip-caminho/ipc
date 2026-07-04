@@ -103,7 +103,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "features/secretarioExecutivo/components/FamiliaDrawer.tsx",
       "features/secretarioExecutivo/components/RolExportView.tsx",
     ],
-    queries: ["membros.eclesiastico.listParaSecretario", "membros.eclesiastico.getResumoSecretario", "membros.eclesiastico.getHistorico"],
+    queries: ["membros.eclesiastico.listParaSecretario (assinatura unica; busca e resumo derivam no cliente)", "membros.eclesiastico.getHistorico"],
     mutations: [
       "membros.eclesiastico.updateEclesiastico",
       "membros.eclesiastico.updateStatus",
