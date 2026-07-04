@@ -6,13 +6,12 @@ import { PageHeader } from "@shared/components/layout/PageHeader";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { InscricoesPanel } from "@features/site-publico/components/paineis/InscricoesPanel";
 
-// Gestão de inscrições (secretaria). Mesma capacidade que edita o site
-// (site_publico:manage), mas fora do hub do site — inscricoes e o
-// acompanhamento das respostas sao trabalho de secretaria.
+// Gestão de inscrições (secretaria). Gated por inscricoes:manage — permissão
+// própria, separada do site_publico:manage que edita o conteúdo do site.
 export default function InscricoesPage() {
   return (
     <PermissionGate
-      permission="site_publico:manage"
+      permission="inscricoes:manage"
       fallback={
         <HeaderLayout>
           <Card>

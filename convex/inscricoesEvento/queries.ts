@@ -8,7 +8,7 @@ import { requirePermission } from "../_shared/requirePermission";
 export const listarTodas = query({
   args: {},
   handler: async (ctx) => {
-    await requirePermission(ctx, "site_publico:manage");
+    await requirePermission(ctx, "inscricoes:manage");
     const docs = await ctx.db.query("inscricoesEvento").collect();
     return docs
       .sort((a, b) => b.criadoEm - a.criadoEm)
@@ -28,7 +28,7 @@ export const listarTodas = query({
 export const getById = query({
   args: { id: v.id("inscricoesEvento") },
   handler: async (ctx, { id }) => {
-    await requirePermission(ctx, "site_publico:manage");
+    await requirePermission(ctx, "inscricoes:manage");
     return await ctx.db.get(id);
   },
 });
@@ -37,7 +37,7 @@ export const getById = query({
 export const listarRespostas = query({
   args: { inscricaoId: v.id("inscricoesEvento") },
   handler: async (ctx, { inscricaoId }) => {
-    await requirePermission(ctx, "site_publico:manage");
+    await requirePermission(ctx, "inscricoes:manage");
     const respostas = await ctx.db
       .query("respostasInscricaoEvento")
       .withIndex("by_inscricao", (q) => q.eq("inscricaoId", inscricaoId))

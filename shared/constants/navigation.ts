@@ -129,7 +129,7 @@ export const GESTAO_SECTIONS: NavSection[] = [
         href: "/admin/inscricoes",
         icon: ClipboardList,
         description: "Inscrições genéricas de eventos e suas respostas",
-        permission: "site_publico:manage",
+        permission: "inscricoes:manage",
       },
       {
         label: "Campanhas",

@@ -168,7 +168,7 @@ export default function RespostasPage() {
   const params = useParams<{ id: string }>();
   return (
     <PermissionGate
-      permission="site_publico:manage"
+      permission="inscricoes:manage"
       fallback={
         <HeaderLayout>
           <Card>

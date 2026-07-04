@@ -54,8 +54,10 @@ export type Permission =
   | "campanhas:manage"
   // Atos Pastorais
   | "atos_pastorais:manage"
-  // Site Publico (inscricoes de evento + conteudo publico)
+  // Site Publico (conteudo publico do site)
   | "site_publico:manage"
+  // Inscricoes de evento (gestao pela secretaria)
+  | "inscricoes:manage"
   // Acesso ao sistema (links de ativacao, reset de senha, link de convidado)
   | "acesso:manage"
   // Wildcards
