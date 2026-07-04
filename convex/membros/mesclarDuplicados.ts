@@ -247,3 +247,19 @@ export const renomear = internalMutation({
     return { de: antes.nomeCompleto, para: nome };
   },
 });
+
+// Remove campos de uma entidade (ex: CPF digitado errado na carga), com
+// auditoria de campo (CPF/RG saem mascarados no log).
+export const limparCampos = internalMutation({
+  args: { entidadeId: v.id("entidades"), campos: v.array(v.string()) },
+  handler: async (ctx, { entidadeId, campos }) => {
+    const antes = await ctx.db.get(entidadeId);
+    if (!antes) throw new Error("Entidade nao encontrada");
+    const patch: Record<string, undefined> = {};
+    for (const c of campos) patch[c] = undefined;
+    await ctx.db.patch(entidadeId, patch);
+    const depois = await ctx.db.get(entidadeId);
+    await createFieldAuditLogs(ctx, antes, depois, "entidades");
+    return { nome: antes.nomeCompleto, limpos: campos };
+  },
+});
