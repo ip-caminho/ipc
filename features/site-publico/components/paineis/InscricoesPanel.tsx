@@ -86,7 +86,7 @@ export function InscricoesPanel() {
                 </div>
                 <div className="flex shrink-0 gap-2">
                   <Button asChild variant="outline" size="sm">
-                    <Link href={`/admin/site-publico/inscricoes/${i._id}/respostas`}>
+                    <Link href={`/admin/inscricoes/${i._id}/respostas`}>
                       <Users className="mr-1 h-3.5 w-3.5" /> Respostas
                     </Link>
                   </Button>

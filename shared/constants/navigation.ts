@@ -125,6 +125,13 @@ export const GESTAO_SECTIONS: NavSection[] = [
         permission: "membros:read",
       },
       {
+        label: "Inscrições",
+        href: "/admin/inscricoes",
+        icon: ClipboardList,
+        description: "Inscrições genéricas de eventos e suas respostas",
+        permission: "site_publico:manage",
+      },
+      {
         label: "Campanhas",
         href: "/admin/campanhas",
         icon: Megaphone,
@@ -135,7 +142,7 @@ export const GESTAO_SECTIONS: NavSection[] = [
         label: "Site público",
         href: "/admin/site-publico",
         icon: Globe,
-        description: "Manutenção do site: informações, agenda, avisos, inscrições",
+        description: "Manutenção do site: informações, agenda, avisos e textos",
         permission: "site_publico:manage",
       },
       {
