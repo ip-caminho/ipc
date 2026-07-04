@@ -212,3 +212,38 @@ export const varrerDuplicados = internalQuery({
     };
   },
 });
+
+// Nomes com provavel troca de I por l (OCR da carga inicial): palavra com
+// "l" minusculo em posicao onde se espera "I" maiusculo (inicio de palavra
+// seguida de consoante... heuristica simples: lista palavras contendo "l"
+// para revisao humana). Read-only.
+export const listarNomesSuspeitos = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    const ents = await ctx.db.query("entidades").collect();
+    const suspeitos: { id: string; nome: string; palavras: string[] }[] = [];
+    for (const e of ents) {
+      const nome = e.nomeCompleto ?? "";
+      const ruins = nome.split(/\s+/).filter((w) =>
+        // palavra iniciando com "l" minusculo, ou "l" precedido de consoante
+        // no meio (Kenjl, Kinoshlta, Jl) — padroes tipicos de OCR I->l
+        /^l[a-z]/.test(w) || /[bcdfghjkmnpqrstvwxz]l(?![aeiouy])/i.test(w) || /[A-Z]l$/.test(w) || /^[A-Z]l/.test(w)
+      );
+      if (ruins.length > 0) suspeitos.push({ id: e._id, nome, palavras: ruins });
+    }
+    return suspeitos;
+  },
+});
+
+// Corrige o nome de uma entidade (com auditoria de campo).
+export const renomear = internalMutation({
+  args: { entidadeId: v.id("entidades"), nome: v.string() },
+  handler: async (ctx, { entidadeId, nome }) => {
+    const antes = await ctx.db.get(entidadeId);
+    if (!antes) throw new Error("Entidade nao encontrada");
+    await ctx.db.patch(entidadeId, { nomeCompleto: nome });
+    const depois = await ctx.db.get(entidadeId);
+    await createFieldAuditLogs(ctx, antes, depois, "entidades");
+    return { de: antes.nomeCompleto, para: nome };
+  },
+});
