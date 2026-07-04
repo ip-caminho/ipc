@@ -93,6 +93,7 @@ import type * as membros_convites from "../membros/convites.js";
 import type * as membros_eclesiastico from "../membros/eclesiastico.js";
 import type * as membros_familiaHelpers from "../membros/familiaHelpers.js";
 import type * as membros_import from "../membros/import.js";
+import type * as membros_importFormNovos from "../membros/importFormNovos.js";
 import type * as membros_migrations from "../membros/migrations.js";
 import type * as membros_mutations from "../membros/mutations.js";
 import type * as membros_onboarding from "../membros/onboarding.js";
@@ -235,6 +236,7 @@ declare const fullApi: ApiFromModules<{
   "membros/eclesiastico": typeof membros_eclesiastico;
   "membros/familiaHelpers": typeof membros_familiaHelpers;
   "membros/import": typeof membros_import;
+  "membros/importFormNovos": typeof membros_importFormNovos;
   "membros/migrations": typeof membros_migrations;
   "membros/mutations": typeof membros_mutations;
   "membros/onboarding": typeof membros_onboarding;
