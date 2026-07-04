@@ -163,3 +163,52 @@ export const mesclar = internalMutation({
     return acoes;
   },
 });
+
+// Varredura da base inteira por possiveis duplicados: mesmo CPF (normalizado
+// para digitos), mesmo whatsapp ou mesmo nome (sem acento/caixa). Read-only.
+export const varrerDuplicados = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    const ents = await ctx.db.query("entidades").collect();
+    const membros = await ctx.db.query("membros").collect();
+    const temMembro = new Set(membros.map((m) => m.entidadeId as string));
+
+    const norm = (s: string) =>
+      s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
+    const digitos = (s: string) => s.replace(/\D/g, "");
+
+    const porCpf = new Map<string, string[]>();
+    const porZap = new Map<string, string[]>();
+    const porNome = new Map<string, string[]>();
+    const info = new Map<string, string>();
+
+    for (const e of ents) {
+      if (e.tipoEntidade !== "PF") continue;
+      const id = e._id as string;
+      info.set(
+        id,
+        `${e.nomeCompleto ?? "(sem nome)"} [${id}] status=${e.status} membro=${temMembro.has(id) ? "sim" : "nao"}`,
+      );
+      const cpf = digitos(e.cpf ?? "");
+      if (cpf.length === 11) (porCpf.get(cpf) ?? porCpf.set(cpf, []).get(cpf)!).push(id);
+      const zap = digitos(e.whatsapp ?? "");
+      if (zap.length >= 10) {
+        const z = zap.startsWith("55") ? zap.slice(2) : zap;
+        (porZap.get(z) ?? porZap.set(z, []).get(z)!).push(id);
+      }
+      const nome = norm(e.nomeCompleto ?? "");
+      if (nome) (porNome.get(nome) ?? porNome.set(nome, []).get(nome)!).push(id);
+    }
+
+    const grupos = (m: Map<string, string[]>) =>
+      [...m.entries()]
+        .filter(([, ids]) => ids.length > 1)
+        .map(([chave, ids]) => ({ chave, registros: ids.map((i) => info.get(i)) }));
+
+    return {
+      cpfDuplicado: grupos(porCpf),
+      whatsappDuplicado: grupos(porZap),
+      nomeDuplicado: grupos(porNome),
+    };
+  },
+});
