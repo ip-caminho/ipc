@@ -15,6 +15,7 @@ import { requireAnyPermission } from "../_shared/requirePermission";
 import { espelharConjuge, vincularCriancaAoConjuge } from "./familiaHelpers";
 import { createFieldAuditLogs, createActionAuditLog } from "../_shared/auditHelpers";
 import { getTipoRol, type CargoEclesiastico, type StatusEntidade, type TipoRol } from "./tipoRolHelpers";
+import { calcularResumoSecretario, type ResumoSecretario as ResumoSecretarioT } from "./resumoSecretarioHelpers";
 import type { Doc } from "../_generated/dataModel";
 
 export type RolCategoria = "PRINCIPAL" | "SEPARADO" | "AUSENTE" | "ARQUIVO";
@@ -242,22 +243,7 @@ type LinhaSecretario = {
   familiaOrder: number; // 0 chefe (homem adulto), 1 conjuge, 2 filho
 };
 
-export type ResumoSecretario = {
-  comungantes: number;
-  naoComungantes: number;
-  ausentes: number;
-  arquivo: number;
-  totalRol: number;
-  familias: number;
-  dependentes: number;
-  pendencias: number;
-  civilmenteCapazes: number;
-  pastores: number;
-  presbiteros: number;
-  diaconos: number;
-  mandatosVencidos: number;
-  mandatosVencendo: number;
-};
+export type { ResumoSecretario } from "./resumoSecretarioHelpers";
 
 /** Calcula se um membro tem pendencia de cadastro eclesiastico. */
 function temPendencia(
@@ -277,11 +263,20 @@ function temPendencia(
  * pendencia, sobre toda a base. Reusado pela lista e pelo resumo.
  */
 async function montarLinhasSecretario(ctx: QueryCtx): Promise<LinhaSecretario[]> {
-  const membros = await ctx.db.query("membros").collect();
+  // A pagina precisa de praticamente todas as entidades (cada membro aponta
+  // para uma). Um collect de range unico substitui ~1 get sequencial por
+  // membro — mesma leitura de documentos, latencia muito menor.
+  const [membros, entidades, responsaveis] = await Promise.all([
+    ctx.db.query("membros").collect(),
+    ctx.db.query("entidades").collect(),
+    ctx.db.query("responsaveis").collect(),
+  ]);
+  const todasEnts = new Map<string, Doc<"entidades">>(entidades.map((e) => [e._id, e]));
+
   const membroPorEnt = new Map<string, Doc<"membros">>();
   const entPorId = new Map<string, Doc<"entidades">>();
   for (const m of membros) {
-    const e = await ctx.db.get(m.entidadeId);
+    const e = todasEnts.get(m.entidadeId);
     if (!e) continue;
     membroPorEnt.set(e._id, m);
     entPorId.set(e._id, e);
@@ -289,13 +284,12 @@ async function montarLinhasSecretario(ctx: QueryCtx): Promise<LinhaSecretario[]>
 
   const filhosDe = new Map<string, string[]>();
   const paisDe = new Map<string, string[]>();
-  const responsaveis = await ctx.db.query("responsaveis").collect();
   for (const r of responsaveis) {
     const crianca = r.criancaEntidadeId as string;
     const resp = r.responsavelEntidadeId as string;
     if (!membroPorEnt.has(resp)) continue;
     if (!entPorId.has(crianca)) {
-      const ce = await ctx.db.get(r.criancaEntidadeId);
+      const ce = todasEnts.get(crianca);
       if (!ce) continue;
       entPorId.set(crianca, ce);
     }
@@ -408,52 +402,17 @@ export const listParaSecretario = query({
   },
 });
 
-/** Contagens para o dashboard do secretario (sobre toda a base, sem busca). */
+/**
+ * Contagens para o dashboard do secretario (sobre toda a base, sem busca).
+ * A pagina do Rol nao assina mais esta query — deriva o resumo no cliente via
+ * calcularResumoSecretario sobre as linhas de listParaSecretario. Mantida
+ * para compatibilidade (clientes antigos) e testes.
+ */
 export const getResumoSecretario = query({
   args: {},
-  handler: async (ctx): Promise<ResumoSecretario> => {
+  handler: async (ctx): Promise<ResumoSecretarioT> => {
     await requireAnyPermission(ctx, ["rol:read"]);
-    const linhas = await montarLinhasSecretario(ctx);
-    const familias = new Set<string>();
-    let comungantes = 0, naoComungantes = 0, ausentes = 0, arquivo = 0;
-    let dependentes = 0, pendencias = 0, civilmenteCapazes = 0;
-    let pastores = 0, presbiteros = 0, diaconos = 0;
-    let mandatosVencidos = 0, mandatosVencendo = 0;
-    for (const l of linhas) {
-      familias.add(l.familiaHeadId);
-      if (!l.ehMembro) { dependentes++; continue; }
-      if (l.pendencia) pendencias++;
-      if (l.mandatoVencido) mandatosVencidos++;
-      if (l.mandatoVencendo) mandatosVencendo++;
-      if (l.cargoEclesiastico === "PASTOR") pastores++;
-      else if (l.cargoEclesiastico === "PRESBITERO") presbiteros++;
-      else if (l.cargoEclesiastico === "DIACONO") diaconos++;
-      switch (l.rolCategoria) {
-        case "PRINCIPAL":
-          comungantes++;
-          if (l.civilmenteCapazes) civilmenteCapazes++;
-          break;
-        case "SEPARADO": naoComungantes++; break;
-        case "AUSENTE": ausentes++; break;
-        case "ARQUIVO": arquivo++; break;
-      }
-    }
-    return {
-      comungantes,
-      naoComungantes,
-      ausentes,
-      arquivo,
-      totalRol: comungantes + naoComungantes,
-      familias: familias.size,
-      dependentes,
-      pendencias,
-      civilmenteCapazes,
-      pastores,
-      presbiteros,
-      diaconos,
-      mandatosVencidos,
-      mandatosVencendo,
-    };
+    return calcularResumoSecretario(await montarLinhasSecretario(ctx));
   },
 });
 

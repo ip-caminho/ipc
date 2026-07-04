@@ -12,8 +12,9 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/shared/components/ui/collapsible";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useDebounce } from "@shared/hooks/useDebounce";
+import { calcularResumoSecretario } from "@convex/membros/resumoSecretarioHelpers";
 import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
 import { PageHeader } from "@shared/components/layout/PageHeader";
 import { AnyPermissionGate, PermissionGate } from "@shared/components/auth/PermissionGate";
@@ -30,6 +31,15 @@ import {
   type MembroEclesiastico,
 } from "@features/secretarioExecutivo/components/SecretarioExecutivoTabela";
 import { RolExportView } from "@features/secretarioExecutivo/components/RolExportView";
+
+// Busca tolerante a acento (nome); telefone compara cru.
+function normalizeBusca(s: string): string {
+  return s
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
 
 const DESCRICAO_FILTRO: Record<string, string> = {
   PRINCIPAL: "Comungantes (Rol Principal)",
@@ -106,11 +116,25 @@ export default function SecretarioExecutivoPage() {
   const [categoria, setCategoria] = useState<string | null>(null);
   const [maisOpen, setMaisOpen] = useState(false);
   const debouncedSearch = useDebounce(search, 300);
+  // Assinatura unica e estavel (sem args): busca e resumo derivam no cliente.
+  // Passar `search` como arg criava uma assinatura nova por termo digitado,
+  // recomputando toda a base no servidor a cada busca.
   // @ts-ignore Convex TS2589
-  const membros = useQuery(api.membros.eclesiastico.listParaSecretario, {
-    search: debouncedSearch || undefined,
-  });
-  const resumo = useQuery(api.membros.eclesiastico.getResumoSecretario, {});
+  const linhas = useQuery(api.membros.eclesiastico.listParaSecretario, {});
+  const membros = useMemo(() => {
+    if (!linhas) return undefined;
+    const t = normalizeBusca(debouncedSearch);
+    if (!t) return linhas;
+    return linhas.filter(
+      (l) =>
+        normalizeBusca(l.entidade.nomeCompleto ?? "").includes(t) ||
+        (l.entidade.whatsapp ?? "").includes(debouncedSearch)
+    );
+  }, [linhas, debouncedSearch]);
+  const resumo = useMemo(
+    () => (linhas ? calcularResumoSecretario(linhas) : undefined),
+    [linhas]
+  );
 
   function toggle(cat: string) {
     setCategoria((c) => (c === cat ? null : cat));
