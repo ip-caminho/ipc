@@ -107,3 +107,56 @@ export const encerrar = mutation({
     return id;
   },
 });
+
+// === Gestão de respostas ===
+
+// Move uma resposta entre CONFIRMADA e LISTA_ESPERA, mantendo o contador
+// denormalizado vagasOcupadas (= nº de CONFIRMADA) consistente. Promover da
+// espera pode estourar as vagas de propósito — é ação manual do admin.
+export const moverStatusResposta = mutation({
+  args: {
+    respostaId: v.id("respostasInscricaoEvento"),
+    status: v.union(v.literal("CONFIRMADA"), v.literal("LISTA_ESPERA")),
+  },
+  handler: async (ctx, { respostaId, status }) => {
+    await requirePermission(ctx, "inscricoes:manage");
+    const resposta = await ctx.db.get(respostaId);
+    if (!resposta) throw new Error("Resposta não encontrada");
+    if (resposta.status === status) return respostaId;
+
+    const insc = await ctx.db.get(resposta.inscricaoId);
+    if (insc) {
+      const delta = status === "CONFIRMADA" ? 1 : -1;
+      await ctx.db.patch(insc._id, {
+        vagasOcupadas: Math.max(0, insc.vagasOcupadas + delta),
+      });
+    }
+    await ctx.db.patch(respostaId, { status });
+    await createActionAuditLog(ctx, "UPDATE", "respostasInscricaoEvento", respostaId);
+    return respostaId;
+  },
+});
+
+// Exclui uma resposta (spam, teste, duplicada). Se estava CONFIRMADA, libera a
+// vaga (decrementa o contador). Não promove automaticamente da espera — o admin
+// promove quem quiser via moverStatusResposta.
+export const excluirResposta = mutation({
+  args: { respostaId: v.id("respostasInscricaoEvento") },
+  handler: async (ctx, { respostaId }) => {
+    await requirePermission(ctx, "inscricoes:manage");
+    const resposta = await ctx.db.get(respostaId);
+    if (!resposta) throw new Error("Resposta não encontrada");
+
+    if (resposta.status === "CONFIRMADA") {
+      const insc = await ctx.db.get(resposta.inscricaoId);
+      if (insc) {
+        await ctx.db.patch(insc._id, {
+          vagasOcupadas: Math.max(0, insc.vagasOcupadas - 1),
+        });
+      }
+    }
+    await ctx.db.delete(respostaId);
+    await createActionAuditLog(ctx, "DELETE", "respostasInscricaoEvento", respostaId);
+    return respostaId;
+  },
+});
