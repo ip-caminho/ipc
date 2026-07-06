@@ -31,6 +31,7 @@ import {
 } from "@/shared/components/ui/table";
 import { ArrowLeft } from "lucide-react";
 import { InscricaoDetalheDrawer } from "@features/acampamento/components/InscricaoDetalheDrawer";
+import { FundoEventoCard } from "@features/acampamento/components/FundoEventoCard";
 import { brl, dataBR } from "@features/acampamento/lib/format";
 
 type FiltroStatus = "TODAS" | "ATIVA" | "LISTA_ESPERA" | "CANCELADA";
@@ -121,6 +122,8 @@ function Conteudo({ acampamentoId }: { acampamentoId: Id<"acampamentos"> }) {
           ))}
         </div>
       )}
+      <FundoEventoCard acampamentoId={acampamentoId} />
+
       {resumo && resumo.semMatching > 0 && (
         <p className="text-xs text-amber-700">
           {resumo.semMatching} participante(s) ainda sem vínculo com a base de membros.

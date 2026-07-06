@@ -2,7 +2,7 @@ import { mutation } from "../_generated/server";
 import { v } from "convex/values";
 import { requirePermission } from "../_shared/requirePermission";
 import { createActionAuditLog, createFieldAuditLogs } from "../_shared/auditHelpers";
-import { calcularValorInscricao } from "./calculoHelpers";
+import { calcularValorInscricao, saldoInscricao } from "./calculoHelpers";
 
 // Config do acampamento — gestao sob inscricoes:manage (secretaria).
 // Valores monetarios em CENTAVOS.
@@ -288,6 +288,145 @@ export const promoverListaEspera = mutation({
     }
     await ctx.db.patch(id, { status: "ATIVA", atualizadoEm: Date.now() });
     await createActionAuditLog(ctx, "PROMOCAO", "inscricoesAcampamento", id);
+    return id;
+  },
+});
+
+// ===== Financeiro flexivel (fase 4) =====
+
+// Registra um recebimento (qualquer valor, qualquer data). Comprovante e a
+// URL do CDN (upload pela secretaria via shared/files, pasta
+// acampamento-comprovantes).
+export const registrarRecebimento = mutation({
+  args: {
+    id: v.id("inscricoesAcampamento"),
+    valor: v.number(),
+    data: v.string(), // YYYY-MM-DD
+    comprovanteUrl: v.optional(v.string()),
+    obs: v.optional(v.string()),
+  },
+  handler: async (ctx, { id, valor, data, comprovanteUrl, obs }) => {
+    const { membro } = await requirePermission(ctx, "inscricoes:manage");
+    if (valor <= 0) throw new Error("Valor deve ser positivo");
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(data)) throw new Error("Data inválida");
+
+    const insc = await ctx.db.get(id);
+    if (!insc) throw new Error("Inscrição não encontrada");
+    await ctx.db.patch(id, {
+      recebimentos: [
+        ...insc.recebimentos,
+        { valor, data, comprovanteUrl, obs: obs?.trim() || undefined, registradoPor: membro._id, em: Date.now() },
+      ],
+      atualizadoEm: Date.now(),
+    });
+    await createActionAuditLog(ctx, "RECEBIMENTO", "inscricoesAcampamento", id);
+    return id;
+  },
+});
+
+export const removerRecebimento = mutation({
+  args: { id: v.id("inscricoesAcampamento"), index: v.number() },
+  handler: async (ctx, { id, index }) => {
+    await requirePermission(ctx, "inscricoes:manage");
+    const insc = await ctx.db.get(id);
+    if (!insc || !insc.recebimentos[index]) throw new Error("Recebimento não encontrado");
+    await ctx.db.patch(id, {
+      recebimentos: insc.recebimentos.filter((_, i) => i !== index),
+      atualizadoEm: Date.now(),
+    });
+    await createActionAuditLog(ctx, "RECEBIMENTO_REMOVIDO", "inscricoesAcampamento", id);
+    return id;
+  },
+});
+
+// Desconto caso a caso (consome o fundo solidario — a UI mostra o saldo e
+// avisa ao estourar; a decisao final e da secretaria).
+export const concederDesconto = mutation({
+  args: {
+    id: v.id("inscricoesAcampamento"),
+    valor: v.number(),
+    motivo: v.string(),
+  },
+  handler: async (ctx, { id, valor, motivo }) => {
+    const { membro } = await requirePermission(ctx, "inscricoes:manage");
+    if (valor <= 0) throw new Error("Valor deve ser positivo");
+    if (!motivo.trim()) throw new Error("Informe o motivo do desconto");
+
+    const insc = await ctx.db.get(id);
+    if (!insc) throw new Error("Inscrição não encontrada");
+    await ctx.db.patch(id, {
+      ajustes: [
+        ...insc.ajustes,
+        { tipo: "DESCONTO" as const, valor, motivo: motivo.trim(), criadoPor: membro._id, em: Date.now() },
+      ],
+      atualizadoEm: Date.now(),
+    });
+    await createActionAuditLog(ctx, "DESCONTO", "inscricoesAcampamento", id);
+    return id;
+  },
+});
+
+// 1 clique: destina a sobra (recebido alem do valor final) ao fundo solidario.
+export const destinarSobraAoFundo = mutation({
+  args: { id: v.id("inscricoesAcampamento") },
+  handler: async (ctx, { id }) => {
+    const { membro } = await requirePermission(ctx, "inscricoes:manage");
+    const insc = await ctx.db.get(id);
+    if (!insc) throw new Error("Inscrição não encontrada");
+
+    const sobra = -saldoInscricao(insc.valorTabela, insc.ajustes, insc.recebimentos);
+    if (sobra <= 0) throw new Error("Não há sobra a destinar");
+
+    await ctx.db.patch(id, {
+      ajustes: [
+        ...insc.ajustes,
+        {
+          tipo: "CONTRIBUICAO_FUNDO" as const,
+          valor: sobra,
+          motivo: "Sobra de pagamento destinada ao fundo",
+          criadoPor: membro._id,
+          em: Date.now(),
+        },
+      ],
+      atualizadoEm: Date.now(),
+    });
+    await createActionAuditLog(ctx, "CONTRIBUICAO_FUNDO", "inscricoesAcampamento", id);
+    return { id, valor: sobra };
+  },
+});
+
+export const removerAjuste = mutation({
+  args: { id: v.id("inscricoesAcampamento"), index: v.number() },
+  handler: async (ctx, { id, index }) => {
+    await requirePermission(ctx, "inscricoes:manage");
+    const insc = await ctx.db.get(id);
+    if (!insc || !insc.ajustes[index]) throw new Error("Ajuste não encontrado");
+    await ctx.db.patch(id, {
+      ajustes: insc.ajustes.filter((_, i) => i !== index),
+      atualizadoEm: Date.now(),
+    });
+    await createActionAuditLog(ctx, "AJUSTE_REMOVIDO", "inscricoesAcampamento", id);
+    return id;
+  },
+});
+
+// Previsao de parcelas editavel (acordos caso a caso). Nao trava recebimentos.
+export const editarPlanoPagamento = mutation({
+  args: {
+    id: v.id("inscricoesAcampamento"),
+    plano: v.array(v.object({ data: v.string(), valor: v.number() })),
+  },
+  handler: async (ctx, { id, plano }) => {
+    await requirePermission(ctx, "inscricoes:manage");
+    const insc = await ctx.db.get(id);
+    if (!insc) throw new Error("Inscrição não encontrada");
+    for (const p of plano) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(p.data) || p.valor <= 0) {
+        throw new Error("Plano com data ou valor inválido");
+      }
+    }
+    await ctx.db.patch(id, { planoPagamento: plano, atualizadoEm: Date.now() });
+    await createActionAuditLog(ctx, "PLANO_PAGAMENTO", "inscricoesAcampamento", id);
     return id;
   },
 });

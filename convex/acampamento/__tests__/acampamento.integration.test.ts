@@ -328,3 +328,113 @@ describe("acampamento admin (fase 3)", () => {
     expect(detalhe!.participantes[0].membroNome).toBe("Adulto da Silva");
   });
 });
+
+describe("acampamento financeiro (fase 4)", () => {
+  it("recebimento + sobra ao fundo + desconto fecham no resumo", async () => {
+    const t = convexTest(schema, modules);
+    const admin = await seedAdmin(t);
+    const id = await admin.mutation(api.acampamento.mutations.criar, ARGS_ACAMP);
+
+    // Inscricao A: deve 85k, paga 100k -> sobra 15k destinada ao fundo
+    await t.mutation(api.public.acampamento.responder, argsInscricao("11911110001"));
+    // Inscricao B: deve 85k, ganha 30k de desconto do fundo
+    await t.mutation(api.public.acampamento.responder, argsInscricao("11911110002"));
+
+    const inscricoes = await admin.query(api.acampamento.queries.listarInscricoes, {
+      acampamentoId: id,
+    });
+    const [a, b] = inscricoes;
+
+    await admin.mutation(api.acampamento.mutations.registrarRecebimento, {
+      id: a._id,
+      valor: 100_000,
+      data: "2026-07-05",
+      obs: "Pix",
+    });
+    const sobra = await admin.mutation(api.acampamento.mutations.destinarSobraAoFundo, {
+      id: a._id,
+    });
+    expect(sobra.valor).toBe(15_000);
+
+    await admin.mutation(api.acampamento.mutations.concederDesconto, {
+      id: b._id,
+      valor: 30_000,
+      motivo: "Fundo solidário",
+    });
+
+    const resumo = await admin.query(api.acampamento.queries.resumoFinanceiro, { id });
+    expect(resumo!.fundo).toBe(-15_000); // 15k contribuicao - 30k desconto
+    expect(resumo!.totalDescontos).toBe(30_000);
+    expect(resumo!.totalRecebido).toBe(100_000);
+    // A quitada (sobra ja destinada); B deve 55k
+    expect(resumo!.aReceber).toBe(55_000);
+
+    // Aporte da igreja cobre o fundo
+    await admin.mutation(api.acampamento.mutations.aportarFundo, {
+      id,
+      valor: 50_000,
+      descricao: "Verba missões",
+    });
+    const resumo2 = await admin.query(api.acampamento.queries.resumoFinanceiro, { id });
+    expect(resumo2!.fundo).toBe(35_000);
+  });
+
+  it("destinarSobra sem sobra falha; remover recebimento/ajuste desfaz", async () => {
+    const t = convexTest(schema, modules);
+    const admin = await seedAdmin(t);
+    const id = await admin.mutation(api.acampamento.mutations.criar, ARGS_ACAMP);
+    await t.mutation(api.public.acampamento.responder, argsInscricao("11911110001"));
+    const insc = (
+      await admin.query(api.acampamento.queries.listarInscricoes, { acampamentoId: id })
+    )[0];
+
+    await expect(
+      admin.mutation(api.acampamento.mutations.destinarSobraAoFundo, { id: insc._id }),
+    ).rejects.toThrow(/sobra/i);
+
+    await admin.mutation(api.acampamento.mutations.registrarRecebimento, {
+      id: insc._id,
+      valor: 40_000,
+      data: "2026-07-05",
+    });
+    await admin.mutation(api.acampamento.mutations.concederDesconto, {
+      id: insc._id,
+      valor: 10_000,
+      motivo: "Teste",
+    });
+    let det = await admin.query(api.acampamento.queries.getInscricao, { id: insc._id });
+    expect(det!.saldo).toBe(35_000); // 85k - 10k - 40k
+
+    await admin.mutation(api.acampamento.mutations.removerRecebimento, { id: insc._id, index: 0 });
+    await admin.mutation(api.acampamento.mutations.removerAjuste, { id: insc._id, index: 0 });
+    det = await admin.query(api.acampamento.queries.getInscricao, { id: insc._id });
+    expect(det!.saldo).toBe(85_000);
+  });
+
+  it("plano de pagamento editavel valida datas/valores", async () => {
+    const t = convexTest(schema, modules);
+    const admin = await seedAdmin(t);
+    const id = await admin.mutation(api.acampamento.mutations.criar, ARGS_ACAMP);
+    await t.mutation(api.public.acampamento.responder, argsInscricao("11911110001"));
+    const insc = (
+      await admin.query(api.acampamento.queries.listarInscricoes, { acampamentoId: id })
+    )[0];
+
+    await admin.mutation(api.acampamento.mutations.editarPlanoPagamento, {
+      id: insc._id,
+      plano: [
+        { data: "2027-01-05", valor: 42_500 },
+        { data: "2027-02-05", valor: 42_500 },
+      ],
+    });
+    const det = await admin.query(api.acampamento.queries.getInscricao, { id: insc._id });
+    expect(det!.planoPagamento).toHaveLength(2);
+
+    await expect(
+      admin.mutation(api.acampamento.mutations.editarPlanoPagamento, {
+        id: insc._id,
+        plano: [{ data: "05/01/2027", valor: 100 }],
+      }),
+    ).rejects.toThrow(/inválido/);
+  });
+});

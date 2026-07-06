@@ -1140,7 +1140,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "Tabela desktop -> cards mobile (regra mobile-ux)",
       "InscricaoDetalheDrawer (matching, financeiro resumido, acoes)",
     ],
-    notas: ["Permissao: inscricoes:manage. Financeiro completo (recebimentos/fundo) na fase 4"],
+    notas: ["Permissao: inscricoes:manage. Financeiro: FinanceiroSection no drawer (recebimentos c/ comprovante, descontos c/ saldo do fundo, sobra -> fundo, plano editavel) + FundoEventoCard (consolidado + aporte avulso)"],
   },
   "/acampamento/[slug]": {
     nome: "Acampamento - inscricao publica",
