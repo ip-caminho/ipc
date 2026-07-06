@@ -1435,6 +1435,7 @@ export default defineSchema({
     .index("by_acampamento_status", ["acampamentoId", "status"])
     .index("by_acampamento_whatsapp", ["acampamentoId", "responsavel.whatsapp"])
     .index("by_comprovanteToken", ["comprovanteToken"])
+    .index("by_responsavel_membro", ["responsavel.membroId"])
     .index("by_ipHash_criadoEm", ["ipHash", "criadoEm"]),
 
   quartosAcampamento: defineTable({

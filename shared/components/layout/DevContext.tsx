@@ -1208,6 +1208,28 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "Path curto /comprovante/<codigo> (token base64url ~11 chars gerado no route handler), sem login — membro ou visitante. So ANEXA; a secretaria confere o valor e registra o recebimento no drawer. Cancelada/token invalido -> null",
     ],
   },
+  "/minhas-inscricoes": {
+    nome: "Minhas inscricoes (membro logado)",
+    pagina: "app/(ready)/minhas-inscricoes/page.tsx",
+    arquivos: [
+      "app/(ready)/minhas-inscricoes/page.tsx",
+      "features/acampamento/components/EnviarComprovanteDialog.tsx",
+      "features/acampamento/components/MinhasInscricoesCard.tsx",
+      "convex/public/acampamento.ts",
+    ],
+    queries: ["public.acampamento.minhasInscricoes (por responsavel.membroId; traz o token do dono)"],
+    mutations: [
+      "public.acampamento.enviarComprovante (via token da propria inscricao)",
+      "files.upload.getPublicComprovanteUploadUrl (token-gated)",
+    ],
+    componentes: [
+      "EnviarComprovanteDialog (upload pelo membro sem URL — usa o token por baixo)",
+      "MinhasInscricoesCard (atalho no dashboard, so aparece com inscricao ativa)",
+    ],
+    notas: [
+      "Membro comum acessa (nao exige inscricoes:manage): usa a via publica por token da propria inscricao, index by_responsavel_membro. Descoberta via card no dashboard",
+    ],
+  },
   "/inscricoes/[slug]": {
     nome: "Inscricao - formulario publico",
     pagina: "app/(public)/(site)/inscricoes/[slug]/page.tsx",
