@@ -1,9 +1,18 @@
-import { query, mutation } from "../_generated/server";
+import { query, mutation, internalQuery } from "../_generated/server";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { QueryCtx } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { calcularValorInscricao } from "../acampamento/calculoHelpers";
+import {
+  calcularValorInscricao,
+  valorFinal,
+  totalRecebido,
+  saldoInscricao,
+} from "../acampamento/calculoHelpers";
+
+// Prefixo valido de comprovante no CDN (evita injetar URL arbitraria).
+// Hardcoded p/ nao puxar o SDK do B2 (files/helpers e "use node") p/ a mutation.
+const COMPROVANTE_URL_PREFIXO = "https://cdn.yhc.com.br/acampamento-comprovantes/";
 
 // Resolve a familia do membro logado (ele + conjuge + filhos) a partir da base,
 // com o membroId de cada um quando existir registro de `membros` (crianças
@@ -197,11 +206,13 @@ export const responder = mutation({
     lgpdConsentimento: v.boolean(),
     website: v.optional(v.string()), // honeypot
     ipHash: v.string(),
+    // Token do link de comprovante — gerado no route handler (node crypto)
+    comprovanteToken: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     // Honeypot: bot preencheu campo oculto -> finge sucesso, nao grava.
     if (args.website && args.website.trim() !== "") {
-      return { status: "ATIVA" as const };
+      return { status: "ATIVA" as const, comprovanteToken: undefined };
     }
     if (!args.lgpdConsentimento) throw new Error("Consentimento LGPD obrigatório");
 
@@ -339,12 +350,95 @@ export const responder = mutation({
       ajustes: [],
       recebimentos: [],
       planoPagamento: [],
+      comprovanteToken: args.comprovanteToken,
       status,
       lgpdConsentimento: true,
       ipHash: args.ipHash,
       criadoEm: agora,
     });
 
-    return { status, valorTabela: calculo.total };
+    return { status, valorTabela: calculo.total, comprovanteToken: args.comprovanteToken };
+  },
+});
+
+// ===== Comprovante de pagamento — link publico tokenizado (membro/visitante) =====
+
+// Resumo minimo p/ a pagina de comprovante (sem PII alem do nome). Retorna null
+// se o token nao existe ou a inscricao foi cancelada.
+export const getComprovanteInfo = query({
+  args: { token: v.string() },
+  handler: async (ctx, { token }) => {
+    if (!token) return null;
+    const insc = await ctx.db
+      .query("inscricoesAcampamento")
+      .withIndex("by_comprovanteToken", (q) => q.eq("comprovanteToken", token))
+      .first();
+    if (!insc || insc.status === "CANCELADA") return null;
+    const acamp = await ctx.db.get(insc.acampamentoId);
+    const final = valorFinal(insc.valorTabela, insc.ajustes);
+    const recebido = totalRecebido(insc.recebimentos);
+    return {
+      responsavelNome: insc.responsavel.nome,
+      acampamentoTitulo: acamp?.titulo ?? "Acampamento",
+      valorFinal: final,
+      recebido,
+      saldo: saldoInscricao(insc.valorTabela, insc.ajustes, insc.recebimentos),
+      enviados: insc.comprovantesPendentes?.length ?? 0,
+    };
+  },
+});
+
+// Envio do comprovante pelo pagante — apenas ANEXA (a secretaria confere o valor
+// e registra o recebimento). Suporta parcelado: acumula varios comprovantes.
+export const enviarComprovante = mutation({
+  args: {
+    token: v.string(),
+    comprovanteUrl: v.string(),
+    valorInformado: v.optional(v.number()), // centavos
+    obs: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const insc = await ctx.db
+      .query("inscricoesAcampamento")
+      .withIndex("by_comprovanteToken", (q) => q.eq("comprovanteToken", args.token))
+      .first();
+    if (!insc || insc.status === "CANCELADA") {
+      throw new Error("Link inválido ou inscrição cancelada");
+    }
+    if (!args.comprovanteUrl.startsWith(COMPROVANTE_URL_PREFIXO)) {
+      throw new Error("Arquivo inválido");
+    }
+    const atuais = insc.comprovantesPendentes ?? [];
+    if (atuais.length >= 50) {
+      throw new Error("Muitos comprovantes enviados. Fale com a secretaria.");
+    }
+    await ctx.db.patch(insc._id, {
+      comprovantesPendentes: [
+        ...atuais,
+        {
+          comprovanteUrl: args.comprovanteUrl,
+          valorInformado: args.valorInformado,
+          obs: args.obs?.trim() || undefined,
+          enviadoEm: Date.now(),
+        },
+      ],
+      atualizadoEm: Date.now(),
+    });
+    return { ok: true };
+  },
+});
+
+// Valida o token do comprovante e devolve o id — usado pelo action de presigned
+// (actions nao tem ctx.db). Espelha files/authz.checkUploadAccess.
+export const validarComprovanteToken = internalQuery({
+  args: { token: v.string() },
+  handler: async (ctx, { token }): Promise<Id<"inscricoesAcampamento"> | null> => {
+    if (!token) return null;
+    const insc = await ctx.db
+      .query("inscricoesAcampamento")
+      .withIndex("by_comprovanteToken", (q) => q.eq("comprovanteToken", token))
+      .first();
+    if (!insc || insc.status === "CANCELADA") return null;
+    return insc._id;
   },
 });

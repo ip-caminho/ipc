@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import { DatePickerBR } from "@/shared/components/ui/date-picker-br";
-import { Plus, Trash2, UserRound, Loader2 } from "lucide-react";
+import { Plus, Trash2, UserRound, Loader2, Copy, Check, Receipt } from "lucide-react";
 import { calcularValorInscricao, idadeNaData } from "@convex/acampamento/calculoHelpers";
 import { isValidCPF } from "@shared/lib/validations/brazilian";
 import type { AcampamentoPublico } from "../lib/data";
@@ -172,13 +172,61 @@ function LinhaConta({ nome, detalhe, valor }: { nome: string; detalhe?: string; 
   );
 }
 
+// Link individual p/ o pagante enviar o comprovante (inclusive parcelado)
+function LinkComprovante({ token }: { token: string }) {
+  const [copiado, setCopiado] = useState(false);
+  const url =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/acampamento/comprovante?k=${token}`
+      : "";
+  return (
+    <div className={`mx-auto mt-6 max-w-[46ch] border ${BORDA} bg-[#F4F0E8] p-4 text-left`}>
+      <p className={`flex items-center gap-1.5 ${FONT_BODY} text-[13px] font-semibold ${COR_TEXTO}`}>
+        <Receipt className="h-4 w-4 text-[#F0732B]" /> Enviar comprovante de pagamento
+      </p>
+      <p className={`${FONT_BODY} mt-1 text-[12px] leading-[1.5] ${COR_MUTED}`}>
+        Guarde este link. Ao pagar (ou cada parcela), envie o comprovante por aqui — a
+        secretaria confere.
+      </p>
+      <div className="mt-3 flex items-center gap-2">
+        <input
+          readOnly
+          value={url}
+          onFocus={(e) => e.currentTarget.select()}
+          className={`min-w-0 flex-1 border ${BORDA} bg-white px-2 py-1.5 ${FONT_BODY} text-[12px] ${COR_TEXTO}`}
+        />
+        <button
+          type="button"
+          onClick={async () => {
+            try {
+              await navigator.clipboard.writeText(url);
+              setCopiado(true);
+              setTimeout(() => setCopiado(false), 2000);
+            } catch {
+              /* clipboard indisponivel — o campo ja permite copiar manualmente */
+            }
+          }}
+          className={`flex h-9 shrink-0 items-center gap-1.5 border ${BORDA} bg-white px-3 ${FONT_BODY} text-[12px] font-semibold ${COR_TEXTO} transition-colors hover:bg-[#ECE6DC]`}
+        >
+          {copiado ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+          {copiado ? "Copiado" : "Copiar"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function AcampamentoForm({ acampamento }: { acampamento: AcampamentoPublico }) {
   const { isAuthenticated } = useConvexAuth();
   // @ts-ignore Convex TS2589
   const familia = useQuery(api.public.acampamento.minhaFamilia, isAuthenticated ? {} : "skip");
   const [loginOpen, setLoginOpen] = useState(false);
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
-  const [resultado, setResultado] = useState<{ status: string; valorTabela: number } | null>(null);
+  const [resultado, setResultado] = useState<{
+    status: string;
+    valorTabela: number;
+    comprovanteToken?: string;
+  } | null>(null);
   const [erroEnvio, setErroEnvio] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
@@ -294,7 +342,11 @@ export function AcampamentoForm({ acampamento }: { acampamento: AcampamentoPubli
       });
       const json = await res.json();
       if (!res.ok || !json.ok) throw new Error(json.error || "Erro ao enviar inscrição");
-      setResultado({ status: json.status, valorTabela: json.valorTabela });
+      setResultado({
+        status: json.status,
+        valorTabela: json.valorTabela,
+        comprovanteToken: json.comprovanteToken,
+      });
       setStatus("success");
       window.scrollTo({ top: 0 });
     } catch (e) {
@@ -315,6 +367,9 @@ export function AcampamentoForm({ acampamento }: { acampamento: AcampamentoPubli
             ? "Os quartos disponíveis se esgotaram. A secretaria entrará em contato assim que abrir vaga."
             : `Valor da inscrição: ${brl(resultado.valorTabela)}. A secretaria entrará em contato pelo WhatsApp para combinar o pagamento.`}
         </p>
+        {resultado.comprovanteToken && (
+          <LinkComprovante token={resultado.comprovanteToken} />
+        )}
       </div>
     );
   }

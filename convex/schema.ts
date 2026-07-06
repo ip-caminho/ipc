@@ -1405,6 +1405,21 @@ export default defineSchema({
     ),
     // Previsao editavel pela secretaria (acordos caso a caso) — nao trava nada
     planoPagamento: v.array(v.object({ data: v.string(), valor: v.number() })),
+    // Comprovantes enviados pelo proprio pagante (link tokenizado, sem login) —
+    // ficam "a conferir": a secretaria abre e vira recebimento. Suporta parcelado
+    // (varios comprovantes ao longo do tempo).
+    comprovantesPendentes: v.optional(
+      v.array(
+        v.object({
+          comprovanteUrl: v.string(),
+          valorInformado: v.optional(v.number()), // centavos, auto-declarado
+          obs: v.optional(v.string()),
+          enviadoEm: v.number(),
+        }),
+      ),
+    ),
+    // Token do link publico de envio de comprovante (por inscricao)
+    comprovanteToken: v.optional(v.string()),
     status: v.union(
       v.literal("ATIVA"),
       v.literal("LISTA_ESPERA"),
@@ -1419,6 +1434,7 @@ export default defineSchema({
     .index("by_acampamento", ["acampamentoId"])
     .index("by_acampamento_status", ["acampamentoId", "status"])
     .index("by_acampamento_whatsapp", ["acampamentoId", "responsavel.whatsapp"])
+    .index("by_comprovanteToken", ["comprovanteToken"])
     .index("by_ipHash_criadoEm", ["ipHash", "criadoEm"]),
 
   quartosAcampamento: defineTable({

@@ -1135,12 +1135,13 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "acampamento.mutations.promoverListaEspera",
       "acampamento.mutations.recalcularValor (tabela vigente, explicito)",
       "acampamento.mutations.editarInscricao (recalcula com snapshot)",
+      "acampamento.mutations.removerComprovantePendente (apos conferir)",
     ],
     componentes: [
       "Tabela desktop -> cards mobile (regra mobile-ux)",
-      "InscricaoDetalheDrawer (matching, financeiro resumido, acoes)",
+      "InscricaoDetalheDrawer (matching, financeiro resumido, acoes, 'Copiar link do comprovante')",
     ],
-    notas: ["Permissao: inscricoes:manage. Financeiro: FinanceiroSection no drawer (recebimentos c/ comprovante, descontos c/ saldo do fundo, sobra -> fundo, plano editavel) + FundoEventoCard (consolidado + aporte avulso)"],
+    notas: ["Permissao: inscricoes:manage. Financeiro: FinanceiroSection no drawer (comprovantes 'a conferir' enviados pelo pagante -> registrar/descartar, recebimentos c/ comprovante, descontos c/ saldo do fundo, sobra -> fundo, plano editavel) + FundoEventoCard (consolidado + aporte avulso)"],
   },
   "/admin/acampamento/[id]/quartos": {
     nome: "Secretaria - Quartos do acampamento",
@@ -1183,7 +1184,28 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     notas: [
       "Inscricao POR GRUPO com calculo ao vivo (calculoHelpers compartilhado com o backend)",
       "Estoque esgotado -> LISTA_ESPERA; dedupe por whatsapp; honeypot + LGPD + rate-limit",
+      "CPF do pagante obrigatorio (isValidCPF no form; cpfValido inline na mutation)",
       "Membro logado: minhaFamilia traz membroId por familiar; auto-vincula os participantes no responder (revalida a familia no servidor, anti-forja). Editar o nome quebra o vinculo",
+      "Sucesso mostra link individual de comprovante (LinkComprovante) — /acampamento/comprovante?k=token",
+    ],
+  },
+  "/acampamento/comprovante": {
+    nome: "Acampamento - envio de comprovante (publico)",
+    pagina: "app/(public)/acampamento/comprovante/page.tsx",
+    arquivos: [
+      "app/(public)/acampamento/comprovante/page.tsx",
+      "features/acampamento/components/ComprovanteForm.tsx",
+      "convex/public/acampamento.ts",
+      "convex/files/upload.ts",
+    ],
+    queries: ["public.acampamento.getComprovanteInfo (resumo por token)"],
+    mutations: [
+      "public.acampamento.enviarComprovante (anexa 'a conferir')",
+      "files.upload.getPublicComprovanteUploadUrl (presigned, token-gated, image/pdf)",
+    ],
+    componentes: ["ComprovanteForm (upload sem login, suporta parcelado)"],
+    notas: [
+      "Link tokenizado por inscricao (?k=token), sem login — membro ou visitante. So ANEXA; a secretaria confere o valor e registra o recebimento no drawer. Cancelada/token invalido -> null",
     ],
   },
   "/inscricoes/[slug]": {

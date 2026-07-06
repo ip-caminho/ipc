@@ -16,7 +16,7 @@ import {
   DialogTitle,
 } from "@/shared/components/ui/dialog";
 import { FileUpload } from "@shared/files/components/FileUpload";
-import { Plus, Trash2, PiggyBank, Receipt, BadgePercent } from "lucide-react";
+import { Plus, Trash2, PiggyBank, Receipt, BadgePercent, FileCheck2, ExternalLink } from "lucide-react";
 import { brl, parseReais, dataBR } from "../lib/format";
 
 type Recebimento = {
@@ -27,6 +27,12 @@ type Recebimento = {
 };
 type Ajuste = { tipo: "DESCONTO" | "CONTRIBUICAO_FUNDO"; valor: number; motivo?: string };
 type PlanoItem = { data: string; valor: number };
+type ComprovantePendente = {
+  comprovanteUrl: string;
+  valorInformado?: number;
+  obs?: string;
+  enviadoEm: number;
+};
 
 function hojeIso(): string {
   return new Date().toISOString().slice(0, 10);
@@ -39,6 +45,7 @@ export function FinanceiroSection({
   recebimentos,
   ajustes,
   planoPagamento,
+  comprovantesPendentes,
   cancelada,
 }: {
   inscricaoId: Id<"inscricoesAcampamento">;
@@ -47,6 +54,7 @@ export function FinanceiroSection({
   recebimentos: Recebimento[];
   ajustes: Ajuste[];
   planoPagamento: PlanoItem[];
+  comprovantesPendentes?: ComprovantePendente[];
   cancelada: boolean;
 }) {
   const registrar = useMutation(api.acampamento.mutations.registrarRecebimento);
@@ -55,10 +63,14 @@ export function FinanceiroSection({
   const destinarSobra = useMutation(api.acampamento.mutations.destinarSobraAoFundo);
   const removerAjuste = useMutation(api.acampamento.mutations.removerAjuste);
   const salvarPlano = useMutation(api.acampamento.mutations.editarPlanoPagamento);
+  const removerComprovante = useMutation(api.acampamento.mutations.removerComprovantePendente);
 
   const [recebOpen, setRecebOpen] = useState(false);
   const [descontoOpen, setDescontoOpen] = useState(false);
   const [planoOpen, setPlanoOpen] = useState(false);
+  // Indice do comprovante pendente sendo confirmado (some da lista ao registrar)
+  const [pendingIndex, setPendingIndex] = useState<number | null>(null);
+  const pendentes = comprovantesPendentes ?? [];
 
   // Dialog de recebimento
   const [rValor, setRValor] = useState("");
@@ -89,6 +101,19 @@ export function FinanceiroSection({
     }
   }
 
+  // Abre o dialog de recebimento pre-preenchido a partir de um comprovante
+  // enviado pelo pagante; ao registrar, o comprovante sai da lista "a conferir".
+  function conferirComprovante(i: number) {
+    const c = pendentes[i];
+    if (!c) return;
+    setRValor(c.valorInformado ? (c.valorInformado / 100).toFixed(2).replace(".", ",") : "");
+    setRData(hojeIso());
+    setRObs(c.obs ?? "");
+    setRComprovante(c.comprovanteUrl);
+    setPendingIndex(i);
+    setRecebOpen(true);
+  }
+
   return (
     <div className="mt-4 space-y-4">
       {/* Sobra destacada */}
@@ -109,12 +134,76 @@ export function FinanceiroSection({
         </div>
       )}
 
+      {/* Comprovantes enviados pelo pagante — a conferir */}
+      {pendentes.length > 0 && !cancelada && (
+        <div className="space-y-2 rounded-lg border border-amber-300 bg-amber-50 p-3 dark:border-amber-900 dark:bg-amber-950/30">
+          <p className="flex items-center gap-1.5 text-sm font-semibold">
+            <FileCheck2 className="h-4 w-4" /> Comprovantes a conferir ({pendentes.length})
+          </p>
+          <ul className="space-y-1">
+            {pendentes.map((c, i) => (
+              <li
+                key={i}
+                className="flex items-center justify-between gap-2 rounded-md border bg-background px-3 py-2 text-sm"
+              >
+                <div className="min-w-0">
+                  <a
+                    href={c.comprovanteUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 font-medium underline underline-offset-2"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" /> Ver comprovante
+                  </a>
+                  <span className="ml-2 text-xs text-muted-foreground">
+                    {c.valorInformado ? `informado ${brl(c.valorInformado)} · ` : ""}
+                    {dataBR(new Date(c.enviadoEm).toISOString().slice(0, 10))}
+                  </span>
+                  {c.obs && <p className="truncate text-xs text-muted-foreground">{c.obs}</p>}
+                </div>
+                <div className="flex shrink-0 items-center gap-1">
+                  <Button
+                    size="sm"
+                    className="h-8"
+                    onClick={() => conferirComprovante(i)}
+                  >
+                    Registrar
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground"
+                    aria-label="Descartar comprovante"
+                    onClick={() =>
+                      acao(
+                        () => removerComprovante({ id: inscricaoId, index: i }),
+                        "Comprovante descartado",
+                      )
+                    }
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {/* Recebimentos */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <p className="text-sm font-semibold">Recebimentos</p>
           {!cancelada && (
-            <Button variant="outline" size="sm" className="h-9" onClick={() => setRecebOpen(true)}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9"
+              onClick={() => {
+                setPendingIndex(null);
+                setRecebOpen(true);
+              }}
+            >
               <Plus className="mr-1 h-3.5 w-3.5" /> Registrar
             </Button>
           )}
@@ -294,7 +383,12 @@ export function FinanceiroSection({
                     "Recebimento registrado",
                   );
                   if (ok) {
+                    // Veio de um comprovante "a conferir"? Tira da lista.
+                    if (pendingIndex !== null) {
+                      await removerComprovante({ id: inscricaoId, index: pendingIndex });
+                    }
                     setRecebOpen(false);
+                    setPendingIndex(null);
                     setRValor("");
                     setRObs("");
                     setRComprovante(undefined);

@@ -357,6 +357,61 @@ describe("acampamento admin (fase 3)", () => {
     expect(r.status).toBe("ATIVA");
   });
 
+  it("comprovante: envio publico anexa 'a conferir' e secretaria descarta", async () => {
+    const t = convexTest(schema, modules);
+    const admin = await seedAdmin(t);
+    await admin.mutation(api.acampamento.mutations.criar, ARGS_ACAMP);
+    await t.mutation(api.public.acampamento.responder, {
+      ...argsInscricao("11911110009"),
+      comprovanteToken: "tok-abc",
+    });
+
+    // Resumo publico pelo token
+    const info = await t.query(api.public.acampamento.getComprovanteInfo, { token: "tok-abc" });
+    expect(info!.responsavelNome).toBe("Resp Teste");
+    expect(info!.valorFinal).toBe(85_000); // 80k adulto + 5k palestra
+    expect(info!.enviados).toBe(0);
+
+    // Token invalido -> null
+    expect(
+      await t.query(api.public.acampamento.getComprovanteInfo, { token: "nao-existe" }),
+    ).toBeNull();
+
+    // Envio com URL fora do CDN de comprovantes -> rejeita
+    await expect(
+      t.mutation(api.public.acampamento.enviarComprovante, {
+        token: "tok-abc",
+        comprovanteUrl: "https://evil.com/x.jpg",
+      }),
+    ).rejects.toThrow();
+
+    // Envio valido -> entra em comprovantesPendentes
+    await t.mutation(api.public.acampamento.enviarComprovante, {
+      token: "tok-abc",
+      comprovanteUrl: "https://cdn.yhc.com.br/acampamento-comprovantes/x.jpg",
+      valorInformado: 85_000,
+      obs: "pix",
+    });
+
+    const acampId = (await admin.query(api.acampamento.queries.listar, {}))[0]._id;
+    const linha = (
+      await admin.query(api.acampamento.queries.listarInscricoes, { acampamentoId: acampId })
+    )[0];
+    expect(linha.comprovantesAConferir).toBe(1);
+
+    const detalhe = await admin.query(api.acampamento.queries.getInscricao, { id: linha._id });
+    expect(detalhe!.comprovantesPendentes).toHaveLength(1);
+    expect(detalhe!.comprovantesPendentes![0].valorInformado).toBe(85_000);
+
+    // Secretaria descarta apos conferir
+    await admin.mutation(api.acampamento.mutations.removerComprovantePendente, {
+      id: linha._id,
+      index: 0,
+    });
+    const depois = await admin.query(api.acampamento.queries.getInscricao, { id: linha._id });
+    expect(depois!.comprovantesPendentes ?? []).toHaveLength(0);
+  });
+
   it("membro logado auto-vincula a propria familia e ignora membroId forjado", async () => {
     const t = convexTest(schema, modules);
     const admin = await seedAdmin(t);

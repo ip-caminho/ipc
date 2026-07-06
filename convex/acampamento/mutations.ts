@@ -348,6 +348,24 @@ export const removerRecebimento = mutation({
   },
 });
 
+// Remove um comprovante "a conferir" (o pagante enviou pelo link). A secretaria
+// tira da lista depois de registrar o recebimento correspondente, ou se for
+// invalido/duplicado.
+export const removerComprovantePendente = mutation({
+  args: { id: v.id("inscricoesAcampamento"), index: v.number() },
+  handler: async (ctx, { id, index }) => {
+    await requirePermission(ctx, "inscricoes:manage");
+    const insc = await ctx.db.get(id);
+    const pendentes = insc?.comprovantesPendentes ?? [];
+    if (!insc || !pendentes[index]) throw new Error("Comprovante não encontrado");
+    await ctx.db.patch(id, {
+      comprovantesPendentes: pendentes.filter((_, i) => i !== index),
+      atualizadoEm: Date.now(),
+    });
+    return id;
+  },
+});
+
 // Desconto caso a caso (consome o fundo solidario — a UI mostra o saldo e
 // avisa ao estourar; a decisao final e da secretaria).
 export const concederDesconto = mutation({
