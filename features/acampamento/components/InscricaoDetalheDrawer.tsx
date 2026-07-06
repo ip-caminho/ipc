@@ -125,7 +125,7 @@ function CopiarLinkComprovante({ token }: { token: string }) {
     <button
       type="button"
       onClick={async () => {
-        const url = `${window.location.origin}/acampamento/comprovante?k=${token}`;
+        const url = `${window.location.origin}/comprovante/${token}`;
         try {
           await navigator.clipboard.writeText(url);
           setCopiado(true);

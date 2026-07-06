@@ -1186,14 +1186,14 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "Estoque esgotado -> LISTA_ESPERA; dedupe por whatsapp; honeypot + LGPD + rate-limit",
       "CPF do pagante obrigatorio (isValidCPF no form; cpfValido inline na mutation)",
       "Membro logado: minhaFamilia traz membroId por familiar; auto-vincula os participantes no responder (revalida a familia no servidor, anti-forja). Editar o nome quebra o vinculo",
-      "Sucesso mostra link individual de comprovante (LinkComprovante) — /acampamento/comprovante?k=token",
+      "Sucesso mostra link individual de comprovante (LinkComprovante) — /comprovante/<codigo>",
     ],
   },
-  "/acampamento/comprovante": {
+  "/comprovante/[codigo]": {
     nome: "Acampamento - envio de comprovante (publico)",
-    pagina: "app/(public)/acampamento/comprovante/page.tsx",
+    pagina: "app/(public)/comprovante/[codigo]/page.tsx",
     arquivos: [
-      "app/(public)/acampamento/comprovante/page.tsx",
+      "app/(public)/comprovante/[codigo]/page.tsx",
       "features/acampamento/components/ComprovanteForm.tsx",
       "convex/public/acampamento.ts",
       "convex/files/upload.ts",
@@ -1203,9 +1203,9 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "public.acampamento.enviarComprovante (anexa 'a conferir')",
       "files.upload.getPublicComprovanteUploadUrl (presigned, token-gated, image/pdf)",
     ],
-    componentes: ["ComprovanteForm (upload sem login, suporta parcelado)"],
+    componentes: ["ComprovanteForm (upload sem login, suporta parcelado; recebe codigo por path)"],
     notas: [
-      "Link tokenizado por inscricao (?k=token), sem login — membro ou visitante. So ANEXA; a secretaria confere o valor e registra o recebimento no drawer. Cancelada/token invalido -> null",
+      "Path curto /comprovante/<codigo> (token base64url ~11 chars gerado no route handler), sem login — membro ou visitante. So ANEXA; a secretaria confere o valor e registra o recebimento no drawer. Cancelada/token invalido -> null",
     ],
   },
   "/inscricoes/[slug]": {
@@ -1423,6 +1423,8 @@ function resolveRoute(pathname: string): PageContext | null {
   if (/^\/admin\/acampamento\/[^/]+\/quartos$/.test(pathname)) return CONTEXT_MAP["/admin/acampamento/[id]/quartos"];
   // /admin/acampamento/[id]
   if (/^\/admin\/acampamento\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/admin/acampamento/[id]"];
+  // /comprovante/[codigo] (envio publico de comprovante)
+  if (/^\/comprovante\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/comprovante/[codigo]"];
   // /acampamento/[slug]
   if (/^\/acampamento\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/acampamento/[slug]"];
   if (/^\/inscricoes\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/inscricoes/[slug]"];

@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import { useAction, useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { toast } from "sonner";
@@ -22,9 +21,8 @@ import { brl, parseReais } from "../lib/format";
 // Envio publico do comprovante (membro ou visitante) — link tokenizado, sem
 // login. Apenas anexa: a secretaria confere o valor e registra o recebimento.
 // Suporta parcelado (varios envios pelo mesmo link).
-export function ComprovanteForm() {
-  const searchParams = useSearchParams();
-  const token = searchParams.get("k") ?? "";
+export function ComprovanteForm({ codigo }: { codigo: string }) {
+  const token = codigo;
 
   const info = useQuery(api.public.acampamento.getComprovanteInfo, { token });
   const getUploadUrl = useAction(api.files.upload.getPublicComprovanteUploadUrl);
