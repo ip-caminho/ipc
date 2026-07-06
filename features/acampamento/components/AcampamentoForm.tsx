@@ -349,7 +349,7 @@ export function AcampamentoForm({ acampamento }: { acampamento: AcampamentoPubli
       <LoginModalInline open={loginOpen} onOpenChange={setLoginOpen} />
 
       {/* 1 — Responsavel */}
-      <section className="space-y-4">
+      <div className="space-y-4">
         <Etapa n={1} titulo="Responsável pela inscrição" />
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-1">
@@ -363,10 +363,10 @@ export function AcampamentoForm({ acampamento }: { acampamento: AcampamentoPubli
             <Erro msg={errs.responsavelWhatsapp?.message} />
           </div>
         </div>
-      </section>
+      </div>
 
       {/* 2 — Participantes */}
-      <section className="space-y-4">
+      <div className="space-y-4">
         <Etapa n={2} titulo="Quem vai" hint={`${fields.length} de 10`} />
         <Erro msg={errs.participantes?.message} />
         <div className="space-y-3">
@@ -441,10 +441,10 @@ export function AcampamentoForm({ acampamento }: { acampamento: AcampamentoPubli
         >
           <Plus className="h-4 w-4 text-[#F0732B]" /> Adicionar participante
         </button>
-      </section>
+      </div>
 
       {/* 3 — Hospedagem */}
-      <section className="space-y-4">
+      <div className="space-y-4">
         <Etapa n={3} titulo="Hospedagem" />
         <div className="grid gap-2 md:grid-cols-2">
           <Controller
@@ -497,10 +497,10 @@ export function AcampamentoForm({ acampamento }: { acampamento: AcampamentoPubli
           />
         </div>
         <Erro msg={errs.quartosDuplos?.message} />
-      </section>
+      </div>
 
       {/* 4 — Preferencias */}
-      <section className="space-y-4">
+      <div className="space-y-4">
         <Etapa n={4} titulo="Preferências" hint="opcional" />
         <div className="space-y-4">
           <div className="space-y-1">
@@ -530,10 +530,10 @@ export function AcampamentoForm({ acampamento }: { acampamento: AcampamentoPubli
             <Textarea id="obs" rows={3} {...form.register("observacao")} />
           </div>
         </div>
-      </section>
+      </div>
 
       {/* 5 — Pagamento */}
-      <section className="space-y-4">
+      <div className="space-y-4">
         <Etapa n={5} titulo="Pagamento" hint="a secretaria confirma pelo WhatsApp" />
         <div className="grid gap-4 md:grid-cols-3">
           <div className="space-y-1">
@@ -584,11 +584,11 @@ export function AcampamentoForm({ acampamento }: { acampamento: AcampamentoPubli
             <Erro msg={errs.cpfPagante?.message} />
           </div>
         </div>
-      </section>
+      </div>
 
       {/* Conta do retiro (assinatura visual: recibo com pontilhado) */}
       {resumo && resumo.total > 0 && (
-        <section className={`border ${BORDA} bg-[#F4F0E8] p-6 md:p-7`}>
+        <div className={`border  bg-[#F4F0E8] p-6 md:p-7`}>
           <p className={`${FONT_BODY} text-[11px] font-semibold uppercase tracking-[0.1em] ${COR_MUTED}`}>
             Resumo da inscrição
           </p>
@@ -611,7 +611,7 @@ export function AcampamentoForm({ acampamento }: { acampamento: AcampamentoPubli
           <p className={`${FONT_BODY} mt-4 text-[12px] leading-relaxed ${COR_MUTED}`}>
             Valor pela tabela vigente. Condições especiais podem ser combinadas com a secretaria.
           </p>
-        </section>
+        </div>
       )}
 
       {/* Honeypot (invisivel p/ humanos) */}
@@ -625,7 +625,7 @@ export function AcampamentoForm({ acampamento }: { acampamento: AcampamentoPubli
       />
 
       {/* LGPD + enviar (desktop) */}
-      <section className="space-y-4">
+      <div className="space-y-4">
         <label className={`flex items-start gap-2.5 ${FONT_BODY} text-[13px] leading-[1.5] ${COR_TEXTO}`}>
           <Controller
             control={form.control}
@@ -657,7 +657,7 @@ export function AcampamentoForm({ acampamento }: { acampamento: AcampamentoPubli
           {status === "submitting" && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Enviar inscrição{temTotal ? ` — ${brl(resumo.total)}` : ""}
         </Button>
-      </section>
+      </div>
 
       {/* Mobile: barra fixa com o total ao vivo — so existe quando ha valor
           calculado (antes disso seria um "—" flutuando sobre a descricao) */}
