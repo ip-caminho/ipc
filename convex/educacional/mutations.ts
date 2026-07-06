@@ -247,6 +247,97 @@ export const removeOvelhinhaApta = mutation({
   },
 });
 
+// ===== Voluntarios =====
+
+const papelEduValidator = v.union(
+  v.literal("PROFESSOR"),
+  v.literal("AUXILIAR"),
+  v.literal("APOIO")
+);
+const cbcmValidator = v.union(
+  v.literal("NAO_INICIADO"),
+  v.literal("CURSANDO"),
+  v.literal("CONCLUIDO")
+);
+
+export const createVoluntario = mutation({
+  args: {
+    membroId: v.id("membros"),
+    papelEdu: papelEduValidator,
+    turmasHabilitadas: v.array(v.string()),
+    cbcm: v.optional(cbcmValidator),
+    cacValidade: v.optional(v.string()),
+    certificadoCacUrl: v.optional(v.string()),
+    observacoes: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    await requirePermission(ctx, "voluntarios_edu:manage");
+
+    const membro = await ctx.db.get(args.membroId);
+    if (!membro) throw new Error("Membro nao encontrado");
+
+    const existing = await ctx.db
+      .query("eduVoluntarios")
+      .withIndex("by_membro", (q) => q.eq("membroId", args.membroId))
+      .first();
+    if (existing) throw new Error("Este membro ja e voluntario do educacional");
+
+    const id = await ctx.db.insert("eduVoluntarios", {
+      ...args,
+      criadoEm: Date.now(),
+    });
+    await createActionAuditLog(ctx, "CREATE", "eduVoluntarios", id);
+    return id;
+  },
+});
+
+export const updateVoluntario = mutation({
+  args: {
+    id: v.id("eduVoluntarios"),
+    papelEdu: v.optional(papelEduValidator),
+    turmasHabilitadas: v.optional(v.array(v.string())),
+    cbcm: v.optional(cbcmValidator),
+    // null = remover; undefined = nao mexe
+    cacValidade: v.optional(v.union(v.string(), v.null())),
+    certificadoCacUrl: v.optional(v.union(v.string(), v.null())),
+    observacoes: v.optional(v.union(v.string(), v.null())),
+  },
+  handler: async (ctx, { id, ...updates }) => {
+    await requirePermission(ctx, "voluntarios_edu:manage");
+
+    const vol = await ctx.db.get(id);
+    if (!vol) throw new Error("Voluntario nao encontrado");
+
+    const patch: Record<string, any> = {};
+    if (updates.papelEdu !== undefined) patch.papelEdu = updates.papelEdu;
+    if (updates.turmasHabilitadas !== undefined) patch.turmasHabilitadas = updates.turmasHabilitadas;
+    if (updates.cbcm !== undefined) patch.cbcm = updates.cbcm;
+    if (updates.cacValidade !== undefined) patch.cacValidade = updates.cacValidade ?? undefined;
+    if (updates.certificadoCacUrl !== undefined) patch.certificadoCacUrl = updates.certificadoCacUrl ?? undefined;
+    if (updates.observacoes !== undefined) patch.observacoes = updates.observacoes ?? undefined;
+
+    if (Object.keys(patch).length > 0) {
+      patch.atualizadoEm = Date.now();
+      await ctx.db.patch(id, patch);
+    }
+    await createActionAuditLog(ctx, "UPDATE", "eduVoluntarios", id);
+    return id;
+  },
+});
+
+export const removeVoluntario = mutation({
+  args: { id: v.id("eduVoluntarios") },
+  handler: async (ctx, { id }) => {
+    await requirePermission(ctx, "voluntarios_edu:manage");
+
+    const vol = await ctx.db.get(id);
+    if (!vol) throw new Error("Voluntario nao encontrado");
+
+    await ctx.db.delete(id);
+    await createActionAuditLog(ctx, "DELETE", "eduVoluntarios", id);
+  },
+});
+
 // ===== Relatorios =====
 
 export const createRelatorio = mutation({
@@ -256,6 +347,14 @@ export const createRelatorio = mutation({
     professores: v.string(),
     observacoes: v.optional(v.string()),
     presentes: v.array(v.id("entidades")),
+    numero: v.optional(v.number()),
+    tema: v.optional(v.string()),
+    textosBase: v.optional(v.array(v.string())),
+    passagemMemorizar: v.optional(v.string()),
+    historia: v.optional(v.string()),
+    aplicacao: v.optional(v.string()),
+    licaoDeCasa: v.optional(v.string()),
+    visitantes: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
     await requirePermission(ctx, "educacional:write");
@@ -269,11 +368,9 @@ export const createRelatorio = mutation({
       .first();
     if (existing) throw new Error("Ja existe relatorio para esta turma e data");
 
+    const { presentes, ...relatorioFields } = args;
     const relatorioId = await ctx.db.insert("eduRelatorios", {
-      turma: args.turma,
-      data: args.data,
-      professores: args.professores,
-      observacoes: args.observacoes,
+      ...relatorioFields,
       criadoEm: Date.now(),
     });
 

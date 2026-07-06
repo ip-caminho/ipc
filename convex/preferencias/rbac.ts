@@ -36,6 +36,8 @@ export const ALL_PERMISSIONS = [
   "calendario:read", "calendario:create", "calendario:update", "calendario:delete",
   // Educacional
   "criancas:read", "criancas:manage", "educacional:read", "educacional:write",
+  // Voluntarios Educacional
+  "voluntarios_edu:read", "voluntarios_edu:manage",
   // Biblioteca
   "biblioteca:read", "biblioteca:create", "biblioteca:update", "biblioteca:delete", "biblioteca:emprestar",
   // Multimidia
@@ -109,6 +111,8 @@ function getPermissionLabel(perm: string): string {
     "criancas:manage": "Gerenciar Criancas",
     "educacional:read": "Ver Educacional",
     "educacional:write": "Editar Educacional",
+    "voluntarios_edu:read": "Ver Voluntarios Educacional",
+    "voluntarios_edu:manage": "Gerenciar Voluntarios Educacional",
     "louvor:read": "Ver Louvores",
     "louvor:create": "Criar Louvores",
     "louvor:update": "Editar Louvores",
@@ -158,6 +162,7 @@ function getPermissionModule(perm: string): string {
   if (perm.startsWith("calendario:")) return "Calendario";
   if (perm.startsWith("criancas:")) return "Educacional Infantil";
   if (perm.startsWith("educacional:")) return "Educacional Infantil";
+  if (perm.startsWith("voluntarios_edu:")) return "Educacional Infantil";
   if (perm.startsWith("louvor:")) return "Louvor";
   if (perm.startsWith("biblioteca:")) return "Biblioteca";
   if (perm.startsWith("multimidia:")) return "Multimidia";
@@ -215,6 +220,8 @@ function getPermissionDescription(perm: string): string {
     "criancas:manage": "Gerenciar perfis completos (inclui obs medicas)",
     "educacional:read": "Ver relatorios e escalas do educacional",
     "educacional:write": "Criar/editar relatorios e escalas",
+    "voluntarios_edu:read": "Ver voluntarios do educacional",
+    "voluntarios_edu:manage": "Gerenciar voluntarios do educacional (CAC, CBCM, papeis)",
     "louvor:read": "Ver repertorio de louvores e cifras",
     "louvor:create": "Cadastrar novas musicas no repertorio",
     "louvor:update": "Editar musicas existentes",
@@ -607,6 +614,62 @@ export const addAvisosPermissions = internalMutation({
       }
     }
     return { updated };
+  },
+});
+
+/**
+ * Concede as permissoes de voluntarios do educacional (Fase 2). Roles que ja
+ * gerenciam o educacional (secretaria) ganham read+manage; quem so le (pastor,
+ * presbitero) ganha read. Tambem atualiza snapshots individuais: membro com
+ * educacional:write no snapshot ganha read+manage; com educacional:read, read.
+ * Direcionada e idempotente. Rodar em prod apos deploy:
+ * npx convex run preferencias/rbac:addVoluntariosEduPermissions --prod
+ */
+export const addVoluntariosEduPermissions = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const grants: Record<string, string[]> = {
+      secretaria: ["voluntarios_edu:read", "voluntarios_edu:manage"],
+      pastor: ["voluntarios_edu:read"],
+      presbitero: ["voluntarios_edu:read"],
+    };
+    const rolesUpdated: string[] = [];
+    for (const [role, perms] of Object.entries(grants)) {
+      const row = await ctx.db
+        .query("rolePermissions")
+        .withIndex("by_role", (q) => q.eq("role", role))
+        .first();
+      // Sem row: resolvePermissions cai no INITIAL do codigo (ja atualizado).
+      if (!row) continue;
+      const missing = perms.filter((p) => !row.permissions.includes(p));
+      if (missing.length > 0) {
+        await ctx.db.patch(row._id, {
+          permissions: [...row.permissions, ...missing],
+          updatedAt: Date.now(),
+        });
+        rolesUpdated.push(role);
+      }
+    }
+
+    // Snapshots individuais (membro.permissions[] tem prioridade sobre o role).
+    const membros = await ctx.db.query("membros").collect();
+    let snapshotsUpdated = 0;
+    for (const m of membros) {
+      if (!m.permissions || m.permissions.length === 0) continue;
+      const add: string[] = [];
+      if (m.permissions.includes("educacional:write")) {
+        add.push("voluntarios_edu:read", "voluntarios_edu:manage");
+      } else if (m.permissions.includes("educacional:read")) {
+        add.push("voluntarios_edu:read");
+      }
+      const missing = add.filter((p) => !m.permissions!.includes(p));
+      if (missing.length > 0) {
+        await ctx.db.patch(m._id, { permissions: [...m.permissions, ...missing] });
+        snapshotsUpdated++;
+      }
+    }
+
+    return { rolesUpdated, snapshotsUpdated };
   },
 });
 

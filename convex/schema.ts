@@ -711,11 +711,21 @@ export default defineSchema({
     .index("by_crianca", ["criancaEntidadeId"])
     .index("by_responsavel", ["responsavelEntidadeId"]),
 
+  // Registro de licao (aula) — presenca em eduPresencas. Campos de conteudo
+  // opcionais para retrocompatibilidade com relatorios ja existentes.
   eduRelatorios: defineTable({
     turma: v.string(),
     data: v.string(), // YYYY-MM-DD
     professores: v.string(), // texto livre: "Ana, Bruno"
-    observacoes: v.optional(v.string()),
+    observacoes: v.optional(v.string()), // observacoes e sugestoes internas
+    numero: v.optional(v.number()), // numero da licao
+    tema: v.optional(v.string()),
+    textosBase: v.optional(v.array(v.string())), // pode ser varios
+    passagemMemorizar: v.optional(v.string()),
+    historia: v.optional(v.string()),
+    aplicacao: v.optional(v.string()),
+    licaoDeCasa: v.optional(v.string()),
+    visitantes: v.optional(v.array(v.string())), // nomes livres
     criadoEm: v.number(),
   })
     .index("by_turma", ["turma"])
@@ -735,6 +745,33 @@ export default defineSchema({
     membroId: v.id("membros"),
     criadoEm: v.number(),
   }).index("by_membro", ["membroId"]),
+
+  // Voluntarios do educacional infantil. Voluntario e sempre um membro
+  // cadastrado — contato/aniversario derivam da entidade do membro.
+  eduVoluntarios: defineTable({
+    membroId: v.id("membros"),
+    papelEdu: v.union(
+      v.literal("PROFESSOR"),
+      v.literal("AUXILIAR"),
+      v.literal("APOIO")
+    ),
+    turmasHabilitadas: v.array(v.string()), // turmas que pode servir: "0-2"...
+    // Status do curso CBCM (mesmos valores de membros.CBCM_OPTIONS)
+    cbcm: v.optional(
+      v.union(
+        v.literal("NAO_INICIADO"),
+        v.literal("CURSANDO"),
+        v.literal("CONCLUIDO")
+      )
+    ),
+    cacValidade: v.optional(v.string()), // YYYY-MM-DD
+    certificadoCacUrl: v.optional(v.string()), // upload B2 (presigned)
+    observacoes: v.optional(v.string()),
+    criadoEm: v.number(),
+    atualizadoEm: v.optional(v.number()),
+  })
+    .index("by_membro", ["membroId"])
+    .index("by_papel", ["papelEdu"]),
 
   ministerioEscalas: defineTable({
     ministerioId: v.id("ministerios"),

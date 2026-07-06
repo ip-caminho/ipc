@@ -60,3 +60,36 @@ export const PAPEL_ESCALA_OPTIONS = [
   { value: "Professor", label: "Professor(a)" },
   { value: "Auxiliar", label: "Auxiliar" },
 ];
+
+// ===== Voluntarios do educacional =====
+
+export const PAPEL_VOLUNTARIO_OPTIONS = [
+  { value: "PROFESSOR", label: "Professor(a)" },
+  { value: "AUXILIAR", label: "Auxiliar" },
+  { value: "APOIO", label: "Apoio" },
+];
+
+export const PAPEL_VOLUNTARIO_LABELS: Record<string, string> = {
+  PROFESSOR: "Professor(a)",
+  AUXILIAR: "Auxiliar",
+  APOIO: "Apoio",
+};
+
+export const PAPEL_VOLUNTARIO_COLORS: Record<string, string> = {
+  PROFESSOR: "bg-blue-100 text-blue-800",
+  AUXILIAR: "bg-green-100 text-green-800",
+  APOIO: "bg-gray-100 text-gray-800",
+};
+
+// Status do curso CBCM (espelha CBCM_OPTIONS de features/membros).
+export const CBCM_OPTIONS = [
+  { value: "NAO_INICIADO", label: "Nao iniciado" },
+  { value: "CURSANDO", label: "Cursando" },
+  { value: "CONCLUIDO", label: "Concluido" },
+];
+
+export const CBCM_LABELS: Record<string, string> = {
+  NAO_INICIADO: "Nao iniciado",
+  CURSANDO: "Cursando",
+  CONCLUIDO: "Concluido",
+};
