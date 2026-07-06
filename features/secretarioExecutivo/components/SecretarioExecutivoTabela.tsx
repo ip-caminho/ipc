@@ -474,9 +474,8 @@ export function SecretarioExecutivoTabela({
       base = base.filter((m) => m.ehMembro !== false && m.cargoEclesiastico === categoria);
     } else if (categoria) {
       base = base.filter((m) => m.ehMembro !== false && m.rolCategoria === categoria);
-    } else if (!agrupar) {
-      base = base.filter((m) => m.ehMembro !== false);
     }
+    // Sem categoria: lista plana inclui membros E dependentes (filhos nao-membros).
     if (!agrupar) return base;
     return [...base].sort((a, b) => {
       const hn = (a.familiaHeadNome ?? "").localeCompare(b.familiaHeadNome ?? "");

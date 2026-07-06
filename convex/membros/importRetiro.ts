@@ -8,7 +8,7 @@ import type { Id } from "../_generated/dataModel";
  * Passo 2: cadastrar filhos como entidade DEPENDENTE + responsaveis.
  *
  * internalMutations rodadas via `npx convex run --prod ... {dryRun:true}` antes.
- * Idempotentes. Ver memoria project_acampamento_cadastro_retiro.
+ * Idempotentes. Ver memoria project_retiro_cadastro_retiro.
  */
 export const vincularCasaisRetiro = internalMutation({
   args: {
@@ -92,6 +92,84 @@ export const corrigirVinculoIgreja = internalMutation({
     const de = e.vinculoIgreja ?? null;
     if (!args.dryRun) await ctx.db.patch(args.entidadeId, { vinculoIgreja: args.vinculo });
     return { dryRun: !!args.dryRun, nome: e.nomeCompleto, de, para: args.vinculo };
+  },
+});
+
+/**
+ * Corrige entidades marcadas TRANSFERIDO/EX_MEMBRO por engano (sem registro de
+ * demissao): volta a status ATIVO + vinculoIgreja MEMBRO.
+ */
+export const reativarComoMembro = internalMutation({
+  args: { entidadeIds: v.array(v.id("entidades")), dryRun: v.optional(v.boolean()) },
+  handler: async (ctx, args) => {
+    const alterados: Array<{ nome: string; de: string; para: string }> = [];
+    const erros: Array<{ id: string; motivo: string }> = [];
+    for (const id of args.entidadeIds) {
+      const e = await ctx.db.get(id);
+      if (!e) {
+        erros.push({ id, motivo: "nao encontrada" });
+        continue;
+      }
+      const m = await ctx.db
+        .query("membros")
+        .withIndex("by_entidade", (q) => q.eq("entidadeId", id))
+        .first();
+      if (m?.formaDemissao || m?.dataDemissao) {
+        erros.push({ id, motivo: `tem registro de demissao (${m?.formaDemissao ?? m?.dataDemissao}) — nao reativar automaticamente` });
+        continue;
+      }
+      alterados.push({ nome: e.nomeCompleto ?? "?", de: `${e.status}/${e.vinculoIgreja ?? "—"}`, para: "ATIVO/MEMBRO" });
+      if (!args.dryRun) await ctx.db.patch(id, { status: "ATIVO", vinculoIgreja: "MEMBRO" });
+    }
+    return { dryRun: !!args.dryRun, resumo: { alterar: alterados.length, erros: erros.length }, alterados, erros };
+  },
+});
+
+/**
+ * Passo 3: promove filhos DEPENDENTES (com >=1 pai membro atual) a
+ * MEMBRO_NAO_COMUNGANTE (Rol Separado). Espelha `tornarMembro`. Idempotente.
+ */
+export const tornarFilhosMembros = internalMutation({
+  args: { entidadeIds: v.array(v.id("entidades")), dryRun: v.optional(v.boolean()) },
+  handler: async (ctx, args) => {
+    const criados: string[] = [];
+    const jaEram: string[] = [];
+    const erros: Array<{ id: string; motivo: string }> = [];
+
+    for (const entidadeId of args.entidadeIds) {
+      const e = await ctx.db.get(entidadeId);
+      if (!e) {
+        erros.push({ id: entidadeId, motivo: "entidade nao encontrada" });
+        continue;
+      }
+      const existente = await ctx.db
+        .query("membros")
+        .withIndex("by_entidade", (q) => q.eq("entidadeId", entidadeId))
+        .first();
+      if (existente) {
+        jaEram.push(e.nomeCompleto ?? "?");
+        continue;
+      }
+      if (!args.dryRun) {
+        await ctx.db.insert("membros", {
+          entidadeId,
+          role: "membro",
+          cargoEclesiastico: "MEMBRO_NAO_COMUNGANTE",
+        });
+        const papeis = Array.from(
+          new Set([...(e.papeis ?? []).filter((p) => p !== "DEPENDENTE"), "MEMBRO"]),
+        ) as typeof e.papeis;
+        await ctx.db.patch(entidadeId, { papeis, vinculoIgreja: "MEMBRO" });
+      }
+      criados.push(e.nomeCompleto ?? "?");
+    }
+
+    return {
+      dryRun: !!args.dryRun,
+      resumo: { criar: criados.length, jaEram: jaEram.length, erros: erros.length },
+      criados,
+      erros,
+    };
   },
 });
 
