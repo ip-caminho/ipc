@@ -1,14 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { toast } from "sonner";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
-import { Skeleton } from "@/shared/components/ui/skeleton";
 import {
   Dialog,
   DialogContent,
@@ -17,18 +16,22 @@ import {
 } from "@/shared/components/ui/dialog";
 import { PiggyBank, Plus } from "lucide-react";
 import { brl, parseReais } from "../lib/format";
+import type { ConsolidadoEvento } from "@convex/acampamento/calculoHelpers";
 
 // Painel financeiro consolidado do evento + fundo solidario com aporte avulso.
-export function FundoEventoCard({ acampamentoId }: { acampamentoId: Id<"acampamentos"> }) {
-  // @ts-ignore Convex TS2589
-  const resumo = useQuery(api.acampamento.queries.resumoFinanceiro, { id: acampamentoId });
+// O consolidado vem por props (derivado no cliente das linhas ja assinadas) —
+// sem segunda assinatura reativa relendo a base a cada mutation.
+export function FundoEventoCard({
+  acampamentoId,
+  resumo,
+}: {
+  acampamentoId: Id<"acampamentos">;
+  resumo: ConsolidadoEvento;
+}) {
   const aportar = useMutation(api.acampamento.mutations.aportarFundo);
   const [open, setOpen] = useState(false);
   const [valor, setValor] = useState("");
   const [descricao, setDescricao] = useState("");
-
-  if (resumo === undefined) return <Skeleton className="h-24 w-full" />;
-  if (resumo === null) return null;
 
   return (
     <div className="space-y-2">

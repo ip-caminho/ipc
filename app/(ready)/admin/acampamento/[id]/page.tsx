@@ -33,6 +33,7 @@ import { ArrowLeft, BedDouble } from "lucide-react";
 import { InscricaoDetalheDrawer } from "@features/acampamento/components/InscricaoDetalheDrawer";
 import { FundoEventoCard } from "@features/acampamento/components/FundoEventoCard";
 import { brl, dataBR } from "@features/acampamento/lib/format";
+import { consolidadoEvento } from "@convex/acampamento/calculoHelpers";
 
 type FiltroStatus = "TODAS" | "ATIVA" | "LISTA_ESPERA" | "CANCELADA";
 
@@ -65,7 +66,7 @@ function Conteudo({ acampamentoId }: { acampamentoId: Id<"acampamentos"> }) {
       if (filtro !== "TODAS" && i.status !== filtro) return false;
       if (!t) return true;
       const alvo = normalize(
-        `${i.responsavel.nome} ${i.participantes.map((p) => p.nome).join(" ")} ${i.responsavel.whatsapp}`,
+        `${i.responsavel.nome} ${i.participantesNomes.join(" ")} ${i.responsavel.whatsapp}`,
       );
       return alvo.includes(t);
     });
@@ -77,10 +78,17 @@ function Conteudo({ acampamentoId }: { acampamentoId: Id<"acampamentos"> }) {
     return {
       ativas: ativas.length,
       espera: inscricoes.filter((i) => i.status === "LISTA_ESPERA").length,
-      pessoas: ativas.reduce((s, i) => s + i.participantes.length, 0),
+      pessoas: ativas.reduce((s, i) => s + i.participantesQtd, 0),
       semMatching: ativas.reduce((s, i) => s + i.semMatching, 0),
     };
   }, [inscricoes]);
+
+  // Consolidado financeiro derivado das linhas ja assinadas + aportes do
+  // acampamento — sem assinar resumoFinanceiro (leitura dupla da base).
+  const consolidado = useMemo(
+    () => (inscricoes && acamp ? consolidadoEvento(inscricoes, acamp.aportesFundo) : null),
+    [inscricoes, acamp],
+  );
 
   if (acamp === undefined || inscricoes === undefined) {
     return <Skeleton className="h-64 w-full" />;
@@ -129,7 +137,7 @@ function Conteudo({ acampamentoId }: { acampamentoId: Id<"acampamentos"> }) {
           ))}
         </div>
       )}
-      <FundoEventoCard acampamentoId={acampamentoId} />
+      {consolidado && <FundoEventoCard acampamentoId={acampamentoId} resumo={consolidado} />}
 
       {resumo && resumo.semMatching > 0 && (
         <p className="text-xs text-amber-700">
@@ -187,7 +195,7 @@ function Conteudo({ acampamentoId }: { acampamentoId: Id<"acampamentos"> }) {
                   >
                     <TableCell className="font-medium">{i.responsavel.nome}</TableCell>
                     <TableCell>
-                      {i.participantes.length}
+                      {i.participantesQtd}
                       {i.semMatching > 0 && i.status !== "CANCELADA" && (
                         <span className="ml-1 text-xs text-amber-700">({i.semMatching} s/ vínculo)</span>
                       )}
@@ -230,7 +238,7 @@ function Conteudo({ acampamentoId }: { acampamentoId: Id<"acampamentos"> }) {
                   </Badge>
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {i.participantes.length} pessoa(s) · {i.hospedagem.quartosDuplos}D+
+                  {i.participantesQtd} pessoa(s) · {i.hospedagem.quartosDuplos}D+
                   {i.hospedagem.quartosTriplos}T · {brl(i.valorFinal)}
                   {i.saldo > 0 ? ` · falta ${brl(i.saldo)}` : " · quitada"}
                 </p>

@@ -115,9 +115,18 @@ export const confirmarMatching = mutation({
     if (!insc) throw new Error("Inscrição não encontrada");
     const parts = [...insc.participantes];
     if (!parts[participanteIndex]) throw new Error("Participante inválido");
+
+    // Denormaliza o nome do membro no vinculo (leitura sem N+1 no drawer)
+    let membroNome: string | undefined = undefined;
+    if (membroId) {
+      const m = await ctx.db.get(membroId);
+      const e = m ? await ctx.db.get(m.entidadeId) : null;
+      membroNome = e?.nomeCompleto ?? undefined;
+    }
     parts[participanteIndex] = {
       ...parts[participanteIndex],
       membroId: membroId ?? undefined,
+      membroNome,
     };
     await ctx.db.patch(inscricaoId, { participantes: parts, atualizadoEm: Date.now() });
     await createActionAuditLog(ctx, "MATCHING", "inscricoesAcampamento", inscricaoId);
