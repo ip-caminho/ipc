@@ -133,10 +133,10 @@ export const GESTAO_SECTIONS: NavSection[] = [
         permission: "inscricoes:manage",
       },
       {
-        label: "Acampamento",
-        href: "/admin/acampamento",
+        label: "Retiro",
+        href: "/admin/retiro",
         icon: Tent,
-        description: "Inscrições do acampamento anual: grupos, quartos e pagamentos",
+        description: "Inscrições do retiro anual: grupos, quartos e pagamentos",
         permission: "inscricoes:manage",
       },
       {

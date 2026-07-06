@@ -1450,4 +1450,149 @@ export default defineSchema({
       }),
     ),
   }).index("by_acampamento", ["acampamentoId"]),
+
+  // ===== Retiro anual (renomeacao de "acampamento") =====
+  // Tabelas novas (mesma forma das antigas). Durante a migracao ambas coexistem;
+  // as antigas (acampamentos/inscricoesAcampamento/quartosAcampamento) sao
+  // removidas na limpeza final, apos copiar os dados via retiroMigracao.
+
+  retiros: defineTable({
+    slug: v.string(),
+    titulo: v.string(),
+    descricao: v.optional(v.string()),
+    ativa: v.boolean(),
+    dataInicio: v.string(),
+    dataFim: v.string(),
+    inscricoesAbrem: v.optional(v.number()),
+    inscricoesFecham: v.optional(v.number()),
+    precos: v.object({
+      faixas: v.array(
+        v.object({ idadeMin: v.number(), idadeMax: v.number(), valor: v.number() }),
+      ),
+      camaExtra: v.number(),
+      petPorDia: v.number(),
+      palestra: v.number(),
+    }),
+    estoqueDuplos: v.number(),
+    estoqueTriplos: v.number(),
+    duplosReservados: v.number(),
+    triplosReservados: v.number(),
+    aportesFundo: v.array(
+      v.object({
+        valor: v.number(),
+        descricao: v.string(),
+        criadoPor: v.optional(v.id("membros")),
+        em: v.number(),
+      }),
+    ),
+    criadoPor: v.optional(v.id("membros")),
+    criadoEm: v.number(),
+  })
+    .index("by_slug", ["slug"])
+    .index("by_ativa", ["ativa"]),
+
+  inscricoesRetiro: defineTable({
+    retiroId: v.id("retiros"),
+    responsavel: v.object({
+      nome: v.string(),
+      whatsapp: v.string(),
+      membroId: v.optional(v.id("membros")),
+    }),
+    participantes: v.array(
+      v.object({
+        nome: v.string(),
+        dataNascimento: v.string(),
+        membroId: v.optional(v.id("membros")),
+        membroNome: v.optional(v.string()),
+        participaPalestras: v.boolean(),
+      }),
+    ),
+    hospedagem: v.object({
+      quartosDuplos: v.number(),
+      quartosTriplos: v.number(),
+      camasExtras: v.number(),
+      pets: v.number(),
+    }),
+    extras: v.optional(
+      v.object({
+        colegaDeQuarto: v.optional(v.string()),
+        berco: v.optional(v.boolean()),
+        necessidadesEspeciais: v.optional(v.string()),
+        observacao: v.optional(v.string()),
+      }),
+    ),
+    pagamentoPreferido: v.object({
+      forma: v.union(v.literal("A_VISTA"), v.literal("PARCELADO")),
+      parcelas: v.optional(v.number()),
+      cpfPagante: v.optional(v.string()),
+    }),
+    valorTabela: v.number(),
+    precosSnapshot: v.object({
+      faixas: v.array(
+        v.object({ idadeMin: v.number(), idadeMax: v.number(), valor: v.number() }),
+      ),
+      camaExtra: v.number(),
+      petPorDia: v.number(),
+      palestra: v.number(),
+    }),
+    ajustes: v.array(
+      v.object({
+        tipo: v.union(v.literal("DESCONTO"), v.literal("CONTRIBUICAO_FUNDO")),
+        valor: v.number(),
+        motivo: v.optional(v.string()),
+        criadoPor: v.optional(v.id("membros")),
+        em: v.number(),
+      }),
+    ),
+    recebimentos: v.array(
+      v.object({
+        valor: v.number(),
+        data: v.string(),
+        comprovanteUrl: v.optional(v.string()),
+        obs: v.optional(v.string()),
+        registradoPor: v.optional(v.id("membros")),
+        em: v.number(),
+      }),
+    ),
+    planoPagamento: v.array(v.object({ data: v.string(), valor: v.number() })),
+    comprovantesPendentes: v.optional(
+      v.array(
+        v.object({
+          comprovanteUrl: v.string(),
+          valorInformado: v.optional(v.number()),
+          obs: v.optional(v.string()),
+          enviadoEm: v.number(),
+        }),
+      ),
+    ),
+    comprovanteToken: v.optional(v.string()),
+    status: v.union(
+      v.literal("ATIVA"),
+      v.literal("LISTA_ESPERA"),
+      v.literal("CANCELADA"),
+    ),
+    observacaoCancelamento: v.optional(v.string()),
+    lgpdConsentimento: v.boolean(),
+    ipHash: v.optional(v.string()),
+    criadoEm: v.number(),
+    atualizadoEm: v.optional(v.number()),
+  })
+    .index("by_retiro", ["retiroId"])
+    .index("by_retiro_status", ["retiroId", "status"])
+    .index("by_retiro_whatsapp", ["retiroId", "responsavel.whatsapp"])
+    .index("by_comprovanteToken", ["comprovanteToken"])
+    .index("by_responsavel_membro", ["responsavel.membroId"])
+    .index("by_ipHash_criadoEm", ["ipHash", "criadoEm"]),
+
+  quartosRetiro: defineTable({
+    retiroId: v.id("retiros"),
+    tipo: v.union(v.literal("DUPLO"), v.literal("TRIPLO")),
+    identificacao: v.optional(v.string()),
+    ocupantes: v.array(
+      v.object({
+        inscricaoId: v.id("inscricoesRetiro"),
+        participanteIndex: v.number(),
+      }),
+    ),
+  }).index("by_retiro", ["retiroId"]),
 });

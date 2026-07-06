@@ -44,7 +44,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     mutations: ["membros.bootstrap.bootstrapAdmin"],
     componentes: ["BoletimCard", "UltimoSermaoCard", "ComentariosRecentesCard", "ProfileCompletenessCard", "TodaySection", "BirthdayList", "SectionLabel", "AvisosWidget (drawer)", "BootstrapForm"],
     notas: [
-      "Hierarquia: saudacao → ProfileCompletenessCard (condicional, progress bar) → BoletimCard → ultimo sermao → Comentarios recentes (admin) → Hoje (avisos) → aniversariantes → MinhasInscricoesCard (discreto, no rodape; so aparece com acampamento ativo; features/acampamento)",
+      "Hierarquia: saudacao → ProfileCompletenessCard (condicional, progress bar) → BoletimCard → ultimo sermao → Comentarios recentes (admin) → Hoje (avisos) → aniversariantes → MinhasInscricoesCard (discreto, no rodape; so aparece com retiro ativo; features/retiro)",
       "BoletimCard: atalho para /boletim (item saiu do sidebar). Estado 'ao vivo agora' na janela do culto, senao 'proximo culto'. So com can(escalas:read)",
       "UltimoSermaoCard: link para pregacao mais recente publicada",
       "ComentariosRecentesCard: admin-only. Gravacoes com comentario recente agrupadas (titulo + count + preview do ultimo), link p/ /gravacoes/[id]. Usa denormalizado gravacoes.ultimoComentarioEm (indice by_ultimo_comentario) — custo fixo, nao varre comentarios",
@@ -1101,41 +1101,41 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     queries: ["public.inscricoesEvento.listAtivas (via getInscricoesAtivas, ISR 300s)"],
     notas: ["Grid de inscricoes ativas. Card -> /inscricoes/[slug]"],
   },
-  "/admin/acampamento": {
-    nome: "Secretaria - Acampamento",
-    pagina: "app/(ready)/admin/acampamento/page.tsx",
+  "/admin/retiro": {
+    nome: "Secretaria - Retiro",
+    pagina: "app/(ready)/admin/retiro/page.tsx",
     arquivos: [
-      "app/(ready)/admin/acampamento/page.tsx",
-      "features/acampamento/components/AcampamentoConfigDialog.tsx",
-      "convex/acampamento/mutations.ts",
-      "convex/acampamento/queries.ts",
+      "app/(ready)/admin/retiro/page.tsx",
+      "features/retiro/components/RetiroConfigDialog.tsx",
+      "convex/retiro/mutations.ts",
+      "convex/retiro/queries.ts",
     ],
-    queries: ["acampamento.queries.listar", "acampamento.queries.getById"],
-    mutations: ["acampamento.mutations.criar", "acampamento.mutations.atualizar"],
-    componentes: ["AcampamentoConfigDialog (precos por faixa etaria + estoque de quartos)"],
+    queries: ["retiro.queries.listar", "retiro.queries.getById"],
+    mutations: ["retiro.mutations.criar", "retiro.mutations.atualizar"],
+    componentes: ["RetiroConfigDialog (precos por faixa etaria + estoque de quartos)"],
     notas: ["Permissao: inscricoes:manage. Valores em centavos no backend, R$ na UI"],
   },
-  "/admin/acampamento/[id]": {
-    nome: "Secretaria - Inscricoes do acampamento",
-    pagina: "app/(ready)/admin/acampamento/[id]/page.tsx",
+  "/admin/retiro/[id]": {
+    nome: "Secretaria - Inscricoes do retiro",
+    pagina: "app/(ready)/admin/retiro/[id]/page.tsx",
     arquivos: [
-      "app/(ready)/admin/acampamento/[id]/page.tsx",
-      "features/acampamento/components/InscricaoDetalheDrawer.tsx",
-      "convex/acampamento/queries.ts",
-      "convex/acampamento/mutations.ts",
+      "app/(ready)/admin/retiro/[id]/page.tsx",
+      "features/retiro/components/InscricaoDetalheDrawer.tsx",
+      "convex/retiro/queries.ts",
+      "convex/retiro/mutations.ts",
     ],
     queries: [
-      "acampamento.queries.listarInscricoes (resumo financeiro por linha)",
-      "acampamento.queries.getInscricao",
-      "acampamento.queries.sugerirMembros (matching manual)",
+      "retiro.queries.listarInscricoes (resumo financeiro por linha)",
+      "retiro.queries.getInscricao",
+      "retiro.queries.sugerirMembros (matching manual)",
     ],
     mutations: [
-      "acampamento.mutations.confirmarMatching",
-      "acampamento.mutations.cancelarInscricao (devolve quartos)",
-      "acampamento.mutations.promoverListaEspera",
-      "acampamento.mutations.recalcularValor (tabela vigente, explicito)",
-      "acampamento.mutations.editarInscricao (recalcula com snapshot)",
-      "acampamento.mutations.removerComprovantePendente (apos conferir)",
+      "retiro.mutations.confirmarMatching",
+      "retiro.mutations.cancelarInscricao (devolve quartos)",
+      "retiro.mutations.promoverListaEspera",
+      "retiro.mutations.recalcularValor (tabela vigente, explicito)",
+      "retiro.mutations.editarInscricao (recalcula com snapshot)",
+      "retiro.mutations.removerComprovantePendente (apos conferir)",
     ],
     componentes: [
       "Tabela desktop -> cards mobile (regra mobile-ux)",
@@ -1143,41 +1143,41 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     ],
     notas: ["Permissao: inscricoes:manage. Financeiro: FinanceiroSection no drawer (comprovantes 'a conferir' enviados pelo pagante -> registrar/descartar, recebimentos c/ comprovante, descontos c/ saldo do fundo, sobra -> fundo, plano editavel) + FundoEventoCard (consolidado + aporte avulso)"],
   },
-  "/admin/acampamento/[id]/quartos": {
-    nome: "Secretaria - Quartos do acampamento",
-    pagina: "app/(ready)/admin/acampamento/[id]/quartos/page.tsx",
+  "/admin/retiro/[id]/quartos": {
+    nome: "Secretaria - Quartos do retiro",
+    pagina: "app/(ready)/admin/retiro/[id]/quartos/page.tsx",
     arquivos: [
-      "app/(ready)/admin/acampamento/[id]/quartos/page.tsx",
-      "features/acampamento/components/QuartosBoard.tsx",
-      "convex/acampamento/quartos.ts",
+      "app/(ready)/admin/retiro/[id]/quartos/page.tsx",
+      "features/retiro/components/QuartosBoard.tsx",
+      "convex/retiro/quartos.ts",
     ],
-    queries: ["acampamento.quartos.listarQuartos (quartos + sem-quarto c/ preferencias)"],
+    queries: ["retiro.quartos.listarQuartos (quartos + sem-quarto c/ preferencias)"],
     mutations: [
-      "acampamento.quartos.gerarQuartosDoPedido (auto a partir das inscricoes)",
-      "acampamento.quartos.moverOcupante (DnD; capacidade +1 de cama extra)",
-      "acampamento.quartos.criarQuarto / renomearQuarto / removerQuarto",
+      "retiro.quartos.gerarQuartosDoPedido (auto a partir das inscricoes)",
+      "retiro.quartos.moverOcupante (DnD; capacidade +1 de cama extra)",
+      "retiro.quartos.criarQuarto / renomearQuarto / removerQuarto",
     ],
     componentes: ["QuartosBoard (dnd-kit, padrao PGGrid; coluna Sem quarto tambem e alvo de drop)"],
     notas: ["Permissao: inscricoes:manage"],
   },
-  "/acampamento/[slug]": {
-    nome: "Acampamento - inscricao publica",
-    pagina: "app/(public)/(site)/acampamento/[slug]/page.tsx",
+  "/retiro/[slug]": {
+    nome: "Retiro - inscricao publica",
+    pagina: "app/(public)/(site)/retiro/[slug]/page.tsx",
     arquivos: [
-      "app/(public)/(site)/acampamento/[slug]/page.tsx",
-      "features/acampamento/components/AcampamentoForm.tsx",
-      "features/acampamento/lib/data.ts",
-      "convex/public/acampamento.ts",
-      "convex/acampamento/calculoHelpers.ts",
-      "app/api/acampamento/responder/route.ts",
+      "app/(public)/(site)/retiro/[slug]/page.tsx",
+      "features/retiro/components/RetiroForm.tsx",
+      "features/retiro/lib/data.ts",
+      "convex/public/retiro.ts",
+      "convex/retiro/calculoHelpers.ts",
+      "app/api/retiro/responder/route.ts",
     ],
     queries: [
-      "public.acampamento.getBySlug (ISR 60s via unstable_cache)",
-      "public.acampamento.minhaFamilia (logado: pre-preenchimento)",
+      "public.retiro.getBySlug (ISR 60s via unstable_cache)",
+      "public.retiro.minhaFamilia (logado: pre-preenchimento)",
     ],
-    mutations: ["public.acampamento.responder (via /api/acampamento/responder, ipHash)"],
+    mutations: ["public.retiro.responder (via /api/retiro/responder, ipHash)"],
     componentes: [
-      "AcampamentoForm (grupo: participantes dinamicos + resumo do valor ao vivo)",
+      "RetiroForm (grupo: participantes dinamicos + resumo do valor ao vivo)",
       "CampoNumero (stepper mobile-first)",
       "LoginModalInline (reuso do site publico)",
     ],
@@ -1190,17 +1190,17 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     ],
   },
   "/comprovante/[codigo]": {
-    nome: "Acampamento - envio de comprovante (publico)",
+    nome: "Retiro - envio de comprovante (publico)",
     pagina: "app/(public)/comprovante/[codigo]/page.tsx",
     arquivos: [
       "app/(public)/comprovante/[codigo]/page.tsx",
-      "features/acampamento/components/ComprovanteForm.tsx",
-      "convex/public/acampamento.ts",
+      "features/retiro/components/ComprovanteForm.tsx",
+      "convex/public/retiro.ts",
       "convex/files/upload.ts",
     ],
-    queries: ["public.acampamento.getComprovanteInfo (resumo por token)"],
+    queries: ["public.retiro.getComprovanteInfo (resumo por token)"],
     mutations: [
-      "public.acampamento.enviarComprovante (anexa 'a conferir')",
+      "public.retiro.enviarComprovante (anexa 'a conferir')",
       "files.upload.getPublicComprovanteUploadUrl (presigned, token-gated, image/pdf)",
     ],
     componentes: ["ComprovanteForm (upload sem login, suporta parcelado; recebe codigo por path)"],
@@ -1213,26 +1213,26 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     pagina: "app/(ready)/minhas-inscricoes/page.tsx",
     arquivos: [
       "app/(ready)/minhas-inscricoes/page.tsx",
-      "features/acampamento/components/EnviarComprovanteDialog.tsx",
-      "features/acampamento/components/MinhasInscricoesCard.tsx",
-      "convex/public/acampamento.ts",
+      "features/retiro/components/EnviarComprovanteDialog.tsx",
+      "features/retiro/components/MinhasInscricoesCard.tsx",
+      "convex/public/retiro.ts",
     ],
     queries: [
-      "public.acampamento.minhasInscricoes (acampamentos; traz o token do dono)",
+      "public.retiro.minhasInscricoes (retiros; traz o token do dono)",
       "public.inscricoesEvento.minhasRespostas (inscricoes genericas; index by_membro)",
       "turmas.queries.minhasInscricoes (turmas matriculadas; index by_membro)",
     ],
     mutations: [
-      "public.acampamento.enviarComprovante (via token da propria inscricao)",
+      "public.retiro.enviarComprovante (via token da propria inscricao)",
       "files.upload.getPublicComprovanteUploadUrl (token-gated)",
     ],
     componentes: [
-      "Hub de 3 secoes: Acampamentos (c/ comprovante), Inscricoes, Turmas",
+      "Hub de 3 secoes: Retiros (c/ comprovante), Inscricoes, Turmas",
       "EnviarComprovanteDialog (upload pelo membro sem URL — usa o token por baixo)",
-      "MinhasInscricoesCard (atalho no dashboard, so aparece com acampamento ativo)",
+      "MinhasInscricoesCard (atalho no dashboard, so aparece com retiro ativo)",
     ],
     notas: [
-      "Membro comum acessa (nao exige inscricoes:manage). Acampamento: via publica por token (index by_responsavel_membro). Inscricoes genericas e turmas: so leitura por membroId. Entrada no menu (MoreSheet + UserMenu) + card no dashboard",
+      "Membro comum acessa (nao exige inscricoes:manage). Retiro: via publica por token (index by_responsavel_membro). Inscricoes genericas e turmas: so leitura por membroId. Entrada no menu (MoreSheet + UserMenu) + card no dashboard",
     ],
   },
   "/inscricoes/[slug]": {
@@ -1446,14 +1446,14 @@ function resolveRoute(pathname: string): PageContext | null {
     return CONTEXT_MAP["/admin/campanhas/[id]"];
   }
   // /inscricoes/[slug] (formulario publico)
-  // /admin/acampamento/[id]/quartos
-  if (/^\/admin\/acampamento\/[^/]+\/quartos$/.test(pathname)) return CONTEXT_MAP["/admin/acampamento/[id]/quartos"];
-  // /admin/acampamento/[id]
-  if (/^\/admin\/acampamento\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/admin/acampamento/[id]"];
+  // /admin/retiro/[id]/quartos
+  if (/^\/admin\/retiro\/[^/]+\/quartos$/.test(pathname)) return CONTEXT_MAP["/admin/retiro/[id]/quartos"];
+  // /admin/retiro/[id]
+  if (/^\/admin\/retiro\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/admin/retiro/[id]"];
   // /comprovante/[codigo] (envio publico de comprovante)
   if (/^\/comprovante\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/comprovante/[codigo]"];
-  // /acampamento/[slug]
-  if (/^\/acampamento\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/acampamento/[slug]"];
+  // /retiro/[slug]
+  if (/^\/retiro\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/retiro/[slug]"];
   if (/^\/inscricoes\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/inscricoes/[slug]"];
   // /admin/inscricoes/[id]/respostas
   if (/^\/admin\/inscricoes\/[^/]+\/respostas$/.test(pathname)) {

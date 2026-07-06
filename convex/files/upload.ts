@@ -68,7 +68,7 @@ export const getPublicAudioUploadUrl = action({
 
 // Upload PUBLICO de comprovante de pagamento (sem login) — protegido pelo token
 // da inscricao (link individual) e restrito a imagem/PDF na pasta de
-// comprovantes. Usado pela pagina /acampamento/comprovante (membro ou visitante).
+// comprovantes. Usado pela pagina /retiro/comprovante (membro ou visitante).
 export const getPublicComprovanteUploadUrl = action({
   args: {
     token: v.string(),
@@ -78,7 +78,7 @@ export const getPublicComprovanteUploadUrl = action({
   handler: async (ctx, args) => {
     // @ts-ignore Convex TS2589 (instanciacao de tipo profunda)
     const inscricaoId = await ctx.runQuery(
-      internal.public.acampamento.validarComprovanteToken,
+      internal.public.retiro.validarComprovanteToken,
       { token: args.token },
     );
     if (!inscricaoId) {
@@ -89,7 +89,7 @@ export const getPublicComprovanteUploadUrl = action({
       throw new Error("Envie uma imagem ou PDF do comprovante");
     }
     const ext = args.fileName.split(".").pop() || "bin";
-    const key = generateObjectKey("acampamento-comprovantes", String(inscricaoId), ext);
+    const key = generateObjectKey("retiro-comprovantes", String(inscricaoId), ext);
     return await generatePresignedUploadUrl(key, args.mimeType);
   },
 });

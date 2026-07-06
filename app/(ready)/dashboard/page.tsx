@@ -23,7 +23,7 @@ import { UltimoSermaoCard } from "@features/dashboard/components/UltimoSermaoCar
 import { ComentariosRecentesCard } from "@features/dashboard/components/ComentariosRecentesCard";
 import { ProfileCompletenessCard } from "@features/dashboard/components/ProfileCompletenessCard";
 import { ProfileNudgeDialog } from "@features/dashboard/components/ProfileNudgeDialog";
-import { MinhasInscricoesCard } from "@features/acampamento/components/MinhasInscricoesCard";
+import { MinhasInscricoesCard } from "@features/retiro/components/MinhasInscricoesCard";
 
 function BootstrapForm() {
   // @ts-ignore Convex TS2589
