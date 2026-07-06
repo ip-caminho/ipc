@@ -3,7 +3,19 @@
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { Badge } from "@/shared/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
-import { TURMA_COLORS, USO_IMAGEM_COLORS, TIPO_RESPONSAVEL_LABELS } from "../lib/constants";
+import {
+  TURMA_COLORS,
+  USO_IMAGEM_COLORS,
+  USO_IMAGEM_LABELS_CURTO,
+  TIPO_RESPONSAVEL_LABELS,
+} from "../lib/constants";
+import {
+  calcularIdade,
+  proximaTransicaoTurma,
+  turmaDivergente,
+  formatarMesAno,
+} from "../lib/idade";
+import { ArrowRight } from "lucide-react";
 
 interface CriancaCardProps {
   crianca: {
@@ -19,21 +31,11 @@ interface CriancaCardProps {
   onClick?: () => void;
 }
 
-function calcularIdade(dataNascimento: string): string {
-  const nascimento = new Date(dataNascimento);
-  const hoje = new Date();
-  const diff = hoje.getTime() - nascimento.getTime();
-  const anos = Math.floor(diff / (365.25 * 24 * 60 * 60 * 1000));
-  if (anos < 1) {
-    const meses = Math.floor(diff / (30.44 * 24 * 60 * 60 * 1000));
-    return `${meses}m`;
-  }
-  return `${anos}a`;
-}
-
 export function CriancaCard({ crianca, onClick }: CriancaCardProps) {
   const turmaColor = TURMA_COLORS[crianca.turma] || "bg-gray-100 text-gray-800";
   const usoColor = USO_IMAGEM_COLORS[crianca.usoImagem] || "bg-gray-100 text-gray-800";
+  const transicao = proximaTransicaoTurma(crianca.dataNascimento);
+  const divergente = turmaDivergente(crianca.turma, crianca.dataNascimento);
 
   return (
     <Card
@@ -60,9 +62,23 @@ export function CriancaCard({ crianca, onClick }: CriancaCardProps) {
             </div>
           </div>
           <Badge variant="outline" className={usoColor}>
-            {crianca.usoImagem === "AUTORIZADO" ? "Img" : crianca.usoImagem === "NAO_AUTORIZADO" ? "S/Img" : "Pend"}
+            {USO_IMAGEM_LABELS_CURTO[crianca.usoImagem] || crianca.usoImagem}
           </Badge>
         </div>
+        {(transicao || divergente) && (
+          <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+            <ArrowRight className="h-3 w-3 shrink-0" />
+            {divergente ? (
+              <span className="text-amber-600">Turma desatualizada pela idade</span>
+            ) : transicao?.saiDoDepartamento ? (
+              <span>Sai do infantil em {formatarMesAno(transicao.data)}</span>
+            ) : (
+              <span>
+                Muda p/ {transicao?.proximaTurma} em {formatarMesAno(transicao!.data)}
+              </span>
+            )}
+          </p>
+        )}
         {crianca.responsaveis.length > 0 && (
           <p className="text-xs text-muted-foreground mt-2 truncate">
             {crianca.responsaveis

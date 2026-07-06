@@ -8,6 +8,7 @@ export const criancaFormSchema = z.object({
   usoImagem: z.enum(["AUTORIZADO", "NAO_AUTORIZADO", "PENDENTE"]),
   observacoesMedicas: z.string().optional(),
   observacoesFamilia: z.string().optional(),
+  ovelhinhaId: z.string().optional(),
 });
 
 export type CriancaFormValues = z.infer<typeof criancaFormSchema>;

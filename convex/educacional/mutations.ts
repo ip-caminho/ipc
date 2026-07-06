@@ -88,7 +88,8 @@ export const updateCrianca = mutation({
     )),
     observacoesMedicas: v.optional(v.string()),
     observacoesFamilia: v.optional(v.string()),
-    ovelhinhaId: v.optional(v.id("membros")),
+    // null = remover ovelhinha; undefined = nao mexe (ex: update so de foto)
+    ovelhinhaId: v.optional(v.union(v.id("membros"), v.null())),
     foto: v.optional(v.string()),
   },
   handler: async (ctx, { entidadeId, ...updates }) => {
@@ -116,7 +117,8 @@ export const updateCrianca = mutation({
     if (updates.usoImagem !== undefined) perfilUpdates.usoImagem = updates.usoImagem;
     if (updates.observacoesMedicas !== undefined) perfilUpdates.observacoesMedicas = updates.observacoesMedicas;
     if (updates.observacoesFamilia !== undefined) perfilUpdates.observacoesFamilia = updates.observacoesFamilia;
-    if (updates.ovelhinhaId !== undefined) perfilUpdates.ovelhinhaId = updates.ovelhinhaId;
+    // null -> remove o campo (patch com undefined); id -> define
+    if (updates.ovelhinhaId !== undefined) perfilUpdates.ovelhinhaId = updates.ovelhinhaId ?? undefined;
     if (Object.keys(perfilUpdates).length > 0) {
       perfilUpdates.atualizadoEm = Date.now();
       await ctx.db.patch(perfil._id, perfilUpdates);
@@ -212,6 +214,36 @@ export const removeResponsavel = mutation({
     if (!resp) throw new Error("Responsavel nao encontrado");
 
     await ctx.db.delete(id);
+  },
+});
+
+// ===== Ovelhinhas aptas =====
+
+export const addOvelhinhaApta = mutation({
+  args: { membroId: v.id("membros") },
+  handler: async (ctx, { membroId }) => {
+    await requirePermission(ctx, "criancas:manage");
+
+    const existing = await ctx.db
+      .query("eduOvelhinhas")
+      .withIndex("by_membro", (q) => q.eq("membroId", membroId))
+      .first();
+    if (existing) return existing._id;
+
+    return ctx.db.insert("eduOvelhinhas", { membroId, criadoEm: Date.now() });
+  },
+});
+
+export const removeOvelhinhaApta = mutation({
+  args: { membroId: v.id("membros") },
+  handler: async (ctx, { membroId }) => {
+    await requirePermission(ctx, "criancas:manage");
+
+    const existing = await ctx.db
+      .query("eduOvelhinhas")
+      .withIndex("by_membro", (q) => q.eq("membroId", membroId))
+      .first();
+    if (existing) await ctx.db.delete(existing._id);
   },
 });
 

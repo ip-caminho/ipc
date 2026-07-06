@@ -729,6 +729,13 @@ export default defineSchema({
     .index("by_relatorio", ["relatorioId"])
     .index("by_crianca", ["criancaEntidadeId"]),
 
+  // Membros aptos a serem "ovelhinha" (cuidam de perto de cada crianca).
+  // Lista de aptos para popular o select de ovelhinha no cadastro da crianca.
+  eduOvelhinhas: defineTable({
+    membroId: v.id("membros"),
+    criadoEm: v.number(),
+  }).index("by_membro", ["membroId"]),
+
   ministerioEscalas: defineTable({
     ministerioId: v.id("ministerios"),
     data: v.string(), // YYYY-MM-DD

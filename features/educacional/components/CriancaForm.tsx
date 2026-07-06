@@ -24,6 +24,10 @@ import {
 import { TURMA_OPTIONS, USO_IMAGEM_OPTIONS } from "../lib/constants";
 import { criancaFormSchema, type CriancaFormValues } from "../lib/validations";
 import { useState } from "react";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+
+const OVELHINHA_NONE = "__none__";
 
 interface CriancaFormProps {
   open: boolean;
@@ -41,6 +45,8 @@ export function CriancaForm({
   isEditing,
 }: CriancaFormProps) {
   const [loading, setLoading] = useState(false);
+  // @ts-ignore Convex TS2589
+  const ovelhinhasAptas = useQuery(api.educacional.queries.listOvelhinhasAptas, {});
 
   const form = useForm<CriancaFormValues>({
     resolver: zodResolver(criancaFormSchema),
@@ -142,6 +148,33 @@ export function CriancaForm({
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="space-y-1">
+            <Label>Ovelhinha</Label>
+            <Select
+              value={form.watch("ovelhinhaId") || OVELHINHA_NONE}
+              onValueChange={(v) =>
+                form.setValue("ovelhinhaId", v === OVELHINHA_NONE ? undefined : v)
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Nenhuma" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={OVELHINHA_NONE}>Nenhuma</SelectItem>
+                {(ovelhinhasAptas || []).map((o) => (
+                  <SelectItem key={o.membroId} value={o.membroId}>
+                    {o.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {ovelhinhasAptas && ovelhinhasAptas.length === 0 && (
+              <p className="text-xs text-muted-foreground">
+                Nenhum membro apto cadastrado. Use &quot;Ovelhinhas&quot; para marcar.
+              </p>
+            )}
           </div>
 
           <div className="space-y-1">

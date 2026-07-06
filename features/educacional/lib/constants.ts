@@ -17,8 +17,22 @@ export const TURMA_COLORS: Record<string, string> = {
 export const USO_IMAGEM_OPTIONS = [
   { value: "AUTORIZADO", label: "Autorizado" },
   { value: "NAO_AUTORIZADO", label: "Nao autorizado" },
-  { value: "PENDENTE", label: "Pendente" },
+  { value: "PENDENTE", label: "Nao assinado" },
 ];
+
+// Rotulo do estado de uso de imagem por valor (fonte unica para cards/detalhe).
+export const USO_IMAGEM_LABELS: Record<string, string> = {
+  AUTORIZADO: "Autorizado",
+  NAO_AUTORIZADO: "Nao autorizado",
+  PENDENTE: "Nao assinado",
+};
+
+// Rotulo curto para badges compactos (card).
+export const USO_IMAGEM_LABELS_CURTO: Record<string, string> = {
+  AUTORIZADO: "Img",
+  NAO_AUTORIZADO: "S/Img",
+  PENDENTE: "N/assin",
+};
 
 export const USO_IMAGEM_COLORS: Record<string, string> = {
   AUTORIZADO: "bg-green-100 text-green-800",
