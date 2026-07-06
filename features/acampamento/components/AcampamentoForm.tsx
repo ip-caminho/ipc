@@ -158,12 +158,12 @@ function CampoNumero({
 // Linha da "conta do retiro": pontilhado entre item e valor (estetica de recibo)
 function LinhaConta({ nome, detalhe, valor }: { nome: string; detalhe?: string; valor: string }) {
   return (
-    <li className={`flex items-baseline gap-2 ${FONT_BODY} text-[14px]`}>
+    <li className={`flex items-baseline gap-2 py-1 ${FONT_BODY} text-[14px]`}>
       <span className={`shrink-0 ${COR_TEXTO}`}>
         {nome}
-        {detalhe && <span className={`ml-1 text-[12px] ${COR_MUTED}`}>{detalhe}</span>}
+        {detalhe && <span className={`ml-1.5 text-[12px] ${COR_MUTED}`}>{detalhe}</span>}
       </span>
-      <span className="mx-1 flex-1 border-b border-dotted border-[#C9C2B4]" aria-hidden />
+      <span className="mx-1 flex-1 translate-y-[-2px] border-b border-dotted border-[#C9C2B4]" aria-hidden />
       <span className={`shrink-0 tabular-nums ${COR_TEXTO}`}>{valor}</span>
     </li>
   );
@@ -588,11 +588,11 @@ export function AcampamentoForm({ acampamento }: { acampamento: AcampamentoPubli
 
       {/* Conta do retiro (assinatura visual: recibo com pontilhado) */}
       {resumo && resumo.total > 0 && (
-        <section className={`border ${BORDA} bg-[#F4F0E8] p-5 md:p-6`}>
+        <section className={`border ${BORDA} bg-[#F4F0E8] p-6 md:p-7`}>
           <p className={`${FONT_BODY} text-[11px] font-semibold uppercase tracking-[0.1em] ${COR_MUTED}`}>
             Resumo da inscrição
           </p>
-          <ul className="mt-3 space-y-1.5">
+          <ul className="mt-5 space-y-2.5">
             {resumo.hospedagemPorParticipante.map((p, i) => (
               <LinhaConta key={i} nome={p.nome} detalhe={`${p.idade} anos`} valor={brl(p.valor)} />
             ))}
@@ -600,15 +600,15 @@ export function AcampamentoForm({ acampamento }: { acampamento: AcampamentoPubli
             {resumo.camasExtras > 0 && <LinhaConta nome="Camas extras" valor={brl(resumo.camasExtras)} />}
             {resumo.pets > 0 && <LinhaConta nome="Pets" valor={brl(resumo.pets)} />}
           </ul>
-          <div className="mt-4 flex items-baseline justify-between border-t-2 border-[#1C2E49] pt-3">
+          <div className="mt-6 flex items-baseline justify-between border-t-2 border-[#1C2E49] pt-4">
             <span className={`${FONT_BODY} text-[13px] font-semibold uppercase tracking-[0.08em] ${COR_TEXTO}`}>
               Total
             </span>
-            <span className={`${FONT_DISPLAY} text-[28px] leading-none text-[#16243F] tabular-nums`}>
+            <span className={`${FONT_DISPLAY} text-[30px] leading-none text-[#16243F] tabular-nums`}>
               {brl(resumo.total)}
             </span>
           </div>
-          <p className={`${FONT_BODY} mt-2 text-[12px] ${COR_MUTED}`}>
+          <p className={`${FONT_BODY} mt-4 text-[12px] leading-relaxed ${COR_MUTED}`}>
             Valor pela tabela vigente. Condições especiais podem ser combinadas com a secretaria.
           </p>
         </section>
