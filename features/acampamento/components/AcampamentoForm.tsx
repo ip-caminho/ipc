@@ -184,7 +184,7 @@ function LinkComprovante({ token }: { token: string }) {
       <p className={`flex items-center justify-center gap-1.5 ${FONT_BODY} text-[13px] font-semibold ${COR_TEXTO}`}>
         <Receipt className="h-4 w-4 text-[#F0732B]" /> Enviar comprovante de pagamento
       </p>
-      <p className={`${FONT_BODY} mx-auto mt-1 max-w-[38ch] text-[12px] leading-[1.5] ${COR_MUTED}`}>
+      <p className={`${FONT_BODY} mt-1 text-[12px] leading-[1.5] ${COR_MUTED}`}>
         Guarde este link. Ao pagar (ou cada parcela), envie o comprovante por aqui — a
         secretaria confere.
       </p>
@@ -369,11 +369,15 @@ export function AcampamentoForm({
         <p className={`${FONT_DISPLAY} text-[24px] ${COR_TEXTO}`}>
           {espera ? "Você está na lista de espera" : "Inscrição recebida!"}
         </p>
-        <p className={`${FONT_BODY} mx-auto mt-3 max-w-[42ch] text-[14px] leading-[1.6] ${COR_MUTED}`}>
-          {espera
-            ? "Os quartos disponíveis se esgotaram. A secretaria entrará em contato assim que abrir vaga."
-            : `Valor da inscrição: ${brl(resultado.valorTabela)}. A secretaria entrará em contato pelo WhatsApp para combinar o pagamento.`}
-        </p>
+        {/* Wrapper <div> centraliza o bloco: `.site-v2 p` (margin:0 0 1em) anula
+            o mx-auto do <p> por especificidade. */}
+        <div className="mx-auto mt-3 max-w-[42ch]">
+          <p className={`${FONT_BODY} text-[14px] leading-[1.6] ${COR_MUTED}`}>
+            {espera
+              ? "Os quartos disponíveis se esgotaram. A secretaria entrará em contato assim que abrir vaga."
+              : `Valor da inscrição: ${brl(resultado.valorTabela)}. A secretaria entrará em contato pelo WhatsApp para combinar o pagamento.`}
+          </p>
+        </div>
         {resultado.comprovanteToken && (
           <LinkComprovante token={resultado.comprovanteToken} />
         )}
