@@ -1217,17 +1217,22 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "features/acampamento/components/MinhasInscricoesCard.tsx",
       "convex/public/acampamento.ts",
     ],
-    queries: ["public.acampamento.minhasInscricoes (por responsavel.membroId; traz o token do dono)"],
+    queries: [
+      "public.acampamento.minhasInscricoes (acampamentos; traz o token do dono)",
+      "public.inscricoesEvento.minhasRespostas (inscricoes genericas; index by_membro)",
+      "turmas.queries.minhasInscricoes (turmas matriculadas; index by_membro)",
+    ],
     mutations: [
       "public.acampamento.enviarComprovante (via token da propria inscricao)",
       "files.upload.getPublicComprovanteUploadUrl (token-gated)",
     ],
     componentes: [
+      "Hub de 3 secoes: Acampamentos (c/ comprovante), Inscricoes, Turmas",
       "EnviarComprovanteDialog (upload pelo membro sem URL — usa o token por baixo)",
-      "MinhasInscricoesCard (atalho no dashboard, so aparece com inscricao ativa)",
+      "MinhasInscricoesCard (atalho no dashboard, so aparece com acampamento ativo)",
     ],
     notas: [
-      "Membro comum acessa (nao exige inscricoes:manage): usa a via publica por token da propria inscricao, index by_responsavel_membro. Descoberta via card no dashboard",
+      "Membro comum acessa (nao exige inscricoes:manage). Acampamento: via publica por token (index by_responsavel_membro). Inscricoes genericas e turmas: so leitura por membroId. Entrada no menu (MoreSheet + UserMenu) + card no dashboard",
     ],
   },
   "/inscricoes/[slug]": {

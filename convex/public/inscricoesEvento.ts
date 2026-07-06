@@ -44,6 +44,36 @@ function estaAberta(i: InscricaoDoc, agora: number): boolean {
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+// Inscrições genéricas do membro logado (área "Minhas inscrições"). Ligadas por
+// membroId (resolvido no servidor no `responder`). [] se não logado.
+export const minhasRespostas = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return [];
+    const membro = await ctx.db
+      .query("membros")
+      .withIndex("by_user_id", (q) => q.eq("userId", userId))
+      .first();
+    if (!membro) return [];
+    const respostas = await ctx.db
+      .query("respostasInscricaoEvento")
+      .withIndex("by_membro", (q) => q.eq("membroId", membro._id))
+      .collect();
+    const out = [];
+    for (const r of respostas) {
+      const evento = await ctx.db.get(r.inscricaoId);
+      out.push({
+        _id: r._id,
+        titulo: evento?.titulo ?? "Inscrição",
+        status: r.status,
+        criadoEm: r.criadoEm,
+      });
+    }
+    return out.sort((a, b) => b.criadoEm - a.criadoEm);
+  },
+});
+
 // Lista inscrições ativas e dentro da janela. Ordenadas por dataLimite (mais
 // próxima primeiro). Usada em /inscricoes e na home.
 export const listAtivas = query({

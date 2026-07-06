@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import { useAuthActions } from "@convex-dev/auth/react";
-import { LogOut, Moon, Sun, User } from "lucide-react";
+import { ClipboardList, LogOut, Moon, Sun, User } from "lucide-react";
 
 import { useAuth } from "@shared/providers/PermissionsProvider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
@@ -49,6 +49,12 @@ export function UserMenu() {
           <Link href="/meu-perfil" className="cursor-pointer">
             <User className="size-4" />
             Meu perfil
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/minhas-inscricoes" className="cursor-pointer">
+            <ClipboardList className="size-4" />
+            Minhas inscrições
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem
