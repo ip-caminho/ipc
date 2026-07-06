@@ -21,6 +21,7 @@ import {
 import { DatePickerBR } from "@/shared/components/ui/date-picker-br";
 import { Plus, Trash2, UserRound, Loader2 } from "lucide-react";
 import { calcularValorInscricao, idadeNaData } from "@convex/acampamento/calculoHelpers";
+import { isValidCPF } from "@shared/lib/validations/brazilian";
 import type { AcampamentoPublico } from "../lib/data";
 import { LoginModalInline } from "@features/site-publico/components/LoginModalInline";
 
@@ -63,8 +64,7 @@ const formSchema = z
     parcelas: z.string().optional(),
     cpfPagante: z
       .string()
-      .optional()
-      .refine((s) => !s || s.replace(/\D/g, "").length === 11, "CPF inválido"),
+      .refine((s) => isValidCPF(s ?? ""), "CPF do pagante inválido"),
     lgpd: z.boolean().refine((v) => v, "Confirme que leu as condições"),
     website: z.string().optional(), // honeypot
   })
