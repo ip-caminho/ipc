@@ -177,7 +177,7 @@ function LinkComprovante({ token }: { token: string }) {
   const [copiado, setCopiado] = useState(false);
   const url =
     typeof window !== "undefined"
-      ? `${window.location.origin}/acampamento/comprovante?k=${token}`
+      ? `${window.location.origin}/comprovante/${token}`
       : "";
   return (
     <div className={`mx-auto mt-6 max-w-[46ch] border ${BORDA} bg-[#F4F0E8] p-4 text-center`}>

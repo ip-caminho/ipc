@@ -37,8 +37,8 @@ export async function POST(req: NextRequest) {
   const ip = fwd.split(",")[0].trim() || req.headers.get("x-real-ip") || "0.0.0.0";
   const salt = process.env.INSCRICOES_IP_SALT || "ipc-dev-salt";
   const ipHash = createHash("sha256").update(`${ip}${salt}`).digest("hex");
-  // Token do link de comprovante (individual, imprevisivel)
-  const comprovanteToken = randomBytes(18).toString("hex");
+  // Token do link de comprovante (individual, imprevisivel, curto p/ URL amigavel)
+  const comprovanteToken = randomBytes(8).toString("base64url");
 
   const url = process.env.NEXT_PUBLIC_CONVEX_URL;
   if (!url) {
