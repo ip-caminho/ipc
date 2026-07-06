@@ -19,6 +19,7 @@ import type * as _shared_membroResolver from "../_shared/membroResolver.js";
 import type * as _shared_requirePermission from "../_shared/requirePermission.js";
 import type * as acampamento_calculoHelpers from "../acampamento/calculoHelpers.js";
 import type * as acampamento_mutations from "../acampamento/mutations.js";
+import type * as acampamento_quartos from "../acampamento/quartos.js";
 import type * as acampamento_queries from "../acampamento/queries.js";
 import type * as appConfig_mutations from "../appConfig/mutations.js";
 import type * as appConfig_queries from "../appConfig/queries.js";
@@ -168,6 +169,7 @@ declare const fullApi: ApiFromModules<{
   "_shared/requirePermission": typeof _shared_requirePermission;
   "acampamento/calculoHelpers": typeof acampamento_calculoHelpers;
   "acampamento/mutations": typeof acampamento_mutations;
+  "acampamento/quartos": typeof acampamento_quartos;
   "acampamento/queries": typeof acampamento_queries;
   "appConfig/mutations": typeof appConfig_mutations;
   "appConfig/queries": typeof appConfig_queries;

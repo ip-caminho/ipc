@@ -1142,6 +1142,23 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     ],
     notas: ["Permissao: inscricoes:manage. Financeiro: FinanceiroSection no drawer (recebimentos c/ comprovante, descontos c/ saldo do fundo, sobra -> fundo, plano editavel) + FundoEventoCard (consolidado + aporte avulso)"],
   },
+  "/admin/acampamento/[id]/quartos": {
+    nome: "Secretaria - Quartos do acampamento",
+    pagina: "app/(ready)/admin/acampamento/[id]/quartos/page.tsx",
+    arquivos: [
+      "app/(ready)/admin/acampamento/[id]/quartos/page.tsx",
+      "features/acampamento/components/QuartosBoard.tsx",
+      "convex/acampamento/quartos.ts",
+    ],
+    queries: ["acampamento.quartos.listarQuartos (quartos + sem-quarto c/ preferencias)"],
+    mutations: [
+      "acampamento.quartos.gerarQuartosDoPedido (auto a partir das inscricoes)",
+      "acampamento.quartos.moverOcupante (DnD; capacidade +1 de cama extra)",
+      "acampamento.quartos.criarQuarto / renomearQuarto / removerQuarto",
+    ],
+    componentes: ["QuartosBoard (dnd-kit, padrao PGGrid; coluna Sem quarto tambem e alvo de drop)"],
+    notas: ["Permissao: inscricoes:manage"],
+  },
   "/acampamento/[slug]": {
     nome: "Acampamento - inscricao publica",
     pagina: "app/(public)/(site)/acampamento/[slug]/page.tsx",
@@ -1379,6 +1396,8 @@ function resolveRoute(pathname: string): PageContext | null {
     return CONTEXT_MAP["/admin/campanhas/[id]"];
   }
   // /inscricoes/[slug] (formulario publico)
+  // /admin/acampamento/[id]/quartos
+  if (/^\/admin\/acampamento\/[^/]+\/quartos$/.test(pathname)) return CONTEXT_MAP["/admin/acampamento/[id]/quartos"];
   // /admin/acampamento/[id]
   if (/^\/admin\/acampamento\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/admin/acampamento/[id]"];
   // /acampamento/[slug]
