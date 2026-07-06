@@ -132,3 +132,17 @@ Fases 4 e 5 são independentes entre si (paralelizáveis após a 3).
 - **Fundo solidário**: pote geral do evento (contribuições anônimas para quem recebe); desconto consome do fundo com saldo visível. Entradas por 2 vias: sobra de pagamento de inscrição **ou aporte avulso direto** (doação sem inscrição / verba da igreja).
 - **Só recebimentos**: pagamento da igreja ao hotel fica fora do sistema (tesouraria).
 - Valores reais em R$: admin preenche na tela de config quando a igreja definir (não bloqueia nada).
+
+---
+
+## Status da implementação (05/07/2026 — branch feature/acampamento)
+
+5 fases entregues na worktree: schema (3 tabelas), backend de config/preços/
+cálculo, form público /acampamento/[slug] (grupo + resumo ao vivo + pré-
+preenchimento p/ logado), admin (matching manual, cancelar/promover/recalcular),
+financeiro flexível (recebimentos c/ comprovante, descontos c/ fundo, sobra→
+fundo em 1 clique, plano editável, aporte avulso) e quartos (gerar dos pedidos
++ DnD manual, capacidade +1 de cama extra). 20 testes de integração no módulo.
+Ajuste de escopo: comprovante é anexado pela secretaria (chega via WhatsApp) —
+sem upload público, menos superfície. Falta: integrar ao main (rebase ff-only)
+e deploy (convex deploy + push).

@@ -29,7 +29,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/shared/components/ui/table";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, BedDouble } from "lucide-react";
 import { InscricaoDetalheDrawer } from "@features/acampamento/components/InscricaoDetalheDrawer";
 import { FundoEventoCard } from "@features/acampamento/components/FundoEventoCard";
 import { brl, dataBR } from "@features/acampamento/lib/format";
@@ -101,9 +101,16 @@ function Conteudo({ acampamentoId }: { acampamentoId: Id<"acampamentos"> }) {
             <ArrowLeft className="mr-1 h-4 w-4" /> Acampamentos
           </Link>
         </Button>
-        <p className="text-sm text-muted-foreground">
-          {dataBR(acamp.dataInicio)} a {dataBR(acamp.dataFim)}
-        </p>
+        <div className="flex items-center gap-3">
+          <p className="text-sm text-muted-foreground">
+            {dataBR(acamp.dataInicio)} a {dataBR(acamp.dataFim)}
+          </p>
+          <Button asChild variant="outline" size="sm" className="h-11 md:h-8">
+            <Link href={`/admin/acampamento/${acampamentoId}/quartos`}>
+              <BedDouble className="mr-1 h-4 w-4" /> Quartos
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {resumo && (

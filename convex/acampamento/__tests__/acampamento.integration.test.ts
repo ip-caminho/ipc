@@ -438,3 +438,91 @@ describe("acampamento financeiro (fase 4)", () => {
     ).rejects.toThrow(/inválido/);
   });
 });
+
+describe("acampamento quartos (fase 5)", () => {
+  it("gerarQuartosDoPedido cria e aloca; idempotente por inscricao", async () => {
+    const t = convexTest(schema, modules);
+    const admin = await seedAdmin(t);
+    const id = await admin.mutation(api.acampamento.mutations.criar, ARGS_ACAMP);
+    await t.mutation(
+      api.public.acampamento.responder,
+      argsInscricao("11911110001", {
+        participantes: [
+          { nome: "Pai", dataNascimento: "1985-01-01", participaPalestras: true },
+          { nome: "Mae", dataNascimento: "1987-01-01", participaPalestras: true },
+          { nome: "Filho", dataNascimento: "2018-01-01", participaPalestras: false },
+        ],
+        hospedagem: { quartosDuplos: 1, quartosTriplos: 0, camasExtras: 1, pets: 0 },
+      }),
+    );
+
+    const r1 = await admin.mutation(api.acampamento.quartos.gerarQuartosDoPedido, {
+      acampamentoId: id,
+    });
+    expect(r1.criados).toBe(1);
+    const r2 = await admin.mutation(api.acampamento.quartos.gerarQuartosDoPedido, {
+      acampamentoId: id,
+    });
+    expect(r2.criados).toBe(0); // ja alocada
+
+    const board = await admin.query(api.acampamento.quartos.listarQuartos, { acampamentoId: id });
+    expect(board.quartos).toHaveLength(1);
+    // duplo + cama extra = 3 alocados, ninguem de fora
+    expect(board.quartos[0].ocupantes).toHaveLength(3);
+    expect(board.semQuarto).toHaveLength(0);
+  });
+
+  it("moverOcupante respeita capacidade e desaloca com quartoId=null", async () => {
+    const t = convexTest(schema, modules);
+    const admin = await seedAdmin(t);
+    const id = await admin.mutation(api.acampamento.mutations.criar, ARGS_ACAMP);
+    await t.mutation(
+      api.public.acampamento.responder,
+      argsInscricao("11911110001", {
+        participantes: [
+          { nome: "A", dataNascimento: "1990-01-01", participaPalestras: false },
+          { nome: "B", dataNascimento: "1990-01-01", participaPalestras: false },
+          { nome: "C", dataNascimento: "1990-01-01", participaPalestras: false },
+          { nome: "D", dataNascimento: "1990-01-01", participaPalestras: false },
+        ],
+        hospedagem: { quartosDuplos: 1, quartosTriplos: 0, camasExtras: 0, pets: 0 },
+      }),
+    );
+    const inscId = (
+      await admin.query(api.acampamento.queries.listarInscricoes, { acampamentoId: id })
+    )[0]._id;
+    const quartoId = await admin.mutation(api.acampamento.quartos.criarQuarto, {
+      acampamentoId: id,
+      tipo: "DUPLO",
+    });
+
+    // 3 cabem (2 + 1 cama extra); o 4o estoura
+    for (const idx of [0, 1, 2]) {
+      await admin.mutation(api.acampamento.quartos.moverOcupante, {
+        acampamentoId: id,
+        inscricaoId: inscId,
+        participanteIndex: idx,
+        quartoId,
+      });
+    }
+    await expect(
+      admin.mutation(api.acampamento.quartos.moverOcupante, {
+        acampamentoId: id,
+        inscricaoId: inscId,
+        participanteIndex: 3,
+        quartoId,
+      }),
+    ).rejects.toThrow(/cheio/);
+
+    // Desaloca um -> volta pro sem-quarto
+    await admin.mutation(api.acampamento.quartos.moverOcupante, {
+      acampamentoId: id,
+      inscricaoId: inscId,
+      participanteIndex: 0,
+      quartoId: null,
+    });
+    const board = await admin.query(api.acampamento.quartos.listarQuartos, { acampamentoId: id });
+    expect(board.quartos[0].ocupantes).toHaveLength(2);
+    expect(board.semQuarto.map((p) => p.nome)).toContain("A");
+  });
+});
