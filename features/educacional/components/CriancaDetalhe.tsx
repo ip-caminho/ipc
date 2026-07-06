@@ -11,7 +11,13 @@ import { Separator } from "@/shared/components/ui/separator";
 import { PhotoUpload } from "@/shared/files/components/PhotoUpload";
 import { ArrowLeft, Trash2, Edit, Users, ClipboardList } from "lucide-react";
 import { useAuth } from "@shared/providers/PermissionsProvider";
-import { TURMA_COLORS, USO_IMAGEM_COLORS, TIPO_RESPONSAVEL_LABELS } from "../lib/constants";
+import {
+  TURMA_COLORS,
+  USO_IMAGEM_COLORS,
+  USO_IMAGEM_LABELS,
+  TIPO_RESPONSAVEL_LABELS,
+} from "../lib/constants";
+import { calcularIdade, proximaTransicaoTurma, turmaDivergente } from "../lib/idade";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -20,18 +26,6 @@ interface CriancaDetalheProps {
   onBack: () => void;
   onEdit: () => void;
   onDelete: () => void;
-}
-
-function calcularIdade(dataNascimento: string): string {
-  const nascimento = new Date(dataNascimento);
-  const hoje = new Date();
-  const diff = hoje.getTime() - nascimento.getTime();
-  const anos = Math.floor(diff / (365.25 * 24 * 60 * 60 * 1000));
-  if (anos < 1) {
-    const meses = Math.floor(diff / (30.44 * 24 * 60 * 60 * 1000));
-    return `${meses} meses`;
-  }
-  return `${anos} ano${anos !== 1 ? "s" : ""}`;
 }
 
 export function CriancaDetalhe({ entidadeId, onBack, onEdit, onDelete }: CriancaDetalheProps) {
@@ -50,6 +44,8 @@ export function CriancaDetalhe({ entidadeId, onBack, onEdit, onDelete }: Crianca
 
   const turmaColor = TURMA_COLORS[crianca.turma] || "bg-gray-100 text-gray-800";
   const usoColor = USO_IMAGEM_COLORS[crianca.usoImagem] || "bg-gray-100 text-gray-800";
+  const transicao = proximaTransicaoTurma(crianca.dataNascimento);
+  const divergente = turmaDivergente(crianca.turma, crianca.dataNascimento);
 
   return (
     <div className="space-y-4">
@@ -105,7 +101,7 @@ export function CriancaDetalhe({ entidadeId, onBack, onEdit, onDelete }: Crianca
                 <p className="text-muted-foreground">Nascimento</p>
                 <p>
                   {format(parseISO(crianca.dataNascimento), "dd/MM/yyyy", { locale: ptBR })}
-                  {" "}({calcularIdade(crianca.dataNascimento)})
+                  {" "}({calcularIdade(crianca.dataNascimento, { long: true })})
                 </p>
               </div>
             )}
@@ -118,17 +114,33 @@ export function CriancaDetalhe({ entidadeId, onBack, onEdit, onDelete }: Crianca
             <div>
               <p className="text-muted-foreground">Uso de imagem</p>
               <Badge variant="outline" className={usoColor}>
-                {crianca.usoImagem === "AUTORIZADO"
-                  ? "Autorizado"
-                  : crianca.usoImagem === "NAO_AUTORIZADO"
-                    ? "Nao autorizado"
-                    : "Pendente"}
+                {USO_IMAGEM_LABELS[crianca.usoImagem] || crianca.usoImagem}
               </Badge>
             </div>
             {crianca.ovelhinhaNome && (
               <div>
                 <p className="text-muted-foreground">Ovelhinha</p>
                 <p>{crianca.ovelhinhaNome}</p>
+              </div>
+            )}
+            {(transicao || divergente) && (
+              <div>
+                <p className="text-muted-foreground">Proxima turma</p>
+                {divergente ? (
+                  <p className="text-amber-600">
+                    Turma desatualizada pela idade (reenquadrar)
+                  </p>
+                ) : transicao?.saiDoDepartamento ? (
+                  <p>
+                    Sai do infantil em{" "}
+                    {format(parseISO(transicao.data), "MM/yyyy", { locale: ptBR })}
+                  </p>
+                ) : (
+                  <p>
+                    {transicao?.proximaTurma} em{" "}
+                    {format(parseISO(transicao!.data), "MM/yyyy", { locale: ptBR })}
+                  </p>
+                )}
               </div>
             )}
           </div>

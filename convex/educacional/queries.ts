@@ -1,5 +1,5 @@
 import { query } from "../_generated/server";
-import { getSaoPauloDateString } from "../_shared/datetime";
+import { getSaoPauloDate, getSaoPauloDateString } from "../_shared/datetime";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { resolvePermissions } from "../preferencias/rbacHelpers";
@@ -288,6 +288,117 @@ export const listEscalas = query({
         };
       })
     );
+  },
+});
+
+// ===== Ovelhinhas aptas =====
+
+// Membros marcados como aptos a ovelhinha — popula o select do cadastro.
+export const listOvelhinhasAptas = query({
+  args: {},
+  handler: async (ctx) => {
+    const auth = await getAuthContext(ctx);
+    if (!auth || !auth.can("criancas:read")) return [];
+
+    const aptas = await ctx.db.query("eduOvelhinhas").collect();
+    const resolvidas = await Promise.all(
+      aptas.map(async (a) => ({
+        membroId: a.membroId,
+        nome: await resolveMembroNome(ctx, a.membroId),
+      }))
+    );
+    return resolvidas
+      .filter((r) => r.nome)
+      .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+  },
+});
+
+// Todos os membros ativos + flag de apto — usado no gerenciador de ovelhinhas.
+// Leitura ampla e pontual (uso administrativo), protegida por criancas:manage.
+export const listMembrosParaOvelhinha = query({
+  args: {},
+  handler: async (ctx) => {
+    const auth = await getAuthContext(ctx);
+    if (!auth || !auth.can("criancas:manage")) return [];
+
+    const aptasSet = new Set(
+      (await ctx.db.query("eduOvelhinhas").collect()).map((a) => String(a.membroId))
+    );
+
+    const membros = await ctx.db.query("membros").collect();
+    const resultados = await Promise.all(
+      membros.map(async (m) => {
+        const entidade = await ctx.db.get(m.entidadeId);
+        if (!entidade || entidade.status !== "ATIVO") return null;
+        return {
+          membroId: m._id,
+          nome: entidade.nomeCompleto || "",
+          foto: entidade.foto || null,
+          apto: aptasSet.has(String(m._id)),
+        };
+      })
+    );
+
+    return resultados
+      .filter((r): r is NonNullable<typeof r> => r !== null && r.nome !== "")
+      .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+  },
+});
+
+// ===== Proximos aniversarios =====
+
+// Crianças ativas ordenadas pela proximidade do aniversário (departamento
+// inteiro, com filtro opcional de turma). Calculo no fuso da igreja.
+export const proximosAniversarios = query({
+  args: { turma: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const auth = await getAuthContext(ctx);
+    if (!auth || !auth.can("criancas:read")) return [];
+
+    let perfis;
+    if (args.turma) {
+      perfis = await ctx.db
+        .query("criancaPerfil")
+        .withIndex("by_turma", (q) => q.eq("turma", args.turma!))
+        .collect();
+    } else {
+      perfis = await ctx.db.query("criancaPerfil").collect();
+    }
+
+    const { year, month, day } = getSaoPauloDate();
+    const hojeUTC = Date.UTC(year, month - 1, day);
+
+    const itens = await Promise.all(
+      perfis.map(async (perfil) => {
+        const entidade = await ctx.db.get(perfil.entidadeId);
+        if (!entidade || entidade.status !== "ATIVO" || !entidade.dataNascimento) {
+          return null;
+        }
+        const [by, bm, bd] = entidade.dataNascimento.split("-").map(Number);
+        if ([by, bm, bd].some((n) => Number.isNaN(n))) return null;
+
+        // Proximo aniversario: este ano se ainda nao passou, senao no ano seguinte.
+        let anoAniv = year;
+        if (bm < month || (bm === month && bd < day)) anoAniv = year + 1;
+        const diasAteAniversario = Math.round(
+          (Date.UTC(anoAniv, bm - 1, bd) - hojeUTC) / 86400000
+        );
+
+        return {
+          entidadeId: perfil.entidadeId,
+          nome: entidade.nomeCompleto || "",
+          foto: entidade.foto || null,
+          turma: perfil.turma,
+          dataNascimento: entidade.dataNascimento,
+          diasAteAniversario,
+          faraIdade: anoAniv - by,
+        };
+      })
+    );
+
+    return itens
+      .filter((i): i is NonNullable<typeof i> => i !== null)
+      .sort((a, b) => a.diasAteAniversario - b.diasAteAniversario);
   },
 });
 
