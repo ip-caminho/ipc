@@ -38,6 +38,7 @@ export type Permission =
   // Educacional
   | "criancas:read" | "criancas:manage"
   | "educacional:read" | "educacional:write"
+  | "voluntarios_edu:read" | "voluntarios_edu:manage"
   // Biblioteca
   | "biblioteca:read" | "biblioteca:create" | "biblioteca:update" | "biblioteca:delete" | "biblioteca:emprestar"
   // Multimidia

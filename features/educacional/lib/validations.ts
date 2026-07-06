@@ -19,6 +19,15 @@ export const relatorioFormSchema = z.object({
   professores: z.string().min(1, "Informe os professores"),
   observacoes: z.string().optional(),
   presentes: z.array(z.string()),
+  // Conteudo da licao
+  numero: z.string().optional(), // convertido p/ number na submissao
+  tema: z.string().optional(),
+  textosBaseText: z.string().optional(), // um por linha
+  passagemMemorizar: z.string().optional(),
+  historia: z.string().optional(),
+  aplicacao: z.string().optional(),
+  licaoDeCasa: z.string().optional(),
+  visitantesText: z.string().optional(), // um por linha
 });
 
 export type RelatorioFormValues = z.infer<typeof relatorioFormSchema>;
@@ -34,3 +43,15 @@ export const escalaFormSchema = z.object({
 });
 
 export type EscalaFormValues = z.infer<typeof escalaFormSchema>;
+
+export const voluntarioFormSchema = z.object({
+  membroId: z.string().min(1, "Selecione o membro"),
+  papelEdu: z.enum(["PROFESSOR", "AUXILIAR", "APOIO"]),
+  turmasHabilitadas: z.array(z.string()),
+  cbcm: z.enum(["NAO_INICIADO", "CURSANDO", "CONCLUIDO"]).optional(),
+  cacValidade: z.string().optional(),
+  certificadoCacUrl: z.string().optional(),
+  observacoes: z.string().optional(),
+});
+
+export type VoluntarioFormValues = z.infer<typeof voluntarioFormSchema>;

@@ -36,6 +36,7 @@ export const INITIAL_ROLE_PERMISSIONS: Record<string, string[]> = {
     "calendario:read", "calendario:create", "calendario:update",
     // Educacional
     "criancas:read", "educacional:read",
+    "voluntarios_edu:read",
     // Biblioteca
     "biblioteca:read",
     // Salas
@@ -71,6 +72,7 @@ export const INITIAL_ROLE_PERMISSIONS: Record<string, string[]> = {
     "ministerios:read",
     "calendario:read",
     "educacional:read",
+    "voluntarios_edu:read",
     "biblioteca:read",
     "salas:read", "salas:create",
     // Tarefas
@@ -111,6 +113,7 @@ export const INITIAL_ROLE_PERMISSIONS: Record<string, string[]> = {
     // Educacional
     "criancas:read", "criancas:manage",
     "educacional:read", "educacional:write",
+    "voluntarios_edu:read", "voluntarios_edu:manage",
     // Salas
     "salas:read", "salas:create", "salas:update", "salas:delete",
     // Pastoreio (visualização)
@@ -180,6 +183,7 @@ export const VOLUNTEER_PERMISSION_SETS: Record<string, { label: string; permissi
     permissions: [
       "criancas:read",
       "educacional:read", "educacional:write",
+      "voluntarios_edu:read", "voluntarios_edu:manage",
     ],
   },
   voluntario_multimidia: {

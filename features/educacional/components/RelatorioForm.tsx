@@ -45,6 +45,14 @@ export function RelatorioForm({ open, onOpenChange, onSubmit }: RelatorioFormPro
       data: new Date().toISOString().slice(0, 10),
       professores: "",
       presentes: [],
+      numero: "",
+      tema: "",
+      textosBaseText: "",
+      passagemMemorizar: "",
+      historia: "",
+      aplicacao: "",
+      licaoDeCasa: "",
+      visitantesText: "",
     },
   });
 
@@ -52,10 +60,8 @@ export function RelatorioForm({ open, onOpenChange, onSubmit }: RelatorioFormPro
   const presentes = form.watch("presentes");
 
   // Buscar criancas da turma selecionada
-  const criancas = useQuery(
-    api.educacional.queries.listCriancas,
-    turmaSelecionada ? { turma: turmaSelecionada } : "skip"
-  );
+  // @ts-ignore Convex TS2589
+  const criancas = useQuery(api.educacional.queries.listCriancas, turmaSelecionada ? { turma: turmaSelecionada } : "skip");
 
   const handleSubmit = async (data: RelatorioFormValues) => {
     setLoading(true);
@@ -119,16 +125,61 @@ export function RelatorioForm({ open, onOpenChange, onSubmit }: RelatorioFormPro
             </div>
           </div>
 
-          <div className="space-y-1">
-            <Label>Professores *</Label>
-            <Input {...form.register("professores")} placeholder="Ana, Bruno" />
-            {form.formState.errors.professores && (
-              <p className="text-xs text-destructive">{form.formState.errors.professores.message}</p>
-            )}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label>Professores *</Label>
+              <Input {...form.register("professores")} placeholder="Ana, Bruno" />
+              {form.formState.errors.professores && (
+                <p className="text-xs text-destructive">{form.formState.errors.professores.message}</p>
+              )}
+            </div>
+            <div className="space-y-1">
+              <Label>Numero da licao</Label>
+              <Input type="number" {...form.register("numero")} placeholder="Ex: 12" />
+            </div>
           </div>
 
           <div className="space-y-1">
-            <Label>Observacoes</Label>
+            <Label>Tema</Label>
+            <Input {...form.register("tema")} />
+          </div>
+
+          <div className="space-y-1">
+            <Label>Textos-base (um por linha)</Label>
+            <Textarea
+              {...form.register("textosBaseText")}
+              rows={2}
+              placeholder={"Joao 3:16\nSalmo 23"}
+            />
+          </div>
+
+          <div className="space-y-1">
+            <Label>Passagem para memorizar</Label>
+            <Input {...form.register("passagemMemorizar")} />
+          </div>
+
+          <div className="space-y-1">
+            <Label>Historia</Label>
+            <Textarea {...form.register("historia")} rows={3} />
+          </div>
+
+          <div className="space-y-1">
+            <Label>Aplicacao</Label>
+            <Textarea {...form.register("aplicacao")} rows={2} />
+          </div>
+
+          <div className="space-y-1">
+            <Label>Licao de casa</Label>
+            <Textarea {...form.register("licaoDeCasa")} rows={2} />
+          </div>
+
+          <div className="space-y-1">
+            <Label>Visitantes (um por linha)</Label>
+            <Textarea {...form.register("visitantesText")} rows={2} />
+          </div>
+
+          <div className="space-y-1">
+            <Label>Observacoes e sugestoes internas</Label>
             <Textarea {...form.register("observacoes")} rows={2} />
           </div>
 

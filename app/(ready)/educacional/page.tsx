@@ -40,9 +40,12 @@ import { CriancaCard } from "@features/educacional/components/CriancaCard";
 import { CriancaForm } from "@features/educacional/components/CriancaForm";
 import { CriancaDetalhe } from "@features/educacional/components/CriancaDetalhe";
 import { RelatorioForm } from "@features/educacional/components/RelatorioForm";
+import { RelatorioDetalhe } from "@features/educacional/components/RelatorioDetalhe";
 import { EscalaForm } from "@features/educacional/components/EscalaForm";
 import { ProximosAniversarios } from "@features/educacional/components/ProximosAniversarios";
 import { OvelhinhasManager } from "@features/educacional/components/OvelhinhasManager";
+import { VoluntariosTab } from "@features/educacional/components/VoluntariosTab";
+import { AgendaTab } from "@features/educacional/components/AgendaTab";
 
 import type { CriancaFormValues } from "@features/educacional/lib/validations";
 import type { RelatorioFormValues } from "@features/educacional/lib/validations";
@@ -56,6 +59,7 @@ export default function EducacionalPage() {
   const canManage = can("criancas:manage");
   const canReadEdu = can("educacional:read");
   const canWriteEdu = can("educacional:write");
+  const canReadVol = can("voluntarios_edu:read");
   const isCoordenador = canManage || canWriteEdu;
 
   // Deteccao de persona: professor escalado em turma
@@ -78,6 +82,7 @@ export default function EducacionalPage() {
   const [relatorioFormOpen, setRelatorioFormOpen] = useState(false);
   const [escalaFormOpen, setEscalaFormOpen] = useState(false);
   const [ovelhinhasManagerOpen, setOvelhinhasManagerOpen] = useState(false);
+  const [selectedRelatorioId, setSelectedRelatorioId] = useState<Id<"eduRelatorios"> | null>(null);
 
   // Queries
   const criancas = useQuery(
@@ -162,12 +167,25 @@ export default function EducacionalPage() {
 
   const handleCreateRelatorio = async (data: RelatorioFormValues) => {
     try {
+      const toLines = (s?: string) =>
+        s
+          ? s.split("\n").map((l) => l.trim()).filter(Boolean)
+          : undefined;
+      const numeroParsed = data.numero ? parseInt(data.numero, 10) : NaN;
       await createRelatorio({
         turma: data.turma,
         data: data.data,
         professores: data.professores,
         observacoes: data.observacoes || undefined,
         presentes: data.presentes as Id<"entidades">[],
+        numero: Number.isNaN(numeroParsed) ? undefined : numeroParsed,
+        tema: data.tema || undefined,
+        textosBase: toLines(data.textosBaseText),
+        passagemMemorizar: data.passagemMemorizar || undefined,
+        historia: data.historia || undefined,
+        aplicacao: data.aplicacao || undefined,
+        licaoDeCasa: data.licaoDeCasa || undefined,
+        visitantes: toLines(data.visitantesText),
       });
       toast.success("Relatorio criado");
     } catch (error) {
@@ -322,6 +340,18 @@ export default function EducacionalPage() {
               <Cake className="h-4 w-4" />
               Aniversarios
             </TabsTrigger>
+            {canReadVol && (
+              <TabsTrigger value="voluntarios" className="gap-1.5">
+                <Heart className="h-4 w-4" />
+                Voluntarios
+              </TabsTrigger>
+            )}
+            {canReadEdu && (
+              <TabsTrigger value="agenda" className="gap-1.5">
+                <CalendarDays className="h-4 w-4" />
+                Agenda
+              </TabsTrigger>
+            )}
             {canReadEdu && (
               <TabsTrigger value="escala" className="gap-1.5">
                 <CalendarDays className="h-4 w-4" />
@@ -396,6 +426,20 @@ export default function EducacionalPage() {
           <TabsContent value="aniversarios" className="space-y-4">
             <ProximosAniversarios />
           </TabsContent>
+
+          {/* Tab: Voluntarios */}
+          {canReadVol && (
+            <TabsContent value="voluntarios" className="space-y-4">
+              <VoluntariosTab />
+            </TabsContent>
+          )}
+
+          {/* Tab: Agenda */}
+          {canReadEdu && (
+            <TabsContent value="agenda" className="space-y-4">
+              <AgendaTab ministerioId={eduMinisterio?._id} />
+            </TabsContent>
+          )}
 
           {/* Tab: Escala */}
           {canReadEdu && (
@@ -488,11 +532,16 @@ export default function EducacionalPage() {
               ) : (
                 <div className="grid gap-3 sm:grid-cols-2">
                   {relatorios.map((r: any) => (
-                    <Card key={r._id}>
+                    <Card
+                      key={r._id}
+                      className="cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={() => setSelectedRelatorioId(r._id)}
+                    >
                       <CardContent className="py-3">
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="text-sm font-medium">
+                              {r.numero != null ? `Licao ${r.numero} · ` : ""}
                               {format(parseISO(r.data), "dd/MM/yyyy", { locale: ptBR })}
                             </p>
                             <Badge
@@ -506,12 +555,12 @@ export default function EducacionalPage() {
                             {r.totalPresentes} presente{r.totalPresentes !== 1 ? "s" : ""}
                           </Badge>
                         </div>
+                        {r.tema && (
+                          <p className="text-xs font-medium mt-1">{r.tema}</p>
+                        )}
                         <p className="text-xs text-muted-foreground mt-1">
                           Professores: {r.professores}
                         </p>
-                        {r.observacoes && (
-                          <p className="text-xs text-muted-foreground mt-1">{r.observacoes}</p>
-                        )}
                       </CardContent>
                     </Card>
                   ))}
@@ -543,6 +592,10 @@ export default function EducacionalPage() {
         <OvelhinhasManager
           open={ovelhinhasManagerOpen}
           onOpenChange={setOvelhinhasManagerOpen}
+        />
+        <RelatorioDetalhe
+          id={selectedRelatorioId}
+          onOpenChange={(open) => !open && setSelectedRelatorioId(null)}
         />
       </div>
       </HeaderLayout>
