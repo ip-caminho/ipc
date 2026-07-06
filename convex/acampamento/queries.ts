@@ -1,7 +1,7 @@
 import { query } from "../_generated/server";
 import { v } from "convex/values";
 import { requirePermission } from "../_shared/requirePermission";
-import { saldoFundo, saldoInscricao, totalRecebido, valorFinal } from "./calculoHelpers";
+import { consolidadoEvento, saldoInscricao, totalRecebido, valorFinal } from "./calculoHelpers";
 
 // Queries admin do acampamento (inscricoes:manage). Volume baixo (1 evento/ano,
 // dezenas de inscricoes) — collect por indice e agregacao em memoria.
@@ -36,7 +36,11 @@ export const getById = query({
   },
 });
 
-// Lista de inscricoes do acampamento com resumo financeiro por linha.
+// Lista de inscricoes com resumo financeiro por linha. Shape ENXUTO: a lista
+// e reativa (re-executa a cada mutation em qualquer inscricao) — detalhes
+// (extras, pagamento, participantes completos) ficam no getInscricao do
+// drawer. Os agregados por linha permitem ao cliente derivar o consolidado
+// do evento sem uma segunda assinatura (ver resumoFinanceiro).
 export const listarInscricoes = query({
   args: { acampamentoId: v.id("acampamentos") },
   handler: async (ctx, { acampamentoId }) => {
@@ -50,16 +54,18 @@ export const listarInscricoes = query({
       .map((i) => ({
         _id: i._id,
         responsavel: i.responsavel,
-        participantes: i.participantes,
+        participantesQtd: i.participantes.length,
+        participantesNomes: i.participantes.map((p) => p.nome), // busca client-side
         hospedagem: i.hospedagem,
-        extras: i.extras,
-        pagamentoPreferido: i.pagamentoPreferido,
         status: i.status,
         criadoEm: i.criadoEm,
         valorTabela: i.valorTabela,
         valorFinal: valorFinal(i.valorTabela, i.ajustes),
         recebido: totalRecebido(i.recebimentos),
         saldo: saldoInscricao(i.valorTabela, i.ajustes, i.recebimentos),
+        contribuicoesFundo: i.ajustes
+          .filter((a) => a.tipo === "CONTRIBUICAO_FUNDO")
+          .reduce((s, a) => s + a.valor, 0),
         semMatching: i.participantes.filter((p) => !p.membroId).length,
       }));
   },
@@ -71,21 +77,15 @@ export const getInscricao = query({
     await requirePermission(ctx, "inscricoes:manage");
     const insc = await ctx.db.get(id);
     if (!insc) return null;
-    // Nomes dos membros ja vinculados (badge de confirmacao)
-    const participantes = await Promise.all(
-      insc.participantes.map(async (p) => {
-        let membroNome: string | null = null;
-        if (p.membroId) {
-          const m = await ctx.db.get(p.membroId);
-          const e = m ? await ctx.db.get(m.entidadeId) : null;
-          membroNome = e?.nomeCompleto ?? null;
-        }
-        return { ...p, membroNome };
-      }),
-    );
+    // membroNome ja e denormalizado no matching — sem N+1 aqui. Shape sem
+    // precosSnapshot/ipHash/lgpd (o drawer nao usa; menos egress por
+    // re-execucao — esta query reexecuta a cada acao no drawer).
+    const { precosSnapshot, ipHash, lgpdConsentimento, ...resto } = insc;
+    void precosSnapshot;
+    void ipHash;
+    void lgpdConsentimento;
     return {
-      ...insc,
-      participantes,
+      ...resto,
       valorFinal: valorFinal(insc.valorTabela, insc.ajustes),
       recebido: totalRecebido(insc.recebimentos),
       saldo: saldoInscricao(insc.valorTabela, insc.ajustes, insc.recebimentos),
@@ -123,7 +123,10 @@ export const sugerirMembros = query({
   },
 });
 
-// Painel financeiro consolidado: totais + fundo + situacao por inscricao.
+// Painel financeiro consolidado do evento. A pagina admin NAO assina esta
+// query — deriva o consolidado no cliente via consolidadoEvento() sobre as
+// linhas de listarInscricoes + aportes do getById (uma assinatura so).
+// Mantida p/ o dialog de desconto (assinatura pontual enquanto aberto) e testes.
 export const resumoFinanceiro = query({
   args: { id: v.id("acampamentos") },
   handler: async (ctx, { id }) => {
@@ -136,33 +139,19 @@ export const resumoFinanceiro = query({
       .withIndex("by_acampamento", (q) => q.eq("acampamentoId", id))
       .collect();
 
-    const consideradas = inscricoes.filter((i) => i.status !== "CANCELADA");
-    let totalTabela = 0,
-      totalDescontos = 0,
-      totalFinal = 0,
-      totalRecebidoGeral = 0;
-    for (const i of consideradas) {
-      totalTabela += i.valorTabela;
-      const final = valorFinal(i.valorTabela, i.ajustes);
-      totalDescontos += i.valorTabela - final;
-      totalFinal += final;
-      totalRecebidoGeral += totalRecebido(i.recebimentos);
-    }
-    const fundo = saldoFundo(
-      acamp.aportesFundo,
-      consideradas.flatMap((i) => i.ajustes),
-    );
+    const linhas = inscricoes.map((i) => ({
+      status: i.status,
+      valorTabela: i.valorTabela,
+      valorFinal: valorFinal(i.valorTabela, i.ajustes),
+      recebido: totalRecebido(i.recebimentos),
+      saldo: saldoInscricao(i.valorTabela, i.ajustes, i.recebimentos),
+      contribuicoesFundo: i.ajustes
+        .filter((a) => a.tipo === "CONTRIBUICAO_FUNDO")
+        .reduce((s, a) => s + a.valor, 0),
+    }));
 
     return {
-      totalTabela,
-      totalDescontos,
-      totalFinal,
-      totalRecebido: totalRecebidoGeral,
-      aReceber: consideradas.reduce(
-        (s, i) => s + Math.max(0, saldoInscricao(i.valorTabela, i.ajustes, i.recebimentos)),
-        0,
-      ),
-      fundo,
+      ...consolidadoEvento(linhas, acamp.aportesFundo),
       inscricoes: {
         ativas: inscricoes.filter((i) => i.status === "ATIVA").length,
         listaEspera: inscricoes.filter((i) => i.status === "LISTA_ESPERA").length,

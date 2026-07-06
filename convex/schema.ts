@@ -1348,6 +1348,9 @@ export default defineSchema({
         nome: v.string(),
         dataNascimento: v.string(), // YYYY-MM-DD (validada: nao-futura)
         membroId: v.optional(v.id("membros")), // matching confirmado pela secretaria
+        // Nome do membro denormalizado no matching — evita 2 gets por
+        // participante em toda re-execucao do getInscricao (drawer reativo)
+        membroNome: v.optional(v.string()),
         participaPalestras: v.boolean(),
       }),
     ),

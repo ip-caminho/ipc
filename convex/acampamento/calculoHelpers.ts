@@ -132,3 +132,55 @@ export function saldoFundo(
     .reduce((s, a) => s + a.valor, 0);
   return aportes + contribuicoes - descontos;
 }
+
+type LinhaConsolidado = {
+  status: "ATIVA" | "LISTA_ESPERA" | "CANCELADA";
+  valorTabela: number;
+  valorFinal: number;
+  recebido: number;
+  saldo: number;
+  contribuicoesFundo: number;
+};
+
+export type ConsolidadoEvento = {
+  totalTabela: number;
+  totalDescontos: number;
+  totalFinal: number;
+  totalRecebido: number;
+  aReceber: number;
+  fundo: number;
+};
+
+/**
+ * Consolidado financeiro do evento a partir das linhas de listarInscricoes +
+ * aportes avulsos (doc do acampamento). Derivavel no CLIENTE — evita uma
+ * segunda assinatura reativa relendo a mesma base (padrao do Rol de Membros).
+ */
+export function consolidadoEvento(
+  linhas: LinhaConsolidado[],
+  aportesFundo: { valor: number }[],
+): ConsolidadoEvento {
+  const consideradas = linhas.filter((l) => l.status !== "CANCELADA");
+  let totalTabela = 0,
+    totalFinal = 0,
+    totalRecebido = 0,
+    aReceber = 0,
+    contribuicoes = 0;
+  for (const l of consideradas) {
+    totalTabela += l.valorTabela;
+    totalFinal += l.valorFinal;
+    totalRecebido += l.recebido;
+    aReceber += Math.max(0, l.saldo);
+    contribuicoes += l.contribuicoesFundo;
+  }
+  const totalDescontos = totalTabela - totalFinal;
+  const aportes = aportesFundo.reduce((s, a) => s + a.valor, 0);
+  return {
+    totalTabela,
+    totalDescontos,
+    totalFinal,
+    totalRecebido,
+    aReceber,
+    fundo: aportes + contribuicoes - totalDescontos,
+  };
+}
