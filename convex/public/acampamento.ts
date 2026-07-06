@@ -158,6 +158,21 @@ const hospedagemValidator = v.object({
 
 const DATA_RE = /^\d{4}-\d{2}-\d{2}$/;
 
+// Valida CPF (11 digitos + digitos verificadores). Inline porque o Convex nao
+// empacota imports de fora de convex/ (shared/lib/validations/brazilian).
+function cpfValido(raw: string): boolean {
+  const c = raw.replace(/\D/g, "");
+  if (c.length !== 11 || /^(\d)\1{10}$/.test(c)) return false;
+  const dig = c.split("").map(Number);
+  for (let t = 9; t < 11; t++) {
+    let soma = 0;
+    for (let i = 0; i < t; i++) soma += dig[i] * (t + 1 - i);
+    const d = ((soma * 10) % 11) % 10;
+    if (d !== dig[t]) return false;
+  }
+  return true;
+}
+
 // Submissao publica da inscricao de grupo. Calcula o valor com snapshot da
 // tabela vigente; estoque esgotado -> LISTA_ESPERA.
 export const responder = mutation({
@@ -229,6 +244,10 @@ export const responder = mutation({
     if (args.pagamentoPreferido.forma === "PARCELADO") {
       const n = args.pagamentoPreferido.parcelas;
       if (!n || n < 2 || n > 12) throw new Error("Número de parcelas inválido (2 a 12)");
+    }
+    // CPF do pagante obrigatório (borda: form já valida, mas o endpoint é público)
+    if (!cpfValido(args.pagamentoPreferido.cpfPagante ?? "")) {
+      throw new Error("CPF do pagante inválido");
     }
 
     // Rate limit anti-spam: 5 submissoes/hora por ipHash.

@@ -129,7 +129,7 @@ function argsInscricao(whatsapp: string, extra: Record<string, unknown> = {}) {
       { nome: "Adulto", dataNascimento: "1990-01-01", participaPalestras: true },
     ],
     hospedagem: { quartosDuplos: 1, quartosTriplos: 0, camasExtras: 0, pets: 0 },
-    pagamentoPreferido: { forma: "A_VISTA" as const },
+    pagamentoPreferido: { forma: "A_VISTA" as const, cpfPagante: "11144477735" },
     lgpdConsentimento: true,
     ipHash: "hash-teste",
     ...extra,
@@ -328,6 +328,35 @@ describe("acampamento admin (fase 3)", () => {
     expect(detalhe!.participantes[0].membroNome).toBe("Adulto da Silva");
   });
 
+  it("responder exige CPF do pagante valido", async () => {
+    const t = convexTest(schema, modules);
+    const admin = await seedAdmin(t);
+    await admin.mutation(api.acampamento.mutations.criar, ARGS_ACAMP);
+
+    // Sem CPF -> rejeita
+    await expect(
+      t.mutation(api.public.acampamento.responder, {
+        ...argsInscricao("11911110001"),
+        pagamentoPreferido: { forma: "A_VISTA" as const },
+      }),
+    ).rejects.toThrow(/CPF/);
+
+    // CPF invalido (digitos verificadores errados) -> rejeita
+    await expect(
+      t.mutation(api.public.acampamento.responder, {
+        ...argsInscricao("11911110002"),
+        pagamentoPreferido: { forma: "A_VISTA" as const, cpfPagante: "11111111111" },
+      }),
+    ).rejects.toThrow(/CPF/);
+
+    // CPF valido -> aceita
+    const r = await t.mutation(
+      api.public.acampamento.responder,
+      argsInscricao("11911110003"),
+    );
+    expect(r.status).toBe("ATIVA");
+  });
+
   it("membro logado auto-vincula a propria familia e ignora membroId forjado", async () => {
     const t = convexTest(schema, modules);
     const admin = await seedAdmin(t);
@@ -376,7 +405,7 @@ describe("acampamento admin (fase 3)", () => {
         },
       ],
       hospedagem: { quartosDuplos: 1, quartosTriplos: 0, camasExtras: 0, pets: 0 },
-      pagamentoPreferido: { forma: "A_VISTA" },
+      pagamentoPreferido: { forma: "A_VISTA", cpfPagante: "11144477735" },
       lgpdConsentimento: true,
       ipHash: "hash-teste",
     });
