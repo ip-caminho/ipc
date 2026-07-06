@@ -26,6 +26,7 @@ import { ProfileNudgeDialog } from "@features/dashboard/components/ProfileNudgeD
 import { MinhasInscricoesCard } from "@features/acampamento/components/MinhasInscricoesCard";
 
 function BootstrapForm() {
+  // @ts-ignore Convex TS2589
   const bootstrap = useMutation(api.membros.bootstrap.bootstrapAdmin);
   const relinkAdmin = useMutation(api.debug.relinkAdmin);
   const [loading, setLoading] = useState(false);
