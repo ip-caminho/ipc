@@ -20,11 +20,14 @@ import {
 } from "@/shared/components/ui/select";
 import { DatePickerBR } from "@/shared/components/ui/date-picker-br";
 import { Plus, Trash2, UserRound, Loader2 } from "lucide-react";
-import { calcularValorInscricao } from "@convex/acampamento/calculoHelpers";
+import { calcularValorInscricao, idadeNaData } from "@convex/acampamento/calculoHelpers";
 import type { AcampamentoPublico } from "../lib/data";
 import { LoginModalInline } from "@features/site-publico/components/LoginModalInline";
 
 const hojeIso = () => new Date().toISOString().slice(0, 10);
+
+// Palestras: marcadas por padrao so a partir dos 15 anos
+const IDADE_PALESTRA = 15;
 
 const participanteSchema = z.object({
   nome: z.string().trim().min(3, "Nome completo"),
@@ -77,50 +80,92 @@ function brl(centavos: number): string {
   return (centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-// Input numerico compacto (mobile-first, tap >= 44px)
+// ===== Vocabulario visual do site v2 (navy/laranja/papel, cantos retos) =====
+const FONT_BODY = "font-[family-name:var(--font-source-sans)]";
+const FONT_DISPLAY = "font-[family-name:var(--font-spectral)]";
+const COR_TEXTO = "text-[#1A1A1A]";
+const COR_MUTED = "text-[#595959]";
+const BORDA = "border-[#E5E3DC]";
+
+function Erro({ msg }: { msg?: string }) {
+  if (!msg) return null;
+  return <p className={`${FONT_BODY} text-[12px] text-[#B3261E]`}>{msg}</p>;
+}
+
+// Cabecalho de etapa: numero em Spectral + regua — o form e uma sequencia real
+function Etapa({ n, titulo, hint }: { n: number; titulo: string; hint?: string }) {
+  return (
+    <div className="flex items-baseline gap-3 border-b border-[#E5E3DC] pb-2">
+      <span className={`${FONT_DISPLAY} text-[20px] leading-none text-[#F0732B]`}>{n}</span>
+      <h2 className={`${FONT_DISPLAY} text-[19px] leading-tight ${COR_TEXTO}`}>{titulo}</h2>
+      {hint && <span className={`${FONT_BODY} ml-auto text-[12px] ${COR_MUTED}`}>{hint}</span>}
+    </div>
+  );
+}
+
+function CampoLabel({ htmlFor, children }: { htmlFor?: string; children: React.ReactNode }) {
+  return (
+    <Label htmlFor={htmlFor} className={`${FONT_BODY} text-[13px] ${COR_TEXTO}`}>
+      {children}
+    </Label>
+  );
+}
+
+// Stepper quadrado no vocabulario do site
 function CampoNumero({
   label,
   hint,
   value,
   onChange,
-  max,
 }: {
   label: string;
   hint?: string;
   value: number;
   onChange: (n: number) => void;
-  max?: number;
 }) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
+    <div className={`flex items-center justify-between gap-3 border ${BORDA} bg-white p-3`}>
       <div className="min-w-0">
-        <p className="text-sm font-medium">{label}</p>
-        {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+        <p className={`${FONT_BODY} text-[14px] font-semibold ${COR_TEXTO}`}>{label}</p>
+        {hint && <p className={`${FONT_BODY} text-[12px] ${COR_MUTED}`}>{hint}</p>}
       </div>
       <div className="flex shrink-0 items-center gap-2">
-        <Button
+        <button
           type="button"
-          variant="outline"
-          size="icon"
-          className="h-11 w-11 md:h-9 md:w-9"
+          aria-label={`Diminuir ${label}`}
           onClick={() => onChange(Math.max(0, value - 1))}
           disabled={value <= 0}
+          className={`h-11 w-11 border ${BORDA} bg-white text-[18px] leading-none ${COR_TEXTO} transition-colors hover:bg-[#F4F0E8] disabled:opacity-30 md:h-9 md:w-9`}
         >
           −
-        </Button>
-        <span className="w-6 text-center text-sm font-semibold tabular-nums">{value}</span>
-        <Button
+        </button>
+        <span className={`${FONT_DISPLAY} w-7 text-center text-[18px] tabular-nums ${COR_TEXTO}`}>
+          {value}
+        </span>
+        <button
           type="button"
-          variant="outline"
-          size="icon"
-          className="h-11 w-11 md:h-9 md:w-9"
+          aria-label={`Aumentar ${label}`}
           onClick={() => onChange(value + 1)}
-          disabled={max !== undefined && value >= max}
+          className={`h-11 w-11 border ${BORDA} bg-white text-[18px] leading-none ${COR_TEXTO} transition-colors hover:bg-[#F4F0E8] md:h-9 md:w-9`}
         >
           +
-        </Button>
+        </button>
       </div>
     </div>
+  );
+}
+
+// Linha da "conta do retiro": pontilhado entre item e valor (estetica de recibo)
+function LinhaConta({ nome, detalhe, valor }: { nome: string; detalhe?: string; valor: string }) {
+  return (
+    <li className={`flex items-baseline gap-2 ${FONT_BODY} text-[14px]`}>
+      <span className={`shrink-0 ${COR_TEXTO}`}>
+        {nome}
+        {detalhe && <span className={`ml-1 text-[12px] ${COR_MUTED}`}>{detalhe}</span>}
+      </span>
+      <span className="mx-1 flex-1 border-b border-dotted border-[#C9C2B4]" aria-hidden />
+      <span className={`shrink-0 tabular-nums ${COR_TEXTO}`}>{valor}</span>
+    </li>
   );
 }
 
@@ -177,6 +222,17 @@ export function AcampamentoForm({ acampamento }: { acampamento: AcampamentoPubli
     );
   }, [valores, acampamento]);
 
+  // Ao informar o nascimento, palestras ficam marcadas so p/ 15+ (ajustavel)
+  function aoMudarNascimento(index: number, iso: string) {
+    form.setValue(`participantes.${index}.dataNascimento`, iso, { shouldValidate: true });
+    if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) {
+      form.setValue(
+        `participantes.${index}.participaPalestras`,
+        idadeNaData(iso, acampamento.dataInicio) >= IDADE_PALESTRA,
+      );
+    }
+  }
+
   function preencherComFamilia() {
     if (!familia) return;
     form.setValue("responsavelNome", familia.responsavel.nome);
@@ -186,7 +242,9 @@ export function AcampamentoForm({ acampamento }: { acampamento: AcampamentoPubli
       familia.participantes.map((p) => ({
         nome: p.nome,
         dataNascimento: p.dataNascimento ?? "",
-        participaPalestras: true,
+        participaPalestras: p.dataNascimento
+          ? idadeNaData(p.dataNascimento, acampamento.dataInicio) >= IDADE_PALESTRA
+          : true,
       })),
     );
   }
@@ -227,6 +285,7 @@ export function AcampamentoForm({ acampamento }: { acampamento: AcampamentoPubli
       if (!res.ok || !json.ok) throw new Error(json.error || "Erro ao enviar inscrição");
       setResultado({ status: json.status, valorTabela: json.valorTabela });
       setStatus("success");
+      window.scrollTo({ top: 0 });
     } catch (e) {
       setErroEnvio(e instanceof Error ? e.message : "Erro ao enviar inscrição");
       setStatus("error");
@@ -236,11 +295,11 @@ export function AcampamentoForm({ acampamento }: { acampamento: AcampamentoPubli
   if (status === "success" && resultado) {
     const espera = resultado.status === "LISTA_ESPERA";
     return (
-      <div className="rounded-xl border p-6 text-center space-y-3">
-        <p className="text-lg font-semibold">
+      <div className={`border ${BORDA} bg-white p-6 text-center md:p-10`}>
+        <p className={`${FONT_DISPLAY} text-[24px] ${COR_TEXTO}`}>
           {espera ? "Você está na lista de espera" : "Inscrição recebida!"}
         </p>
-        <p className="text-sm text-muted-foreground">
+        <p className={`${FONT_BODY} mx-auto mt-3 max-w-[42ch] text-[14px] leading-[1.6] ${COR_MUTED}`}>
           {espera
             ? "Os quartos disponíveis se esgotaram. A secretaria entrará em contato assim que abrir vaga."
             : `Valor da inscrição: ${brl(resultado.valorTabela)}. A secretaria entrará em contato pelo WhatsApp para combinar o pagamento.`}
@@ -251,136 +310,137 @@ export function AcampamentoForm({ acampamento }: { acampamento: AcampamentoPubli
 
   if (!acampamento.inscricoesAbertas) {
     return (
-      <div className="rounded-xl border p-6 text-center text-sm text-muted-foreground">
+      <div className={`border ${BORDA} bg-[#F4F0E8] p-6 text-center ${FONT_BODY} text-[14px] ${COR_MUTED}`}>
         As inscrições não estão abertas no momento.
       </div>
     );
   }
 
+  const errs = form.formState.errors;
+
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-      {/* Pré-preenchimento p/ membro */}
+    <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="space-y-10 pb-28 md:pb-0">
+      {/* Pre-preenchimento p/ membro */}
       {!isAuthenticated ? (
         <button
           type="button"
           onClick={() => setLoginOpen(true)}
-          className="w-full rounded-lg border border-dashed p-3 text-sm text-muted-foreground hover:bg-accent/40 min-h-[44px]"
+          className={`flex min-h-[48px] w-full items-center justify-center gap-2 border ${BORDA} bg-[#F4F0E8] px-4 py-3 ${FONT_BODY} text-[13px] ${COR_TEXTO} transition-colors hover:bg-[#ECE6DC]`}
         >
-          É membro? <span className="underline">Entre</span> para preencher com os dados da sua família.
+          É membro da IPC? <span className="underline underline-offset-2">Entre</span> e preenchemos
+          com os dados da sua família.
         </button>
       ) : familia && familia.participantes.length > 0 ? (
-        <Button type="button" variant="outline" className="w-full h-11" onClick={preencherComFamilia}>
-          <UserRound className="mr-2 h-4 w-4" />
+        <Button
+          type="button"
+          variant="outline"
+          onClick={preencherComFamilia}
+          className={`h-12 w-full border ${BORDA} ${FONT_BODY} text-[14px] ${COR_TEXTO} hover:bg-[#F4F0E8]`}
+        >
+          <UserRound className="mr-2 h-4 w-4 text-[#F0732B]" />
           Preencher com minha família ({familia.participantes.length})
         </Button>
       ) : null}
       <LoginModalInline open={loginOpen} onOpenChange={setLoginOpen} />
 
-      {/* Responsável */}
-      <section className="space-y-3">
-        <h2 className="text-base font-semibold">Responsável pela inscrição</h2>
-        <div className="grid gap-3 md:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label htmlFor="respNome">Nome</Label>
+      {/* 1 — Responsavel */}
+      <section className="space-y-4">
+        <Etapa n={1} titulo="Responsável pela inscrição" />
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-1">
+            <CampoLabel htmlFor="respNome">Nome</CampoLabel>
             <Input id="respNome" {...form.register("responsavelNome")} />
-            {form.formState.errors.responsavelNome && (
-              <p className="text-xs text-destructive">{form.formState.errors.responsavelNome.message}</p>
-            )}
+            <Erro msg={errs.responsavelNome?.message} />
           </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="respZap">WhatsApp</Label>
+          <div className="space-y-1">
+            <CampoLabel htmlFor="respZap">WhatsApp</CampoLabel>
             <Input id="respZap" type="tel" placeholder="(11) 9…" {...form.register("responsavelWhatsapp")} />
-            {form.formState.errors.responsavelWhatsapp && (
-              <p className="text-xs text-destructive">{form.formState.errors.responsavelWhatsapp.message}</p>
-            )}
+            <Erro msg={errs.responsavelWhatsapp?.message} />
           </div>
         </div>
       </section>
 
-      {/* Participantes */}
-      <section className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold">Participantes</h2>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-11 md:h-8"
-            disabled={fields.length >= 10}
-            onClick={() => append({ nome: "", dataNascimento: "", participaPalestras: true })}
-          >
-            <Plus className="mr-1 h-4 w-4" /> Adicionar
-          </Button>
-        </div>
-        {form.formState.errors.participantes?.message && (
-          <p className="text-xs text-destructive">{form.formState.errors.participantes.message}</p>
-        )}
+      {/* 2 — Participantes */}
+      <section className="space-y-4">
+        <Etapa n={2} titulo="Quem vai" hint={`${fields.length} de 10`} />
+        <Erro msg={errs.participantes?.message} />
         <div className="space-y-3">
-          {fields.map((f, i) => (
-            <div key={f.id} className="rounded-lg border p-3 space-y-3">
-              <div className="grid gap-3 md:grid-cols-[1fr_auto_auto]">
-                <div className="space-y-1.5">
-                  <Label htmlFor={`p-nome-${i}`}>Nome completo</Label>
-                  <Input id={`p-nome-${i}`} {...form.register(`participantes.${i}.nome`)} />
-                  {form.formState.errors.participantes?.[i]?.nome && (
-                    <p className="text-xs text-destructive">
-                      {form.formState.errors.participantes[i]?.nome?.message}
-                    </p>
-                  )}
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor={`p-nasc-${i}`}>Nascimento</Label>
-                  <Controller
-                    control={form.control}
-                    name={`participantes.${i}.dataNascimento`}
-                    render={({ field }) => (
-                      <DatePickerBR
-                        id={`p-nasc-${i}`}
-                        value={field.value}
-                        onChange={field.onChange}
-                        max={hojeIso()}
-                      />
+          {fields.map((f, i) => {
+            const nasc = valores.participantes?.[i]?.dataNascimento;
+            const nascValido = nasc && /^\d{4}-\d{2}-\d{2}$/.test(nasc);
+            const idade = nascValido ? idadeNaData(nasc, acampamento.dataInicio) : null;
+            return (
+              <div key={f.id} className={`border ${BORDA} bg-white p-4`}>
+                <div className="mb-3 flex items-center justify-between">
+                  <p className={`${FONT_BODY} text-[11px] font-semibold uppercase tracking-[0.08em] ${COR_MUTED}`}>
+                    Participante {i + 1}
+                    {idade !== null && (
+                      <span className="ml-2 normal-case tracking-normal text-[#F0732B]">
+                        {idade} {idade === 1 ? "ano" : "anos"}
+                      </span>
                     )}
-                  />
-                  {form.formState.errors.participantes?.[i]?.dataNascimento && (
-                    <p className="text-xs text-destructive">
-                      {form.formState.errors.participantes[i]?.dataNascimento?.message}
-                    </p>
-                  )}
-                </div>
-                <div className="flex items-end justify-between gap-3 md:flex-col md:items-center">
-                  <label className="flex items-center gap-2 text-sm min-h-[44px] md:min-h-0">
-                    <Controller
-                      control={form.control}
-                      name={`participantes.${i}.participaPalestras`}
-                      render={({ field }) => (
-                        <Checkbox checked={field.value} onCheckedChange={(c) => field.onChange(c === true)} />
-                      )}
-                    />
-                    Palestras
-                  </label>
+                  </p>
                   {fields.length > 1 && (
-                    <Button
+                    <button
                       type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="h-11 w-11 md:h-8 md:w-8 text-muted-foreground"
+                      aria-label={`Remover participante ${i + 1}`}
                       onClick={() => remove(i)}
-                      aria-label="Remover participante"
+                      className={`-mr-1 flex h-9 w-9 items-center justify-center ${COR_MUTED} transition-colors hover:text-[#B3261E]`}
                     >
                       <Trash2 className="h-4 w-4" />
-                    </Button>
+                    </button>
                   )}
                 </div>
+                <div className="grid gap-4 md:grid-cols-[1fr_190px]">
+                  <div className="space-y-1">
+                    <CampoLabel htmlFor={`p-nome-${i}`}>Nome completo</CampoLabel>
+                    <Input id={`p-nome-${i}`} {...form.register(`participantes.${i}.nome`)} />
+                    <Erro msg={errs.participantes?.[i]?.nome?.message} />
+                  </div>
+                  <div className="space-y-1">
+                    <CampoLabel htmlFor={`p-nasc-${i}`}>Nascimento</CampoLabel>
+                    <Controller
+                      control={form.control}
+                      name={`participantes.${i}.dataNascimento`}
+                      render={({ field }) => (
+                        <DatePickerBR
+                          id={`p-nasc-${i}`}
+                          value={field.value}
+                          onChange={(iso) => aoMudarNascimento(i, iso)}
+                          max={hojeIso()}
+                        />
+                      )}
+                    />
+                    <Erro msg={errs.participantes?.[i]?.dataNascimento?.message} />
+                  </div>
+                </div>
+                <label className={`mt-3 flex min-h-[44px] items-center gap-2.5 ${FONT_BODY} text-[13px] ${COR_TEXTO} md:min-h-0`}>
+                  <Controller
+                    control={form.control}
+                    name={`participantes.${i}.participaPalestras`}
+                    render={({ field }) => (
+                      <Checkbox checked={field.value} onCheckedChange={(c) => field.onChange(c === true)} />
+                    )}
+                  />
+                  Participará das palestras
+                </label>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
+        <button
+          type="button"
+          onClick={() => append({ nome: "", dataNascimento: "", participaPalestras: true })}
+          disabled={fields.length >= 10}
+          className={`flex min-h-[48px] w-full items-center justify-center gap-2 border border-dashed ${BORDA} ${FONT_BODY} text-[13px] font-semibold ${COR_TEXTO} transition-colors hover:bg-[#F4F0E8] disabled:opacity-40`}
+        >
+          <Plus className="h-4 w-4 text-[#F0732B]" /> Adicionar participante
+        </button>
       </section>
 
-      {/* Hospedagem */}
-      <section className="space-y-3">
-        <h2 className="text-base font-semibold">Hospedagem</h2>
+      {/* 3 — Hospedagem */}
+      <section className="space-y-4">
+        <Etapa n={3} titulo="Hospedagem" />
         <div className="grid gap-2 md:grid-cols-2">
           <Controller
             control={form.control}
@@ -431,20 +491,18 @@ export function AcampamentoForm({ acampamento }: { acampamento: AcampamentoPubli
             )}
           />
         </div>
-        {form.formState.errors.quartosDuplos && (
-          <p className="text-xs text-destructive">{form.formState.errors.quartosDuplos.message}</p>
-        )}
+        <Erro msg={errs.quartosDuplos?.message} />
       </section>
 
-      {/* Extras */}
-      <section className="space-y-3">
-        <h2 className="text-base font-semibold">Preferências</h2>
-        <div className="space-y-3">
-          <div className="space-y-1.5">
-            <Label htmlFor="colega">Dividir quarto com (opcional)</Label>
-            <Input id="colega" placeholder="Nome de quem quer por perto" {...form.register("colegaDeQuarto")} />
+      {/* 4 — Preferencias */}
+      <section className="space-y-4">
+        <Etapa n={4} titulo="Preferências" hint="opcional" />
+        <div className="space-y-4">
+          <div className="space-y-1">
+            <CampoLabel htmlFor="colega">Dividir quarto com</CampoLabel>
+            <Input id="colega" placeholder="Nome de quem você quer por perto" {...form.register("colegaDeQuarto")} />
           </div>
-          <label className="flex items-center gap-2 text-sm min-h-[44px]">
+          <label className={`flex min-h-[44px] items-center gap-2.5 ${FONT_BODY} text-[13px] ${COR_TEXTO} md:min-h-0`}>
             <Controller
               control={form.control}
               name="berco"
@@ -454,27 +512,27 @@ export function AcampamentoForm({ acampamento }: { acampamento: AcampamentoPubli
             />
             Preciso de berço
           </label>
-          <div className="space-y-1.5">
-            <Label htmlFor="especiais">Necessidades especiais (opcional)</Label>
+          <div className="space-y-1">
+            <CampoLabel htmlFor="especiais">Necessidades especiais</CampoLabel>
             <Input
               id="especiais"
               placeholder="Acessibilidade, alergias, restrições…"
               {...form.register("necessidadesEspeciais")}
             />
           </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="obs">Observações (opcional)</Label>
+          <div className="space-y-1">
+            <CampoLabel htmlFor="obs">Observações</CampoLabel>
             <Textarea id="obs" rows={3} {...form.register("observacao")} />
           </div>
         </div>
       </section>
 
-      {/* Pagamento */}
-      <section className="space-y-3">
-        <h2 className="text-base font-semibold">Pagamento</h2>
-        <div className="grid gap-3 md:grid-cols-3">
-          <div className="space-y-1.5">
-            <Label>Forma</Label>
+      {/* 5 — Pagamento */}
+      <section className="space-y-4">
+        <Etapa n={5} titulo="Pagamento" hint="a secretaria confirma pelo WhatsApp" />
+        <div className="grid gap-4 md:grid-cols-3">
+          <div className="space-y-1">
+            <CampoLabel>Forma</CampoLabel>
             <Controller
               control={form.control}
               name="forma"
@@ -492,8 +550,8 @@ export function AcampamentoForm({ acampamento }: { acampamento: AcampamentoPubli
             />
           </div>
           {valores.forma === "PARCELADO" && (
-            <div className="space-y-1.5">
-              <Label>Parcelas</Label>
+            <div className="space-y-1">
+              <CampoLabel>Parcelas</CampoLabel>
               <Controller
                 control={form.control}
                 name="parcelas"
@@ -505,71 +563,53 @@ export function AcampamentoForm({ acampamento }: { acampamento: AcampamentoPubli
                     <SelectContent>
                       {Array.from({ length: 11 }, (_, i) => i + 2).map((n) => (
                         <SelectItem key={n} value={String(n)}>
-                          {n}×
+                          {n}×{resumo && resumo.total > 0 ? ` de ${brl(Math.ceil(resumo.total / n))}` : ""}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 )}
               />
-              {form.formState.errors.parcelas && (
-                <p className="text-xs text-destructive">{form.formState.errors.parcelas.message}</p>
-              )}
+              <Erro msg={errs.parcelas?.message} />
             </div>
           )}
-          <div className="space-y-1.5">
-            <Label htmlFor="cpf">CPF do pagante</Label>
+          <div className="space-y-1">
+            <CampoLabel htmlFor="cpf">CPF do pagante</CampoLabel>
             <Input id="cpf" inputMode="numeric" placeholder="Somente números" {...form.register("cpfPagante")} />
-            {form.formState.errors.cpfPagante && (
-              <p className="text-xs text-destructive">{form.formState.errors.cpfPagante.message}</p>
-            )}
+            <Erro msg={errs.cpfPagante?.message} />
           </div>
         </div>
       </section>
 
-      {/* Resumo do valor */}
+      {/* Conta do retiro (assinatura visual: recibo com pontilhado) */}
       {resumo && resumo.total > 0 && (
-        <section className="rounded-xl border bg-muted/30 p-4 space-y-2">
-          <h2 className="text-base font-semibold">Resumo</h2>
-          <ul className="space-y-1 text-sm">
+        <section className={`border ${BORDA} bg-[#F4F0E8] p-5 md:p-6`}>
+          <p className={`${FONT_BODY} text-[11px] font-semibold uppercase tracking-[0.1em] ${COR_MUTED}`}>
+            Resumo da inscrição
+          </p>
+          <ul className="mt-3 space-y-1.5">
             {resumo.hospedagemPorParticipante.map((p, i) => (
-              <li key={i} className="flex justify-between gap-2">
-                <span className="truncate text-muted-foreground">
-                  {p.nome} ({p.idade} anos)
-                </span>
-                <span className="tabular-nums">{brl(p.valor)}</span>
-              </li>
+              <LinhaConta key={i} nome={p.nome} detalhe={`${p.idade} anos`} valor={brl(p.valor)} />
             ))}
-            {resumo.palestras > 0 && (
-              <li className="flex justify-between gap-2">
-                <span className="text-muted-foreground">Palestras</span>
-                <span className="tabular-nums">{brl(resumo.palestras)}</span>
-              </li>
-            )}
-            {resumo.camasExtras > 0 && (
-              <li className="flex justify-between gap-2">
-                <span className="text-muted-foreground">Camas extras</span>
-                <span className="tabular-nums">{brl(resumo.camasExtras)}</span>
-              </li>
-            )}
-            {resumo.pets > 0 && (
-              <li className="flex justify-between gap-2">
-                <span className="text-muted-foreground">Pets</span>
-                <span className="tabular-nums">{brl(resumo.pets)}</span>
-              </li>
-            )}
+            {resumo.palestras > 0 && <LinhaConta nome="Palestras" valor={brl(resumo.palestras)} />}
+            {resumo.camasExtras > 0 && <LinhaConta nome="Camas extras" valor={brl(resumo.camasExtras)} />}
+            {resumo.pets > 0 && <LinhaConta nome="Pets" valor={brl(resumo.pets)} />}
           </ul>
-          <div className="flex justify-between border-t pt-2 font-semibold">
-            <span>Total</span>
-            <span className="tabular-nums">{brl(resumo.total)}</span>
+          <div className="mt-4 flex items-baseline justify-between border-t-2 border-[#1C2E49] pt-3">
+            <span className={`${FONT_BODY} text-[13px] font-semibold uppercase tracking-[0.08em] ${COR_TEXTO}`}>
+              Total
+            </span>
+            <span className={`${FONT_DISPLAY} text-[28px] leading-none text-[#16243F] tabular-nums`}>
+              {brl(resumo.total)}
+            </span>
           </div>
-          <p className="text-xs text-muted-foreground">
-            Valor calculado pela tabela vigente. Condições especiais podem ser combinadas com a secretaria.
+          <p className={`${FONT_BODY} mt-2 text-[12px] ${COR_MUTED}`}>
+            Valor pela tabela vigente. Condições especiais podem ser combinadas com a secretaria.
           </p>
         </section>
       )}
 
-      {/* Honeypot (invisível p/ humanos) */}
+      {/* Honeypot (invisivel p/ humanos) */}
       <input
         type="text"
         tabIndex={-1}
@@ -579,9 +619,9 @@ export function AcampamentoForm({ acampamento }: { acampamento: AcampamentoPubli
         {...form.register("website")}
       />
 
-      {/* LGPD + enviar */}
+      {/* LGPD + enviar (desktop) */}
       <section className="space-y-4">
-        <label className="flex items-start gap-2 text-sm">
+        <label className={`flex items-start gap-2.5 ${FONT_BODY} text-[13px] leading-[1.5] ${COR_TEXTO}`}>
           <Controller
             control={form.control}
             name="lgpd"
@@ -598,17 +638,41 @@ export function AcampamentoForm({ acampamento }: { acampamento: AcampamentoPubli
             adicionais e regras de hospedagem.
           </span>
         </label>
-        {form.formState.errors.lgpd && (
-          <p className="text-xs text-destructive">{form.formState.errors.lgpd.message}</p>
-        )}
+        <Erro msg={errs.lgpd?.message} />
         {erroEnvio && (
-          <p className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{erroEnvio}</p>
+          <p className={`border border-[#B3261E]/30 bg-[#B3261E]/5 p-3 ${FONT_BODY} text-[13px] text-[#B3261E]`}>
+            {erroEnvio}
+          </p>
         )}
-        <Button type="submit" className="w-full h-12" disabled={status === "submitting"}>
+        <Button
+          type="submit"
+          disabled={status === "submitting"}
+          className={`hidden h-12 w-full bg-[#F0732B] ${FONT_BODY} text-[15px] font-semibold text-white hover:bg-[#DE5F18] md:flex`}
+        >
           {status === "submitting" && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Enviar inscrição{resumo && resumo.total > 0 ? ` — ${brl(resumo.total)}` : ""}
         </Button>
       </section>
+
+      {/* Mobile: barra fixa com total + enviar (o valor acompanha o preenchimento) */}
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[#E5E3DC] bg-white/95 px-4 py-3 backdrop-blur md:hidden">
+        <div className="mx-auto flex max-w-[680px] items-center gap-3">
+          <div className="min-w-0">
+            <p className={`${FONT_BODY} text-[11px] uppercase tracking-[0.08em] ${COR_MUTED}`}>Total</p>
+            <p className={`${FONT_DISPLAY} text-[20px] leading-none ${COR_TEXTO} tabular-nums`}>
+              {resumo && resumo.total > 0 ? brl(resumo.total) : "—"}
+            </p>
+          </div>
+          <Button
+            type="submit"
+            disabled={status === "submitting"}
+            className={`h-12 flex-1 bg-[#F0732B] ${FONT_BODY} text-[15px] font-semibold text-white hover:bg-[#DE5F18]`}
+          >
+            {status === "submitting" && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Enviar inscrição
+          </Button>
+        </div>
+      </div>
     </form>
   );
 }
