@@ -33,6 +33,7 @@ import {
 import { MessageCircle, Link2, Link2Off, ArrowUp, Ban, RefreshCcw } from "lucide-react";
 import { brl, dataBR } from "../lib/format";
 import { idadeNaData } from "@convex/acampamento/calculoHelpers";
+import { FinanceiroSection } from "./FinanceiroSection";
 
 const STATUS_LABEL: Record<string, { label: string; variant: "default" | "secondary" | "destructive" }> = {
   ATIVA: { label: "Ativa", variant: "default" },
@@ -281,6 +282,17 @@ export function InscricaoDetalheDrawer({
                   </div>
                 )}
               </div>
+
+              {/* Financeiro: recebimentos, descontos/fundo e plano */}
+              <FinanceiroSection
+                inscricaoId={insc._id}
+                acampamentoId={insc.acampamentoId}
+                saldo={insc.saldo}
+                recebimentos={insc.recebimentos}
+                ajustes={insc.ajustes}
+                planoPagamento={insc.planoPagamento}
+                cancelada={insc.status === "CANCELADA"}
+              />
 
               {insc.observacaoCancelamento && (
                 <p className="mt-3 rounded-md bg-muted p-3 text-sm text-muted-foreground">

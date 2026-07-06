@@ -10,6 +10,9 @@ const FOLDER_PERMISSIONS: Record<string, string[]> = {
   "membros/cartas-transferencia": ["membros:create", "membros:update", "rol:update"],
   "educacional/fotos": ["educacional:write", "criancas:manage"],
   "biblioteca-capas": ["biblioteca:create", "biblioteca:update"],
+  // Comprovantes anexados pela secretaria ao registrar recebimentos do
+  // acampamento (os inscritos enviam pelo WhatsApp; quem sobe e a gestao).
+  "acampamento-comprovantes": ["inscricoes:manage"],
 };
 
 // Chamada pelo action getUploadUrl (Node) via runQuery — actions nao tem ctx.db.
