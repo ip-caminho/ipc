@@ -10,11 +10,11 @@ const FOLDER_PERMISSIONS: Record<string, string[]> = {
   "membros/cartas-transferencia": ["membros:create", "membros:update", "rol:update"],
   "educacional/fotos": ["educacional:write", "criancas:manage"],
   "biblioteca-capas": ["biblioteca:create", "biblioteca:update"],
-  // Comprovantes do acampamento pela via LOGADA (secretaria ao registrar
+  // Comprovantes do retiro pela via LOGADA (secretaria ao registrar
   // recebimento). O pagante tambem envia sem login pelo link tokenizado —
   // esse caminho usa files.upload.getPublicComprovanteUploadUrl (validado
   // pelo token da inscricao), nao passa por aqui.
-  "acampamento-comprovantes": ["inscricoes:manage"],
+  "retiro-comprovantes": ["inscricoes:manage"],
 };
 
 // Chamada pelo action getUploadUrl (Node) via runQuery — actions nao tem ctx.db.

@@ -12,6 +12,15 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async redirects() {
+    // Rotas antigas de "acampamento" -> "retiro" (feature renomeada).
+    // Preserva links ja enviados (ex.: /acampamento/retiro27).
+    return [
+      { source: "/acampamento/:slug", destination: "/retiro/:slug", permanent: true },
+      { source: "/admin/acampamento", destination: "/admin/retiro", permanent: true },
+      { source: "/admin/acampamento/:path*", destination: "/admin/retiro/:path*", permanent: true },
+    ];
+  },
   async headers() {
     return [
       {

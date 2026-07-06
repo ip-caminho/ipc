@@ -6,8 +6,8 @@ import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
 import { PageHeader } from "@shared/components/layout/PageHeader";
 import { Badge } from "@/shared/components/ui/badge";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import { EnviarComprovanteDialog } from "@features/acampamento/components/EnviarComprovanteDialog";
-import { brl, dataBR } from "@features/acampamento/lib/format";
+import { EnviarComprovanteDialog } from "@features/retiro/components/EnviarComprovanteDialog";
+import { brl, dataBR } from "@features/retiro/lib/format";
 
 type BadgeVariant = "default" | "secondary" | "destructive";
 const STATUS: Record<string, { label: string; variant: BadgeVariant }> = {
@@ -32,15 +32,15 @@ function Secao({ titulo, children }: { titulo: string; children: React.ReactNode
 }
 
 export default function MinhasInscricoesPage() {
-  const acampamentos = useQuery(api.public.acampamento.minhasInscricoes, {});
+  const retiros = useQuery(api.public.retiro.minhasInscricoes, {});
   const inscricoes = useQuery(api.public.inscricoesEvento.minhasRespostas, {});
   const turmas = useQuery(api.turmas.queries.minhasInscricoes, {});
 
   const carregando =
-    acampamentos === undefined || inscricoes === undefined || turmas === undefined;
+    retiros === undefined || inscricoes === undefined || turmas === undefined;
   const vazio =
     !carregando &&
-    (acampamentos?.length ?? 0) === 0 &&
+    (retiros?.length ?? 0) === 0 &&
     (inscricoes?.length ?? 0) === 0 &&
     (turmas?.length ?? 0) === 0;
 
@@ -51,7 +51,7 @@ export default function MinhasInscricoesPage() {
           <div className="px-4">
             <PageHeader
               title="Minhas inscrições"
-              subtitle="Acampamentos, eventos e turmas em que você está inscrito"
+              subtitle="Retiros, eventos e turmas em que você está inscrito"
             />
           </div>
 
@@ -67,15 +67,15 @@ export default function MinhasInscricoesPage() {
               </p>
             ) : (
               <>
-                {acampamentos && acampamentos.length > 0 && (
-                  <Secao titulo="Acampamentos e retiros">
+                {retiros && retiros.length > 0 && (
+                  <Secao titulo="Retiros">
                     <ul className="space-y-3">
-                      {acampamentos.map((i) => {
+                      {retiros.map((i) => {
                         return (
                           <li key={i._id} className="rounded-lg border p-4">
                             <div className="flex items-start justify-between gap-2">
                               <div className="min-w-0">
-                                <p className="font-semibold">{i.acampamentoTitulo}</p>
+                                <p className="font-semibold">{i.retiroTitulo}</p>
                                 {i.dataInicio && (
                                   <p className="text-xs text-muted-foreground">
                                     {dataBR(i.dataInicio)}
@@ -108,7 +108,7 @@ export default function MinhasInscricoesPage() {
                               {i.comprovanteToken && (
                                 <EnviarComprovanteDialog
                                   token={i.comprovanteToken}
-                                  titulo={i.acampamentoTitulo}
+                                  titulo={i.retiroTitulo}
                                 />
                               )}
                             </div>

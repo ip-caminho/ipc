@@ -1,4 +1,4 @@
-import { ComprovanteForm } from "@features/acampamento/components/ComprovanteForm";
+import { ComprovanteForm } from "@features/retiro/components/ComprovanteForm";
 
 export const metadata = { title: "Enviar comprovante — IPC" };
 
