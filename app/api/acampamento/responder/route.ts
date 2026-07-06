@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ConvexHttpClient } from "convex/browser";
 import { convexAuthNextjsToken } from "@convex-dev/auth/nextjs/server";
-import { createHash } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 
@@ -37,6 +37,8 @@ export async function POST(req: NextRequest) {
   const ip = fwd.split(",")[0].trim() || req.headers.get("x-real-ip") || "0.0.0.0";
   const salt = process.env.INSCRICOES_IP_SALT || "ipc-dev-salt";
   const ipHash = createHash("sha256").update(`${ip}${salt}`).digest("hex");
+  // Token do link de comprovante (individual, imprevisivel)
+  const comprovanteToken = randomBytes(18).toString("hex");
 
   const url = process.env.NEXT_PUBLIC_CONVEX_URL;
   if (!url) {
@@ -63,6 +65,7 @@ export async function POST(req: NextRequest) {
       lgpdConsentimento: Boolean(body.lgpdConsentimento),
       website: typeof body.website === "string" ? body.website : undefined,
       ipHash,
+      comprovanteToken,
     });
 
     return NextResponse.json({ ok: true, ...result });

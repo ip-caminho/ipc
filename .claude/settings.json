@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc:*)",
+      "Bash(npm run lint:*)",
+      "Bash(npx eslint:*)",
+      "Bash(npx next lint:*)",
+      "Bash(npx convex env list)",
+      "mcp__claude_ai_Notion__notion-search",
+      "mcp__claude_ai_Notion__notion-fetch"
+    ]
+  },
+  "worktree": {
+    "bgIsolation": "none"
+  }
+}

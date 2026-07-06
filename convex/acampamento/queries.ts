@@ -67,6 +67,7 @@ export const listarInscricoes = query({
           .filter((a) => a.tipo === "CONTRIBUICAO_FUNDO")
           .reduce((s, a) => s + a.valor, 0),
         semMatching: i.participantes.filter((p) => !p.membroId).length,
+        comprovantesAConferir: i.comprovantesPendentes?.length ?? 0,
       }));
   },
 });

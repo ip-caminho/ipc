@@ -10,8 +10,10 @@ const FOLDER_PERMISSIONS: Record<string, string[]> = {
   "membros/cartas-transferencia": ["membros:create", "membros:update", "rol:update"],
   "educacional/fotos": ["educacional:write", "criancas:manage"],
   "biblioteca-capas": ["biblioteca:create", "biblioteca:update"],
-  // Comprovantes anexados pela secretaria ao registrar recebimentos do
-  // acampamento (os inscritos enviam pelo WhatsApp; quem sobe e a gestao).
+  // Comprovantes do acampamento pela via LOGADA (secretaria ao registrar
+  // recebimento). O pagante tambem envia sem login pelo link tokenizado —
+  // esse caminho usa files.upload.getPublicComprovanteUploadUrl (validado
+  // pelo token da inscricao), nao passa por aqui.
   "acampamento-comprovantes": ["inscricoes:manage"],
 };
 

@@ -30,7 +30,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/shared/components/ui/alert-dialog";
-import { MessageCircle, Link2, Link2Off, ArrowUp, Ban, RefreshCcw } from "lucide-react";
+import { MessageCircle, Link2, Link2Off, ArrowUp, Ban, RefreshCcw, Copy, Check } from "lucide-react";
 import { brl, dataBR } from "../lib/format";
 import { idadeNaData } from "@convex/acampamento/calculoHelpers";
 import { FinanceiroSection } from "./FinanceiroSection";
@@ -117,6 +117,32 @@ function VincularMembro({
   );
 }
 
+// Copia o link individual de envio de comprovante — a secretaria manda no
+// WhatsApp p/ quem fechou a pagina de inscricao (membro ou visitante).
+function CopiarLinkComprovante({ token }: { token: string }) {
+  const [copiado, setCopiado] = useState(false);
+  return (
+    <button
+      type="button"
+      onClick={async () => {
+        const url = `${window.location.origin}/acampamento/comprovante?k=${token}`;
+        try {
+          await navigator.clipboard.writeText(url);
+          setCopiado(true);
+          toast.success("Link do comprovante copiado");
+          setTimeout(() => setCopiado(false), 2000);
+        } catch {
+          toast.error("Não foi possível copiar");
+        }
+      }}
+      className="inline-flex items-center gap-1 text-foreground underline-offset-2 hover:underline"
+    >
+      {copiado ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+      Link do comprovante
+    </button>
+  );
+}
+
 export function InscricaoDetalheDrawer({
   inscricaoId,
   dataInicio,
@@ -166,7 +192,7 @@ export function InscricaoDetalheDrawer({
                     {STATUS_LABEL[insc.status].label}
                   </Badge>
                 </DrawerTitle>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                   {insc.responsavel.whatsapp}
                   {zap && (
                     <a
@@ -177,6 +203,9 @@ export function InscricaoDetalheDrawer({
                     >
                       <MessageCircle className="h-3.5 w-3.5" /> WhatsApp
                     </a>
+                  )}
+                  {insc.comprovanteToken && insc.status !== "CANCELADA" && (
+                    <CopiarLinkComprovante token={insc.comprovanteToken} />
                   )}
                 </div>
               </DrawerHeader>
@@ -291,6 +320,7 @@ export function InscricaoDetalheDrawer({
                 recebimentos={insc.recebimentos}
                 ajustes={insc.ajustes}
                 planoPagamento={insc.planoPagamento}
+                comprovantesPendentes={insc.comprovantesPendentes}
                 cancelada={insc.status === "CANCELADA"}
               />
 
