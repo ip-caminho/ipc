@@ -317,9 +317,14 @@ export function AcampamentoForm({ acampamento }: { acampamento: AcampamentoPubli
   }
 
   const errs = form.formState.errors;
+  const temTotal = !!resumo && resumo.total > 0;
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="space-y-10 pb-28 md:pb-0">
+    <form
+      onSubmit={form.handleSubmit(onSubmit)}
+      noValidate
+      className={`space-y-10 ${temTotal ? "pb-24 md:pb-0" : ""}`}
+    >
       {/* Pre-preenchimento p/ membro */}
       {!isAuthenticated ? (
         <button
@@ -647,32 +652,35 @@ export function AcampamentoForm({ acampamento }: { acampamento: AcampamentoPubli
         <Button
           type="submit"
           disabled={status === "submitting"}
-          className={`hidden h-12 w-full bg-[#F0732B] ${FONT_BODY} text-[15px] font-semibold text-white hover:bg-[#DE5F18] md:flex`}
+          className={`h-12 w-full bg-[#F0732B] ${FONT_BODY} text-[15px] font-semibold text-white hover:bg-[#DE5F18]`}
         >
           {status === "submitting" && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Enviar inscrição{resumo && resumo.total > 0 ? ` — ${brl(resumo.total)}` : ""}
+          Enviar inscrição{temTotal ? ` — ${brl(resumo.total)}` : ""}
         </Button>
       </section>
 
-      {/* Mobile: barra fixa com total + enviar (o valor acompanha o preenchimento) */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[#E5E3DC] bg-white/95 px-4 py-3 backdrop-blur md:hidden">
-        <div className="mx-auto flex max-w-[680px] items-center gap-3">
-          <div className="min-w-0">
-            <p className={`${FONT_BODY} text-[11px] uppercase tracking-[0.08em] ${COR_MUTED}`}>Total</p>
-            <p className={`${FONT_DISPLAY} text-[20px] leading-none ${COR_TEXTO} tabular-nums`}>
-              {resumo && resumo.total > 0 ? brl(resumo.total) : "—"}
-            </p>
+      {/* Mobile: barra fixa com o total ao vivo — so existe quando ha valor
+          calculado (antes disso seria um "—" flutuando sobre a descricao) */}
+      {temTotal && (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[#E5E3DC] bg-white/95 px-4 py-3 backdrop-blur md:hidden">
+          <div className="mx-auto flex max-w-[680px] items-center gap-3">
+            <div className="min-w-0">
+              <p className={`${FONT_BODY} text-[11px] uppercase tracking-[0.08em] ${COR_MUTED}`}>Total</p>
+              <p className={`${FONT_DISPLAY} text-[20px] leading-none ${COR_TEXTO} tabular-nums`}>
+                {brl(resumo.total)}
+              </p>
+            </div>
+            <Button
+              type="submit"
+              disabled={status === "submitting"}
+              className={`h-12 flex-1 bg-[#F0732B] ${FONT_BODY} text-[15px] font-semibold text-white hover:bg-[#DE5F18]`}
+            >
+              {status === "submitting" && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Enviar inscrição
+            </Button>
           </div>
-          <Button
-            type="submit"
-            disabled={status === "submitting"}
-            className={`h-12 flex-1 bg-[#F0732B] ${FONT_BODY} text-[15px] font-semibold text-white hover:bg-[#DE5F18]`}
-          >
-            {status === "submitting" && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Enviar inscrição
-          </Button>
         </div>
-      </div>
+      )}
     </form>
   );
 }
