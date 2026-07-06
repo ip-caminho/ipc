@@ -16,6 +16,7 @@ import {
   UsersRound,
   Baby,
   ClipboardList,
+  Tent,
   ListTodo,
   GraduationCap,
   Shield,
@@ -129,6 +130,13 @@ export const GESTAO_SECTIONS: NavSection[] = [
         href: "/admin/inscricoes",
         icon: ClipboardList,
         description: "Inscrições genéricas de eventos e suas respostas",
+        permission: "inscricoes:manage",
+      },
+      {
+        label: "Acampamento",
+        href: "/admin/acampamento",
+        icon: Tent,
+        description: "Inscrições do acampamento anual: grupos, quartos e pagamentos",
         permission: "inscricoes:manage",
       },
       {
