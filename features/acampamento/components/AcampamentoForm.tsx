@@ -36,6 +36,9 @@ const participanteSchema = z.object({
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Informe a data")
     .refine((d) => d < hojeIso(), "Data no futuro"),
   participaPalestras: z.boolean(),
+  // Vínculo com o cadastro de membro (vem do pré-preenchimento; some se o nome
+  // for editado). Reconfirmado no servidor.
+  membroId: z.string().optional(),
 });
 
 const formSchema = z
@@ -245,8 +248,16 @@ export function AcampamentoForm({ acampamento }: { acampamento: AcampamentoPubli
         participaPalestras: p.dataNascimento
           ? idadeNaData(p.dataNascimento, acampamento.dataInicio) >= IDADE_PALESTRA
           : true,
+        membroId: p.membroId ?? undefined,
       })),
     );
+  }
+
+  // Editar o nome quebra o vínculo pré-preenchido — evita vincular alguém errado
+  function aoMudarNome(index: number) {
+    if (form.getValues(`participantes.${index}.membroId`)) {
+      form.setValue(`participantes.${index}.membroId`, undefined);
+    }
   }
 
   async function onSubmit(data: FormValues) {
@@ -399,7 +410,12 @@ export function AcampamentoForm({ acampamento }: { acampamento: AcampamentoPubli
                 <div className="grid gap-4 md:grid-cols-[1fr_190px]">
                   <div className="space-y-1">
                     <CampoLabel htmlFor={`p-nome-${i}`}>Nome completo</CampoLabel>
-                    <Input id={`p-nome-${i}`} {...form.register(`participantes.${i}.nome`)} />
+                    <Input
+                      id={`p-nome-${i}`}
+                      {...form.register(`participantes.${i}.nome`, {
+                        onChange: () => aoMudarNome(i),
+                      })}
+                    />
                     <Erro msg={errs.participantes?.[i]?.nome?.message} />
                   </div>
                   <div className="space-y-1">

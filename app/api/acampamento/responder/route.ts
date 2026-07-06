@@ -3,6 +3,7 @@ import { ConvexHttpClient } from "convex/browser";
 import { convexAuthNextjsToken } from "@convex-dev/auth/nextjs/server";
 import { createHash } from "node:crypto";
 import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 
 /**
  * Recebe a submissão do formulário público do acampamento. Mesmo padrão do
@@ -15,7 +16,7 @@ export async function POST(req: NextRequest) {
   let body: {
     slug?: string;
     responsavel?: { nome: string; whatsapp: string };
-    participantes?: { nome: string; dataNascimento: string; participaPalestras: boolean }[];
+    participantes?: { nome: string; dataNascimento: string; participaPalestras: boolean; membroId?: string }[];
     hospedagem?: { quartosDuplos: number; quartosTriplos: number; camasExtras: number; pets: number };
     extras?: { colegaDeQuarto?: string; berco?: boolean; necessidadesEspeciais?: string; observacao?: string };
     pagamentoPreferido?: { forma: "A_VISTA" | "PARCELADO"; parcelas?: number; cpfPagante?: string };
@@ -51,7 +52,11 @@ export async function POST(req: NextRequest) {
     const result = await client.mutation(api.public.acampamento.responder, {
       slug: body.slug!,
       responsavel: body.responsavel!,
-      participantes: body.participantes ?? [],
+      // membroId é apenas hint; a mutation revalida contra a família do usuário
+      participantes: (body.participantes ?? []).map((p) => ({
+        ...p,
+        membroId: p.membroId as Id<"membros"> | undefined,
+      })),
       hospedagem: body.hospedagem!,
       extras: body.extras,
       pagamentoPreferido: body.pagamentoPreferido!,

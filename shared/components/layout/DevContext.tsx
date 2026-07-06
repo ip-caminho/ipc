@@ -1183,6 +1183,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     notas: [
       "Inscricao POR GRUPO com calculo ao vivo (calculoHelpers compartilhado com o backend)",
       "Estoque esgotado -> LISTA_ESPERA; dedupe por whatsapp; honeypot + LGPD + rate-limit",
+      "Membro logado: minhaFamilia traz membroId por familiar; auto-vincula os participantes no responder (revalida a familia no servidor, anti-forja). Editar o nome quebra o vinculo",
     ],
   },
   "/inscricoes/[slug]": {
