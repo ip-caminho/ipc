@@ -361,6 +361,44 @@ export const responder = mutation({
   },
 });
 
+// Inscricoes do membro logado (area "Minhas inscricoes") — ele envia o
+// comprovante direto pelo app, sem lidar com URL/codigo (usa o proprio token
+// por baixo). Retorna [] se nao logado ou sem membro.
+export const minhasInscricoes = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return [];
+    const membro = await ctx.db
+      .query("membros")
+      .withIndex("by_user_id", (q) => q.eq("userId", userId))
+      .first();
+    if (!membro) return [];
+    const docs = await ctx.db
+      .query("inscricoesAcampamento")
+      .withIndex("by_responsavel_membro", (q) => q.eq("responsavel.membroId", membro._id))
+      .collect();
+    const out = [];
+    for (const i of docs) {
+      const acamp = await ctx.db.get(i.acampamentoId);
+      out.push({
+        _id: i._id,
+        acampamentoTitulo: acamp?.titulo ?? "Acampamento",
+        dataInicio: acamp?.dataInicio ?? "",
+        dataFim: acamp?.dataFim ?? "",
+        status: i.status,
+        valorFinal: valorFinal(i.valorTabela, i.ajustes),
+        recebido: totalRecebido(i.recebimentos),
+        saldo: saldoInscricao(i.valorTabela, i.ajustes, i.recebimentos),
+        // Proprio dono — pode receber o token p/ enviar o comprovante pelo app
+        comprovanteToken: i.comprovanteToken,
+        comprovantesEnviados: i.comprovantesPendentes?.length ?? 0,
+      });
+    }
+    return out.sort((a, b) => (a.dataInicio < b.dataInicio ? 1 : -1));
+  },
+});
+
 // ===== Comprovante de pagamento — link publico tokenizado (membro/visitante) =====
 
 // Resumo minimo p/ a pagina de comprovante (sem PII alem do nome). Retorna null

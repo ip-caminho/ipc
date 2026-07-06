@@ -23,6 +23,7 @@ import { UltimoSermaoCard } from "@features/dashboard/components/UltimoSermaoCar
 import { ComentariosRecentesCard } from "@features/dashboard/components/ComentariosRecentesCard";
 import { ProfileCompletenessCard } from "@features/dashboard/components/ProfileCompletenessCard";
 import { ProfileNudgeDialog } from "@features/dashboard/components/ProfileNudgeDialog";
+import { MinhasInscricoesCard } from "@features/acampamento/components/MinhasInscricoesCard";
 
 function BootstrapForm() {
   const bootstrap = useMutation(api.membros.bootstrap.bootstrapAdmin);
@@ -140,6 +141,8 @@ export default function DashboardPage() {
         <PushPermissionBanner />
 
         <ProfileCompletenessCard />
+
+        <MinhasInscricoesCard />
 
         <BoletimCard />
 

@@ -474,6 +474,38 @@ describe("acampamento admin (fase 3)", () => {
     expect(detalhe!.participantes[0].membroNome).toBe("Joao Membro");
     expect(detalhe!.participantes[1].membroId).toBeUndefined();
   });
+
+  it("minhasInscricoes lista as inscricoes do membro logado com o token", async () => {
+    const t = convexTest(schema, modules);
+    const admin = await seedAdmin(t);
+    await admin.mutation(api.acampamento.mutations.criar, ARGS_ACAMP);
+
+    const userId = await t.run((ctx) => ctx.db.insert("users", {}));
+    await t.run(async (ctx) => {
+      const eid = await ctx.db.insert("entidades", {
+        tipoEntidade: "PF",
+        papeis: ["MEMBRO"],
+        status: "ATIVO",
+        nomeCompleto: "Joao Membro",
+        dataNascimento: "1990-01-01",
+      });
+      await ctx.db.insert("membros", { entidadeId: eid, role: "membro", userId });
+    });
+    const asMembro = t.withIdentity({ subject: `${userId}|s` });
+
+    // Sem login -> lista vazia
+    expect(await t.query(api.public.acampamento.minhasInscricoes, {})).toEqual([]);
+
+    await asMembro.mutation(api.public.acampamento.responder, {
+      ...argsInscricao("11999990000"),
+      comprovanteToken: "meu-tok",
+    });
+
+    const lista = await asMembro.query(api.public.acampamento.minhasInscricoes, {});
+    expect(lista).toHaveLength(1);
+    expect(lista[0].comprovanteToken).toBe("meu-tok");
+    expect(lista[0].valorFinal).toBe(85_000);
+  });
 });
 
 describe("acampamento financeiro (fase 4)", () => {
