@@ -74,6 +74,27 @@ export const vincularCasaisRetiro = internalMutation({
   },
 });
 
+export const corrigirVinculoIgreja = internalMutation({
+  args: {
+    entidadeId: v.id("entidades"),
+    vinculo: v.union(
+      v.literal("MEMBRO"),
+      v.literal("FREQUENTADOR"),
+      v.literal("VISITANTE"),
+      v.literal("EX_MEMBRO"),
+      v.literal("NAO_MEMBRO"),
+    ),
+    dryRun: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const e = await ctx.db.get(args.entidadeId);
+    if (!e) return { erro: "entidade nao encontrada" };
+    const de = e.vinculoIgreja ?? null;
+    if (!args.dryRun) await ctx.db.patch(args.entidadeId, { vinculoIgreja: args.vinculo });
+    return { dryRun: !!args.dryRun, nome: e.nomeCompleto, de, para: args.vinculo };
+  },
+});
+
 const normNome = (s?: string) =>
   (s ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
 

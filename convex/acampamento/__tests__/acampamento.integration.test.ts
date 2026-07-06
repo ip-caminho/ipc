@@ -505,6 +505,10 @@ describe("acampamento admin (fase 3)", () => {
     expect(lista).toHaveLength(1);
     expect(lista[0].comprovanteToken).toBe("meu-tok");
     expect(lista[0].valorFinal).toBe(85_000);
+
+    // Cancelada nao aparece mais p/ o membro
+    await admin.mutation(api.acampamento.mutations.cancelarInscricao, { id: lista[0]._id });
+    expect(await asMembro.query(api.public.acampamento.minhasInscricoes, {})).toHaveLength(0);
   });
 });
 

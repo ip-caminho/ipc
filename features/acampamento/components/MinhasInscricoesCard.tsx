@@ -11,8 +11,10 @@ import { brl } from "../lib/format";
 // Card do dashboard: aparece só quando o membro tem inscrição ativa em
 // acampamento. Atalho pra enviar o comprovante sem ir atrás de link/código.
 export function MinhasInscricoesCard() {
+  // Backend ja exclui canceladas
+  // @ts-ignore Convex TS2589
   const inscricoes = useQuery(api.public.acampamento.minhasInscricoes, {});
-  const ativas = (inscricoes ?? []).filter((i) => i.status !== "CANCELADA");
+  const ativas = inscricoes ?? [];
   if (ativas.length === 0) return null;
 
   return (

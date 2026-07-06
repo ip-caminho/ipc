@@ -71,7 +71,6 @@ export default function MinhasInscricoesPage() {
                   <Secao titulo="Acampamentos e retiros">
                     <ul className="space-y-3">
                       {acampamentos.map((i) => {
-                        const cancelada = i.status === "CANCELADA";
                         return (
                           <li key={i._id} className="rounded-lg border p-4">
                             <div className="flex items-start justify-between gap-2">
@@ -100,21 +99,19 @@ export default function MinhasInscricoesPage() {
                               ))}
                             </div>
 
-                            {!cancelada && (
-                              <div className="mt-3 flex items-center justify-between gap-2">
-                                <p className="text-xs text-muted-foreground">
-                                  {i.comprovantesEnviados > 0
-                                    ? `${i.comprovantesEnviados} comprovante(s) em conferência`
-                                    : "Nenhum comprovante enviado ainda"}
-                                </p>
-                                {i.comprovanteToken && (
-                                  <EnviarComprovanteDialog
-                                    token={i.comprovanteToken}
-                                    titulo={i.acampamentoTitulo}
-                                  />
-                                )}
-                              </div>
-                            )}
+                            <div className="mt-3 flex items-center justify-between gap-2">
+                              <p className="text-xs text-muted-foreground">
+                                {i.comprovantesEnviados > 0
+                                  ? `${i.comprovantesEnviados} comprovante(s) em conferência`
+                                  : "Nenhum comprovante enviado ainda"}
+                              </p>
+                              {i.comprovanteToken && (
+                                <EnviarComprovanteDialog
+                                  token={i.comprovanteToken}
+                                  titulo={i.acampamentoTitulo}
+                                />
+                              )}
+                            </div>
                           </li>
                         );
                       })}
