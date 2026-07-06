@@ -142,8 +142,6 @@ export default function DashboardPage() {
 
         <ProfileCompletenessCard />
 
-        <MinhasInscricoesCard />
-
         <BoletimCard />
 
         <UltimoSermaoCard />
@@ -153,6 +151,8 @@ export default function DashboardPage() {
         <TodaySection />
 
       <BirthdayList />
+
+        <MinhasInscricoesCard />
       </div>
       <ProfileNudgeDialog />
     </HeaderLayout>

@@ -98,6 +98,7 @@ import type * as membros_eclesiastico from "../membros/eclesiastico.js";
 import type * as membros_familiaHelpers from "../membros/familiaHelpers.js";
 import type * as membros_import from "../membros/import.js";
 import type * as membros_importFormNovos from "../membros/importFormNovos.js";
+import type * as membros_importRetiro from "../membros/importRetiro.js";
 import type * as membros_mesclarDuplicados from "../membros/mesclarDuplicados.js";
 import type * as membros_migrations from "../membros/migrations.js";
 import type * as membros_mutations from "../membros/mutations.js";
@@ -248,6 +249,7 @@ declare const fullApi: ApiFromModules<{
   "membros/familiaHelpers": typeof membros_familiaHelpers;
   "membros/import": typeof membros_import;
   "membros/importFormNovos": typeof membros_importFormNovos;
+  "membros/importRetiro": typeof membros_importRetiro;
   "membros/mesclarDuplicados": typeof membros_mesclarDuplicados;
   "membros/migrations": typeof membros_migrations;
   "membros/mutations": typeof membros_mutations;

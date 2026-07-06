@@ -44,7 +44,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     mutations: ["membros.bootstrap.bootstrapAdmin"],
     componentes: ["BoletimCard", "UltimoSermaoCard", "ComentariosRecentesCard", "ProfileCompletenessCard", "TodaySection", "BirthdayList", "SectionLabel", "AvisosWidget (drawer)", "BootstrapForm"],
     notas: [
-      "Hierarquia: saudacao → ProfileCompletenessCard (condicional, progress bar) → BoletimCard → ultimo sermao → Comentarios recentes (admin) → Hoje (avisos) → aniversariantes",
+      "Hierarquia: saudacao → ProfileCompletenessCard (condicional, progress bar) → BoletimCard → ultimo sermao → Comentarios recentes (admin) → Hoje (avisos) → aniversariantes → MinhasInscricoesCard (discreto, no rodape; so aparece com acampamento ativo; features/acampamento)",
       "BoletimCard: atalho para /boletim (item saiu do sidebar). Estado 'ao vivo agora' na janela do culto, senao 'proximo culto'. So com can(escalas:read)",
       "UltimoSermaoCard: link para pregacao mais recente publicada",
       "ComentariosRecentesCard: admin-only. Gravacoes com comentario recente agrupadas (titulo + count + preview do ultimo), link p/ /gravacoes/[id]. Usa denormalizado gravacoes.ultimoComentarioEm (indice by_ultimo_comentario) — custo fixo, nao varre comentarios",

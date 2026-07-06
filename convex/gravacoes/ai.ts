@@ -1,6 +1,6 @@
 import { internalMutation, internalQuery, mutation } from "../_generated/server";
 import { getSaoPauloDateString } from "../_shared/datetime";
-import { extrairFrases } from "./iaHelpers";
+import { extrairFrases, titulosSimilares } from "./iaHelpers";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 
@@ -46,12 +46,14 @@ export const createEventosFromAvisos = internalMutation({
     for (const aviso of avisos) {
       if (!aviso.dataEvento) continue;
 
-      // Dedup: verificar se ja existe evento com mesmo titulo e data
+      // Dedup: na mesma data-alvo, ignorar se ja existe evento com titulo
+      // parecido (a IA parafraseia o titulo a cada semana). Compara contra
+      // qualquer origem para nao duplicar nem eventos criados manualmente.
       const existing = await ctx.db
         .query("calendarioEventos")
         .withIndex("by_data", (q) => q.eq("data", aviso.dataEvento!))
         .collect();
-      const dup = existing.find((e) => e.titulo === aviso.titulo);
+      const dup = existing.find((e) => titulosSimilares(e.titulo, aviso.titulo));
       if (dup) continue;
 
       await ctx.db.insert("calendarioEventos", {
