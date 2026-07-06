@@ -1101,6 +1101,47 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     queries: ["public.inscricoesEvento.listAtivas (via getInscricoesAtivas, ISR 300s)"],
     notas: ["Grid de inscricoes ativas. Card -> /inscricoes/[slug]"],
   },
+  "/admin/acampamento": {
+    nome: "Secretaria - Acampamento",
+    pagina: "app/(ready)/admin/acampamento/page.tsx",
+    arquivos: [
+      "app/(ready)/admin/acampamento/page.tsx",
+      "features/acampamento/components/AcampamentoConfigDialog.tsx",
+      "convex/acampamento/mutations.ts",
+      "convex/acampamento/queries.ts",
+    ],
+    queries: ["acampamento.queries.listar", "acampamento.queries.getById"],
+    mutations: ["acampamento.mutations.criar", "acampamento.mutations.atualizar"],
+    componentes: ["AcampamentoConfigDialog (precos por faixa etaria + estoque de quartos)"],
+    notas: ["Permissao: inscricoes:manage. Valores em centavos no backend, R$ na UI"],
+  },
+  "/admin/acampamento/[id]": {
+    nome: "Secretaria - Inscricoes do acampamento",
+    pagina: "app/(ready)/admin/acampamento/[id]/page.tsx",
+    arquivos: [
+      "app/(ready)/admin/acampamento/[id]/page.tsx",
+      "features/acampamento/components/InscricaoDetalheDrawer.tsx",
+      "convex/acampamento/queries.ts",
+      "convex/acampamento/mutations.ts",
+    ],
+    queries: [
+      "acampamento.queries.listarInscricoes (resumo financeiro por linha)",
+      "acampamento.queries.getInscricao",
+      "acampamento.queries.sugerirMembros (matching manual)",
+    ],
+    mutations: [
+      "acampamento.mutations.confirmarMatching",
+      "acampamento.mutations.cancelarInscricao (devolve quartos)",
+      "acampamento.mutations.promoverListaEspera",
+      "acampamento.mutations.recalcularValor (tabela vigente, explicito)",
+      "acampamento.mutations.editarInscricao (recalcula com snapshot)",
+    ],
+    componentes: [
+      "Tabela desktop -> cards mobile (regra mobile-ux)",
+      "InscricaoDetalheDrawer (matching, financeiro resumido, acoes)",
+    ],
+    notas: ["Permissao: inscricoes:manage. Financeiro completo (recebimentos/fundo) na fase 4"],
+  },
   "/acampamento/[slug]": {
     nome: "Acampamento - inscricao publica",
     pagina: "app/(public)/(site)/acampamento/[slug]/page.tsx",
@@ -1338,6 +1379,8 @@ function resolveRoute(pathname: string): PageContext | null {
     return CONTEXT_MAP["/admin/campanhas/[id]"];
   }
   // /inscricoes/[slug] (formulario publico)
+  // /admin/acampamento/[id]
+  if (/^\/admin\/acampamento\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/admin/acampamento/[id]"];
   // /acampamento/[slug]
   if (/^\/acampamento\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/acampamento/[slug]"];
   if (/^\/inscricoes\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/inscricoes/[slug]"];

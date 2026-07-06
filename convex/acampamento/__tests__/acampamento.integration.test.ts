@@ -236,3 +236,95 @@ describe("acampamento (integracao)", () => {
     expect(resumo!.inscricoes.ativas).toBe(1);
   });
 });
+
+describe("acampamento admin (fase 3)", () => {
+  it("cancelar devolve quartos; promover reserva mesmo estourando", async () => {
+    const t = convexTest(schema, modules);
+    const admin = await seedAdmin(t);
+    await admin.mutation(api.acampamento.mutations.criar, { ...ARGS_ACAMP, estoqueDuplos: 1 });
+
+    await t.mutation(api.public.acampamento.responder, argsInscricao("11911110001"));
+    const r2 = await t.mutation(api.public.acampamento.responder, argsInscricao("11911110002"));
+    expect(r2.status).toBe("LISTA_ESPERA");
+
+    const acampId = (await admin.query(api.acampamento.queries.listar, {}))[0]._id;
+    const inscricoes = await admin.query(api.acampamento.queries.listarInscricoes, {
+      acampamentoId: acampId,
+    });
+    const ativa = inscricoes.find((i) => i.status === "ATIVA")!;
+    const espera = inscricoes.find((i) => i.status === "LISTA_ESPERA")!;
+
+    // Cancela a ativa -> estoque volta (1 disponivel)
+    await admin.mutation(api.acampamento.mutations.cancelarInscricao, {
+      id: ativa._id,
+      observacao: "Desistiu",
+    });
+    let pub = await t.query(api.public.acampamento.getBySlug, { slug: "acampa-2026" });
+    expect(pub!.disponibilidade.duplos).toBe(1);
+
+    // Promove a da espera -> reserva de novo (0 disponivel)
+    await admin.mutation(api.acampamento.mutations.promoverListaEspera, { id: espera._id });
+    pub = await t.query(api.public.acampamento.getBySlug, { slug: "acampa-2026" });
+    expect(pub!.disponibilidade.duplos).toBe(0);
+    const depois = await admin.query(api.acampamento.queries.getInscricao, { id: espera._id });
+    expect(depois!.status).toBe("ATIVA");
+  });
+
+  it("editarInscricao recalcula com o snapshot e ajusta estoque pelo delta", async () => {
+    const t = convexTest(schema, modules);
+    const admin = await seedAdmin(t);
+    await admin.mutation(api.acampamento.mutations.criar, ARGS_ACAMP);
+    await t.mutation(api.public.acampamento.responder, argsInscricao("11911110001"));
+
+    const acampId = (await admin.query(api.acampamento.queries.listar, {}))[0]._id;
+    const insc = (
+      await admin.query(api.acampamento.queries.listarInscricoes, { acampamentoId: acampId })
+    )[0];
+
+    // Adiciona crianca de 8 anos (faixa 40k) e mais um quarto
+    const r = await admin.mutation(api.acampamento.mutations.editarInscricao, {
+      id: insc._id,
+      participantes: [
+        { nome: "Adulto", dataNascimento: "1990-01-01", participaPalestras: true },
+        { nome: "Crianca", dataNascimento: "2018-01-01", participaPalestras: false },
+      ],
+      hospedagem: { quartosDuplos: 2, quartosTriplos: 0, camasExtras: 0, pets: 0 },
+    });
+    expect(r.valorTabela).toBe(125_000); // 80k + 40k + 5k palestra
+
+    const pub = await t.query(api.public.acampamento.getBySlug, { slug: "acampa-2026" });
+    expect(pub!.disponibilidade.duplos).toBe(0); // estoque 2, reservados 2
+  });
+
+  it("confirmarMatching vincula participante a membro e mostra o nome", async () => {
+    const t = convexTest(schema, modules);
+    const admin = await seedAdmin(t);
+    await admin.mutation(api.acampamento.mutations.criar, ARGS_ACAMP);
+    await t.mutation(api.public.acampamento.responder, argsInscricao("11911110001"));
+
+    const membroId = await t.run(async (ctx) => {
+      const eid = await ctx.db.insert("entidades", {
+        tipoEntidade: "PF",
+        papeis: ["MEMBRO"],
+        status: "ATIVO",
+        nomeCompleto: "Adulto da Silva",
+      });
+      return ctx.db.insert("membros", { entidadeId: eid, role: "membro" });
+    });
+
+    const acampId = (await admin.query(api.acampamento.queries.listar, {}))[0]._id;
+    const insc = (
+      await admin.query(api.acampamento.queries.listarInscricoes, { acampamentoId: acampId })
+    )[0];
+    expect(insc.semMatching).toBe(1);
+
+    await admin.mutation(api.acampamento.mutations.confirmarMatching, {
+      inscricaoId: insc._id,
+      participanteIndex: 0,
+      membroId,
+    });
+
+    const detalhe = await admin.query(api.acampamento.queries.getInscricao, { id: insc._id });
+    expect(detalhe!.participantes[0].membroNome).toBe("Adulto da Silva");
+  });
+});

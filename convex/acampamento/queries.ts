@@ -36,6 +36,93 @@ export const getById = query({
   },
 });
 
+// Lista de inscricoes do acampamento com resumo financeiro por linha.
+export const listarInscricoes = query({
+  args: { acampamentoId: v.id("acampamentos") },
+  handler: async (ctx, { acampamentoId }) => {
+    await requirePermission(ctx, "inscricoes:manage");
+    const docs = await ctx.db
+      .query("inscricoesAcampamento")
+      .withIndex("by_acampamento", (q) => q.eq("acampamentoId", acampamentoId))
+      .collect();
+    return docs
+      .sort((a, b) => a.criadoEm - b.criadoEm)
+      .map((i) => ({
+        _id: i._id,
+        responsavel: i.responsavel,
+        participantes: i.participantes,
+        hospedagem: i.hospedagem,
+        extras: i.extras,
+        pagamentoPreferido: i.pagamentoPreferido,
+        status: i.status,
+        criadoEm: i.criadoEm,
+        valorTabela: i.valorTabela,
+        valorFinal: valorFinal(i.valorTabela, i.ajustes),
+        recebido: totalRecebido(i.recebimentos),
+        saldo: saldoInscricao(i.valorTabela, i.ajustes, i.recebimentos),
+        semMatching: i.participantes.filter((p) => !p.membroId).length,
+      }));
+  },
+});
+
+export const getInscricao = query({
+  args: { id: v.id("inscricoesAcampamento") },
+  handler: async (ctx, { id }) => {
+    await requirePermission(ctx, "inscricoes:manage");
+    const insc = await ctx.db.get(id);
+    if (!insc) return null;
+    // Nomes dos membros ja vinculados (badge de confirmacao)
+    const participantes = await Promise.all(
+      insc.participantes.map(async (p) => {
+        let membroNome: string | null = null;
+        if (p.membroId) {
+          const m = await ctx.db.get(p.membroId);
+          const e = m ? await ctx.db.get(m.entidadeId) : null;
+          membroNome = e?.nomeCompleto ?? null;
+        }
+        return { ...p, membroNome };
+      }),
+    );
+    return {
+      ...insc,
+      participantes,
+      valorFinal: valorFinal(insc.valorTabela, insc.ajustes),
+      recebido: totalRecebido(insc.recebimentos),
+      saldo: saldoInscricao(insc.valorTabela, insc.ajustes, insc.recebimentos),
+    };
+  },
+});
+
+// Sugestoes de membro para um nome de participante (matching manual da
+// secretaria — nunca vinculamos automatico). Usa o full-text de entidades.
+export const sugerirMembros = query({
+  args: { nome: v.string() },
+  handler: async (ctx, { nome }) => {
+    await requirePermission(ctx, "inscricoes:manage");
+    const termo = nome.trim();
+    if (termo.length < 3) return [];
+    const ents = await ctx.db
+      .query("entidades")
+      .withSearchIndex("search_entidades", (q) => q.search("nomeCompleto", termo))
+      .take(5);
+    const out: { membroId: string; nome: string; dataNascimento?: string }[] = [];
+    for (const e of ents) {
+      const m = await ctx.db
+        .query("membros")
+        .withIndex("by_entidade", (q) => q.eq("entidadeId", e._id))
+        .first();
+      if (m) {
+        out.push({
+          membroId: m._id,
+          nome: e.nomeCompleto ?? "",
+          dataNascimento: e.dataNascimento,
+        });
+      }
+    }
+    return out;
+  },
+});
+
 // Painel financeiro consolidado: totais + fundo + situacao por inscricao.
 export const resumoFinanceiro = query({
   args: { id: v.id("acampamentos") },
