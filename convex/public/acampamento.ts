@@ -1,8 +1,83 @@
 import { query, mutation } from "../_generated/server";
-import type { Doc } from "../_generated/dataModel";
+import type { Doc, Id } from "../_generated/dataModel";
+import type { QueryCtx } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { calcularValorInscricao } from "../acampamento/calculoHelpers";
+
+// Resolve a familia do membro logado (ele + conjuge + filhos) a partir da base,
+// com o membroId de cada um quando existir registro de `membros` (crianças
+// costumam ser so `entidades`, sem membro). Usado tanto no pre-preenchimento
+// quanto na validacao anti-forja do vinculo no `responder`.
+type FamiliarBase = {
+  entidadeId: Id<"entidades">;
+  nome: string;
+  dataNascimento: string | null;
+  membroId: Id<"membros"> | null;
+};
+async function familiaDoUsuario(
+  ctx: QueryCtx,
+  userId: Id<"users">,
+): Promise<{ responsavelNome: string; responsavelWhatsapp: string; familiares: FamiliarBase[] } | null> {
+  const membro = await ctx.db
+    .query("membros")
+    .withIndex("by_user_id", (q) => q.eq("userId", userId))
+    .first();
+  if (!membro) return null;
+  const eu = await ctx.db.get(membro.entidadeId);
+  if (!eu) return null;
+
+  async function membroIdDe(entidadeId: Id<"entidades">): Promise<Id<"membros"> | null> {
+    const m = await ctx.db
+      .query("membros")
+      .withIndex("by_entidade", (q) => q.eq("entidadeId", entidadeId))
+      .first();
+    return m?._id ?? null;
+  }
+
+  const familiares: FamiliarBase[] = [
+    {
+      entidadeId: eu._id,
+      nome: eu.nomeCompleto ?? "",
+      dataNascimento: eu.dataNascimento ?? null,
+      membroId: membro._id,
+    },
+  ];
+
+  if (membro.conjugeId) {
+    const conjuge = await ctx.db.get(membro.conjugeId);
+    if (conjuge) {
+      familiares.push({
+        entidadeId: conjuge._id,
+        nome: conjuge.nomeCompleto ?? "",
+        dataNascimento: conjuge.dataNascimento ?? null,
+        membroId: await membroIdDe(conjuge._id),
+      });
+    }
+  }
+
+  const vinculos = await ctx.db
+    .query("responsaveis")
+    .withIndex("by_responsavel", (q) => q.eq("responsavelEntidadeId", membro.entidadeId))
+    .collect();
+  for (const vinc of vinculos) {
+    const filho = await ctx.db.get(vinc.criancaEntidadeId);
+    if (filho) {
+      familiares.push({
+        entidadeId: filho._id,
+        nome: filho.nomeCompleto ?? "",
+        dataNascimento: filho.dataNascimento ?? null,
+        membroId: await membroIdDe(filho._id),
+      });
+    }
+  }
+
+  return {
+    responsavelNome: eu.nomeCompleto ?? "",
+    responsavelWhatsapp: eu.whatsapp ?? "",
+    familiares,
+  };
+}
 
 // Acampamento — endpoints PUBLICOS (sem auth obrigatoria), mesmo padrao das
 // inscricoes genericas: `responder` recebe ipHash de um route handler Next.
@@ -48,45 +123,19 @@ export const minhaFamilia = query({
   handler: async (ctx) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) return null;
-    const membro = await ctx.db
-      .query("membros")
-      .withIndex("by_user_id", (q) => q.eq("userId", userId))
-      .first();
-    if (!membro) return null;
-    const eu = await ctx.db.get(membro.entidadeId);
-    if (!eu) return null;
-
-    const participantes: { nome: string; dataNascimento: string | null }[] = [
-      { nome: eu.nomeCompleto ?? "", dataNascimento: eu.dataNascimento ?? null },
-    ];
-
-    if (membro.conjugeId) {
-      const conjuge = await ctx.db.get(membro.conjugeId);
-      if (conjuge) {
-        participantes.push({
-          nome: conjuge.nomeCompleto ?? "",
-          dataNascimento: conjuge.dataNascimento ?? null,
-        });
-      }
-    }
-
-    const vinculos = await ctx.db
-      .query("responsaveis")
-      .withIndex("by_responsavel", (q) => q.eq("responsavelEntidadeId", membro.entidadeId))
-      .collect();
-    for (const vinc of vinculos) {
-      const filho = await ctx.db.get(vinc.criancaEntidadeId);
-      if (filho) {
-        participantes.push({
-          nome: filho.nomeCompleto ?? "",
-          dataNascimento: filho.dataNascimento ?? null,
-        });
-      }
-    }
-
+    const familia = await familiaDoUsuario(ctx, userId);
+    if (!familia) return null;
     return {
-      responsavel: { nome: eu.nomeCompleto ?? "", whatsapp: eu.whatsapp ?? "" },
-      participantes: participantes.filter((p) => p.nome),
+      responsavel: { nome: familia.responsavelNome, whatsapp: familia.responsavelWhatsapp },
+      participantes: familia.familiares
+        .filter((f) => f.nome)
+        .map((f) => ({
+          nome: f.nome,
+          dataNascimento: f.dataNascimento,
+          // Só vai o membroId de quem tem cadastro de membro — o vínculo é
+          // reconfirmado no servidor no envio.
+          membroId: f.membroId ?? undefined,
+        })),
     };
   },
 });
@@ -95,6 +144,9 @@ const participanteValidator = v.object({
   nome: v.string(),
   dataNascimento: v.string(),
   participaPalestras: v.boolean(),
+  // Hint de vínculo vindo do pré-preenchimento; só é aceito se pertencer à
+  // família do usuário logado (validado no servidor).
+  membroId: v.optional(v.id("membros")),
 });
 
 const hospedagemValidator = v.object({
@@ -204,15 +256,20 @@ export const responder = mutation({
       );
     }
 
-    // Membro logado? Resolve membroId do responsavel no servidor.
+    // Membro logado? Resolve a família no servidor: membroId do responsável +
+    // mapa membroId->nome autorizado p/ auto-vincular os participantes que
+    // vieram do pré-preenchimento (anti-forja: só vincula a própria família).
     let membroId: Doc<"membros">["_id"] | undefined = undefined;
+    const familiaMap = new Map<string, string>(); // membroId -> nome do membro
     const userId = await getAuthUserId(ctx);
     if (userId) {
-      const membro = await ctx.db
-        .query("membros")
-        .withIndex("by_user_id", (q) => q.eq("userId", userId))
-        .first();
-      if (membro) membroId = membro._id;
+      const familia = await familiaDoUsuario(ctx, userId);
+      if (familia) {
+        membroId = familia.familiares[0]?.membroId ?? undefined;
+        for (const f of familia.familiares) {
+          if (f.membroId) familiaMap.set(f.membroId, f.nome);
+        }
+      }
     }
 
     // Calculo com snapshot da tabela vigente
@@ -238,11 +295,20 @@ export const responder = mutation({
     await ctx.db.insert("inscricoesAcampamento", {
       acampamentoId: acamp._id,
       responsavel: { nome: args.responsavel.nome.trim(), whatsapp, membroId },
-      participantes: args.participantes.map((p) => ({
-        nome: p.nome.trim(),
-        dataNascimento: p.dataNascimento,
-        participaPalestras: p.participaPalestras,
-      })),
+      participantes: args.participantes.map((p) => {
+        // Auto-vínculo só se o membroId veio no envio E pertence à família do
+        // usuário logado. Caso contrário, entra sem vínculo (Vincular manual).
+        const nome = p.nome.trim();
+        const vincula = p.membroId && familiaMap.has(p.membroId);
+        return {
+          nome,
+          dataNascimento: p.dataNascimento,
+          participaPalestras: p.participaPalestras,
+          ...(vincula
+            ? { membroId: p.membroId, membroNome: familiaMap.get(p.membroId!) }
+            : {}),
+        };
+      }),
       hospedagem: h,
       extras: args.extras,
       pagamentoPreferido: {

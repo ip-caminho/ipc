@@ -327,6 +327,69 @@ describe("acampamento admin (fase 3)", () => {
     const detalhe = await admin.query(api.acampamento.queries.getInscricao, { id: insc._id });
     expect(detalhe!.participantes[0].membroNome).toBe("Adulto da Silva");
   });
+
+  it("membro logado auto-vincula a propria familia e ignora membroId forjado", async () => {
+    const t = convexTest(schema, modules);
+    const admin = await seedAdmin(t);
+    await admin.mutation(api.acampamento.mutations.criar, ARGS_ACAMP);
+
+    // Membro com cadastro na base (vira o usuario logado)
+    const userId = await t.run((ctx) => ctx.db.insert("users", {}));
+    const membroId = await t.run(async (ctx) => {
+      const eid = await ctx.db.insert("entidades", {
+        tipoEntidade: "PF",
+        papeis: ["MEMBRO"],
+        status: "ATIVO",
+        nomeCompleto: "Joao Membro",
+        dataNascimento: "1990-01-01",
+      });
+      return ctx.db.insert("membros", { entidadeId: eid, role: "membro", userId });
+    });
+    // Membro de OUTRA familia — membroId que o cliente nao pode reivindicar
+    const foreignMembroId = await t.run(async (ctx) => {
+      const eid = await ctx.db.insert("entidades", {
+        tipoEntidade: "PF",
+        papeis: ["MEMBRO"],
+        status: "ATIVO",
+        nomeCompleto: "Estranho",
+      });
+      return ctx.db.insert("membros", { entidadeId: eid, role: "membro" });
+    });
+    const asMembro = t.withIdentity({ subject: `${userId}|s` });
+
+    // Pre-preenchimento traz o membroId do proprio membro
+    const fam = await asMembro.query(api.public.acampamento.minhaFamilia, {});
+    expect(fam!.participantes[0].membroId).toBe(membroId);
+
+    // Participante 0: membroId da propria familia -> auto-vincula.
+    // Participante 1: membroId forjado (fora da familia) -> entra sem vinculo.
+    await asMembro.mutation(api.public.acampamento.responder, {
+      slug: "acampa-2026",
+      responsavel: { nome: "Joao Membro", whatsapp: "11999990000" },
+      participantes: [
+        { nome: "Joao Membro", dataNascimento: "1990-01-01", participaPalestras: true, membroId },
+        {
+          nome: "Estranho",
+          dataNascimento: "1995-01-01",
+          participaPalestras: true,
+          membroId: foreignMembroId,
+        },
+      ],
+      hospedagem: { quartosDuplos: 1, quartosTriplos: 0, camasExtras: 0, pets: 0 },
+      pagamentoPreferido: { forma: "A_VISTA" },
+      lgpdConsentimento: true,
+      ipHash: "hash-teste",
+    });
+
+    const acampId = (await admin.query(api.acampamento.queries.listar, {}))[0]._id;
+    const insc = (
+      await admin.query(api.acampamento.queries.listarInscricoes, { acampamentoId: acampId })
+    )[0];
+    const detalhe = await admin.query(api.acampamento.queries.getInscricao, { id: insc._id });
+    expect(detalhe!.participantes[0].membroId).toBe(membroId);
+    expect(detalhe!.participantes[0].membroNome).toBe("Joao Membro");
+    expect(detalhe!.participantes[1].membroId).toBeUndefined();
+  });
 });
 
 describe("acampamento financeiro (fase 4)", () => {
