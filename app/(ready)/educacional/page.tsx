@@ -29,6 +29,8 @@ import {
   CalendarDays,
   ClipboardList,
   Baby,
+  Cake,
+  Heart,
 } from "lucide-react";
 import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
@@ -39,6 +41,8 @@ import { CriancaForm } from "@features/educacional/components/CriancaForm";
 import { CriancaDetalhe } from "@features/educacional/components/CriancaDetalhe";
 import { RelatorioForm } from "@features/educacional/components/RelatorioForm";
 import { EscalaForm } from "@features/educacional/components/EscalaForm";
+import { ProximosAniversarios } from "@features/educacional/components/ProximosAniversarios";
+import { OvelhinhasManager } from "@features/educacional/components/OvelhinhasManager";
 
 import type { CriancaFormValues } from "@features/educacional/lib/validations";
 import type { RelatorioFormValues } from "@features/educacional/lib/validations";
@@ -73,6 +77,7 @@ export default function EducacionalPage() {
   const [editingCrianca, setEditingCrianca] = useState<any>(null);
   const [relatorioFormOpen, setRelatorioFormOpen] = useState(false);
   const [escalaFormOpen, setEscalaFormOpen] = useState(false);
+  const [ovelhinhasManagerOpen, setOvelhinhasManagerOpen] = useState(false);
 
   // Queries
   const criancas = useQuery(
@@ -115,6 +120,7 @@ export default function EducacionalPage() {
         usoImagem: data.usoImagem,
         observacoesMedicas: data.observacoesMedicas || undefined,
         observacoesFamilia: data.observacoesFamilia || undefined,
+        ovelhinhaId: (data.ovelhinhaId as Id<"membros">) || undefined,
       });
       toast.success("Crianca cadastrada");
     } catch (error) {
@@ -134,6 +140,7 @@ export default function EducacionalPage() {
         usoImagem: data.usoImagem,
         observacoesMedicas: data.observacoesMedicas || undefined,
         observacoesFamilia: data.observacoesFamilia || undefined,
+        ovelhinhaId: data.ovelhinhaId ? (data.ovelhinhaId as Id<"membros">) : null,
       });
       toast.success("Crianca atualizada");
       setEditingCrianca(null);
@@ -280,6 +287,7 @@ export default function EducacionalPage() {
               usoImagem: editingCrianca.usoImagem,
               observacoesMedicas: editingCrianca.observacoesMedicas,
               observacoesFamilia: editingCrianca.observacoesFamilia,
+              ovelhinhaId: editingCrianca.ovelhinhaId,
             }}
             isEditing
           />
@@ -309,6 +317,10 @@ export default function EducacionalPage() {
             <TabsTrigger value="turmas" className="gap-1.5">
               <Users className="h-4 w-4" />
               Turmas
+            </TabsTrigger>
+            <TabsTrigger value="aniversarios" className="gap-1.5">
+              <Cake className="h-4 w-4" />
+              Aniversarios
             </TabsTrigger>
             {canReadEdu && (
               <TabsTrigger value="escala" className="gap-1.5">
@@ -344,10 +356,19 @@ export default function EducacionalPage() {
                 </SelectContent>
               </Select>
               <PermissionGate permission="criancas:manage">
-                <Button onClick={() => setCriancaFormOpen(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Nova Crianca
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setOvelhinhasManagerOpen(true)}
+                  >
+                    <Heart className="h-4 w-4 mr-2" />
+                    Ovelhinhas
+                  </Button>
+                  <Button onClick={() => setCriancaFormOpen(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Nova Crianca
+                  </Button>
+                </div>
               </PermissionGate>
             </div>
 
@@ -369,6 +390,11 @@ export default function EducacionalPage() {
                 </div>
               </>
             )}
+          </TabsContent>
+
+          {/* Tab: Aniversarios */}
+          <TabsContent value="aniversarios" className="space-y-4">
+            <ProximosAniversarios />
           </TabsContent>
 
           {/* Tab: Escala */}
@@ -514,6 +540,10 @@ export default function EducacionalPage() {
             ministerioId={eduMinisterio._id}
           />
         )}
+        <OvelhinhasManager
+          open={ovelhinhasManagerOpen}
+          onOpenChange={setOvelhinhasManagerOpen}
+        />
       </div>
       </HeaderLayout>
     </ModuloGuard>
