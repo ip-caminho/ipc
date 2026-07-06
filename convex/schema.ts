@@ -1292,6 +1292,7 @@ export default defineSchema({
   })
     .index("by_inscricao", ["inscricaoId"])
     .index("by_inscricao_status", ["inscricaoId", "status"])
+    .index("by_membro", ["membroId"])
     .index("by_ipHash_criadoEm", ["ipHash", "criadoEm"]),
 
   // ===== Acampamento anual (inscricao especial por grupo) =====
