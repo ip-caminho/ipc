@@ -173,6 +173,115 @@ export const tornarFilhosMembros = internalMutation({
   },
 });
 
+/**
+ * Funde uma duplicata (criada pelo import) na entidade canonica pre-existente:
+ * move responsaveis pra canonica, garante membro na canonica se a duplicata era,
+ * e apaga a duplicata (responsaveis + membro + entidade). Idempotente-ish.
+ */
+export const fundirDuplicata = internalMutation({
+  args: { duplicataId: v.id("entidades"), canonicaId: v.id("entidades"), nomeCanonica: v.optional(v.string()), manterNascimentoCanonica: v.optional(v.boolean()), dryRun: v.optional(v.boolean()) },
+  handler: async (ctx, { duplicataId, canonicaId, nomeCanonica, manterNascimentoCanonica, dryRun }) => {
+    if (duplicataId === canonicaId) return { erro: "ids iguais" };
+    const dup = await ctx.db.get(duplicataId);
+    const can = await ctx.db.get(canonicaId);
+    if (!dup || !can) return { erro: "entidade nao encontrada" };
+
+    const rel = async (crianca: Id<"entidades">) =>
+      ctx.db.query("responsaveis").withIndex("by_crianca", (q) => q.eq("criancaEntidadeId", crianca)).collect();
+    const memb = async (ent: Id<"entidades">) =>
+      ctx.db.query("membros").withIndex("by_entidade", (q) => q.eq("entidadeId", ent)).first();
+
+    const dupRels = await rel(duplicataId);
+    const canRels = await rel(canonicaId);
+    const paisMovidos: string[] = [];
+    for (const r of dupRels) {
+      if (!canRels.some((c) => c.responsavelEntidadeId === r.responsavelEntidadeId)) {
+        if (!dryRun) {
+          await ctx.db.insert("responsaveis", {
+            criancaEntidadeId: canonicaId,
+            responsavelEntidadeId: r.responsavelEntidadeId,
+            tipo: r.tipo,
+            principal: canRels.length === 0 && paisMovidos.length === 0,
+            criadoEm: r.criadoEm,
+          });
+        }
+        paisMovidos.push(r.responsavelEntidadeId);
+      }
+    }
+
+    // Atualiza DOB (dos pais/retiro = da duplicata) e nome (se canonica for so 1o nome)
+    const titleCase = (s: string) =>
+      s.trim().toLowerCase().split(/\s+/).map((w) => (w ? w[0].toUpperCase() + w.slice(1) : w)).join(" ");
+    const canPatch: Record<string, unknown> = {};
+    if (nomeCanonica) {
+      canPatch.nomeCompleto = nomeCanonica;
+    } else if ((can.nomeCompleto ?? "").trim().split(/\s+/).length <= 1 && dup.nomeCompleto) {
+      canPatch.nomeCompleto = titleCase(dup.nomeCompleto);
+    }
+    if (!manterNascimentoCanonica && dup.dataNascimento && dup.dataNascimento !== can.dataNascimento) {
+      canPatch.dataNascimento = dup.dataNascimento;
+    }
+    if (!dryRun && Object.keys(canPatch).length) await ctx.db.patch(canonicaId, canPatch);
+
+    const dupMembro = await memb(duplicataId);
+    const canMembro = await memb(canonicaId);
+    let virouMembro = false;
+    if (dupMembro && !canMembro) {
+      if (!dryRun) {
+        await ctx.db.insert("membros", {
+          entidadeId: canonicaId,
+          role: "membro",
+          cargoEclesiastico: dupMembro.cargoEclesiastico ?? "MEMBRO_NAO_COMUNGANTE",
+        });
+        const papeis = Array.from(
+          new Set([...(can.papeis ?? []).filter((p) => p !== "DEPENDENTE"), "MEMBRO"]),
+        ) as typeof can.papeis;
+        await ctx.db.patch(canonicaId, { papeis, vinculoIgreja: "MEMBRO" });
+      }
+      virouMembro = true;
+    }
+
+    // criancaPerfil: se a canonica nao tem e a duplicata tem, repoe pra canonica; se ambas tem, apaga a da duplicata
+    const cpDe = async (ent: Id<"entidades">) =>
+      ctx.db.query("criancaPerfil").withIndex("by_entidade", (q) => q.eq("entidadeId", ent)).first();
+    const dupCp = await cpDe(duplicataId);
+    const canCp = await cpDe(canonicaId);
+    let cpRepontada = false;
+    let cpApagada = false;
+    if (dupCp) {
+      if (!canCp) {
+        if (!dryRun) await ctx.db.patch(dupCp._id, { entidadeId: canonicaId });
+        cpRepontada = true;
+      } else {
+        if (!dryRun) await ctx.db.delete(dupCp._id);
+        cpApagada = true;
+      }
+    }
+
+    // apaga a duplicata
+    if (!dryRun) {
+      for (const r of dupRels) await ctx.db.delete(r._id);
+      if (dupMembro) await ctx.db.delete(dupMembro._id);
+      await ctx.db.delete(duplicataId);
+    }
+
+    return {
+      dryRun: !!dryRun,
+      canonica: can.nomeCompleto,
+      duplicataApagada: dup.nomeCompleto,
+      nomeAtualizado: (canPatch.nomeCompleto as string) ?? null,
+      dobAtualizada: (canPatch.dataNascimento as string) ?? null,
+      dobMantida: manterNascimentoCanonica ? (can.dataNascimento ?? null) : undefined,
+      paisMovidos: paisMovidos.length,
+      canonicaVirouMembro: virouMembro,
+      relsApagadas: dupRels.length,
+      membroApagado: !!dupMembro,
+      criancaPerfilRepontada: cpRepontada,
+      criancaPerfilApagada: cpApagada,
+    };
+  },
+});
+
 const normNome = (s?: string) =>
   (s ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
 
@@ -267,5 +376,23 @@ export const cadastrarFilhosRetiro = internalMutation({
       jaExistiam,
       erros,
     };
+  },
+});
+
+/** Corrige a data de nascimento de uma entidade (uso pontual pos-fusao). */
+export const corrigirNascimento = internalMutation({
+  args: {
+    entidadeId: v.id("entidades"),
+    dataNascimento: v.string(),
+    dryRun: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const e = await ctx.db.get(args.entidadeId);
+    if (!e) throw new Error("entidade nao encontrada");
+    const antes = e.dataNascimento ?? null;
+    if (!args.dryRun) {
+      await ctx.db.patch(args.entidadeId, { dataNascimento: args.dataNascimento });
+    }
+    return { nome: e.nomeCompleto, antes, depois: args.dataNascimento, dryRun: !!args.dryRun };
   },
 });
