@@ -180,11 +180,11 @@ function LinkComprovante({ token }: { token: string }) {
       ? `${window.location.origin}/acampamento/comprovante?k=${token}`
       : "";
   return (
-    <div className={`mx-auto mt-6 max-w-[46ch] border ${BORDA} bg-[#F4F0E8] p-4 text-left`}>
-      <p className={`flex items-center gap-1.5 ${FONT_BODY} text-[13px] font-semibold ${COR_TEXTO}`}>
+    <div className={`mx-auto mt-6 max-w-[46ch] border ${BORDA} bg-[#F4F0E8] p-4 text-center`}>
+      <p className={`flex items-center justify-center gap-1.5 ${FONT_BODY} text-[13px] font-semibold ${COR_TEXTO}`}>
         <Receipt className="h-4 w-4 text-[#F0732B]" /> Enviar comprovante de pagamento
       </p>
-      <p className={`${FONT_BODY} mt-1 text-[12px] leading-[1.5] ${COR_MUTED}`}>
+      <p className={`${FONT_BODY} mx-auto mt-1 max-w-[38ch] text-[12px] leading-[1.5] ${COR_MUTED}`}>
         Guarde este link. Ao pagar (ou cada parcela), envie o comprovante por aqui — a
         secretaria confere.
       </p>
@@ -216,7 +216,13 @@ function LinkComprovante({ token }: { token: string }) {
   );
 }
 
-export function AcampamentoForm({ acampamento }: { acampamento: AcampamentoPublico }) {
+export function AcampamentoForm({
+  acampamento,
+  onEnviado,
+}: {
+  acampamento: AcampamentoPublico;
+  onEnviado?: () => void;
+}) {
   const { isAuthenticated } = useConvexAuth();
   // @ts-ignore Convex TS2589
   const familia = useQuery(api.public.acampamento.minhaFamilia, isAuthenticated ? {} : "skip");
@@ -348,6 +354,7 @@ export function AcampamentoForm({ acampamento }: { acampamento: AcampamentoPubli
         comprovanteToken: json.comprovanteToken,
       });
       setStatus("success");
+      onEnviado?.();
       window.scrollTo({ top: 0 });
     } catch (e) {
       setErroEnvio(e instanceof Error ? e.message : "Erro ao enviar inscrição");

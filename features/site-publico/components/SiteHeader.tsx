@@ -47,7 +47,7 @@ export function SiteHeader() {
               <SheetTrigger aria-label="Abrir menu" className="menu-toggle">
                 <Menu className="h-5 w-5" />
               </SheetTrigger>
-              <SheetContent side="right" className="site-v2 bg-[var(--surface-page)]">
+              <SheetContent side="right" className="site-v2 bg-[var(--surface-page)] p-6">
                 <SheetTitle className="font-[family-name:var(--font-spectral)] text-[18px] text-[color:var(--text-strong)]">
                   Igreja Presbiteriana do Caminho
                 </SheetTitle>
