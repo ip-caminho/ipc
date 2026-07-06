@@ -380,6 +380,7 @@ export const minhasInscricoes = query({
       .collect();
     const out = [];
     for (const i of docs) {
+      if (i.status === "CANCELADA") continue; // canceladas nao aparecem p/ o membro
       const acamp = await ctx.db.get(i.acampamentoId);
       out.push({
         _id: i._id,
