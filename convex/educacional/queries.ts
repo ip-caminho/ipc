@@ -402,6 +402,129 @@ export const proximosAniversarios = query({
   },
 });
 
+// ===== Agenda do departamento =====
+
+// Eventos do calendario vinculados ao ministerio do educacional. Desacoplado
+// de calendario:read — quem tem educacional:read ve a agenda do departamento.
+// incluirPassados=false retorna so os proximos (data >= hoje).
+export const listAgendaEducacional = query({
+  args: {
+    ministerioId: v.id("ministerios"),
+    incluirPassados: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const auth = await getAuthContext(ctx);
+    if (!auth || !auth.can("educacional:read")) return [];
+
+    let eventos = await ctx.db
+      .query("calendarioEventos")
+      .withIndex("by_ministerio", (q) => q.eq("ministerioId", args.ministerioId))
+      .collect();
+
+    if (!args.incluirPassados) {
+      const hoje = getSaoPauloDateString();
+      eventos = eventos.filter((e) => (e.dataFim || e.data) >= hoje);
+    }
+
+    return eventos
+      .map((e) => ({
+        _id: e._id,
+        titulo: e.titulo,
+        data: e.data,
+        dataFim: e.dataFim,
+        descricao: e.descricao,
+        tipo: e.tipo,
+      }))
+      .sort((a, b) => a.data.localeCompare(b.data));
+  },
+});
+
+// ===== Voluntarios =====
+
+// Lista voluntarios do educacional, enriquecidos com dados do membro/entidade.
+export const listVoluntarios = query({
+  args: { papelEdu: v.optional(v.string()), turma: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const auth = await getAuthContext(ctx);
+    if (!auth || !auth.can("voluntarios_edu:read")) return [];
+
+    let voluntarios;
+    if (args.papelEdu) {
+      voluntarios = await ctx.db
+        .query("eduVoluntarios")
+        .withIndex("by_papel", (q) => q.eq("papelEdu", args.papelEdu as any))
+        .collect();
+    } else {
+      voluntarios = await ctx.db.query("eduVoluntarios").collect();
+    }
+
+    if (args.turma) {
+      voluntarios = voluntarios.filter((v) =>
+        v.turmasHabilitadas.includes(args.turma!)
+      );
+    }
+
+    const enriquecidos = await Promise.all(
+      voluntarios.map(async (vol) => {
+        const membro = await ctx.db.get(vol.membroId);
+        const entidade = membro ? await ctx.db.get(membro.entidadeId) : null;
+        return {
+          _id: vol._id,
+          membroId: vol.membroId,
+          nome: entidade?.nomeCompleto || "",
+          foto: entidade?.foto || null,
+          email: entidade?.email,
+          whatsapp: entidade?.whatsapp,
+          telefone: entidade?.telefone,
+          dataNascimento: entidade?.dataNascimento,
+          papelEdu: vol.papelEdu,
+          turmasHabilitadas: vol.turmasHabilitadas,
+          cbcm: vol.cbcm,
+          cacValidade: vol.cacValidade,
+          certificadoCacUrl: vol.certificadoCacUrl,
+          observacoes: vol.observacoes,
+        };
+      })
+    );
+
+    return enriquecidos
+      .filter((v) => v.nome)
+      .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+  },
+});
+
+// Membros ativos selecionaveis como voluntario, com flag de ja cadastrado.
+// Leitura ampla e pontual (uso administrativo), protegida por manage.
+export const listMembrosParaVoluntario = query({
+  args: {},
+  handler: async (ctx) => {
+    const auth = await getAuthContext(ctx);
+    if (!auth || !auth.can("voluntarios_edu:manage")) return [];
+
+    const jaVoluntario = new Set(
+      (await ctx.db.query("eduVoluntarios").collect()).map((v) => String(v.membroId))
+    );
+
+    const membros = await ctx.db.query("membros").collect();
+    const resultados = await Promise.all(
+      membros.map(async (m) => {
+        const entidade = await ctx.db.get(m.entidadeId);
+        if (!entidade || entidade.status !== "ATIVO") return null;
+        return {
+          membroId: m._id,
+          nome: entidade.nomeCompleto || "",
+          foto: entidade.foto || null,
+          jaVoluntario: jaVoluntario.has(String(m._id)),
+        };
+      })
+    );
+
+    return resultados
+      .filter((r): r is NonNullable<typeof r> => r !== null && r.nome !== "")
+      .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+  },
+});
+
 // ===== Queries para Diretorio =====
 
 export const listCriancasForDiretorio = query({
@@ -556,11 +679,28 @@ export const dashboardPais = query({
           );
         }
 
+        // Ultima licao registrada da turma (mais recente por data).
+        const ultimoRel = await ctx.db
+          .query("eduRelatorios")
+          .withIndex("by_turma_data", (q) => q.eq("turma", perfil.turma))
+          .order("desc")
+          .first();
+        const ultimaLicao = ultimoRel
+          ? {
+              data: ultimoRel.data,
+              numero: ultimoRel.numero,
+              tema: ultimoRel.tema,
+              passagemMemorizar: ultimoRel.passagemMemorizar,
+              licaoDeCasa: ultimoRel.licaoDeCasa,
+            }
+          : null;
+
         return {
           nome: criancaEntidade.nomeCompleto || "",
           turma: perfil.turma,
           proximaEscalaData: proximaEscala?.data,
           professores: professores.filter(Boolean),
+          ultimaLicao,
         };
       })
     );
