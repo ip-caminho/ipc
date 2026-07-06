@@ -31,7 +31,7 @@ function addDias(d: Date, n: number): Date {
 
 const cache = new Map<number, Record<string, string>>();
 
-// Feriados nacionais (fixos + móveis derivados da Páscoa) + municipais de São Paulo.
+// Feriados nacionais (fixos + móveis derivados da Páscoa) + estaduais e municipais de São Paulo.
 // Chave = "YYYY-MM-DD", valor = nome. Memoizado por ano.
 export function feriadosDoAno(ano: number): Record<string, string> {
   const cached = cache.get(ano);
@@ -42,6 +42,7 @@ export function feriadosDoAno(ano: number): Record<string, string> {
     [`${ano}-01-25`]: "Aniversário de São Paulo",
     [`${ano}-04-21`]: "Tiradentes",
     [`${ano}-05-01`]: "Dia do Trabalho",
+    [`${ano}-07-09`]: "Revolução Constitucionalista",
     [`${ano}-09-07`]: "Independência",
     [`${ano}-10-12`]: "N. Sra. Aparecida",
     [`${ano}-11-02`]: "Finados",
