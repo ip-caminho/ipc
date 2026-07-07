@@ -40,7 +40,6 @@ export const create = mutation({
     dataBatismo: v.optional(v.string()),
     igrejaProcedencia: v.optional(v.string()),
     conjugeId: v.optional(v.id("entidades")),
-    filhos: v.optional(v.array(v.any())),
   },
   handler: async (ctx, args) => {
     const { membro: caller } = await requirePermission(ctx, "membros:create");
@@ -90,7 +89,6 @@ export const create = mutation({
       dataBatismo: args.dataBatismo,
       igrejaProcedencia: args.igrejaProcedencia,
       conjugeId: args.conjugeId,
-      filhos: args.filhos,
     });
 
     // Vinculo de conjuge e bilateral
