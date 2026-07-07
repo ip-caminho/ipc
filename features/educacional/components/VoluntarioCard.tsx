@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/shared/components/ui/card";
 import { Badge } from "@/shared/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { Button } from "@/shared/components/ui/button";
-import { Edit, Trash2, FileText, Phone, Mail } from "lucide-react";
+import { Edit, Trash2, FileText, Phone, Mail, TriangleAlert } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
@@ -12,7 +12,22 @@ import {
   PAPEL_VOLUNTARIO_LABELS,
   PAPEL_VOLUNTARIO_COLORS,
   CBCM_LABELS,
+  CBCM_COLORS,
 } from "../lib/constants";
+
+// Status do CAC pela validade: vencido (vermelho), a vencer em <=30d (ambar),
+// valido (verde). Retorna null quando nao ha data de validade.
+function cacStatus(cacValidade?: string): { label: string; color: string; alerta: boolean } | null {
+  if (!cacValidade) return null;
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+  const validade = parseISO(cacValidade);
+  const dias = Math.ceil((validade.getTime() - hoje.getTime()) / 86400000);
+  const dataFmt = format(validade, "dd/MM/yyyy", { locale: ptBR });
+  if (dias < 0) return { label: `CAC vencido (${dataFmt})`, color: "bg-red-100 text-red-800", alerta: true };
+  if (dias <= 30) return { label: `CAC vence ${dataFmt}`, color: "bg-amber-100 text-amber-800", alerta: true };
+  return { label: `CAC ate ${dataFmt}`, color: "bg-green-100 text-green-800", alerta: false };
+}
 
 interface VoluntarioCardProps {
   voluntario: {
@@ -41,6 +56,8 @@ export function VoluntarioCard({
 }: VoluntarioCardProps) {
   const papelColor = PAPEL_VOLUNTARIO_COLORS[v.papelEdu] || "bg-gray-100 text-gray-800";
   const telefone = v.whatsapp || v.telefone;
+  const cac = cacStatus(v.cacValidade);
+  const cbcmColor = v.cbcm ? CBCM_COLORS[v.cbcm] || "bg-gray-100 text-gray-700" : "";
 
   return (
     <Card>
@@ -87,12 +104,17 @@ export function VoluntarioCard({
           </div>
         )}
 
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-          {v.cbcm && <span>CBCM: {CBCM_LABELS[v.cbcm] || v.cbcm}</span>}
-          {v.cacValidade && (
-            <span>
-              CAC ate {format(parseISO(v.cacValidade), "dd/MM/yyyy", { locale: ptBR })}
-            </span>
+        <div className="flex flex-wrap items-center gap-1.5">
+          {v.cbcm && (
+            <Badge variant="secondary" className={cbcmColor}>
+              CBCM: {CBCM_LABELS[v.cbcm] || v.cbcm}
+            </Badge>
+          )}
+          {cac && (
+            <Badge variant="secondary" className={cac.color}>
+              {cac.alerta && <TriangleAlert className="h-3 w-3 mr-1" />}
+              {cac.label}
+            </Badge>
           )}
           {v.certificadoCacUrl && (
             <Button

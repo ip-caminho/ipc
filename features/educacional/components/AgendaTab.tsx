@@ -5,13 +5,13 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import Link from "next/link";
-import { Card, CardContent } from "@/shared/components/ui/card";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { CalendarDays, ExternalLink } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAuth } from "@shared/providers/PermissionsProvider";
+import { EduEmptyState } from "./EduEmptyState";
 
 interface AgendaTabProps {
   ministerioId?: Id<"ministerios">;
@@ -77,40 +77,40 @@ export function AgendaTab({ ministerioId }: AgendaTabProps) {
       {lista === undefined ? (
         <p className="text-sm text-muted-foreground">Carregando...</p>
       ) : lista.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          {historico ? "Nenhum evento no historico" : "Nenhum evento proximo"}
-        </p>
+        <EduEmptyState
+          icon={CalendarDays}
+          title={historico ? "Sem historico" : "Nenhum evento proximo"}
+          description="Eventos do departamento aparecem aqui quando vinculados ao ministerio Educacional no calendario."
+        />
       ) : (
-        <div className="space-y-2">
-          {lista.map((e) => (
-            <Card key={e._id}>
-              <CardContent className="py-3">
-                <div className="flex items-start gap-3">
-                  <div className="flex h-10 w-10 shrink-0 flex-col items-center justify-center rounded-lg bg-muted text-center">
-                    <CalendarDays className="h-4 w-4" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium">{e.titulo}</p>
-                      {e.tipo && (
-                        <Badge variant="outline">{TIPO_LABEL[e.tipo] || e.tipo}</Badge>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {format(parseISO(e.data), "dd/MM/yyyy (EEEE)", { locale: ptBR })}
-                      {e.dataFim && e.dataFim !== e.data
-                        ? ` ate ${format(parseISO(e.dataFim), "dd/MM/yyyy", { locale: ptBR })}`
-                        : ""}
-                    </p>
-                    {e.descricao && (
-                      <p className="text-xs text-muted-foreground mt-1 whitespace-pre-wrap">
-                        {e.descricao}
-                      </p>
-                    )}
-                  </div>
+        <div className="space-y-0">
+          {lista.map((e, i) => (
+            <div key={e._id} className="flex gap-3">
+              {/* Coluna do marcador + linha conectora da timeline */}
+              <div className="flex flex-col items-center">
+                <div className="mt-1.5 h-3 w-3 shrink-0 rounded-full border-2 border-primary bg-background" />
+                {i < lista.length - 1 && <div className="my-1 w-px flex-1 bg-border" />}
+              </div>
+              <div className="min-w-0 flex-1 pb-4">
+                <p className="text-xs font-medium text-primary">
+                  {format(parseISO(e.data), "dd/MM/yyyy (EEEE)", { locale: ptBR })}
+                  {e.dataFim && e.dataFim !== e.data
+                    ? ` ate ${format(parseISO(e.dataFim), "dd/MM/yyyy", { locale: ptBR })}`
+                    : ""}
+                </p>
+                <div className="mt-0.5 flex items-center gap-2">
+                  <p className="text-sm font-medium">{e.titulo}</p>
+                  {e.tipo && (
+                    <Badge variant="outline">{TIPO_LABEL[e.tipo] || e.tipo}</Badge>
+                  )}
                 </div>
-              </CardContent>
-            </Card>
+                {e.descricao && (
+                  <p className="mt-1 text-xs text-muted-foreground whitespace-pre-wrap">
+                    {e.descricao}
+                  </p>
+                )}
+              </div>
+            </div>
           ))}
         </div>
       )}
