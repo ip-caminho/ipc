@@ -46,6 +46,7 @@ import { ProximosAniversarios } from "@features/educacional/components/ProximosA
 import { OvelhinhasManager } from "@features/educacional/components/OvelhinhasManager";
 import { VoluntariosTab } from "@features/educacional/components/VoluntariosTab";
 import { AgendaTab } from "@features/educacional/components/AgendaTab";
+import { EduEmptyState } from "@features/educacional/components/EduEmptyState";
 
 import type { CriancaFormValues } from "@features/educacional/lib/validations";
 import type { RelatorioFormValues } from "@features/educacional/lib/validations";
@@ -318,7 +319,10 @@ export default function EducacionalPage() {
     <ModuloGuard modulo="educacional">
       <HeaderLayout>
       <div className="space-y-4">
-        <PageHeader title="Educacional" />
+        <PageHeader
+          title="Educacional Infantil"
+          subtitle="Turmas, voluntarios, licoes e agenda do departamento"
+        />
         <div className="flex items-center justify-end">
           {canWriteEdu && (
             <Button asChild>
@@ -331,7 +335,9 @@ export default function EducacionalPage() {
         </div>
 
         <Tabs defaultValue="turmas">
-          <TabsList>
+          {/* Scroll horizontal no mobile: 6 tabs nao cabem em 390px */}
+          <div className="overflow-x-auto -mx-1 px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <TabsList className="w-max">
             <TabsTrigger value="turmas" className="gap-1.5">
               <Users className="h-4 w-4" />
               Turmas
@@ -365,6 +371,7 @@ export default function EducacionalPage() {
               </TabsTrigger>
             )}
           </TabsList>
+          </div>
 
           {/* Tab: Turmas */}
           <TabsContent value="turmas" className="space-y-4">
@@ -405,7 +412,23 @@ export default function EducacionalPage() {
             {criancas === undefined ? (
               <p className="text-sm text-muted-foreground">Carregando...</p>
             ) : criancas.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Nenhuma crianca encontrada</p>
+              <EduEmptyState
+                icon={Baby}
+                title="Nenhuma crianca"
+                description={
+                  turmaFilter === "all"
+                    ? "Cadastre as criancas do departamento infantil."
+                    : "Nenhuma crianca nesta turma."
+                }
+                action={
+                  canManage && turmaFilter === "all" ? (
+                    <Button onClick={() => setCriancaFormOpen(true)}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Nova Crianca
+                    </Button>
+                  ) : undefined
+                }
+              />
             ) : (
               <>
                 <p className="text-sm text-muted-foreground">{criancas.length} crianca{criancas.length !== 1 ? "s" : ""}</p>
@@ -465,7 +488,11 @@ export default function EducacionalPage() {
               {escalas === undefined ? (
                 <p className="text-sm text-muted-foreground">Carregando...</p>
               ) : !escalas || escalas.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Nenhuma escala encontrada</p>
+                <EduEmptyState
+                  icon={CalendarDays}
+                  title="Nenhuma escala"
+                  description="Monte a escala de professores e auxiliares por data e turma."
+                />
               ) : (
                 <div className="grid gap-3 sm:grid-cols-2">
                   {escalas.map((e: any) => (
@@ -528,7 +555,11 @@ export default function EducacionalPage() {
               {relatorios === undefined ? (
                 <p className="text-sm text-muted-foreground">Carregando...</p>
               ) : relatorios.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Nenhum relatorio encontrado</p>
+                <EduEmptyState
+                  icon={ClipboardList}
+                  title="Nenhuma licao registrada"
+                  description="Registre as licoes com tema, historia, aplicacao e presenca."
+                />
               ) : (
                 <div className="grid gap-3 sm:grid-cols-2">
                   {relatorios.map((r: any) => (

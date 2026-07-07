@@ -4,9 +4,16 @@ import { Card, CardContent } from "@/shared/components/ui/card";
 import { Badge } from "@/shared/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/shared/components/ui/tooltip";
+import {
   TURMA_COLORS,
-  USO_IMAGEM_COLORS,
-  USO_IMAGEM_LABELS_CURTO,
+  TURMA_RING,
+  USO_IMAGEM_LABELS,
+  USO_IMAGEM_ICON_COLORS,
   TIPO_RESPONSAVEL_LABELS,
 } from "../lib/constants";
 import {
@@ -14,7 +21,7 @@ import {
   proximaTransicaoTurma,
   turmaDivergente,
 } from "../lib/idade";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Camera, CameraOff } from "lucide-react";
 
 interface CriancaCardProps {
   crianca: {
@@ -32,9 +39,13 @@ interface CriancaCardProps {
 
 export function CriancaCard({ crianca, onClick }: CriancaCardProps) {
   const turmaColor = TURMA_COLORS[crianca.turma] || "bg-gray-100 text-gray-800";
-  const usoColor = USO_IMAGEM_COLORS[crianca.usoImagem] || "bg-gray-100 text-gray-800";
+  const turmaRing = TURMA_RING[crianca.turma] || "ring-gray-200";
   const transicao = proximaTransicaoTurma(crianca.dataNascimento);
   const divergente = turmaDivergente(crianca.turma, crianca.dataNascimento);
+
+  const usoImagemLabel = USO_IMAGEM_LABELS[crianca.usoImagem] || crianca.usoImagem;
+  const usoIconColor = USO_IMAGEM_ICON_COLORS[crianca.usoImagem] || "text-muted-foreground";
+  const UsoIcon = crianca.usoImagem === "NAO_AUTORIZADO" ? CameraOff : Camera;
 
   return (
     <Card
@@ -43,7 +54,9 @@ export function CriancaCard({ crianca, onClick }: CriancaCardProps) {
     >
       <CardContent className="py-3">
         <div className="flex items-start gap-3">
-          <Avatar className="h-10 w-10 shrink-0">
+          <Avatar
+            className={`h-10 w-10 shrink-0 ring-2 ring-offset-2 ring-offset-background ${turmaRing}`}
+          >
             {crianca.foto && <AvatarImage src={crianca.foto} alt={crianca.nome} />}
             <AvatarFallback className="text-sm">{crianca.nome?.charAt(0)}</AvatarFallback>
           </Avatar>
@@ -60,9 +73,16 @@ export function CriancaCard({ crianca, onClick }: CriancaCardProps) {
               )}
             </div>
           </div>
-          <Badge variant="outline" className={usoColor}>
-            {USO_IMAGEM_LABELS_CURTO[crianca.usoImagem] || crianca.usoImagem}
-          </Badge>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className={`shrink-0 ${usoIconColor}`}>
+                  <UsoIcon className="h-4 w-4" />
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>Uso de imagem: {usoImagemLabel}</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
         {(transicao || divergente) && (
           <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
