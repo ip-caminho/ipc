@@ -10,7 +10,7 @@ async function seedAdmin(t: ReturnType<typeof convexTest>) {
   await t.run(async (ctx) => {
     const eid = await ctx.db.insert("entidades", {
       tipoEntidade: "PF",
-      papeis: ["MEMBRO"],
+      papeis: [],
       status: "ATIVO",
       nomeCompleto: "Admin",
     });
@@ -28,7 +28,7 @@ async function pessoa(
   return t.run(async (ctx) => {
     const entidadeId = await ctx.db.insert("entidades", {
       tipoEntidade: "PF",
-      papeis: ["MEMBRO"],
+      papeis: [],
       status: "ATIVO",
       nomeCompleto: nome,
       sexo,
@@ -99,7 +99,7 @@ describe("listParaSecretario — agrupamento por familia", () => {
     const noahEnt = await t.run(async (ctx) => {
       const e = await ctx.db.insert("entidades", {
         tipoEntidade: "PF",
-        papeis: ["DEPENDENTE"],
+        papeis: [],
         status: "ATIVO",
         nomeCompleto: "Noah Dependente",
         vinculoIgreja: "NAO_MEMBRO",
@@ -131,7 +131,7 @@ describe("listParaSecretario — agrupamento por familia", () => {
     const entId = await t.run(async (ctx) =>
       ctx.db.insert("entidades", {
         tipoEntidade: "PF",
-        papeis: ["DEPENDENTE"],
+        papeis: [],
         status: "ATIVO",
         nomeCompleto: "Crianca Promovida",
         vinculoIgreja: "NAO_MEMBRO",
@@ -251,7 +251,7 @@ describe("listParaSecretario — agrupamento por familia", () => {
       // dependente
       const dep = await ctx.db.insert("entidades", {
         tipoEntidade: "PF",
-        papeis: ["DEPENDENTE"],
+        papeis: [],
         status: "ATIVO",
         nomeCompleto: "Dep Endente",
         vinculoIgreja: "NAO_MEMBRO",
@@ -387,7 +387,7 @@ describe("listParaSecretario — agrupamento por familia", () => {
     const esposaEntidadeId = await t.run(async (ctx) =>
       ctx.db.insert("entidades", {
         tipoEntidade: "PF",
-        papeis: ["DEPENDENTE"],
+        papeis: [],
         status: "ATIVO",
         nomeCompleto: "Esposa Promovida",
         sexo: "F",
@@ -414,7 +414,7 @@ describe("listParaSecretario — agrupamento por familia", () => {
       await ctx.db.patch(a.membroId, { conjugeId: b.entidadeId });
       const cid = await ctx.db.insert("entidades", {
         tipoEntidade: "PF",
-        papeis: ["DEPENDENTE"],
+        papeis: [],
         status: "ATIVO",
         nomeCompleto: "Crianca Migrada",
         sexo: "M",

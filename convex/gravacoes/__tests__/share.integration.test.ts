@@ -9,7 +9,7 @@ async function seedUser(t: ReturnType<typeof convexTest>, role: string) {
   await t.run(async (ctx) => {
     const eid = await ctx.db.insert("entidades", {
       tipoEntidade: "PF",
-      papeis: ["MEMBRO"],
+      papeis: [],
       status: "ATIVO",
       nomeCompleto: role,
     });

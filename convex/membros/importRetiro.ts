@@ -156,10 +156,7 @@ export const tornarFilhosMembros = internalMutation({
           role: "membro",
           cargoEclesiastico: "MEMBRO_NAO_COMUNGANTE",
         });
-        const papeis = (e.papeis ?? []).filter(
-          (p) => p !== "DEPENDENTE" && p !== "MEMBRO",
-        ) as typeof e.papeis;
-        await ctx.db.patch(entidadeId, { papeis, vinculoIgreja: "MEMBRO" });
+        await ctx.db.patch(entidadeId, { vinculoIgreja: "MEMBRO" });
       }
       criados.push(e.nomeCompleto ?? "?");
     }
@@ -233,10 +230,7 @@ export const fundirDuplicata = internalMutation({
           role: "membro",
           cargoEclesiastico: dupMembro.cargoEclesiastico ?? "MEMBRO_NAO_COMUNGANTE",
         });
-        const papeis = (can.papeis ?? []).filter(
-          (p) => p !== "DEPENDENTE" && p !== "MEMBRO",
-        ) as typeof can.papeis;
-        await ctx.db.patch(canonicaId, { papeis, vinculoIgreja: "MEMBRO" });
+        await ctx.db.patch(canonicaId, { vinculoIgreja: "MEMBRO" });
       }
       virouMembro = true;
     }

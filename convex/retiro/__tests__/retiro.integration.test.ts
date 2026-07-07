@@ -101,7 +101,7 @@ async function seedAdmin(t: ReturnType<typeof convexTest>) {
   await t.run(async (ctx) => {
     const eid = await ctx.db.insert("entidades", {
       tipoEntidade: "PF",
-      papeis: ["MEMBRO"],
+      papeis: [],
       status: "ATIVO",
       nomeCompleto: "Admin",
     });
@@ -305,7 +305,7 @@ describe("retiro admin (fase 3)", () => {
     const membroId = await t.run(async (ctx) => {
       const eid = await ctx.db.insert("entidades", {
         tipoEntidade: "PF",
-        papeis: ["MEMBRO"],
+        papeis: [],
         status: "ATIVO",
         nomeCompleto: "Adulto da Silva",
       });
@@ -422,7 +422,7 @@ describe("retiro admin (fase 3)", () => {
     const membroId = await t.run(async (ctx) => {
       const eid = await ctx.db.insert("entidades", {
         tipoEntidade: "PF",
-        papeis: ["MEMBRO"],
+        papeis: [],
         status: "ATIVO",
         nomeCompleto: "Joao Membro",
         dataNascimento: "1990-01-01",
@@ -433,7 +433,7 @@ describe("retiro admin (fase 3)", () => {
     const foreignMembroId = await t.run(async (ctx) => {
       const eid = await ctx.db.insert("entidades", {
         tipoEntidade: "PF",
-        papeis: ["MEMBRO"],
+        papeis: [],
         status: "ATIVO",
         nomeCompleto: "Estranho",
       });
@@ -484,7 +484,7 @@ describe("retiro admin (fase 3)", () => {
     await t.run(async (ctx) => {
       const eid = await ctx.db.insert("entidades", {
         tipoEntidade: "PF",
-        papeis: ["MEMBRO"],
+        papeis: [],
         status: "ATIVO",
         nomeCompleto: "Joao Membro",
         dataNascimento: "1990-01-01",

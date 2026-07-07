@@ -10,7 +10,7 @@ async function seedAdmin(t: ReturnType<typeof convexTest>) {
   await t.run(async (ctx) => {
     const eid = await ctx.db.insert("entidades", {
       tipoEntidade: "PF",
-      papeis: ["MEMBRO"],
+      papeis: [],
       status: "ATIVO",
       nomeCompleto: "Admin",
     });
@@ -27,7 +27,7 @@ async function seedMembro(
   return t.run(async (ctx) => {
     const entidadeId = await ctx.db.insert("entidades", {
       tipoEntidade: "PF",
-      papeis: ["MEMBRO"],
+      papeis: [],
       status: opts.status ?? "ATIVO",
       nomeCompleto: nome,
       whatsapp: "11999990000",

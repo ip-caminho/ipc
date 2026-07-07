@@ -17,7 +17,7 @@ async function seedAdmin(t: ReturnType<typeof convexTest>) {
   await t.run(async (ctx) => {
     const eid = await ctx.db.insert("entidades", {
       tipoEntidade: "PF",
-      papeis: ["MEMBRO"],
+      papeis: [],
       status: "ATIVO",
       nomeCompleto: "Admin",
     });
@@ -83,7 +83,7 @@ describe("membros — criação atômica", () => {
     await t.run(async (ctx) => {
       const eid = await ctx.db.insert("entidades", {
         tipoEntidade: "PF",
-        papeis: ["MEMBRO"],
+        papeis: [],
         status: "ATIVO",
         nomeCompleto: "Comum",
       });
@@ -102,7 +102,7 @@ describe("membros — criação atômica", () => {
     await t.run(async (ctx) => {
       const eid = await ctx.db.insert("entidades", {
         tipoEntidade: "PF",
-        papeis: ["MEMBRO"],
+        papeis: [],
         status: "ATIVO",
         nomeCompleto: "Secretaria",
       });
@@ -130,7 +130,7 @@ describe("membros — criação atômica", () => {
     await t.run(async (ctx) => {
       const eid = await ctx.db.insert("entidades", {
         tipoEntidade: "PF",
-        papeis: ["MEMBRO"],
+        papeis: [],
         status: "ATIVO",
         nomeCompleto: "Admin",
       });
@@ -171,7 +171,7 @@ describe("membros — update", () => {
     const ids = await t.run(async (ctx) => {
       const entidadeId = await ctx.db.insert("entidades", {
         tipoEntidade: "PF",
-        papeis: ["MEMBRO"],
+        papeis: [],
         status: "ATIVO",
         nomeCompleto: "João Antigo",
       });
@@ -209,7 +209,7 @@ describe("membros — update", () => {
     const membroId = await t.run(async (ctx) => {
       const eid = await ctx.db.insert("entidades", {
         tipoEntidade: "PF",
-        papeis: ["MEMBRO"],
+        papeis: [],
         status: "ATIVO",
         nomeCompleto: "Membro",
       });
@@ -232,7 +232,7 @@ describe("membros — update", () => {
     const membroId = await t.run(async (ctx) => {
       const eid = await ctx.db.insert("entidades", {
         tipoEntidade: "PF",
-        papeis: ["MEMBRO"],
+        papeis: [],
         status: "ATIVO",
         nomeCompleto: "Membro",
       });
@@ -254,7 +254,7 @@ describe("membros — update", () => {
     const membroId = await t.run(async (ctx) => {
       const eid = await ctx.db.insert("entidades", {
         tipoEntidade: "PF",
-        papeis: ["MEMBRO"],
+        papeis: [],
         status: "ATIVO",
         nomeCompleto: "Membro",
       });
@@ -278,7 +278,7 @@ describe("membros — updateStatus", () => {
     const ids = await t.run(async (ctx) => {
       const entidadeId = await ctx.db.insert("entidades", {
         tipoEntidade: "PF",
-        papeis: ["MEMBRO"],
+        papeis: [],
         status: "ATIVO",
         nomeCompleto: "Membro Transferido",
       });

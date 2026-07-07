@@ -12,6 +12,8 @@ import { Checkbox } from "@/shared/components/ui/checkbox";
 import { toast } from "sonner";
 import { PAPEL_OPTIONS } from "@features/membros/lib/constants";
 
+type PapelEntidade = (typeof PAPEL_OPTIONS)[number]["value"];
+
 // So Pessoa Juridica: fornecedores e igrejas parceiras. Pessoas (PF) sao
 // cadastradas como membros no rol (/secretario-executivo).
 const PAPEIS_PJ = PAPEL_OPTIONS.filter((p) =>
@@ -21,7 +23,7 @@ const PAPEIS_PJ = PAPEL_OPTIONS.filter((p) =>
 export default function NovaEntidadePage() {
   const createEntidade = useMutation(api.entidades.mutations.create);
   const router = useRouter();
-  const [papeis, setPapeis] = useState<string[]>([]);
+  const [papeis, setPapeis] = useState<PapelEntidade[]>([]);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -51,7 +53,7 @@ export default function NovaEntidadePage() {
     }
   };
 
-  const togglePapel = (papel: string) => {
+  const togglePapel = (papel: PapelEntidade) => {
     setPapeis((prev) =>
       prev.includes(papel) ? prev.filter((p) => p !== papel) : [...prev, papel]
     );

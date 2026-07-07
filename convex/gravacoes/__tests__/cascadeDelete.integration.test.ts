@@ -10,7 +10,7 @@ describe("gravacoes cascade delete", () => {
       const userId = await ctx.db.insert("users", {});
       const entidadeId = await ctx.db.insert("entidades", {
         tipoEntidade: "PF",
-        papeis: ["MEMBRO"],
+        papeis: [],
         status: "ATIVO",
         nomeCompleto: "Pastor João",
       });
@@ -126,7 +126,7 @@ describe("gravacoes cascade delete", () => {
       const userId = await ctx.db.insert("users", {});
       const eid = await ctx.db.insert("entidades", {
         tipoEntidade: "PF",
-        papeis: ["MEMBRO"],
+        papeis: [],
         status: "ATIVO",
         nomeCompleto: "Membro",
       });
@@ -154,7 +154,7 @@ describe("gravacoes cascade delete", () => {
       const userId = await ctx.db.insert("users", {});
       const eid = await ctx.db.insert("entidades", {
         tipoEntidade: "PF",
-        papeis: ["MEMBRO"],
+        papeis: [],
         status: "ATIVO",
         nomeCompleto: "Admin",
       });
@@ -205,7 +205,7 @@ describe("gravacoes cascade delete", () => {
       const userId = await ctx.db.insert("users", {});
       const eid = await ctx.db.insert("entidades", {
         tipoEntidade: "PF",
-        papeis: ["MEMBRO"],
+        papeis: [],
         status: "ATIVO",
         nomeCompleto: "Admin",
       });

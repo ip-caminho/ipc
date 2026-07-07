@@ -535,12 +535,9 @@ export const tornarMembro = mutation({
       await ctx.db.patch(membroId, { conjugeId: apontante.entidadeId });
     }
 
-    // Promocao a membro: limpa marcadores de pessoa de `papeis` (agora so PJ).
-    // Ser membro vem da linha em `membros` + `vinculoIgreja`.
-    const papeis = (entidade.papeis ?? []).filter(
-      (p) => p !== "DEPENDENTE" && p !== "MEMBRO"
-    ) as typeof entidade.papeis;
-    await ctx.db.patch(entidadeId, { papeis, vinculoIgreja: "MEMBRO" });
+    // Promocao a membro: `papeis` nao marca pessoa (so PJ), entao basta setar
+    // `vinculoIgreja`. Ser membro vem da linha em `membros`.
+    await ctx.db.patch(entidadeId, { vinculoIgreja: "MEMBRO" });
 
     await createActionAuditLog(ctx, "CREATE", "membros", membroId);
 
