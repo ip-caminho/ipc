@@ -150,19 +150,20 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     ],
   },
   "/entidades": {
-    nome: "Fornecedores e Parceiros",
+    nome: "Entidades (Fornecedores/Parceiros + Contatos)",
     pagina: "app/(ready)/entidades/page.tsx",
     doc: "docs/modules/entidades.md",
     arquivos: [
       "app/(ready)/entidades/page.tsx",
       "features/entidades/lib/constants.ts",
     ],
-    queries: ["entidades.queries.list"],
-    componentes: ["PermissionGate"],
+    queries: ["entidades.queries.list", "entidades.queries.listNaoMembros"],
+    componentes: ["Tabs", "PermissionGate"],
     notas: [
       "Permissao: entidades:read",
-      "So Pessoa Juridica (query com tipo: PJ): fornecedores e igrejas parceiras",
-      "Pessoas (PF) ficam no rol de membros (/secretario-executivo), nao aqui",
+      "Aba 1 Fornecedores e Parceiros: PJ (query list com tipo: PJ)",
+      "Aba 2 Contatos e Visitantes: PF sem linha em membros (listNaoMembros)",
+      "Membros (PF com linha em membros) ficam no rol (/secretario-executivo)",
     ],
   },
   "/entidades/novo": {

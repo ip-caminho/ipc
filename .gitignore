@@ -43,3 +43,6 @@ next-env.d.ts
 
 # Dados sensiveis locais (PII) — NUNCA versionar
 .local-data/
+
+# Snapshots de backup do Convex (PII) — nunca commitar
+backup-*.zip

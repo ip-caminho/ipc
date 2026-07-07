@@ -205,6 +205,7 @@ export const setFotoSeVazia = internalMutation({
 export const importarFotoTally = internalAction({
   args: { cpf: v.string(), url: v.string() },
   handler: async (ctx, { cpf, url }): Promise<string> => {
+    // @ts-ignore Convex TS2589 (inferencia profunda da API apos crescer entidades/queries)
     const ent = await ctx.runQuery(internal.membros.importFormNovos.getEntidadeIdByCpf, { cpf });
     if (!ent) return `SKIP: cpf ${cpf} nao encontrado`;
     if (ent.temFoto) return `SKIP: ja tem foto`;
