@@ -12,12 +12,23 @@ Tambem reposicionar `/entidades` (PJ/nao-pessoas), reduzir a redundancia
 dos tres campos que hoje respondem "essa pessoa e membro?", e resolver a
 dupla representacao de "filho" (entidade real vs texto solto).
 
-A **leitura** ja esta correta ("perfil = obreiro pra cima", "rol = secretaria
-pra cima"). Mas a **gestao de acesso** hoje NAO e toda admin-only: ativar/resetar
-login e editar `role` rodam sob `membros:update` (obreiro pra cima). O escopo
-inclui elevar essas acoes para admin e centraliza-las em `/admin/permissoes`.
+## Status de execucao (2026-07-07)
 
-## Diagnostico (estado atual)
+O main avancou ~116 commits durante o planejamento e resolveu A e B por conta
+propria (por outro caminho). Estado atual:
+
+| Item | Estado | Nota |
+|------|--------|------|
+| **A** — centralizar acesso | ABANDONADO | Main criou a pagina `/admin/acesso` (AcessoPanel) + a permissao granular `acesso:manage`, e `/membros` deixou de existir. PR #127 (tentativa admin-only) fechado — `acesso:manage` foi concedido a pastor/secretaria/presbitero, decisao deliberada do main, oposta ao "admin-only" pedido. |
+| **B** — separar detalhe pessoal/eclesiastico | FEITO PELO MAIN | `/membros` consolidado em `/secretario-executivo` (lista + detalhe). |
+| **C** — `/entidades` so PJ | FEITO | PR #142 (`feature/entidades-pj`): lista e cadastro so PJ (fornecedores/parceiros). |
+| **D** — `papeis` para de marcar "membro" | PENDENTE | Remapeado 2026-07-07 (ver Ordem, item D). Cresceu com educacional/retiro. |
+| **E** — criancas / "filho" duplicado | PENDENTE | Precisa remapear (educacional/retiro tocam criancaPerfil/dependentes). |
+
+O diagnostico abaixo e do planejamento original (pre-main); onde divergir do
+estado atual, o quadro acima prevalece.
+
+## Diagnostico (planejamento original)
 
 ### Duplicacao de detalhe
 `/membros/[id]` e `/secretario-executivo/[id]` mostram o mesmo membro com
@@ -94,7 +105,7 @@ Gates atuais confirmados:
 
 | Tabela | Tipo de Mudanca |
 |--------|-----------------|
-| `entidades` | `papeis` deixa de carregar `MEMBRO`; passa a servir so PJ (FORNECEDOR, IGREJA_PARCEIRA). Sem migracao destrutiva. |
+| `entidades` | `papeis` deixa de carregar `MEMBRO` (e possivelmente `DEPENDENTE` — ver decisao em aberto); passa a servir so PJ (FORNECEDOR, IGREJA_PARCEIRA). Requer backfill de limpeza dos dados legados que ja tem "MEMBRO". |
 | `membros` | Nenhuma mudanca de schema. Tab "Acesso" da UI sai do detalhe; gestao migra para `/admin/permissoes`. |
 | `vinculoIgreja` (campo) | Mantido como derivado. Sem mudanca. |
 | `membros.filhos` (campo) | Deixa de ser fonte. Vira atalho derivado de `responsaveis` ou e eliminado. Toda crianca = uma `entidade`. |
@@ -138,27 +149,39 @@ Gates atuais confirmados:
 
 ## Ordem de Implementacao
 
-1. **A — Centralizar acesso em `/admin/permissoes` (admin-only)**:
-   - **Ativacao de login**: mover `AcessoSection`/`AcessoPanel` de `/membros`
-     para `/admin/permissoes`; elevar `gerarLink`/`resetarAcesso` (`acesso.ts`)
-     de `membros:update` para admin. Consolidar com a aba "Convites" existente.
-   - **Editar role**: remover o seletor de `role` do `MembroForm`; usar o
-     `updateMembroRole` (ja admin-only) da aba Membros de `/admin/permissoes`.
-   - **Permissions individuais**: ja estao la, admin-only. Nada a fazer.
-   - Resultado: `/membros` e `/secretario-executivo` nao tocam mais acesso/role.
-2. **B — Separar dominio do detalhe**: `/membros/[id]` = pessoal + familia;
-   eclesiastico vive so em `/secretario-executivo/[id]`.
-3. **C — Refocar `/entidades`** para PJ/nao-pessoas (fornecedores, igrejas
-   parceiras); `/membros` so PF da igreja. Independente — pode paralelizar.
-4. **D — Campo canonico "e membro" (corrigido, esforco baixo-medio)**:
-   - `membros` (tabela) **continua sendo a fonte de verdade**. Nao se toca.
-   - `vinculoIgreja` **mantido** como derivado (atalho para campanhas/cron).
-   - **Parar de usar `papeis` para "e membro"**: corrigir as 2 leituras
-     (`educacional/mutations.ts:427`, `entidades/queries.ts:32`) e os ~7 pontos
-     de escrita que setam `papeis: ["MEMBRO"]`. `papeis` passa a servir so PJ.
-   - Opcional: renomear `entidades.papeis` para acabar com a colisao com
-     `ministerios.papeis`.
-5. **E — Criancas e dependentes**:
+1. **A — ABANDONADO.** Main resolveu por outro caminho (`/admin/acesso` +
+   `acesso:manage`; `/membros` extinto). PR #127 fechado. Ver Status.
+2. **B — FEITO PELO MAIN.** `/membros` consolidado em `/secretario-executivo`.
+3. **C — FEITO.** `/entidades` refocado em PJ (PR #142).
+4. **D — Parar de usar `papeis` para "e membro" (remapeado 2026-07-07)**:
+   - `membros` (tabela) **continua a fonte de verdade**; `vinculoIgreja` segue
+     derivado (backfill em `convex/migration/vinculoIgreja.ts`). Nao se tocam.
+     Nenhum RBAC/cron/campanha le `papeis` para membresia (cron e campanhas ja
+     usam `vinculoIgreja`).
+   - **Leituras que decidem "e membro" por `papeis`: so 2** —
+     `convex/entidades/queries.ts:32` (filtro generico por papel) e
+     `convex/educacional/mutations.ts:561` (migracao one-off).
+   - **Escritas de `papeis` cresceram de ~7 para ~14** (modulos novos):
+     - MEMBRO/promocao (~8): `membros/mutations.ts:56`, `convites.ts:76`,
+       `bootstrap.ts:41`, `import.ts:28`, `importFormNovos.ts:63`,
+       `eclesiastico.ts:541`, `importRetiro.ts:162`, `importRetiro.ts:239`.
+     - DEPENDENTE (~5): `eclesiastico.ts:682`, `selfService.ts:372`,
+       `importRetiro.ts:334`, `educacional/mutations.ts:38`, `:527`.
+     - Saneamento: `educacional/mutations.ts:565` (migrateCriancasPapel).
+     - Passthrough: `entidades/mutations.ts:38` (validador aceita qualquer string).
+   - **Plano**: parar de escrever "MEMBRO" em `papeis` nas escritas de promocao
+     (mantendo `insert("membros")` + `vinculoIgreja`); migrar o filtro de
+     `queries.ts:32` para `vinculoIgreja`/`membros`; endurecer o validador de
+     `entidades/mutations.ts` (rejeitar MEMBRO/DEPENDENTE); backfill de limpeza
+     (estender `migrateCriancasPapel` para as entidades legadas com "MEMBRO").
+   - **DECISAO EM ABERTO — `DEPENDENTE`**: hoje `papeis: ["DEPENDENTE"]` e o
+     UNICO marcador de crianca/nao-batizado. Se `papeis` virar so PJ, "dependente"
+     precisa de outro lar (provavel: `vinculoIgreja: "NAO_MEMBRO"` +
+     `criancaPerfil`). Nao estava no escopo original do D e conecta com o E —
+     decidir antes de implementar.
+   - Esforco reavaliado: **medio** (era "baixo-medio") — subiu pelas escritas
+     novas + a questao do DEPENDENTE + backfill.
+5. **E — Criancas e dependentes** (PENDENTE — remapear como o D):
    - **Documentar o criterio**: batizado na infancia → linha em `membros`
      (nao-comungante); nao batizado → so `entidades` + `criancaPerfil`. Vinculo
      sempre via `responsaveis`.
@@ -176,7 +199,11 @@ Gates atuais confirmados:
 
 ## Perguntas em aberto
 
-1. Vale renomear `entidades.papeis` (ex: `tiposEntidade`) para eliminar a
+1. **`DEPENDENTE` (bloqueia o D):** ao tirar "MEMBRO" de `papeis`, onde vive o
+   marcador de crianca/nao-batizado, hoje representado por `papeis: ["DEPENDENTE"]`?
+   Proposta: `vinculoIgreja: "NAO_MEMBRO"` + presenca em `criancaPerfil`. Definir
+   junto com o item E.
+2. Vale renomear `entidades.papeis` (ex: `tiposEntidade`) para eliminar a
    colisao com `ministerios.papeis`, ou so limpar o valor `MEMBRO`?
 
 ### Respondidas pela investigacao
