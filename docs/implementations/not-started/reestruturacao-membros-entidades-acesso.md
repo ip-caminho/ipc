@@ -210,6 +210,11 @@ Gates atuais confirmados:
      do schema (`schema.ts:165`). Antes, migrar eventuais filhos-texto legados
      para `entidades`+`responsaveis`. **Baixo risco** (array legado quase sem
      consumidor).
+   - **Verificado em prod (2026-07-07, `earnest-husky-324`)**: `membros.filhos`
+     esta VAZIO — o campo nao aparece no schema inferido dos dados reais (zero
+     registros com filhos populado). Eliminar o campo nao perde dado algum; os
+     filhos cadastrados na UI vivem em `entidades`+`responsaveis` (tabela com
+     dados). Nem migracao de legado e necessaria.
    - Faz par natural com D (ambos limpam representacao redundante) e resolve a
      questao do DEPENDENTE do D.
 
