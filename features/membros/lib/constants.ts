@@ -77,13 +77,13 @@ export const VINCULO_IGREJA_OPTIONS = [
   { value: "NAO_MEMBRO", label: "Nao-membro" },
 ] as const;
 
+// MEMBRO/DEPENDENTE nao sao papeis: membresia deriva de `membros` +
+// `vinculoIgreja`. Papeis marcam so PJ (fornecedor/parceira) e PF nao-membro.
 export const PAPEL_OPTIONS = [
-  { value: "MEMBRO", label: "Membro" },
   { value: "VISITANTE", label: "Visitante" },
   { value: "CONTATO", label: "Contato" },
   { value: "FORNECEDOR", label: "Fornecedor" },
   { value: "IGREJA_PARCEIRA", label: "Igreja Parceira" },
-  { value: "DEPENDENTE", label: "Dependente" },
 ] as const;
 
 export const ROLE_OPTIONS = [

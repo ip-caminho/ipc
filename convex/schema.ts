@@ -7,13 +7,14 @@ export default defineSchema({
 
   entidades: defineTable({
     tipoEntidade: v.union(v.literal("PF"), v.literal("PJ")),
+    // `papeis` NAO marca membresia. Ser membro/dependente deriva da linha em
+    // `membros` + `vinculoIgreja` (fonte de verdade). MEMBRO/DEPENDENTE foram
+    // removidos da union na fase 2 do item D (banco limpo via limparPapeisPessoa).
     papeis: v.array(v.union(
-      v.literal("MEMBRO"),
       v.literal("VISITANTE"),
       v.literal("CONTATO"),
       v.literal("FORNECEDOR"),
-      v.literal("IGREJA_PARCEIRA"),
-      v.literal("DEPENDENTE")
+      v.literal("IGREJA_PARCEIRA")
     )),
     status: v.union(
       v.literal("ATIVO"),

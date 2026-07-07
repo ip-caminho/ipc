@@ -7,9 +7,13 @@ export const create = mutation({
   args: {
     tipoEntidade: v.union(v.literal("PF"), v.literal("PJ")),
     // MEMBRO/DEPENDENTE nao sao papeis (derivam de `membros` + `vinculoIgreja`).
-    // Endurecer este validador para rejeita-los fica na fase 2 (com o backfill
-    // e a limpeza do schema union), quando o cadastro ja for PJ-only.
-    papeis: v.array(v.string()),
+    // Validador alinhado a union do schema (fase 2 do item D).
+    papeis: v.array(v.union(
+      v.literal("VISITANTE"),
+      v.literal("CONTATO"),
+      v.literal("FORNECEDOR"),
+      v.literal("IGREJA_PARCEIRA")
+    )),
     nomeCompleto: v.optional(v.string()),
     cpf: v.optional(v.string()),
     rg: v.optional(v.string()),

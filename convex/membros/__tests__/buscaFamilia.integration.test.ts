@@ -10,7 +10,7 @@ async function seedEntidade(t: T, nomeCompleto: string, status = "ATIVO") {
   return t.run((ctx) =>
     ctx.db.insert("entidades", {
       tipoEntidade: "PF",
-      papeis: ["MEMBRO"],
+      papeis: [],
       status: status as any,
       nomeCompleto,
     }),
@@ -22,7 +22,7 @@ async function seedMembroComUser(t: T, nome: string, role = "membro") {
   await t.run(async (ctx) => {
     const eid = await ctx.db.insert("entidades", {
       tipoEntidade: "PF",
-      papeis: ["MEMBRO"],
+      papeis: [],
       status: "ATIVO",
       nomeCompleto: nome,
     });
@@ -58,7 +58,7 @@ describe("busca de familia por searchIndex + fallback substring", () => {
     const eMembro = await t.run(async (ctx) => {
       const eid = await ctx.db.insert("entidades", {
         tipoEntidade: "PF",
-        papeis: ["MEMBRO"],
+        papeis: [],
         status: "ATIVO",
         nomeCompleto: "Pedro Membro",
       });

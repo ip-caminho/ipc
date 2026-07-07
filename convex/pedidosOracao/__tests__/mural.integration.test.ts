@@ -12,7 +12,7 @@ async function seedMembro(t: T, role: string, nome: string) {
   const membroId = await t.run(async (ctx) => {
     const eid = await ctx.db.insert("entidades", {
       tipoEntidade: "PF",
-      papeis: ["MEMBRO"],
+      papeis: [],
       status: "ATIVO",
       nomeCompleto: nome,
     });

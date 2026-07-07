@@ -10,7 +10,7 @@ async function seedAdmin(t: ReturnType<typeof convexTest>) {
   const membroId = await t.run(async (ctx) => {
     const eid = await ctx.db.insert("entidades", {
       tipoEntidade: "PF",
-      papeis: ["MEMBRO"],
+      papeis: [],
       status: "ATIVO",
       nomeCompleto: "Admin",
     });
@@ -40,6 +40,7 @@ describe("contadores denormalizados de gravacoes", () => {
     const { ctx } = await seedAdmin(t);
     const id = await seedSermao(t);
 
+    // @ts-ignore Convex TS2589 (inferencia profunda da API apos endurecer schema)
     await ctx.mutation(api.gravacoes.comentarios.toggleReacao, { gravacaoId: id, tipo: "❤️" });
     await ctx.mutation(api.gravacoes.comentarios.toggleReacao, { gravacaoId: id, tipo: "🙏" });
 
@@ -98,6 +99,7 @@ describe("contadores denormalizados de gravacoes", () => {
       });
     });
 
+    // @ts-ignore Convex TS2589 (inferencia profunda da API apos endurecer schema)
     await t.mutation(internal.gravacoes.migrations.backfillContadores, {});
     let g = await t.run((c) => c.db.get(id));
     expect(g!.reacoesResumo).toEqual([{ tipo: "👏", count: 2 }]);

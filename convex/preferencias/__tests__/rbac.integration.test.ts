@@ -13,7 +13,7 @@ async function seedMembroWithRole(
     const userId = await ctx.db.insert("users", {});
     const entidadeId = await ctx.db.insert("entidades", {
       tipoEntidade: "PF",
-      papeis: ["MEMBRO"],
+      papeis: [],
       status: "ATIVO",
       nomeCompleto: opts.nomeCompleto ?? `Membro ${opts.role}`,
       foto: opts.foto,
@@ -51,7 +51,7 @@ describe("RBAC — getUserPermissionContext", () => {
       const uid = await ctx.db.insert("users", {});
       const eid = await ctx.db.insert("entidades", {
         tipoEntidade: "PF",
-        papeis: ["MEMBRO"],
+        papeis: [],
         status: "INATIVO",
         nomeCompleto: "Membro Inativo",
       });
