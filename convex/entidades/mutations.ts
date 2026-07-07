@@ -6,6 +6,9 @@ import { createFieldAuditLogs, createActionAuditLog } from "../_shared/auditHelp
 export const create = mutation({
   args: {
     tipoEntidade: v.union(v.literal("PF"), v.literal("PJ")),
+    // MEMBRO/DEPENDENTE nao sao papeis (derivam de `membros` + `vinculoIgreja`).
+    // Endurecer este validador para rejeita-los fica na fase 2 (com o backfill
+    // e a limpeza do schema union), quando o cadastro ja for PJ-only.
     papeis: v.array(v.string()),
     nomeCompleto: v.optional(v.string()),
     cpf: v.optional(v.string()),

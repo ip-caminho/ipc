@@ -535,8 +535,10 @@ export const tornarMembro = mutation({
       await ctx.db.patch(membroId, { conjugeId: apontante.entidadeId });
     }
 
-    const papeis = Array.from(
-      new Set([...(entidade.papeis ?? []).filter((p) => p !== "DEPENDENTE"), "MEMBRO"])
+    // Promocao a membro: limpa marcadores de pessoa de `papeis` (agora so PJ).
+    // Ser membro vem da linha em `membros` + `vinculoIgreja`.
+    const papeis = (entidade.papeis ?? []).filter(
+      (p) => p !== "DEPENDENTE" && p !== "MEMBRO"
     ) as typeof entidade.papeis;
     await ctx.db.patch(entidadeId, { papeis, vinculoIgreja: "MEMBRO" });
 
@@ -679,7 +681,7 @@ export const adicionarFilhoAdmin = mutation({
 
     const filhoEntidadeId = await ctx.db.insert("entidades", {
       tipoEntidade: "PF",
-      papeis: args.batismoInfantil ? ["MEMBRO"] : ["DEPENDENTE"],
+      papeis: [],
       status: "ATIVO",
       nomeCompleto: args.nomeCompleto,
       dataNascimento: args.dataNascimento,

@@ -72,6 +72,7 @@ describe("listParaSecretario — agrupamento por familia", () => {
       }
     });
 
+    // @ts-ignore Convex TS2589
     const linhas = await admin.query(api.membros.eclesiastico.listParaSecretario, {});
     const by = (nome: string) => linhas.find((l) => l.entidade.nomeCompleto === nome)!;
 
@@ -152,8 +153,10 @@ describe("listParaSecretario — agrupamento por familia", () => {
     });
     expect(membro).toBeTruthy();
     expect(membro?.cargoEclesiastico).toBe("MEMBRO_NAO_COMUNGANTE");
+    // Fonte de verdade: linha em `membros` + `vinculoIgreja`. `papeis` nao
+    // carrega mais MEMBRO/DEPENDENTE (limpo na promocao).
     expect(entidade?.vinculoIgreja).toBe("MEMBRO");
-    expect(entidade?.papeis).toContain("MEMBRO");
+    expect(entidade?.papeis).not.toContain("MEMBRO");
     expect(entidade?.papeis).not.toContain("DEPENDENTE");
 
     // idempotente
@@ -426,6 +429,7 @@ describe("listParaSecretario — agrupamento por familia", () => {
       return cid;
     });
 
+    // @ts-ignore Convex TS2589
     const resultado = await t.mutation(internal.membros.migrations.migrateFamiliaBidirecional, {});
     expect(resultado).toEqual({ conjugesEspelhados: 1, responsaveisAdicionados: 1 });
 

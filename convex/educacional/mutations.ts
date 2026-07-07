@@ -35,7 +35,7 @@ export const createCrianca = mutation({
     // Criar entidade da crianca
     const entidadeId = await ctx.db.insert("entidades", {
       tipoEntidade: "PF",
-      papeis: ["DEPENDENTE"],
+      papeis: [],
       status: "ATIVO",
       nomeCompleto: args.nomeCompleto,
       dataNascimento: args.dataNascimento,
@@ -524,7 +524,7 @@ export const seedCriancas = mutation({
       // Criar entidade
       const entidadeId = await ctx.db.insert("entidades", {
         tipoEntidade: "PF" as const,
-        papeis: ["DEPENDENTE" as const],
+        papeis: [],
         status: "ATIVO" as const,
         nomeCompleto: c.nome,
         dataNascimento: c.dataNascimento,
