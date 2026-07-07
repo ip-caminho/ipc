@@ -240,7 +240,7 @@ export const getMembroPerfil = query({
         })
     );
 
-    // Filhos: combina estrutura nova (responsaveis) com array legado
+    // Filhos: derivados de responsaveis (vinculo canonico)
     const responsabilidades = await ctx.db
       .query("responsaveis")
       .withIndex("by_responsavel", (q) =>
@@ -258,15 +258,9 @@ export const getMembroPerfil = query({
         };
       })
     );
-    const filhosLegado = (membro.filhos ?? []).map((f) => ({
-      nome: f.nome,
-      dataNascimento: f.dataNascimento,
-      entidadeId: undefined,
-    }));
-    const filhosCombinados = [
-      ...filhosNovos.filter((f): f is NonNullable<typeof f> => f !== null),
-      ...filhosLegado,
-    ];
+    const filhosCombinados = filhosNovos.filter(
+      (f): f is NonNullable<typeof f> => f !== null
+    );
 
     return {
       membro: {

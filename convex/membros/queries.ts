@@ -102,7 +102,6 @@ export const getPublicProfile = query({
       cidade: entidade.endereco?.cidade || null,
       dataMembresia: membro.dataMembresia || null,
       conjugeNome,
-      filhos: membro.filhos || null,
       pgNome,
     };
   },

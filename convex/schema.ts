@@ -162,10 +162,8 @@ export default defineSchema({
 
     // Family relations
     conjugeId: v.optional(v.id("entidades")),
-    filhos: v.optional(v.array(v.object({
-      nome: v.string(),
-      dataNascimento: v.optional(v.string()),
-    }))),
+    // (removido) filhos: array de texto legado — substituido por
+    // entidades + responsaveis (vinculo canonico). Verificado vazio em prod.
 
     // Padrao IPB - identificacao no rol
     numeroMatricula: v.optional(v.string()),
