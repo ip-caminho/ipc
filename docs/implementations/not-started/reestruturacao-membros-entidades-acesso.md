@@ -23,7 +23,7 @@ propria (por outro caminho). Estado atual:
 | **B** — separar detalhe pessoal/eclesiastico | FEITO PELO MAIN | `/membros` consolidado em `/secretario-executivo` (lista + detalhe). |
 | **C** — `/entidades` so PJ | FEITO | PR #142 (`feature/entidades-pj`): lista e cadastro so PJ (fornecedores/parceiros). |
 | **D** — `papeis` para de marcar "membro" | PENDENTE | Remapeado 2026-07-07 (ver Ordem, item D). Cresceu com educacional/retiro. |
-| **E** — criancas / "filho" duplicado | PENDENTE | Precisa remapear (educacional/retiro tocam criancaPerfil/dependentes). |
+| **E** — criancas / "filho" duplicado | PENDENTE (remapeado) | `membros.filhos` quase morto (so 2 leitores); eliminavel com baixo risco. Resolve o DEPENDENTE do D. |
 
 O diagnostico abaixo e do planejamento original (pre-main); onde divergir do
 estado atual, o quadro acima prevalece.
@@ -174,22 +174,44 @@ Gates atuais confirmados:
      `queries.ts:32` para `vinculoIgreja`/`membros`; endurecer o validador de
      `entidades/mutations.ts` (rejeitar MEMBRO/DEPENDENTE); backfill de limpeza
      (estender `migrateCriancasPapel` para as entidades legadas com "MEMBRO").
-   - **DECISAO EM ABERTO — `DEPENDENTE`**: hoje `papeis: ["DEPENDENTE"]` e o
-     UNICO marcador de crianca/nao-batizado. Se `papeis` virar so PJ, "dependente"
-     precisa de outro lar (provavel: `vinculoIgreja: "NAO_MEMBRO"` +
-     `criancaPerfil`). Nao estava no escopo original do D e conecta com o E —
-     decidir antes de implementar.
-   - Esforco reavaliado: **medio** (era "baixo-medio") — subiu pelas escritas
-     novas + a questao do DEPENDENTE + backfill.
-5. **E — Criancas e dependentes** (PENDENTE — remapear como o D):
-   - **Documentar o criterio**: batizado na infancia → linha em `membros`
-     (nao-comungante); nao batizado → so `entidades` + `criancaPerfil`. Vinculo
-     sempre via `responsaveis`.
-   - **Resolver a dupla representacao**: `membros.filhos` (texto) deixa de ser
-     fonte — vira leitura derivada de `responsaveis` ou e eliminado. Migrar
-     filhos-texto existentes para `entidades` + `responsaveis`.
-   - Independente de A/B/C; pode rodar em paralelo. Faz par natural com D
-     (ambos limpam representacao redundante).
+   - **`DEPENDENTE` — RESOLVIDO (pelo remapeamento do E)**: `vinculoIgreja:
+     "NAO_MEMBRO"` ja e setado em paralelo com `papeis:["DEPENDENTE"]` em todo
+     insert (hoje redundante). E "e dependente/crianca" ja e DERIVAVEL de "sem
+     linha em `membros` + tem `responsaveis` apontando" (como
+     `eclesiastico.ts:309` montarLinhasSecretario ja calcula, sem olhar
+     `papeis`). Logo tirar DEPENDENTE de `papeis` e seguro; `vinculoIgreja` +
+     `responsaveis` cobrem. Revisar os `.filter(p!=="DEPENDENTE")` em
+     `eclesiastico.ts:539`, `importRetiro.ts:160,237`, e a migracao
+     `educacional/mutations.ts:561` (MEMBRO→DEPENDENTE).
+   - Esforco reavaliado: **medio** — as ~14 escritas + backfill de limpeza.
+5. **E — Criancas e dependentes (remapeado 2026-07-07)**:
+   - **`membros.filhos` esta praticamente morto**: 1 escrita
+     (`membros/mutations.ts:43,93`, sem UI que a alimente) e 2 leituras reais —
+     `membros/queries.ts:105` (getPublicProfile → diretorio) e
+     `pastoreio/queries.ts:261` (getMembroPerfil, merge com `responsaveis`). Toda
+     a UI de familia moderna (getFamily, getMyFamily, listParaSecretario,
+     educacional) ja usa `responsaveis`.
+   - **`responsaveis` e o vinculo canonico** (filho↔pai, tipado); `criancaPerfil`
+     e so a ficha do departamento infantil (≤10 anos, uso de imagem), sem dedup.
+   - **Criterio membro-crianca** (bem documentado no codigo):
+     `batismoInfantil`/`batizadoNestaIgreja` → linha em `membros`
+     (MEMBRO_NAO_COMUNGANTE) + `vinculoIgreja MEMBRO`; senao → so `entidades`
+     (DEPENDENTE) + `responsaveis` (+ `criancaPerfil` se ≤10). Fluxos:
+     `eclesiastico.ts:662` adicionarFilhoAdmin, `selfService.ts:333`
+     adicionarFilho, `eclesiastico.ts:506` tornarMembro (promocao).
+   - **Duplicatas sao problema real**: `importRetiro.ts:181` fundirDuplicata
+     funde entidade duplicata na canonica (responsaveis, DOB, criancaPerfil,
+     membros). O import do retiro gera crianca colidindo com entidade existente.
+   - **Unico conflito das 2 representacoes**: `pastoreio/queries.ts:243`
+     getMembroPerfil faz merge `responsaveis` + `membros.filhos` SEM dedup → a
+     mesma crianca pode aparecer duas vezes.
+   - **Plano**: eliminar `membros.filhos` — ajustar os 2 leitores para derivar de
+     `responsaveis`; remover o arg/insert `filhos` de `mutations.create`; remover
+     do schema (`schema.ts:165`). Antes, migrar eventuais filhos-texto legados
+     para `entidades`+`responsaveis`. **Baixo risco** (array legado quase sem
+     consumidor).
+   - Faz par natural com D (ambos limpam representacao redundante) e resolve a
+     questao do DEPENDENTE do D.
 
 ## Decisoes tomadas
 
@@ -199,14 +221,14 @@ Gates atuais confirmados:
 
 ## Perguntas em aberto
 
-1. **`DEPENDENTE` (bloqueia o D):** ao tirar "MEMBRO" de `papeis`, onde vive o
-   marcador de crianca/nao-batizado, hoje representado por `papeis: ["DEPENDENTE"]`?
-   Proposta: `vinculoIgreja: "NAO_MEMBRO"` + presenca em `criancaPerfil`. Definir
-   junto com o item E.
-2. Vale renomear `entidades.papeis` (ex: `tiposEntidade`) para eliminar a
+1. Vale renomear `entidades.papeis` (ex: `tiposEntidade`) para eliminar a
    colisao com `ministerios.papeis`, ou so limpar o valor `MEMBRO`?
 
 ### Respondidas pela investigacao
+- **`DEPENDENTE` (item D) — RESOLVIDO:** destino = `vinculoIgreja: "NAO_MEMBRO"`
+  (ja setado em paralelo em todo insert) + condicao "e dependente" derivavel de
+  `membros`+`responsaveis`. `criancaPerfil` nao serve como marcador universal
+  (so infantil ≤10). Tirar DEPENDENTE de `papeis` e seguro. Ver item E.
 - `/admin/permissoes` ja edita acesso por-membro (role, permissions, reset,
   convites), tudo admin-only — o destino do item A ja existe.
 - A "tab Acesso" de `/membros` (`AcessoSection`/`AcessoPanel`) so gerencia
