@@ -196,15 +196,21 @@ export function VoluntarioForm({
 
           <div className="space-y-1">
             <Label>Certificado CAC</Label>
-            <FileUpload
-              folder="educacional/certificados-cac"
-              entityId={membroId || "novo"}
-              accept="application/pdf,image/*"
-              value={form.watch("certificadoCacUrl") || undefined}
-              onChange={(url) =>
-                form.setValue("certificadoCacUrl", url ?? undefined)
-              }
-            />
+            {membroId ? (
+              <FileUpload
+                folder="educacional/certificados-cac"
+                entityId={membroId}
+                accept="application/pdf,image/*"
+                value={form.watch("certificadoCacUrl") || undefined}
+                onChange={(url) =>
+                  form.setValue("certificadoCacUrl", url ?? undefined)
+                }
+              />
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                Selecione o membro antes de anexar o certificado.
+              </p>
+            )}
           </div>
 
           <div className="space-y-1">

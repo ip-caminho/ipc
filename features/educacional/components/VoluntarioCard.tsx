@@ -95,15 +95,17 @@ export function VoluntarioCard({
             </span>
           )}
           {v.certificadoCacUrl && (
-            <a
-              href={v.certificadoCacUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-primary hover:underline"
+            <Button
+              variant="link"
+              size="sm"
+              asChild
+              className="h-auto p-0 text-xs"
             >
-              <FileText className="h-3 w-3" />
-              Certificado
-            </a>
+              <a href={v.certificadoCacUrl} target="_blank" rel="noopener noreferrer">
+                <FileText className="h-3 w-3" />
+                Certificado
+              </a>
+            </Button>
           )}
         </div>
 
