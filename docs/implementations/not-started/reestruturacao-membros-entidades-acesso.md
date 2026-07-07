@@ -22,8 +22,8 @@ propria (por outro caminho). Estado atual:
 | **A** — centralizar acesso | ABANDONADO | Main criou a pagina `/admin/acesso` (AcessoPanel) + a permissao granular `acesso:manage`, e `/membros` deixou de existir. PR #127 (tentativa admin-only) fechado — `acesso:manage` foi concedido a pastor/secretaria/presbitero, decisao deliberada do main, oposta ao "admin-only" pedido. |
 | **B** — separar detalhe pessoal/eclesiastico | FEITO PELO MAIN | `/membros` consolidado em `/secretario-executivo` (lista + detalhe). |
 | **C** — `/entidades` so PJ | FEITO | PR #142 (`feature/entidades-pj`): lista e cadastro so PJ (fornecedores/parceiros). |
-| **D** — `papeis` para de marcar "membro" | PENDENTE | Remapeado 2026-07-07 (ver Ordem, item D). Cresceu com educacional/retiro. |
-| **E** — criancas / "filho" duplicado | PENDENTE (remapeado) | `membros.filhos` quase morto (so 2 leitores); eliminavel com baixo risco. Resolve o DEPENDENTE do D. |
+| **D** — `papeis` para de marcar "membro" | FASE 1 FEITA (PR #143) | ~13 escritas pararam de gravar MEMBRO/DEPENDENTE em `papeis`; membresia so via `membros`+`vinculoIgreja`. Fase 2 (backfill + validador + schema union) pendente — roda em prod. |
+| **E** — criancas / "filho" duplicado | FEITO (PR #143) | `membros.filhos` eliminado (verificado vazio em prod). Filhos derivam de `responsaveis`. |
 
 O diagnostico abaixo e do planejamento original (pre-main); onde divergir do
 estado atual, o quadro acima prevalece.
@@ -153,7 +153,7 @@ Gates atuais confirmados:
    `acesso:manage`; `/membros` extinto). PR #127 fechado. Ver Status.
 2. **B — FEITO PELO MAIN.** `/membros` consolidado em `/secretario-executivo`.
 3. **C — FEITO.** `/entidades` refocado em PJ (PR #142).
-4. **D — Parar de usar `papeis` para "e membro" (remapeado 2026-07-07)**:
+4. **D — Parar de usar `papeis` para "e membro" (FASE 1 FEITA — PR #143)**:
    - `membros` (tabela) **continua a fonte de verdade**; `vinculoIgreja` segue
      derivado (backfill em `convex/migration/vinculoIgreja.ts`). Nao se tocam.
      Nenhum RBAC/cron/campanha le `papeis` para membresia (cron e campanhas ja
@@ -184,7 +184,7 @@ Gates atuais confirmados:
      `eclesiastico.ts:539`, `importRetiro.ts:160,237`, e a migracao
      `educacional/mutations.ts:561` (MEMBRO→DEPENDENTE).
    - Esforco reavaliado: **medio** — as ~14 escritas + backfill de limpeza.
-5. **E — Criancas e dependentes (remapeado 2026-07-07)**:
+5. **E — Criancas e dependentes (FEITO — PR #143)**:
    - **`membros.filhos` esta praticamente morto**: 1 escrita
      (`membros/mutations.ts:43,93`, sem UI que a alimente) e 2 leituras reais —
      `membros/queries.ts:105` (getPublicProfile → diretorio) e
