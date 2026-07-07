@@ -545,28 +545,3 @@ export const seedCriancas = mutation({
     return { inserted: count };
   },
 });
-
-// ===== Migracao: MEMBRO → DEPENDENTE para criancas existentes =====
-
-export const migrateCriancasPapel = mutation({
-  args: {},
-  handler: async (ctx) => {
-    const perfis = await ctx.db.query("criancaPerfil").collect();
-    let migrated = 0;
-
-    for (const perfil of perfis) {
-      const entidade = await ctx.db.get(perfil.entidadeId);
-      if (!entidade) continue;
-
-      if (entidade.papeis.includes("MEMBRO" as any)) {
-        const novosPapeis = entidade.papeis.map((p: string) =>
-          p === "MEMBRO" ? "DEPENDENTE" : p
-        );
-        await ctx.db.patch(perfil.entidadeId, { papeis: novosPapeis as any });
-        migrated++;
-      }
-    }
-
-    return { migrated };
-  },
-});
