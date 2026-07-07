@@ -150,7 +150,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     ],
   },
   "/entidades": {
-    nome: "Lista de Entidades",
+    nome: "Fornecedores e Parceiros",
     pagina: "app/(ready)/entidades/page.tsx",
     doc: "docs/modules/entidades.md",
     arquivos: [
@@ -159,15 +159,22 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     ],
     queries: ["entidades.queries.list"],
     componentes: ["PermissionGate"],
-    notas: ["Permissao: entidades:read. Exibe PF e PJ com papeis"],
+    notas: [
+      "Permissao: entidades:read",
+      "So Pessoa Juridica (query com tipo: PJ): fornecedores e igrejas parceiras",
+      "Pessoas (PF) ficam no rol de membros (/secretario-executivo), nao aqui",
+    ],
   },
   "/entidades/novo": {
-    nome: "Nova Entidade",
+    nome: "Novo Fornecedor ou Parceiro",
     pagina: "app/(ready)/entidades/novo/page.tsx",
     doc: "docs/modules/entidades.md",
     arquivos: ["app/(ready)/entidades/novo/page.tsx"],
     mutations: ["entidades.mutations.create"],
-    notas: ["Permissao: entidades:create"],
+    notas: [
+      "Permissao: entidades:create",
+      "Cria sempre PJ (tipoEntidade fixo). Papeis: FORNECEDOR, IGREJA_PARCEIRA",
+    ],
   },
   "/diretorio": {
     nome: "Diretorio de Membros e Criancas",
