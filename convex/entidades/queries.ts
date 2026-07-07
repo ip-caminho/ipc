@@ -32,18 +32,61 @@ export const list = query({
       results = results.filter((e) => e.papeis.includes(args.papel as any));
     }
     if (args.search) {
-      const term = args.search.toLowerCase();
-      results = results.filter((e) => {
-        const name = (e.nomeCompleto || e.nomeRazaoSocial || "").toLowerCase();
-        const phone = (e.whatsapp || "").toLowerCase();
-        const email = (e.email || "").toLowerCase();
-        return name.includes(term) || phone.includes(term) || email.includes(term);
-      });
+      results = filtrarPorBusca(results, args.search);
     }
 
     return results;
   },
 });
+
+/**
+ * Contatos e visitantes: entidades PF que NAO tem linha em `membros`.
+ * Fonte de verdade da membresia e a linha em `membros` (nao `vinculoIgreja`
+ * nem `papeis`), entao cruzamos PF x membros aqui. Escala de igreja (poucas
+ * centenas), tela administrativa de baixa frequencia — collect() aceitavel.
+ */
+export const listNaoMembros = query({
+  args: {
+    search: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const pf = await ctx.db
+      .query("entidades")
+      .withIndex("by_tipo", (q) => q.eq("tipoEntidade", "PF"))
+      .collect();
+
+    const membros = await ctx.db.query("membros").collect();
+    const idsComMembro = new Set(membros.map((m) => m.entidadeId));
+
+    let results = pf.filter((e) => !idsComMembro.has(e._id));
+    if (args.search) {
+      results = filtrarPorBusca(results, args.search);
+    }
+    return results;
+  },
+});
+
+function filtrarPorBusca<T extends {
+  nomeCompleto?: string;
+  nomeRazaoSocial?: string;
+  nomeFantasia?: string;
+  whatsapp?: string;
+  telefone?: string;
+  email?: string;
+}>(items: T[], search: string): T[] {
+  const term = search.toLowerCase();
+  return items.filter((e) => {
+    const campos = [
+      e.nomeCompleto,
+      e.nomeRazaoSocial,
+      e.nomeFantasia,
+      e.whatsapp,
+      e.telefone,
+      e.email,
+    ];
+    return campos.some((c) => (c || "").toLowerCase().includes(term));
+  });
+}
 
 export const getById = query({
   args: { id: v.id("entidades") },
