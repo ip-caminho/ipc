@@ -15,9 +15,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
-import { Plus } from "lucide-react";
+import { Plus, HeartHandshake } from "lucide-react";
 import { VoluntarioCard } from "./VoluntarioCard";
 import { VoluntarioForm } from "./VoluntarioForm";
+import { EduEmptyState } from "./EduEmptyState";
 import {
   TURMA_OPTIONS,
   PAPEL_VOLUNTARIO_OPTIONS,
@@ -131,7 +132,23 @@ export function VoluntariosTab() {
       {voluntarios === undefined ? (
         <p className="text-sm text-muted-foreground">Carregando...</p>
       ) : voluntarios.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Nenhum voluntario encontrado</p>
+        <EduEmptyState
+          icon={HeartHandshake}
+          title="Nenhum voluntario"
+          description={
+            papelFilter !== "all" || turmaFilter !== "all"
+              ? "Nenhum voluntario para os filtros selecionados."
+              : "Cadastre os professores, auxiliares e apoios do departamento."
+          }
+          action={
+            canManage && papelFilter === "all" && turmaFilter === "all" ? (
+              <Button onClick={() => setFormOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Novo Voluntario
+              </Button>
+            ) : undefined
+          }
+        />
       ) : (
         <>
           <p className="text-sm text-muted-foreground">

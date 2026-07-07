@@ -18,6 +18,7 @@ import { DateFieldBR } from "@/shared/components/ui/date-picker-br";
 import { Label } from "@/shared/components/ui/label";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Checkbox } from "@/shared/components/ui/checkbox";
+import { Separator } from "@/shared/components/ui/separator";
 import {
   Select,
   SelectContent,
@@ -33,6 +34,17 @@ interface RelatorioFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: RelatorioFormValues) => Promise<void>;
+}
+
+function SecTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-2 pt-1">
+      <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        {children}
+      </span>
+      <Separator className="flex-1" />
+    </div>
+  );
 }
 
 export function RelatorioForm({ open, onOpenChange, onSubmit }: RelatorioFormProps) {
@@ -91,6 +103,7 @@ export function RelatorioForm({ open, onOpenChange, onSubmit }: RelatorioFormPro
         </ResponsiveDialogHeader>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="contents">
         <ResponsiveDialogBody className="space-y-4">
+          <SecTitle>Aula</SecTitle>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label>Turma *</Label>
@@ -139,6 +152,7 @@ export function RelatorioForm({ open, onOpenChange, onSubmit }: RelatorioFormPro
             </div>
           </div>
 
+          <SecTitle>Conteudo da licao</SecTitle>
           <div className="space-y-1">
             <Label>Tema</Label>
             <Input {...form.register("tema")} />
@@ -173,6 +187,7 @@ export function RelatorioForm({ open, onOpenChange, onSubmit }: RelatorioFormPro
             <Textarea {...form.register("licaoDeCasa")} rows={2} />
           </div>
 
+          <SecTitle>Turma do dia</SecTitle>
           <div className="space-y-1">
             <Label>Visitantes (um por linha)</Label>
             <Textarea {...form.register("visitantesText")} rows={2} />
