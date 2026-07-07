@@ -81,15 +81,16 @@ export const PAPEL_VOLUNTARIO_COLORS: Record<string, string> = {
   APOIO: "bg-gray-100 text-gray-800",
 };
 
-// Status do curso CBCM (espelha CBCM_OPTIONS de features/membros).
+// Status do curso CBCM (espelha CBCM_OPTIONS de features/membros — labels
+// alinhados: "Nao Iniciado" com I maiusculo, igual ao de membros).
 export const CBCM_OPTIONS = [
-  { value: "NAO_INICIADO", label: "Nao iniciado" },
+  { value: "NAO_INICIADO", label: "Nao Iniciado" },
   { value: "CURSANDO", label: "Cursando" },
   { value: "CONCLUIDO", label: "Concluido" },
 ];
 
 export const CBCM_LABELS: Record<string, string> = {
-  NAO_INICIADO: "Nao iniciado",
+  NAO_INICIADO: "Nao Iniciado",
   CURSANDO: "Cursando",
   CONCLUIDO: "Concluido",
 };

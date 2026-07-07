@@ -230,7 +230,9 @@ export const addOvelhinhaApta = mutation({
       .first();
     if (existing) return existing._id;
 
-    return ctx.db.insert("eduOvelhinhas", { membroId, criadoEm: Date.now() });
+    const id = await ctx.db.insert("eduOvelhinhas", { membroId, criadoEm: Date.now() });
+    await createActionAuditLog(ctx, "CREATE", "eduOvelhinhas", id);
+    return id;
   },
 });
 
@@ -243,7 +245,10 @@ export const removeOvelhinhaApta = mutation({
       .query("eduOvelhinhas")
       .withIndex("by_membro", (q) => q.eq("membroId", membroId))
       .first();
-    if (existing) await ctx.db.delete(existing._id);
+    if (existing) {
+      await ctx.db.delete(existing._id);
+      await createActionAuditLog(ctx, "DELETE", "eduOvelhinhas", existing._id);
+    }
   },
 });
 

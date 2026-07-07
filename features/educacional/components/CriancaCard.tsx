@@ -13,7 +13,6 @@ import {
   calcularIdade,
   proximaTransicaoTurma,
   turmaDivergente,
-  formatarMesAno,
 } from "../lib/idade";
 import { ArrowRight } from "lucide-react";
 
@@ -71,10 +70,10 @@ export function CriancaCard({ crianca, onClick }: CriancaCardProps) {
             {divergente ? (
               <span className="text-amber-600">Turma desatualizada pela idade</span>
             ) : transicao?.saiDoDepartamento ? (
-              <span>Sai do infantil em {formatarMesAno(transicao.data)}</span>
+              <span>Sai do infantil em {transicao.ano}</span>
             ) : (
               <span>
-                Muda p/ {transicao?.proximaTurma} em {formatarMesAno(transicao!.data)}
+                Muda p/ {transicao?.proximaTurma} em {transicao?.ano}
               </span>
             )}
           </p>

@@ -32,6 +32,7 @@ export function CriancaDetalhe({ entidadeId, onBack, onEdit, onDelete }: Crianca
   const { can } = useAuth();
   const canManage = can("criancas:manage");
 
+  // @ts-ignore Convex TS2589
   const crianca = useQuery(api.educacional.queries.getCrianca, { entidadeId });
   const updateCrianca = useMutation(api.educacional.mutations.updateCrianca);
 
@@ -128,17 +129,13 @@ export function CriancaDetalhe({ entidadeId, onBack, onEdit, onDelete }: Crianca
                 <p className="text-muted-foreground">Proxima turma</p>
                 {divergente ? (
                   <p className="text-amber-600">
-                    Turma desatualizada pela idade (reenquadrar)
+                    Turma desatualizada pela coorte (reenquadrar)
                   </p>
                 ) : transicao?.saiDoDepartamento ? (
-                  <p>
-                    Sai do infantil em{" "}
-                    {format(parseISO(transicao.data), "MM/yyyy", { locale: ptBR })}
-                  </p>
+                  <p>Sai do infantil em {transicao.ano}</p>
                 ) : (
                   <p>
-                    {transicao?.proximaTurma} em{" "}
-                    {format(parseISO(transicao!.data), "MM/yyyy", { locale: ptBR })}
+                    {transicao?.proximaTurma} em {transicao?.ano}
                   </p>
                 )}
               </div>

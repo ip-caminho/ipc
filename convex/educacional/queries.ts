@@ -313,8 +313,37 @@ export const listOvelhinhasAptas = query({
   },
 });
 
+// Helper compartilhado dos "pickers de membro" (ovelhinhas/voluntarios): lista
+// membros ativos com uma flag de pertencimento a um conjunto. O scan de
+// `membros` segue o mesmo padrao de `membros.queries.list` — inerente a um
+// picker que precisa listar todos; por isso as queries que o usam so devem ser
+// disparadas sob demanda (dialog aberto, com "skip" quando fechado).
+async function listMembrosAtivosComFlag(
+  ctx: any,
+  flagSet: Set<string>,
+  flagName: string
+) {
+  const membros = await ctx.db.query("membros").collect();
+  const resultados = await Promise.all(
+    membros.map(async (m: any) => {
+      const entidade = await ctx.db.get(m.entidadeId);
+      if (!entidade || entidade.status !== "ATIVO") return null;
+      const nome = entidade.nomeCompleto || "";
+      if (!nome) return null;
+      return {
+        membroId: m._id,
+        nome,
+        foto: entidade.foto || null,
+        [flagName]: flagSet.has(String(m._id)),
+      };
+    })
+  );
+  return (resultados.filter(Boolean) as any[]).sort((a, b) =>
+    a.nome.localeCompare(b.nome, "pt-BR")
+  );
+}
+
 // Todos os membros ativos + flag de apto — usado no gerenciador de ovelhinhas.
-// Leitura ampla e pontual (uso administrativo), protegida por criancas:manage.
 export const listMembrosParaOvelhinha = query({
   args: {},
   handler: async (ctx) => {
@@ -324,24 +353,7 @@ export const listMembrosParaOvelhinha = query({
     const aptasSet = new Set(
       (await ctx.db.query("eduOvelhinhas").collect()).map((a) => String(a.membroId))
     );
-
-    const membros = await ctx.db.query("membros").collect();
-    const resultados = await Promise.all(
-      membros.map(async (m) => {
-        const entidade = await ctx.db.get(m.entidadeId);
-        if (!entidade || entidade.status !== "ATIVO") return null;
-        return {
-          membroId: m._id,
-          nome: entidade.nomeCompleto || "",
-          foto: entidade.foto || null,
-          apto: aptasSet.has(String(m._id)),
-        };
-      })
-    );
-
-    return resultados
-      .filter((r): r is NonNullable<typeof r> => r !== null && r.nome !== "")
-      .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+    return listMembrosAtivosComFlag(ctx, aptasSet, "apto");
   },
 });
 
@@ -494,7 +506,6 @@ export const listVoluntarios = query({
 });
 
 // Membros ativos selecionaveis como voluntario, com flag de ja cadastrado.
-// Leitura ampla e pontual (uso administrativo), protegida por manage.
 export const listMembrosParaVoluntario = query({
   args: {},
   handler: async (ctx) => {
@@ -504,24 +515,7 @@ export const listMembrosParaVoluntario = query({
     const jaVoluntario = new Set(
       (await ctx.db.query("eduVoluntarios").collect()).map((v) => String(v.membroId))
     );
-
-    const membros = await ctx.db.query("membros").collect();
-    const resultados = await Promise.all(
-      membros.map(async (m) => {
-        const entidade = await ctx.db.get(m.entidadeId);
-        if (!entidade || entidade.status !== "ATIVO") return null;
-        return {
-          membroId: m._id,
-          nome: entidade.nomeCompleto || "",
-          foto: entidade.foto || null,
-          jaVoluntario: jaVoluntario.has(String(m._id)),
-        };
-      })
-    );
-
-    return resultados
-      .filter((r): r is NonNullable<typeof r> => r !== null && r.nome !== "")
-      .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+    return listMembrosAtivosComFlag(ctx, jaVoluntario, "jaVoluntario");
   },
 });
 
