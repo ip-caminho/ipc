@@ -54,7 +54,9 @@ describe("membros — criação atômica", () => {
     });
     expect(result.entidade).toMatchObject({
       tipoEntidade: "PF",
-      papeis: ["MEMBRO"],
+      // `papeis` nao carrega mais "MEMBRO" — ser membro vem da linha em
+      // `membros` + `vinculoIgreja`; `papeis` serve so para PJ.
+      papeis: [],
       status: "ATIVO",
       nomeCompleto: "João da Silva",
       cpf: "529.982.247-25",

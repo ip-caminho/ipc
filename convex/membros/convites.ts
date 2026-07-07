@@ -73,7 +73,7 @@ export const acceptInvite = mutation({
     // Create entidade + membro atomically
     const entidadeId = await ctx.db.insert("entidades", {
       tipoEntidade: "PF",
-      papeis: ["MEMBRO"],
+      papeis: [],
       status: "ATIVO",
       nomeCompleto: args.nomeCompleto,
       whatsapp: args.whatsapp,

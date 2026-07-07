@@ -369,7 +369,7 @@ export const adicionarFilho = mutation({
 
     const filhoEntidadeId = await ctx.db.insert("entidades", {
       tipoEntidade: "PF",
-      papeis: batizadoNestaIgreja ? ["MEMBRO"] : ["DEPENDENTE"],
+      papeis: [],
       status: "ATIVO",
       nomeCompleto,
       dataNascimento,

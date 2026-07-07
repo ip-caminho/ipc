@@ -52,7 +52,9 @@ export const create = mutation({
     // Atomic: create entidade + membro together
     const entidadeId = await ctx.db.insert("entidades", {
       tipoEntidade: "PF",
-      papeis: ["MEMBRO"],
+      // `papeis` serve so para PJ (FORNECEDOR/IGREJA_PARCEIRA). Ser membro e
+      // determinado pela linha em `membros` + `vinculoIgreja`, nao por papeis.
+      papeis: [],
       status: "ATIVO",
       nomeCompleto: args.nomeCompleto,
       apelido: args.apelido,

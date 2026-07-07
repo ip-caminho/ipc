@@ -60,7 +60,7 @@ export const importar = internalMutation({
 
       const entidadeId = await ctx.db.insert("entidades", {
         tipoEntidade: "PF",
-        papeis: ["MEMBRO"],
+        papeis: [],
         status: "ATIVO",
         vinculoIgreja: "MEMBRO",
         nomeCompleto: p.nomeCompleto,

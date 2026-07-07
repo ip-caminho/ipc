@@ -25,7 +25,7 @@ export const importMembros = mutation({
       // Build entidade — only include defined fields
       const entidade: Record<string, any> = {
         tipoEntidade: "PF",
-        papeis: ["MEMBRO"],
+        papeis: [],
         status: m.entityStatus || "ATIVO",
         nomeCompleto: m.nomeCompleto,
       };

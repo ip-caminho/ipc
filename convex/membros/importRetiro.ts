@@ -156,8 +156,8 @@ export const tornarFilhosMembros = internalMutation({
           role: "membro",
           cargoEclesiastico: "MEMBRO_NAO_COMUNGANTE",
         });
-        const papeis = Array.from(
-          new Set([...(e.papeis ?? []).filter((p) => p !== "DEPENDENTE"), "MEMBRO"]),
+        const papeis = (e.papeis ?? []).filter(
+          (p) => p !== "DEPENDENTE" && p !== "MEMBRO",
         ) as typeof e.papeis;
         await ctx.db.patch(entidadeId, { papeis, vinculoIgreja: "MEMBRO" });
       }
@@ -233,8 +233,8 @@ export const fundirDuplicata = internalMutation({
           role: "membro",
           cargoEclesiastico: dupMembro.cargoEclesiastico ?? "MEMBRO_NAO_COMUNGANTE",
         });
-        const papeis = Array.from(
-          new Set([...(can.papeis ?? []).filter((p) => p !== "DEPENDENTE"), "MEMBRO"]),
+        const papeis = (can.papeis ?? []).filter(
+          (p) => p !== "DEPENDENTE" && p !== "MEMBRO",
         ) as typeof can.papeis;
         await ctx.db.patch(canonicaId, { papeis, vinculoIgreja: "MEMBRO" });
       }
@@ -331,7 +331,7 @@ export const cadastrarFilhosRetiro = internalMutation({
         if (!args.dryRun) {
           filhoId = await ctx.db.insert("entidades", {
             tipoEntidade: "PF",
-            papeis: ["DEPENDENTE"],
+            papeis: [],
             status: "ATIVO",
             nomeCompleto: f.nomeCompleto,
             dataNascimento: f.dataNascimento,
