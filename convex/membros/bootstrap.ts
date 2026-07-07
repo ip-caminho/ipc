@@ -39,6 +39,7 @@ export const bootstrapAdmin = mutation({
     const entidadeId = await ctx.db.insert("entidades", {
       tipoEntidade: "PF",
       papeis: [],
+      vinculoIgreja: "MEMBRO",
       status: "ATIVO",
       nomeCompleto: args.nomeCompleto,
       whatsapp: args.whatsapp,

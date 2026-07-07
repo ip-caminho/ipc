@@ -26,6 +26,7 @@ export const importMembros = mutation({
       const entidade: Record<string, any> = {
         tipoEntidade: "PF",
         papeis: [],
+        vinculoIgreja: "MEMBRO",
         status: m.entityStatus || "ATIVO",
         nomeCompleto: m.nomeCompleto,
       };
