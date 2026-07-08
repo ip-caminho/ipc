@@ -1,5 +1,4 @@
 import { query, mutation, type MutationCtx } from "../_generated/server";
-import { getSaoPauloDate } from "../_shared/datetime";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { createFieldAuditLogs } from "../_shared/auditHelpers";
@@ -320,128 +319,10 @@ export const desvincularConjuge = mutation({
 });
 
 // ============ FILHOS (self-service) ============
-
-/**
- * Cria nova entidade como filho do membro autenticado.
- * - Se batizadoNestaIgreja=true, cria tambem registro em membros com
- *   tipoRol=NAO_COMUNGANTE (caso ainda <18, podera virar COMUNGANTE
- *   apos profissao de fe).
- * - Se nao, cria so entidade com vinculoIgreja=NAO_MEMBRO.
- * Vincula via tabela responsaveis (tipo PAI/MAE definido pelo sexo
- * do responsavel quando disponivel; senao RESPONSAVEL).
- */
-export const adicionarFilho = mutation({
-  args: {
-    nomeCompleto: v.string(),
-    dataNascimento: v.optional(v.string()),
-    sexo: v.optional(v.union(v.literal("M"), v.literal("F"))),
-    batizadoNestaIgreja: v.optional(v.boolean()),
-    dataBatismo: v.optional(v.string()),
-    usoImagem: v.optional(v.union(
-      v.literal("AUTORIZADO"),
-      v.literal("NAO_AUTORIZADO"),
-      v.literal("PENDENTE")
-    )),
-    observacoesMedicas: v.optional(v.string()),
-  },
-  handler: async (ctx, args) => {
-    const {
-      nomeCompleto,
-      dataNascimento,
-      sexo,
-      batizadoNestaIgreja,
-      dataBatismo,
-      usoImagem,
-      observacoesMedicas,
-    } = args;
-
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
-
-    const myMembro = await ctx.db
-      .query("membros")
-      .withIndex("by_user_id", (q) => q.eq("userId", userId))
-      .first();
-    if (!myMembro) throw new Error("Member not found");
-
-    const minhaEntidade = await ctx.db.get(myMembro.entidadeId);
-    if (!minhaEntidade) throw new Error("Minha entidade nao encontrada");
-
-    const filhoEntidadeId = await ctx.db.insert("entidades", {
-      tipoEntidade: "PF",
-      papeis: [],
-      status: "ATIVO",
-      nomeCompleto,
-      dataNascimento,
-      sexo,
-      vinculoIgreja: batizadoNestaIgreja ? "MEMBRO" : "NAO_MEMBRO",
-      perfilAtualizadoEm: Date.now(),
-      perfilAtualizadoPor: myMembro._id,
-    });
-
-    if (batizadoNestaIgreja) {
-      await ctx.db.insert("membros", {
-        entidadeId: filhoEntidadeId,
-        role: "membro",
-        cargoEclesiastico: "MEMBRO_NAO_COMUNGANTE",
-        dataBatismo: dataBatismo || undefined,
-      });
-    }
-
-    const tipo: "PAI" | "MAE" | "RESPONSAVEL" =
-      minhaEntidade.sexo === "M"
-        ? "PAI"
-        : minhaEntidade.sexo === "F"
-          ? "MAE"
-          : "RESPONSAVEL";
-
-    await ctx.db.insert("responsaveis", {
-      criancaEntidadeId: filhoEntidadeId,
-      responsavelEntidadeId: myMembro.entidadeId,
-      tipo,
-      principal: true,
-      criadoEm: Date.now(),
-    });
-    // Filho pertence ao casal: vincula tambem ao conjuge, se houver
-    await vincularCriancaAoConjuge(ctx, myMembro.entidadeId, filhoEntidadeId);
-
-    // Departamento infantil: se idade derivavel <11, cria criancaPerfil
-    const turma = turmaFromDataNascimento(dataNascimento);
-    if (turma && (usoImagem || observacoesMedicas)) {
-      await ctx.db.insert("criancaPerfil", {
-        entidadeId: filhoEntidadeId,
-        turma,
-        usoImagem: usoImagem || "PENDENTE",
-        observacoesMedicas: observacoesMedicas || undefined,
-        criadoEm: Date.now(),
-      });
-    }
-
-    return { filhoEntidadeId };
-  },
-});
-
-/**
- * Deriva a turma do departamento infantil a partir da data de nascimento.
- * Retorna null para idade >10 ou data invalida.
- */
-function turmaFromDataNascimento(dataNascimento: string | undefined): string | null {
-  if (!dataNascimento) return null;
-  const [by, bm, bd] = dataNascimento.split("-").map(Number);
-  if ([by, bm, bd].some((n) => Number.isNaN(n))) return null;
-  // Idade "hoje" no fuso da igreja (Sao Paulo), nao no UTC do servidor.
-  const sp = getSaoPauloDate();
-  let age = sp.year - by;
-  const beforeBirthday = sp.month < bm || (sp.month === bm && sp.day < bd);
-  if (beforeBirthday) age--;
-  if (age < 0) return null;
-  if (age <= 2) return "0-2";
-  if (age <= 4) return "3-4";
-  if (age <= 6) return "5-6";
-  if (age <= 8) return "7-8";
-  if (age <= 10) return "9-10";
-  return null;
-}
+//
+// A criacao direta de filho (adicionarFilho) foi removida: agora o membro
+// SOLICITA o cadastro (convex/membros/solicitacoes.ts) e a secretaria aprova.
+// Aqui restam apenas vincular filho ja cadastrado e remover vinculo.
 
 export const vincularFilhoExistente = mutation({
   args: { filhoEntidadeId: v.id("entidades") },

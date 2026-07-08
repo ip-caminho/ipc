@@ -9,6 +9,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Textarea } from "@/shared/components/ui/textarea";
+import { Badge } from "@/shared/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import {
   ResponsiveDialog,
@@ -28,7 +29,7 @@ import {
 } from "@/shared/components/ui/select";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { DatePickerField } from "@/shared/components/DatePickerField";
-import { Users, Search, X, Plus, Heart, Baby } from "lucide-react";
+import { Users, Search, X, Plus, Heart, Baby, Clock } from "lucide-react";
 import { parseISO } from "date-fns";
 import { toast } from "sonner";
 
@@ -57,13 +58,34 @@ function initials(name: string): string {
     .toUpperCase();
 }
 
+// Linha "aguardando aprovacao da secretaria" para uma solicitacao pendente.
+function PendenteRow({ nome }: { nome: string }) {
+  return (
+    <div className="flex items-center justify-between gap-2 p-2 rounded-md border border-dashed">
+      <div className="flex items-center gap-2">
+        <Avatar className="h-9 w-9">
+          <AvatarFallback>{initials(nome)}</AvatarFallback>
+        </Avatar>
+        <p className="text-sm">{nome}</p>
+      </div>
+      <Badge variant="secondary" className="gap-1 text-[10px]">
+        <Clock className="h-3 w-3" /> Aguardando secretaria
+      </Badge>
+    </div>
+  );
+}
+
 export function FamiliaSection() {
   const familia = useQuery(api.membros.selfService.getMyFamily);
+  const solicitacoes = useQuery(api.membros.solicitacoes.getMinhasSolicitacoes);
   const vincularConjuge = useMutation(api.membros.selfService.vincularConjuge);
   const desvincularConjuge = useMutation(api.membros.selfService.desvincularConjuge);
-  const adicionarFilho = useMutation(api.membros.selfService.adicionarFilho);
+  const solicitarFamiliar = useMutation(api.membros.solicitacoes.solicitarCadastroFamiliar);
   const removerFilho = useMutation(api.membros.selfService.removerFilho);
   const vincularFilho = useMutation(api.membros.selfService.vincularFilhoExistente);
+
+  const filhosPendentes = (solicitacoes ?? []).filter((s) => s.tipoVinculo === "FILHO");
+  const conjugePendente = (solicitacoes ?? []).find((s) => s.tipoVinculo === "CONJUGE");
 
   const [searchConjuge, setSearchConjuge] = useState("");
   const buscaConjuge = useQuery(
@@ -76,6 +98,14 @@ export function FamiliaSection() {
     api.membros.selfService.searchMembersForFamily,
     searchFilho.trim().length >= 2 ? { search: searchFilho.trim() } : "skip"
   );
+
+  const [openConjuge, setOpenConjuge] = useState(false);
+  const [conjugeForm, setConjugeForm] = useState({
+    nomeCompleto: "",
+    dataNascimento: "",
+    sexo: "" as "M" | "F" | "",
+  });
+  const [savingConjuge, setSavingConjuge] = useState(false);
 
   const [openFilho, setOpenFilho] = useState(false);
   const [filhoForm, setFilhoForm] = useState({
@@ -114,29 +144,58 @@ export function FamiliaSection() {
     }
   };
 
-  const handleAdicionarFilho = async () => {
+  const handleSolicitarConjuge = async () => {
+    if (!conjugeForm.nomeCompleto.trim()) {
+      toast.error("Informe o nome");
+      return;
+    }
+    setSavingConjuge(true);
+    try {
+      await solicitarFamiliar({
+        tipoVinculo: "CONJUGE",
+        dados: {
+          nomeCompleto: conjugeForm.nomeCompleto.trim(),
+          dataNascimento: conjugeForm.dataNascimento || undefined,
+          sexo: conjugeForm.sexo || undefined,
+        },
+      });
+      toast.success("Solicitacao enviada a secretaria");
+      setConjugeForm({ nomeCompleto: "", dataNascimento: "", sexo: "" });
+      setOpenConjuge(false);
+      setSearchConjuge("");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao solicitar cadastro");
+    } finally {
+      setSavingConjuge(false);
+    }
+  };
+
+  const handleSolicitarFilho = async () => {
     if (!filhoForm.nomeCompleto.trim()) {
       toast.error("Informe o nome");
       return;
     }
     setSavingFilho(true);
     try {
-      await adicionarFilho({
-        nomeCompleto: filhoForm.nomeCompleto.trim(),
-        dataNascimento: filhoForm.dataNascimento || undefined,
-        sexo: filhoForm.sexo || undefined,
-        batizadoNestaIgreja: filhoForm.batizadoNestaIgreja,
-        dataBatismo:
-          filhoForm.batizadoNestaIgreja && filhoForm.dataBatismo
-            ? filhoForm.dataBatismo
-            : undefined,
-        usoImagem: ehCrianca && filhoForm.usoImagem ? filhoForm.usoImagem : undefined,
-        observacoesMedicas:
-          ehCrianca && filhoForm.observacoesMedicas.trim()
-            ? filhoForm.observacoesMedicas.trim()
-            : undefined,
+      await solicitarFamiliar({
+        tipoVinculo: "FILHO",
+        dados: {
+          nomeCompleto: filhoForm.nomeCompleto.trim(),
+          dataNascimento: filhoForm.dataNascimento || undefined,
+          sexo: filhoForm.sexo || undefined,
+          batizadoNestaIgreja: filhoForm.batizadoNestaIgreja,
+          dataBatismo:
+            filhoForm.batizadoNestaIgreja && filhoForm.dataBatismo
+              ? filhoForm.dataBatismo
+              : undefined,
+          usoImagem: ehCrianca && filhoForm.usoImagem ? filhoForm.usoImagem : undefined,
+          observacoesMedicas:
+            ehCrianca && filhoForm.observacoesMedicas.trim()
+              ? filhoForm.observacoesMedicas.trim()
+              : undefined,
+        },
       });
-      toast.success("Filho adicionado");
+      toast.success("Solicitacao enviada a secretaria");
       setFilhoForm({
         nomeCompleto: "",
         dataNascimento: "",
@@ -148,7 +207,7 @@ export function FamiliaSection() {
       });
       setOpenFilho(false);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Erro ao adicionar filho");
+      toast.error(e instanceof Error ? e.message : "Erro ao solicitar cadastro");
     } finally {
       setSavingFilho(false);
     }
@@ -207,6 +266,8 @@ export function FamiliaSection() {
                 <X className="h-4 w-4" />
               </Button>
             </div>
+          ) : conjugePendente ? (
+            <PendenteRow nome={conjugePendente.nomeCompleto} />
           ) : (
             <div className="space-y-2">
               <div className="relative">
@@ -240,6 +301,78 @@ export function FamiliaSection() {
                   )}
                 </div>
               )}
+              <div className="flex items-center justify-between gap-2 pt-1">
+                <p className="text-[11px] text-muted-foreground">
+                  Nao encontrou? Solicite o cadastro.
+                </p>
+                <ResponsiveDialog open={openConjuge} onOpenChange={setOpenConjuge}>
+                  <ResponsiveDialogTrigger asChild>
+                    <Button size="sm" variant="outline">
+                      <Plus className="h-3 w-3 mr-1" /> Solicitar conjuge
+                    </Button>
+                  </ResponsiveDialogTrigger>
+                  <ResponsiveDialogContent>
+                    <ResponsiveDialogHeader>
+                      <ResponsiveDialogTitle>Solicitar cadastro do conjuge</ResponsiveDialogTitle>
+                    </ResponsiveDialogHeader>
+                    <ResponsiveDialogBody>
+                      <div className="space-y-4">
+                        <p className="text-xs text-muted-foreground">
+                          A secretaria vai revisar e cadastrar. Voce sera vinculado(a)
+                          automaticamente apos a aprovacao.
+                        </p>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Nome completo *</Label>
+                          <Input
+                            value={conjugeForm.nomeCompleto}
+                            onChange={(e) =>
+                              setConjugeForm((p) => ({ ...p, nomeCompleto: e.target.value }))
+                            }
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="space-y-1">
+                            <Label className="text-xs">Data de nascimento</Label>
+                            <DatePickerField
+                              value={conjugeForm.dataNascimento}
+                              onChange={(iso) =>
+                                setConjugeForm((p) => ({ ...p, dataNascimento: iso }))
+                              }
+                              placeholder="dd/mm/aaaa"
+                              maxDate={new Date()}
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">Sexo</Label>
+                            <Select
+                              value={conjugeForm.sexo}
+                              onValueChange={(v) =>
+                                setConjugeForm((p) => ({ ...p, sexo: v as "M" | "F" }))
+                              }
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecione" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="M">Masculino</SelectItem>
+                                <SelectItem value="F">Feminino</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      </div>
+                    </ResponsiveDialogBody>
+                    <ResponsiveDialogFooter>
+                      <Button variant="outline" onClick={() => setOpenConjuge(false)}>
+                        Cancelar
+                      </Button>
+                      <Button onClick={handleSolicitarConjuge} disabled={savingConjuge}>
+                        {savingConjuge ? "Enviando..." : "Solicitar"}
+                      </Button>
+                    </ResponsiveDialogFooter>
+                  </ResponsiveDialogContent>
+                </ResponsiveDialog>
+              </div>
             </div>
           )}
         </div>
@@ -283,6 +416,15 @@ export function FamiliaSection() {
             </div>
           )}
 
+          {/* Solicitacoes de filho aguardando a secretaria */}
+          {filhosPendentes.length > 0 && (
+            <div className="space-y-1">
+              {filhosPendentes.map((s) => (
+                <PendenteRow key={s._id} nome={s.nomeCompleto} />
+              ))}
+            </div>
+          )}
+
           {/* Buscar filho ja cadastrado (acao primaria) */}
           <div className="relative">
             <Search className="h-4 w-4 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -316,23 +458,27 @@ export function FamiliaSection() {
             </div>
           )}
 
-          {/* Fallback: cadastrar novo (Fase 2: solicitar a secretaria) */}
+          {/* Fallback: solicitar cadastro de filho ainda nao cadastrado */}
           <div className="flex items-center justify-between gap-2 pt-1">
             <p className="text-[11px] text-muted-foreground">
-              Nao encontrou? Cadastre um novo.
+              Nao encontrou? Solicite o cadastro.
             </p>
             <ResponsiveDialog open={openFilho} onOpenChange={setOpenFilho}>
               <ResponsiveDialogTrigger asChild>
                 <Button size="sm" variant="outline">
-                  <Plus className="h-3 w-3 mr-1" /> Novo filho
+                  <Plus className="h-3 w-3 mr-1" /> Solicitar filho
                 </Button>
               </ResponsiveDialogTrigger>
               <ResponsiveDialogContent>
                 <ResponsiveDialogHeader>
-                  <ResponsiveDialogTitle>Adicionar filho</ResponsiveDialogTitle>
+                  <ResponsiveDialogTitle>Solicitar cadastro de filho</ResponsiveDialogTitle>
                 </ResponsiveDialogHeader>
                 <ResponsiveDialogBody>
                 <div className="space-y-4">
+                  <p className="text-xs text-muted-foreground">
+                    A secretaria vai revisar e cadastrar. O vinculo aparece
+                    automaticamente apos a aprovacao.
+                  </p>
                   <div className="space-y-1">
                     <Label className="text-xs">Nome completo *</Label>
                     <Input
@@ -467,8 +613,8 @@ export function FamiliaSection() {
                   <Button variant="outline" onClick={() => setOpenFilho(false)}>
                     Cancelar
                   </Button>
-                  <Button onClick={handleAdicionarFilho} disabled={savingFilho}>
-                    {savingFilho ? "Salvando..." : "Adicionar"}
+                  <Button onClick={handleSolicitarFilho} disabled={savingFilho}>
+                    {savingFilho ? "Enviando..." : "Solicitar"}
                   </Button>
                 </ResponsiveDialogFooter>
               </ResponsiveDialogContent>

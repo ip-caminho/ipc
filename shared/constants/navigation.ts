@@ -25,6 +25,7 @@ import {
   History,
   ClipboardCheck,
   Globe,
+  UserPlus,
   MoreHorizontal,
   type LucideIcon,
 } from "lucide-react";
@@ -131,6 +132,13 @@ export const GESTAO_SECTIONS: NavSection[] = [
         icon: ClipboardList,
         description: "Inscrições genéricas de eventos e suas respostas",
         permission: "inscricoes:manage",
+      },
+      {
+        label: "Solicitações de cadastro",
+        href: "/admin/solicitacoes-familia",
+        icon: UserPlus,
+        description: "Pedidos de cadastro de familiar (filho/cônjuge) para aprovar",
+        permission: "membros:create",
       },
       {
         label: "Retiro",

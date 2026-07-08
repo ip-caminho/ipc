@@ -815,10 +815,29 @@ const CONTEXT_MAP: Record<string, PageContext> = {
   "/meu-perfil": {
     nome: "Meu Perfil",
     pagina: "app/(ready)/meu-perfil/page.tsx",
-    arquivos: ["app/(ready)/meu-perfil/page.tsx"],
-    queries: ["membros.selfService.getMyProfile"],
-    mutations: ["membros.selfService.updateMyProfile"],
-    notas: ["Self-service: membro edita seus proprios dados"],
+    arquivos: [
+      "app/(ready)/meu-perfil/page.tsx",
+      "features/membros/components/FamiliaSection.tsx",
+      "convex/membros/selfService.ts",
+      "convex/membros/solicitacoes.ts",
+    ],
+    queries: [
+      "membros.selfService.getMyProfile",
+      "membros.selfService.getMyFamily",
+      "membros.solicitacoes.getMinhasSolicitacoes",
+    ],
+    mutations: [
+      "membros.selfService.updateMyProfile",
+      "membros.selfService.updateMembresiaDatas",
+      "membros.selfService.vincularConjuge",
+      "membros.selfService.vincularFilhoExistente",
+      "membros.solicitacoes.solicitarCadastroFamiliar",
+    ],
+    componentes: ["FamiliaSection (busca-e-vincula + solicitar cadastro)", "SectionEditButton/EditBar (edicao por secao)"],
+    notas: [
+      "Self-service: membro edita seus proprios dados (edicao autocontida por secao)",
+      "Familia: vincula cadastrado ou solicita cadastro a secretaria (fila em /admin/solicitacoes-familia)",
+    ],
   },
   "/multimidia": {
     nome: "Multimidia",
@@ -1399,6 +1418,27 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "Rota REDIRECIONA p/ o hub (/admin/site-publico?secao=textos); UI real em TextosPanel",
       "Textos do hero da home (site.*). Home le com fallback SITE_TEXTOS_DEFAULTS",
       "Editorial denso (quem-somos) fica em MDX, nao aqui",
+    ],
+  },
+  "/admin/solicitacoes-familia": {
+    nome: "Secretaria - Solicitacoes de cadastro",
+    pagina: "app/(ready)/admin/solicitacoes-familia/page.tsx",
+    arquivos: [
+      "app/(ready)/admin/solicitacoes-familia/page.tsx",
+      "features/membros/components/SolicitacoesPanel.tsx",
+      "convex/membros/solicitacoes.ts",
+      "convex/membros/familiaHelpers.ts",
+    ],
+    queries: ["membros.solicitacoes.listSolicitacoes"],
+    mutations: [
+      "membros.solicitacoes.aprovarSolicitacao",
+      "membros.solicitacoes.rejeitarSolicitacao",
+    ],
+    componentes: ["SolicitacoesPanel (tabela + AlertDialog rejeitar)"],
+    notas: [
+      "Fila de solicitacoes de familiar (filho/conjuge) vindas do self-service (/meu-perfil)",
+      "Aprovar = criar entidade + vinculo (criarFilhoParaResponsavel/criarConjugeParaMembro). Permissao: membros:create. Auditado",
+      "Substitui a criacao direta (adicionarFilho removido)",
     ],
   },
   "/admin/inscricoes": {
