@@ -39,7 +39,7 @@ type Cargo = (typeof CARGO_OPTIONS)[number]["value"];
 const STATUS_COLOR: Record<string, string> = {
   ATIVO: "bg-green-100 text-green-800",
   ENCERRADO: "bg-gray-100 text-gray-700",
-  AFASTADO: "bg-amber-100 text-amber-800",
+  AFASTADO: "bg-yellow-100 text-yellow-800",
 };
 
 export function CargosHistoricoSection({ membroId }: { membroId: Id<"membros"> }) {

@@ -24,12 +24,12 @@ export function CompletionStep({ firstName, percentage }: Props) {
       ? "text-emerald-600"
       : percentage > 80
         ? "text-emerald-600"
-        : "text-amber-600";
+        : "text-yellow-600";
 
   const progressColor =
     percentage >= 80
       ? "[&_[data-slot=progress-indicator]]:bg-emerald-500"
-      : "[&_[data-slot=progress-indicator]]:bg-amber-500";
+      : "[&_[data-slot=progress-indicator]]:bg-yellow-500";
 
   return (
     <div className="flex flex-col items-center text-center gap-5 py-8 animate-in fade-in zoom-in-95 duration-500">

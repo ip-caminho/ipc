@@ -82,8 +82,8 @@ export function AvisosWidget({ variant = "card" }: AvisosWidgetProps) {
               onClick={handlePlay}
               className={`w-full flex items-center justify-center gap-2.5 h-12 rounded-xl text-base font-medium transition-all min-h-[48px] ${
                 isThisPlaying
-                  ? "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
-                  : "bg-amber-600 text-white hover:bg-amber-700"
+                  ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-950/40 dark:text-yellow-300"
+                  : "bg-yellow-600 text-white hover:bg-yellow-700"
               }`}
             >
               <Headphones className="h-4.5 w-4.5" />

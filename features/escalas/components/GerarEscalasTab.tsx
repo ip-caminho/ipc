@@ -57,14 +57,14 @@ export function GerarEscalasTab() {
                       return (
                         <div className="flex gap-2 text-xs">
                           <span className="flex items-center gap-1">
-                            <Mic className="h-3 w-3 text-amber-600" />
+                            <Mic className="h-3 w-3 text-yellow-600" />
                             {condutores.length} condutor{condutores.length !== 1 ? "es" : ""}
                           </span>
                           <span className="text-muted-foreground">
                             {acompanhantes.length} acompanha{acompanhantes.length !== 1 ? "m" : ""}
                           </span>
                           {condutores.length === 0 && (
-                            <span className="flex items-center gap-0.5 text-amber-600">
+                            <span className="flex items-center gap-0.5 text-yellow-600">
                               <AlertTriangle className="h-3 w-3" />
                               sem condutor
                             </span>

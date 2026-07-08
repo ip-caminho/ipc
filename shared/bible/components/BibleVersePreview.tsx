@@ -51,7 +51,7 @@ function VerseBlock({ result, fontSize }: { result: BibleVerseResult; fontSize?:
         )}
       </div>
       {result.clamped && (
-        <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-1">
+        <p className="text-[11px] text-yellow-600 dark:text-yellow-400 mt-1">
           {result.clamped}
         </p>
       )}

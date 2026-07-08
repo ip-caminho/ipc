@@ -38,7 +38,7 @@ const TIPO_OPTIONS: Array<{
     value: "REFORCO",
     label: "Pedido continua",
     description: "Ainda preciso de oração por isso.",
-    dotClass: "bg-amber-500",
+    dotClass: "bg-yellow-500",
   },
   {
     value: "TESTEMUNHO",

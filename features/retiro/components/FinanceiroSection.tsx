@@ -136,7 +136,7 @@ export function FinanceiroSection({
 
       {/* Comprovantes enviados pelo pagante — a conferir */}
       {pendentes.length > 0 && !cancelada && (
-        <div className="space-y-2 rounded-lg border border-amber-300 bg-amber-50 p-3 dark:border-amber-900 dark:bg-amber-950/30">
+        <div className="space-y-2 rounded-lg border border-yellow-300 bg-yellow-50 p-3 dark:border-yellow-900 dark:bg-yellow-950/30">
           <p className="flex items-center gap-1.5 text-sm font-semibold">
             <FileCheck2 className="h-4 w-4" /> Comprovantes a conferir ({pendentes.length})
           </p>
@@ -414,7 +414,7 @@ export function FinanceiroSection({
               <p
                 className={`rounded-md p-3 text-sm ${
                   resumoEvento.fundo - parseReais(dValor) < 0
-                    ? "bg-amber-50 text-amber-800 dark:bg-amber-950/30 dark:text-amber-300"
+                    ? "bg-yellow-50 text-yellow-800 dark:bg-yellow-950/30 dark:text-yellow-300"
                     : "bg-muted text-muted-foreground"
                 }`}
               >
