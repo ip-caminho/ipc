@@ -14,16 +14,8 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
   SidebarFooter,
 } from "@/shared/components/ui/sidebar";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/shared/components/ui/collapsible";
 import {
   Tooltip,
   TooltipContent,
@@ -32,7 +24,7 @@ import {
 } from "@/shared/components/ui/tooltip";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { Button } from "@/shared/components/ui/button";
-import { LogOut, ChevronRight, Globe } from "lucide-react";
+import { LogOut, Globe } from "lucide-react";
 import { Logo } from "@shared/components/layout/Logo";
 import { api } from "@/convex/_generated/api";
 import { useAuth } from "@shared/providers/PermissionsProvider";
@@ -115,53 +107,30 @@ export function AppSidebar() {
             </SidebarGroupContent>
           </SidebarGroup>
 
-          {visibleSections.length > 0 && (
-            <SidebarGroup>
-              <SidebarGroupLabel>Gestão</SidebarGroupLabel>
+          {visibleSections.map((section) => (
+            <SidebarGroup key={section.titulo}>
+              <SidebarGroupLabel>{section.titulo}</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {visibleSections.map((section) => {
-                    const sectionActive = section.items.some((item) =>
-                      isActive(item.href)
-                    );
-                    return (
-                      <Collapsible
-                        key={section.titulo}
-                        defaultOpen={sectionActive}
-                        className="group/collapsible"
-                      >
-                        <SidebarMenuItem>
-                          <CollapsibleTrigger asChild>
-                            <SidebarMenuButton isActive={sectionActive}>
-                              <span>{section.titulo}</span>
-                              <ChevronRight className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
-                            </SidebarMenuButton>
-                          </CollapsibleTrigger>
-                          <CollapsibleContent>
-                            <SidebarMenuSub>
-                              {section.items.map((item) => (
-                                <SidebarMenuSubItem key={item.href + item.label}>
-                                  <SidebarMenuSubButton
-                                    asChild
-                                    isActive={isActive(item.href)}
-                                  >
-                                    <Link href={item.href}>
-                                      <item.icon className="h-4 w-4" />
-                                      <span>{item.label}</span>
-                                    </Link>
-                                  </SidebarMenuSubButton>
-                                </SidebarMenuSubItem>
-                              ))}
-                            </SidebarMenuSub>
-                          </CollapsibleContent>
-                        </SidebarMenuItem>
-                      </Collapsible>
-                    );
-                  })}
+                  {section.items.map((item) => (
+                    <SidebarMenuItem key={item.href + item.label}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <SidebarMenuButton asChild isActive={isActive(item.href)}>
+                            <Link href={item.href}>
+                              <item.icon className="h-4 w-4" />
+                              <span>{item.label}</span>
+                            </Link>
+                          </SidebarMenuButton>
+                        </TooltipTrigger>
+                        <TooltipContent side="right">{item.label}</TooltipContent>
+                      </Tooltip>
+                    </SidebarMenuItem>
+                  ))}
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
-          )}
+          ))}
         </TooltipProvider>
       </SidebarContent>
 
