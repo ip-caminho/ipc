@@ -204,7 +204,7 @@ export function CampaignForm() {
         </CardContent>
       </Card>
 
-      <Card className={modoTeste ? "border-amber-300 bg-amber-50 dark:bg-amber-950/30" : undefined}>
+      <Card className={modoTeste ? "border-yellow-300 bg-yellow-50 dark:bg-yellow-950/30" : undefined}>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center justify-between">
             Modo teste
@@ -327,7 +327,7 @@ export function CampaignForm() {
                 <span className="text-muted-foreground ml-2">membros serao notificados</span>
               </p>
               {preview.puladosAntiSpam > 0 && (
-                <p className="text-xs text-amber-700 mt-1">
+                <p className="text-xs text-yellow-700 mt-1">
                   {preview.puladosAntiSpam} membros serao pulados (ja receberam 3+ envios em{" "}
                   {preview.janelaAntiSpamDias} dias)
                 </p>

@@ -191,7 +191,7 @@ function GerarContent({
             <Badge
               key={m.membroId}
               variant="secondary"
-              className={`text-xs ${m.condutor ? "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200" : ""}`}
+              className={`text-xs ${m.condutor ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200" : ""}`}
             >
               {m.condutor && <Mic className="h-2.5 w-2.5 mr-0.5" />}
               {m.nomeCompleto.split(" ")[0]}
@@ -230,7 +230,7 @@ function GerarContent({
                           </Badge>
                         ))
                     ) : resultadoCulto?.alertaSemCondutor ? (
-                      <Badge variant="secondary" className="text-[10px] bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">
+                      <Badge variant="secondary" className="text-[10px] bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
                         <AlertTriangle className="h-2.5 w-2.5 mr-0.5" />
                         Sem condutor
                       </Badge>
@@ -251,13 +251,13 @@ function GerarContent({
       )}
 
       {resultado?.alertas?.length > 0 && (
-        <div className="flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-200">
+        <div className="flex items-start gap-2 rounded-lg border border-yellow-300 bg-yellow-50 p-3 text-sm text-yellow-800 dark:border-yellow-700 dark:bg-yellow-950 dark:text-yellow-200">
           <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
           <div>
             <p className="font-medium">
               {resultado.alertas.length} culto{resultado.alertas.length > 1 ? "s" : ""} sem condutor disponível
             </p>
-            <p className="text-xs mt-1 text-amber-700 dark:text-amber-300">
+            <p className="text-xs mt-1 text-yellow-700 dark:text-yellow-300">
               Nenhum condutor de louvor está disponível nestas datas. Atribua manualmente ou verifique as indisponibilidades.
             </p>
           </div>

@@ -52,7 +52,7 @@ type RolCategoria = "PRINCIPAL" | "SEPARADO" | "AUSENTE" | "ARQUIVO";
 const ROL_BADGE: Record<RolCategoria, { label: string; className: string }> = {
   PRINCIPAL: { label: "Principal", className: "bg-emerald-100 text-emerald-800 border-emerald-200" },
   SEPARADO: { label: "Separado", className: "bg-sky-100 text-sky-800 border-sky-200" },
-  AUSENTE: { label: "Ausente", className: "bg-amber-100 text-amber-800 border-amber-200" },
+  AUSENTE: { label: "Ausente", className: "bg-yellow-100 text-yellow-800 border-yellow-200" },
   ARQUIVO: { label: "Arquivo", className: "bg-muted text-muted-foreground" },
 };
 
@@ -227,7 +227,7 @@ function CardMembro({ membro, agrupar }: { membro: MembroEclesiastico; agrupar: 
             {membro.civilmenteCapazes ? (
               <span className="text-emerald-700">Sim</span>
             ) : (
-              <span className="text-amber-700">Menor</span>
+              <span className="text-yellow-700">Menor</span>
             )}
           </span>
         )}
@@ -334,7 +334,7 @@ function LinhaMembro({ membro, agrupar, readOnly }: { membro: MembroEclesiastico
           membro.civilmenteCapazes ? (
             <span className="text-xs text-emerald-700">Sim</span>
           ) : (
-            <span className="text-xs text-amber-700" title="Menor de 18 anos">Menor</span>
+            <span className="text-xs text-yellow-700" title="Menor de 18 anos">Menor</span>
           )
         ) : (
           <span className="text-xs text-muted-foreground">—</span>

@@ -25,7 +25,7 @@ const TIPO_CONFIG: Record<string, { label: string; icon: typeof Mic; color: stri
   SERMAO: { label: "Sermao", icon: Mic, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-950/30" },
   ESTUDO_BIBLICO: { label: "Estudo", icon: BookOpen, color: "text-violet-600 dark:text-violet-400", bg: "bg-violet-50 dark:bg-violet-950/30" },
   PALESTRA: { label: "Palestra", icon: Presentation, color: "text-teal-600 dark:text-teal-400", bg: "bg-teal-50 dark:bg-teal-950/30" },
-  OUTRO: { label: "Outro", icon: FileAudio, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-950/30" },
+  OUTRO: { label: "Outro", icon: FileAudio, color: "text-yellow-600 dark:text-yellow-400", bg: "bg-yellow-50 dark:bg-yellow-950/30" },
 };
 
 type SortField = "data" | "titulo" | "tipo" | "status";

@@ -122,7 +122,7 @@ export function CalendarioView({ cultos }: CalendarioViewProps) {
                       {filled === totalFuncoes ? (
                         <Check className="h-3 w-3 text-green-500 shrink-0" />
                       ) : filled > 0 ? (
-                        <Minus className="h-3 w-3 text-amber-500 shrink-0" />
+                        <Minus className="h-3 w-3 text-yellow-500 shrink-0" />
                       ) : null}
                       <span className="text-[10px] text-muted-foreground">
                         {filled}/{totalFuncoes}
@@ -153,7 +153,7 @@ export function CalendarioView({ cultos }: CalendarioViewProps) {
           <span>Completo</span>
         </div>
         <div className="flex items-center gap-1">
-          <Minus className="h-3 w-3 text-amber-500" />
+          <Minus className="h-3 w-3 text-yellow-500" />
           <span>Parcial</span>
         </div>
       </div>

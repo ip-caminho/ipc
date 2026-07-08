@@ -25,7 +25,7 @@ function cacStatus(cacValidade?: string): { label: string; color: string; alerta
   const dias = Math.ceil((validade.getTime() - hoje.getTime()) / 86400000);
   const dataFmt = format(validade, "dd/MM/yyyy", { locale: ptBR });
   if (dias < 0) return { label: `CAC vencido (${dataFmt})`, color: "bg-red-100 text-red-800", alerta: true };
-  if (dias <= 30) return { label: `CAC vence ${dataFmt}`, color: "bg-amber-100 text-amber-800", alerta: true };
+  if (dias <= 30) return { label: `CAC vence ${dataFmt}`, color: "bg-yellow-100 text-yellow-800", alerta: true };
   return { label: `CAC ate ${dataFmt}`, color: "bg-green-100 text-green-800", alerta: false };
 }
 

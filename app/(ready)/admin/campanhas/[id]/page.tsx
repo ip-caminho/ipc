@@ -41,7 +41,7 @@ const ENVIO_STATUS_LABEL: Record<string, string> = {
 };
 
 const ENVIO_STATUS_COLOR: Record<string, string> = {
-  PENDENTE: "bg-amber-100 text-amber-800",
+  PENDENTE: "bg-yellow-100 text-yellow-800",
   PROCESSANDO: "bg-blue-100 text-blue-800",
   ENVIADO: "bg-blue-100 text-blue-800",
   FALHOU: "bg-red-100 text-red-800",

@@ -277,7 +277,7 @@ function EquipeCard({
             {isLouvor && (
               <Badge
                 variant={m.condutor ? "default" : "outline"}
-                className={`text-[10px] ${canEdit ? "cursor-pointer" : ""} ${m.condutor ? "bg-amber-600 hover:bg-amber-700" : ""}`}
+                className={`text-[10px] ${canEdit ? "cursor-pointer" : ""} ${m.condutor ? "bg-yellow-600 hover:bg-yellow-700" : ""}`}
                 onClick={canEdit ? () => handleToggleCondutor(m._id) : undefined}
               >
                 <Mic className="h-2.5 w-2.5 mr-0.5" />

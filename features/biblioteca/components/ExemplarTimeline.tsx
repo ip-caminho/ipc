@@ -8,7 +8,7 @@ import type { Id } from "@/convex/_generated/dataModel";
 const TIPO_ICONS: Record<string, { icon: any; color: string }> = {
   CADASTRO: { icon: BookPlus, color: "text-blue-500" },
   DOACAO: { icon: Gift, color: "text-green-500" },
-  EMPRESTIMO: { icon: ArrowRight, color: "text-orange-500" },
+  EMPRESTIMO: { icon: ArrowRight, color: "text-violet-500" },
   DEVOLUCAO: { icon: ArrowLeft, color: "text-emerald-500" },
   PERDA: { icon: AlertCircle, color: "text-red-500" },
   CONDICAO: { icon: AlertCircle, color: "text-yellow-500" },

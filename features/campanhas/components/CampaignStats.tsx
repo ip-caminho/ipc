@@ -39,7 +39,7 @@ function StatCard({
     blue: "text-blue-700",
     green: "text-green-700",
     red: "text-red-700",
-    amber: "text-amber-700",
+    amber: "text-yellow-700",
     neutral: "text-foreground",
   }[accent];
 

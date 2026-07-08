@@ -17,14 +17,14 @@ export function ProfileCompletenessCard() {
     data.percentage > 80
       ? "text-emerald-600 dark:text-emerald-400"
       : data.percentage >= 50
-        ? "text-amber-600 dark:text-amber-500"
+        ? "text-yellow-600 dark:text-yellow-500"
         : "text-red-600 dark:text-red-400";
 
   const progressColor =
     data.percentage > 80
       ? "[&_[data-slot=progress-indicator]]:bg-emerald-500"
       : data.percentage >= 50
-        ? "[&_[data-slot=progress-indicator]]:bg-amber-500"
+        ? "[&_[data-slot=progress-indicator]]:bg-yellow-500"
         : "[&_[data-slot=progress-indicator]]:bg-red-500";
 
   const Icon = data.percentage === 100 ? CheckCircle2 : AlertCircle;
