@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Spectral } from "next/font/google";
+import { Inter, JetBrains_Mono, Spectral } from "next/font/google";
 import "./globals.css";
 import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
 import ConvexClientProvider from "@shared/providers/ConvexClientProvider";
@@ -8,13 +8,13 @@ import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "sonner";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const interSans = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
   subsets: ["latin"],
 });
 
@@ -63,7 +63,7 @@ export default function RootLayout({
     <ConvexAuthNextjsServerProvider>
       <html lang="pt-BR" suppressHydrationWarning>
         <body
-          className={`${geistSans.variable} ${geistMono.variable} ${spectral.variable} antialiased`}
+          className={`${interSans.variable} ${jetbrainsMono.variable} ${spectral.variable} antialiased`}
         >
           <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
             <ConvexClientProvider>
