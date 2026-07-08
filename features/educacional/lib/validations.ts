@@ -16,9 +16,11 @@ export type CriancaFormValues = z.infer<typeof criancaFormSchema>;
 export const relatorioFormSchema = z.object({
   turma: z.string().min(1, "Selecione a turma"),
   data: z.string().min(1, "Informe a data"),
-  professores: z.string().min(1, "Informe os professores"),
+  // Voluntarios que serviram (puxados do cadastro do educacional).
+  voluntarios: z.array(
+    z.object({ membroId: z.string().min(1), papel: z.string() })
+  ),
   observacoes: z.string().optional(),
-  presentes: z.array(z.string()),
   // Conteudo da licao
   numero: z.string().optional(), // convertido p/ number na submissao
   tema: z.string().optional(),

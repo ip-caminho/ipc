@@ -176,9 +176,11 @@ export default function EducacionalPage() {
       await createRelatorio({
         turma: data.turma,
         data: data.data,
-        professores: data.professores,
+        voluntarios: data.voluntarios.map((v) => ({
+          membroId: v.membroId as Id<"membros">,
+          papel: v.papel,
+        })),
         observacoes: data.observacoes || undefined,
-        presentes: data.presentes as Id<"entidades">[],
         numero: Number.isNaN(numeroParsed) ? undefined : numeroParsed,
         tema: data.tema || undefined,
         textosBase: toLines(data.textosBaseText),
@@ -589,9 +591,11 @@ export default function EducacionalPage() {
                         {r.tema && (
                           <p className="text-xs font-medium mt-1">{r.tema}</p>
                         )}
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Professores: {r.professores}
-                        </p>
+                        {r.equipeLabel && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Equipe: {r.equipeLabel}
+                          </p>
+                        )}
                       </CardContent>
                     </Card>
                   ))}
