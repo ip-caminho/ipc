@@ -111,6 +111,7 @@ import type * as messaging_phoneUtils from "../messaging/phoneUtils.js";
 import type * as messaging_service from "../messaging/service.js";
 import type * as messaging_types from "../messaging/types.js";
 import type * as messaging_wuzapiProvider from "../messaging/wuzapiProvider.js";
+import type * as migration_limparPapeisPessoa from "../migration/limparPapeisPessoa.js";
 import type * as migration_mutations from "../migration/mutations.js";
 import type * as migration_queries from "../migration/queries.js";
 import type * as migration_vinculoIgreja from "../migration/vinculoIgreja.js";
@@ -263,6 +264,7 @@ declare const fullApi: ApiFromModules<{
   "messaging/service": typeof messaging_service;
   "messaging/types": typeof messaging_types;
   "messaging/wuzapiProvider": typeof messaging_wuzapiProvider;
+  "migration/limparPapeisPessoa": typeof migration_limparPapeisPessoa;
   "migration/mutations": typeof migration_mutations;
   "migration/queries": typeof migration_queries;
   "migration/vinculoIgreja": typeof migration_vinculoIgreja;
