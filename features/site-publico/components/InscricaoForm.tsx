@@ -373,7 +373,7 @@ export function InscricaoForm({ inscricao }: { inscricao: InscricaoEventoPublica
           <Button
             type="submit"
             disabled={status === "submitting"}
-            className="h-11 w-full bg-[#F0732B] text-white hover:bg-[#DE5F18] sm:w-auto sm:px-8"
+            className="h-11 w-full bg-[#2563EB] text-white hover:bg-[#1D4ED8] sm:w-auto sm:px-8"
           >
             {status === "submitting" ? "Enviando..." : "Enviar inscrição"}
           </Button>

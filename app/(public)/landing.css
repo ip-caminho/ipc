@@ -1,7 +1,7 @@
 /* ============================================================
    Landing pública — IPC site v2.1 ("tradição aquecida")
    Títulos serif (Spectral) + corpo Source Sans 3.
-   Paleta marinho + laranja sobre off-white, fotografia grande.
+   Paleta marinho + azul sobre off-white, fotografia grande.
    Tudo ESCOPADO em .site-v2 para não vazar pro resto do app.
    Fontes via next/font: --font-spectral / --font-source-sans.
    ============================================================ */
@@ -24,15 +24,15 @@ html:has(.site-v2) {
   --navy-800: #111D33;
   --navy-900: #0B1426;
 
-  /* ---- Laranja (acento quente) ---- */
-  --orange-50: #FDEEE2;
-  --orange-100: #FBD9BF;
-  --orange-200: #F8BC8E;
-  --orange-300: #F49B5C;
-  --orange-400: #F0732B;
-  --orange-500: #DE5F18;
-  --orange-600: #BC5414;
-  --orange-700: #934010;
+  /* ---- Azul (acento — alinhado ao primary do sistema) ---- */
+  --blue-50: #EFF6FF;
+  --blue-100: #DBEAFE;
+  --blue-200: #BFDBFE;
+  --blue-300: #93C5FD;
+  --blue-400: #2563EB;
+  --blue-500: #1D4ED8;
+  --blue-600: #1E40AF;
+  --blue-700: #1E3A8A;
 
   /* ---- Neutros quentes (off-white, pedra) ---- */
   --paper-0: #FFFFFF;
@@ -49,18 +49,18 @@ html:has(.site-v2) {
   --surface-page: var(--paper-50);
   --surface-card: var(--paper-0);
   --surface-sunken: var(--paper-100);
-  --surface-accent: var(--orange-50);
+  --surface-accent: var(--blue-50);
   --text-strong: var(--navy-800);
   --text-body: #34404F;
   --text-muted: #5E6B7A;
   --text-subtle: #8A95A3;
-  --brand-soft: var(--orange-50);
+  --brand-soft: var(--blue-50);
   --border-subtle: var(--paper-200);
   --border-default: var(--paper-300);
   --border-strong: var(--paper-400);
-  --accent: var(--orange-400);
-  --accent-ink: var(--orange-600); /* laranja escuro p/ texto (contraste) */
-  --accent-rule: var(--orange-400);
+  --accent: var(--blue-400);
+  --accent-ink: var(--blue-600); /* azul escuro p/ texto (contraste) */
+  --accent-rule: var(--blue-400);
   --dark-surface: var(--navy-700);
   --dark-surface-2: var(--navy-900);
 
@@ -132,7 +132,7 @@ html:has(.site-v2) {
   color-scheme: light;
 }
 
-.site-v2 ::selection { background: var(--orange-400); color: #fff; }
+.site-v2 ::selection { background: var(--blue-400); color: #fff; }
 
 /* ---------- Base (substitui o preflight dentro do escopo) ---------- */
 .site-v2 p { margin: 0 0 1em; text-wrap: pretty; }
@@ -144,7 +144,7 @@ html:has(.site-v2) {
 }
 .site-v2 img { max-width: 100%; display: block; }
 .site-v2 a { color: inherit; }
-.site-v2 :focus-visible { outline: none; box-shadow: 0 0 0 3px var(--orange-200); border-radius: 4px; }
+.site-v2 :focus-visible { outline: none; box-shadow: 0 0 0 3px var(--blue-200); border-radius: 4px; }
 
 /* ---------- Containers ---------- */
 .site-v2 .wrap { width: 100%; max-width: 880px; margin: 0 auto; padding: 0 var(--gutter); }
@@ -175,8 +175,8 @@ html:has(.site-v2) {
   transition: var(--transition-base);
   text-decoration: none;
 }
-.site-v2 .btn-primary { background: var(--orange-400); color: #fff; border-color: var(--orange-400); box-shadow: var(--shadow-sm); }
-.site-v2 .btn-primary:hover { background: var(--orange-500); border-color: var(--orange-500); color: #fff; box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.site-v2 .btn-primary { background: var(--blue-400); color: #fff; border-color: var(--blue-400); box-shadow: var(--shadow-sm); }
+.site-v2 .btn-primary:hover { background: var(--blue-500); border-color: var(--blue-500); color: #fff; box-shadow: var(--shadow-md); transform: translateY(-1px); }
 .site-v2 .btn-outline { background: transparent; color: var(--text-strong); border-color: var(--border-strong); }
 .site-v2 .btn-outline:hover { border-color: var(--navy-700); color: var(--navy-700); background: var(--paper-100); }
 .site-v2 .link-quiet {
@@ -289,7 +289,7 @@ html:has(.site-v2) {
   mix-blend-mode: screen;
 }
 .site-v2 .hero .wrap-wide { position: relative; z-index: 2; max-width: 1040px; }
-.site-v2 .hero .eyebrow { color: var(--orange-300); }
+.site-v2 .hero .eyebrow { color: var(--blue-300); }
 .site-v2 .hero h1 {
   font-family: var(--font-display);
   /* 600 em vez de 800: Spectral ExtraBold fica pesado em tamanho grande */
@@ -319,13 +319,13 @@ html:has(.site-v2) {
   text-transform: uppercase;
   color: var(--navy-200);
 }
-.site-v2 .hero .refs .sep { color: var(--orange-400); }
+.site-v2 .hero .refs .sep { color: var(--blue-400); }
 .site-v2 .hero .cta-row {
   margin-top: var(--space-12);
   display: flex; align-items: center; justify-content: center; gap: var(--space-6); flex-wrap: wrap;
 }
 .site-v2 .hero .link-quiet { color: #fff; text-decoration-color: rgba(255,255,255,0.45); }
-.site-v2 .hero .link-quiet:hover { color: var(--orange-300); text-decoration-color: var(--orange-300); }
+.site-v2 .hero .link-quiet:hover { color: var(--blue-300); text-decoration-color: var(--blue-300); }
 
 /* =========================== FAIXA DE FOTO (full-bleed) =========================== */
 .site-v2 .photo-band {
@@ -414,7 +414,7 @@ html:has(.site-v2) {
   background: var(--dark-surface);
   color: #fff;
 }
-.site-v2 .inverse .eyebrow { color: var(--orange-300); }
+.site-v2 .inverse .eyebrow { color: var(--blue-300); }
 .site-v2 .inverse .section-head { text-align: center; }
 .site-v2 .inverse .section-head h2 { color: #fff; margin: 0 auto; max-width: 22ch; }
 .site-v2 .inverse .title-rule { margin-left: auto; margin-right: auto; }
@@ -442,7 +442,7 @@ html:has(.site-v2) {
   letter-spacing: -0.02em;
   color: #fff;
 }
-.site-v2 .contraste-solo .emphasis .hl { color: var(--orange-300); font-style: italic; }
+.site-v2 .contraste-solo .emphasis .hl { color: var(--blue-300); font-style: italic; }
 
 /* =========================== CREMOS =========================== */
 /* Grade 2 colunas no desktop — compacta a secao sem cortar conteudo */
@@ -716,7 +716,7 @@ html:has(.site-v2) {
   font-size: var(--text-xs);
   letter-spacing: var(--tracking-caps);
   text-transform: uppercase;
-  color: var(--orange-300);
+  color: var(--blue-300);
   margin: 0 0 var(--space-5);
 }
 .site-v2 footer.site p { color: var(--navy-100); margin: 0 0 var(--space-2); }
@@ -725,7 +725,7 @@ html:has(.site-v2) {
   text-decoration: underline; text-decoration-color: var(--navy-400); text-underline-offset: 3px;
   transition: color var(--dur-fast) var(--ease), text-decoration-color var(--dur-fast) var(--ease);
 }
-.site-v2 footer.site a.foot-link:hover { color: #fff; text-decoration-color: var(--orange-300); }
+.site-v2 footer.site a.foot-link:hover { color: #fff; text-decoration-color: var(--blue-300); }
 
 .site-v2 .foot-cols {
   display: grid; grid-template-columns: 1fr 1.7fr; gap: var(--space-16);
@@ -742,12 +742,12 @@ html:has(.site-v2) {
   font-weight: var(--fw-semibold);
   font-size: var(--text-sm);
   color: #fff;
-  text-decoration: underline; text-decoration-color: var(--orange-400); text-underline-offset: 5px;
+  text-decoration: underline; text-decoration-color: var(--blue-400); text-underline-offset: 5px;
   transition: text-decoration-color var(--dur-fast) var(--ease);
 }
-.site-v2 .members-link:hover { color: #fff; text-decoration-color: var(--orange-300); }
+.site-v2 .members-link:hover { color: #fff; text-decoration-color: var(--blue-300); }
 .site-v2 .colofao { font-family: var(--font-mono); font-size: var(--text-xs); letter-spacing: 0.06em; color: var(--navy-300); line-height: 1.8; }
-.site-v2 .colofao .hl { color: var(--orange-300); }
+.site-v2 .colofao .hl { color: var(--blue-300); }
 
 @media (max-width: 820px) {
   .site-v2 .foot-cols { grid-template-columns: 1fr; gap: var(--space-10); }
@@ -801,7 +801,7 @@ html:has(.site-v2) {
   color: var(--navy-700); text-decoration: none; white-space: nowrap;
   transition: color var(--dur-fast) var(--ease);
 }
-.site-v2 .hub-head .aside-link:hover { color: var(--orange-600); }
+.site-v2 .hub-head .aside-link:hover { color: var(--blue-600); }
 .site-v2 .hero-agenda { list-style: none; margin: 0; padding: 0; }
 .site-v2 .ha-item {
   display: flex; flex-direction: column; gap: 2px;
@@ -904,14 +904,14 @@ html:has(.site-v2) {
 .site-v2 .cc-live {
   display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-3);
   font-family: var(--font-body); font-size: var(--text-sm); font-weight: var(--fw-semibold);
-  color: var(--orange-600);
+  color: var(--blue-600);
 }
 .site-v2 .cc-dot {
-  width: 8px; height: 8px; border-radius: 999px; background: var(--orange-500);
+  width: 8px; height: 8px; border-radius: 999px; background: var(--blue-500);
   animation: cc-pulse 1.6s ease-in-out infinite;
 }
 @keyframes cc-pulse {
-  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 color-mix(in srgb, var(--orange-500) 45%, transparent); }
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 color-mix(in srgb, var(--blue-500) 45%, transparent); }
   50% { opacity: 0.75; box-shadow: 0 0 0 6px transparent; }
 }
 .site-v2 .cc-boletim-row { margin-top: var(--space-3); }
@@ -923,7 +923,7 @@ html:has(.site-v2) {
   border-bottom: 1px solid color-mix(in srgb, var(--navy-700) 35%, transparent);
   padding-bottom: 1px; transition: color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
 }
-.site-v2 .cc-boletim:hover { color: var(--orange-600); border-color: var(--orange-500); }
+.site-v2 .cc-boletim:hover { color: var(--blue-600); border-color: var(--blue-500); }
 @media (prefers-reduced-motion: reduce) {
   .site-v2 .cc-num { animation: none; }
   .site-v2 .cc-dot { animation: none; }
