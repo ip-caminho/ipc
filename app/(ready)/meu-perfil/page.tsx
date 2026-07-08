@@ -23,7 +23,7 @@ import { PageHeader } from "@shared/components/layout/PageHeader";
 import { DatePickerField } from "@shared/components/DatePickerField";
 import { toast } from "sonner";
 import Link from "next/link";
-import { MapPin, User, Phone, Save, AlertCircle, CheckCircle2, HeartPulse, Church, ArrowRight, Pencil, X } from "lucide-react";
+import { MapPin, User, Phone, AlertCircle, CheckCircle2, HeartPulse, Church, ArrowRight, Pencil } from "lucide-react";
 import {
   CARGO_ECLESIASTICO_OPTIONS,
   STATUS_COLORS,
@@ -55,6 +55,30 @@ function ReadOnlyField({ label, value, span }: { label: string; value?: string |
     <div className={span === 2 ? "sm:col-span-2" : ""}>
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className="text-sm mt-0.5">{value || <span className="text-muted-foreground italic">—</span>}</p>
+    </div>
+  );
+}
+
+// Botao "Editar" no header de cada secao. So aparece quando a secao nao esta em edicao.
+function SectionEditButton({ editing, onClick }: { editing: boolean; onClick: () => void }) {
+  if (editing) return null;
+  return (
+    <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs text-muted-foreground" onClick={onClick}>
+      <Pencil className="h-3 w-3" /> Editar
+    </Button>
+  );
+}
+
+// Barra local Salvar/Cancelar exibida no rodape do card em modo edicao.
+function EditBar({ onCancel, onSave, saving }: { onCancel: () => void; onSave: () => void; saving: boolean }) {
+  return (
+    <div className="flex justify-end gap-2 pt-3 mt-1 border-t">
+      <Button variant="ghost" size="sm" onClick={onCancel} disabled={saving}>
+        Cancelar
+      </Button>
+      <Button size="sm" onClick={onSave} disabled={saving}>
+        {saving ? "Salvando..." : "Salvar"}
+      </Button>
     </div>
   );
 }
@@ -239,20 +263,9 @@ export default function MeuPerfilPage() {
     datasMembresia.dataBatismo !== (profile.dataBatismo || "") ||
     datasMembresia.dataConversao !== (profile.dataConversao || "");
 
-  const hasChanges =
-    formData.nomeCompleto !== (ent?.nomeCompleto || "") ||
-    formData.apelido !== (ent?.apelido || "") ||
-    formData.cpf !== (ent?.cpf || "") ||
-    formData.estadoCivil !== (ent?.estadoCivil || "") ||
-    formData.nacionalidade !== (ent?.nacionalidade || "") ||
-    formData.telefone !== (ent?.telefone || "") ||
-    formData.email !== (ent?.email || "") ||
-    formData.profissao !== (ent?.profissao || "") ||
-    formData.formacao !== (ent?.formacao || "") ||
-    JSON.stringify(newEndereco) !== JSON.stringify(endereco || {}) ||
-    (hasAnyCE && JSON.stringify(newCE) !== JSON.stringify(contatoEmergencia || {})) ||
-    JSON.stringify([...dadosIncertos].sort()) !== JSON.stringify([...incertosAtual].sort()) ||
-    datasChanged;
+  const incertosChanged =
+    JSON.stringify([...dadosIncertos].sort()) !==
+    JSON.stringify([...incertosAtual].sort());
 
   const handlePhotoChange = async (url: string | null) => {
     try {
@@ -263,68 +276,120 @@ export default function MeuPerfilPage() {
     }
   };
 
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      const data: Record<string, unknown> = {};
-
+  // Monta o patch apenas dos campos da secao editada.
+  const buildSectionData = (section: string): Record<string, unknown> => {
+    const data: Record<string, unknown> = {};
+    if (section === "pessoais") {
       if (formData.nomeCompleto !== (ent?.nomeCompleto || "")) data.nomeCompleto = formData.nomeCompleto;
       if (formData.apelido !== (ent?.apelido || "")) data.apelido = formData.apelido;
       if (formData.cpf !== (ent?.cpf || "")) data.cpf = formData.cpf;
       if (formData.estadoCivil !== (ent?.estadoCivil || "")) data.estadoCivil = formData.estadoCivil || undefined;
       if (formData.nacionalidade !== (ent?.nacionalidade || "")) data.nacionalidade = formData.nacionalidade;
+      if (formData.profissao !== (ent?.profissao || "")) data.profissao = formData.profissao;
+      if (formData.formacao !== (ent?.formacao || "")) data.formacao = formData.formacao || undefined;
+    } else if (section === "contato") {
       if (formData.telefone !== (ent?.telefone || "")) data.telefone = formData.telefone;
       if (formData.email !== (ent?.email || "")) data.email = formData.email;
-      if (formData.profissao !== (ent?.profissao || "")) data.profissao = formData.profissao;
-      if (formData.formacao !== (ent?.formacao || "")) {
-        data.formacao = formData.formacao || undefined;
-      }
-      if (JSON.stringify(newEndereco) !== JSON.stringify(endereco || {})) {
-        data.endereco = newEndereco;
-      }
+    } else if (section === "emergencia") {
       if (hasAnyCE && JSON.stringify(newCE) !== JSON.stringify(contatoEmergencia || {})) {
         data.contatoEmergencia = newCE;
       }
-      if (
-        JSON.stringify([...dadosIncertos].sort()) !==
-        JSON.stringify([...incertosAtual].sort())
-      ) {
-        data.dadosIncertos = dadosIncertos;
+    } else if (section === "endereco") {
+      if (JSON.stringify(newEndereco) !== JSON.stringify(endereco || {})) {
+        data.endereco = newEndereco;
       }
+    }
+    return data;
+  };
 
-      const hasFieldChanges = Object.keys(data).length > 0;
-      if (!hasFieldChanges && !datasChanged) {
-        toast.info("Nenhuma alteracao nos dados pessoais (familia e foto sao salvas automaticamente)");
-        return;
-      }
-
-      if (hasFieldChanges) {
+  const handleSaveSection = async (section: string) => {
+    setSaving(true);
+    try {
+      if (section === "membresia") {
+        if (!datasChanged && !incertosChanged) {
+          toast.info("Nenhuma alteracao");
+          setEditingSection(null);
+          return;
+        }
+        if (incertosChanged) {
+          await updateProfile({ data: { dadosIncertos } });
+        }
+        if (datasChanged) {
+          await updateMembresiaDatas({
+            dataMembresia:
+              datasMembresia.dataMembresia !== (profile.dataMembresia || "")
+                ? datasMembresia.dataMembresia || null
+                : undefined,
+            dataBatismo:
+              datasMembresia.dataBatismo !== (profile.dataBatismo || "")
+                ? datasMembresia.dataBatismo || null
+                : undefined,
+            dataConversao:
+              datasMembresia.dataConversao !== (profile.dataConversao || "")
+                ? datasMembresia.dataConversao || null
+                : undefined,
+          });
+        }
+      } else {
+        const data = buildSectionData(section);
+        if (Object.keys(data).length === 0) {
+          toast.info("Nenhuma alteracao");
+          setEditingSection(null);
+          return;
+        }
         await updateProfile({ data });
       }
-
-      if (datasChanged) {
-        await updateMembresiaDatas({
-          dataMembresia:
-            datasMembresia.dataMembresia !== (profile.dataMembresia || "")
-              ? datasMembresia.dataMembresia || null
-              : undefined,
-          dataBatismo:
-            datasMembresia.dataBatismo !== (profile.dataBatismo || "")
-              ? datasMembresia.dataBatismo || null
-              : undefined,
-          dataConversao:
-            datasMembresia.dataConversao !== (profile.dataConversao || "")
-              ? datasMembresia.dataConversao || null
-              : undefined,
-        });
-      }
-
-      toast.success("Perfil atualizado");
+      toast.success("Alteracoes salvas");
+      setEditingSection(null);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao atualizar perfil");
+      toast.error(error instanceof Error ? error.message : "Erro ao salvar");
     } finally {
       setSaving(false);
     }
+  };
+
+  // Cancela a edicao revertendo apenas os campos da secao aos valores atuais.
+  const handleCancelSection = (section: string) => {
+    if (section === "pessoais") {
+      setFormData((p) => ({
+        ...p,
+        nomeCompleto: ent?.nomeCompleto || "",
+        apelido: ent?.apelido || "",
+        cpf: ent?.cpf || "",
+        estadoCivil: ent?.estadoCivil || "",
+        nacionalidade: ent?.nacionalidade || "",
+        profissao: ent?.profissao || "",
+        formacao: ent?.formacao || "",
+      }));
+    } else if (section === "contato") {
+      setFormData((p) => ({ ...p, telefone: ent?.telefone || "", email: ent?.email || "" }));
+    } else if (section === "emergencia") {
+      setFormData((p) => ({
+        ...p,
+        contatoEmergenciaNome: contatoEmergencia?.nome || "",
+        contatoEmergenciaTelefone: contatoEmergencia?.telefone || "",
+        contatoEmergenciaParentesco: contatoEmergencia?.parentesco || "",
+      }));
+    } else if (section === "endereco") {
+      setFormData((p) => ({
+        ...p,
+        logradouro: endereco?.logradouro || "",
+        numero: endereco?.numero || "",
+        complemento: endereco?.complemento || "",
+        bairro: endereco?.bairro || "",
+        cidade: endereco?.cidade || "",
+        estado: endereco?.estado || "",
+        cep: endereco?.cep || "",
+      }));
+    } else if (section === "membresia") {
+      setDatasMembresia({
+        dataMembresia: profile.dataMembresia || "",
+        dataBatismo: profile.dataBatismo || "",
+        dataConversao: profile.dataConversao || "",
+      });
+      setDadosIncertos(incertosAtual);
+    }
+    setEditingSection(null);
   };
 
   const handleConfirm = async () => {
@@ -426,14 +491,7 @@ export default function MeuPerfilPage() {
           <CardTitle className="text-sm text-muted-foreground flex items-center gap-1.5">
             <User className="h-3.5 w-3.5" /> Dados pessoais
           </CardTitle>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7"
-            onClick={() => setEditingSection(editingSection === "pessoais" ? null : "pessoais")}
-          >
-            {editingSection === "pessoais" ? <X className="h-3.5 w-3.5" /> : <Pencil className="h-3.5 w-3.5" />}
-          </Button>
+          <SectionEditButton editing={editingSection === "pessoais"} onClick={() => setEditingSection("pessoais")} />
         </CardHeader>
         <CardContent className="space-y-3">
           {editingSection === "pessoais" ? (
@@ -524,6 +582,13 @@ export default function MeuPerfilPage() {
             <ReadOnlyField label="Nacionalidade" value={ent?.nacionalidade} />
           </div>
           )}
+          {editingSection === "pessoais" && (
+            <EditBar
+              saving={saving}
+              onCancel={() => handleCancelSection("pessoais")}
+              onSave={() => handleSaveSection("pessoais")}
+            />
+          )}
         </CardContent>
       </Card>
 
@@ -533,9 +598,7 @@ export default function MeuPerfilPage() {
           <CardTitle className="text-sm text-muted-foreground flex items-center gap-1.5">
             <Phone className="h-3.5 w-3.5" /> Contato
           </CardTitle>
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingSection(editingSection === "contato" ? null : "contato")}>
-            {editingSection === "contato" ? <X className="h-3.5 w-3.5" /> : <Pencil className="h-3.5 w-3.5" />}
-          </Button>
+          <SectionEditButton editing={editingSection === "contato"} onClick={() => setEditingSection("contato")} />
         </CardHeader>
         <CardContent className="space-y-3">
           {editingSection === "contato" ? (
@@ -558,6 +621,13 @@ export default function MeuPerfilPage() {
             <ReadOnlyField label="Email" value={ent?.email} />
           </div>
           )}
+          {editingSection === "contato" && (
+            <EditBar
+              saving={saving}
+              onCancel={() => handleCancelSection("contato")}
+              onSave={() => handleSaveSection("contato")}
+            />
+          )}
         </CardContent>
       </Card>
 
@@ -567,9 +637,7 @@ export default function MeuPerfilPage() {
           <CardTitle className="text-sm text-muted-foreground flex items-center gap-1.5">
             <HeartPulse className="h-3.5 w-3.5" /> Contato de emergencia
           </CardTitle>
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingSection(editingSection === "emergencia" ? null : "emergencia")}>
-            {editingSection === "emergencia" ? <X className="h-3.5 w-3.5" /> : <Pencil className="h-3.5 w-3.5" />}
-          </Button>
+          <SectionEditButton editing={editingSection === "emergencia"} onClick={() => setEditingSection("emergencia")} />
         </CardHeader>
         <CardContent className="space-y-3">
           {editingSection === "emergencia" ? (
@@ -594,6 +662,13 @@ export default function MeuPerfilPage() {
             <ReadOnlyField label="Parentesco" value={(contatoEmergencia as { parentesco?: string })?.parentesco} />
           </div>
           )}
+          {editingSection === "emergencia" && (
+            <EditBar
+              saving={saving}
+              onCancel={() => handleCancelSection("emergencia")}
+              onSave={() => handleSaveSection("emergencia")}
+            />
+          )}
         </CardContent>
       </Card>
 
@@ -603,9 +678,7 @@ export default function MeuPerfilPage() {
           <CardTitle className="text-sm text-muted-foreground flex items-center gap-1.5">
             <MapPin className="h-3.5 w-3.5" /> Endereco
           </CardTitle>
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingSection(editingSection === "endereco" ? null : "endereco")}>
-            {editingSection === "endereco" ? <X className="h-3.5 w-3.5" /> : <Pencil className="h-3.5 w-3.5" />}
-          </Button>
+          <SectionEditButton editing={editingSection === "endereco"} onClick={() => setEditingSection("endereco")} />
         </CardHeader>
         <CardContent className="space-y-3">
           {editingSection === "endereco" ? (
@@ -650,15 +723,23 @@ export default function MeuPerfilPage() {
             <ReadOnlyField label="CEP" value={endereco?.cep} />
           </div>
           )}
+          {editingSection === "endereco" && (
+            <EditBar
+              saving={saving}
+              onCancel={() => handleCancelSection("endereco")}
+              onSave={() => handleSaveSection("endereco")}
+            />
+          )}
         </CardContent>
       </Card>
 
       {/* Membresia */}
       <Card>
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-3 flex-row items-center justify-between">
           <CardTitle className="text-sm text-muted-foreground flex items-center gap-1.5">
             <Church className="h-3.5 w-3.5" /> Vida na igreja
           </CardTitle>
+          <SectionEditButton editing={editingSection === "membresia"} onClick={() => setEditingSection("membresia")} />
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-2 text-sm">
@@ -689,6 +770,8 @@ export default function MeuPerfilPage() {
             </div>
           </div>
 
+          {editingSection === "membresia" ? (
+          <>
           <div className="grid gap-3 sm:grid-cols-2 pt-2 border-t">
             <DataSacramentalRow
               label="Data de conversao"
@@ -736,6 +819,32 @@ export default function MeuPerfilPage() {
             Voce pode editar suas datas sacramentais. A secretaria vai confirmar com
             o livro de registros depois.
           </p>
+          <EditBar
+            saving={saving}
+            onCancel={() => handleCancelSection("membresia")}
+            onSave={() => handleSaveSection("membresia")}
+          />
+          </>
+          ) : (
+          <div className="grid gap-3 sm:grid-cols-2 pt-2 border-t">
+            <ReadOnlyField
+              label="Data de conversao"
+              value={
+                dadosIncertos.includes("dataConversao")
+                  ? "Aguardando secretaria"
+                  : profile.dataConversao?.split("-").reverse().join("/")
+              }
+            />
+            <ReadOnlyField
+              label="Data de batismo"
+              value={
+                dadosIncertos.includes("dataBatismo")
+                  ? "Aguardando secretaria"
+                  : profile.dataBatismo?.split("-").reverse().join("/")
+              }
+            />
+          </div>
+          )}
         </CardContent>
       </Card>
 
@@ -743,7 +852,7 @@ export default function MeuPerfilPage() {
       <FamiliaSection />
 
       {/* Acoes */}
-      <div className="pb-24 md:pb-4 grid gap-2 sm:grid-cols-2">
+      <div className="pb-24 md:pb-4">
         <Button
           onClick={handleConfirm}
           disabled={confirming || saving}
@@ -753,17 +862,9 @@ export default function MeuPerfilPage() {
           <CheckCircle2 className="h-4 w-4 mr-1" />
           {confirming ? "Confirmando..." : "Meus dados estao corretos"}
         </Button>
-        <Button
-          onClick={handleSave}
-          disabled={saving || confirming || !hasChanges}
-          className="w-full"
-        >
-          <Save className="h-4 w-4 mr-1" />
-          {saving ? "Salvando..." : "Salvar alteracoes"}
-        </Button>
       </div>
       <p className="text-[11px] text-muted-foreground text-center pb-4">
-        Foto e familia sao salvas automaticamente.
+        Cada secao e salva ao clicar em Salvar. Foto e familia sao salvas automaticamente.
       </p>
     </div>
     </HeaderLayout>
