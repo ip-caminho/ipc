@@ -99,7 +99,7 @@ function Erro({ msg }: { msg?: string }) {
 function Etapa({ n, titulo, hint }: { n: number; titulo: string; hint?: string }) {
   return (
     <div className="flex items-baseline gap-3 border-b border-[#E5E3DC] pb-2">
-      <span className={`${FONT_DISPLAY} text-[20px] leading-none text-[#F0732B]`}>{n}</span>
+      <span className={`${FONT_DISPLAY} text-[20px] leading-none text-[#2563EB]`}>{n}</span>
       <h2 className={`${FONT_DISPLAY} text-[19px] leading-tight ${COR_TEXTO}`}>{titulo}</h2>
       {hint && <span className={`${FONT_BODY} ml-auto text-[12px] ${COR_MUTED}`}>{hint}</span>}
     </div>
@@ -182,7 +182,7 @@ function LinkComprovante({ token }: { token: string }) {
   return (
     <div className={`mx-auto mt-6 max-w-[46ch] border ${BORDA} bg-[#F4F0E8] p-4 text-center`}>
       <p className={`flex items-center justify-center gap-1.5 ${FONT_BODY} text-[13px] font-semibold ${COR_TEXTO}`}>
-        <Receipt className="h-4 w-4 text-[#F0732B]" /> Enviar comprovante de pagamento
+        <Receipt className="h-4 w-4 text-[#2563EB]" /> Enviar comprovante de pagamento
       </p>
       <p className={`${FONT_BODY} mt-1 text-[12px] leading-[1.5] ${COR_MUTED}`}>
         Guarde este link. Ao pagar (ou cada parcela), envie o comprovante por aqui — a
@@ -419,7 +419,7 @@ export function RetiroForm({
           onClick={preencherComFamilia}
           className={`h-12 w-full border ${BORDA} ${FONT_BODY} text-[14px] ${COR_TEXTO} hover:bg-[#F4F0E8]`}
         >
-          <UserRound className="mr-2 h-4 w-4 text-[#F0732B]" />
+          <UserRound className="mr-2 h-4 w-4 text-[#2563EB]" />
           Preencher com minha família ({familia.participantes.length})
         </Button>
       ) : null}
@@ -457,7 +457,7 @@ export function RetiroForm({
                   <p className={`${FONT_BODY} text-[11px] font-semibold uppercase tracking-[0.08em] ${COR_MUTED}`}>
                     Participante {i + 1}
                     {idade !== null && (
-                      <span className="ml-2 normal-case tracking-normal text-[#F0732B]">
+                      <span className="ml-2 normal-case tracking-normal text-[#2563EB]">
                         {idade} {idade === 1 ? "ano" : "anos"}
                       </span>
                     )}
@@ -521,7 +521,7 @@ export function RetiroForm({
           disabled={fields.length >= 10}
           className={`flex min-h-[48px] w-full items-center justify-center gap-2 border border-dashed ${BORDA} ${FONT_BODY} text-[13px] font-semibold ${COR_TEXTO} transition-colors hover:bg-[#F4F0E8] disabled:opacity-40`}
         >
-          <Plus className="h-4 w-4 text-[#F0732B]" /> Adicionar participante
+          <Plus className="h-4 w-4 text-[#2563EB]" /> Adicionar participante
         </button>
       </div>
 
@@ -734,7 +734,7 @@ export function RetiroForm({
         <Button
           type="submit"
           disabled={status === "submitting"}
-          className={`h-12 w-full bg-[#F0732B] ${FONT_BODY} text-[15px] font-semibold text-white hover:bg-[#DE5F18]`}
+          className={`h-12 w-full bg-[#2563EB] ${FONT_BODY} text-[15px] font-semibold text-white hover:bg-[#1D4ED8]`}
         >
           {status === "submitting" && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Enviar inscrição{temTotal ? ` — ${brl(resumo.total)}` : ""}
@@ -755,7 +755,7 @@ export function RetiroForm({
             <Button
               type="submit"
               disabled={status === "submitting"}
-              className={`h-12 flex-1 bg-[#F0732B] ${FONT_BODY} text-[15px] font-semibold text-white hover:bg-[#DE5F18]`}
+              className={`h-12 flex-1 bg-[#2563EB] ${FONT_BODY} text-[15px] font-semibold text-white hover:bg-[#1D4ED8]`}
             >
               {status === "submitting" && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Enviar inscrição

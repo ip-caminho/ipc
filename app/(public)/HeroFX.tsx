@@ -14,7 +14,7 @@ type Ember = {
   color: string;
 };
 
-const CORES = ["#F0732B", "#F49B5C", "#FBD9BF", "#DE5F18"];
+const CORES = ["#2563EB", "#93C5FD", "#DBEAFE", "#1D4ED8"];
 
 // Brasas flutuantes + parallax do fundo do hero.
 // Canvas com rAF; pausa quando o hero sai da viewport ou a aba fica oculta;
