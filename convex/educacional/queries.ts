@@ -210,9 +210,21 @@ export const listRelatorios = query({
           .query("eduPresencas")
           .withIndex("by_relatorio", (q) => q.eq("relatorioId", rel._id))
           .collect();
+
+        // Rotulo da equipe: nomes dos voluntarios (fonte estruturada) ou o
+        // texto livre `professores` (legado / tela de presenca).
+        let equipeLabel = rel.professores || "";
+        if (rel.voluntarios && rel.voluntarios.length > 0) {
+          const nomes = await Promise.all(
+            rel.voluntarios.map((vol) => resolveMembroNome(ctx, vol.membroId))
+          );
+          equipeLabel = nomes.filter(Boolean).join(", ");
+        }
+
         return {
           ...rel,
           totalPresentes: presencas.length,
+          equipeLabel,
         };
       })
     );
@@ -243,10 +255,53 @@ export const getRelatorio = query({
       })
     );
 
+    // Voluntarios que serviram, com nome resolvido.
+    const voluntarios = relatorio.voluntarios
+      ? await Promise.all(
+          relatorio.voluntarios.map(async (vol) => ({
+            membroId: vol.membroId,
+            papel: vol.papel,
+            nome: await resolveMembroNome(ctx, vol.membroId),
+          }))
+        )
+      : [];
+
     return {
       ...relatorio,
+      voluntarios,
       presentes,
     };
+  },
+});
+
+// Sugestao de voluntarios para o relatorio: puxa a escala do dia da turma
+// (subgrupo == turma) e resolve o papelEdu de cada um pelo cadastro de
+// voluntarios do educacional. Usado pelo botao "Preencher pela escala".
+export const sugestaoVoluntariosRelatorio = query({
+  args: { turma: v.string(), data: v.string() },
+  handler: async (ctx, { turma, data }) => {
+    const auth = await getAuthContext(ctx);
+    if (!auth || !auth.can("educacional:read")) return [];
+
+    const escalas = await ctx.db
+      .query("ministerioEscalas")
+      .withIndex("by_data", (q) => q.eq("data", data))
+      .collect();
+    const escala = escalas.find((e) => e.subgrupo === turma);
+    if (!escala) return [];
+
+    const voluntarios = await ctx.db.query("eduVoluntarios").collect();
+    const papelPorMembro = new Map(
+      voluntarios.map((v) => [String(v.membroId), v.papelEdu])
+    );
+
+    return Promise.all(
+      escala.membros.map(async (m) => ({
+        membroId: m.membroId,
+        nome: await resolveMembroNome(ctx, m.membroId),
+        papel: papelPorMembro.get(String(m.membroId)) || "APOIO",
+      }))
+    );
   },
 });
 

@@ -715,7 +715,18 @@ export default defineSchema({
   eduRelatorios: defineTable({
     turma: v.string(),
     data: v.string(), // YYYY-MM-DD
-    professores: v.string(), // texto livre: "Ana, Bruno"
+    // Legado / preenchido rapido pela tela de presenca. A fonte estruturada de
+    // quem serviu e `voluntarios` (abaixo); professores string e fallback.
+    professores: v.optional(v.string()),
+    // Voluntarios que serviram no dia (fonte estruturada, do RelatorioForm).
+    voluntarios: v.optional(
+      v.array(
+        v.object({
+          membroId: v.id("membros"),
+          papel: v.string(), // PROFESSOR | AUXILIAR | APOIO
+        })
+      )
+    ),
     observacoes: v.optional(v.string()), // observacoes e sugestoes internas
     numero: v.optional(v.number()), // numero da licao
     tema: v.optional(v.string()),

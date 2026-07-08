@@ -345,13 +345,20 @@ export const removeVoluntario = mutation({
 
 // ===== Relatorios =====
 
+// Upsert do relatorio da lição por turma+data. Dois fluxos escrevem aqui sem
+// colidir: a tela de presenca (professores string + presentes) e o
+// RelatorioForm (voluntarios + conteudo pedagogico). Cada chamada atualiza
+// apenas os campos que fornece; presencas so sao tocadas quando `presentes` vem.
 export const createRelatorio = mutation({
   args: {
     turma: v.string(),
     data: v.string(),
-    professores: v.string(),
+    professores: v.optional(v.string()),
+    voluntarios: v.optional(
+      v.array(v.object({ membroId: v.id("membros"), papel: v.string() }))
+    ),
     observacoes: v.optional(v.string()),
-    presentes: v.array(v.id("entidades")),
+    presentes: v.optional(v.array(v.id("entidades"))),
     numero: v.optional(v.number()),
     tema: v.optional(v.string()),
     textosBase: v.optional(v.array(v.string())),
@@ -364,30 +371,46 @@ export const createRelatorio = mutation({
   handler: async (ctx, args) => {
     await requirePermission(ctx, "educacional:write");
 
-    // Verificar unicidade turma+data
-    const existing = await ctx.db
-      .query("eduRelatorios")
-      .withIndex("by_turma_data", (q) =>
-        q.eq("turma", args.turma).eq("data", args.data)
-      )
-      .first();
-    if (existing) throw new Error("Ja existe relatorio para esta turma e data");
+    const { presentes, turma, data, ...conteudo } = args;
 
-    const { presentes, ...relatorioFields } = args;
-    const relatorioId = await ctx.db.insert("eduRelatorios", {
-      ...relatorioFields,
-      criadoEm: Date.now(),
-    });
-
-    // Inserir presencas
-    for (const entidadeId of args.presentes) {
-      await ctx.db.insert("eduPresencas", {
-        relatorioId,
-        criancaEntidadeId: entidadeId,
-      });
+    // So os campos efetivamente fornecidos (upsert nao apaga o resto).
+    const campos: Record<string, any> = {};
+    for (const [k, val] of Object.entries(conteudo)) {
+      if (val !== undefined) campos[k] = val;
     }
 
-    await createActionAuditLog(ctx, "CREATE", "eduRelatorios", relatorioId);
+    const existing = await ctx.db
+      .query("eduRelatorios")
+      .withIndex("by_turma_data", (q) => q.eq("turma", turma).eq("data", data))
+      .first();
+
+    let relatorioId;
+    if (existing) {
+      if (Object.keys(campos).length > 0) await ctx.db.patch(existing._id, campos);
+      relatorioId = existing._id;
+      await createActionAuditLog(ctx, "UPDATE", "eduRelatorios", relatorioId);
+    } else {
+      relatorioId = await ctx.db.insert("eduRelatorios", {
+        turma,
+        data,
+        ...campos,
+        criadoEm: Date.now(),
+      });
+      await createActionAuditLog(ctx, "CREATE", "eduRelatorios", relatorioId);
+    }
+
+    // Presencas: substitui as do relatorio apenas quando `presentes` e enviado.
+    if (presentes !== undefined) {
+      const antigas = await ctx.db
+        .query("eduPresencas")
+        .withIndex("by_relatorio", (q) => q.eq("relatorioId", relatorioId))
+        .collect();
+      for (const p of antigas) await ctx.db.delete(p._id);
+      for (const entidadeId of presentes) {
+        await ctx.db.insert("eduPresencas", { relatorioId, criancaEntidadeId: entidadeId });
+      }
+    }
+
     return relatorioId;
   },
 });

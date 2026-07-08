@@ -640,6 +640,8 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "educacional.queries.listVoluntarios",
       "educacional.queries.listMembrosParaVoluntario",
       "educacional.queries.listAgendaEducacional",
+      "educacional.queries.getRelatorio",
+      "educacional.queries.sugestaoVoluntariosRelatorio",
     ],
     mutations: [
       "educacional.mutations.createCrianca",
@@ -668,7 +670,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "6 tabs: Turmas (default), Aniversarios, Voluntarios, Agenda, Escala, Relatorios",
       "Agenda: eventos do ministerio Educacional (proximos/historico), desacoplada de calendario:read; link p/ calendario geral",
       "Voluntarios: papel (Prof/Aux/Apoio), turmas habilitadas, CBCM, validade+certificado CAC (upload B2). Voluntario = membro",
-      "Relatorio = registro de licao: numero, tema, textos-base, passagem p/ memorizar, historia, aplicacao, licao de casa, visitantes + presenca. Clique no card abre RelatorioDetalhe",
+      "Relatorio = registro de licao: numero, tema, textos-base, passagem p/ memorizar, historia, aplicacao, licao de casa, visitantes + voluntarios que serviram (do cadastro, agrupados por papel; botao 'Preencher pela escala' via sugestaoVoluntariosRelatorio). Presenca fica na tela dedicada. createRelatorio e upsert por turma+data (presenca e RelatorioForm gravam sem colidir). Clique no card abre RelatorioDetalhe",
       "Filtro por turma, grid de CriancaCards",
       "Click no card abre CriancaDetalhe inline",
       "Obs medicas so visivel com criancas:manage (LGPD)",

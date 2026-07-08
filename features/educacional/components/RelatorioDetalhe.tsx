@@ -19,6 +19,12 @@ interface RelatorioDetalheProps {
   onOpenChange: (open: boolean) => void;
 }
 
+const PAPEL_LABEL: Record<string, string> = {
+  PROFESSOR: "Professor",
+  AUXILIAR: "Auxiliar",
+  APOIO: "Apoio",
+};
+
 function Campo({ label, valor }: { label: string; valor?: string }) {
   if (!valor) return null;
   return (
@@ -68,7 +74,16 @@ export function RelatorioDetalhe({ id, onOpenChange }: RelatorioDetalheProps) {
               <Campo label="Historia" valor={relatorio.historia} />
               <Campo label="Aplicacao" valor={relatorio.aplicacao} />
               <Campo label="Licao de casa" valor={relatorio.licaoDeCasa} />
-              <Campo label="Professores" valor={relatorio.professores} />
+              {relatorio.voluntarios.length > 0 ? (
+                <Campo
+                  label="Voluntarios"
+                  valor={relatorio.voluntarios
+                    .map((v) => `${v.nome}${PAPEL_LABEL[v.papel] ? ` (${PAPEL_LABEL[v.papel]})` : ""}`)
+                    .join("\n")}
+                />
+              ) : (
+                <Campo label="Professores" valor={relatorio.professores} />
+              )}
               {relatorio.visitantes && relatorio.visitantes.length > 0 && (
                 <Campo label="Visitantes" valor={relatorio.visitantes.join("\n")} />
               )}

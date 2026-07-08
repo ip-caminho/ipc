@@ -19,6 +19,8 @@ import { Label } from "@/shared/components/ui/label";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { Separator } from "@/shared/components/ui/separator";
+import { Wand2 } from "lucide-react";
+import { toast } from "sonner";
 import {
   Select,
   SelectContent,
@@ -35,6 +37,13 @@ interface RelatorioFormProps {
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: RelatorioFormValues) => Promise<void>;
 }
+
+// Agrupamento do picker de voluntarios pelos 3 papeis do educacional.
+const PAPEL_GRUPOS = [
+  { papel: "PROFESSOR", label: "Professores" },
+  { papel: "AUXILIAR", label: "Auxiliares" },
+  { papel: "APOIO", label: "Apoio" },
+] as const;
 
 function SecTitle({ children }: { children: React.ReactNode }) {
   return (
@@ -55,8 +64,7 @@ export function RelatorioForm({ open, onOpenChange, onSubmit }: RelatorioFormPro
     defaultValues: {
       turma: "",
       data: new Date().toISOString().slice(0, 10),
-      professores: "",
-      presentes: [],
+      voluntarios: [],
       numero: "",
       tema: "",
       textosBaseText: "",
@@ -69,11 +77,16 @@ export function RelatorioForm({ open, onOpenChange, onSubmit }: RelatorioFormPro
   });
 
   const turmaSelecionada = form.watch("turma");
-  const presentes = form.watch("presentes");
+  const dataSelecionada = form.watch("data");
+  const voluntarios = form.watch("voluntarios");
 
-  // Buscar criancas da turma selecionada
+  // Voluntarios do educacional habilitados na turma selecionada.
   // @ts-ignore Convex TS2589
-  const criancas = useQuery(api.educacional.queries.listCriancas, turmaSelecionada ? { turma: turmaSelecionada } : "skip");
+  const voluntariosDisponiveis = useQuery(api.educacional.queries.listVoluntarios, turmaSelecionada ? { turma: turmaSelecionada } : "skip");
+
+  // Escala do dia para pre-preencher quem serviu.
+  // @ts-ignore Convex TS2589
+  const sugestao = useQuery(api.educacional.queries.sugestaoVoluntariosRelatorio, turmaSelecionada && dataSelecionada ? { turma: turmaSelecionada, data: dataSelecionada } : "skip");
 
   const handleSubmit = async (data: RelatorioFormValues) => {
     setLoading(true);
@@ -86,12 +99,44 @@ export function RelatorioForm({ open, onOpenChange, onSubmit }: RelatorioFormPro
     }
   };
 
-  const togglePresente = (entidadeId: string) => {
-    const current = form.getValues("presentes");
-    if (current.includes(entidadeId)) {
-      form.setValue("presentes", current.filter((id) => id !== entidadeId));
+  const isSelecionado = (membroId: string) =>
+    voluntarios.some((v) => v.membroId === membroId);
+
+  const toggleVoluntario = (membroId: string, papel: string) => {
+    const current = form.getValues("voluntarios");
+    if (current.some((v) => v.membroId === membroId)) {
+      form.setValue(
+        "voluntarios",
+        current.filter((v) => v.membroId !== membroId)
+      );
     } else {
-      form.setValue("presentes", [...current, entidadeId]);
+      form.setValue("voluntarios", [...current, { membroId, papel }]);
+    }
+  };
+
+  // Pre-preenche a partir da escala do dia — marca os escalados que sao
+  // voluntarios cadastrados na turma (fonte selecionavel).
+  const preencherPelaEscala = () => {
+    if (!sugestao || !voluntariosDisponiveis) return;
+    const disponiveisIds = new Set(
+      voluntariosDisponiveis.map((v: any) => String(v.membroId))
+    );
+    const novos = sugestao
+      .filter((s: any) => disponiveisIds.has(String(s.membroId)))
+      .map((s: any) => ({ membroId: String(s.membroId), papel: s.papel }));
+
+    if (sugestao.length === 0) {
+      toast.info("Sem escala cadastrada para esta turma e data");
+      return;
+    }
+    form.setValue("voluntarios", novos);
+    const faltantes = sugestao.length - novos.length;
+    if (novos.length === 0) {
+      toast.info("Nenhum escalado consta no cadastro de voluntarios desta turma");
+    } else if (faltantes > 0) {
+      toast.info(
+        `${novos.length} preenchido(s); ${faltantes} escalado(s) fora do cadastro de voluntarios`
+      );
     }
   };
 
@@ -111,7 +156,7 @@ export function RelatorioForm({ open, onOpenChange, onSubmit }: RelatorioFormPro
                 value={turmaSelecionada}
                 onValueChange={(v) => {
                   form.setValue("turma", v);
-                  form.setValue("presentes", []);
+                  form.setValue("voluntarios", []);
                 }}
               >
                 <SelectTrigger>
@@ -138,19 +183,66 @@ export function RelatorioForm({ open, onOpenChange, onSubmit }: RelatorioFormPro
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label>Professores *</Label>
-              <Input {...form.register("professores")} placeholder="Ana, Bruno" />
-              {form.formState.errors.professores && (
-                <p className="text-xs text-destructive">{form.formState.errors.professores.message}</p>
+          <div className="space-y-1">
+            <Label>Numero da licao</Label>
+            <Input type="number" {...form.register("numero")} placeholder="Ex: 12" />
+          </div>
+
+          {/* Voluntarios que serviram — puxados do cadastro do educacional */}
+          {turmaSelecionada && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <Label>Voluntarios ({voluntarios.length})</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={preencherPelaEscala}
+                  disabled={!sugestao || !voluntariosDisponiveis}
+                >
+                  <Wand2 className="h-3.5 w-3.5 mr-1" />
+                  Preencher pela escala
+                </Button>
+              </div>
+              {!voluntariosDisponiveis ? (
+                <p className="text-sm text-muted-foreground">Carregando...</p>
+              ) : voluntariosDisponiveis.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  Nenhum voluntario cadastrado nesta turma
+                </p>
+              ) : (
+                <div className="space-y-3 max-h-56 overflow-y-auto border rounded-md p-2">
+                  {PAPEL_GRUPOS.map((grupo) => {
+                    const doGrupo = voluntariosDisponiveis.filter(
+                      (v: any) => v.papelEdu === grupo.papel
+                    );
+                    if (doGrupo.length === 0) return null;
+                    return (
+                      <div key={grupo.papel} className="space-y-1">
+                        <p className="text-xs font-medium text-muted-foreground">
+                          {grupo.label}
+                        </p>
+                        {doGrupo.map((v: any) => (
+                          <label
+                            key={String(v.membroId)}
+                            className="flex items-center gap-2 text-sm cursor-pointer hover:bg-muted/50 rounded px-1 py-0.5"
+                          >
+                            <Checkbox
+                              checked={isSelecionado(String(v.membroId))}
+                              onCheckedChange={() =>
+                                toggleVoluntario(String(v.membroId), grupo.papel)
+                              }
+                            />
+                            {v.nome}
+                          </label>
+                        ))}
+                      </div>
+                    );
+                  })}
+                </div>
               )}
             </div>
-            <div className="space-y-1">
-              <Label>Numero da licao</Label>
-              <Input type="number" {...form.register("numero")} placeholder="Ex: 12" />
-            </div>
-          </div>
+          )}
 
           <SecTitle>Conteudo da licao</SecTitle>
           <div className="space-y-1">
@@ -197,34 +289,6 @@ export function RelatorioForm({ open, onOpenChange, onSubmit }: RelatorioFormPro
             <Label>Observacoes e sugestoes internas</Label>
             <Textarea {...form.register("observacoes")} rows={2} />
           </div>
-
-          {/* Lista de criancas para presenca */}
-          {turmaSelecionada && (
-            <div className="space-y-2">
-              <Label>Presenca ({presentes.length} presente{presentes.length !== 1 ? "s" : ""})</Label>
-              {!criancas ? (
-                <p className="text-sm text-muted-foreground">Carregando...</p>
-              ) : criancas.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Nenhuma crianca nesta turma</p>
-              ) : (
-                <div className="space-y-1.5 max-h-48 overflow-y-auto border rounded-md p-2">
-                  {criancas.map((c: any) => (
-                    <label
-                      key={c.entidadeId}
-                      className="flex items-center gap-2 text-sm cursor-pointer hover:bg-muted/50 rounded px-1 py-0.5"
-                    >
-                      <Checkbox
-                        checked={presentes.includes(c.entidadeId)}
-                        onCheckedChange={() => togglePresente(c.entidadeId)}
-                      />
-                      {c.nome}
-                    </label>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
         </ResponsiveDialogBody>
         <ResponsiveDialogFooter>
           <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>
