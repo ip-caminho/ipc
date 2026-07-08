@@ -140,7 +140,7 @@ function Conteudo({ retiroId }: { retiroId: Id<"retiros"> }) {
       {consolidado && <FundoEventoCard retiroId={retiroId} resumo={consolidado} />}
 
       {resumo && resumo.semMatching > 0 && (
-        <p className="text-xs text-amber-700">
+        <p className="text-xs text-yellow-700">
           {resumo.semMatching} participante(s) ainda sem vínculo com a base de membros.
         </p>
       )}
@@ -197,7 +197,7 @@ function Conteudo({ retiroId }: { retiroId: Id<"retiros"> }) {
                     <TableCell>
                       {i.participantesQtd}
                       {i.semMatching > 0 && i.status !== "CANCELADA" && (
-                        <span className="ml-1 text-xs text-amber-700">({i.semMatching} s/ vínculo)</span>
+                        <span className="ml-1 text-xs text-yellow-700">({i.semMatching} s/ vínculo)</span>
                       )}
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">

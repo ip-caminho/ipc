@@ -115,7 +115,7 @@ export function MembrosTable({ membros }: Props) {
                     m.percentage === 100
                       ? "border-emerald-300 text-emerald-700 dark:text-emerald-400"
                       : m.percentage >= 50
-                        ? "border-amber-300 text-amber-700 dark:text-amber-400"
+                        ? "border-yellow-300 text-yellow-700 dark:text-yellow-400"
                         : "border-red-300 text-red-700 dark:text-red-400"
                   )}
                 >
@@ -129,7 +129,7 @@ export function MembrosTable({ membros }: Props) {
                   m.percentage === 100
                     ? "[&_[data-slot=progress-indicator]]:bg-emerald-500"
                     : m.percentage >= 50
-                      ? "[&_[data-slot=progress-indicator]]:bg-amber-500"
+                      ? "[&_[data-slot=progress-indicator]]:bg-yellow-500"
                       : "[&_[data-slot=progress-indicator]]:bg-red-500"
                 )}
               />
@@ -139,7 +139,7 @@ export function MembrosTable({ membros }: Props) {
                     ? `${m.missingCount} campo${m.missingCount > 1 ? "s" : ""} faltando`
                     : "Completo"}
                 </p>
-                <p className={cn("text-xs", m.isStale ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground")}>
+                <p className={cn("text-xs", m.isStale ? "text-yellow-600 dark:text-yellow-400" : "text-muted-foreground")}>
                   {formatLastUpdated(m.lastUpdated)}
                 </p>
               </div>

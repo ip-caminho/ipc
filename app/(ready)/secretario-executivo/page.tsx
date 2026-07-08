@@ -180,7 +180,7 @@ export default function SecretarioExecutivoPage() {
                       <CardNum label="Mandatos vencidos" valor={resumo.mandatosVencidos} cor="text-rose-700" dica="Mandatos ativos com termino no passado — renovar ou encerrar." ativo={categoria === "MANDATO_VENCIDO"} onClick={() => toggle("MANDATO_VENCIDO")} />
                     )}
                     {resumo.mandatosVencendo > 0 && (
-                      <CardNum label="A vencer (90d)" valor={resumo.mandatosVencendo} cor="text-amber-700" dica="Mandatos que terminam nos proximos 90 dias — preparar eleicao." ativo={categoria === "MANDATO_VENCENDO"} onClick={() => toggle("MANDATO_VENCENDO")} />
+                      <CardNum label="A vencer (90d)" valor={resumo.mandatosVencendo} cor="text-yellow-700" dica="Mandatos que terminam nos proximos 90 dias — preparar eleicao." ativo={categoria === "MANDATO_VENCENDO"} onClick={() => toggle("MANDATO_VENCENDO")} />
                     )}
                   </div>
                 )}
@@ -195,7 +195,7 @@ export default function SecretarioExecutivoPage() {
                   <CollapsibleContent>
                     <div className="flex flex-wrap items-center gap-2 pt-1">
                       <CardNum label="Civilmente capazes" valor={resumo.civilmenteCapazes} cor="text-emerald-700" dica="Comungantes com 18+ anos — aptos a votar na assembleia." ativo={categoria === "CIVILMENTE_CAPAZ"} onClick={() => toggle("CIVILMENTE_CAPAZ")} />
-                      <CardNum label="Ausentes" valor={resumo.ausentes} cor="text-amber-700" dica="Status Ausente (paradeiro ignorado)." ativo={categoria === "AUSENTE"} onClick={() => toggle("AUSENTE")} />
+                      <CardNum label="Ausentes" valor={resumo.ausentes} cor="text-yellow-700" dica="Status Ausente (paradeiro ignorado)." ativo={categoria === "AUSENTE"} onClick={() => toggle("AUSENTE")} />
                       <CardNum label="Arquivo" valor={resumo.arquivo} dica="Transferidos, excluidos e falecidos (fora do rol)." ativo={categoria === "ARQUIVO"} onClick={() => toggle("ARQUIVO")} />
                       <CardNum label="Familias" valor={resumo.familias} dica="Nucleos familiares. Clique para agrupar a tabela por familia." ativo={agrupar} onClick={() => { setCategoria(null); setAgrupar((v) => !v); }} />
                       <CardNum label="Dependentes" valor={resumo.dependentes} dica="Filhos nao-membros (sem batismo) vinculados a um membro." ativo={categoria === "DEPENDENTES"} onClick={() => toggle("DEPENDENTES")} />
@@ -214,7 +214,7 @@ export default function SecretarioExecutivoPage() {
             <strong>Rol:</strong>{" "}
             <span className="text-emerald-700">Principal</span> = comungantes (profissao de fe;
             subcategoria civilmente capazes) · <span className="text-sky-700">Separado</span> =
-            nao comungantes (batismo infantil) · <span className="text-amber-700">Ausente</span> =
+            nao comungantes (batismo infantil) · <span className="text-yellow-700">Ausente</span> =
             paradeiro ignorado · <span className="text-foreground">Arquivo</span> = transferidos,
             excluidos e falecidos. Edicao salva ao sair do campo; o Rol e derivado de cargo + status.
           </div>

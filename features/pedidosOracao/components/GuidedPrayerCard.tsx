@@ -41,7 +41,7 @@ export interface GuidedCardData {
 
 const TIPO_DOT: Record<GuidedCardData["atualizacoes"][number]["tipo"], string> = {
   ATUALIZACAO: "bg-blue-500",
-  REFORCO: "bg-amber-500",
+  REFORCO: "bg-yellow-500",
   TESTEMUNHO: "bg-emerald-500",
 };
 

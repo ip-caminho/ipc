@@ -128,7 +128,7 @@ export function CriancaDetalhe({ entidadeId, onBack, onEdit, onDelete }: Crianca
               <div>
                 <p className="text-muted-foreground">Proxima turma</p>
                 {divergente ? (
-                  <p className="text-amber-600">
+                  <p className="text-yellow-600">
                     Turma desatualizada pela coorte (reenquadrar)
                   </p>
                 ) : transicao?.saiDoDepartamento ? (

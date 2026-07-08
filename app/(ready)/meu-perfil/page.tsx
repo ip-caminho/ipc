@@ -108,7 +108,7 @@ function DataSacramentalRow({
         </p>
       )}
       {!naoLembro && value && !verificado && pendenteVerificacao && (
-        <p className="text-[11px] text-amber-700 dark:text-amber-400 px-1">
+        <p className="text-[11px] text-yellow-700 dark:text-yellow-400 px-1">
           Aguardando confirmacao da secretaria.
         </p>
       )}
@@ -362,9 +362,9 @@ export default function MeuPerfilPage() {
 
       {/* Banner de atualizacao */}
       {desatualizado && (
-        <Card className="border-amber-300 bg-amber-50 dark:bg-amber-950/30">
+        <Card className="border-yellow-300 bg-yellow-50 dark:bg-yellow-950/30">
           <CardContent className="p-4 flex gap-3 items-start">
-            <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+            <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5 flex-shrink-0" />
             <div className="flex-1 space-y-1">
               <p className="text-sm font-medium">
                 {perfilAtualizadoEm

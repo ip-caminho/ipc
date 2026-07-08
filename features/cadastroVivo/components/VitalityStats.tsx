@@ -37,7 +37,7 @@ export function VitalityStats({
       label: "Atualizado (6m)",
       value: `${atualizadosCount} (${atualizadosPercent}%)`,
       icon: Clock,
-      color: "text-amber-600 dark:text-amber-500",
+      color: "text-yellow-600 dark:text-yellow-500",
     },
     {
       label: "Completude media",

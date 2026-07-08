@@ -22,14 +22,14 @@ const FUNCAO_LABELS: Record<string, string> = {
 
 const FUNCAO_COLORS: Record<string, string> = {
   LOUVOR: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
-  HOSPITALIDADE: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200",
+  HOSPITALIDADE: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
   SOM: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
   MULTIMIDIA: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200",
   ABERTURA: "bg-slate-100 text-slate-800 dark:bg-slate-900 dark:text-slate-200",
   CONFISSAO: "bg-slate-100 text-slate-800 dark:bg-slate-900 dark:text-slate-200",
   PREGACAO: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
   ORACAO: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200",
-  AVISOS: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
+  AVISOS: "bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200",
 };
 
 interface EscalaItem {

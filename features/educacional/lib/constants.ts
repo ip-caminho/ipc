@@ -11,7 +11,7 @@ export const TURMA_COLORS: Record<string, string> = {
   "3-4": "bg-purple-100 text-purple-800",
   "5-6": "bg-blue-100 text-blue-800",
   "7-8": "bg-green-100 text-green-800",
-  "9-10": "bg-orange-100 text-orange-800",
+  "9-10": "bg-cyan-100 text-cyan-800",
 };
 
 // Anel do avatar por turma (identidade visual sem badge extra).
@@ -20,7 +20,7 @@ export const TURMA_RING: Record<string, string> = {
   "3-4": "ring-purple-300",
   "5-6": "ring-blue-300",
   "7-8": "ring-green-300",
-  "9-10": "ring-orange-300",
+  "9-10": "ring-cyan-300",
 };
 
 export const USO_IMAGEM_OPTIONS = [
@@ -47,7 +47,7 @@ export const USO_IMAGEM_LABELS_CURTO: Record<string, string> = {
 export const USO_IMAGEM_ICON_COLORS: Record<string, string> = {
   AUTORIZADO: "text-green-600",
   NAO_AUTORIZADO: "text-red-600",
-  PENDENTE: "text-amber-500",
+  PENDENTE: "text-yellow-500",
 };
 
 export const USO_IMAGEM_COLORS: Record<string, string> = {
@@ -113,6 +113,6 @@ export const CBCM_LABELS: Record<string, string> = {
 
 export const CBCM_COLORS: Record<string, string> = {
   CONCLUIDO: "bg-green-100 text-green-800",
-  CURSANDO: "bg-amber-100 text-amber-800",
+  CURSANDO: "bg-yellow-100 text-yellow-800",
   NAO_INICIADO: "bg-gray-100 text-gray-700",
 };

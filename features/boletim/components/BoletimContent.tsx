@@ -91,7 +91,7 @@ function PalavraDrawer({ referencia }: { referencia: string }) {
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger
         onClick={() => setOpen(true)}
-        className="w-full flex items-center gap-2 text-sm text-amber-700 dark:text-amber-300 bg-amber-50/60 dark:bg-amber-950/20 px-6 py-2.5 min-h-[44px] hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors"
+        className="w-full flex items-center gap-2 text-sm text-yellow-700 dark:text-yellow-300 bg-yellow-50/60 dark:bg-yellow-950/20 px-6 py-2.5 min-h-[44px] hover:bg-yellow-50 dark:hover:bg-yellow-950/30 transition-colors"
       >
         <BookOpen className="h-3.5 w-3.5 shrink-0" />
         {nomeCompleto}

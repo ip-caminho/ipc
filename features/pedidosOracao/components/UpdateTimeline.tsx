@@ -23,8 +23,8 @@ const TIPO_META: Record<UpdateTipo, { label: string; dot: string; text: string }
   },
   REFORCO: {
     label: "Pedido continua",
-    dot: "bg-amber-500 dark:bg-amber-400",
-    text: "text-amber-700 dark:text-amber-400",
+    dot: "bg-yellow-500 dark:bg-yellow-400",
+    text: "text-yellow-700 dark:text-yellow-400",
   },
   TESTEMUNHO: {
     label: "Testemunho",

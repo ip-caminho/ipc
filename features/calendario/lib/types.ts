@@ -23,5 +23,5 @@ export const TIPO_EVENTO_LABEL: Record<string, string> = {
 export const TIPO_EVENTO_COR: Record<string, string> = {
   pg: "bg-emerald-500",
   evento: "bg-sky-500",
-  reuniao: "bg-amber-500",
+  reuniao: "bg-yellow-500",
 };

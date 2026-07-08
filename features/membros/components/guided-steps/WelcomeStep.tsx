@@ -17,14 +17,14 @@ export function WelcomeStep({ firstName, percentage, missingLabels, onStart }: P
     percentage > 80
       ? "text-emerald-600"
       : percentage >= 50
-        ? "text-amber-600"
+        ? "text-yellow-600"
         : "text-red-600";
 
   const progressColor =
     percentage > 80
       ? "[&_[data-slot=progress-indicator]]:bg-emerald-500"
       : percentage >= 50
-        ? "[&_[data-slot=progress-indicator]]:bg-amber-500"
+        ? "[&_[data-slot=progress-indicator]]:bg-yellow-500"
         : "[&_[data-slot=progress-indicator]]:bg-red-500";
 
   return (

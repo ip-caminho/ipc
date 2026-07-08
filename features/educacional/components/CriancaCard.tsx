@@ -88,7 +88,7 @@ export function CriancaCard({ crianca, onClick }: CriancaCardProps) {
           <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
             <ArrowRight className="h-3 w-3 shrink-0" />
             {divergente ? (
-              <span className="text-amber-600">Turma desatualizada pela idade</span>
+              <span className="text-yellow-600">Turma desatualizada pela idade</span>
             ) : transicao?.saiDoDepartamento ? (
               <span>Sai do infantil em {transicao.ano}</span>
             ) : (

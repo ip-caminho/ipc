@@ -42,7 +42,7 @@ export function ProfileNudgeDialog() {
     data.percentage > 80
       ? "[&_[data-slot=progress-indicator]]:bg-emerald-500"
       : data.percentage >= 50
-        ? "[&_[data-slot=progress-indicator]]:bg-amber-500"
+        ? "[&_[data-slot=progress-indicator]]:bg-yellow-500"
         : "[&_[data-slot=progress-indicator]]:bg-red-500";
 
   return (

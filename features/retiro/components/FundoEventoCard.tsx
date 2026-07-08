@@ -51,7 +51,7 @@ export function FundoEventoCard({
         <div
           className={`rounded-md border p-3 ${
             resumo.fundo < 0
-              ? "border-amber-300 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/30"
+              ? "border-yellow-300 bg-yellow-50 dark:border-yellow-900 dark:bg-yellow-950/30"
               : "border-emerald-300 bg-emerald-50 dark:border-emerald-900 dark:bg-emerald-950/30"
           }`}
         >
