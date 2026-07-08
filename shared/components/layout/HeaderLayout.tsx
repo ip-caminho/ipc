@@ -1,22 +1,11 @@
-import { UserMenu } from "./UserMenu";
-
 interface HeaderLayoutProps {
   children: React.ReactNode;
+  // Mantido por compatibilidade com chamadas existentes; o menu do usuario
+  // (perfil, inscricoes, tema, sair) agora vive no rodape da AppSidebar no
+  // desktop e no MoreSheet no mobile — nao ha mais avatar no canto superior.
   showUserMenu?: boolean;
 }
 
-export function HeaderLayout({
-  children,
-  showUserMenu = true,
-}: HeaderLayoutProps) {
-  return (
-    <div className="relative">
-      {showUserMenu && (
-        <div className="hidden md:block absolute top-4 right-4 z-10">
-          <UserMenu />
-        </div>
-      )}
-      {children}
-    </div>
-  );
+export function HeaderLayout({ children }: HeaderLayoutProps) {
+  return <div className="relative">{children}</div>;
 }
