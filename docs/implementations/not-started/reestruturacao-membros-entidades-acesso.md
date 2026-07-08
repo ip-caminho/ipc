@@ -22,14 +22,14 @@ propria (por outro caminho). Estado atual:
 | **A** — centralizar acesso | ABANDONADO | Main criou a pagina `/admin/acesso` (AcessoPanel) + a permissao granular `acesso:manage`, e `/membros` deixou de existir. PR #127 (tentativa admin-only) fechado — `acesso:manage` foi concedido a pastor/secretaria/presbitero, decisao deliberada do main, oposta ao "admin-only" pedido. |
 | **B** — separar detalhe pessoal/eclesiastico | FEITO PELO MAIN | `/membros` consolidado em `/secretario-executivo` (lista + detalhe). |
 | **C** — `/entidades` so PJ | MERGEADO (PR #142) | Cadastro so PJ. Na revisao acharam 26 PF nao-membro (visitantes/contatos, `vinculoIgreja: NAO_MEMBRO`) que sumiriam da UI — resolvido com 2 abas: **Fornecedores e Parceiros** (PJ) + **Contatos e Visitantes** (PF sem linha em `membros`, query `listNaoMembros`). Busca tambem passou a filtrar telefone/nome fantasia. |
-| **D** — `papeis` para de marcar "membro" | FASE 1 MERGEADA (PR #143) | ~13 escritas pararam de gravar MEMBRO/DEPENDENTE em `papeis`; membresia so via `membros`+`vinculoIgreja` (fonte de verdade, agora tambem setada em import/convites/bootstrap). Fase 2 (backfill `limparPapeisPessoa` + endurecer validador + limpar union do schema) pendente — roda em prod apos deploy. |
+| **D** — `papeis` para de marcar "membro" | CONCLUIDO (PRs #143 + #144) | Fase 1 (#143): escritas pararam de gravar MEMBRO/DEPENDENTE em `papeis`; membresia so via `membros`+`vinculoIgreja` (fonte de verdade, tambem setada em import/convites/bootstrap). Fase 2 (#144): backfill `limparPapeisPessoa` rodado em prod (251 entidades limpas, idempotente), validador e union do schema endurecidos (`papeis` so VISITANTE/CONTATO/FORNECEDOR/IGREJA_PARCEIRA), deploy do Convex feito. |
 | **E** — criancas / "filho" duplicado | MERGEADO (PR #143) | `membros.filhos` eliminado (verificado vazio em prod). Filhos derivam de `responsaveis`. |
 
-**Merge:** PRs #142 e #143 integrados no `main` (ff-only) em 2026-07-07 e
-branches removidas. Falta apenas: (1) deploy do backend no Convex prod, (2)
-rodar `limparPapeisPessoa` com `dryRun:false` (backfill fase 2 do item D —
-backup salvo, dry-run validou 225 registros legados), (3) revisao visual da
-nova tela de abas no preview.
+**Merge/deploy:** PRs #142, #143 e #144 integrados no `main` (ff-only) em
+2026-07-07 e branches removidas; backend deployado no Convex prod
+(earnest-husky-324) com schema validado; backfill executado. Reestruturacao
+(itens C/D/E) **concluida em producao**. Resta apenas a revisao visual da
+nova tela de abas de `/entidades` no preview (item cosmetico).
 
 O diagnostico abaixo e do planejamento original (pre-main); onde divergir do
 estado atual, o quadro acima prevalece.
