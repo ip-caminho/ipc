@@ -710,6 +710,42 @@ export default defineSchema({
     .index("by_crianca", ["criancaEntidadeId"])
     .index("by_responsavel", ["responsavelEntidadeId"]),
 
+  // Solicitacao de cadastro de familiar (self-service): o membro solicita o
+  // cadastro de um filho/conjuge ainda nao cadastrado; a secretaria revisa e
+  // aprova (aprovar = criar entidade + vinculo). Substitui a criacao direta.
+  solicitacoesCadastro: defineTable({
+    status: v.union(
+      v.literal("PENDENTE"),
+      v.literal("APROVADA"),
+      v.literal("REJEITADA")
+    ),
+    tipoVinculo: v.union(v.literal("FILHO"), v.literal("CONJUGE")),
+    solicitadoPor: v.id("membros"),
+    solicitanteEntidadeId: v.id("entidades"),
+    dadosPreenchidos: v.object({
+      nomeCompleto: v.string(),
+      dataNascimento: v.optional(v.string()),
+      sexo: v.optional(v.union(v.literal("M"), v.literal("F"))),
+      batizadoNestaIgreja: v.optional(v.boolean()),
+      dataBatismo: v.optional(v.string()),
+      usoImagem: v.optional(
+        v.union(
+          v.literal("AUTORIZADO"),
+          v.literal("NAO_AUTORIZADO"),
+          v.literal("PENDENTE")
+        )
+      ),
+      observacoesMedicas: v.optional(v.string()),
+    }),
+    revisadoPor: v.optional(v.id("membros")),
+    revisadoEm: v.optional(v.number()),
+    motivoRejeicao: v.optional(v.string()),
+    entidadeCriadaId: v.optional(v.id("entidades")),
+    criadoEm: v.number(),
+  })
+    .index("by_status", ["status"])
+    .index("by_solicitante", ["solicitadoPor"]),
+
   // Registro de licao (aula) — presenca em eduPresencas. Campos de conteudo
   // opcionais para retrocompatibilidade com relatorios ja existentes.
   eduRelatorios: defineTable({

@@ -103,6 +103,7 @@ import type * as membros_queries from "../membros/queries.js";
 import type * as membros_resumoSecretarioHelpers from "../membros/resumoSecretarioHelpers.js";
 import type * as membros_selfService from "../membros/selfService.js";
 import type * as membros_selfServiceHelpers from "../membros/selfServiceHelpers.js";
+import type * as membros_solicitacoes from "../membros/solicitacoes.js";
 import type * as membros_tipoRolHelpers from "../membros/tipoRolHelpers.js";
 import type * as membros_updatePhotos from "../membros/updatePhotos.js";
 import type * as messaging_campanhas from "../messaging/campanhas.js";
@@ -256,6 +257,7 @@ declare const fullApi: ApiFromModules<{
   "membros/resumoSecretarioHelpers": typeof membros_resumoSecretarioHelpers;
   "membros/selfService": typeof membros_selfService;
   "membros/selfServiceHelpers": typeof membros_selfServiceHelpers;
+  "membros/solicitacoes": typeof membros_solicitacoes;
   "membros/tipoRolHelpers": typeof membros_tipoRolHelpers;
   "membros/updatePhotos": typeof membros_updatePhotos;
   "messaging/campanhas": typeof messaging_campanhas;
