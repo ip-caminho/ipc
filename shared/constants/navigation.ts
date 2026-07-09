@@ -84,7 +84,7 @@ export const GESTAO_SECTIONS: NavSection[] = [
     items: [
       {
         label: "Membros",
-        href: "/secretario-executivo",
+        href: "/membros",
         icon: Users,
         description: "Membresia: rol IPB, dados pessoais e eclesiásticos, família e impressão",
         permission: "rol:read",

@@ -16,8 +16,8 @@ export function buildEndereco(data: MembroFormValues) {
 
 /**
  * Campos de entidade (dados pessoais) do form -> payload de mutation.
- * Fonte unica do mapeamento, usada na criacao (/secretario-executivo/novo)
- * e na edicao pessoal (/secretario-executivo/[id]).
+ * Fonte unica do mapeamento, usada na criacao (/membros/novo)
+ * e na edicao pessoal (/membros/[id]).
  */
 export function mapFormToEntidadeData(data: MembroFormValues) {
   return {

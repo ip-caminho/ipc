@@ -150,7 +150,7 @@ export default function SecretarioExecutivoPage() {
             <PermissionGate permission="membros:create">
               {/* h-11 no mobile = tap target >=44px (regra mobile-ux) */}
               <Button asChild size="sm" className="mt-4 shrink-0 h-11 md:h-8">
-                <Link href="/secretario-executivo/novo">
+                <Link href="/membros/novo">
                   <Plus className="h-4 w-4 mr-1.5" />
                   <span className="hidden sm:inline">Novo membro</span>
                 </Link>
