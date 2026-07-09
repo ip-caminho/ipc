@@ -194,7 +194,7 @@ function CardMembro({ membro, agrupar }: { membro: MembroEclesiastico; agrupar: 
   const status = membro.entidade?.status || "ATIVO";
   const rol = membro.rolCategoria ? ROL_BADGE[membro.rolCategoria] : null;
   const ehFilho = agrupar && membro.familiaOrder === 2;
-  const href = `/secretario-executivo/${membro._id}`;
+  const href = `/membros/${membro._id}`;
   const statusLabel = STATUS_OPTIONS.find((o) => o.value === status)?.label ?? status;
   // So exibe Cargo quando e oficio (redundante com o badge de Rol para membros comuns)
   const ehOficio = ["PASTOR", "PRESBITERO", "DIACONO"].includes(membro.cargoEclesiastico ?? "");
@@ -272,7 +272,7 @@ function LinhaMembro({ membro, agrupar, readOnly }: { membro: MembroEclesiastico
   return (
     <TableRow>
       <TableCell className={cn(COL_NOME, "font-medium whitespace-nowrap")}>
-        <Link href={`/secretario-executivo/${membro._id}`} className={cn("flex items-center gap-2 hover:underline", agrupar && "pl-6")}>
+        <Link href={`/membros/${membro._id}`} className={cn("flex items-center gap-2 hover:underline", agrupar && "pl-6")}>
           <AvatarMembro nome={membro.entidade?.nomeCompleto} foto={membro.entidade?.foto} />
           <span>
             {membro.entidade?.nomeCompleto || "-"}
@@ -374,7 +374,7 @@ function LinhaMembro({ membro, agrupar, readOnly }: { membro: MembroEclesiastico
         )}
       </TableCell>
       <TableCell>
-        <AcoesMembro ctl={ctl} href={`/secretario-executivo/${membro._id}`} readOnly={readOnly} />
+        <AcoesMembro ctl={ctl} href={`/membros/${membro._id}`} readOnly={readOnly} />
         <DrawersMembro ctl={ctl} nome={membro.entidade?.nomeCompleto || ""} readOnly={readOnly} />
       </TableCell>
     </TableRow>

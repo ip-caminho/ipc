@@ -81,11 +81,11 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "AcessoPanel: resumo (com acesso/pendente/sem/adesao) + gerar links de ativacao (individual e lote) + resetar + atividade + LinkConvidadoCard (so admin: /convidado/<codigo>)",
     ],
   },
-  "/secretario-executivo/novo": {
+  "/membros/novo": {
     nome: "Novo Membro",
-    pagina: "app/(ready)/secretario-executivo/novo/page.tsx",
+    pagina: "app/(ready)/membros/novo/page.tsx",
     arquivos: [
-      "app/(ready)/secretario-executivo/novo/page.tsx",
+      "app/(ready)/membros/novo/page.tsx",
       "features/membros/components/MembroForm.tsx",
       "features/membros/lib/validations.ts",
     ],
@@ -93,11 +93,11 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     componentes: ["MembroForm", "PermissionGate"],
     notas: ["Permissao: membros:create + ModuloGuard modulo=membros. MembroForm completo (pessoal + eclesiastico); dados pessoais via mapFormToEntidadeData (features/membros/lib/mappers.ts)"],
   },
-  "/secretario-executivo": {
+  "/membros": {
     nome: "Rol de Membros",
-    pagina: "app/(ready)/secretario-executivo/page.tsx",
+    pagina: "app/(ready)/membros/page.tsx",
     arquivos: [
-      "app/(ready)/secretario-executivo/page.tsx",
+      "app/(ready)/membros/page.tsx",
       "features/secretarioExecutivo/components/SecretarioExecutivoTabela.tsx",
       "features/secretarioExecutivo/components/HistoricoEclesiasticoDrawer.tsx",
       "features/secretarioExecutivo/components/FamiliaDrawer.tsx",
@@ -117,7 +117,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     notas: [
       "Permissao: rol:read (ver pagina/tabela), rol:update (editar — sem ela a tabela fica somente-leitura)",
       "Roles: admin, pastor, secretaria, secretario_executivo",
-      "Pagina UNICA de membros (a antiga /membros foi removida). ModuloGuard modulo=membros. Botao 'Novo membro' (membros:create) -> /secretario-executivo/novo",
+      "Pagina UNICA de membros (rota renomeada de /secretario-executivo em 07/2026, com redirect). ModuloGuard modulo=membros. Botao 'Novo membro' (membros:create) -> /membros/novo",
       "Edicao tabular inline (auto-save no blur): cargo, rol, tipoRol, matricula, datas sacramentais",
       "Dashboard de cards clicaveis (getResumoSecretario): comungantes/nao-comungantes/ausentes/arquivo/total/familias/dependentes/pendencias + oficiais (pastores/presbiteros/diaconos) + alertas de mandatos vencidos e a vencer em 90 dias (cargosEclesiasticosHistorico ATIVO) — filtram a tabela",
       "Impressao A4 com assinatura para assembleia (RolExportView, window.print) respeitando o filtro atual — movida de /membros pra ca",
@@ -127,11 +127,11 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "Historico (FIELD_CHANGE) com reverter; drill-down no detalhe para admissao/demissao/atos/cargos",
     ],
   },
-  "/secretario-executivo/[id]": {
+  "/membros/[id]": {
     nome: "Detalhe do Membro (Rol)",
-    pagina: "app/(ready)/secretario-executivo/[id]/page.tsx",
+    pagina: "app/(ready)/membros/[id]/page.tsx",
     arquivos: [
-      "app/(ready)/secretario-executivo/[id]/page.tsx",
+      "app/(ready)/membros/[id]/page.tsx",
       "features/secretarioExecutivo/components/DadosBasicosSection.tsx",
       "features/secretarioExecutivo/components/EclesiasticoForm.tsx",
       "features/membros/components/MembroForm.tsx",
@@ -163,7 +163,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "Permissao: entidades:read",
       "Aba 1 Fornecedores e Parceiros: PJ (query list com tipo: PJ)",
       "Aba 2 Contatos e Visitantes: PF sem linha em membros (listNaoMembros)",
-      "Membros (PF com linha em membros) ficam no rol (/secretario-executivo)",
+      "Membros (PF com linha em membros) ficam no rol (/membros)",
     ],
   },
   "/entidades/novo": {
@@ -1499,11 +1499,11 @@ function resolveRoute(pathname: string): PageContext | null {
   if (/^\/louvor\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/louvor/[id]"];
   // /ministerios/[id]
   if (/^\/ministerios\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/ministerios/[id]"];
-  // /secretario-executivo/novo e /secretario-executivo/[id] resolvem via exact match + regex abaixo
+  // /membros/novo e /membros/[id] resolvem via exact match + regex abaixo
   // /ativar/[token]
   if (/^\/ativar\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/ativar/[token]"];
-  // /secretario-executivo/[id]
-  if (/^\/secretario-executivo\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/secretario-executivo/[id]"];
+  // /membros/[id]
+  if (/^\/membros\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/membros/[id]"];
   // /biblioteca/[id]
   if (/^\/biblioteca\/[^/]+$/.test(pathname) && pathname !== "/biblioteca/novo") return CONTEXT_MAP["/biblioteca/[id]"];
   // /turmas/[id]

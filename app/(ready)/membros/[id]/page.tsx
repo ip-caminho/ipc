@@ -40,7 +40,7 @@ export default function SecretarioExecutivoDetalhePage() {
   if (membro === undefined) {
     return (
       <HeaderLayout>
-        <DetailHeader backHref="/secretario-executivo" />
+        <DetailHeader backHref="/membros" />
         <div className="space-y-4 max-w-4xl">
           <Skeleton className="h-32 w-full" />
           <Skeleton className="h-96 w-full" />
@@ -52,7 +52,7 @@ export default function SecretarioExecutivoDetalhePage() {
   if (!membro) {
     return (
       <HeaderLayout>
-        <DetailHeader backHref="/secretario-executivo" />
+        <DetailHeader backHref="/membros" />
         <p className="text-muted-foreground">Membro nao encontrado.</p>
       </HeaderLayout>
     );
@@ -62,7 +62,7 @@ export default function SecretarioExecutivoDetalhePage() {
   if (!entidade) {
     return (
       <HeaderLayout>
-        <DetailHeader backHref="/secretario-executivo" />
+        <DetailHeader backHref="/membros" />
         <p className="text-muted-foreground">Entidade nao encontrada.</p>
       </HeaderLayout>
     );
@@ -116,7 +116,7 @@ export default function SecretarioExecutivoDetalhePage() {
     <ModuloGuard modulo="membros">
     <PermissionGate permission="rol:read">
       <HeaderLayout>
-        <DetailHeader backHref="/secretario-executivo" />
+        <DetailHeader backHref="/membros" />
         <div className="max-w-4xl space-y-6 pb-24">
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1">

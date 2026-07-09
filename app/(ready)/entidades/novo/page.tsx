@@ -15,7 +15,7 @@ import { PAPEL_OPTIONS } from "@features/membros/lib/constants";
 type PapelEntidade = (typeof PAPEL_OPTIONS)[number]["value"];
 
 // So Pessoa Juridica: fornecedores e igrejas parceiras. Pessoas (PF) sao
-// cadastradas como membros no rol (/secretario-executivo).
+// cadastradas como membros no rol (/membros).
 const PAPEIS_PJ = PAPEL_OPTIONS.filter((p) =>
   ["FORNECEDOR", "IGREJA_PARCEIRA"].includes(p.value)
 );

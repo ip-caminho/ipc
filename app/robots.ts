@@ -37,7 +37,7 @@ export default function robots(): MetadataRoute.Robots {
         "/tarefas",
         "/turmas",
         "/biblioteca",
-        "/secretario-executivo",
+        "/membros",
         "/meu-perfil",
         "/bem-vindo",
         "/proximo-domingo",

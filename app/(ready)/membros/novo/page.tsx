@@ -33,7 +33,7 @@ export default function NovoMembroPage() {
       });
 
       toast.success("Membro criado com sucesso");
-      router.push("/secretario-executivo");
+      router.push("/membros");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao criar membro");
     }
@@ -50,7 +50,7 @@ export default function NovoMembroPage() {
       }
     >
       <HeaderLayout>
-        <DetailHeader title="Novo membro" backHref="/secretario-executivo" />
+        <DetailHeader title="Novo membro" backHref="/membros" />
         <div className="max-w-4xl">
           <MembroForm onSubmit={handleSubmit} />
         </div>

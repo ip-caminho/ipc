@@ -19,6 +19,9 @@ const nextConfig: NextConfig = {
       { source: "/acampamento/:slug", destination: "/retiro/:slug", permanent: true },
       { source: "/admin/acampamento", destination: "/admin/retiro", permanent: true },
       { source: "/admin/acampamento/:path*", destination: "/admin/retiro/:path*", permanent: true },
+      // Rota antiga da pagina de membros -> /membros (nome coerente com o menu).
+      { source: "/secretario-executivo", destination: "/membros", permanent: true },
+      { source: "/secretario-executivo/:path*", destination: "/membros/:path*", permanent: true },
     ];
   },
   async headers() {
