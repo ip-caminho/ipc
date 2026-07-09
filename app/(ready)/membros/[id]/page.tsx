@@ -5,7 +5,6 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
-import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import {
   Drawer,
@@ -13,11 +12,11 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/shared/components/ui/drawer";
-import { Pencil } from "lucide-react";
 import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
 import { DetailHeader } from "@shared/components/layout/DetailHeader";
 import { PermissionGate } from "@shared/components/auth/PermissionGate";
 import { ModuloGuard } from "@shared/components/auth/ModuloGuard";
+import { useAuth } from "@shared/providers/PermissionsProvider";
 import type { Id } from "@/convex/_generated/dataModel";
 import type { MembroFormValues } from "@features/membros/lib/validations";
 import { mapFormToEntidadeData } from "@features/membros/lib/mappers";
@@ -32,6 +31,7 @@ export default function SecretarioExecutivoDetalhePage() {
   const params = useParams();
   const id = params.id as Id<"membros">;
 
+  const { can } = useAuth();
   const membro = useQuery(api.membros.queries.getById, { id });
   const familia = useQuery(api.membros.eclesiastico.getFamily, { membroId: id });
   const updateMembro = useMutation(api.membros.mutations.update);
@@ -118,46 +118,31 @@ export default function SecretarioExecutivoDetalhePage() {
       <HeaderLayout>
         <DetailHeader backHref="/membros" />
         <div className="max-w-4xl space-y-6 pb-24">
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex-1">
-              <DadosBasicosSection
-                entidade={{
-                  _id: entidade._id,
-                  nomeCompleto: entidade.nomeCompleto,
-                  apelido: entidade.apelido,
-                  nomeSocial: entidade.nomeSocial,
-                  cpf: entidade.cpf,
-                  rg: entidade.rg,
-                  dataNascimento: entidade.dataNascimento,
-                  sexo: entidade.sexo,
-                  estadoCivil: entidade.estadoCivil,
-                  pai: entidade.pai,
-                  mae: entidade.mae,
-                  profissao: entidade.profissao,
-                  formacao: entidade.formacao,
-                  foto: entidade.foto,
-                  whatsapp: entidade.whatsapp,
-                  telefone: entidade.telefone,
-                  email: entidade.email,
-                  endereco: entidade.endereco,
-                  status: entidade.status,
-                }}
-                familia={familia}
-              />
-            </div>
-            <PermissionGate permission="membros:update">
-              {/* h-11 no mobile = tap target >=44px (regra mobile-ux) */}
-              <Button
-                variant="outline"
-                size="sm"
-                className="shrink-0 h-11 md:h-8"
-                onClick={() => setEditOpen(true)}
-              >
-                <Pencil className="h-4 w-4 mr-1.5" />
-                Editar dados pessoais
-              </Button>
-            </PermissionGate>
-          </div>
+          <DadosBasicosSection
+            entidade={{
+              _id: entidade._id,
+              nomeCompleto: entidade.nomeCompleto,
+              apelido: entidade.apelido,
+              nomeSocial: entidade.nomeSocial,
+              cpf: entidade.cpf,
+              rg: entidade.rg,
+              dataNascimento: entidade.dataNascimento,
+              sexo: entidade.sexo,
+              estadoCivil: entidade.estadoCivil,
+              pai: entidade.pai,
+              mae: entidade.mae,
+              profissao: entidade.profissao,
+              formacao: entidade.formacao,
+              foto: entidade.foto,
+              whatsapp: entidade.whatsapp,
+              telefone: entidade.telefone,
+              email: entidade.email,
+              endereco: entidade.endereco,
+              status: entidade.status,
+            }}
+            familia={familia}
+            onEditar={can("membros:update") ? () => setEditOpen(true) : undefined}
+          />
 
           <PermissionGate permission="rol:update">
             <EclesiasticoForm

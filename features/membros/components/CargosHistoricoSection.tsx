@@ -43,6 +43,7 @@ const STATUS_COLOR: Record<string, string> = {
 };
 
 export function CargosHistoricoSection({ membroId }: { membroId: Id<"membros"> }) {
+  // @ts-ignore Convex TS2589
   const cargos = useQuery(api.cargosEclesiasticosHistorico.queries.listByMembro, { membroId });
   const iniciar = useMutation(api.cargosEclesiasticosHistorico.mutations.iniciarMandato);
   const encerrar = useMutation(api.cargosEclesiasticosHistorico.mutations.encerrarMandato);
@@ -121,7 +122,7 @@ export function CargosHistoricoSection({ membroId }: { membroId: Id<"membros"> }
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-        <CardTitle className="text-sm flex items-center gap-1.5">
+        <CardTitle className="text-sm text-muted-foreground flex items-center gap-1.5">
           <Briefcase className="h-3.5 w-3.5" /> Cargos Eclesiasticos (historico)
         </CardTitle>
         <Dialog open={open} onOpenChange={setOpen}>

@@ -77,9 +77,9 @@ export function AcessoSection({ membroId }: { membroId: Id<"membros"> }) {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base">
-          <KeyRound className="h-4 w-4" />
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm text-muted-foreground flex items-center gap-1.5">
+          <KeyRound className="h-3.5 w-3.5" />
           Acesso ao sistema
         </CardTitle>
       </CardHeader>

@@ -21,6 +21,7 @@ const PAPEIS_PJ = PAPEL_OPTIONS.filter((p) =>
 );
 
 export default function NovaEntidadePage() {
+  // @ts-ignore Convex TS2589
   const createEntidade = useMutation(api.entidades.mutations.create);
   const router = useRouter();
   const [papeis, setPapeis] = useState<PapelEntidade[]>([]);

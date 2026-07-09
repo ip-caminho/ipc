@@ -3,7 +3,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { Badge } from "@/shared/components/ui/badge";
-import { User, MapPin, Phone, Users } from "lucide-react";
+import { Button } from "@/shared/components/ui/button";
+import { User, MapPin, Phone, Users, Pencil } from "lucide-react";
 import {
   STATUS_COLORS,
   FORMACAO_OPTIONS,
@@ -76,9 +77,13 @@ function Row({ label, value }: { label: string; value?: string | null }) {
 export function DadosBasicosSection({
   entidade,
   familia,
+  onEditar,
 }: {
   entidade: Entidade;
   familia: Familia;
+  // Quando fornecido, exibe um botao largo "Editar dados pessoais" no rodape
+  // (abre o Drawer de edicao na pagina). So passado a quem tem membros:update.
+  onEditar?: () => void;
 }) {
   const end = entidade.endereco;
   const enderecoStr = end
@@ -131,7 +136,7 @@ export function DadosBasicosSection({
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm text-muted-foreground flex items-center gap-1.5">
-            <User className="h-3.5 w-3.5" /> Identificacao (somente leitura)
+            <User className="h-3.5 w-3.5" /> Identificacao
           </CardTitle>
         </CardHeader>
         <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -151,7 +156,7 @@ export function DadosBasicosSection({
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm text-muted-foreground flex items-center gap-1.5">
-            <Phone className="h-3.5 w-3.5" /> Contato (somente leitura)
+            <Phone className="h-3.5 w-3.5" /> Contato
           </CardTitle>
         </CardHeader>
         <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -166,7 +171,7 @@ export function DadosBasicosSection({
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm text-muted-foreground flex items-center gap-1.5">
-              <MapPin className="h-3.5 w-3.5" /> Endereco (somente leitura)
+              <MapPin className="h-3.5 w-3.5" /> Endereco
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -180,7 +185,7 @@ export function DadosBasicosSection({
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm text-muted-foreground flex items-center gap-1.5">
-              <Users className="h-3.5 w-3.5" /> Familia (somente leitura)
+              <Users className="h-3.5 w-3.5" /> Familia
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -218,6 +223,17 @@ export function DadosBasicosSection({
             ))}
           </CardContent>
         </Card>
+      )}
+
+      {onEditar && (
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full gap-1.5 text-muted-foreground"
+          onClick={onEditar}
+        >
+          <Pencil className="h-3.5 w-3.5" /> Editar dados pessoais
+        </Button>
       )}
     </div>
   );
