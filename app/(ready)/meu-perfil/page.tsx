@@ -59,12 +59,17 @@ function ReadOnlyField({ label, value, span }: { label: string; value?: string |
   );
 }
 
-// Botao "Editar" no header de cada secao. So aparece quando a secao nao esta em edicao.
-function SectionEditButton({ editing, onClick }: { editing: boolean; onClick: () => void }) {
-  if (editing) return null;
+// Botao "Editar" largo no rodape de cada secao (modo leitura). Mais visivel e
+// facil de tocar que um lapisinho no cabecalho.
+function SectionEditFooter({ onClick }: { onClick: () => void }) {
   return (
-    <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs text-muted-foreground" onClick={onClick}>
-      <Pencil className="h-3 w-3" /> Editar
+    <Button
+      variant="outline"
+      size="sm"
+      className="w-full gap-1.5 text-muted-foreground mt-1"
+      onClick={onClick}
+    >
+      <Pencil className="h-3.5 w-3.5" /> Editar
     </Button>
   );
 }
@@ -156,6 +161,7 @@ function tempoDesde(timestamp: number | undefined): string {
 }
 
 export default function MeuPerfilPage() {
+  // @ts-ignore Convex TS2589
   const profile = useQuery(api.membros.selfService.getMyProfile);
   const updateProfile = useMutation(api.membros.selfService.updateMyProfile);
   const updateMembresiaDatas = useMutation(api.membros.selfService.updateMembresiaDatas);
@@ -487,11 +493,10 @@ export default function MeuPerfilPage() {
 
       {/* Dados pessoais */}
       <Card>
-        <CardHeader className="pb-3 flex-row items-center justify-between">
+        <CardHeader className="pb-3">
           <CardTitle className="text-sm text-muted-foreground flex items-center gap-1.5">
             <User className="h-3.5 w-3.5" /> Dados pessoais
           </CardTitle>
-          <SectionEditButton editing={editingSection === "pessoais"} onClick={() => setEditingSection("pessoais")} />
         </CardHeader>
         <CardContent className="space-y-3">
           {editingSection === "pessoais" ? (
@@ -582,23 +587,24 @@ export default function MeuPerfilPage() {
             <ReadOnlyField label="Nacionalidade" value={ent?.nacionalidade} />
           </div>
           )}
-          {editingSection === "pessoais" && (
+          {editingSection === "pessoais" ? (
             <EditBar
               saving={saving}
               onCancel={() => handleCancelSection("pessoais")}
               onSave={() => handleSaveSection("pessoais")}
             />
+          ) : (
+            <SectionEditFooter onClick={() => setEditingSection("pessoais")} />
           )}
         </CardContent>
       </Card>
 
       {/* Contato */}
       <Card>
-        <CardHeader className="pb-3 flex-row items-center justify-between">
+        <CardHeader className="pb-3">
           <CardTitle className="text-sm text-muted-foreground flex items-center gap-1.5">
             <Phone className="h-3.5 w-3.5" /> Contato
           </CardTitle>
-          <SectionEditButton editing={editingSection === "contato"} onClick={() => setEditingSection("contato")} />
         </CardHeader>
         <CardContent className="space-y-3">
           {editingSection === "contato" ? (
@@ -621,23 +627,24 @@ export default function MeuPerfilPage() {
             <ReadOnlyField label="Email" value={ent?.email} />
           </div>
           )}
-          {editingSection === "contato" && (
+          {editingSection === "contato" ? (
             <EditBar
               saving={saving}
               onCancel={() => handleCancelSection("contato")}
               onSave={() => handleSaveSection("contato")}
             />
+          ) : (
+            <SectionEditFooter onClick={() => setEditingSection("contato")} />
           )}
         </CardContent>
       </Card>
 
       {/* Contato de emergencia */}
       <Card>
-        <CardHeader className="pb-3 flex-row items-center justify-between">
+        <CardHeader className="pb-3">
           <CardTitle className="text-sm text-muted-foreground flex items-center gap-1.5">
             <HeartPulse className="h-3.5 w-3.5" /> Contato de emergencia
           </CardTitle>
-          <SectionEditButton editing={editingSection === "emergencia"} onClick={() => setEditingSection("emergencia")} />
         </CardHeader>
         <CardContent className="space-y-3">
           {editingSection === "emergencia" ? (
@@ -662,23 +669,24 @@ export default function MeuPerfilPage() {
             <ReadOnlyField label="Parentesco" value={(contatoEmergencia as { parentesco?: string })?.parentesco} />
           </div>
           )}
-          {editingSection === "emergencia" && (
+          {editingSection === "emergencia" ? (
             <EditBar
               saving={saving}
               onCancel={() => handleCancelSection("emergencia")}
               onSave={() => handleSaveSection("emergencia")}
             />
+          ) : (
+            <SectionEditFooter onClick={() => setEditingSection("emergencia")} />
           )}
         </CardContent>
       </Card>
 
       {/* Endereco */}
       <Card>
-        <CardHeader className="pb-3 flex-row items-center justify-between">
+        <CardHeader className="pb-3">
           <CardTitle className="text-sm text-muted-foreground flex items-center gap-1.5">
             <MapPin className="h-3.5 w-3.5" /> Endereco
           </CardTitle>
-          <SectionEditButton editing={editingSection === "endereco"} onClick={() => setEditingSection("endereco")} />
         </CardHeader>
         <CardContent className="space-y-3">
           {editingSection === "endereco" ? (
@@ -723,23 +731,24 @@ export default function MeuPerfilPage() {
             <ReadOnlyField label="CEP" value={endereco?.cep} />
           </div>
           )}
-          {editingSection === "endereco" && (
+          {editingSection === "endereco" ? (
             <EditBar
               saving={saving}
               onCancel={() => handleCancelSection("endereco")}
               onSave={() => handleSaveSection("endereco")}
             />
+          ) : (
+            <SectionEditFooter onClick={() => setEditingSection("endereco")} />
           )}
         </CardContent>
       </Card>
 
       {/* Membresia */}
       <Card>
-        <CardHeader className="pb-3 flex-row items-center justify-between">
+        <CardHeader className="pb-3">
           <CardTitle className="text-sm text-muted-foreground flex items-center gap-1.5">
             <Church className="h-3.5 w-3.5" /> Vida na igreja
           </CardTitle>
-          <SectionEditButton editing={editingSection === "membresia"} onClick={() => setEditingSection("membresia")} />
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-2 text-sm">
@@ -826,6 +835,7 @@ export default function MeuPerfilPage() {
           />
           </>
           ) : (
+          <>
           <div className="grid gap-3 sm:grid-cols-2 pt-2 border-t">
             <ReadOnlyField
               label="Data de conversao"
@@ -844,6 +854,8 @@ export default function MeuPerfilPage() {
               }
             />
           </div>
+          <SectionEditFooter onClick={() => setEditingSection("membresia")} />
+          </>
           )}
         </CardContent>
       </Card>
