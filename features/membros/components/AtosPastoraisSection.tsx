@@ -115,7 +115,7 @@ export function AtosPastoraisSection({ membroId }: { membroId: Id<"membros"> }) 
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-        <CardTitle className="text-sm flex items-center gap-1.5">
+        <CardTitle className="text-sm text-muted-foreground flex items-center gap-1.5">
           <BookOpen className="h-3.5 w-3.5" /> Atos Pastorais
         </CardTitle>
         <Dialog open={open} onOpenChange={setOpen}>
