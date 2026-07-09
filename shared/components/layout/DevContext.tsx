@@ -40,7 +40,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "features/dashboard/components/ComentariosRecentesCard.tsx",
       "features/gravacoes/components/AvisosWidget.tsx",
     ],
-    queries: ["gravacoes.queries.listRecentesByTipo (tipo=SERMAO, limit=1)", "gravacoes.queries.getLatestAvisos", "gravacoes.comentarios.listGravacoesComComentariosRecentes (admin)", "boletim.queries.getLiveStatus", "membros.selfService.getMyProfile", "membros.queries.birthdaysThisMonth", "membros.cadastroVivo.getMyCompleteness"],
+    queries: ["gravacoes.queries.listRecentesByTipo (tipo=SERMAO, limit=1)", "gravacoes.queries.getLatestAvisos", "gravacoes.comentarios.listGravacoesComComentariosRecentes (admin)", "boletim.queries.getLiveStatus", "membros.selfService.getMyProfile", "membros.queries.birthdaysThisMonth", "pequenosGrupos.queries.meusColegasDePg", "membros.cadastroVivo.getMyCompleteness"],
     mutations: ["membros.bootstrap.bootstrapAdmin"],
     componentes: ["BoletimCard", "UltimoSermaoCard", "ComentariosRecentesCard", "ProfileCompletenessCard", "TodaySection", "BirthdayList", "SectionLabel", "AvisosWidget (drawer)", "BootstrapForm"],
     notas: [
@@ -50,7 +50,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "ComentariosRecentesCard: admin-only. Gravacoes com comentario recente agrupadas (titulo + count + preview do ultimo), link p/ /gravacoes/[id]. Usa denormalizado gravacoes.ultimoComentarioEm (indice by_ultimo_comentario) — custo fixo, nao varre comentarios",
       "ProfileCompletenessCard: mostra % completude do perfil + campos faltantes. Desaparece se 100% e atualizado <6m",
       "TodaySection: card Avisos abre Drawer com AvisosWidget",
-      "BirthdayList: scroll horizontal, avatares com tempo relativo",
+      "BirthdayList: scroll horizontal, avatares com tempo relativo. Colegas do meu PG (meusColegasDePg) vem primeiro, ganham dot ambar; anel ambar + label ambar quando aniversario nos proximos 7 dias. Detalhe mostra 'Do seu PG · [nome]'",
     ],
   },
   "/admin/acesso": {

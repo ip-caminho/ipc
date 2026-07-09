@@ -28,6 +28,13 @@ interface Person {
   dia: number;
   mes: number;
   jaPassou: boolean;
+  noMeuPg: boolean;
+  pgNome?: string;
+}
+
+// Aniversario do meu PG dentro da janela de destaque (proximos 7 dias)
+function isPgDestaque(p: Person): boolean {
+  return p.noMeuPg && !p.jaPassou && daysUntil(p.dia, p.mes) <= 7;
 }
 
 function daysUntil(dia: number, mes: number): number {
@@ -74,24 +81,26 @@ function BirthdayAvatar({
 }) {
   const initial = p.primeiroNome.charAt(0).toUpperCase() || "?";
   const sizeClass = size === "lg" ? "h-20 w-20 text-2xl" : "h-11 w-11 text-sm";
-  const ring = highlight
-    ? "ring-2 ring-blue-500 ring-offset-2 ring-offset-background"
-    : "";
-  if (p.foto) {
-    const px = size === "lg" ? 80 : 44;
-    return (
-      <Image
-        src={p.foto}
-        alt={p.nome}
-        width={px}
-        height={px}
-        sizes={size === "lg" ? "80px" : "44px"}
-        className={cn(sizeClass, "rounded-full object-cover", ring)}
-        unoptimized={!p.foto.startsWith("https://cdn.yhc.com.br")}
-      />
-    );
-  }
-  return (
+  // PG dentro da janela de 7 dias tem anel ambar (prioridade sobre o azul de
+  // "hoje"); demais aniversariantes de hoje mantem o anel azul.
+  const pgDestaque = isPgDestaque(p);
+  const ring = pgDestaque
+    ? "ring-2 ring-amber-500 ring-offset-2 ring-offset-background"
+    : highlight
+      ? "ring-2 ring-blue-500 ring-offset-2 ring-offset-background"
+      : "";
+  const dotSize = size === "lg" ? "h-4 w-4" : "h-3 w-3";
+  const inner = p.foto ? (
+    <Image
+      src={p.foto}
+      alt={p.nome}
+      width={size === "lg" ? 80 : 44}
+      height={size === "lg" ? 80 : 44}
+      sizes={size === "lg" ? "80px" : "44px"}
+      className={cn(sizeClass, "rounded-full object-cover", ring)}
+      unoptimized={!p.foto.startsWith("https://cdn.yhc.com.br")}
+    />
+  ) : (
     <div
       aria-label={p.nome}
       className={cn(
@@ -105,6 +114,21 @@ function BirthdayAvatar({
     >
       {initial}
     </div>
+  );
+
+  // Dot ambar no canto sinaliza "do seu PG" mesmo fora da janela de destaque.
+  if (!p.noMeuPg) return inner;
+  return (
+    <span className="relative inline-flex">
+      {inner}
+      <span
+        aria-hidden
+        className={cn(
+          dotSize,
+          "absolute -bottom-0.5 -right-0.5 rounded-full bg-amber-500 border-2 border-background",
+        )}
+      />
+    </span>
   );
 }
 
@@ -127,6 +151,11 @@ function BirthdayDetail({ p }: { p: Person }) {
       />
       <div className="space-y-1">
         <p className="text-base font-medium">{p.nome}</p>
+        {p.noMeuPg && (
+          <p className="text-xs font-medium text-amber-600 dark:text-amber-400">
+            Do seu PG{p.pgNome ? ` · ${p.pgNome}` : ""}
+          </p>
+        )}
         <p className="flex items-center justify-center gap-1.5 text-sm text-muted-foreground">
           <Cake className="h-3.5 w-3.5" aria-hidden />
           {dataFormatada}
@@ -166,8 +195,17 @@ export function BirthdayList() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   // @ts-ignore Convex TS2589
   const raw = useQuery(api.membros.queries.birthdaysThisMonth, {});
+  const colegasPg = useQuery(api.pequenosGrupos.queries.meusColegasDePg, {});
 
   const mesAtualLabel = format(new Date(), "MMMM", { locale: ptBR });
+
+  const pgPorMembro = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const c of (colegasPg as { membroId: string; pgNome: string }[]) ?? []) {
+      map.set(c.membroId, c.pgNome);
+    }
+    return map;
+  }, [colegasPg]);
 
   const aniversariantes: Person[] = useMemo(() => {
     if (!raw) return [];
@@ -176,6 +214,7 @@ export function BirthdayList() {
       .filter((a) => a.mes === mesAtual)
       .map((a) => {
         const nome = (a.nome as string) || "?";
+        const pgNome = pgPorMembro.get(a._id);
         return {
           id: a._id,
           nome,
@@ -185,14 +224,18 @@ export function BirthdayList() {
           dia: a.dia,
           mes: a.mes,
           jaPassou: a.jaPassou,
+          noMeuPg: pgNome !== undefined,
+          pgNome,
         } satisfies Person;
       })
       .sort((a, b) => {
+        // Colegas de PG vem primeiro; dentro de cada grupo, por proximidade.
+        if (a.noMeuPg !== b.noMeuPg) return a.noMeuPg ? -1 : 1;
         const aKey = a.jaPassou ? 10_000 + a.dia : daysUntil(a.dia, a.mes);
         const bKey = b.jaPassou ? 10_000 + b.dia : daysUntil(b.dia, b.mes);
         return aKey - bKey;
       });
-  }, [raw]);
+  }, [raw, pgPorMembro]);
 
   const selected = useMemo(
     () => aniversariantes.find((a) => a.id === selectedId) ?? null,
@@ -257,9 +300,11 @@ export function BirthdayList() {
                 <span
                   className={cn(
                     "text-[10px] leading-none",
-                    isToday
-                      ? "text-blue-600 dark:text-blue-400 font-semibold"
-                      : "text-muted-foreground",
+                    isPgDestaque(p)
+                      ? "text-amber-600 dark:text-amber-400 font-semibold"
+                      : isToday
+                        ? "text-blue-600 dark:text-blue-400 font-semibold"
+                        : "text-muted-foreground",
                   )}
                 >
                   {text}
