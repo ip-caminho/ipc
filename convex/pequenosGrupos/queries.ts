@@ -252,6 +252,48 @@ export const getFrequenciaResumo = query({
   },
 });
 
+export const meusColegasDePg = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return [];
+
+    // Meu membro (invariante: no maximo 1 por userId)
+    const meuMembro = await ctx.db
+      .query("membros")
+      .withIndex("by_user_id", (q) => q.eq("userId", userId))
+      .first();
+    if (!meuMembro) return [];
+
+    // PGs a que eu pertenco
+    const meusVinculos = await ctx.db
+      .query("pgMembros")
+      .withIndex("by_membro", (q) => q.eq("membroId", meuMembro._id))
+      .collect();
+    if (meusVinculos.length === 0) return [];
+
+    // Colegas de cada PG. Um colega em 2 PGs meus fica com o primeiro nome
+    // encontrado — suficiente para o rotulo de destaque.
+    const colegas = new Map<string, string>();
+    for (const vinculo of meusVinculos) {
+      const pg = await ctx.db.get(vinculo.pgId);
+      if (!pg || pg.status !== "ATIVO") continue;
+
+      const membrosDoPg = await ctx.db
+        .query("pgMembros")
+        .withIndex("by_pg", (q) => q.eq("pgId", vinculo.pgId))
+        .collect();
+
+      for (const pm of membrosDoPg) {
+        const key = pm.membroId.toString();
+        if (!colegas.has(key)) colegas.set(key, pg.nome);
+      }
+    }
+
+    return Array.from(colegas, ([membroId, pgNome]) => ({ membroId, pgNome }));
+  },
+});
+
 export const listByMembro = query({
   args: { membroId: v.id("membros") },
   handler: async (ctx, { membroId }) => {
