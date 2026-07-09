@@ -16,7 +16,7 @@ import { espelharConjuge, vincularCriancaAoConjuge } from "./familiaHelpers";
 import { createFieldAuditLogs, createActionAuditLog } from "../_shared/auditHelpers";
 import { getTipoRol, type CargoEclesiastico, type StatusEntidade, type TipoRol } from "./tipoRolHelpers";
 import { calcularResumoSecretario, type ResumoSecretario as ResumoSecretarioT } from "./resumoSecretarioHelpers";
-import type { Doc } from "../_generated/dataModel";
+import type { Doc, Id } from "../_generated/dataModel";
 
 export type RolCategoria = "PRINCIPAL" | "SEPARADO" | "AUSENTE" | "ARQUIVO";
 
@@ -263,15 +263,32 @@ function temPendencia(
  * pendencia, sobre toda a base. Reusado pela lista e pelo resumo.
  */
 async function montarLinhasSecretario(ctx: QueryCtx): Promise<LinhaSecretario[]> {
-  // A pagina precisa de praticamente todas as entidades (cada membro aponta
-  // para uma). Um collect de range unico substitui ~1 get sequencial por
-  // membro — mesma leitura de documentos, latencia muito menor.
-  const [membros, entidades, responsaveis] = await Promise.all([
+  // So membros e vinculos de dependencia sao lidos por completo (tabelas
+  // pequenas). As entidades sao buscadas POR ID — apenas as referenciadas
+  // (membros + criancas dependentes), nunca a tabela `entidades` inteira, que
+  // guarda toda a populacao (visitantes, contatos, fornecedores, PJ...) e e a
+  // origem da lentidao. Cada get roda em paralelo, entao a latencia se mantem.
+  const [membros, responsaveis] = await Promise.all([
     ctx.db.query("membros").collect(),
-    ctx.db.query("entidades").collect(),
     ctx.db.query("responsaveis").collect(),
   ]);
-  const todasEnts = new Map<string, Doc<"entidades">>(entidades.map((e) => [e._id, e]));
+
+  const membroEntIds = new Set<string>(membros.map((m) => m.entidadeId as string));
+  const criancaIds = new Set<string>();
+  for (const r of responsaveis) {
+    // So dependentes de responsavel que e membro entram na tabela.
+    if (membroEntIds.has(r.responsavelEntidadeId as string)) {
+      criancaIds.add(r.criancaEntidadeId as string);
+    }
+  }
+  const idsNecessarios = [...new Set<string>([...membroEntIds, ...criancaIds])];
+  const entsCarregadas = await Promise.all(
+    idsNecessarios.map((id) => ctx.db.get(id as Id<"entidades">)),
+  );
+  const todasEnts = new Map<string, Doc<"entidades">>();
+  for (const e of entsCarregadas) {
+    if (e) todasEnts.set(e._id, e);
+  }
 
   const membroPorEnt = new Map<string, Doc<"membros">>();
   const entPorId = new Map<string, Doc<"entidades">>();
