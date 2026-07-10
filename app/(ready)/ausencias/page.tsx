@@ -25,6 +25,7 @@ import {
 import { Plus, CalendarOff, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AvisoAusenciaDialog } from "@features/ausencias/components/AvisoAusenciaDialog";
+import { getConvexErrorMessage } from "@/shared/lib/utils/convexError";
 
 function formatBR(data: string): string {
   const [y, m, d] = data.split("-");
@@ -57,7 +58,7 @@ function AusenciasContent() {
       await removerAusencia({ id: removerId });
       toast.success("Ausência removida");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao remover");
+      toast.error(getConvexErrorMessage(error, "Erro ao remover"));
     } finally {
       setRemoverId(null);
     }

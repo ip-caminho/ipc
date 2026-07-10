@@ -1,6 +1,6 @@
 import { mutation } from "../_generated/server";
 import { getSaoPauloDate } from "../_shared/datetime";
-import { v } from "convex/values";
+import { v, ConvexError } from "convex/values";
 import { createActionAuditLog, createFieldAuditLogs } from "../_shared/auditHelpers";
 import { requirePermission } from "../_shared/requirePermission";
 
@@ -185,8 +185,8 @@ export const upsertEscala = mutation({
       );
       if (indisp || ausente) {
         const [, mes, dia] = culto.data.split("-");
-        throw new Error(
-          `Este membro esta marcado como ausente em ${dia}/${mes}. Remova a ausencia antes de escalar.`
+        throw new ConvexError(
+          `Este membro está marcado como ausente em ${dia}/${mes}. Remova a ausência antes de escalar.`
         );
       }
     }
