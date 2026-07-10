@@ -452,6 +452,18 @@ export default defineSchema({
     .index("by_data", ["data"])
     .index("by_membro_data", ["membroId", "data"]),
 
+  // Aviso de ausencia: lideranca ("obreiro para cima") avisa que estara ausente
+  // num intervalo de datas. Sempre a propria ausencia (membroId = self).
+  avisosAusencia: defineTable({
+    membroId: v.id("membros"),      // quem estara ausente (sempre o proprio)
+    dataInicio: v.string(),          // YYYY-MM-DD
+    dataFim: v.optional(v.string()), // YYYY-MM-DD (default = dataInicio)
+    motivo: v.optional(v.string()),
+    criadoEm: v.number(),
+  })
+    .index("by_dataInicio", ["dataInicio"])
+    .index("by_membro", ["membroId"]),
+
   // ===== Avisos (boletim) =====
   avisos: defineTable({
     titulo: v.string(),

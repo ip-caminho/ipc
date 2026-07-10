@@ -134,6 +134,31 @@ function CalendarioContent() {
     return m;
   }, [pregadoresRaw]);
   const pregadoresProp = verPregadores ? pregadores : undefined;
+
+  // Ausências da liderança na janela visível (só para quem tem ausencias:read).
+  // @ts-ignore Convex TS2589
+  const ausenciasRaw = useQuery(
+    api.ausencias.queries.listPorPeriodo,
+    can("ausencias:read")
+      ? { de: format(inicio, "yyyy-MM-dd"), ate: format(fim, "yyyy-MM-dd") }
+      : "skip",
+  ) as { dataInicio: string; dataFim?: string; nomeCompleto: string }[] | undefined;
+  const ausenciasPorDia = useMemo(() => {
+    const m: Record<string, string[]> = {};
+    for (const a of ausenciasRaw ?? []) {
+      const [ys, ms, ds] = a.dataInicio.split("-").map(Number);
+      const [ye, me, de] = (a.dataFim || a.dataInicio).split("-").map(Number);
+      const cur = new Date(ys, ms - 1, ds);
+      const stop = new Date(ye, me - 1, de);
+      while (cur <= stop) {
+        const iso = format(cur, "yyyy-MM-dd");
+        (m[iso] ??= []).push(a.nomeCompleto || "Ausente");
+        cur.setDate(cur.getDate() + 1);
+      }
+    }
+    return m;
+  }, [ausenciasRaw]);
+
   // @ts-ignore Convex TS2589
   const ministerios = useQuery(api.ministerios.queries.list, { status: "ATIVO" });
   // @ts-ignore Convex TS2589
@@ -324,6 +349,7 @@ function CalendarioContent() {
               onNavigate={setRefDate}
               podeCriar={can("calendario:create")}
               pregadores={pregadoresProp}
+              ausencias={ausenciasPorDia}
             />
           ) : view === "semana" ? (
             <CalendarioSemana

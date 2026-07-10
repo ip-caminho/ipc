@@ -19,6 +19,8 @@ export const ALL_PERMISSIONS = [
   "gravacoes:read", "gravacoes:create", "gravacoes:update", "gravacoes:delete", "gravacoes:process_ai", "gravacoes:share",
   // Escalas
   "escalas:read", "escalas:create", "escalas:update", "escalas:delete",
+  // Ausencias
+  "ausencias:read", "ausencias:manage",
   // Avisos
   "avisos:create", "avisos:manage",
   // Louvor
@@ -86,6 +88,8 @@ function getPermissionLabel(perm: string): string {
     "escalas:create": "Criar Escalas",
     "escalas:update": "Editar Escalas",
     "escalas:delete": "Excluir Escalas",
+    "ausencias:read": "Ver Ausencias da Lideranca",
+    "ausencias:manage": "Registrar/Remover Ausencia (propria)",
     "avisos:create": "Lançar Avisos",
     "avisos:manage": "Gerenciar Avisos (editar/excluir)",
     "audit:read": "Ver Auditoria",
@@ -153,6 +157,7 @@ function getPermissionModule(perm: string): string {
   if (perm.startsWith("diretorio:")) return "Diretorio";
   if (perm.startsWith("gravacoes:")) return "Gravacoes";
   if (perm.startsWith("escalas:")) return "Escalas";
+  if (perm.startsWith("ausencias:")) return "Escalas";
   if (perm.startsWith("avisos:")) return "Avisos";
   if (perm.startsWith("audit:")) return "Auditoria";
   if (perm.startsWith("pastoreio:")) return "Pastoreio";

@@ -168,6 +168,29 @@ export const upsertEscala = mutation({
     const culto = await ctx.db.get(cultoId);
     if (!culto) throw new Error("Culto nao encontrado");
 
+    // Trava reversa: nao escalar quem esta marcado como ausente/indisponivel na data.
+    if (membroId) {
+      const indisp = await ctx.db
+        .query("indisponibilidades")
+        .withIndex("by_membro_data", (q) =>
+          q.eq("membroId", membroId).eq("data", culto.data)
+        )
+        .first();
+      const avisos = await ctx.db
+        .query("avisosAusencia")
+        .withIndex("by_membro", (q) => q.eq("membroId", membroId))
+        .collect();
+      const ausente = avisos.some(
+        (a) => culto.data >= a.dataInicio && culto.data <= (a.dataFim || a.dataInicio)
+      );
+      if (indisp || ausente) {
+        const [, mes, dia] = culto.data.split("-");
+        throw new Error(
+          `Este membro esta marcado como ausente em ${dia}/${mes}. Remova a ausencia antes de escalar.`
+        );
+      }
+    }
+
     let outrasFuncoes: string[] = [];
     if (membroId) {
       const todasEscalas = await ctx.db

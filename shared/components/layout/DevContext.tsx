@@ -388,6 +388,27 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "Aba Equipes: card '+Nova equipe' com dialog para criar (admin/escalas:update)",
     ],
   },
+  "/ausencias": {
+    nome: "Ausencias",
+    pagina: "app/(ready)/ausencias/page.tsx",
+    arquivos: [
+      "app/(ready)/ausencias/page.tsx",
+      "features/ausencias/components/AvisoAusenciaDialog.tsx",
+      "features/ausencias/lib/validations.ts",
+      "convex/ausencias/mutations.ts",
+      "convex/ausencias/queries.ts",
+    ],
+    queries: ["ausencias.queries.listProximas", "ausencias.queries.listPorPeriodo"],
+    mutations: ["ausencias.mutations.criarAusencia", "ausencias.mutations.removerAusencia"],
+    componentes: ["AvisoAusenciaDialog", "PermissionGate", "AlertDialog"],
+    notas: [
+      "Lideranca ('obreiro para cima', via ausencias:read/manage) avisa ausencia num intervalo de datas",
+      "So o proprio registra (ownership); push para a lideranca existe (sendPushToRoles) mas esta DESLIGADO por flag (PUSH_AUSENCIA_ENABLED em ausencias/mutations.ts)",
+      "Travas bidirecionais: nao marca ausencia se ja escalado; upsertEscala bloqueia escalar quem esta ausente",
+      "Unifica com indisponibilidades (domingos do intervalo) — gerador de escala ja respeita",
+      "Reflete tambem como tarja ambar no /calendario (CalendarioMes, prop ausencias)",
+    ],
+  },
   "/cultos": {
     nome: "Escala de Cultos",
     pagina: "app/(ready)/cultos/page.tsx",

@@ -11,7 +11,7 @@ import {
   isToday,
   getDay,
 } from "date-fns";
-import { Mic } from "lucide-react";
+import { Mic, CalendarOff } from "lucide-react";
 import { cn } from "@/shared/lib/utils/cn";
 import { getFeriado } from "../lib/feriados";
 import { eventosPorDia } from "../lib/agrupar";
@@ -32,6 +32,8 @@ type Props = {
   podeCriar?: boolean;
   // Pregador do dia (iso -> nome), quando o toggle "Pregadores" está ligado.
   pregadores?: Record<string, string>;
+  // Ausências da liderança no dia (iso -> nomes). Só para quem tem ausencias:read.
+  ausencias?: Record<string, string[]>;
 };
 
 export function CalendarioMes({
@@ -44,6 +46,7 @@ export function CalendarioMes({
   onNavigate,
   podeCriar = true,
   pregadores,
+  ausencias,
 }: Props) {
   const inicio = startOfWeek(startOfMonth(refDate), { weekStartsOn: 0 });
   const fim = endOfWeek(endOfMonth(refDate), { weekStartsOn: 0 });
@@ -158,6 +161,17 @@ export function CalendarioMes({
                     <span className="truncate">{pregadores[iso]}</span>
                   </div>
                 )}
+
+                {ausencias?.[iso]?.length ? (
+                  <div className="mt-0.5 flex items-center gap-1 text-[10px] text-amber-600 dark:text-amber-400">
+                    <CalendarOff className="h-3 w-3 shrink-0" />
+                    <span className="truncate">
+                      {ausencias[iso].length === 1
+                        ? ausencias[iso][0]
+                        : `${ausencias[iso].length} ausentes`}
+                    </span>
+                  </div>
+                ) : null}
               </button>
             );
           })}

@@ -26,6 +26,8 @@ export const INITIAL_ROLE_PERMISSIONS: Record<string, string[]> = {
     "gravacoes:read", "gravacoes:create", "gravacoes:update", "gravacoes:process_ai",
     // Escalas
     "escalas:read", "escalas:create", "escalas:update",
+    // Ausencias
+    "ausencias:read", "ausencias:manage",
     // Avisos
     "avisos:create", "avisos:manage",
     // Louvor
@@ -68,6 +70,7 @@ export const INITIAL_ROLE_PERMISSIONS: Record<string, string[]> = {
     "membros:read", "membros:self_service",
     "gravacoes:read",
     "escalas:read",
+    "ausencias:read", "ausencias:manage",
     "louvor:read",
     "ministerios:read",
     "calendario:read",
@@ -86,6 +89,8 @@ export const INITIAL_ROLE_PERMISSIONS: Record<string, string[]> = {
     "pedidos_oracao:create", "pedidos_oracao:read",
     // Calendario (visivel a todos)
     "calendario:read",
+    // Ausencias (avisar que estara ausente)
+    "ausencias:read", "ausencias:manage",
     // Avisos (obreiro lanca avisos do domingo)
     "avisos:create",
     // Tarefas
@@ -102,6 +107,8 @@ export const INITIAL_ROLE_PERMISSIONS: Record<string, string[]> = {
     "gravacoes:read", "gravacoes:create", "gravacoes:update", "gravacoes:delete", "gravacoes:process_ai",
     // Escalas
     "escalas:read", "escalas:create", "escalas:update", "escalas:delete",
+    // Ausencias
+    "ausencias:read", "ausencias:manage",
     // Avisos
     "avisos:create", "avisos:manage",
     // Louvor
@@ -156,6 +163,8 @@ export const INITIAL_ROLE_PERMISSIONS: Record<string, string[]> = {
     "atos_pastorais:manage",
     // Calendario (visivel a todos)
     "calendario:read",
+    // Ausencias
+    "ausencias:read", "ausencias:manage",
     // Site Publico
     "site_publico:manage",
     // Inscricoes de evento

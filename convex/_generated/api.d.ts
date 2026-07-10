@@ -23,6 +23,8 @@ import type * as atosPastorais_mutations from "../atosPastorais/mutations.js";
 import type * as atosPastorais_queries from "../atosPastorais/queries.js";
 import type * as audit_mutations from "../audit/mutations.js";
 import type * as audit_queries from "../audit/queries.js";
+import type * as ausencias_mutations from "../ausencias/mutations.js";
+import type * as ausencias_queries from "../ausencias/queries.js";
 import type * as auth from "../auth.js";
 import type * as auth_auth from "../auth/auth.js";
 import type * as auth_phoneOTP from "../auth/phoneOTP.js";
@@ -177,6 +179,8 @@ declare const fullApi: ApiFromModules<{
   "atosPastorais/queries": typeof atosPastorais_queries;
   "audit/mutations": typeof audit_mutations;
   "audit/queries": typeof audit_queries;
+  "ausencias/mutations": typeof ausencias_mutations;
+  "ausencias/queries": typeof ausencias_queries;
   auth: typeof auth;
   "auth/auth": typeof auth_auth;
   "auth/phoneOTP": typeof auth_phoneOTP;
