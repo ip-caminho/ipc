@@ -6,6 +6,7 @@ import {
   Music,
   BookOpen,
   CalendarDays,
+  CalendarOff,
   Library,
   DoorOpen,
   Church,
@@ -196,6 +197,13 @@ export const GESTAO_SECTIONS: NavSection[] = [
         icon: Megaphone,
         description: "Comunicados semanais",
         permission: "avisos:create",
+      },
+      {
+        label: "Ausências",
+        href: "/ausencias",
+        icon: CalendarOff,
+        description: "Avisar que estará ausente e ver ausências da liderança",
+        permission: "ausencias:read",
       },
       {
         label: "Multimídia",
