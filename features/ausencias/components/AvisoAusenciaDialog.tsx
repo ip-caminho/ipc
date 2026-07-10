@@ -18,6 +18,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Label } from "@/shared/components/ui/label";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { DateFieldBR } from "@/shared/components/ui/date-picker-br";
+import { getConvexErrorMessage } from "@/shared/lib/utils/convexError";
 import { ausenciaFormSchema, type AusenciaFormValues } from "../lib/validations";
 
 interface Props {
@@ -53,13 +54,7 @@ export function AvisoAusenciaDialog({ open, onOpenChange }: Props) {
       reset();
       onOpenChange(false);
     } catch (error) {
-      const msg =
-        error instanceof Error
-          ? error.message
-          : error && typeof error === "object" && "message" in error
-            ? (error as any).message
-            : "Erro ao registrar ausência";
-      toast.error(msg);
+      toast.error(getConvexErrorMessage(error, "Erro ao registrar ausência"));
     }
   }
 

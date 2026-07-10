@@ -1,5 +1,5 @@
 import { mutation } from "../_generated/server";
-import { v } from "convex/values";
+import { v, ConvexError } from "convex/values";
 import { requirePermission } from "../_shared/requirePermission";
 
 // Push de aviso de ausencia para a lideranca. DESLIGADO por enquanto
@@ -75,8 +75,7 @@ export const criarAusencia = mutation({
     motivo: v.optional(v.string()),
   },
   handler: async (ctx, { dataInicio, dataFim, motivo }) => {
-    try {
-      const { membro } = await requirePermission(ctx, "ausencias:manage");
+    const { membro } = await requirePermission(ctx, "ausencias:manage");
 
     const fim = dataFim && dataFim > dataInicio ? dataFim : dataInicio;
 
@@ -84,8 +83,8 @@ export const criarAusencia = mutation({
     const domingos = getDomingosNoIntervalo(dataInicio, fim);
     for (const domingo of domingos) {
       if (await estaEscaladoNaData(ctx, membro._id, domingo)) {
-        throw new Error(
-          `Voce ja esta escalado em ${formatBR(domingo)}. Fale com o coordenador antes de registrar ausencia.`
+        throw new ConvexError(
+          `Você já está escalado em ${formatBR(domingo)}. Fale com o coordenador antes de registrar ausência.`
         );
       }
     }
@@ -133,11 +132,7 @@ export const criarAusencia = mutation({
       });
     }
 
-      return { id };
-    } catch (err) {
-      console.error("criarAusencia erro:", err);
-      throw err;
-    }
+    return { id };
   },
 });
 
@@ -147,9 +142,9 @@ export const removerAusencia = mutation({
     const { membro } = await requirePermission(ctx, "ausencias:manage");
 
     const aviso = await ctx.db.get(id);
-    if (!aviso) throw new Error("Ausencia nao encontrada");
+    if (!aviso) throw new ConvexError("Ausência não encontrada");
     if (aviso.membroId !== membro._id) {
-      throw new Error("Voce so pode remover a sua propria ausencia");
+      throw new ConvexError("Você só pode remover a sua própria ausência");
     }
 
     await ctx.db.delete(id);

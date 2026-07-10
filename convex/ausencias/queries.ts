@@ -38,28 +38,23 @@ async function comNome(ctx: any, aviso: any, membroAtualId: string) {
 export const listProximas = query({
   args: {},
   handler: async (ctx) => {
-    try {
-      const auth = await checkPermission(ctx, "ausencias:read");
-      if (!auth) return [];
+    const auth = await checkPermission(ctx, "ausencias:read");
+    if (!auth) return [];
 
-      const hoje = getSaoPauloDateString();
-      // Limita a leitura a ausencias recentes/futuras (cobre intervalos em curso).
-      const cutoff = subtrairDias(hoje, 60);
+    const hoje = getSaoPauloDateString();
+    // Limita a leitura a ausencias recentes/futuras (cobre intervalos em curso).
+    const cutoff = subtrairDias(hoje, 60);
 
-      const avisos = await ctx.db
-        .query("avisosAusencia")
-        .withIndex("by_dataInicio", (q: any) => q.gte("dataInicio", cutoff))
-        .collect();
+    const avisos = await ctx.db
+      .query("avisosAusencia")
+      .withIndex("by_dataInicio", (q: any) => q.gte("dataInicio", cutoff))
+      .collect();
 
-      const vigentes = avisos
-        .filter((a) => (a.dataFim || a.dataInicio) >= hoje)
-        .sort((a, b) => a.dataInicio.localeCompare(b.dataInicio));
+    const vigentes = avisos
+      .filter((a) => (a.dataFim || a.dataInicio) >= hoje)
+      .sort((a, b) => a.dataInicio.localeCompare(b.dataInicio));
 
-      return Promise.all(vigentes.map((a) => comNome(ctx, a, auth.membro._id)));
-    } catch (err) {
-      console.error("listProximas erro:", err);
-      throw err;
-    }
+    return Promise.all(vigentes.map((a) => comNome(ctx, a, auth.membro._id)));
   },
 });
 
