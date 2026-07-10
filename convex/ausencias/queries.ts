@@ -15,13 +15,22 @@ function subtrairDias(data: string, dias: number): string {
 }
 
 async function comNome(ctx: any, aviso: any, membroAtualId: string) {
-  const membro = await ctx.db.get(aviso.membroId);
-  const entidade = membro ? await ctx.db.get(membro.entidadeId) : null;
-  return {
-    ...aviso,
-    nomeCompleto: entidade?.nomeCompleto || "",
-    podeRemover: aviso.membroId === membroAtualId,
-  };
+  try {
+    const membro = await ctx.db.get(aviso.membroId);
+    const entidade = membro?.entidadeId ? await ctx.db.get(membro.entidadeId) : null;
+    return {
+      ...aviso,
+      nomeCompleto: entidade?.nomeCompleto || "—",
+      podeRemover: aviso.membroId === membroAtualId,
+    };
+  } catch (err) {
+    console.error("comNome erro para aviso", aviso._id, ":", err);
+    return {
+      ...aviso,
+      nomeCompleto: "—",
+      podeRemover: aviso.membroId === membroAtualId,
+    };
+  }
 }
 
 // Ausencias vigentes ou futuras (dataFim >= hoje), com nome do membro.
@@ -29,23 +38,28 @@ async function comNome(ctx: any, aviso: any, membroAtualId: string) {
 export const listProximas = query({
   args: {},
   handler: async (ctx) => {
-    const auth = await checkPermission(ctx, "ausencias:read");
-    if (!auth) return [];
+    try {
+      const auth = await checkPermission(ctx, "ausencias:read");
+      if (!auth) return [];
 
-    const hoje = getSaoPauloDateString();
-    // Limita a leitura a ausencias recentes/futuras (cobre intervalos em curso).
-    const cutoff = subtrairDias(hoje, 60);
+      const hoje = getSaoPauloDateString();
+      // Limita a leitura a ausencias recentes/futuras (cobre intervalos em curso).
+      const cutoff = subtrairDias(hoje, 60);
 
-    const avisos = await ctx.db
-      .query("avisosAusencia")
-      .withIndex("by_dataInicio", (q: any) => q.gte("dataInicio", cutoff))
-      .collect();
+      const avisos = await ctx.db
+        .query("avisosAusencia")
+        .withIndex("by_dataInicio", (q: any) => q.gte("dataInicio", cutoff))
+        .collect();
 
-    const vigentes = avisos
-      .filter((a) => (a.dataFim || a.dataInicio) >= hoje)
-      .sort((a, b) => a.dataInicio.localeCompare(b.dataInicio));
+      const vigentes = avisos
+        .filter((a) => (a.dataFim || a.dataInicio) >= hoje)
+        .sort((a, b) => a.dataInicio.localeCompare(b.dataInicio));
 
-    return Promise.all(vigentes.map((a) => comNome(ctx, a, auth.membro._id)));
+      return Promise.all(vigentes.map((a) => comNome(ctx, a, auth.membro._id)));
+    } catch (err) {
+      console.error("listProximas erro:", err);
+      throw err;
+    }
   },
 });
 
