@@ -53,7 +53,13 @@ export function AvisoAusenciaDialog({ open, onOpenChange }: Props) {
       reset();
       onOpenChange(false);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao registrar ausência");
+      const msg =
+        error instanceof Error
+          ? error.message
+          : error && typeof error === "object" && "message" in error
+            ? (error as any).message
+            : "Erro ao registrar ausência";
+      toast.error(msg);
     }
   }
 

@@ -23,20 +23,22 @@ function getPushRef() {
 }
 
 // Domingos (YYYY-MM-DD) dentro do intervalo [inicio, fim], inclusivo.
+// Usa UTC day-of-week pra evitar problemas de timezone.
 function getDomingosNoIntervalo(inicio: string, fim: string): string[] {
   const domingos: string[] = [];
-  const [ys, ms, ds] = inicio.split("-").map(Number);
-  const [ye, me, de] = fim.split("-").map(Number);
-  const cur = new Date(ys, ms - 1, ds);
-  const end = new Date(ye, me - 1, de);
+  let cur = inicio;
+  const end = fim;
+
   while (cur <= end) {
-    if (cur.getDay() === 0) {
-      const y = cur.getFullYear();
-      const m = String(cur.getMonth() + 1).padStart(2, "0");
-      const d = String(cur.getDate()).padStart(2, "0");
-      domingos.push(`${y}-${m}-${d}`);
+    // Parse como UTC pra calcular day-of-week consistentemente
+    const dt = new Date(cur + "T00:00:00Z");
+    if (dt.getUTCDay() === 0) {
+      domingos.push(cur);
     }
-    cur.setDate(cur.getDate() + 1);
+    // Avancar pra proxima data
+    const [y, m, d] = cur.split("-").map(Number);
+    const nextDt = new Date(Date.UTC(y, m - 1, d + 1));
+    cur = nextDt.toISOString().split("T")[0];
   }
   return domingos;
 }
@@ -73,7 +75,8 @@ export const criarAusencia = mutation({
     motivo: v.optional(v.string()),
   },
   handler: async (ctx, { dataInicio, dataFim, motivo }) => {
-    const { membro } = await requirePermission(ctx, "ausencias:manage");
+    try {
+      const { membro } = await requirePermission(ctx, "ausencias:manage");
 
     const fim = dataFim && dataFim > dataInicio ? dataFim : dataInicio;
 
@@ -130,7 +133,11 @@ export const criarAusencia = mutation({
       });
     }
 
-    return { id };
+      return { id };
+    } catch (err) {
+      console.error("criarAusencia erro:", err);
+      throw err;
+    }
   },
 });
 
