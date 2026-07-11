@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useAuth } from "@shared/providers/PermissionsProvider";
+import { normalizePapel } from "../lib/constants";
 
 export function useProfessorTurmas() {
   const { membroId } = useAuth();
@@ -29,7 +30,8 @@ export function useProfessorTurmas() {
     const futuras = escalas.filter((e: any) => e.data >= hoje);
     const minhas = futuras.filter((e: any) =>
       e.membros?.some(
-        (m: any) => m.membroId === membroId && m.papel === "Professor"
+        (m: any) =>
+          m.membroId === membroId && normalizePapel(m.papel) === "PROFESSOR"
       )
     );
     const subgrupos = minhas
