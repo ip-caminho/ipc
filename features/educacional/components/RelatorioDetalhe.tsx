@@ -10,9 +10,12 @@ import {
   DialogTitle,
 } from "@/shared/components/ui/dialog";
 import { Badge } from "@/shared/components/ui/badge";
+import { Button } from "@/shared/components/ui/button";
+import { Share2 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { TURMA_COLORS } from "../lib/constants";
+import { shareRelatorioWhatsApp } from "../lib/relatorioWhatsApp";
 
 interface RelatorioDetalheProps {
   id: Id<"eduRelatorios"> | null;
@@ -37,6 +40,7 @@ function Campo({ label, valor }: { label: string; valor?: string }) {
 
 export function RelatorioDetalhe({ id, onOpenChange }: RelatorioDetalheProps) {
   const relatorio = useQuery(
+    // @ts-ignore Convex TS2589
     api.educacional.queries.getRelatorio,
     id ? { id } : "skip"
   );
@@ -101,6 +105,18 @@ export function RelatorioDetalhe({ id, onOpenChange }: RelatorioDetalheProps) {
                   </p>
                 )}
               </div>
+
+              <Button
+                className="w-full"
+                onClick={() => shareRelatorioWhatsApp(relatorio)}
+              >
+                <Share2 className="h-4 w-4 mr-2" />
+                Compartilhar no WhatsApp
+              </Button>
+              <p className="text-xs text-muted-foreground text-center">
+                Envia titulo, data, professores e a licao. Presenca e observacoes
+                internas nao vao na mensagem.
+              </p>
             </div>
           </>
         )}
