@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation, useConvex } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useAuth } from "@shared/providers/PermissionsProvider";
@@ -26,6 +26,7 @@ import {
   Cake,
   Heart,
   LayoutDashboard,
+  Share2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
@@ -51,6 +52,7 @@ import { EduEmptyState } from "@features/educacional/components/EduEmptyState";
 import type { CriancaFormValues } from "@features/educacional/lib/validations";
 import type { RelatorioFormValues } from "@features/educacional/lib/validations";
 import { agruparEscalas, particionarDias, type DiaEscala } from "@features/educacional/lib/escala";
+import { shareRelatorioWhatsApp } from "@features/educacional/lib/relatorioWhatsApp";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -72,6 +74,28 @@ export default function EducacionalPage() {
   const canWriteEdu = can("educacional:write");
   const canReadVol = can("voluntarios_edu:read");
   const isCoordenador = canManage || canWriteEdu;
+  const convex = useConvex();
+
+  // Atalho do card: busca o relatório completo sob demanda (a lista é enxuta)
+  // e dispara o compartilhamento no WhatsApp.
+  const handleShareRelatorio = async (
+    e: React.MouseEvent,
+    id: Id<"eduRelatorios">
+  ) => {
+    e.stopPropagation();
+    try {
+      const rel = await convex.query(api.educacional.queries.getRelatorio, {
+        id,
+      });
+      if (!rel) {
+        toast.error("Relatorio nao encontrado");
+        return;
+      }
+      await shareRelatorioWhatsApp(rel);
+    } catch {
+      toast.error("Erro ao preparar a mensagem");
+    }
+  };
 
   // Deteccao de persona: professor escalado em turma
   const { turmas: minhasTurmas, isLoading: loadingTurmas } = useProfessorTurmas();
@@ -711,9 +735,20 @@ export default function EducacionalPage() {
                               Turma {r.turma}
                             </Badge>
                           </div>
-                          <Badge variant="outline">
-                            {r.totalPresentes} presente{r.totalPresentes !== 1 ? "s" : ""}
-                          </Badge>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <Badge variant="outline">
+                              {r.totalPresentes} presente{r.totalPresentes !== 1 ? "s" : ""}
+                            </Badge>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-9 w-9 text-green-600"
+                              onClick={(e) => handleShareRelatorio(e, r._id)}
+                              aria-label="Compartilhar no WhatsApp"
+                            >
+                              <Share2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                         {r.tema && (
                           <p className="text-xs font-medium mt-1">{r.tema}</p>
