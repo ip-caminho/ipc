@@ -1,4 +1,10 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
+import {
+  EDU_VOLUNTARIO_DERIVED,
+  derivedEduVoluntarioPerms,
+} from "./eduVoluntarioPerms";
+
+const DERIVED_SET = new Set<string>(EDU_VOLUNTARIO_DERIVED);
 
 async function loadAuthAndPerms(ctx: any) {
   const userId = await getAuthUserId(ctx);
@@ -29,6 +35,23 @@ function permsAllow(perms: string[], permission: string): boolean {
   return false;
 }
 
+// Permite se a base concede OU se a permissão pedida é derivada de ser
+// voluntário (Prof/Aux) do educacional. A leitura de eduVoluntarios só ocorre
+// quando a base nega E a permissão pedida é uma das derivadas.
+async function allows(
+  ctx: any,
+  membro: any,
+  perms: string[],
+  permission: string
+): Promise<boolean> {
+  if (permsAllow(perms, permission)) return true;
+  if (DERIVED_SET.has(permission)) {
+    const derived = await derivedEduVoluntarioPerms(ctx, membro._id);
+    if (derived.includes(permission)) return true;
+  }
+  return false;
+}
+
 /**
  * Shared permission check for mutations.
  * Verifies authentication + role-based permission.
@@ -39,7 +62,7 @@ export async function requirePermission(ctx: any, permission: string) {
   if (!ctxData) throw new Error("Not authenticated");
   const { userId, membro, perms } = ctxData;
 
-  if (!permsAllow(perms, permission)) {
+  if (!(await allows(ctx, membro, perms, permission))) {
     throw new Error("Sem permissao");
   }
 
@@ -56,7 +79,7 @@ export async function checkPermission(ctx: any, permission: string) {
   if (!ctxData) return null;
   const { userId, membro, perms } = ctxData;
 
-  if (!permsAllow(perms, permission)) return null;
+  if (!(await allows(ctx, membro, perms, permission))) return null;
 
   return { userId, membro };
 }
@@ -71,9 +94,14 @@ export async function requireAnyPermission(ctx: any, permissions: string[]) {
   if (!ctxData) throw new Error("Not authenticated");
   const { userId, membro, perms } = ctxData;
 
-  if (!permissions.some((p) => permsAllow(perms, p))) {
-    throw new Error("Sem permissao");
+  let ok = false;
+  for (const p of permissions) {
+    if (await allows(ctx, membro, perms, p)) {
+      ok = true;
+      break;
+    }
   }
+  if (!ok) throw new Error("Sem permissao");
 
   return { userId, membro };
 }
