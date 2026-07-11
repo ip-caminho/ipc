@@ -26,6 +26,7 @@ import { criancaFormSchema, type CriancaFormValues } from "../lib/validations";
 import { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { useAuth } from "@shared/providers/PermissionsProvider";
 
 const OVELHINHA_NONE = "__none__";
 
@@ -45,6 +46,8 @@ export function CriancaForm({
   isEditing,
 }: CriancaFormProps) {
   const [loading, setLoading] = useState(false);
+  const { can } = useAuth();
+  const canMedical = can("criancas:medical");
   // @ts-ignore Convex TS2589
   const ovelhinhasAptas = useQuery(api.educacional.queries.listOvelhinhasAptas, {});
 
@@ -177,10 +180,12 @@ export function CriancaForm({
             )}
           </div>
 
-          <div className="space-y-1">
-            <Label>Observacoes medicas</Label>
-            <Textarea {...form.register("observacoesMedicas")} rows={2} />
-          </div>
+          {canMedical && (
+            <div className="space-y-1">
+              <Label>Observacoes medicas</Label>
+              <Textarea {...form.register("observacoesMedicas")} rows={2} />
+            </div>
+          )}
 
           <div className="space-y-1">
             <Label>Observacoes da familia</Label>

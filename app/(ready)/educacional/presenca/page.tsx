@@ -85,7 +85,7 @@ export default function PresencaPage() {
   // Tela de sucesso
   if (saved) {
     return (
-      <PermissionGate permission="educacional:write">
+      <PermissionGate permission="relatorio_edu:write">
         <HeaderLayout>
         <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
           <div className="h-16 w-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
@@ -115,7 +115,7 @@ export default function PresencaPage() {
   // Selecionar turma
   if (!turma) {
     return (
-      <PermissionGate permission="educacional:write">
+      <PermissionGate permission="relatorio_edu:write">
         <HeaderLayout>
         <div className="space-y-4">
           <div className="flex items-center gap-3">
@@ -154,7 +154,7 @@ export default function PresencaPage() {
   const turmaLabel = TURMA_OPTIONS.find((t) => t.value === turma)?.label || turma;
 
   return (
-    <PermissionGate permission="educacional:write">
+    <PermissionGate permission="relatorio_edu:write">
       <HeaderLayout>
       <div className="space-y-4">
         {/* Header */}

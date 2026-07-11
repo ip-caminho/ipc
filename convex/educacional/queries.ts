@@ -41,7 +41,7 @@ export const listCriancas = query({
     const auth = await getAuthContext(ctx);
     if (!auth || !auth.can("criancas:read")) return [];
 
-    const canManage = auth.can("criancas:manage");
+    const canVerMedico = auth.can("criancas:medical");
 
     let perfis;
     if (args.turma) {
@@ -90,7 +90,7 @@ export const listCriancas = query({
           sexo: entidade?.sexo,
           turma: perfil.turma,
           usoImagem: perfil.usoImagem,
-          observacoesMedicas: canManage ? perfil.observacoesMedicas : undefined,
+          observacoesMedicas: canVerMedico ? perfil.observacoesMedicas : undefined,
           observacoesFamilia: perfil.observacoesFamilia,
           ovelhinhaId: perfil.ovelhinhaId,
           ovelhinhaNome,
@@ -108,7 +108,7 @@ export const getCrianca = query({
     const auth = await getAuthContext(ctx);
     if (!auth || !auth.can("criancas:read")) return null;
 
-    const canManage = auth.can("criancas:manage");
+    const canVerMedico = auth.can("criancas:medical");
 
     const perfil = await ctx.db
       .query("criancaPerfil")
@@ -163,7 +163,7 @@ export const getCrianca = query({
       sexo: entidade?.sexo,
       turma: perfil.turma,
       usoImagem: perfil.usoImagem,
-      observacoesMedicas: canManage ? perfil.observacoesMedicas : undefined,
+      observacoesMedicas: canVerMedico ? perfil.observacoesMedicas : undefined,
       observacoesFamilia: perfil.observacoesFamilia,
       ovelhinhaId: perfil.ovelhinhaId,
       ovelhinhaNome,
