@@ -4,7 +4,8 @@ import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { resolvePermissions } from "../preferencias/rbacHelpers";
 
-import { resolveMembroNome } from "../_shared/membroResolver";
+import { resolveMembroNome, resolveMembroResumo } from "../_shared/membroResolver";
+import { normalizePapel } from "./papel";
 
 async function getAuthContext(ctx: any) {
   const userId = await getAuthUserId(ctx);
@@ -315,34 +316,116 @@ export const listEscalas = query({
     const auth = await getAuthContext(ctx);
     if (!auth || !auth.can("educacional:read")) return [];
 
-    let escalas = await ctx.db
+    // Range direto no indice by_ministerio_data — evita ler tudo e filtrar em
+    // memoria (bandwidth). Janela de datas opcional.
+    const escalas = await ctx.db
       .query("ministerioEscalas")
-      .withIndex("by_ministerio", (q) => q.eq("ministerioId", args.ministerioId))
+      .withIndex("by_ministerio_data", (q) => {
+        const base = q.eq("ministerioId", args.ministerioId);
+        if (args.dataInicio && args.dataFim)
+          return base.gte("data", args.dataInicio).lte("data", args.dataFim);
+        if (args.dataInicio) return base.gte("data", args.dataInicio);
+        if (args.dataFim) return base.lte("data", args.dataFim);
+        return base;
+      })
       .collect();
 
-    if (args.dataInicio) {
-      escalas = escalas.filter((e) => e.data >= args.dataInicio!);
-    }
-    if (args.dataFim) {
-      escalas = escalas.filter((e) => e.data <= args.dataFim!);
-    }
-
     escalas.sort((a, b) => a.data.localeCompare(b.data));
+
+    // Mapa membroId -> validade CAC do voluntario, para sinalizar CAC vencido
+    // na data da escala (avisar, nao bloquear).
+    const voluntarios = await ctx.db.query("eduVoluntarios").collect();
+    const cacPorMembro = new Map(
+      voluntarios.map((vol) => [String(vol.membroId), vol.cacValidade ?? null])
+    );
 
     return Promise.all(
       escalas.map(async (escala) => {
         const membrosEnriched = await Promise.all(
-          escala.membros.map(async (m) => ({
-            ...m,
-            nome: await resolveMembroNome(ctx, m.membroId),
-          }))
+          escala.membros.map(async (m) => {
+            const resumo = await resolveMembroResumo(ctx, m.membroId);
+            const cacValidade = cacPorMembro.get(String(m.membroId)) ?? null;
+            return {
+              membroId: m.membroId,
+              papel: normalizePapel(m.papel),
+              nome: resumo?.nome ?? "",
+              foto: resumo?.foto ?? null,
+              cacValidade,
+              cacVencido: !!cacValidade && cacValidade < escala.data,
+            };
+          })
         );
         return {
-          ...escala,
+          _id: escala._id,
+          data: escala.data,
+          subgrupo: escala.subgrupo,
+          observacoes: escala.observacoes,
           membros: membrosEnriched,
         };
       })
     );
+  },
+});
+
+// Escala do voluntario logado (proprias datas futuras). Ownership implicito:
+// filtra pelo membro do proprio usuario. Nao exige educacional:write.
+export const minhaEscala = query({
+  args: { ministerioId: v.id("ministerios") },
+  handler: async (ctx, { ministerioId }) => {
+    const auth = await getAuthContext(ctx);
+    if (!auth || !auth.can("educacional:read")) return [];
+
+    const hoje = getSaoPauloDateString();
+    const escalas = await ctx.db
+      .query("ministerioEscalas")
+      .withIndex("by_ministerio_data", (q) =>
+        q.eq("ministerioId", ministerioId).gte("data", hoje)
+      )
+      .collect();
+
+    const meuId = String(auth.membro._id);
+    return escalas
+      .filter((e) => e.membros.some((m) => String(m.membroId) === meuId))
+      .sort((a, b) => a.data.localeCompare(b.data))
+      .map((e) => {
+        const m = e.membros.find((mm) => String(mm.membroId) === meuId);
+        return {
+          _id: e._id,
+          data: e.data,
+          subgrupo: e.subgrupo,
+          papel: normalizePapel(m?.papel),
+        };
+      });
+  },
+});
+
+// Voluntarios cadastrados, enxutos, para montar a escala. Autorizado por
+// educacional:read (admin monta a escala sem exigir voluntarios_edu:read).
+// Filtro por turma habilitada e aviso de CAC ficam no cliente.
+export const voluntariosParaEscala = query({
+  args: {},
+  handler: async (ctx) => {
+    const auth = await getAuthContext(ctx);
+    if (!auth || !auth.can("educacional:read")) return [];
+
+    const voluntarios = await ctx.db.query("eduVoluntarios").collect();
+    const enriquecidos = await Promise.all(
+      voluntarios.map(async (vol) => {
+        const resumo = await resolveMembroResumo(ctx, vol.membroId);
+        if (!resumo) return null;
+        return {
+          membroId: String(vol.membroId),
+          nome: resumo.nome,
+          foto: resumo.foto,
+          papelEdu: vol.papelEdu,
+          turmasHabilitadas: vol.turmasHabilitadas,
+          cacValidade: vol.cacValidade ?? null,
+        };
+      })
+    );
+    return enriquecidos
+      .filter((v): v is NonNullable<typeof v> => v !== null)
+      .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
   },
 });
 

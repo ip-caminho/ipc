@@ -452,6 +452,130 @@ export const removeEscala = mutation({
   },
 });
 
+// Turmas do educacional infantil (espelha TURMA_OPTIONS do frontend; o bundle
+// do Convex nao importa de features/).
+const TURMAS_EDU = ["0-2", "3-4", "5-6", "7-8", "9-10"];
+
+// Grava a escala de um domingo inteiro (uma linha por turma). Upsert por
+// (ministerio, data, subgrupo) — nunca deleta, turma sem membros vira lacuna.
+export const upsertEscalaDia = mutation({
+  args: {
+    ministerioId: v.id("ministerios"),
+    data: v.string(),
+    turmas: v.array(
+      v.object({
+        subgrupo: v.string(),
+        membros: v.array(
+          v.object({
+            membroId: v.id("membros"),
+            papel: v.optional(v.string()),
+          })
+        ),
+        observacoes: v.optional(v.string()),
+      })
+    ),
+  },
+  handler: async (ctx, args) => {
+    await requirePermission(ctx, "educacional:write");
+
+    const existentes = await ctx.db
+      .query("ministerioEscalas")
+      .withIndex("by_ministerio_data", (q) =>
+        q.eq("ministerioId", args.ministerioId).eq("data", args.data)
+      )
+      .collect();
+    const porTurma = new Map(
+      existentes.map((e) => [e.subgrupo ?? "", e])
+    );
+
+    for (const turma of args.turmas) {
+      const found = porTurma.get(turma.subgrupo);
+      if (found) {
+        await ctx.db.patch(found._id, {
+          membros: turma.membros,
+          observacoes: turma.observacoes,
+        });
+      } else {
+        await ctx.db.insert("ministerioEscalas", {
+          ministerioId: args.ministerioId,
+          data: args.data,
+          subgrupo: turma.subgrupo,
+          membros: turma.membros,
+          observacoes: turma.observacoes,
+          criadoEm: Date.now(),
+        });
+      }
+    }
+  },
+});
+
+// Domingos (YYYY-MM-DD) de um mes. Meio-dia UTC evita drift de fuso.
+function domingosDoMes(ano: number, mes: number): string[] {
+  const res: string[] = [];
+  const diasNoMes = new Date(Date.UTC(ano, mes, 0)).getUTCDate();
+  for (let d = 1; d <= diasNoMes; d++) {
+    if (new Date(Date.UTC(ano, mes - 1, d, 12)).getUTCDay() === 0) {
+      res.push(
+        `${ano}-${String(mes).padStart(2, "0")}-${String(d).padStart(2, "0")}`
+      );
+    }
+  }
+  return res;
+}
+
+// Cria os domingos do mes com todas as turmas em branco. Pula domingos que ja
+// tenham qualquer escala — nao sobrescreve.
+export const gerarEscalaMes = mutation({
+  args: {
+    ministerioId: v.id("ministerios"),
+    ano: v.number(),
+    mes: v.number(),
+  },
+  handler: async (ctx, { ministerioId, ano, mes }) => {
+    await requirePermission(ctx, "educacional:write");
+
+    const domingos = domingosDoMes(ano, mes);
+    let criados = 0;
+    for (const data of domingos) {
+      const existentes = await ctx.db
+        .query("ministerioEscalas")
+        .withIndex("by_ministerio_data", (q) =>
+          q.eq("ministerioId", ministerioId).eq("data", data)
+        )
+        .collect();
+      if (existentes.length > 0) continue;
+
+      for (const subgrupo of TURMAS_EDU) {
+        await ctx.db.insert("ministerioEscalas", {
+          ministerioId,
+          data,
+          subgrupo,
+          membros: [],
+          criadoEm: Date.now(),
+        });
+      }
+      criados++;
+    }
+    return { criados, total: domingos.length };
+  },
+});
+
+// Remove todas as turmas de um domingo.
+export const removeEscalaDia = mutation({
+  args: { ministerioId: v.id("ministerios"), data: v.string() },
+  handler: async (ctx, { ministerioId, data }) => {
+    await requirePermission(ctx, "educacional:write");
+
+    const rows = await ctx.db
+      .query("ministerioEscalas")
+      .withIndex("by_ministerio_data", (q) =>
+        q.eq("ministerioId", ministerioId).eq("data", data)
+      )
+      .collect();
+    for (const row of rows) await ctx.db.delete(row._id);
+  },
+});
+
 // ===== Seed de Criancas (dados do Notion) =====
 
 type UsoImagem = "AUTORIZADO" | "NAO_AUTORIZADO" | "PENDENTE";

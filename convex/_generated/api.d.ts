@@ -45,6 +45,7 @@ import type * as cron_paradeiroIgnorado from "../cron/paradeiroIgnorado.js";
 import type * as crons from "../crons.js";
 import type * as debug from "../debug.js";
 import type * as educacional_mutations from "../educacional/mutations.js";
+import type * as educacional_papel from "../educacional/papel.js";
 import type * as educacional_queries from "../educacional/queries.js";
 import type * as entidades_mutations from "../entidades/mutations.js";
 import type * as entidades_queries from "../entidades/queries.js";
@@ -201,6 +202,7 @@ declare const fullApi: ApiFromModules<{
   crons: typeof crons;
   debug: typeof debug;
   "educacional/mutations": typeof educacional_mutations;
+  "educacional/papel": typeof educacional_papel;
   "educacional/queries": typeof educacional_queries;
   "entidades/mutations": typeof entidades_mutations;
   "entidades/queries": typeof entidades_queries;

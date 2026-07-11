@@ -72,10 +72,17 @@ export const TIPO_RESPONSAVEL_LABELS: Record<string, string> = {
   RESPONSAVEL: "Responsavel",
 };
 
-export const PAPEL_ESCALA_OPTIONS = [
-  { value: "Professor", label: "Professor(a)" },
-  { value: "Auxiliar", label: "Auxiliar" },
-];
+// Papel na escala é normalizado para o mesmo enum dos voluntários
+// (PROFESSOR/AUXILIAR/APOIO). Rows antigas gravaram "Professor"/"Auxiliar" —
+// normalizePapel() tolera ambos na exibição.
+export function normalizePapel(
+  papel?: string | null
+): "PROFESSOR" | "AUXILIAR" | "APOIO" {
+  const p = (papel ?? "").toUpperCase();
+  if (p.startsWith("PROF")) return "PROFESSOR";
+  if (p.startsWith("AUX")) return "AUXILIAR";
+  return "APOIO";
+}
 
 // ===== Voluntarios do educacional =====
 

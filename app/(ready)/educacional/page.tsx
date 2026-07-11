@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -41,7 +41,10 @@ import { CriancaForm } from "@features/educacional/components/CriancaForm";
 import { CriancaDetalhe } from "@features/educacional/components/CriancaDetalhe";
 import { RelatorioForm } from "@features/educacional/components/RelatorioForm";
 import { RelatorioDetalhe } from "@features/educacional/components/RelatorioDetalhe";
-import { EscalaForm } from "@features/educacional/components/EscalaForm";
+import { EscalaGrade } from "@features/educacional/components/EscalaGrade";
+import { EscalaDiaForm } from "@features/educacional/components/EscalaDiaForm";
+import { EscalaMesGenerator } from "@features/educacional/components/EscalaMesGenerator";
+import { MinhaEscala } from "@features/educacional/components/MinhaEscala";
 import { ProximosAniversarios } from "@features/educacional/components/ProximosAniversarios";
 import { OvelhinhasManager } from "@features/educacional/components/OvelhinhasManager";
 import { VoluntariosTab } from "@features/educacional/components/VoluntariosTab";
@@ -50,7 +53,17 @@ import { EduEmptyState } from "@features/educacional/components/EduEmptyState";
 
 import type { CriancaFormValues } from "@features/educacional/lib/validations";
 import type { RelatorioFormValues } from "@features/educacional/lib/validations";
-import type { EscalaFormValues } from "@features/educacional/lib/validations";
+import { agruparEscalas, particionarDias, type DiaEscala } from "@features/educacional/lib/escala";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/shared/components/ui/alert-dialog";
 import { TURMA_OPTIONS, TURMA_COLORS } from "@features/educacional/lib/constants";
 
 export default function EducacionalPage() {
@@ -81,7 +94,10 @@ export default function EducacionalPage() {
   const [criancaFormOpen, setCriancaFormOpen] = useState(false);
   const [editingCrianca, setEditingCrianca] = useState<any>(null);
   const [relatorioFormOpen, setRelatorioFormOpen] = useState(false);
-  const [escalaFormOpen, setEscalaFormOpen] = useState(false);
+  const [escalaDiaFormOpen, setEscalaDiaFormOpen] = useState(false);
+  const [editingDia, setEditingDia] = useState<DiaEscala | null>(null);
+  const [mesGeneratorOpen, setMesGeneratorOpen] = useState(false);
+  const [removeDiaTarget, setRemoveDiaTarget] = useState<string | null>(null);
   const [ovelhinhasManagerOpen, setOvelhinhasManagerOpen] = useState(false);
   const [selectedRelatorioId, setSelectedRelatorioId] = useState<Id<"eduRelatorios"> | null>(null);
 
@@ -106,14 +122,32 @@ export default function EducacionalPage() {
     api.educacional.queries.listEscalas,
     canReadEdu && eduMinisterio ? { ministerioId: eduMinisterio._id } : "skip"
   );
+  const voluntariosEscala = useQuery(
+    api.educacional.queries.voluntariosParaEscala,
+    canReadEdu ? {} : "skip"
+  );
+  const minhaEscalaItens = useQuery(
+    api.educacional.queries.minhaEscala,
+    canReadEdu && eduMinisterio ? { ministerioId: eduMinisterio._id } : "skip"
+  );
+
+  // Escalas agrupadas por domingo, separadas em próximos × anteriores.
+  const dias = useMemo(
+    () => agruparEscalas((escalas ?? []) as any),
+    [escalas]
+  );
+  const hoje = new Date().toISOString().slice(0, 10);
+  const { proximos, passados } = useMemo(
+    () => particionarDias(dias, hoje),
+    [dias, hoje]
+  );
 
   // Mutations
   const createCrianca = useMutation(api.educacional.mutations.createCrianca);
   const updateCrianca = useMutation(api.educacional.mutations.updateCrianca);
   const removeCrianca = useMutation(api.educacional.mutations.removeCrianca);
   const createRelatorio = useMutation(api.educacional.mutations.createRelatorio);
-  const createEscala = useMutation(api.educacional.mutations.createEscala);
-  const removeEscala = useMutation(api.educacional.mutations.removeEscala);
+  const removeEscalaDia = useMutation(api.educacional.mutations.removeEscalaDia);
 
   // Handlers
   const handleCreateCrianca = async (data: CriancaFormValues) => {
@@ -196,32 +230,28 @@ export default function EducacionalPage() {
     }
   };
 
-  const handleCreateEscala = async (data: EscalaFormValues) => {
-    if (!eduMinisterio) return;
-    try {
-      await createEscala({
-        ministerioId: eduMinisterio._id as Id<"ministerios">,
-        data: data.data,
-        subgrupo: data.subgrupo || undefined,
-        membros: data.membros.map((m) => ({
-          membroId: m.membroId as Id<"membros">,
-          papel: m.papel || undefined,
-        })),
-        observacoes: data.observacoes || undefined,
-      });
-      toast.success("Escala criada");
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro");
-    }
+  const handleNovaEscala = () => {
+    setEditingDia(null);
+    setEscalaDiaFormOpen(true);
   };
 
-  const handleRemoveEscala = async (id: string) => {
-    if (!confirm("Excluir esta escala?")) return;
+  const handleEditDia = (dia: DiaEscala) => {
+    setEditingDia(dia);
+    setEscalaDiaFormOpen(true);
+  };
+
+  const handleRemoveDia = async () => {
+    if (!removeDiaTarget || !eduMinisterio) return;
     try {
-      await removeEscala({ id: id as Id<"ministerioEscalas"> });
-      toast.success("Escala excluida");
+      await removeEscalaDia({
+        ministerioId: eduMinisterio._id as Id<"ministerios">,
+        data: removeDiaTarget,
+      });
+      toast.success("Escala do dia excluída");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro");
+    } finally {
+      setRemoveDiaTarget(null);
     }
   };
 
@@ -469,14 +499,19 @@ export default function EducacionalPage() {
           {/* Tab: Escala */}
           {canReadEdu && (
             <TabsContent value="escala" className="space-y-4">
-              <div className="flex justify-end">
+              <div className="flex flex-wrap justify-end gap-2">
                 <PermissionGate permission="educacional:write">
                   <Button
-                    onClick={() => setEscalaFormOpen(true)}
+                    variant="outline"
+                    onClick={() => setMesGeneratorOpen(true)}
                     disabled={!eduMinisterio}
                   >
+                    <CalendarDays className="h-4 w-4 mr-2" />
+                    Gerar mês
+                  </Button>
+                  <Button onClick={handleNovaEscala} disabled={!eduMinisterio}>
                     <Plus className="h-4 w-4 mr-2" />
-                    Nova Escala
+                    Nova escala
                   </Button>
                 </PermissionGate>
               </div>
@@ -487,56 +522,46 @@ export default function EducacionalPage() {
                 </p>
               )}
 
+              {minhaEscalaItens && minhaEscalaItens.length > 0 && (
+                <MinhaEscala itens={minhaEscalaItens as any} />
+              )}
+
               {escalas === undefined ? (
                 <p className="text-sm text-muted-foreground">Carregando...</p>
-              ) : !escalas || escalas.length === 0 ? (
+              ) : dias.length === 0 ? (
                 <EduEmptyState
                   icon={CalendarDays}
                   title="Nenhuma escala"
-                  description="Monte a escala de professores e auxiliares por data e turma."
+                  description="Monte a escala de professores e auxiliares por data e turma, ou gere os domingos do mês."
                 />
               ) : (
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {escalas.map((e: any) => (
-                    <Card key={e._id}>
-                      <CardContent className="py-3">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <p className="text-sm font-medium">
-                              {format(parseISO(e.data), "dd/MM/yyyy (EEEE)", { locale: ptBR })}
-                            </p>
-                            {e.subgrupo && (
-                              <Badge
-                                variant="secondary"
-                                className={TURMA_COLORS[e.subgrupo] || ""}
-                              >
-                                Turma {e.subgrupo}
-                              </Badge>
-                            )}
-                            <div className="mt-1 space-y-0.5">
-                              {e.membros.map((m: any, i: number) => (
-                                <p key={i} className="text-sm text-muted-foreground">
-                                  {m.nome}{m.papel ? ` (${m.papel})` : ""}
-                                </p>
-                              ))}
-                            </div>
-                          </div>
-                          {canWriteEdu && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleRemoveEscala(e._id)}
-                            >
-                              Excluir
-                            </Button>
-                          )}
-                        </div>
-                        {e.observacoes && (
-                          <p className="text-xs text-muted-foreground mt-1">{e.observacoes}</p>
-                        )}
-                      </CardContent>
-                    </Card>
-                  ))}
+                <div className="space-y-6">
+                  {proximos.length > 0 && (
+                    <div className="space-y-2">
+                      <h3 className="text-sm font-semibold text-muted-foreground">
+                        Próximos
+                      </h3>
+                      <EscalaGrade
+                        dias={proximos}
+                        canWrite={canWriteEdu}
+                        onEditDia={handleEditDia}
+                        onRemoveDia={setRemoveDiaTarget}
+                      />
+                    </div>
+                  )}
+                  {passados.length > 0 && (
+                    <div className="space-y-2">
+                      <h3 className="text-sm font-semibold text-muted-foreground">
+                        Anteriores
+                      </h3>
+                      <EscalaGrade
+                        dias={passados}
+                        canWrite={canWriteEdu}
+                        onEditDia={handleEditDia}
+                        onRemoveDia={setRemoveDiaTarget}
+                      />
+                    </div>
+                  )}
                 </div>
               )}
             </TabsContent>
@@ -617,13 +642,44 @@ export default function EducacionalPage() {
           onSubmit={handleCreateRelatorio}
         />
         {eduMinisterio && (
-          <EscalaForm
-            open={escalaFormOpen}
-            onOpenChange={setEscalaFormOpen}
-            onSubmit={handleCreateEscala}
-            ministerioId={eduMinisterio._id}
-          />
+          <>
+            <EscalaDiaForm
+              open={escalaDiaFormOpen}
+              onOpenChange={setEscalaDiaFormOpen}
+              ministerioId={eduMinisterio._id}
+              voluntarios={(voluntariosEscala ?? []) as any}
+              initialDia={editingDia}
+            />
+            <EscalaMesGenerator
+              open={mesGeneratorOpen}
+              onOpenChange={setMesGeneratorOpen}
+              ministerioId={eduMinisterio._id}
+            />
+          </>
         )}
+        <AlertDialog
+          open={!!removeDiaTarget}
+          onOpenChange={(open) => !open && setRemoveDiaTarget(null)}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Excluir escala do dia?</AlertDialogTitle>
+              <AlertDialogDescription>
+                {removeDiaTarget &&
+                  `Todas as turmas de ${format(parseISO(removeDiaTarget), "dd/MM/yyyy", { locale: ptBR })} serão removidas. Esta ação não pode ser desfeita.`}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleRemoveDia}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Excluir
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
         <OvelhinhasManager
           open={ovelhinhasManagerOpen}
           onOpenChange={setOvelhinhasManagerOpen}

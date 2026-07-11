@@ -34,17 +34,25 @@ export const relatorioFormSchema = z.object({
 
 export type RelatorioFormValues = z.infer<typeof relatorioFormSchema>;
 
-export const escalaFormSchema = z.object({
+// Escala de um domingo inteiro: uma entrada por turma, cada uma com seus
+// membros (papel no enum de voluntario). Turma sem membros vira lacuna.
+export const escalaDiaFormSchema = z.object({
   data: z.string().min(1, "Informe a data"),
-  subgrupo: z.string().optional(),
-  membros: z.array(z.object({
-    membroId: z.string().min(1),
-    papel: z.string().optional(),
-  })).min(1, "Adicione pelo menos um membro"),
-  observacoes: z.string().optional(),
+  turmas: z.array(
+    z.object({
+      subgrupo: z.string(),
+      membros: z.array(
+        z.object({
+          membroId: z.string().min(1),
+          papel: z.enum(["PROFESSOR", "AUXILIAR", "APOIO"]),
+        })
+      ),
+      observacoes: z.string().optional(),
+    })
+  ),
 });
 
-export type EscalaFormValues = z.infer<typeof escalaFormSchema>;
+export type EscalaDiaFormValues = z.infer<typeof escalaDiaFormSchema>;
 
 export const voluntarioFormSchema = z.object({
   membroId: z.string().min(1, "Selecione o membro"),
