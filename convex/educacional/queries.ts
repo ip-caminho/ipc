@@ -6,6 +6,7 @@ import { resolvePermissions } from "../preferencias/rbacHelpers";
 
 import { resolveMembroNome, resolveMembroResumo } from "../_shared/membroResolver";
 import { normalizePapel } from "./papel";
+import { derivedEduVoluntarioPerms, mergeDerived } from "../_shared/eduVoluntarioPerms";
 
 async function getAuthContext(ctx: any) {
   const userId = await getAuthUserId(ctx);
@@ -21,10 +22,15 @@ async function getAuthContext(ctx: any) {
     .query("rolePermissions")
     .withIndex("by_role", (q: any) => q.eq("role", membro.role))
     .first();
-  const permissions = resolvePermissions(
+  const basePerms = resolvePermissions(
     membro.permissions,
     rolePerms?.permissions,
     membro.role
+  );
+  // Une capacidade derivada de ser voluntário (Prof/Aux) do educacional.
+  const permissions = mergeDerived(
+    basePerms,
+    await derivedEduVoluntarioPerms(ctx, membro._id)
   );
 
   const can = (perm: string) =>
