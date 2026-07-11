@@ -20,7 +20,8 @@ import { shareRelatorioWhatsApp } from "../lib/relatorioWhatsApp";
 interface RelatorioDetalheProps {
   id: Id<"eduRelatorios"> | null;
   onOpenChange: (open: boolean) => void;
-  canWrite?: boolean;
+  canEdit?: boolean;
+  canDelete?: boolean;
   onEdit?: (relatorio: any) => void;
   onDelete?: (id: Id<"eduRelatorios">) => void;
 }
@@ -44,7 +45,8 @@ function Campo({ label, valor }: { label: string; valor?: string }) {
 export function RelatorioDetalhe({
   id,
   onOpenChange,
-  canWrite,
+  canEdit,
+  canDelete,
   onEdit,
   onDelete,
 }: RelatorioDetalheProps) {
@@ -127,9 +129,9 @@ export function RelatorioDetalhe({
                 internas nao vao na mensagem.
               </p>
 
-              {canWrite && (onEdit || onDelete) && (
+              {((canEdit && onEdit) || (canDelete && onDelete && id)) && (
                 <div className="flex gap-2 pt-1">
-                  {onEdit && (
+                  {canEdit && onEdit && (
                     <Button
                       variant="outline"
                       className="flex-1"
@@ -139,7 +141,7 @@ export function RelatorioDetalhe({
                       Editar
                     </Button>
                   )}
-                  {onDelete && id && (
+                  {canDelete && onDelete && id && (
                     <Button
                       variant="outline"
                       className="flex-1 text-destructive hover:text-destructive"

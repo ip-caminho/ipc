@@ -38,8 +38,10 @@ export type Permission =
   // Calendario
   | "calendario:read" | "calendario:create" | "calendario:update" | "calendario:delete"
   // Educacional
-  | "criancas:read" | "criancas:manage"
+  | "criancas:read" | "criancas:manage" | "criancas:medical"
   | "educacional:read" | "educacional:write"
+  | "escala_edu:manage"
+  | "relatorio_edu:write" | "relatorio_edu:delete"
   | "voluntarios_edu:read" | "voluntarios_edu:manage"
   // Biblioteca
   | "biblioteca:read" | "biblioteca:create" | "biblioteca:update" | "biblioteca:delete" | "biblioteca:emprestar"

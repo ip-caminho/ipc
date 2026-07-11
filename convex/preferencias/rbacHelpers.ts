@@ -118,8 +118,9 @@ export const INITIAL_ROLE_PERMISSIONS: Record<string, string[]> = {
     // Calendario
     "calendario:read", "calendario:create", "calendario:update",
     // Educacional
-    "criancas:read", "criancas:manage",
-    "educacional:read", "educacional:write",
+    "criancas:read", "criancas:manage", "criancas:medical",
+    "educacional:read",
+    "escala_edu:manage", "relatorio_edu:write", "relatorio_edu:delete",
     "voluntarios_edu:read", "voluntarios_edu:manage",
     // Salas
     "salas:read", "salas:create", "salas:update", "salas:delete",
@@ -187,12 +188,23 @@ export const VOLUNTEER_PERMISSION_SETS: Record<string, { label: string; permissi
       "escalas:update", // editar setlist
     ],
   },
+  // Coordenador do educacional: gestao completa do modulo.
   voluntario_educacional: {
-    label: "Voluntario Educacional",
+    label: "Coordenador Educacional",
+    permissions: [
+      "criancas:read", "criancas:manage", "criancas:medical",
+      "educacional:read",
+      "escala_edu:manage", "relatorio_edu:write", "relatorio_edu:delete",
+      "voluntarios_edu:read", "voluntarios_edu:manage",
+    ],
+  },
+  // Professor/auxiliar: ve a turma, marca presenca e preenche relatorio.
+  professor_educacional: {
+    label: "Professor Educacional",
     permissions: [
       "criancas:read",
-      "educacional:read", "educacional:write",
-      "voluntarios_edu:read", "voluntarios_edu:manage",
+      "educacional:read",
+      "relatorio_edu:write",
     ],
   },
   voluntario_multimidia: {

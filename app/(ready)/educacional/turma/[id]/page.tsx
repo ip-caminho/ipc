@@ -27,7 +27,7 @@ export default function TurmaProfessorPage() {
   const { turmas: minhasTurmas, isLoading: loadingTurmas } = useProfessorTurmas();
 
   const canRead = can("criancas:read") || can("educacional:read");
-  const canWrite = can("educacional:write");
+  const canWrite = can("relatorio_edu:write");
 
   const criancas = useQuery(
     api.educacional.queries.listCriancas,

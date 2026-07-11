@@ -37,7 +37,9 @@ export const ALL_PERMISSIONS = [
   // Calendario
   "calendario:read", "calendario:create", "calendario:update", "calendario:delete",
   // Educacional
-  "criancas:read", "criancas:manage", "educacional:read", "educacional:write",
+  "criancas:read", "criancas:manage", "criancas:medical",
+  "educacional:read", "educacional:write",
+  "escala_edu:manage", "relatorio_edu:write", "relatorio_edu:delete",
   // Voluntarios Educacional
   "voluntarios_edu:read", "voluntarios_edu:manage",
   // Biblioteca
@@ -113,8 +115,12 @@ function getPermissionLabel(perm: string): string {
     "calendario:delete": "Excluir Eventos",
     "criancas:read": "Ver Criancas",
     "criancas:manage": "Gerenciar Criancas",
+    "criancas:medical": "Ver Observacoes Medicas (LGPD)",
     "educacional:read": "Ver Educacional",
-    "educacional:write": "Editar Educacional",
+    "educacional:write": "Editar Educacional (descontinuado)",
+    "escala_edu:manage": "Gerenciar Escala do Educacional",
+    "relatorio_edu:write": "Preencher Relatorio e Presenca",
+    "relatorio_edu:delete": "Excluir Relatorio",
     "voluntarios_edu:read": "Ver Voluntarios Educacional",
     "voluntarios_edu:manage": "Gerenciar Voluntarios Educacional",
     "louvor:read": "Ver Louvores",
@@ -167,6 +173,8 @@ function getPermissionModule(perm: string): string {
   if (perm.startsWith("calendario:")) return "Calendario";
   if (perm.startsWith("criancas:")) return "Educacional Infantil";
   if (perm.startsWith("educacional:")) return "Educacional Infantil";
+  if (perm.startsWith("escala_edu:")) return "Educacional Infantil";
+  if (perm.startsWith("relatorio_edu:")) return "Educacional Infantil";
   if (perm.startsWith("voluntarios_edu:")) return "Educacional Infantil";
   if (perm.startsWith("louvor:")) return "Louvor";
   if (perm.startsWith("biblioteca:")) return "Biblioteca";
@@ -222,9 +230,13 @@ function getPermissionDescription(perm: string): string {
     "calendario:update": "Editar eventos do calendario",
     "calendario:delete": "Excluir eventos do calendario",
     "criancas:read": "Ver nome e turma das criancas",
-    "criancas:manage": "Gerenciar perfis completos (inclui obs medicas)",
-    "educacional:read": "Ver relatorios e escalas do educacional",
-    "educacional:write": "Criar/editar relatorios e escalas",
+    "criancas:manage": "Gerenciar perfis das criancas (cadastro, foto, ovelhinhas)",
+    "criancas:medical": "Ver observacoes medicas das criancas (dado sensivel, LGPD)",
+    "educacional:read": "Ver dashboard, agenda, escalas e relatorios do educacional",
+    "educacional:write": "Descontinuado — substituido por escala_edu e relatorio_edu",
+    "escala_edu:manage": "Montar, editar, gerar e excluir a escala do educacional",
+    "relatorio_edu:write": "Preencher relatorios de licao e marcar presenca",
+    "relatorio_edu:delete": "Excluir relatorios de licao",
     "voluntarios_edu:read": "Ver voluntarios do educacional",
     "voluntarios_edu:manage": "Gerenciar voluntarios do educacional (CAC, CBCM, papeis)",
     "louvor:read": "Ver repertorio de louvores e cifras",
@@ -670,6 +682,65 @@ export const addVoluntariosEduPermissions = internalMutation({
       const missing = add.filter((p) => !m.permissions!.includes(p));
       if (missing.length > 0) {
         await ctx.db.patch(m._id, { permissions: [...m.permissions, ...missing] });
+        snapshotsUpdated++;
+      }
+    }
+
+    return { rolesUpdated, snapshotsUpdated };
+  },
+});
+
+/**
+ * Migra as permissoes grossas do educacional para as granulares por persona.
+ * Roles/snapshots com educacional:write ganham escala_edu:manage +
+ * relatorio_edu:write + relatorio_edu:delete; com criancas:manage ganham
+ * criancas:medical. educacional:write e mantido (deprecado, inofensivo).
+ * Idempotente. Rodar em prod apos deploy:
+ * npx convex run preferencias/rbac:addEducacionalGranularPermissions --prod
+ */
+export const addEducacionalGranularPermissions = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    // Deriva as permissoes granulares a partir das grossas presentes.
+    const derivar = (perms: string[]): string[] => {
+      const add: string[] = [];
+      if (perms.includes("educacional:write")) {
+        add.push(
+          "escala_edu:manage",
+          "relatorio_edu:write",
+          "relatorio_edu:delete"
+        );
+      }
+      if (perms.includes("criancas:manage")) {
+        add.push("criancas:medical");
+      }
+      return add.filter((p) => !perms.includes(p));
+    };
+
+    // Snapshots de roles.
+    const rolesUpdated: string[] = [];
+    const roleRows = await ctx.db.query("rolePermissions").collect();
+    for (const row of roleRows) {
+      const missing = derivar(row.permissions);
+      if (missing.length > 0) {
+        await ctx.db.patch(row._id, {
+          permissions: [...row.permissions, ...missing],
+          updatedAt: Date.now(),
+        });
+        rolesUpdated.push(row.role);
+      }
+    }
+
+    // Snapshots individuais (membro.permissions[] tem prioridade sobre o role).
+    const membros = await ctx.db.query("membros").collect();
+    let snapshotsUpdated = 0;
+    for (const m of membros) {
+      if (!m.permissions || m.permissions.length === 0) continue;
+      const missing = derivar(m.permissions);
+      if (missing.length > 0) {
+        await ctx.db.patch(m._id, {
+          permissions: [...m.permissions, ...missing],
+        });
         snapshotsUpdated++;
       }
     }

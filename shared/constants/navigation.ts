@@ -239,7 +239,7 @@ export const GESTAO_SECTIONS: NavSection[] = [
         href: "/educacional/presenca",
         icon: ClipboardList,
         description: "Registro de presença das crianças",
-        permission: "educacional:write",
+        permission: "relatorio_edu:write",
         modulo: "educacional",
       },
     ],

@@ -369,7 +369,7 @@ export const createRelatorio = mutation({
     visitantes: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
-    await requirePermission(ctx, "educacional:write");
+    await requirePermission(ctx, "relatorio_edu:write");
 
     const { presentes, turma, data, ...conteudo } = args;
 
@@ -419,7 +419,7 @@ export const createRelatorio = mutation({
 export const removeRelatorio = mutation({
   args: { id: v.id("eduRelatorios") },
   handler: async (ctx, { id }) => {
-    await requirePermission(ctx, "educacional:write");
+    await requirePermission(ctx, "relatorio_edu:delete");
 
     const relatorio = await ctx.db.get(id);
     if (!relatorio) throw new Error("Relatorio nao encontrado");
@@ -449,7 +449,7 @@ export const createEscala = mutation({
     observacoes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    await requirePermission(ctx, "educacional:write");
+    await requirePermission(ctx, "escala_edu:manage");
 
     const id = await ctx.db.insert("ministerioEscalas", {
       ...args,
@@ -463,7 +463,7 @@ export const createEscala = mutation({
 export const removeEscala = mutation({
   args: { id: v.id("ministerioEscalas") },
   handler: async (ctx, { id }) => {
-    await requirePermission(ctx, "educacional:write");
+    await requirePermission(ctx, "escala_edu:manage");
 
     const escala = await ctx.db.get(id);
     if (!escala) throw new Error("Escala nao encontrada");
@@ -496,7 +496,7 @@ export const upsertEscalaDia = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    await requirePermission(ctx, "educacional:write");
+    await requirePermission(ctx, "escala_edu:manage");
 
     const existentes = await ctx.db
       .query("ministerioEscalas")
@@ -552,7 +552,7 @@ export const gerarEscalaMes = mutation({
     mes: v.number(),
   },
   handler: async (ctx, { ministerioId, ano, mes }) => {
-    await requirePermission(ctx, "educacional:write");
+    await requirePermission(ctx, "escala_edu:manage");
 
     const domingos = domingosDoMes(ano, mes);
     let criados = 0;
@@ -584,7 +584,7 @@ export const gerarEscalaMes = mutation({
 export const removeEscalaDia = mutation({
   args: { ministerioId: v.id("ministerios"), data: v.string() },
   handler: async (ctx, { ministerioId, data }) => {
-    await requirePermission(ctx, "educacional:write");
+    await requirePermission(ctx, "escala_edu:manage");
 
     const rows = await ctx.db
       .query("ministerioEscalas")

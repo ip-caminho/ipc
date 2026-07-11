@@ -71,9 +71,11 @@ export default function EducacionalPage() {
   const canRead = can("criancas:read");
   const canManage = can("criancas:manage");
   const canReadEdu = can("educacional:read");
-  const canWriteEdu = can("educacional:write");
+  const canManageEscala = can("escala_edu:manage");
+  const canWriteRelatorio = can("relatorio_edu:write");
+  const canDeleteRelatorio = can("relatorio_edu:delete");
   const canReadVol = can("voluntarios_edu:read");
-  const isCoordenador = canManage || canWriteEdu;
+  const isCoordenador = canManage || canManageEscala || canWriteRelatorio;
   const convex = useConvex();
 
   // Atalho do card: busca o relatório completo sob demanda (a lista é enxuta)
@@ -480,7 +482,7 @@ export default function EducacionalPage() {
           subtitle="Turmas, voluntarios, licoes e agenda do departamento"
         />
         <div className="flex items-center justify-end">
-          {canWriteEdu && (
+          {canWriteRelatorio && (
             <Button asChild>
               <Link href="/educacional/presenca">
                 <ClipboardList className="h-4 w-4 mr-1" />
@@ -670,7 +672,7 @@ export default function EducacionalPage() {
           {canReadEdu && (
             <TabsContent value="escala" className="space-y-4">
               <div className="flex flex-wrap justify-end gap-2">
-                <PermissionGate permission="educacional:write">
+                <PermissionGate permission="escala_edu:manage">
                   <Button
                     variant="outline"
                     onClick={() => setMesGeneratorOpen(true)}
@@ -713,7 +715,7 @@ export default function EducacionalPage() {
                       </h3>
                       <EscalaGrade
                         dias={proximos}
-                        canWrite={canWriteEdu}
+                        canWrite={canManageEscala}
                         onEditDia={handleEditDia}
                         onRemoveDia={setRemoveDiaTarget}
                       />
@@ -726,7 +728,7 @@ export default function EducacionalPage() {
                       </h3>
                       <EscalaGrade
                         dias={passados}
-                        canWrite={canWriteEdu}
+                        canWrite={canManageEscala}
                         onEditDia={handleEditDia}
                         onRemoveDia={setRemoveDiaTarget}
                       />
@@ -741,7 +743,7 @@ export default function EducacionalPage() {
           {canReadEdu && (
             <TabsContent value="relatorios" className="space-y-4">
               <div className="flex justify-end">
-                <PermissionGate permission="educacional:write">
+                <PermissionGate permission="relatorio_edu:write">
                   <Button onClick={handleNovoRelatorio}>
                     <Plus className="h-4 w-4 mr-2" />
                     Novo Relatorio
@@ -873,7 +875,8 @@ export default function EducacionalPage() {
         <RelatorioDetalhe
           id={selectedRelatorioId}
           onOpenChange={(open) => !open && setSelectedRelatorioId(null)}
-          canWrite={canWriteEdu}
+          canEdit={canWriteRelatorio}
+          canDelete={canDeleteRelatorio}
           onEdit={handleEditRelatorio}
           onDelete={setRemoveRelatorioTarget}
         />
