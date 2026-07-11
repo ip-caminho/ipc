@@ -28,15 +28,36 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
-import { TURMA_OPTIONS } from "../lib/constants";
+import { Badge } from "@/shared/components/ui/badge";
+import { TURMA_OPTIONS, TURMA_COLORS } from "../lib/constants";
 import { relatorioFormSchema, type RelatorioFormValues } from "../lib/validations";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { format, parseISO } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface RelatorioFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: RelatorioFormValues) => Promise<void>;
+  /** Valores iniciais para edição. Ausente = criação. */
+  defaultValues?: Partial<RelatorioFormValues>;
+  /** Em edição turma+data são a identidade — ficam travadas. */
+  isEditing?: boolean;
 }
+
+const EMPTY_VALUES: RelatorioFormValues = {
+  turma: "",
+  data: new Date().toISOString().slice(0, 10),
+  voluntarios: [],
+  numero: "",
+  tema: "",
+  textosBaseText: "",
+  passagemMemorizar: "",
+  historia: "",
+  aplicacao: "",
+  licaoDeCasa: "",
+  visitantesText: "",
+};
 
 // Agrupamento do picker de voluntarios pelos 3 papeis do educacional.
 const PAPEL_GRUPOS = [
@@ -56,25 +77,28 @@ function SecTitle({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function RelatorioForm({ open, onOpenChange, onSubmit }: RelatorioFormProps) {
+export function RelatorioForm({
+  open,
+  onOpenChange,
+  onSubmit,
+  defaultValues,
+  isEditing,
+}: RelatorioFormProps) {
   const [loading, setLoading] = useState(false);
 
   const form = useForm<RelatorioFormValues>({
     resolver: zodResolver(relatorioFormSchema),
-    defaultValues: {
-      turma: "",
-      data: new Date().toISOString().slice(0, 10),
-      voluntarios: [],
-      numero: "",
-      tema: "",
-      textosBaseText: "",
-      passagemMemorizar: "",
-      historia: "",
-      aplicacao: "",
-      licaoDeCasa: "",
-      visitantesText: "",
-    },
+    defaultValues: EMPTY_VALUES,
   });
+
+  // Ao abrir, preenche com os valores de edição ou zera para criação.
+  useEffect(() => {
+    if (!open) return;
+    form.reset(
+      defaultValues ? { ...EMPTY_VALUES, ...defaultValues } : EMPTY_VALUES
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   const turmaSelecionada = form.watch("turma");
   const dataSelecionada = form.watch("data");
@@ -144,44 +168,65 @@ export function RelatorioForm({ open, onOpenChange, onSubmit }: RelatorioFormPro
     <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
       <ResponsiveDialogContent>
         <ResponsiveDialogHeader>
-          <ResponsiveDialogTitle>Novo Relatorio</ResponsiveDialogTitle>
+          <ResponsiveDialogTitle>
+            {isEditing ? "Editar Relatorio" : "Novo Relatorio"}
+          </ResponsiveDialogTitle>
         </ResponsiveDialogHeader>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="contents">
         <ResponsiveDialogBody className="space-y-4">
           <SecTitle>Aula</SecTitle>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label>Turma *</Label>
-              <Select
-                value={turmaSelecionada}
-                onValueChange={(v) => {
-                  form.setValue("turma", v);
-                  form.setValue("voluntarios", []);
-                }}
+          {isEditing ? (
+            // Turma+data sao a identidade do relatorio — nao editaveis (mudar
+            // criaria um duplicado). Exibidas como referencia.
+            <div className="flex items-center gap-2">
+              <Badge
+                variant="secondary"
+                className={TURMA_COLORS[turmaSelecionada] || ""}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione" />
-                </SelectTrigger>
-                <SelectContent>
-                  {TURMA_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {form.formState.errors.turma && (
-                <p className="text-xs text-destructive">{form.formState.errors.turma.message}</p>
-              )}
+                Turma {turmaSelecionada}
+              </Badge>
+              <span className="text-sm text-muted-foreground">
+                {dataSelecionada &&
+                  format(parseISO(dataSelecionada), "dd/MM/yyyy (EEEE)", {
+                    locale: ptBR,
+                  })}
+              </span>
             </div>
-            <div className="space-y-1">
-              <Label>Data *</Label>
-              <DateFieldBR control={form.control} name="data" />
-              {form.formState.errors.data && (
-                <p className="text-xs text-destructive">{form.formState.errors.data.message}</p>
-              )}
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label>Turma *</Label>
+                <Select
+                  value={turmaSelecionada}
+                  onValueChange={(v) => {
+                    form.setValue("turma", v);
+                    form.setValue("voluntarios", []);
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TURMA_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {form.formState.errors.turma && (
+                  <p className="text-xs text-destructive">{form.formState.errors.turma.message}</p>
+                )}
+              </div>
+              <div className="space-y-1">
+                <Label>Data *</Label>
+                <DateFieldBR control={form.control} name="data" />
+                {form.formState.errors.data && (
+                  <p className="text-xs text-destructive">{form.formState.errors.data.message}</p>
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="space-y-1">
             <Label>Numero da licao</Label>
@@ -295,7 +340,7 @@ export function RelatorioForm({ open, onOpenChange, onSubmit }: RelatorioFormPro
             Cancelar
           </Button>
           <Button type="submit" disabled={loading}>
-            {loading ? "Salvando..." : "Criar"}
+            {loading ? "Salvando..." : isEditing ? "Salvar" : "Criar"}
           </Button>
         </ResponsiveDialogFooter>
         </form>

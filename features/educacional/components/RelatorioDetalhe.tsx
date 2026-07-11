@@ -11,7 +11,7 @@ import {
 } from "@/shared/components/ui/dialog";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
-import { Share2 } from "lucide-react";
+import { Share2, Pencil, Trash2 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { TURMA_COLORS } from "../lib/constants";
@@ -20,6 +20,9 @@ import { shareRelatorioWhatsApp } from "../lib/relatorioWhatsApp";
 interface RelatorioDetalheProps {
   id: Id<"eduRelatorios"> | null;
   onOpenChange: (open: boolean) => void;
+  canWrite?: boolean;
+  onEdit?: (relatorio: any) => void;
+  onDelete?: (id: Id<"eduRelatorios">) => void;
 }
 
 const PAPEL_LABEL: Record<string, string> = {
@@ -38,7 +41,13 @@ function Campo({ label, valor }: { label: string; valor?: string }) {
   );
 }
 
-export function RelatorioDetalhe({ id, onOpenChange }: RelatorioDetalheProps) {
+export function RelatorioDetalhe({
+  id,
+  onOpenChange,
+  canWrite,
+  onEdit,
+  onDelete,
+}: RelatorioDetalheProps) {
   const relatorio = useQuery(
     // @ts-ignore Convex TS2589
     api.educacional.queries.getRelatorio,
@@ -117,6 +126,31 @@ export function RelatorioDetalhe({ id, onOpenChange }: RelatorioDetalheProps) {
                 Envia titulo, data, professores e a licao. Presenca e observacoes
                 internas nao vao na mensagem.
               </p>
+
+              {canWrite && (onEdit || onDelete) && (
+                <div className="flex gap-2 pt-1">
+                  {onEdit && (
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => onEdit(relatorio)}
+                    >
+                      <Pencil className="h-4 w-4 mr-2" />
+                      Editar
+                    </Button>
+                  )}
+                  {onDelete && id && (
+                    <Button
+                      variant="outline"
+                      className="flex-1 text-destructive hover:text-destructive"
+                      onClick={() => onDelete(id)}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Excluir
+                    </Button>
+                  )}
+                </div>
+              )}
             </div>
           </>
         )}

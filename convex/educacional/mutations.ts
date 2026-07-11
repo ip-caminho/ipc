@@ -415,6 +415,26 @@ export const createRelatorio = mutation({
   },
 });
 
+// Remove um relatório e, em cascata, as presenças vinculadas.
+export const removeRelatorio = mutation({
+  args: { id: v.id("eduRelatorios") },
+  handler: async (ctx, { id }) => {
+    await requirePermission(ctx, "educacional:write");
+
+    const relatorio = await ctx.db.get(id);
+    if (!relatorio) throw new Error("Relatorio nao encontrado");
+
+    const presencas = await ctx.db
+      .query("eduPresencas")
+      .withIndex("by_relatorio", (q) => q.eq("relatorioId", id))
+      .collect();
+    for (const p of presencas) await ctx.db.delete(p._id);
+
+    await ctx.db.delete(id);
+    await createActionAuditLog(ctx, "DELETE", "eduRelatorios", id);
+  },
+});
+
 // ===== Escalas =====
 
 export const createEscala = mutation({

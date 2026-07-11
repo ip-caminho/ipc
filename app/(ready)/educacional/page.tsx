@@ -116,6 +116,8 @@ export default function EducacionalPage() {
   const [criancaFormOpen, setCriancaFormOpen] = useState(false);
   const [editingCrianca, setEditingCrianca] = useState<any>(null);
   const [relatorioFormOpen, setRelatorioFormOpen] = useState(false);
+  const [editingRelatorio, setEditingRelatorio] = useState<Partial<RelatorioFormValues> | null>(null);
+  const [removeRelatorioTarget, setRemoveRelatorioTarget] = useState<Id<"eduRelatorios"> | null>(null);
   const [escalaDiaFormOpen, setEscalaDiaFormOpen] = useState(false);
   const [editingDia, setEditingDia] = useState<DiaEscala | null>(null);
   const [mesGeneratorOpen, setMesGeneratorOpen] = useState(false);
@@ -227,6 +229,7 @@ export default function EducacionalPage() {
   const updateCrianca = useMutation(api.educacional.mutations.updateCrianca);
   const removeCrianca = useMutation(api.educacional.mutations.removeCrianca);
   const createRelatorio = useMutation(api.educacional.mutations.createRelatorio);
+  const removeRelatorio = useMutation(api.educacional.mutations.removeRelatorio);
   const removeEscalaDia = useMutation(api.educacional.mutations.removeEscalaDia);
 
   // Handlers
@@ -304,9 +307,50 @@ export default function EducacionalPage() {
         licaoDeCasa: data.licaoDeCasa || undefined,
         visitantes: toLines(data.visitantesText),
       });
-      toast.success("Relatorio criado");
+      toast.success(editingRelatorio ? "Relatorio atualizado" : "Relatorio criado");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro");
+    }
+  };
+
+  // Abre o formulário pré-preenchido para editar. Turma+data ficam travadas.
+  const handleEditRelatorio = (rel: any) => {
+    setEditingRelatorio({
+      turma: rel.turma,
+      data: rel.data,
+      numero: rel.numero != null ? String(rel.numero) : "",
+      tema: rel.tema ?? "",
+      textosBaseText: (rel.textosBase ?? []).join("\n"),
+      passagemMemorizar: rel.passagemMemorizar ?? "",
+      historia: rel.historia ?? "",
+      aplicacao: rel.aplicacao ?? "",
+      licaoDeCasa: rel.licaoDeCasa ?? "",
+      visitantesText: (rel.visitantes ?? []).join("\n"),
+      observacoes: rel.observacoes ?? "",
+      voluntarios: (rel.voluntarios ?? []).map((v: any) => ({
+        membroId: String(v.membroId),
+        papel: v.papel,
+      })),
+    });
+    setSelectedRelatorioId(null);
+    setRelatorioFormOpen(true);
+  };
+
+  const handleNovoRelatorio = () => {
+    setEditingRelatorio(null);
+    setRelatorioFormOpen(true);
+  };
+
+  const handleRemoveRelatorio = async () => {
+    if (!removeRelatorioTarget) return;
+    try {
+      await removeRelatorio({ id: removeRelatorioTarget });
+      toast.success("Relatorio excluido");
+      setSelectedRelatorioId(null);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro");
+    } finally {
+      setRemoveRelatorioTarget(null);
     }
   };
 
@@ -698,7 +742,7 @@ export default function EducacionalPage() {
             <TabsContent value="relatorios" className="space-y-4">
               <div className="flex justify-end">
                 <PermissionGate permission="educacional:write">
-                  <Button onClick={() => setRelatorioFormOpen(true)}>
+                  <Button onClick={handleNovoRelatorio}>
                     <Plus className="h-4 w-4 mr-2" />
                     Novo Relatorio
                   </Button>
@@ -775,8 +819,13 @@ export default function EducacionalPage() {
         />
         <RelatorioForm
           open={relatorioFormOpen}
-          onOpenChange={setRelatorioFormOpen}
+          onOpenChange={(open) => {
+            setRelatorioFormOpen(open);
+            if (!open) setEditingRelatorio(null);
+          }}
           onSubmit={handleCreateRelatorio}
+          defaultValues={editingRelatorio ?? undefined}
+          isEditing={!!editingRelatorio}
         />
         {eduMinisterio && (
           <>
@@ -824,7 +873,33 @@ export default function EducacionalPage() {
         <RelatorioDetalhe
           id={selectedRelatorioId}
           onOpenChange={(open) => !open && setSelectedRelatorioId(null)}
+          canWrite={canWriteEdu}
+          onEdit={handleEditRelatorio}
+          onDelete={setRemoveRelatorioTarget}
         />
+        <AlertDialog
+          open={!!removeRelatorioTarget}
+          onOpenChange={(open) => !open && setRemoveRelatorioTarget(null)}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Excluir relatorio?</AlertDialogTitle>
+              <AlertDialogDescription>
+                O relatorio e a presenca vinculada serao removidos. Esta acao nao
+                pode ser desfeita.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleRemoveRelatorio}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Excluir
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
       </HeaderLayout>
     </ModuloGuard>
