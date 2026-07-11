@@ -3,6 +3,7 @@ import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { internalMutation } from "../_generated/server";
 import { INITIAL_ROLE_PERMISSIONS as ROLE_DEFAULTS, resolvePermissions, VOLUNTEER_PERMISSION_SETS } from "./rbacHelpers";
+import { derivedEduVoluntarioPerms, mergeDerived } from "../_shared/eduVoluntarioPerms";
 
 // ===== PERMISSION DEFINITIONS =====
 
@@ -316,10 +317,15 @@ export const getUserPermissionContext = query({
       .query("rolePermissions")
       .withIndex("by_role", (q) => q.eq("role", membro.role))
       .first();
-    const permissions = resolvePermissions(
+    const basePerms = resolvePermissions(
       membro.permissions,
       rolePermsRecord?.permissions,
       membro.role
+    );
+    // Une capacidade derivada de ser voluntário (Prof/Aux) do educacional.
+    const permissions = mergeDerived(
+      basePerms,
+      await derivedEduVoluntarioPerms(ctx, membro._id)
     );
 
     return {
