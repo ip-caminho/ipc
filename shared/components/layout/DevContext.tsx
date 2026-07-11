@@ -654,6 +654,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "features/educacional/components/AgendaTab.tsx",
       "features/educacional/lib/idade.ts",
       "features/educacional/lib/escala.ts",
+      "features/educacional/lib/relatorioWhatsApp.ts",
     ],
     queries: [
       "educacional.queries.listCriancas",
@@ -706,7 +707,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "Turmas: TurmaFilterChips (chips com contagem, substitui Select) + agrupamento por turma na visao 'Todas'. listCriancas busca todas; filtro/contagem no client",
       "Agenda: eventos do ministerio Educacional (proximos/historico), desacoplada de calendario:read; link p/ calendario geral",
       "Voluntarios: papel (Prof/Aux/Apoio), turmas habilitadas, CBCM, validade+certificado CAC (upload B2). Voluntario = membro",
-      "Relatorio = registro de licao: numero, tema, textos-base, passagem p/ memorizar, historia, aplicacao, licao de casa, visitantes + voluntarios que serviram (do cadastro, agrupados por papel; botao 'Preencher pela escala' via sugestaoVoluntariosRelatorio). Presenca fica na tela dedicada. createRelatorio e upsert por turma+data (presenca e RelatorioForm gravam sem colidir). Clique no card abre RelatorioDetalhe",
+      "Relatorio = registro de licao: numero, tema, textos-base, passagem p/ memorizar, historia, aplicacao, licao de casa, visitantes + voluntarios que serviram (do cadastro, agrupados por papel; botao 'Preencher pela escala' via sugestaoVoluntariosRelatorio). Presenca fica na tela dedicada. createRelatorio e upsert por turma+data (presenca e RelatorioForm gravam sem colidir). Clique no card abre RelatorioDetalhe. Compartilhar no WhatsApp (lib/relatorioWhatsApp.ts): botao no detalhe + atalho no card montam a mensagem (titulo 'Licao N — tema', data, professores, texto base, historia, aplicacao, licao de casa) e usam share nativo/wa.me. NAO inclui presenca (LGPD), obs internas nem visitantes",
       "Filtro por turma, grid de CriancaCards",
       "Click no card abre CriancaDetalhe inline",
       "Obs medicas so visivel com criancas:manage (LGPD)",
