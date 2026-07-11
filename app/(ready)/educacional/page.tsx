@@ -17,20 +17,15 @@ import Link from "next/link";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
 import { Badge } from "@/shared/components/ui/badge";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/components/ui/select";
-import {
   Plus,
   Users,
   CalendarDays,
+  CalendarCheck,
   ClipboardList,
   Baby,
   Cake,
   Heart,
+  LayoutDashboard,
 } from "lucide-react";
 import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
@@ -45,6 +40,8 @@ import { EscalaGrade } from "@features/educacional/components/EscalaGrade";
 import { EscalaDiaForm } from "@features/educacional/components/EscalaDiaForm";
 import { EscalaMesGenerator } from "@features/educacional/components/EscalaMesGenerator";
 import { MinhaEscala } from "@features/educacional/components/MinhaEscala";
+import { EducacionalResumo } from "@features/educacional/components/EducacionalResumo";
+import { TurmaFilterChips } from "@features/educacional/components/TurmaFilterChips";
 import { ProximosAniversarios } from "@features/educacional/components/ProximosAniversarios";
 import { OvelhinhasManager } from "@features/educacional/components/OvelhinhasManager";
 import { VoluntariosTab } from "@features/educacional/components/VoluntariosTab";
@@ -89,6 +86,7 @@ export default function EducacionalPage() {
   }, [loadingTurmas, isCoordenador, minhasTurmas, router]);
 
   // State
+  const [activeTab, setActiveTab] = useState("resumo");
   const [turmaFilter, setTurmaFilter] = useState<string>("all");
   const [selectedEntidadeId, setSelectedEntidadeId] = useState<Id<"entidades"> | null>(null);
   const [criancaFormOpen, setCriancaFormOpen] = useState(false);
@@ -101,10 +99,15 @@ export default function EducacionalPage() {
   const [ovelhinhasManagerOpen, setOvelhinhasManagerOpen] = useState(false);
   const [selectedRelatorioId, setSelectedRelatorioId] = useState<Id<"eduRelatorios"> | null>(null);
 
-  // Queries
+  // Queries — busca todas as crianças; filtro/contagem no client (chips e grid
+  // sempre consistentes).
   const criancas = useQuery(
     api.educacional.queries.listCriancas,
-    canRead ? { turma: turmaFilter === "all" ? undefined : turmaFilter } : "skip"
+    canRead ? {} : "skip"
+  );
+  const aniversarios = useQuery(
+    api.educacional.queries.proximosAniversarios,
+    canRead ? {} : "skip"
   );
   const relatorios = useQuery(
     api.educacional.queries.listRelatorios,
@@ -141,6 +144,59 @@ export default function EducacionalPage() {
     () => particionarDias(dias, hoje),
     [dias, hoje]
   );
+
+  // Crianças: filtro e contagem por turma no client (consistência chips ↔ grid).
+  const criancasFiltradas = useMemo(
+    () =>
+      turmaFilter === "all"
+        ? criancas
+        : criancas?.filter((c: any) => c.turma === turmaFilter),
+    [criancas, turmaFilter]
+  );
+  const countPorTurma = useMemo(() => {
+    const m: Record<string, number> = {};
+    criancas?.forEach((c: any) => {
+      m[c.turma] = (m[c.turma] ?? 0) + 1;
+    });
+    return m;
+  }, [criancas]);
+
+  // Métricas do Resumo (tudo derivado das queries já buscadas).
+  const proximoDomingo = proximos[0] ?? null;
+  const lacunasProximo = proximoDomingo
+    ? proximoDomingo.turmas.filter((t) => t.semProfessor).length
+    : null;
+  const aniversariantesSemana = useMemo(
+    () => (aniversarios ?? []).filter((a: any) => a.diasAteAniversario <= 7).length,
+    [aniversarios]
+  );
+  const limite30 = useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 30);
+    return d.toISOString().slice(0, 10);
+  }, []);
+  const cacAtencao = useMemo(
+    () =>
+      (voluntariosEscala ?? []).filter(
+        (v: any) => v.cacValidade && v.cacValidade <= limite30
+      ).length,
+    [voluntariosEscala, limite30]
+  );
+
+  // Crianças agrupadas por turma (aba Turmas, visão "Todas").
+  const criancasPorTurma = useMemo(() => {
+    const grupos = new Map<string, any[]>();
+    (criancasFiltradas ?? []).forEach((c: any) => {
+      const arr = grupos.get(c.turma) ?? [];
+      arr.push(c);
+      grupos.set(c.turma, arr);
+    });
+    return TURMA_OPTIONS.map((t) => ({
+      turma: t.value,
+      label: t.label,
+      criancas: grupos.get(t.value) ?? [],
+    })).filter((g) => g.criancas.length > 0);
+  }, [criancasFiltradas]);
 
   // Mutations
   const createCrianca = useMutation(api.educacional.mutations.createCrianca);
@@ -366,10 +422,14 @@ export default function EducacionalPage() {
           )}
         </div>
 
-        <Tabs defaultValue="turmas">
-          {/* Scroll horizontal no mobile: 6 tabs nao cabem em 390px */}
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          {/* Scroll horizontal no mobile: as tabs nao cabem em 390px */}
           <div className="overflow-x-auto -mx-1 px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <TabsList className="w-max">
+            <TabsTrigger value="resumo" className="gap-1.5">
+              <LayoutDashboard className="h-4 w-4" />
+              Resumo
+            </TabsTrigger>
             <TabsTrigger value="turmas" className="gap-1.5">
               <Users className="h-4 w-4" />
               Turmas
@@ -392,7 +452,7 @@ export default function EducacionalPage() {
             )}
             {canReadEdu && (
               <TabsTrigger value="escala" className="gap-1.5">
-                <CalendarDays className="h-4 w-4" />
+                <CalendarCheck className="h-4 w-4" />
                 Escala
               </TabsTrigger>
             )}
@@ -405,25 +465,36 @@ export default function EducacionalPage() {
           </TabsList>
           </div>
 
+          {/* Tab: Resumo */}
+          <TabsContent value="resumo" className="space-y-4">
+            <EducacionalResumo
+              totalCriancas={criancas?.length ?? 0}
+              countPorTurma={countPorTurma}
+              proximoDomingoData={proximoDomingo?.data ?? null}
+              lacunasProximo={lacunasProximo}
+              aniversariantesSemana={aniversariantesSemana}
+              totalVoluntarios={voluntariosEscala?.length ?? 0}
+              cacAtencao={cacAtencao}
+              showVoluntarios={canReadVol}
+              onVerCriancas={() => setActiveTab("turmas")}
+              onVerEscala={() => setActiveTab("escala")}
+              onVerAniversarios={() => setActiveTab("aniversarios")}
+              onVerVoluntarios={() => setActiveTab("voluntarios")}
+            />
+            {minhaEscalaItens && minhaEscalaItens.length > 0 && (
+              <MinhaEscala itens={minhaEscalaItens as any} />
+            )}
+          </TabsContent>
+
           {/* Tab: Turmas */}
           <TabsContent value="turmas" className="space-y-4">
-            <div className="flex items-center justify-between gap-4">
-              <Select
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <TurmaFilterChips
                 value={turmaFilter}
-                onValueChange={setTurmaFilter}
-              >
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Todas as turmas" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas as turmas</SelectItem>
-                  {TURMA_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                onChange={setTurmaFilter}
+                counts={countPorTurma}
+                total={criancas?.length ?? 0}
+              />
               <PermissionGate permission="criancas:manage">
                 <div className="flex items-center gap-2">
                   <Button
@@ -443,7 +514,7 @@ export default function EducacionalPage() {
 
             {criancas === undefined ? (
               <p className="text-sm text-muted-foreground">Carregando...</p>
-            ) : criancas.length === 0 ? (
+            ) : (criancasFiltradas?.length ?? 0) === 0 ? (
               <EduEmptyState
                 icon={Baby}
                 title="Nenhuma crianca"
@@ -461,11 +532,42 @@ export default function EducacionalPage() {
                   ) : undefined
                 }
               />
+            ) : turmaFilter === "all" ? (
+              <div className="space-y-6">
+                {criancasPorTurma.map((grupo) => (
+                  <div key={grupo.turma} className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Badge
+                        variant="secondary"
+                        className={TURMA_COLORS[grupo.turma] || ""}
+                      >
+                        {grupo.label}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">
+                        {grupo.criancas.length} crianca
+                        {grupo.criancas.length !== 1 ? "s" : ""}
+                      </span>
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                      {grupo.criancas.map((c: any) => (
+                        <CriancaCard
+                          key={c._id}
+                          crianca={c}
+                          onClick={() => setSelectedEntidadeId(c.entidadeId)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
             ) : (
               <>
-                <p className="text-sm text-muted-foreground">{criancas.length} crianca{criancas.length !== 1 ? "s" : ""}</p>
+                <p className="text-sm text-muted-foreground">
+                  {criancasFiltradas!.length} crianca
+                  {criancasFiltradas!.length !== 1 ? "s" : ""}
+                </p>
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {criancas.map((c: any) => (
+                  {criancasFiltradas!.map((c: any) => (
                     <CriancaCard
                       key={c._id}
                       crianca={c}
