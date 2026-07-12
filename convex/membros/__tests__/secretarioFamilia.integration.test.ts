@@ -238,6 +238,98 @@ describe("listParaSecretario — agrupamento por familia", () => {
     expect(filho!.familiaOrder).toBe(2);
   });
 
+  it("vincularParenteAdmin pai: cria responsavel (pai -> foco)", async () => {
+    const t = convexTest(schema, modules);
+    const admin = await seedAdmin(t);
+    const foco = await pessoa(t, "Foco A", "M");
+    const pai = await pessoa(t, "Pai A", "M");
+
+    await admin.mutation(api.membros.eclesiastico.vincularParenteAdmin, {
+      parentesco: "pai",
+      focoEntidadeId: foco.entidadeId,
+      outraEntidadeId: pai.entidadeId,
+    });
+
+    const rows = await t.run(async (ctx) =>
+      ctx.db
+        .query("responsaveis")
+        .withIndex("by_crianca", (q) => q.eq("criancaEntidadeId", foco.entidadeId))
+        .collect()
+    );
+    expect(rows).toHaveLength(1);
+    expect(rows[0].responsavelEntidadeId).toBe(pai.entidadeId);
+    expect(rows[0].tipo).toBe("PAI");
+  });
+
+  it("vincularParenteAdmin pai: rejeita ciclo (descendente vira pai)", async () => {
+    const t = convexTest(schema, modules);
+    const admin = await seedAdmin(t);
+    const foco = await pessoa(t, "Foco C", "M");
+    const filho = await pessoa(t, "Filho C", "M");
+    // foco -> filho
+    await admin.mutation(api.membros.eclesiastico.vincularParenteAdmin, {
+      parentesco: "pai",
+      focoEntidadeId: filho.entidadeId,
+      outraEntidadeId: foco.entidadeId,
+    });
+    // tentar tornar o filho pai do foco = ciclo
+    await expect(
+      admin.mutation(api.membros.eclesiastico.vincularParenteAdmin, {
+        parentesco: "pai",
+        focoEntidadeId: foco.entidadeId,
+        outraEntidadeId: filho.entidadeId,
+      })
+    ).rejects.toThrow(/ciclo/i);
+  });
+
+  it("vincularParenteAdmin irmao: copia os pais do foco", async () => {
+    const t = convexTest(schema, modules);
+    const admin = await seedAdmin(t);
+    const foco = await pessoa(t, "Foco B", "M");
+    const pai = await pessoa(t, "Pai B", "M");
+    const mae = await pessoa(t, "Mae B", "F");
+    const irmao = await pessoa(t, "Irmao B", "F");
+    await admin.mutation(api.membros.eclesiastico.vincularParenteAdmin, {
+      parentesco: "pai",
+      focoEntidadeId: foco.entidadeId,
+      outraEntidadeId: pai.entidadeId,
+    });
+    await admin.mutation(api.membros.eclesiastico.vincularParenteAdmin, {
+      parentesco: "pai",
+      focoEntidadeId: foco.entidadeId,
+      outraEntidadeId: mae.entidadeId,
+    });
+
+    await admin.mutation(api.membros.eclesiastico.vincularParenteAdmin, {
+      parentesco: "irmao",
+      focoEntidadeId: foco.entidadeId,
+      outraEntidadeId: irmao.entidadeId,
+    });
+
+    const rows = await t.run(async (ctx) =>
+      ctx.db
+        .query("responsaveis")
+        .withIndex("by_crianca", (q) => q.eq("criancaEntidadeId", irmao.entidadeId))
+        .collect()
+    );
+    const paisIrmao = rows.map((r) => r.responsavelEntidadeId).sort();
+    expect(paisIrmao).toEqual([pai.entidadeId, mae.entidadeId].sort());
+  });
+
+  it("vincularParenteAdmin irmao: rejeita quando o foco nao tem pais", async () => {
+    const t = convexTest(schema, modules);
+    const admin = await seedAdmin(t);
+    const foco = await pessoa(t, "Foco D", "M");
+    const irmao = await pessoa(t, "Irmao D", "M");
+    await expect(
+      admin.mutation(api.membros.eclesiastico.vincularParenteAdmin, {
+        parentesco: "irmao",
+        focoEntidadeId: foco.entidadeId,
+        outraEntidadeId: irmao.entidadeId,
+      })
+    ).rejects.toThrow(/pai\/mae/i);
+  });
+
   it("getResumoSecretario conta categorias do rol", async () => {
     const t = convexTest(schema, modules);
     const admin = await seedAdmin(t);

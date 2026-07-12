@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import { anyApi } from "convex/server";
 import type { Id } from "@/convex/_generated/dataModel";
 import {
   Sheet,
@@ -24,7 +24,7 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import { DatePickerField } from "@shared/components/DatePickerField";
-import { Heart, Baby, Trash2, Plus, X } from "lucide-react";
+import { Heart, Baby, Trash2, Plus, X, Users, UsersRound } from "lucide-react";
 import { toast } from "sonner";
 
 type Props = {
@@ -34,6 +34,13 @@ type Props = {
   open: boolean;
   onOpenChange: (v: boolean) => void;
 };
+
+type ResultadoBusca = { entidadeId: string; nomeCompleto: string; ehMembro: boolean };
+
+type FamiliaData = {
+  conjuge: { entidadeId: string; nomeCompleto: string; foto?: string } | null;
+  filhos: Array<{ entidadeId: string; nomeCompleto: string; foto?: string; dataNascimento?: string }>;
+} | null | undefined;
 
 function BuscaEntidade({
   excluirEntidadeId,
@@ -45,10 +52,15 @@ function BuscaEntidade({
   placeholder: string;
 }) {
   const [termo, setTermo] = useState("");
-  const args = termo.trim().length >= 2
-    ? { termo, excluirEntidadeId: excluirEntidadeId as Id<"entidades"> | undefined }
-    : "skip";
-  const resultados = useQuery(api.membros.eclesiastico.buscarEntidadesFamilia, args);
+  const ativo = termo.trim().length >= 2;
+  // anyApi (ref sem tipo) em vez de api.*: a ref tipada de uma query carrega a
+  // inferencia do retorno, que resolve a arvore inteira do `api` e estoura o
+  // limite de profundidade do TS (TS2589). anyApi nao resolve nada; re-tipamos
+  // o resultado manualmente.
+  const resultados = useQuery(
+    anyApi.membros.familia.buscarEntidadesFamilia,
+    ativo ? { termo, excluirEntidadeId } : "skip",
+  ) as ResultadoBusca[] | undefined;
   return (
     <div className="space-y-1">
       <Input value={termo} onChange={(e) => setTermo(e.target.value)} placeholder={placeholder} className="h-8 text-sm" />
@@ -76,12 +88,17 @@ function BuscaEntidade({
 }
 
 export function FamiliaDrawer({ membroId, entidadeId, nome, open, onOpenChange }: Props) {
-  const familia = useQuery(api.membros.eclesiastico.getFamily, open ? { membroId } : "skip");
-  const vincularConjuge = useMutation(api.membros.eclesiastico.vincularConjugeAdmin);
-  const desvincularConjuge = useMutation(api.membros.eclesiastico.desvincularConjugeAdmin);
-  const adicionarFilho = useMutation(api.membros.eclesiastico.adicionarFilhoAdmin);
-  const vincularFilho = useMutation(api.membros.eclesiastico.vincularFilhoExistenteAdmin);
-  const removerFilho = useMutation(api.membros.eclesiastico.removerFilhoAdmin);
+  // anyApi + retipagem: ver nota em BuscaEntidade (TS2589).
+  const familia = useQuery(
+    anyApi.membros.eclesiastico.getFamily,
+    open ? { membroId } : "skip",
+  ) as FamiliaData;
+  const vincularConjuge = useMutation(anyApi.membros.eclesiastico.vincularConjugeAdmin);
+  const desvincularConjuge = useMutation(anyApi.membros.eclesiastico.desvincularConjugeAdmin);
+  const adicionarFilho = useMutation(anyApi.membros.eclesiastico.adicionarFilhoAdmin);
+  const vincularFilho = useMutation(anyApi.membros.eclesiastico.vincularFilhoExistenteAdmin);
+  const removerFilho = useMutation(anyApi.membros.eclesiastico.removerFilhoAdmin);
+  const vincularParente = useMutation(anyApi.membros.eclesiastico.vincularParenteAdmin);
 
   const [addFilho, setAddFilho] = useState(false);
   const [fNome, setFNome] = useState("");
@@ -249,6 +266,57 @@ export function FamiliaDrawer({ membroId, entidadeId, nome, open, onOpenChange }
                 <Plus className="h-3.5 w-3.5 mr-1" /> Adicionar novo filho
               </Button>
             )}
+          </section>
+
+          {/* Pai / mae */}
+          <section className="space-y-2">
+            <h3 className="flex items-center gap-2 text-sm font-semibold">
+              <Users className="h-4 w-4 text-amber-600" /> Pai / mae
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              Vincular pai/mae que ja existe. Para desvincular, abra o pai/mae e
+              remova esta pessoa da lista de filhos.
+            </p>
+            <BuscaEntidade
+              excluirEntidadeId={entidadeId}
+              placeholder="Buscar pessoa..."
+              onSelecionar={(eid) =>
+                acao(
+                  () =>
+                    vincularParente({
+                      parentesco: "pai",
+                      focoEntidadeId: entidadeId as Id<"entidades">,
+                      outraEntidadeId: eid,
+                    }),
+                  "Pai/mae vinculado"
+                )
+              }
+            />
+          </section>
+
+          {/* Irmaos */}
+          <section className="space-y-2">
+            <h3 className="flex items-center gap-2 text-sm font-semibold">
+              <UsersRound className="h-4 w-4 text-violet-500" /> Irmaos
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              Vincular um irmao copia os pais desta pessoa. Cadastre o pai/mae antes.
+            </p>
+            <BuscaEntidade
+              excluirEntidadeId={entidadeId}
+              placeholder="Buscar pessoa para vincular como irmao..."
+              onSelecionar={(eid) =>
+                acao(
+                  () =>
+                    vincularParente({
+                      parentesco: "irmao",
+                      focoEntidadeId: entidadeId as Id<"entidades">,
+                      outraEntidadeId: eid,
+                    }),
+                  "Irmao vinculado"
+                )
+              }
+            />
           </section>
         </div>
       </SheetContent>
