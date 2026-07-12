@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/site-publico/revalidate-diario",
+      "schedule": "5 3 * * *"
+    }
+  ]
+}
