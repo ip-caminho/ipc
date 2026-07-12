@@ -202,7 +202,8 @@ export default defineSchema({
   })
     .index("by_entidade", ["entidadeId"])
     .index("by_user_id", ["userId"])
-    .index("by_role", ["role"]),
+    .index("by_role", ["role"])
+    .index("by_conjuge", ["conjugeId"]),
 
   serieGravacoes: defineTable({
     nome: v.string(),
