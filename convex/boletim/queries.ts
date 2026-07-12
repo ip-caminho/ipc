@@ -2,28 +2,21 @@ import { query } from "../_generated/server";
 import { getSaoPauloDateString } from "../_shared/datetime";
 
 /**
- * Extrai {weekday, hour} do Date atual no fuso America/Sao_Paulo.
+ * Dia da semana ("Sun", "Mon", ...) no fuso America/Sao_Paulo.
  * Evita ambiguidades do servidor Convex (UTC) vs culto local.
  */
-function getSaoPauloParts(now: Date = new Date()): { weekday: string; hour: number } {
+function getSaoPauloWeekday(now: Date = new Date()): string {
   const fmt = new Intl.DateTimeFormat("en-US", {
     timeZone: "America/Sao_Paulo",
     weekday: "short",
-    hour: "numeric",
-    hour12: false,
   });
   const parts = fmt.formatToParts(now);
-  const weekday = parts.find((p) => p.type === "weekday")?.value ?? "";
-  const hour = parseInt(parts.find((p) => p.type === "hour")?.value ?? "0", 10);
-  return { weekday, hour };
+  return parts.find((p) => p.type === "weekday")?.value ?? "";
 }
 
-/** Janela de "domingo": domingo inteiro OU sábado a partir das 18h (horário Brasil). */
+/** Janela de "domingo": domingo inteiro (horário Brasil). */
 function isDomingoWindowBrasil(now: Date = new Date()): boolean {
-  const { weekday, hour } = getSaoPauloParts(now);
-  if (weekday === "Sun") return true;
-  if (weekday === "Sat" && hour >= 18) return true;
-  return false;
+  return getSaoPauloWeekday(now) === "Sun";
 }
 
 /**
