@@ -26,6 +26,7 @@ import { DadosBasicosSection } from "@features/secretarioExecutivo/components/Da
 import { EclesiasticoForm } from "@features/secretarioExecutivo/components/EclesiasticoForm";
 import { AtosPastoraisSection } from "@features/membros/components/AtosPastoraisSection";
 import { CargosHistoricoSection } from "@features/membros/components/CargosHistoricoSection";
+import { FamiliaArvoreSection } from "@features/membros/components/FamiliaArvoreSection";
 
 export default function SecretarioExecutivoDetalhePage() {
   const params = useParams();
@@ -143,6 +144,8 @@ export default function SecretarioExecutivoDetalhePage() {
             familia={familia}
             onEditar={can("membros:update") ? () => setEditOpen(true) : undefined}
           />
+
+          <FamiliaArvoreSection membroId={membro._id} />
 
           <PermissionGate permission="rol:update">
             <EclesiasticoForm

@@ -95,6 +95,7 @@ import type * as membros_cadastroVivo from "../membros/cadastroVivo.js";
 import type * as membros_completeness from "../membros/completeness.js";
 import type * as membros_convites from "../membros/convites.js";
 import type * as membros_eclesiastico from "../membros/eclesiastico.js";
+import type * as membros_familia from "../membros/familia.js";
 import type * as membros_familiaHelpers from "../membros/familiaHelpers.js";
 import type * as membros_import from "../membros/import.js";
 import type * as membros_importFormNovos from "../membros/importFormNovos.js";
@@ -253,6 +254,7 @@ declare const fullApi: ApiFromModules<{
   "membros/completeness": typeof membros_completeness;
   "membros/convites": typeof membros_convites;
   "membros/eclesiastico": typeof membros_eclesiastico;
+  "membros/familia": typeof membros_familia;
   "membros/familiaHelpers": typeof membros_familiaHelpers;
   "membros/import": typeof membros_import;
   "membros/importFormNovos": typeof membros_importFormNovos;
