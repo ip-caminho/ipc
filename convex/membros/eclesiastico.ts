@@ -599,42 +599,15 @@ export const updateStatus = mutation({
 
 const PERM_FAMILIA = ["rol:update", "membros:update"];
 
-/** Busca entidades por nome para vincular como conjuge/filho. */
-export const buscarEntidadesFamilia = query({
-  args: { termo: v.string(), excluirEntidadeId: v.optional(v.id("entidades")) },
-  handler: async (ctx, { termo, excluirEntidadeId }) => {
-    await requireAnyPermission(ctx, PERM_FAMILIA);
-    const termTrim = termo.trim();
-    const t = termTrim.toLowerCase();
-    if (t.length < 2) return [];
+// Deriva o tipo de responsavel (PAI/MAE/RESPONSAVEL) pelo sexo da entidade.
+function tipoResponsavelPorSexo(
+  sexo: "M" | "F" | undefined,
+): "PAI" | "MAE" | "RESPONSAVEL" {
+  return sexo === "M" ? "PAI" : sexo === "F" ? "MAE" : "RESPONSAVEL";
+}
 
-    // Caminho comum: searchIndex (prefixo por token) — sem varrer entidades.
-    const porPrefixo = await ctx.db
-      .query("entidades")
-      .withSearchIndex("search_entidades", (q) => q.search("nomeCompleto", termTrim))
-      .take(40);
-    let candidatos = porPrefixo.filter((e) => e._id !== excluirEntidadeId);
-
-    // Fallback substring (termo no meio da palavra) — raro.
-    if (candidatos.length === 0) {
-      const entidades = await ctx.db.query("entidades").collect();
-      candidatos = entidades
-        .filter((e) => e._id !== excluirEntidadeId)
-        .filter((e) => (e.nomeCompleto ?? "").toLowerCase().includes(t));
-    }
-
-    const out: Array<{ entidadeId: string; nomeCompleto: string; ehMembro: boolean }> = [];
-    for (const e of candidatos) {
-      const m = await ctx.db
-        .query("membros")
-        .withIndex("by_entidade", (q) => q.eq("entidadeId", e._id))
-        .first();
-      out.push({ entidadeId: e._id, nomeCompleto: e.nomeCompleto ?? "", ehMembro: !!m });
-      if (out.length >= 20) break;
-    }
-    return out;
-  },
-});
+// buscarEntidadesFamilia foi movida para convex/membros/familia.ts (modulo
+// pequeno) — o useQuery sobre este modulo grande estoura o limite de tipos (TS2589).
 
 export const vincularConjugeAdmin = mutation({
   args: { membroId: v.id("membros"), conjugeEntidadeId: v.id("entidades") },
@@ -647,9 +620,31 @@ export const vincularConjugeAdmin = mutation({
     }
     const conjuge = await ctx.db.get(conjugeEntidadeId);
     if (!conjuge) throw new Error("Conjuge nao encontrado");
+    if (conjuge.tipoEntidade !== "PF") {
+      throw new Error("So e possivel vincular pessoas fisicas");
+    }
+
+    // O alvo ja esta casado? (membro dele com conjugeId, ou alguem apontando
+    // para ele via by_conjuge). Sem isso, espelharConjuge pula o espelho e cria
+    // um vinculo assimetrico (A->B, B->C).
+    const conjugeMembro = await ctx.db
+      .query("membros")
+      .withIndex("by_entidade", (q) => q.eq("entidadeId", conjugeEntidadeId))
+      .first();
+    if (conjugeMembro?.conjugeId && conjugeMembro.conjugeId !== membro.entidadeId) {
+      throw new Error("Essa pessoa ja tem conjuge vinculado");
+    }
+    const apontam = await ctx.db
+      .query("membros")
+      .withIndex("by_conjuge", (q) => q.eq("conjugeId", conjugeEntidadeId))
+      .collect();
+    if (apontam.some((m) => m.entidadeId !== membro.entidadeId)) {
+      throw new Error("Essa pessoa ja tem conjuge vinculado");
+    }
 
     await ctx.db.patch(membroId, { conjugeId: conjugeEntidadeId });
     await espelharConjuge(ctx, membro.entidadeId, conjugeEntidadeId);
+    await createActionAuditLog(ctx, "VINCULO_CONJUGE", "membros", membroId);
     return { ok: true };
   },
 });
@@ -660,17 +655,17 @@ export const desvincularConjugeAdmin = mutation({
     await requireAnyPermission(ctx, PERM_FAMILIA);
     const membro = await ctx.db.get(membroId);
     if (!membro) throw new Error("Membro nao encontrado");
-    const antigoConjuge = membro.conjugeId;
     await ctx.db.patch(membroId, { conjugeId: undefined });
-    if (antigoConjuge) {
-      const outro = await ctx.db
-        .query("membros")
-        .withIndex("by_entidade", (q) => q.eq("entidadeId", antigoConjuge))
-        .first();
-      if (outro && outro.conjugeId === membro.entidadeId) {
-        await ctx.db.patch(outro._id, { conjugeId: undefined });
-      }
+    // Limpa TODOS os ponteiros reversos para esta entidade (nao so o conjuge
+    // atual): senao redeFamiliar ainda mostra o casamento pelo lado reverso.
+    const apontam = await ctx.db
+      .query("membros")
+      .withIndex("by_conjuge", (q) => q.eq("conjugeId", membro.entidadeId))
+      .collect();
+    for (const outro of apontam) {
+      await ctx.db.patch(outro._id, { conjugeId: undefined });
     }
+    await createActionAuditLog(ctx, "DESVINCULO_CONJUGE", "membros", membroId);
     return { ok: true };
   },
 });
@@ -713,17 +708,16 @@ export const adicionarFilhoAdmin = mutation({
       });
     }
 
-    const tipo: "PAI" | "MAE" | "RESPONSAVEL" =
-      respEntidade.sexo === "M" ? "PAI" : respEntidade.sexo === "F" ? "MAE" : "RESPONSAVEL";
     await ctx.db.insert("responsaveis", {
       criancaEntidadeId: filhoEntidadeId,
       responsavelEntidadeId: responsavel.entidadeId,
-      tipo,
+      tipo: tipoResponsavelPorSexo(respEntidade.sexo),
       principal: true,
       criadoEm: Date.now(),
     });
     // Filho pertence ao casal: vincula tambem ao conjuge, se houver
     await vincularCriancaAoConjuge(ctx, responsavel.entidadeId, filhoEntidadeId);
+    await createActionAuditLog(ctx, "VINCULO_PAI_FILHO", "responsaveis", filhoEntidadeId);
     return { filhoEntidadeId };
   },
 });
@@ -737,6 +731,11 @@ export const vincularFilhoExistenteAdmin = mutation({
     if (filhoEntidadeId === responsavel.entidadeId) {
       throw new Error("Nao e possivel vincular como proprio filho");
     }
+    const filhoEnt = await ctx.db.get(filhoEntidadeId);
+    if (!filhoEnt) throw new Error("Pessoa nao encontrada");
+    if (filhoEnt.tipoEntidade !== "PF") {
+      throw new Error("So e possivel vincular pessoas fisicas");
+    }
     const existente = await ctx.db
       .query("responsaveis")
       .withIndex("by_crianca", (q) => q.eq("criancaEntidadeId", filhoEntidadeId))
@@ -745,17 +744,16 @@ export const vincularFilhoExistenteAdmin = mutation({
       return { ok: true, jaVinculado: true };
     }
     const respEntidade = await ctx.db.get(responsavel.entidadeId);
-    const tipo: "PAI" | "MAE" | "RESPONSAVEL" =
-      respEntidade?.sexo === "M" ? "PAI" : respEntidade?.sexo === "F" ? "MAE" : "RESPONSAVEL";
     await ctx.db.insert("responsaveis", {
       criancaEntidadeId: filhoEntidadeId,
       responsavelEntidadeId: responsavel.entidadeId,
-      tipo,
+      tipo: tipoResponsavelPorSexo(respEntidade?.sexo),
       principal: false,
       criadoEm: Date.now(),
     });
     // Filho pertence ao casal: vincula tambem ao conjuge, se houver
     await vincularCriancaAoConjuge(ctx, responsavel.entidadeId, filhoEntidadeId);
+    await createActionAuditLog(ctx, "VINCULO_PAI_FILHO", "responsaveis", filhoEntidadeId);
     return { ok: true };
   },
 });
@@ -775,6 +773,126 @@ export const removerFilhoAdmin = mutation({
         await ctx.db.delete(link._id);
       }
     }
+    await createActionAuditLog(ctx, "DESVINCULO_PAI_FILHO", "responsaveis", filhoEntidadeId);
     return { ok: true };
   },
 });
+
+// Vincula um parente EXISTENTE ao foco. Unificada (pai/mae + irmao) para nao
+// inflar o `api` (cada funcao publica pesa no limite de tipos do TS — TS2589).
+// - "pai": outraEntidadeId vira pai/mae do foco (rejeita ciclo).
+// - "irmao": copia os pais PAI/MAE do foco para outraEntidadeId (compartilham
+//   os mesmos pais — nao ha vinculo de irmao no modelo).
+export const vincularParenteAdmin = mutation({
+  args: {
+    parentesco: v.union(v.literal("pai"), v.literal("irmao")),
+    focoEntidadeId: v.id("entidades"),
+    outraEntidadeId: v.id("entidades"),
+  },
+  handler: async (ctx, { parentesco, focoEntidadeId, outraEntidadeId }) => {
+    await requireAnyPermission(ctx, PERM_FAMILIA);
+    if (focoEntidadeId === outraEntidadeId) {
+      throw new Error("Nao e possivel vincular a propria pessoa");
+    }
+    const [foco, outra] = await Promise.all([
+      ctx.db.get(focoEntidadeId),
+      ctx.db.get(outraEntidadeId),
+    ]);
+    if (!foco) throw new Error("Pessoa nao encontrada");
+    if (!outra) throw new Error("Pessoa nao encontrada");
+    if (foco.tipoEntidade !== "PF" || outra.tipoEntidade !== "PF") {
+      throw new Error("So e possivel vincular pessoas fisicas");
+    }
+
+    if (parentesco === "pai") {
+      // outra = pai/mae do foco. Ciclo: o pai nao pode ser descendente do foco.
+      const visitados = new Set<string>([focoEntidadeId]);
+      let fronteira: string[] = [focoEntidadeId];
+      for (let nivel = 0; nivel < 20 && fronteira.length > 0; nivel++) {
+        const proximos: string[] = [];
+        for (const ent of fronteira) {
+          const filhosDele = await ctx.db
+            .query("responsaveis")
+            .withIndex("by_responsavel", (q) => q.eq("responsavelEntidadeId", ent as Id<"entidades">))
+            .collect();
+          for (const r of filhosDele) {
+            const c = r.criancaEntidadeId as string;
+            if (c === outraEntidadeId) {
+              throw new Error("Vinculo invalido: geraria um ciclo na arvore");
+            }
+            if (!visitados.has(c)) {
+              visitados.add(c);
+              proximos.push(c);
+            }
+          }
+        }
+        fronteira = proximos;
+      }
+
+      const existentes = await ctx.db
+        .query("responsaveis")
+        .withIndex("by_crianca", (q) => q.eq("criancaEntidadeId", focoEntidadeId))
+        .collect();
+      if (existentes.some((r) => r.responsavelEntidadeId === outraEntidadeId)) {
+        return { ok: true, jaVinculado: true };
+      }
+      await ctx.db.insert("responsaveis", {
+        criancaEntidadeId: focoEntidadeId,
+        responsavelEntidadeId: outraEntidadeId,
+        tipo: tipoResponsavelPorSexo(outra.sexo),
+        principal: false,
+        criadoEm: Date.now(),
+      });
+      await createActionAuditLog(ctx, "VINCULO_PAI_FILHO", "responsaveis", focoEntidadeId);
+      return { ok: true };
+    }
+
+    // parentesco === "irmao": copia os pais PAI/MAE do foco para a outra pessoa.
+    const paisRef = (
+      await ctx.db
+        .query("responsaveis")
+        .withIndex("by_crianca", (q) => q.eq("criancaEntidadeId", focoEntidadeId))
+        .collect()
+    ).filter((r) => r.tipo === "PAI" || r.tipo === "MAE");
+    if (paisRef.length === 0) {
+      throw new Error("Cadastre o pai/mae desta pessoa antes de vincular um irmao");
+    }
+    const idsPaisRef = new Set(paisRef.map((r) => r.responsavelEntidadeId as string));
+
+    // Meio-irmao silencioso: se a outra pessoa ja tem pais PROPRIOS fora do
+    // conjunto, bloquear (evita virar filho de 3-4 responsaveis sem querer).
+    const paisOutra = (
+      await ctx.db
+        .query("responsaveis")
+        .withIndex("by_crianca", (q) => q.eq("criancaEntidadeId", outraEntidadeId))
+        .collect()
+    ).filter((r) => r.tipo === "PAI" || r.tipo === "MAE");
+    if (paisOutra.some((r) => !idsPaisRef.has(r.responsavelEntidadeId as string))) {
+      throw new Error("Essa pessoa ja tem outro pai/mae cadastrado");
+    }
+
+    let inseridos = 0;
+    for (const ref of paisRef) {
+      // Rele a cada iteracao para nao duplicar.
+      const atuais = await ctx.db
+        .query("responsaveis")
+        .withIndex("by_crianca", (q) => q.eq("criancaEntidadeId", outraEntidadeId))
+        .collect();
+      if (atuais.some((r) => r.responsavelEntidadeId === ref.responsavelEntidadeId)) {
+        continue;
+      }
+      const pai = await ctx.db.get(ref.responsavelEntidadeId);
+      await ctx.db.insert("responsaveis", {
+        criancaEntidadeId: outraEntidadeId,
+        responsavelEntidadeId: ref.responsavelEntidadeId,
+        tipo: tipoResponsavelPorSexo(pai?.sexo),
+        principal: false,
+        criadoEm: Date.now(),
+      });
+      inseridos++;
+    }
+    await createActionAuditLog(ctx, "VINCULO_IRMAO", "responsaveis", outraEntidadeId);
+    return { ok: true, inseridos };
+  },
+});
+

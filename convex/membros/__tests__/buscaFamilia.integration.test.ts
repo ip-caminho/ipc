@@ -67,13 +67,13 @@ describe("busca de familia por searchIndex + fallback substring", () => {
     });
     const eNaoMembro = await seedEntidade(t, "Pedro NaoMembro");
 
-    const res = await admin.query(api.membros.eclesiastico.buscarEntidadesFamilia, { termo: "pedro" });
+    const res = await admin.query(api.membros.familia.buscarEntidadesFamilia, { termo: "pedro" });
     const byId = new Map(res.map((r) => [r.entidadeId, r]));
     expect(byId.get(eMembro)?.ehMembro).toBe(true);
     expect(byId.get(eNaoMembro)?.ehMembro).toBe(false);
 
     // Exclusao remove a entidade do resultado
-    const semUm = await admin.query(api.membros.eclesiastico.buscarEntidadesFamilia, {
+    const semUm = await admin.query(api.membros.familia.buscarEntidadesFamilia, {
       termo: "pedro",
       excluirEntidadeId: eMembro,
     });

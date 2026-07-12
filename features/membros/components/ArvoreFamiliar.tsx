@@ -6,7 +6,7 @@ import { hierarchy, tree } from "d3-hierarchy";
 import { select } from "d3-selection";
 import { zoom, zoomIdentity, type ZoomBehavior } from "d3-zoom";
 import "d3-transition"; // habilita selection.transition()
-import { ExternalLink, ArrowLeft, Plus, Minus, Maximize2, Locate } from "lucide-react";
+import { ExternalLink, ArrowLeft, Plus, Minus, Maximize2, Locate, Pencil } from "lucide-react";
 import type { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/shared/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/shared/components/ui/avatar";
@@ -59,11 +59,15 @@ export function ArvoreFamiliar({
   rede,
   focusId,
   altura = "h-[70vh]",
+  onEditar,
 }: {
   rede: Rede;
   focusId?: Id<"entidades"> | null;
   // Classe de altura do canvas (menor quando embutido no perfil).
   altura?: string;
+  // Quando presente, mostra o botao de editar vinculos por no (so nos com
+  // membroId). O pai (FamiliaArvoreSection) abre o drawer de edicao.
+  onEditar?: (node: PessoaLite) => void;
 }) {
   const router = useRouter();
   // Zoom aplicado ao container; linhas em SVG, nos em HTML sobreposto.
@@ -326,8 +330,16 @@ export function ArvoreFamiliar({
     const mudouLayout = ultimo.current.layout !== layout;
     const mudouFoco = ultimo.current.foco !== foco;
     if (mudouLayout) {
-      cameraRef.current = { fit: true, alvo: null };
-      el.call(zoomRef.current.transform, transformAlvo(true));
+      // Rede mudou. Se ja havia foco (ex.: apos vincular um parente, a rede
+      // cresce), manter a camera no foco em vez de re-enquadrar tudo — evita o
+      // salto visual. Sem foco (primeira carga), enquadra a arvore toda.
+      if (foco) {
+        cameraRef.current = { fit: false, alvo: foco };
+        el.call(zoomRef.current.transform, transformAlvo(false, foco));
+      } else {
+        cameraRef.current = { fit: true, alvo: null };
+        el.call(zoomRef.current.transform, transformAlvo(true));
+      }
     } else if (mudouFoco && foco) {
       cameraRef.current = { fit: false, alvo: foco };
       el.transition().duration(450).call(zoomRef.current.transform, transformAlvo());
@@ -500,6 +512,19 @@ export function ArvoreFamiliar({
                             className="absolute -right-1 -top-1 rounded-full bg-background/90 p-1 text-muted-foreground opacity-0 shadow-sm transition hover:text-foreground focus-visible:opacity-100 group-hover/card:opacity-100"
                           >
                             <ExternalLink className="size-3" />
+                          </button>
+                        )}
+                        {onEditar && p.membroId && (
+                          <button
+                            type="button"
+                            aria-label="Editar vinculos"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onEditar(p);
+                            }}
+                            className="absolute -left-1 -top-1 rounded-full bg-background/90 p-1.5 text-muted-foreground opacity-0 shadow-sm transition hover:text-foreground focus-visible:opacity-100 group-hover/card:opacity-100"
+                          >
+                            <Pencil className="size-3" />
                           </button>
                         )}
                       </div>
