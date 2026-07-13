@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, Fragment } from "react";
+import { useState, useMemo, Fragment, type ReactNode } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -259,6 +259,39 @@ function CardDependente({ dep }: { dep: MembroEclesiastico }) {
   );
 }
 
+// Edicao sob demanda: a celula exibe texto (leve) e so monta o controle pesado
+// (Select do Radix, date picker) quando clicada. Corta ~800 controles Radix do
+// mount inicial da tabela, que era a origem da lentidao percebida em /membros.
+function CelulaEdit({
+  display,
+  readOnly,
+  width,
+  children,
+}: {
+  display: ReactNode;
+  readOnly?: boolean;
+  width?: string;
+  children: (close: () => void) => ReactNode;
+}) {
+  const [editing, setEditing] = useState(false);
+  if (readOnly) return <span className="text-xs">{display}</span>;
+  if (editing) return <>{children(() => setEditing(false))}</>;
+  return (
+    <button
+      type="button"
+      onClick={() => setEditing(true)}
+      title="Clique para editar"
+      className={cn(
+        "flex h-8 items-center rounded px-2 text-left text-xs text-muted-foreground",
+        "hover:bg-accent/50 hover:text-foreground hover:ring-1 hover:ring-border",
+        width,
+      )}
+    >
+      {display}
+    </button>
+  );
+}
+
 function LinhaMembro({ membro, agrupar, readOnly }: { membro: MembroEclesiastico; agrupar: boolean; readOnly?: boolean }) {
   const ctl = useLinhaMembro(membro);
   const { salvar, salvarSeMudou, salvarStatus } = ctl;
@@ -281,44 +314,51 @@ function LinhaMembro({ membro, agrupar, readOnly }: { membro: MembroEclesiastico
         </Link>
       </TableCell>
       <TableCell>
-        {readOnly ? (
-          <span className="text-xs">{statusLabel}</span>
-        ) : (
-          <Select value={status} onValueChange={salvarStatus}>
-            <SelectTrigger className="h-8 w-[130px] text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {STATUS_OPTIONS.map((o) => (
-                <SelectItem key={o.value} value={o.value}>
-                  {o.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
+        <CelulaEdit readOnly={readOnly} display={statusLabel} width="w-[130px]">
+          {(close) => (
+            <Select
+              defaultOpen
+              value={status}
+              onValueChange={salvarStatus}
+              onOpenChange={(o) => { if (!o) close(); }}
+            >
+              <SelectTrigger className="h-8 w-[130px] text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {STATUS_OPTIONS.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>
+                    {o.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </CelulaEdit>
       </TableCell>
       <TableCell>
-        {readOnly ? (
-          <span className="text-xs">{cargoLabel ?? "—"}</span>
-        ) : (
-          <Select
-            value={membro.cargoEclesiastico || NONE}
-            onValueChange={(v) => salvar("cargoEclesiastico", v === NONE ? "" : v)}
-          >
-            <SelectTrigger className="h-8 w-[190px] text-xs">
-              <SelectValue placeholder="-" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={NONE}>—</SelectItem>
-              {CARGO_ECLESIASTICO_OPTIONS.map((o) => (
-                <SelectItem key={o.value} value={o.value}>
-                  {o.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
+        <CelulaEdit readOnly={readOnly} display={cargoLabel ?? "—"} width="w-[190px]">
+          {(close) => (
+            <Select
+              defaultOpen
+              value={membro.cargoEclesiastico || NONE}
+              onValueChange={(v) => salvar("cargoEclesiastico", v === NONE ? "" : v)}
+              onOpenChange={(o) => { if (!o) close(); }}
+            >
+              <SelectTrigger className="h-8 w-[190px] text-xs">
+                <SelectValue placeholder="-" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NONE}>—</SelectItem>
+                {CARGO_ECLESIASTICO_OPTIONS.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>
+                    {o.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </CelulaEdit>
       </TableCell>
       <TableCell>
         {rol ? (
@@ -341,37 +381,58 @@ function LinhaMembro({ membro, agrupar, readOnly }: { membro: MembroEclesiastico
         )}
       </TableCell>
       <TableCell>
-        {readOnly ? (
-          <span className="text-xs">{membro.numeroMatricula || "—"}</span>
-        ) : (
-          <Input
-            key={membro.numeroMatricula ?? ""}
-            defaultValue={membro.numeroMatricula ?? ""}
-            onBlur={(e) => salvarSeMudou("numeroMatricula", membro.numeroMatricula ?? "", e.target.value)}
-            className="h-8 w-24 text-xs"
-          />
-        )}
+        <CelulaEdit readOnly={readOnly} display={membro.numeroMatricula || "—"} width="w-24">
+          {(close) => (
+            <Input
+              autoFocus
+              defaultValue={membro.numeroMatricula ?? ""}
+              onBlur={(e) => {
+                salvarSeMudou("numeroMatricula", membro.numeroMatricula ?? "", e.target.value);
+                close();
+              }}
+              className="h-8 w-24 text-xs"
+            />
+          )}
+        </CelulaEdit>
       </TableCell>
       <TableCell>
-        {readOnly ? (
-          <span className="text-xs">{membro.dataConversao || "—"}</span>
-        ) : (
-          <DatePickerField value={membro.dataConversao ?? ""} onChange={(iso) => salvar("dataConversao", iso)} className="h-8 w-[150px] text-xs" />
-        )}
+        <CelulaEdit readOnly={readOnly} display={membro.dataConversao || "—"} width="w-[150px]">
+          {(close) => (
+            <DatePickerField
+              defaultOpen
+              value={membro.dataConversao ?? ""}
+              onChange={(iso) => salvar("dataConversao", iso)}
+              onOpenChange={(o) => { if (!o) close(); }}
+              className="h-8 w-[150px] text-xs"
+            />
+          )}
+        </CelulaEdit>
       </TableCell>
       <TableCell>
-        {readOnly ? (
-          <span className="text-xs">{membro.dataBatismo || "—"}</span>
-        ) : (
-          <DatePickerField value={membro.dataBatismo ?? ""} onChange={(iso) => salvar("dataBatismo", iso)} className="h-8 w-[150px] text-xs" />
-        )}
+        <CelulaEdit readOnly={readOnly} display={membro.dataBatismo || "—"} width="w-[150px]">
+          {(close) => (
+            <DatePickerField
+              defaultOpen
+              value={membro.dataBatismo ?? ""}
+              onChange={(iso) => salvar("dataBatismo", iso)}
+              onOpenChange={(o) => { if (!o) close(); }}
+              className="h-8 w-[150px] text-xs"
+            />
+          )}
+        </CelulaEdit>
       </TableCell>
       <TableCell>
-        {readOnly ? (
-          <span className="text-xs">{membro.dataMembresia || "—"}</span>
-        ) : (
-          <DatePickerField value={membro.dataMembresia ?? ""} onChange={(iso) => salvar("dataMembresia", iso)} className="h-8 w-[150px] text-xs" />
-        )}
+        <CelulaEdit readOnly={readOnly} display={membro.dataMembresia || "—"} width="w-[150px]">
+          {(close) => (
+            <DatePickerField
+              defaultOpen
+              value={membro.dataMembresia ?? ""}
+              onChange={(iso) => salvar("dataMembresia", iso)}
+              onOpenChange={(o) => { if (!o) close(); }}
+              className="h-8 w-[150px] text-xs"
+            />
+          )}
+        </CelulaEdit>
       </TableCell>
       <TableCell>
         <AcoesMembro ctl={ctl} href={`/membros/${membro._id}`} readOnly={readOnly} />
