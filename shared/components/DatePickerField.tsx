@@ -21,6 +21,10 @@ type Props = {
   minDate?: Date;
   className?: string;
   disabled?: boolean;
+  // Abre o calendario ja no mount (ex: edicao sob demanda em tabela).
+  defaultOpen?: boolean;
+  // Notifica abertura/fechamento (para quem monta o campo sob demanda).
+  onOpenChange?: (open: boolean) => void;
 };
 
 export function DatePickerField({
@@ -31,13 +35,19 @@ export function DatePickerField({
   minDate,
   className,
   disabled,
+  defaultOpen,
+  onOpenChange,
 }: Props) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen ?? false);
+  function mudarOpen(o: boolean) {
+    setOpen(o);
+    onOpenChange?.(o);
+  }
   const parsed = value ? parseISO(value) : undefined;
   const valid = parsed && !Number.isNaN(parsed.getTime()) ? parsed : undefined;
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={mudarOpen}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
@@ -67,7 +77,7 @@ export function DatePickerField({
           onSelect={(d) => {
             if (d) {
               onChange(format(d, "yyyy-MM-dd"));
-              setOpen(false);
+              mudarOpen(false);
             }
           }}
           disabled={(d) => {
