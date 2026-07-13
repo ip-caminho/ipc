@@ -96,7 +96,9 @@ function AvatarMembro({ nome, foto, className }: { nome?: string; foto?: string;
 }
 
 function useLinhaMembro(membro: MembroEclesiastico) {
+  // @ts-ignore Convex TS2589 (instanciacao de tipo profunda — api grande)
   const update = useMutation(api.membros.eclesiastico.updateEclesiastico);
+  // @ts-ignore Convex TS2589
   const updateStatus = useMutation(api.membros.eclesiastico.updateStatus);
   const membroId = membro._id as Id<"membros">;
   const entidadeId = membro.entidadeId as Id<"entidades"> | undefined;

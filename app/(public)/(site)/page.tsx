@@ -4,6 +4,7 @@ import {
   getAvisosUltimoCulto,
   getAgendaPublic,
   getInscricoesAtivas,
+  getRetirosAtivos,
   getTextosSitePublic,
 } from "@features/site-publico/lib/data";
 import { AvisoCard } from "@features/site-publico/components/AvisoCard";
@@ -29,16 +30,17 @@ function formatCulto(data: string, horario?: string): string {
 }
 
 export default async function HomePage() {
-  const [avisosCulto, agenda, inscricoes, textos] = await Promise.all([
+  const [avisosCulto, agenda, inscricoes, retiros, textos] = await Promise.all([
     getAvisosUltimoCulto(),
     getAgendaPublic(),
     getInscricoesAtivas(),
+    getRetirosAtivos(),
     getTextosSitePublic(),
   ]);
   const heroTitulo = textos.heroTitulo || SITE_TEXTOS_DEFAULTS.heroTitulo;
   const heroSub = textos.heroSub || SITE_TEXTOS_DEFAULTS.heroSub;
   const proximoCulto = agenda.find((e) => e.tipo === "culto");
-  const numInscricoes = inscricoes.length;
+  const numInscricoes = inscricoes.length + retiros.length;
   const temAvisos = !!avisosCulto && avisosCulto.avisos.length > 0;
   // Agenda resumida no hero: o próximo culto UMA vez + eventos especiais. O
   // culto dominical é gerado pra 12 domingos (id "culto-*"); mostrá-los todos
