@@ -1194,11 +1194,18 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     arquivos: [
       "app/(public)/(site)/inscricoes/page.tsx",
       "features/site-publico/components/InscricaoCard.tsx",
+      "features/site-publico/components/RetiroCard.tsx",
       "features/site-publico/lib/data.ts",
       "convex/public/inscricoesEvento.ts",
+      "convex/public/retiro.ts",
     ],
-    queries: ["public.inscricoesEvento.listAtivas (via getInscricoesAtivas, ISR 300s)"],
-    notas: ["Grid de inscricoes ativas. Card -> /inscricoes/[slug]"],
+    queries: [
+      "public.inscricoesEvento.listAtivas (via getInscricoesAtivas, ISR 300s)",
+      "public.retiro.listAtivos (via getRetirosAtivos, ISR 300s)",
+    ],
+    notas: [
+      "Grid combinado: RetiroCard (-> /retiro/[slug]) + InscricaoCard (-> /inscricoes/[slug]). Retiro e sistema separado (tabela retiros), listado junto das inscricoes genericas.",
+    ],
   },
   "/admin/retiro": {
     nome: "Secretaria - Retiro",
@@ -1238,7 +1245,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     ],
     componentes: [
       "Tabela desktop -> cards mobile (regra mobile-ux)",
-      "InscricaoDetalheDrawer (matching, financeiro resumido, acoes, 'Copiar link do comprovante')",
+      "InscricaoDetalheDrawer (matching, financeiro resumido, acoes, 'Copiar link do comprovante', secao 'Divergencias de cadastro' quando o membro informou dado diferente do cadastro no submit publico)",
     ],
     notas: ["Permissao: inscricoes:manage. Financeiro: FinanceiroSection no drawer (comprovantes 'a conferir' enviados pelo pagante -> registrar/descartar, recebimentos c/ comprovante, descontos c/ saldo do fundo, sobra -> fundo, plano editavel) + FundoEventoCard (consolidado + aporte avulso)"],
   },
@@ -1285,6 +1292,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "Estoque esgotado -> LISTA_ESPERA; dedupe por whatsapp; honeypot + LGPD + rate-limit",
       "CPF do pagante obrigatorio (isValidCPF no form; cpfValido inline na mutation)",
       "Membro logado: minhaFamilia traz membroId por familiar; auto-vincula os participantes no responder (revalida a familia no servidor, anti-forja). Editar o nome quebra o vinculo",
+      "Write-back de cadastro (so membro logado, entidades da propria familia): WhatsApp do responsavel e dataNascimento dos participantes vinculados. Campo vazio no cadastro -> preenche + audita (createFieldAuditLogs). Divergente -> nao sobrescreve, grava em inscricoesRetiro.divergenciasCadastro p/ a secretaria revisar",
       "Sucesso mostra link individual de comprovante (LinkComprovante) — /comprovante/<codigo>",
     ],
   },

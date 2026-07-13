@@ -277,6 +277,45 @@ export function InscricaoDetalheDrawer({
                 ))}
               </div>
 
+              {/* Divergencias de cadastro: o membro informou na inscricao um
+                  valor diferente do cadastro atual. Nao alteramos automatico —
+                  a secretaria decide atualizar pelo cadastro do membro. */}
+              {insc.divergenciasCadastro && insc.divergenciasCadastro.length > 0 && (
+                <div className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-3 dark:border-amber-900/50 dark:bg-amber-950/30">
+                  <p className="text-sm font-semibold text-amber-900 dark:text-amber-200">
+                    Divergências de cadastro
+                  </p>
+                  <p className="mt-0.5 text-xs text-amber-800/80 dark:text-amber-200/70">
+                    Informado na inscrição, diferente do cadastro. Revise e atualize
+                    pelo cadastro do membro se for o caso.
+                  </p>
+                  <ul className="mt-2 space-y-1 text-sm text-amber-900 dark:text-amber-100">
+                    {insc.divergenciasCadastro.map(
+                      (
+                        d: {
+                          membroNome: string;
+                          campo: "whatsapp" | "dataNascimento";
+                          valorCadastro: string;
+                          valorInformado: string;
+                        },
+                        i: number,
+                      ) => {
+                        const fmt = (v: string) =>
+                          d.campo === "dataNascimento" ? dataBR(v) : v;
+                        const label = d.campo === "whatsapp" ? "WhatsApp" : "Nascimento";
+                        return (
+                          <li key={i}>
+                            <span className="font-medium">{d.membroNome}</span> · {label}:{" "}
+                            <span className="line-through opacity-70">{fmt(d.valorCadastro)}</span>{" "}
+                            → <span className="font-semibold">{fmt(d.valorInformado)}</span>
+                          </li>
+                        );
+                      },
+                    )}
+                  </ul>
+                </div>
+              )}
+
               {/* Hospedagem + extras (leitura; edicao caso a caso via secretaria) */}
               <div className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
                 <div className="rounded-lg border p-3">
