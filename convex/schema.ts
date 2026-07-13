@@ -1675,6 +1675,20 @@ export default defineSchema({
       v.literal("CANCELADA"),
     ),
     observacaoCancelamento: v.optional(v.string()),
+    // Divergencias entre o que o membro digitou na inscricao e o cadastro atual
+    // (campo do cadastro ja preenchido e diferente). O write-back preenche
+    // lacunas automaticamente; divergencias ficam aqui p/ a secretaria revisar.
+    divergenciasCadastro: v.optional(
+      v.array(
+        v.object({
+          entidadeId: v.id("entidades"),
+          membroNome: v.string(),
+          campo: v.union(v.literal("whatsapp"), v.literal("dataNascimento")),
+          valorCadastro: v.string(),
+          valorInformado: v.string(),
+        }),
+      ),
+    ),
     lgpdConsentimento: v.boolean(),
     ipHash: v.optional(v.string()),
     criadoEm: v.number(),

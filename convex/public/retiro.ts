@@ -9,6 +9,7 @@ import {
   totalRecebido,
   saldoInscricao,
 } from "../retiro/calculoHelpers";
+import { createFieldAuditLogs } from "../_shared/auditHelpers";
 
 // Prefixo valido de comprovante no CDN (evita injetar URL arbitraria).
 // Hardcoded p/ nao puxar o SDK do B2 (files/helpers e "use node") p/ a mutation.
@@ -322,9 +323,10 @@ export const responder = mutation({
     // vieram do pré-preenchimento (anti-forja: só vincula a própria família).
     let membroId: Doc<"membros">["_id"] | undefined = undefined;
     const familiaMap = new Map<string, string>(); // membroId -> nome do membro
+    let familia: Awaited<ReturnType<typeof familiaDoUsuario>> = null;
     const userId = await getAuthUserId(ctx);
     if (userId) {
-      const familia = await familiaDoUsuario(ctx, userId);
+      familia = await familiaDoUsuario(ctx, userId);
       if (familia) {
         membroId = familia.familiares[0]?.membroId ?? undefined;
         for (const f of familia.familiares) {
@@ -353,7 +355,7 @@ export const responder = mutation({
       });
     }
 
-    await ctx.db.insert("inscricoesRetiro", {
+    const inscricaoId = await ctx.db.insert("inscricoesRetiro", {
       retiroId: acamp._id,
       responsavel: { nome: args.responsavel.nome.trim(), whatsapp, membroId },
       participantes: args.participantes.map((p) => {
@@ -387,6 +389,82 @@ export const responder = mutation({
       ipHash: args.ipHash,
       criadoEm: agora,
     });
+
+    // Write-back de cadastro: só para membro logado e entidades da própria
+    // família (vínculo já reconfirmado acima). Campo vazio no cadastro ->
+    // preenche automaticamente + audita. Campo preenchido e divergente -> não
+    // sobrescreve; registra divergência p/ a secretaria revisar na inscrição.
+    if (familia) {
+      const norm = (s?: string | null) => (s ?? "").replace(/\D/g, "");
+      const divergencias: Array<{
+        entidadeId: Id<"entidades">;
+        membroNome: string;
+        campo: "whatsapp" | "dataNascimento";
+        valorCadastro: string;
+        valorInformado: string;
+      }> = [];
+
+      // Responsável -> WhatsApp da própria entidade (familiares[0] = o "eu").
+      const eu = familia.familiares[0];
+      if (eu?.entidadeId) {
+        const ent = await ctx.db.get(eu.entidadeId);
+        if (ent) {
+          if (!ent.whatsapp) {
+            await ctx.db.patch(ent._id, { whatsapp });
+            await createFieldAuditLogs(
+              ctx,
+              { whatsapp: ent.whatsapp },
+              { whatsapp },
+              "entidades",
+              ent._id,
+            );
+          } else if (norm(ent.whatsapp) !== norm(whatsapp)) {
+            divergencias.push({
+              entidadeId: ent._id,
+              membroNome: eu.nome,
+              campo: "whatsapp",
+              valorCadastro: ent.whatsapp,
+              valorInformado: whatsapp,
+            });
+          }
+        }
+      }
+
+      // Participantes vinculados -> data de nascimento da entidade.
+      const entPorMembro = new Map<string, Id<"entidades">>();
+      for (const f of familia.familiares) {
+        if (f.membroId) entPorMembro.set(f.membroId, f.entidadeId);
+      }
+      for (const p of args.participantes) {
+        if (!p.membroId || !familiaMap.has(p.membroId)) continue;
+        const entId = entPorMembro.get(p.membroId);
+        if (!entId) continue;
+        const ent = await ctx.db.get(entId);
+        if (!ent) continue;
+        if (!ent.dataNascimento) {
+          await ctx.db.patch(ent._id, { dataNascimento: p.dataNascimento });
+          await createFieldAuditLogs(
+            ctx,
+            { dataNascimento: ent.dataNascimento },
+            { dataNascimento: p.dataNascimento },
+            "entidades",
+            ent._id,
+          );
+        } else if (ent.dataNascimento !== p.dataNascimento) {
+          divergencias.push({
+            entidadeId: ent._id,
+            membroNome: familiaMap.get(p.membroId) ?? p.nome.trim(),
+            campo: "dataNascimento",
+            valorCadastro: ent.dataNascimento,
+            valorInformado: p.dataNascimento,
+          });
+        }
+      }
+
+      if (divergencias.length > 0) {
+        await ctx.db.patch(inscricaoId, { divergenciasCadastro: divergencias });
+      }
+    }
 
     return { status, valorTabela: calculo.total, comprovanteToken: args.comprovanteToken };
   },
