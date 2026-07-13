@@ -12,9 +12,10 @@ import { revalidatePath, revalidateTag } from "next/cache";
 // `Authorization: Bearer <CRON_SECRET>` que a Vercel injeta automaticamente
 // quando a env var CRON_SECRET está definida no projeto.
 
-// Tags de Data Cache cujo conteúdo depende de "hoje".
-const TAGS = ["public-agenda", "public-avisos-ultimo-culto"];
-const PATHS = ["/", "/agenda"];
+// Tags de Data Cache cujo conteúdo depende de "hoje" (agenda/avisos) ou de
+// janelas de abertura/fechamento (retiros — inscricoesAbrem/Fecham).
+const TAGS = ["public-agenda", "public-avisos-ultimo-culto", "public-retiros"];
+const PATHS = ["/", "/agenda", "/inscricoes"];
 
 export async function GET(req: NextRequest) {
   const secret = process.env.CRON_SECRET;

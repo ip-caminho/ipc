@@ -124,6 +124,37 @@ export const getBySlug = query({
   },
 });
 
+export type RetiroPublicoLista = {
+  _id: Id<"retiros">;
+  slug: string;
+  titulo: string;
+  descricao?: string;
+  dataInicio: string;
+  dataFim: string;
+};
+
+// Retiros com inscrições abertas — alimenta o card no hub /inscricoes.
+// `retiros` é tabela de configuração (baixíssima cardinalidade, 1-2 por ano):
+// `.collect()` sem índice dedicado é aceitável aqui.
+export const listAtivos = query({
+  args: {},
+  handler: async (ctx) => {
+    const agora = Date.now();
+    const retiros = await ctx.db.query("retiros").collect();
+    return retiros
+      .filter((a) => inscricoesAbertas(a, agora))
+      .sort((a, b) => a.dataInicio.localeCompare(b.dataInicio))
+      .map((a) => ({
+        _id: a._id,
+        slug: a.slug,
+        titulo: a.titulo,
+        descricao: a.descricao,
+        dataInicio: a.dataInicio,
+        dataFim: a.dataFim,
+      }));
+  },
+});
+
 // Pre-preenchimento p/ membro logado: ele + conjuge + filhos, com nascimento
 // vindo da base (resolve o problema das datas invalidas do form antigo).
 // Retorna null se nao logado — o form segue em branco.

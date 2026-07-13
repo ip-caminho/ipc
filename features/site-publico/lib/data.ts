@@ -4,6 +4,7 @@ import { unstable_cache } from "next/cache";
 import { api } from "@/convex/_generated/api";
 import type { EventoPublico } from "@convex/public/agenda";
 import type { InscricaoEventoPublica } from "@convex/public/inscricoesEvento";
+import type { RetiroPublicoLista } from "@convex/public/retiro";
 import type { AvisosUltimoCulto } from "@convex/public/avisos";
 import type { IgrejaInfo } from "./nav";
 
@@ -46,6 +47,22 @@ export const getAgendaPublic = unstable_cache(
   },
   ["public-agenda"],
   { revalidate: 900, tags: ["public-agenda"] },
+);
+
+// Retiros com inscrições abertas (hub /inscricoes e contador da home). Tolera
+// 5 min de defasagem. Tabela/sistema separado das inscrições genéricas.
+export const getRetirosAtivos = unstable_cache(
+  async (): Promise<RetiroPublicoLista[]> => {
+    try {
+      const client = httpClient();
+      if (!client) return [];
+      return (await client.query(api.public.retiro.listAtivos, {})) ?? [];
+    } catch {
+      return [];
+    }
+  },
+  ["public-retiros"],
+  { revalidate: 300, tags: ["public-retiros"] },
 );
 
 // Inscrições ativas (hub /inscricoes e home). Tolera 5 min de defasagem.
