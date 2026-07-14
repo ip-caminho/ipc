@@ -1,4 +1,6 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { internalQuery } from "../_generated/server";
+import { v } from "convex/values";
 import {
   EDU_VOLUNTARIO_DERIVED,
   derivedEduVoluntarioPerms,
@@ -105,3 +107,19 @@ export async function requireAnyPermission(ctx: any, permissions: string[]) {
 
   return { userId, membro };
 }
+
+/**
+ * Query interna para checar permissão de dentro de uma `action` (actions não
+ * têm `ctx.db`, então não podem chamar os helpers acima diretamente). A action
+ * chama esta query via `ctx.runQuery` e a identidade autenticada é propagada.
+ * Passe `"*"` para exigir admin.
+ */
+export const currentUserHasPermission = internalQuery({
+  args: { permission: v.string() },
+  returns: v.boolean(),
+  handler: async (ctx, { permission }) => {
+    const data = await loadAuthAndPerms(ctx);
+    if (!data) return false;
+    return await allows(ctx, data.membro, data.perms, permission);
+  },
+});

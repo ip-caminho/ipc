@@ -1,4 +1,4 @@
-import { mutation } from "../_generated/server";
+import { internalMutation } from "../_generated/server";
 import { v } from "convex/values";
 
 /**
@@ -6,7 +6,7 @@ import { v } from "convex/values";
  * Para cada domingo, busca/cria culto e upsert escalas por função.
  * Membros são buscados por ID. Convidados são criados como entidade CONVIDADO.
  */
-export const importar = mutation({
+export const importar = internalMutation({
   args: {
     items: v.array(v.object({
       data: v.string(),

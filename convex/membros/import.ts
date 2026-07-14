@@ -1,7 +1,8 @@
-import { mutation } from "../_generated/server";
+import { internalMutation } from "../_generated/server";
 import { v } from "convex/values";
 
-export const importMembros = mutation({
+// INTERNAL: importação em massa (script). Nunca pode ser chamada do cliente.
+export const importMembros = internalMutation({
   args: {
     membros: v.array(v.any()),
   },

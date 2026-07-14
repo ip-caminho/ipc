@@ -1,7 +1,10 @@
 import { query, internalQuery } from "../_generated/server";
 import { v } from "convex/values";
+import { checkPermission } from "../_shared/requirePermission";
 
-export const listAllSubscriptions = query({
+// INTERNAL: expõe endpoint + chaves de push de todos os membros. Só pode ser
+// lida de dentro do backend (usada pela action sendPushToAll).
+export const listAllSubscriptions = internalQuery({
   args: {},
   handler: async (ctx) => {
     return await ctx.db.query("pushSubscriptions").collect();
@@ -11,6 +14,9 @@ export const listAllSubscriptions = query({
 export const countSubscriptions = query({
   args: {},
   handler: async (ctx) => {
+    // Só admin ("*"). Degrada para null em vez de lançar: a pagina /admin/modulos
+    // roda este useQuery antes do AdminGate; lançar quebraria a tela.
+    if (!(await checkPermission(ctx, "*"))) return null;
     const subs = await ctx.db.query("pushSubscriptions").collect();
     return subs.length;
   },
