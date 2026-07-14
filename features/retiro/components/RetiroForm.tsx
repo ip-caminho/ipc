@@ -20,7 +20,7 @@ import {
 } from "@/shared/components/ui/select";
 import { DatePickerBR } from "@/shared/components/ui/date-picker-br";
 import { Plus, Trash2, UserRound, Loader2, Copy, Check, Receipt } from "lucide-react";
-import { calcularValorInscricao, idadeNaData } from "@convex/retiro/calculoHelpers";
+import { calcularValorInscricao, idadeNaData, numDiarias } from "@convex/retiro/calculoHelpers";
 import { isValidCPF } from "@shared/lib/validations/brazilian";
 import type { RetiroPublico } from "../lib/data";
 import { LoginModalInline } from "@features/site-publico/components/LoginModalInline";
@@ -81,6 +81,12 @@ type FormValues = z.infer<typeof formSchema>;
 
 function brl(centavos: number): string {
   return (centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+// "DD/MM" a partir de YYYY-MM-DD (sem Date — evita deslize de fuso).
+function diaMes(data: string): string {
+  const [, m, d] = data.split("-");
+  return d && m ? `${d}/${m}` : data;
 }
 
 // ===== Vocabulario visual do site v2 (navy/laranja/papel, cantos retos) =====
@@ -278,6 +284,14 @@ export function RetiroForm({
       retiro.dataFim,
     );
   }, [valores, retiro]);
+
+  // Nº de diárias e nº de participantes nas palestras — usados no detalhamento
+  // da conta (o que compõe cada valor).
+  const diarias = numDiarias(retiro.dataInicio, retiro.dataFim);
+  const nPalestras =
+    resumo && retiro.precos.palestra > 0
+      ? Math.round(resumo.palestras / retiro.precos.palestra)
+      : 0;
 
   // Ao informar o nascimento, palestras ficam marcadas so p/ 15+ (ajustavel)
   function aoMudarNascimento(index: number, iso: string) {
@@ -674,13 +688,43 @@ export function RetiroForm({
           <p className={`${FONT_BODY} text-[11px] font-semibold uppercase tracking-[0.1em] ${COR_MUTED}`}>
             Resumo da inscrição
           </p>
+          <p className={`${FONT_BODY} mt-1 text-[12px] ${COR_MUTED}`}>
+            {diaMes(retiro.dataInicio)} a {diaMes(retiro.dataFim)} · {diarias}{" "}
+            {diarias > 1 ? "diárias" : "diária"}
+          </p>
           <ul className="mt-5 space-y-2.5">
+            <li className={`${FONT_BODY} text-[11px] uppercase tracking-[0.08em] ${COR_MUTED} pb-0.5`}>
+              Hospedagem por participante (valor pela faixa de idade)
+            </li>
             {resumo.hospedagemPorParticipante.map((p, i) => (
               <LinhaConta key={i} nome={p.nome} detalhe={`${p.idade} anos`} valor={brl(p.valor)} />
             ))}
-            {resumo.palestras > 0 && <LinhaConta nome="Palestras" valor={brl(resumo.palestras)} />}
-            {resumo.camasExtras > 0 && <LinhaConta nome="Camas extras" valor={brl(resumo.camasExtras)} />}
-            {resumo.pets > 0 && <LinhaConta nome="Pets" valor={brl(resumo.pets)} />}
+            {(resumo.palestras > 0 || resumo.camasExtras > 0 || resumo.pets > 0) && (
+              <li className={`${FONT_BODY} text-[11px] uppercase tracking-[0.08em] ${COR_MUTED} pt-2 pb-0.5`}>
+                Adicionais
+              </li>
+            )}
+            {resumo.palestras > 0 && (
+              <LinhaConta
+                nome="Palestras"
+                detalhe={`${nPalestras} × ${brl(retiro.precos.palestra)}`}
+                valor={brl(resumo.palestras)}
+              />
+            )}
+            {resumo.camasExtras > 0 && (
+              <LinhaConta
+                nome="Camas extras"
+                detalhe={`${valores.camasExtras} × ${brl(retiro.precos.camaExtra)} pelo período`}
+                valor={brl(resumo.camasExtras)}
+              />
+            )}
+            {resumo.pets > 0 && (
+              <LinhaConta
+                nome="Pets"
+                detalhe={`${valores.pets} × ${brl(retiro.precos.petPorDia)}/dia × ${diarias} ${diarias > 1 ? "diárias" : "diária"}`}
+                valor={brl(resumo.pets)}
+              />
+            )}
           </ul>
           <div className="mt-6 flex items-baseline justify-between border-t-2 border-[#1C2E49] pt-4">
             <span className={`${FONT_BODY} text-[13px] font-semibold uppercase tracking-[0.08em] ${COR_TEXTO}`}>
