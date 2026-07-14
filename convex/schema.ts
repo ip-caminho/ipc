@@ -2,6 +2,30 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 import { authTables } from "@convex-dev/auth/server";
 
+// ===== Retiro: shapes compartilhados (preco por tipo de quarto) =====
+// Contagem por tipo de quarto (config de estoque, pedido da inscricao e tabela
+// de precos). Capacidade: individual 1, duplo 2, triplo 3, quadruplo 4.
+const quartosContagem = v.object({
+  individual: v.number(),
+  duplo: v.number(),
+  triplo: v.number(),
+  quadruplo: v.number(),
+});
+
+// Tabela de precos do retiro (valores em centavos). Quarto cobrado pelo valor
+// cheio; extras (quem excede a capacidade) pagam refeicoes pela faixa de idade.
+const precosRetiro = v.object({
+  quartos: quartosContagem, // valor cheio de cada tipo
+  refeicaoInteira: v.number(),
+  refeicaoMeia: v.number(),
+  numRefeicoes: v.number(),
+  idadeMeiaMin: v.number(), // passa a pagar meia refeicao (ex: 6)
+  idadeInteiraMin: v.number(), // passa a pagar inteira (ex: 11)
+  camaExtra: v.number(),
+  petPorDia: v.number(),
+  palestra: v.number(),
+});
+
 export default defineSchema({
   ...authTables,
 
@@ -1568,18 +1592,9 @@ export default defineSchema({
     dataFim: v.string(),
     inscricoesAbrem: v.optional(v.number()),
     inscricoesFecham: v.optional(v.number()),
-    precos: v.object({
-      faixas: v.array(
-        v.object({ idadeMin: v.number(), idadeMax: v.number(), valor: v.number() }),
-      ),
-      camaExtra: v.number(),
-      petPorDia: v.number(),
-      palestra: v.number(),
-    }),
-    estoqueDuplos: v.number(),
-    estoqueTriplos: v.number(),
-    duplosReservados: v.number(),
-    triplosReservados: v.number(),
+    precos: precosRetiro,
+    estoque: quartosContagem,
+    reservados: quartosContagem,
     aportesFundo: v.array(
       v.object({
         valor: v.number(),
@@ -1611,8 +1626,7 @@ export default defineSchema({
       }),
     ),
     hospedagem: v.object({
-      quartosDuplos: v.number(),
-      quartosTriplos: v.number(),
+      quartos: quartosContagem,
       camasExtras: v.number(),
       pets: v.number(),
     }),
@@ -1630,14 +1644,7 @@ export default defineSchema({
       cpfPagante: v.optional(v.string()),
     }),
     valorTabela: v.number(),
-    precosSnapshot: v.object({
-      faixas: v.array(
-        v.object({ idadeMin: v.number(), idadeMax: v.number(), valor: v.number() }),
-      ),
-      camaExtra: v.number(),
-      petPorDia: v.number(),
-      palestra: v.number(),
-    }),
+    precosSnapshot: precosRetiro,
     ajustes: v.array(
       v.object({
         tipo: v.union(v.literal("DESCONTO"), v.literal("CONTRIBUICAO_FUNDO")),
@@ -1703,7 +1710,12 @@ export default defineSchema({
 
   quartosRetiro: defineTable({
     retiroId: v.id("retiros"),
-    tipo: v.union(v.literal("DUPLO"), v.literal("TRIPLO")),
+    tipo: v.union(
+      v.literal("INDIVIDUAL"),
+      v.literal("DUPLO"),
+      v.literal("TRIPLO"),
+      v.literal("QUADRUPLO"),
+    ),
     identificacao: v.optional(v.string()),
     ocupantes: v.array(
       v.object({

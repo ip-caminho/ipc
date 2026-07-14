@@ -27,7 +27,7 @@ import { LoginModalInline } from "@features/site-publico/components/LoginModalIn
 
 const hojeIso = () => new Date().toISOString().slice(0, 10);
 
-// Palestras: marcadas por padrao so a partir dos 15 anos
+// Palestras: marcadas por padrao so a partir dos 15 anos (crianca nao paga palestra)
 const IDADE_PALESTRA = 15;
 
 const participanteSchema = z.object({
@@ -52,8 +52,10 @@ const formSchema = z
         return d.length >= 10 && d.length <= 15;
       }, "WhatsApp inválido"),
     participantes: z.array(participanteSchema).min(1, "Adicione ao menos um participante").max(10),
-    quartosDuplos: z.number().int().min(0),
-    quartosTriplos: z.number().int().min(0),
+    quartosIndividual: z.number().int().min(0),
+    quartosDuplo: z.number().int().min(0),
+    quartosTriplo: z.number().int().min(0),
+    quartosQuadruplo: z.number().int().min(0),
     camasExtras: z.number().int().min(0),
     pets: z.number().int().min(0),
     colegaDeQuarto: z.string().optional(),
@@ -68,10 +70,10 @@ const formSchema = z
     lgpd: z.boolean().refine((v) => v, "Confirme que leu as condições"),
     website: z.string().optional(), // honeypot
   })
-  .refine((d) => d.quartosDuplos + d.quartosTriplos > 0, {
-    message: "Escolha ao menos um quarto",
-    path: ["quartosDuplos"],
-  })
+  .refine(
+    (d) => d.quartosIndividual + d.quartosDuplo + d.quartosTriplo + d.quartosQuadruplo > 0,
+    { message: "Escolha ao menos um quarto", path: ["quartosDuplo"] },
+  )
   .refine(
     (d) => d.forma !== "PARCELADO" || (Number(d.parcelas) >= 2 && Number(d.parcelas) <= 12),
     { message: "Escolha de 2 a 12 parcelas", path: ["parcelas"] },
@@ -222,6 +224,14 @@ function LinkComprovante({ token }: { token: string }) {
   );
 }
 
+// Tipos de quarto exibidos na etapa de hospedagem
+const TIPOS_QUARTO = [
+  { key: "quartosIndividual" as const, tipo: "individual" as const, label: "Individual" },
+  { key: "quartosDuplo" as const, tipo: "duplo" as const, label: "Duplo" },
+  { key: "quartosTriplo" as const, tipo: "triplo" as const, label: "Triplo" },
+  { key: "quartosQuadruplo" as const, tipo: "quadruplo" as const, label: "Quádruplo" },
+];
+
 export function RetiroForm({
   retiro,
   onEnviado,
@@ -247,8 +257,10 @@ export function RetiroForm({
       responsavelNome: "",
       responsavelWhatsapp: "",
       participantes: [{ nome: "", dataNascimento: "", participaPalestras: true }],
-      quartosDuplos: 0,
-      quartosTriplos: 0,
+      quartosIndividual: 0,
+      quartosDuplo: 0,
+      quartosTriplo: 0,
+      quartosQuadruplo: 0,
       camasExtras: 0,
       pets: 0,
       berco: false,
@@ -266,7 +278,14 @@ export function RetiroForm({
     const parts = (valores.participantes ?? []).filter(
       (p) => p?.nome?.trim() && /^\d{4}-\d{2}-\d{2}$/.test(p.dataNascimento ?? ""),
     );
-    if (parts.length === 0) return null;
+    // Sem quarto escolhido nao ha inscricao valida — nao calcular (com
+    // capacidade 0 todos virariam "extras" pagando refeicao, total enganoso).
+    const totalQuartos =
+      (valores.quartosIndividual ?? 0) +
+      (valores.quartosDuplo ?? 0) +
+      (valores.quartosTriplo ?? 0) +
+      (valores.quartosQuadruplo ?? 0);
+    if (parts.length === 0 || totalQuartos === 0) return null;
     return calcularValorInscricao(
       parts.map((p) => ({
         nome: p.nome,
@@ -274,8 +293,12 @@ export function RetiroForm({
         participaPalestras: p.participaPalestras,
       })),
       {
-        quartosDuplos: valores.quartosDuplos ?? 0,
-        quartosTriplos: valores.quartosTriplos ?? 0,
+        quartos: {
+          individual: valores.quartosIndividual ?? 0,
+          duplo: valores.quartosDuplo ?? 0,
+          triplo: valores.quartosTriplo ?? 0,
+          quadruplo: valores.quartosQuadruplo ?? 0,
+        },
         camasExtras: valores.camasExtras ?? 0,
         pets: valores.pets ?? 0,
       },
@@ -286,12 +309,17 @@ export function RetiroForm({
   }, [valores, retiro]);
 
   // Nº de diárias e nº de participantes nas palestras — usados no detalhamento
-  // da conta (o que compõe cada valor).
   const diarias = numDiarias(retiro.dataInicio, retiro.dataFim);
   const nPalestras =
     resumo && retiro.precos.palestra > 0
       ? Math.round(resumo.palestras / retiro.precos.palestra)
       : 0;
+
+  // Linhas de quartos escolhidos (tipo × qtd × valor cheio)
+  const linhasQuartos = TIPOS_QUARTO.map((t) => {
+    const qtd = (valores[t.key] as number) ?? 0;
+    return { ...t, qtd, valor: retiro.precos.quartos[t.tipo] };
+  }).filter((l) => l.qtd > 0);
 
   // Ao informar o nascimento, palestras ficam marcadas so p/ 15+ (ajustavel)
   function aoMudarNascimento(index: number, iso: string) {
@@ -340,8 +368,12 @@ export function RetiroForm({
           responsavel: { nome: data.responsavelNome, whatsapp: data.responsavelWhatsapp },
           participantes: data.participantes,
           hospedagem: {
-            quartosDuplos: data.quartosDuplos,
-            quartosTriplos: data.quartosTriplos,
+            quartos: {
+              individual: data.quartosIndividual,
+              duplo: data.quartosDuplo,
+              triplo: data.quartosTriplo,
+              quadruplo: data.quartosQuadruplo,
+            },
             camasExtras: data.camasExtras,
             pets: data.pets,
           },
@@ -409,6 +441,8 @@ export function RetiroForm({
 
   const errs = form.formState.errors;
   const temTotal = !!resumo && resumo.total > 0;
+  // Participantes que pagam refeição (excedem a capacidade dos quartos)
+  const extrasRefeicao = resumo?.participantes.filter((p) => p.refeicoes > 0) ?? [];
 
   return (
     <form
@@ -541,39 +575,31 @@ export function RetiroForm({
 
       {/* 3 — Hospedagem */}
       <div className="space-y-4">
-        <Etapa n={3} titulo="Hospedagem" />
+        <Etapa n={3} titulo="Hospedagem" hint="quem excede a cama do quarto paga só refeição" />
         <div className="grid gap-2 md:grid-cols-2">
-          <Controller
-            control={form.control}
-            name="quartosDuplos"
-            render={({ field }) => (
-              <CampoNumero
-                label="Quartos duplos"
-                hint={`${retiro.disponibilidade.duplos} disponíveis`}
-                value={field.value}
-                onChange={field.onChange}
-              />
-            )}
-          />
-          <Controller
-            control={form.control}
-            name="quartosTriplos"
-            render={({ field }) => (
-              <CampoNumero
-                label="Quartos triplos"
-                hint={`${retiro.disponibilidade.triplos} disponíveis`}
-                value={field.value}
-                onChange={field.onChange}
-              />
-            )}
-          />
+          {/* Só os tipos realmente ofertados (com preço definido) */}
+          {TIPOS_QUARTO.filter((t) => retiro.precos.quartos[t.tipo] > 0).map((t) => (
+            <Controller
+              key={t.key}
+              control={form.control}
+              name={t.key}
+              render={({ field }) => (
+                <CampoNumero
+                  label={`Quarto ${t.label.toLowerCase()}`}
+                  hint={`${brl(retiro.precos.quartos[t.tipo])} · ${retiro.disponibilidade[t.tipo]} disp.`}
+                  value={field.value}
+                  onChange={field.onChange}
+                />
+              )}
+            />
+          ))}
           <Controller
             control={form.control}
             name="camasExtras"
             render={({ field }) => (
               <CampoNumero
                 label="Camas extras"
-                hint={`${brl(retiro.precos.camaExtra)} pelo período`}
+                hint={`${brl(retiro.precos.camaExtra)} (cobrança única)`}
                 value={field.value}
                 onChange={field.onChange}
               />
@@ -592,7 +618,7 @@ export function RetiroForm({
             )}
           />
         </div>
-        <Erro msg={errs.quartosDuplos?.message} />
+        <Erro msg={errs.quartosDuplo?.message} />
       </div>
 
       {/* 4 — Preferencias */}
@@ -693,12 +719,33 @@ export function RetiroForm({
             {diarias > 1 ? "diárias" : "diária"}
           </p>
           <ul className="mt-5 space-y-2.5">
-            <li className={`${FONT_BODY} text-[11px] uppercase tracking-[0.08em] ${COR_MUTED} pb-0.5`}>
-              Hospedagem por participante (valor pela faixa de idade)
-            </li>
-            {resumo.hospedagemPorParticipante.map((p, i) => (
-              <LinhaConta key={i} nome={p.nome} detalhe={`${p.idade} anos`} valor={brl(p.valor)} />
+            {linhasQuartos.length > 0 && (
+              <li className={`${FONT_BODY} text-[11px] uppercase tracking-[0.08em] ${COR_MUTED} pb-0.5`}>
+                Quartos (pacote completo)
+              </li>
+            )}
+            {linhasQuartos.map((l) => (
+              <LinhaConta
+                key={l.key}
+                nome={`${l.qtd} × Quarto ${l.label.toLowerCase()}`}
+                valor={brl(l.qtd * l.valor)}
+              />
             ))}
+
+            {extrasRefeicao.length > 0 && (
+              <li className={`${FONT_BODY} text-[11px] uppercase tracking-[0.08em] ${COR_MUTED} pt-2 pb-0.5`}>
+                Refeições (excede a cama — {retiro.precos.numRefeicoes} refeições)
+              </li>
+            )}
+            {extrasRefeicao.map((p, i) => (
+              <LinhaConta
+                key={`r-${i}`}
+                nome={p.nome}
+                detalhe={`${p.idade} anos · ${p.classe === "meia" ? "meia" : "inteira"}`}
+                valor={brl(p.refeicoes)}
+              />
+            ))}
+
             {(resumo.palestras > 0 || resumo.camasExtras > 0 || resumo.pets > 0) && (
               <li className={`${FONT_BODY} text-[11px] uppercase tracking-[0.08em] ${COR_MUTED} pt-2 pb-0.5`}>
                 Adicionais
@@ -714,7 +761,7 @@ export function RetiroForm({
             {resumo.camasExtras > 0 && (
               <LinhaConta
                 nome="Camas extras"
-                detalhe={`${valores.camasExtras} × ${brl(retiro.precos.camaExtra)} pelo período`}
+                detalhe={`${valores.camasExtras} × ${brl(retiro.precos.camaExtra)}`}
                 valor={brl(resumo.camasExtras)}
               />
             )}
@@ -735,7 +782,8 @@ export function RetiroForm({
             </span>
           </div>
           <p className={`${FONT_BODY} mt-4 text-[12px] leading-relaxed ${COR_MUTED}`}>
-            Valor pela tabela vigente. Condições especiais podem ser combinadas com a secretaria.
+            Total ajustado para terminar em R$ 0,03 (identificação do financeiro). Condições
+            especiais podem ser combinadas com a secretaria.
           </p>
         </div>
       )}

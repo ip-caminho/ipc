@@ -321,10 +321,16 @@ export function InscricaoDetalheDrawer({
                 <div className="rounded-lg border p-3">
                   <p className="font-semibold">Hospedagem</p>
                   <p className="mt-1 text-muted-foreground">
-                    {insc.hospedagem.quartosDuplos} duplo(s) · {insc.hospedagem.quartosTriplos}{" "}
-                    triplo(s)
-                    {insc.hospedagem.camasExtras > 0 && ` · ${insc.hospedagem.camasExtras} cama(s) extra`}
-                    {insc.hospedagem.pets > 0 && ` · ${insc.hospedagem.pets} pet(s)`}
+                    {[
+                      insc.hospedagem.quartos.individual && `${insc.hospedagem.quartos.individual} individual`,
+                      insc.hospedagem.quartos.duplo && `${insc.hospedagem.quartos.duplo} duplo`,
+                      insc.hospedagem.quartos.triplo && `${insc.hospedagem.quartos.triplo} triplo`,
+                      insc.hospedagem.quartos.quadruplo && `${insc.hospedagem.quartos.quadruplo} quádruplo`,
+                      insc.hospedagem.camasExtras > 0 && `${insc.hospedagem.camasExtras} cama(s) extra`,
+                      insc.hospedagem.pets > 0 && `${insc.hospedagem.pets} pet(s)`,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ") || "Sem quarto"}
                   </p>
                   <p className="mt-1 text-muted-foreground">
                     Pagamento pedido:{" "}

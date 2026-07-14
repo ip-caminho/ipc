@@ -8,6 +8,10 @@ import {
   valorFinal,
   totalRecebido,
   saldoInscricao,
+  mapQuartos,
+  somaQuartos,
+  totalQuartos,
+  TIPOS_QUARTO,
 } from "../retiro/calculoHelpers";
 import { createFieldAuditLogs } from "../_shared/auditHelpers";
 
@@ -117,10 +121,7 @@ export const getBySlug = query({
       dataFim: a.dataFim,
       inscricoesAbertas: inscricoesAbertas(a, Date.now()),
       precos: a.precos,
-      disponibilidade: {
-        duplos: Math.max(0, a.estoqueDuplos - a.duplosReservados),
-        triplos: Math.max(0, a.estoqueTriplos - a.triplosReservados),
-      },
+      disponibilidade: mapQuartos((t) => Math.max(0, a.estoque[t] - a.reservados[t])),
     };
   },
 });
@@ -191,8 +192,12 @@ const participanteValidator = v.object({
 });
 
 const hospedagemValidator = v.object({
-  quartosDuplos: v.number(),
-  quartosTriplos: v.number(),
+  quartos: v.object({
+    individual: v.number(),
+    duplo: v.number(),
+    triplo: v.number(),
+    quadruplo: v.number(),
+  }),
   camasExtras: v.number(),
   pets: v.number(),
 });
@@ -272,10 +277,15 @@ export const responder = mutation({
       }
     }
     const h = args.hospedagem;
-    if ([h.quartosDuplos, h.quartosTriplos, h.camasExtras, h.pets].some((n) => n < 0 || !Number.isInteger(n))) {
+    const qh = h.quartos;
+    if (
+      [qh.individual, qh.duplo, qh.triplo, qh.quadruplo, h.camasExtras, h.pets].some(
+        (n) => n < 0 || !Number.isInteger(n),
+      )
+    ) {
       throw new Error("Quantidades de hospedagem inválidas");
     }
-    if (h.quartosDuplos + h.quartosTriplos === 0) {
+    if (totalQuartos(qh) === 0) {
       throw new Error("Escolha ao menos um quarto");
     }
     // Normaliza o whatsapp para +digitos (chave de dedupe estavel)
@@ -345,13 +355,11 @@ export const responder = mutation({
     );
 
     // Estoque: cabe -> ATIVA e reserva; esgotou algum tipo pedido -> LISTA_ESPERA.
-    const cabeDuplos = acamp.duplosReservados + h.quartosDuplos <= acamp.estoqueDuplos;
-    const cabeTriplos = acamp.triplosReservados + h.quartosTriplos <= acamp.estoqueTriplos;
-    const status: "ATIVA" | "LISTA_ESPERA" = cabeDuplos && cabeTriplos ? "ATIVA" : "LISTA_ESPERA";
-    if (status === "ATIVA" && h.quartosDuplos + h.quartosTriplos > 0) {
+    const cabe = TIPOS_QUARTO.every((t) => acamp.reservados[t] + qh[t] <= acamp.estoque[t]);
+    const status: "ATIVA" | "LISTA_ESPERA" = cabe ? "ATIVA" : "LISTA_ESPERA";
+    if (status === "ATIVA" && totalQuartos(qh) > 0) {
       await ctx.db.patch(acamp._id, {
-        duplosReservados: acamp.duplosReservados + h.quartosDuplos,
-        triplosReservados: acamp.triplosReservados + h.quartosTriplos,
+        reservados: somaQuartos(acamp.reservados, qh),
       });
     }
 

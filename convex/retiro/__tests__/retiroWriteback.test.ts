@@ -7,11 +7,12 @@ import { modules } from "../../test.setup";
 import type { PrecosRetiro } from "../calculoHelpers";
 
 const PRECOS: PrecosRetiro = {
-  faixas: [
-    { idadeMin: 0, idadeMax: 4, valor: 0 },
-    { idadeMin: 5, idadeMax: 10, valor: 40_000 },
-    { idadeMin: 11, idadeMax: 120, valor: 80_000 },
-  ],
+  quartos: { individual: 200_000, duplo: 300_000, triplo: 360_000, quadruplo: 400_000 },
+  refeicaoInteira: 10_000,
+  refeicaoMeia: 5_000,
+  numRefeicoes: 6,
+  idadeMeiaMin: 6,
+  idadeInteiraMin: 11,
   camaExtra: 10_000,
   petPorDia: 10_000,
   palestra: 5_000,
@@ -29,10 +30,8 @@ async function seedRetiro(t: T, over: Record<string, unknown> = {}) {
       dataInicio: "2026-09-05",
       dataFim: "2026-09-08",
       precos: PRECOS,
-      estoqueDuplos: 5,
-      estoqueTriplos: 5,
-      duplosReservados: 0,
-      triplosReservados: 0,
+      estoque: { individual: 5, duplo: 5, triplo: 5, quadruplo: 5 },
+      reservados: { individual: 0, duplo: 0, triplo: 0, quadruplo: 0 },
       aportesFundo: [],
       criadoEm: Date.now(),
       ...over,
@@ -54,7 +53,11 @@ function argsInscricao(
     slug: "retiro-x",
     responsavel: { nome: "Resp", whatsapp },
     participantes,
-    hospedagem: { quartosDuplos: 1, quartosTriplos: 0, camasExtras: 0, pets: 0 },
+    hospedagem: {
+      quartos: { individual: 0, duplo: 1, triplo: 0, quadruplo: 0 },
+      camasExtras: 0,
+      pets: 0,
+    },
     pagamentoPreferido: { forma: "A_VISTA" as const, cpfPagante: "11144477735" },
     lgpdConsentimento: true,
     ipHash: "hash",

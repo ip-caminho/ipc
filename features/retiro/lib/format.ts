@@ -15,3 +15,30 @@ export function dataBR(iso: string): string {
   const [y, m, d] = iso.split("-");
   return `${d}/${m}/${y}`;
 }
+
+type Quartos = { individual: number; duplo: number; triplo: number; quadruplo: number };
+
+const SIGLA_QUARTO: Record<keyof Quartos, string> = {
+  individual: "I",
+  duplo: "D",
+  triplo: "T",
+  quadruplo: "Q",
+};
+
+export const LABEL_QUARTO: Record<keyof Quartos, string> = {
+  individual: "Individual",
+  duplo: "Duplo",
+  triplo: "Triplo",
+  quadruplo: "Quádruplo",
+};
+
+export const TIPOS_QUARTO = ["individual", "duplo", "triplo", "quadruplo"] as const;
+
+/** "1I · 2T" — só os tipos com quantidade > 0 (— se nenhum). */
+export function resumoQuartos(q: Quartos): string {
+  return (
+    TIPOS_QUARTO.filter((t) => q[t] > 0)
+      .map((t) => `${q[t]}${SIGLA_QUARTO[t]}`)
+      .join(" · ") || "—"
+  );
+}
