@@ -1,10 +1,10 @@
-import { mutation } from "../_generated/server";
+import { internalMutation } from "../_generated/server";
 
 /**
  * Migration: popular cultoLouvores a partir de cultos.louvores (string[]).
  * Executar uma vez via dashboard: npx convex run escalas/migrateLegacyLouvores:migrate
  */
-export const migrate = mutation({
+export const migrate = internalMutation({
   args: {},
   handler: async (ctx) => {
     const cultos = await ctx.db.query("cultos").collect();

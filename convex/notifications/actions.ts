@@ -59,6 +59,14 @@ export const sendPushToAll = action({
     url: v.optional(v.string()),
   },
   handler: async (ctx, { title, body, url }) => {
+    // SEGURANCA: só admin pode disparar push para todos ("*" = admin).
+    const isAdmin = await ctx.runQuery(
+      // @ts-ignore referencia de funcao por string
+      "_shared/requirePermission:currentUserHasPermission",
+      { permission: "*" }
+    );
+    if (!isAdmin) throw new Error("Sem permissao");
+
     setupVapid();
 
     const subscriptions = await ctx.runQuery(

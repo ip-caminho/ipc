@@ -19,7 +19,7 @@ export const extractBookData = action({
   args: {
     imageUrl: v.string(),
   },
-  handler: async (_, { imageUrl }): Promise<{
+  handler: async (ctx, { imageUrl }): Promise<{
     titulo: string;
     autores: string[];
     editora?: string | null;
@@ -27,6 +27,15 @@ export const extractBookData = action({
     ano?: number | null;
     idioma?: string;
   }> => {
+    // SEGURANCA: exige permissao de cadastro na biblioteca (evita abuso de
+    // billing da API Anthropic e fetch de URL arbitraria por anonimos).
+    const ok = await ctx.runQuery(
+      // @ts-ignore referencia de funcao por string
+      "_shared/requirePermission:currentUserHasPermission",
+      { permission: "biblioteca:create" }
+    );
+    if (!ok) throw new Error("Sem permissao");
+
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) throw new Error("ANTHROPIC_API_KEY nao configurada");
 

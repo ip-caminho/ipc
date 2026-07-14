@@ -1,5 +1,6 @@
 import { query } from "../_generated/server";
 import { v } from "convex/values";
+import { checkPermission } from "../_shared/requirePermission";
 
 export const list = query({
   args: {
@@ -9,6 +10,9 @@ export const list = query({
     search: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    // Sem permissao: degrada para lista vazia (nao vaza dados nem quebra a
+    // pagina, que roda o useQuery antes de qualquer gate de render).
+    if (!(await checkPermission(ctx, "entidades:read"))) return [];
     let results;
     if (args.tipo) {
       results = await ctx.db
@@ -50,6 +54,7 @@ export const listNaoMembros = query({
     search: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    if (!(await checkPermission(ctx, "entidades:read"))) return [];
     const pf = await ctx.db
       .query("entidades")
       .withIndex("by_tipo", (q) => q.eq("tipoEntidade", "PF"))
@@ -91,6 +96,7 @@ function filtrarPorBusca<T extends {
 export const getById = query({
   args: { id: v.id("entidades") },
   handler: async (ctx, { id }) => {
+    if (!(await checkPermission(ctx, "entidades:read"))) return null;
     return await ctx.db.get(id);
   },
 });
