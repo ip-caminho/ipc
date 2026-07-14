@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { RetiroForm } from "./RetiroForm";
+import { ValoresRetiro } from "./ValoresRetiro";
 import type { RetiroPublico } from "../lib/data";
 
 function periodoBR(inicio: string, fim: string): string {
@@ -34,6 +35,11 @@ export function RetiroPagina({ retiro }: { retiro: RetiroPublico }) {
           }}
         >
           {retiro.descricao}
+        </div>
+      )}
+      {!enviado && (
+        <div style={{ marginTop: "var(--space-6)" }}>
+          <ValoresRetiro precos={retiro.precos} />
         </div>
       )}
       <div style={{ marginTop: "var(--space-10)" }}>
