@@ -575,7 +575,7 @@ export function RetiroForm({
 
       {/* 3 — Hospedagem */}
       <div className="space-y-4">
-        <Etapa n={3} titulo="Hospedagem" hint="quem excede a cama do quarto paga só refeição" />
+        <Etapa n={3} titulo="Hospedagem" hint="escolha os quartos da sua família" />
         <div className="grid gap-2 md:grid-cols-2">
           {/* Só os tipos realmente ofertados (com preço definido) */}
           {TIPOS_QUARTO.filter((t) => retiro.precos.quartos[t.tipo] > 0).map((t) => (
@@ -734,14 +734,14 @@ export function RetiroForm({
 
             {extrasRefeicao.length > 0 && (
               <li className={`${FONT_BODY} text-[11px] uppercase tracking-[0.08em] ${COR_MUTED} pt-2 pb-0.5`}>
-                Refeições (excede a cama — {retiro.precos.numRefeicoes} refeições)
+                Refeições
               </li>
             )}
             {extrasRefeicao.map((p, i) => (
               <LinhaConta
                 key={`r-${i}`}
                 nome={p.nome}
-                detalhe={`${p.idade} anos · ${p.classe === "meia" ? "meia" : "inteira"}`}
+                detalhe={`${p.idade} anos · sem cama própria`}
                 valor={brl(p.refeicoes)}
               />
             ))}
