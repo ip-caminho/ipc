@@ -22,7 +22,6 @@ export function RetiroCard({ retiro }: { retiro: RetiroPublicoLista }) {
   return (
     <Link href={`/retiro/${retiro.slug}`} className="insc-card">
       <h3>{retiro.titulo}</h3>
-      {retiro.descricao && <p className="desc">{retiro.descricao}</p>}
       {quando && <p className="meta">{quando}</p>}
       <span className="go">Inscrever-se →</span>
     </Link>

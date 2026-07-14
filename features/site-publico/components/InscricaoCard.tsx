@@ -33,7 +33,6 @@ export function InscricaoCard({
   return (
     <Link href={`/inscricoes/${inscricao.slug}`} className="insc-card">
       <h3>{inscricao.titulo}</h3>
-      {!compact && inscricao.descricao && <p className="desc">{inscricao.descricao}</p>}
       {linha && <p className="meta">{linha}</p>}
       {!compact && <span className="go">Inscrever-se →</span>}
     </Link>
