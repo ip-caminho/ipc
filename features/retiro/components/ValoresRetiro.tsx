@@ -81,9 +81,7 @@ export function ValoresRetiro({ precos }: { precos: RetiroPublico["precos"] }) {
           {textoIdade}
         </li>
         <li className={`${FONT_BODY} text-[13px] leading-relaxed ${COR_MUTED}`}>
-          Quem excede a capacidade do quarto (divide cama) paga só as refeições:{" "}
-          {brl(precos.refeicaoMeia)} (meia) ou {brl(precos.refeicaoInteira)} (inteira) ×{" "}
-          {precos.numRefeicoes} refeições.
+          Quem dividir cama com outra pessoa paga um valor reduzido — só as refeições.
         </li>
       </ul>
 
