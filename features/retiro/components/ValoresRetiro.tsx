@@ -73,7 +73,7 @@ export function ValoresRetiro({ precos }: { precos: RetiroPublico["precos"] }) {
         })}
       </ul>
 
-      <p className={`${FONT_BODY} mt-5 text-[11px] uppercase tracking-[0.08em] ${COR_MUTED}`}>
+      <p className={`${FONT_BODY} mt-7 text-[11px] uppercase tracking-[0.08em] ${COR_MUTED}`}>
         Crianças
       </p>
       <ul className="mt-2 space-y-1.5">
@@ -81,11 +81,12 @@ export function ValoresRetiro({ precos }: { precos: RetiroPublico["precos"] }) {
           {textoIdade}
         </li>
         <li className={`${FONT_BODY} text-[13px] leading-relaxed ${COR_MUTED}`}>
-          Quem dividir cama com outra pessoa paga um valor reduzido — só as refeições.
+          Quem dividir cama com outra pessoa paga apenas a alimentação (as {precos.numRefeicoes}{" "}
+          refeições do período) — sem a diária do quarto.
         </li>
       </ul>
 
-      <p className={`${FONT_BODY} mt-5 text-[11px] uppercase tracking-[0.08em] ${COR_MUTED}`}>
+      <p className={`${FONT_BODY} mt-7 text-[11px] uppercase tracking-[0.08em] ${COR_MUTED}`}>
         Adicionais
       </p>
       <ul className="mt-2 space-y-2.5">

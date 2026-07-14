@@ -734,7 +734,7 @@ export function RetiroForm({
 
             {extrasRefeicao.length > 0 && (
               <li className={`${FONT_BODY} text-[11px] uppercase tracking-[0.08em] ${COR_MUTED} pt-2 pb-0.5`}>
-                Refeições
+                Alimentação
               </li>
             )}
             {extrasRefeicao.map((p, i) => (
