@@ -12,6 +12,7 @@ import { Card, CardContent } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { QuartosBoard } from "@features/retiro/components/QuartosBoard";
+import { LABEL_QUARTO, TIPOS_QUARTO } from "@features/retiro/lib/format";
 
 function Conteudo({ retiroId }: { retiroId: Id<"retiros"> }) {
   // @ts-ignore Convex TS2589
@@ -26,7 +27,10 @@ function Conteudo({ retiroId }: { retiroId: Id<"retiros"> }) {
         </Button>
         {acamp && (
           <p className="text-sm text-muted-foreground">
-            Estoque: {acamp.estoqueDuplos} duplos · {acamp.estoqueTriplos} triplos
+            Estoque:{" "}
+            {TIPOS_QUARTO.filter((t) => acamp.estoque[t] > 0)
+              .map((t) => `${acamp.estoque[t]} ${LABEL_QUARTO[t].toLowerCase()}`)
+              .join(" · ") || "—"}
           </p>
         )}
       </div>

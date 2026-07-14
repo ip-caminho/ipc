@@ -1,55 +1,35 @@
 import { internalMutation } from "./_generated/server";
-import type { Id } from "./_generated/dataModel";
 
-// Migracao unica: acampamento* -> retiro*, remapeando as FKs (novos _id).
-// Idempotente: limpa as tabelas NOVAS antes de copiar. As antigas ficam
-// intactas ate a limpeza final (retiroMigracao.limpar).
+// Migracao unica acampamento* -> retiro* — JA CONCLUIDA e desativada. O modelo
+// de precos do retiro mudou (precos por tipo de quarto + refeicoes), tornando o
+// shape antigo de `acampamentos` incompativel com `retiros`. Mantida so como
+// referencia historica; `limpar` (abaixo) segue valido p/ remover o legado.
 export const migrar = internalMutation({
   args: {},
+  handler: async () => {
+    throw new Error(
+      "Migração acampamento* -> retiro* já concluída e desativada (modelo de preços mudou).",
+    );
+  },
+});
+
+// Reset dos dados do retiro (retiros + inscricoes + quartos). Usar para re-seed
+// em dev e, principalmente, para limpar o evento de TESTE antes do deploy que
+// mudou o shape de precos/hospedagem: o schema novo e INCOMPATIVEL com docs
+// antigos (precosSnapshot.faixas, hospedagem.quartosDuplos), entao a validacao
+// de schema do `convex deploy` rejeita enquanto existirem esses docs. Rode isto
+// (ou apague os docs pela aba Data) no deployment ANTES de subir o schema novo.
+export const resetRetiros = internalMutation({
+  args: {},
   handler: async (ctx) => {
-    // Zera destino (permite reexecutar sem duplicar)
-    for (const t of ["retiros", "inscricoesRetiro", "quartosRetiro"] as const) {
-      for (const d of await ctx.db.query(t).collect()) await ctx.db.delete(d._id);
+    let n = 0;
+    for (const t of ["quartosRetiro", "inscricoesRetiro", "retiros"] as const) {
+      for (const d of await ctx.db.query(t).collect()) {
+        await ctx.db.delete(d._id);
+        n++;
+      }
     }
-
-    // 1) eventos
-    const mapEvento = new Map<string, Id<"retiros">>();
-    for (const a of await ctx.db.query("acampamentos").collect()) {
-      const { _id, _creationTime, ...rest } = a;
-      void _creationTime;
-      const novo = await ctx.db.insert("retiros", rest);
-      mapEvento.set(_id, novo);
-    }
-
-    // 2) inscricoes (remapeia acampamentoId -> retiroId)
-    const mapInsc = new Map<string, Id<"inscricoesRetiro">>();
-    for (const i of await ctx.db.query("inscricoesAcampamento").collect()) {
-      const { _id, _creationTime, acampamentoId, ...rest } = i;
-      void _creationTime;
-      const retiroId = mapEvento.get(acampamentoId);
-      if (!retiroId) throw new Error(`Inscricao ${_id} sem retiro correspondente`);
-      const novo = await ctx.db.insert("inscricoesRetiro", { ...rest, retiroId });
-      mapInsc.set(_id, novo);
-    }
-
-    // 3) quartos (remapeia acampamentoId + ocupantes[].inscricaoId)
-    let quartos = 0;
-    for (const q of await ctx.db.query("quartosAcampamento").collect()) {
-      const { _id, _creationTime, acampamentoId, ocupantes, ...rest } = q;
-      void _id;
-      void _creationTime;
-      const retiroId = mapEvento.get(acampamentoId);
-      if (!retiroId) throw new Error(`Quarto ${_id} sem retiro correspondente`);
-      const ocup = ocupantes.map((o) => {
-        const nova = mapInsc.get(o.inscricaoId);
-        if (!nova) throw new Error(`Ocupante sem inscricao correspondente (${o.inscricaoId})`);
-        return { inscricaoId: nova, participanteIndex: o.participanteIndex };
-      });
-      await ctx.db.insert("quartosRetiro", { ...rest, retiroId, ocupantes: ocup });
-      quartos++;
-    }
-
-    return { retiros: mapEvento.size, inscricoes: mapInsc.size, quartos };
+    return { apagados: n };
   },
 });
 

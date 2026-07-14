@@ -31,6 +31,22 @@ import {
 import { GripVertical, Plus, Trash2, Wand2, BedDouble, Pencil, X } from "lucide-react";
 import { cn } from "@shared/lib/utils/cn";
 
+type TipoQuarto = "INDIVIDUAL" | "DUPLO" | "TRIPLO" | "QUADRUPLO";
+
+const TIPO_LABEL: Record<TipoQuarto, string> = {
+  INDIVIDUAL: "Individual",
+  DUPLO: "Duplo",
+  TRIPLO: "Triplo",
+  QUADRUPLO: "Quádruplo",
+};
+
+const TIPO_CAPACIDADE: Record<TipoQuarto, number> = {
+  INDIVIDUAL: 1,
+  DUPLO: 2,
+  TRIPLO: 3,
+  QUADRUPLO: 4,
+};
+
 type OcupanteInfo = {
   inscricaoId: Id<"inscricoesRetiro">;
   participanteIndex: number;
@@ -82,7 +98,7 @@ function QuartoCard({
 }: {
   quarto: {
     _id: Id<"quartosRetiro">;
-    tipo: "DUPLO" | "TRIPLO";
+    tipo: "INDIVIDUAL" | "DUPLO" | "TRIPLO" | "QUADRUPLO";
     identificacao?: string;
     capacidade: number;
     ocupantes: OcupanteInfo[];
@@ -129,7 +145,7 @@ function QuartoCard({
           </span>
           <span className="flex shrink-0 items-center gap-1">
             <Badge variant={lotado ? "secondary" : "outline"}>
-              {quarto.tipo === "DUPLO" ? "Duplo" : "Triplo"} · {quarto.ocupantes.length}/
+              {TIPO_LABEL[quarto.tipo]} · {quarto.ocupantes.length}/
               {quarto.capacidade}
             </Badge>
             {quarto.ocupantes.length === 0 && (
@@ -257,16 +273,16 @@ export function QuartosBoard({ retiroId }: { retiroId: Id<"retiros"> }) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-              <DropdownMenuItem
-                onClick={() => acao(() => criar({ retiroId, tipo: "DUPLO" }), "Quarto duplo criado")}
-              >
-                Duplo (2)
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => acao(() => criar({ retiroId, tipo: "TRIPLO" }), "Quarto triplo criado")}
-              >
-                Triplo (3)
-              </DropdownMenuItem>
+              {(["INDIVIDUAL", "DUPLO", "TRIPLO", "QUADRUPLO"] as const).map((tipo) => (
+                <DropdownMenuItem
+                  key={tipo}
+                  onClick={() =>
+                    acao(() => criar({ retiroId, tipo }), `Quarto ${TIPO_LABEL[tipo].toLowerCase()} criado`)
+                  }
+                >
+                  {TIPO_LABEL[tipo]} ({TIPO_CAPACIDADE[tipo]})
+                </DropdownMenuItem>
+              ))}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

@@ -20,10 +20,8 @@ export const listar = query({
         ativa: a.ativa,
         dataInicio: a.dataInicio,
         dataFim: a.dataFim,
-        estoqueDuplos: a.estoqueDuplos,
-        estoqueTriplos: a.estoqueTriplos,
-        duplosReservados: a.duplosReservados,
-        triplosReservados: a.triplosReservados,
+        estoque: a.estoque,
+        reservados: a.reservados,
       }));
   },
 });

@@ -1,11 +1,65 @@
 /**
  * Calculo puro do financeiro do retiro (sem dependencia de runtime do
  * Convex — testavel direto). Todos os valores monetarios em CENTAVOS.
+ *
+ * Modelo de preco: o quarto e cobrado pelo VALOR CHEIO do tipo (individual,
+ * duplo, triplo, quadruplo). Quem cabe nas vagas do(s) quarto(s) ja esta
+ * incluso nesse valor. Participante que EXCEDE a capacidade (ex: crianca que
+ * divide cama) paga apenas as REFEICOES do periodo: isento ate `idadeMeiaMin`,
+ * meia entre `idadeMeiaMin` e `idadeInteiraMin`, inteira a partir dai.
  */
 
+export type TipoQuarto = "individual" | "duplo" | "triplo" | "quadruplo";
+
+export const CAPACIDADE_QUARTO: Record<TipoQuarto, number> = {
+  individual: 1,
+  duplo: 2,
+  triplo: 3,
+  quadruplo: 4,
+};
+
+export type QuartosContagem = Record<TipoQuarto, number>;
+
+export const TIPOS_QUARTO: TipoQuarto[] = ["individual", "duplo", "triplo", "quadruplo"];
+export const QUARTOS_ZERO: QuartosContagem = {
+  individual: 0,
+  duplo: 0,
+  triplo: 0,
+  quadruplo: 0,
+};
+
+export function mapQuartos(fn: (t: TipoQuarto) => number): QuartosContagem {
+  return {
+    individual: fn("individual"),
+    duplo: fn("duplo"),
+    triplo: fn("triplo"),
+    quadruplo: fn("quadruplo"),
+  };
+}
+
+/** Soma componente a componente. */
+export function somaQuartos(a: QuartosContagem, b: QuartosContagem): QuartosContagem {
+  return mapQuartos((t) => a[t] + b[t]);
+}
+
+/** Subtrai b de a, nunca abaixo de zero (devolucao de estoque). */
+export function subQuartosClamp(a: QuartosContagem, b: QuartosContagem): QuartosContagem {
+  return mapQuartos((t) => Math.max(0, a[t] - b[t]));
+}
+
+/** Total de quartos (soma dos 4 tipos). */
+export function totalQuartos(q: QuartosContagem): number {
+  return q.individual + q.duplo + q.triplo + q.quadruplo;
+}
+
 export type PrecosRetiro = {
-  faixas: { idadeMin: number; idadeMax: number; valor: number }[];
-  camaExtra: number; // por periodo
+  quartos: QuartosContagem; // valor cheio de cada tipo de quarto
+  refeicaoInteira: number; // por refeicao (extra 11+)
+  refeicaoMeia: number; // por refeicao (extra 6-10)
+  numRefeicoes: number; // qtd de refeicoes do evento
+  idadeMeiaMin: number; // idade em que passa a pagar meia refeicao (ex: 6)
+  idadeInteiraMin: number; // idade em que passa a pagar inteira (ex: 11)
+  camaExtra: number; // cobranca unica
   petPorDia: number;
   palestra: number; // por participante marcado
 };
@@ -17,8 +71,7 @@ export type ParticipanteCalculo = {
 };
 
 export type HospedagemCalculo = {
-  quartosDuplos: number;
-  quartosTriplos: number;
+  quartos: QuartosContagem;
   camasExtras: number;
   pets: number;
 };
@@ -44,32 +97,76 @@ export function numDiarias(dataInicio: string, dataFim: string): number {
   return Math.max(1, dias);
 }
 
-/**
- * Valor de hospedagem do participante pela faixa etaria na data de inicio.
- * Idade fora de todas as faixas cai na faixa de maior idadeMax (inteiro) —
- * nunca deixa participante sem preco.
- */
-export function valorParticipante(
-  precos: PrecosRetiro,
-  dataNascimento: string,
-  dataInicio: string,
-): number {
-  const idade = idadeNaData(dataNascimento, dataInicio);
-  const faixa = precos.faixas.find((f) => idade >= f.idadeMin && idade <= f.idadeMax);
-  if (faixa) return faixa.valor;
-  const maisAlta = [...precos.faixas].sort((a, b) => b.idadeMax - a.idadeMax)[0];
-  return maisAlta?.valor ?? 0;
+export type ClasseIdade = "isento" | "meia" | "inteiro";
+
+/** Classe de cobranca do participante pela idade na data de inicio. */
+export function classeIdade(idade: number, precos: PrecosRetiro): ClasseIdade {
+  if (idade < precos.idadeMeiaMin) return "isento";
+  if (idade < precos.idadeInteiraMin) return "meia";
+  return "inteiro";
 }
 
+/** Capacidade total (nº de camas) dos quartos escolhidos. */
+export function capacidadeQuartos(quartos: QuartosContagem): number {
+  return (
+    quartos.individual * CAPACIDADE_QUARTO.individual +
+    quartos.duplo * CAPACIDADE_QUARTO.duplo +
+    quartos.triplo * CAPACIDADE_QUARTO.triplo +
+    quartos.quadruplo * CAPACIDADE_QUARTO.quadruplo
+  );
+}
+
+/** Custo cheio dos quartos escolhidos. */
+export function custoQuartos(quartos: QuartosContagem, precos: PrecosRetiro): number {
+  return (
+    quartos.individual * precos.quartos.individual +
+    quartos.duplo * precos.quartos.duplo +
+    quartos.triplo * precos.quartos.triplo +
+    quartos.quadruplo * precos.quartos.quadruplo
+  );
+}
+
+/**
+ * Arredonda p/ CIMA ate o total terminar em ,03 (o financeiro identifica a
+ * inscricao pelo sufixo). Zero permanece zero. Valores em centavos.
+ */
+export function ajustarSufixo03(centavos: number): number {
+  if (centavos <= 0) return 0;
+  const resto = centavos % 100;
+  const base = centavos - resto;
+  return resto <= 3 ? base + 3 : base + 103;
+}
+
+export type ParticipanteDetalhe = {
+  nome: string;
+  idade: number;
+  classe: ClasseIdade;
+  emVaga: boolean; // ocupa cama do quarto (incluso no valor cheio)
+  refeicoes: number; // valor das refeicoes avulsas (0 se em vaga)
+};
+
 export type CalculoInscricao = {
-  total: number;
-  hospedagemPorParticipante: { nome: string; idade: number; valor: number }[];
+  total: number; // com sufixo ,03
+  subtotal: number; // antes do arredondamento
+  ajusteCentavos: number; // total - subtotal
+  quartos: number; // custo cheio dos quartos
+  capacidade: number;
+  refeicoesExtras: number; // soma das refeicoes de quem excede a capacidade
   palestras: number;
   camasExtras: number;
   pets: number;
+  participantes: ParticipanteDetalhe[];
 };
 
-/** Total da inscricao: faixas + palestras + camas extras + pets × diarias. */
+/**
+ * Total da inscricao: quartos (valor cheio) + refeicoes dos participantes que
+ * excedem a capacidade + palestras + camas extras + pets × diarias, com o
+ * sufixo ,03 aplicado no total.
+ *
+ * Alocacao de vagas: participantes de maior custo-de-refeicao (inteiros)
+ * ocupam as vagas primeiro — quem sobra paga so refeicoes. Isso minimiza o
+ * total, como a secretaria faria manualmente.
+ */
 export function calcularValorInscricao(
   participantes: ParticipanteCalculo[],
   hospedagem: HospedagemCalculo,
@@ -77,21 +174,59 @@ export function calcularValorInscricao(
   dataInicio: string,
   dataFim: string,
 ): CalculoInscricao {
-  const hospedagemPorParticipante = participantes.map((p) => ({
-    nome: p.nome,
-    idade: idadeNaData(p.dataNascimento, dataInicio),
-    valor: valorParticipante(precos, p.dataNascimento, dataInicio),
-  }));
+  const quartos = custoQuartos(hospedagem.quartos, precos);
+  const capacidade = capacidadeQuartos(hospedagem.quartos);
+
+  const refInteira = precos.refeicaoInteira * precos.numRefeicoes;
+  const refMeia = precos.refeicaoMeia * precos.numRefeicoes;
+  const custoRefeicao = (c: ClasseIdade) =>
+    c === "inteiro" ? refInteira : c === "meia" ? refMeia : 0;
+
+  const comClasse = participantes.map((p, i) => {
+    const idade = idadeNaData(p.dataNascimento, dataInicio);
+    return { i, nome: p.nome, idade, classe: classeIdade(idade, precos) };
+  });
+
+  // Ocupam vaga os de maior custo-de-refeicao (empate: ordem estavel).
+  const ordem = [...comClasse].sort(
+    (a, b) => custoRefeicao(b.classe) - custoRefeicao(a.classe),
+  );
+  const emVaga = new Set<number>();
+  ordem.forEach((c, idx) => {
+    if (idx < capacidade) emVaga.add(c.i);
+  });
+
+  const detalhe: ParticipanteDetalhe[] = comClasse.map((c) => {
+    const naVaga = emVaga.has(c.i);
+    return {
+      nome: c.nome,
+      idade: c.idade,
+      classe: c.classe,
+      emVaga: naVaga,
+      refeicoes: naVaga ? 0 : custoRefeicao(c.classe),
+    };
+  });
+
+  const refeicoesExtras = detalhe.reduce((s, d) => s + d.refeicoes, 0);
   const palestras =
     participantes.filter((p) => p.participaPalestras).length * precos.palestra;
   const camasExtras = hospedagem.camasExtras * precos.camaExtra;
   const pets = hospedagem.pets * precos.petPorDia * numDiarias(dataInicio, dataFim);
-  const total =
-    hospedagemPorParticipante.reduce((s, p) => s + p.valor, 0) +
-    palestras +
-    camasExtras +
-    pets;
-  return { total, hospedagemPorParticipante, palestras, camasExtras, pets };
+
+  const subtotal = quartos + refeicoesExtras + palestras + camasExtras + pets;
+  const total = ajustarSufixo03(subtotal);
+  return {
+    total,
+    subtotal,
+    ajusteCentavos: total - subtotal,
+    quartos,
+    capacidade,
+    refeicoesExtras,
+    palestras,
+    camasExtras,
+    pets,
+    participantes: detalhe,
+  };
 }
 
 /** Valor final devido = tabela − descontos concedidos. Nunca negativo. */

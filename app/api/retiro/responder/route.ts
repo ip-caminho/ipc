@@ -17,7 +17,11 @@ export async function POST(req: NextRequest) {
     slug?: string;
     responsavel?: { nome: string; whatsapp: string };
     participantes?: { nome: string; dataNascimento: string; participaPalestras: boolean; membroId?: string }[];
-    hospedagem?: { quartosDuplos: number; quartosTriplos: number; camasExtras: number; pets: number };
+    hospedagem?: {
+      quartos: { individual: number; duplo: number; triplo: number; quadruplo: number };
+      camasExtras: number;
+      pets: number;
+    };
     extras?: { colegaDeQuarto?: string; berco?: boolean; necessidadesEspeciais?: string; observacao?: string };
     pagamentoPreferido?: { forma: "A_VISTA" | "PARCELADO"; parcelas?: number; cpfPagante?: string };
     lgpdConsentimento?: boolean;

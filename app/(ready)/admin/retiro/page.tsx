@@ -14,7 +14,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { Plus, ExternalLink, Pencil } from "lucide-react";
 import { RetiroConfigDialog } from "@features/retiro/components/RetiroConfigDialog";
-import { dataBR } from "@features/retiro/lib/format";
+import { dataBR, LABEL_QUARTO, TIPOS_QUARTO } from "@features/retiro/lib/format";
 
 function Conteudo() {
   // @ts-ignore Convex TS2589
@@ -62,8 +62,10 @@ function Conteudo() {
                     </Badge>
                   </div>
                   <p className="mt-0.5 text-xs text-muted-foreground">
-                    {dataBR(a.dataInicio)} a {dataBR(a.dataFim)} · duplos {a.duplosReservados}/
-                    {a.estoqueDuplos} · triplos {a.triplosReservados}/{a.estoqueTriplos}
+                    {dataBR(a.dataInicio)} a {dataBR(a.dataFim)} ·{" "}
+                    {TIPOS_QUARTO.filter((t) => a.estoque[t] > 0)
+                      .map((t) => `${LABEL_QUARTO[t]} ${a.reservados[t]}/${a.estoque[t]}`)
+                      .join(" · ") || "sem estoque"}
                   </p>
                 </div>
                 <div className="flex shrink-0 gap-2">

@@ -1,47 +1,90 @@
 import type { RetiroPublico } from "../lib/data";
 import { brl } from "../lib/format";
+import { CAPACIDADE_QUARTO } from "@convex/retiro/calculoHelpers";
 
 // Mesmo vocabulario visual do "Resumo da inscricao" (papel/navy, recibo).
 const FONT_BODY = "font-[family-name:var(--font-source-sans)]";
 const COR_TEXTO = "text-[#1A1A1A]";
 const COR_MUTED = "text-[#595959]";
 
-function LinhaValor({ nome, valor }: { nome: string; valor: string }) {
+function LinhaValor({ nome, detalhe, valor }: { nome: string; detalhe?: string; valor: string }) {
   return (
     <li className={`flex items-baseline gap-2 py-1 ${FONT_BODY} text-[14px]`}>
-      <span className={`shrink-0 ${COR_TEXTO}`}>{nome}</span>
+      <span className={`shrink-0 ${COR_TEXTO}`}>
+        {nome}
+        {detalhe && <span className={`ml-1.5 text-[12px] ${COR_MUTED}`}>{detalhe}</span>}
+      </span>
       <span className="mx-1 flex-1 translate-y-[-2px] border-b border-dotted border-[#C9C2B4]" aria-hidden />
       <span className={`shrink-0 tabular-nums ${COR_TEXTO}`}>{valor}</span>
     </li>
   );
 }
 
-function faixaLabel(f: { idadeMin: number; idadeMax: number }): string {
-  if (f.idadeMax >= 100) return `${f.idadeMin} anos ou mais`;
-  if (f.idadeMin === 0) return `Até ${f.idadeMax} anos`;
-  return `${f.idadeMin} a ${f.idadeMax} anos`;
-}
-
 // Tabela de valores mostrada ANTES de preencher — quem quer entender os preços
-// (por faixa de idade + adicionais) sem começar a inscrição.
+// (por tipo de quarto + refeições dos extras + adicionais) sem começar a
+// inscrição.
+const LABEL: Record<keyof typeof CAPACIDADE_QUARTO, string> = {
+  individual: "Individual",
+  duplo: "Duplo",
+  triplo: "Triplo",
+  quadruplo: "Quádruplo",
+};
+
 export function ValoresRetiro({ precos }: { precos: RetiroPublico["precos"] }) {
-  const faixas = [...precos.faixas].sort((a, b) => a.idadeMin - b.idadeMin);
+  const quartos = (["individual", "duplo", "triplo", "quadruplo"] as const)
+    .map((tipo) => ({ tipo, label: LABEL[tipo], valor: precos.quartos[tipo] }))
+    .filter((q) => q.valor > 0);
+
+  // Texto das faixas de idade — robusto a configs degeneradas (meiaMin=0,
+  // meiaMin==inteiraMin) para nao exibir "Até -1 anos" ou faixa invertida.
+  const partesIdade: string[] = [];
+  if (precos.idadeMeiaMin > 0) {
+    const ate = precos.idadeMeiaMin - 1;
+    partesIdade.push(`até ${ate} ${ate === 1 ? "ano" : "anos"} não pagam`);
+  }
+  if (precos.idadeInteiraMin > precos.idadeMeiaMin) {
+    const de = precos.idadeMeiaMin;
+    const ateMeia = precos.idadeInteiraMin - 1;
+    partesIdade.push(de === ateMeia ? `aos ${de} pagam meia` : `de ${de} a ${ateMeia} pagam meia`);
+  }
+  partesIdade.push(`a partir de ${precos.idadeInteiraMin} pagam inteira`);
+  const textoIdade =
+    partesIdade.join(" · ").replace(/^./, (c) => c.toUpperCase()) + ".";
+
   return (
     <div className="border border-[#E5E3DC] bg-[#F4F0E8] p-6 md:p-7">
       <p className={`${FONT_BODY} text-[11px] font-semibold uppercase tracking-[0.1em] ${COR_MUTED}`}>
-        Valores
+        Valores por quarto
       </p>
       <p className={`${FONT_BODY} mt-1 text-[12px] leading-relaxed ${COR_MUTED}`}>
-        Hospedagem por participante, conforme a idade na data de início.
+        Pacote completo, valor por quarto (por pessoa entre parênteses).
       </p>
       <ul className="mt-4 space-y-2.5">
-        {faixas.map((f, i) => (
-          <LinhaValor
-            key={i}
-            nome={faixaLabel(f)}
-            valor={f.valor === 0 ? "Isento" : brl(f.valor)}
-          />
-        ))}
+        {quartos.map((q) => {
+          const porPessoa = CAPACIDADE_QUARTO[q.tipo];
+          return (
+            <LinhaValor
+              key={q.tipo}
+              nome={q.label}
+              detalhe={porPessoa > 1 ? `${brl(Math.round(q.valor / porPessoa))} por pessoa` : undefined}
+              valor={brl(q.valor)}
+            />
+          );
+        })}
+      </ul>
+
+      <p className={`${FONT_BODY} mt-5 text-[11px] uppercase tracking-[0.08em] ${COR_MUTED}`}>
+        Crianças
+      </p>
+      <ul className="mt-2 space-y-1.5">
+        <li className={`${FONT_BODY} text-[13px] leading-relaxed ${COR_MUTED}`}>
+          {textoIdade}
+        </li>
+        <li className={`${FONT_BODY} text-[13px] leading-relaxed ${COR_MUTED}`}>
+          Quem excede a capacidade do quarto (divide cama) paga só as refeições:{" "}
+          {brl(precos.refeicaoMeia)} (meia) ou {brl(precos.refeicaoInteira)} (inteira) ×{" "}
+          {precos.numRefeicoes} refeições.
+        </li>
       </ul>
 
       <p className={`${FONT_BODY} mt-5 text-[11px] uppercase tracking-[0.08em] ${COR_MUTED}`}>
@@ -51,7 +94,7 @@ export function ValoresRetiro({ precos }: { precos: RetiroPublico["precos"] }) {
         {precos.palestra > 0 && (
           <LinhaValor nome="Palestras (por pessoa)" valor={brl(precos.palestra)} />
         )}
-        <LinhaValor nome="Cama extra (pelo período)" valor={brl(precos.camaExtra)} />
+        <LinhaValor nome="Cama extra (cobrança única)" valor={brl(precos.camaExtra)} />
         <LinhaValor nome="Pet (por dia)" valor={brl(precos.petPorDia)} />
       </ul>
 

@@ -17,9 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/components/ui/dialog";
-import { brl, parseReais } from "../lib/format";
-
-type FaixaForm = { idadeMin: string; idadeMax: string; valor: string };
+import { parseReais } from "../lib/format";
 
 type ConfigForm = {
   slug: string;
@@ -30,12 +28,27 @@ type ConfigForm = {
   dataFim: string;
   inscricoesAbrem: string; // ISO date ("" = sem janela)
   inscricoesFecham: string;
-  faixas: FaixaForm[];
+  // Precos por tipo de quarto (valor cheio, em reais)
+  qIndividual: string;
+  qDuplo: string;
+  qTriplo: string;
+  qQuadruplo: string;
+  // Refeicoes dos extras (quem excede a capacidade do quarto)
+  refeicaoInteira: string;
+  refeicaoMeia: string;
+  numRefeicoes: string;
+  // Faixas de idade (anos)
+  idadeMeiaMin: string;
+  idadeInteiraMin: string;
+  // Adicionais
   camaExtra: string;
   petPorDia: string;
   palestra: string;
-  estoqueDuplos: string;
-  estoqueTriplos: string;
+  // Estoque por tipo
+  eIndividual: string;
+  eDuplo: string;
+  eTriplo: string;
+  eQuadruplo: string;
 };
 
 const VAZIO: ConfigForm = {
@@ -47,16 +60,22 @@ const VAZIO: ConfigForm = {
   dataFim: "",
   inscricoesAbrem: "",
   inscricoesFecham: "",
-  faixas: [
-    { idadeMin: "0", idadeMax: "4", valor: "0" },
-    { idadeMin: "5", idadeMax: "10", valor: "" },
-    { idadeMin: "11", idadeMax: "120", valor: "" },
-  ],
+  qIndividual: "",
+  qDuplo: "",
+  qTriplo: "",
+  qQuadruplo: "",
+  refeicaoInteira: "",
+  refeicaoMeia: "",
+  numRefeicoes: "6",
+  idadeMeiaMin: "6",
+  idadeInteiraMin: "11",
   camaExtra: "",
   petPorDia: "",
   palestra: "",
-  estoqueDuplos: "",
-  estoqueTriplos: "",
+  eIndividual: "",
+  eDuplo: "",
+  eTriplo: "",
+  eQuadruplo: "",
 };
 
 function centavosParaInput(c: number): string {
@@ -101,6 +120,7 @@ export function RetiroConfigDialog({
     if (!retiroId) {
       setForm(VAZIO);
     } else if (existente) {
+      const p = existente.precos;
       setForm({
         slug: existente.slug,
         titulo: existente.titulo,
@@ -110,28 +130,28 @@ export function RetiroConfigDialog({
         dataFim: existente.dataFim,
         inscricoesAbrem: tsParaIso(existente.inscricoesAbrem),
         inscricoesFecham: tsParaIso(existente.inscricoesFecham),
-        faixas: existente.precos.faixas.map((f) => ({
-          idadeMin: String(f.idadeMin),
-          idadeMax: String(f.idadeMax),
-          valor: centavosParaInput(f.valor),
-        })),
-        camaExtra: centavosParaInput(existente.precos.camaExtra),
-        petPorDia: centavosParaInput(existente.precos.petPorDia),
-        palestra: centavosParaInput(existente.precos.palestra),
-        estoqueDuplos: String(existente.estoqueDuplos),
-        estoqueTriplos: String(existente.estoqueTriplos),
+        qIndividual: centavosParaInput(p.quartos.individual),
+        qDuplo: centavosParaInput(p.quartos.duplo),
+        qTriplo: centavosParaInput(p.quartos.triplo),
+        qQuadruplo: centavosParaInput(p.quartos.quadruplo),
+        refeicaoInteira: centavosParaInput(p.refeicaoInteira),
+        refeicaoMeia: centavosParaInput(p.refeicaoMeia),
+        numRefeicoes: String(p.numRefeicoes),
+        idadeMeiaMin: String(p.idadeMeiaMin),
+        idadeInteiraMin: String(p.idadeInteiraMin),
+        camaExtra: centavosParaInput(p.camaExtra),
+        petPorDia: centavosParaInput(p.petPorDia),
+        palestra: centavosParaInput(p.palestra),
+        eIndividual: String(existente.estoque.individual),
+        eDuplo: String(existente.estoque.duplo),
+        eTriplo: String(existente.estoque.triplo),
+        eQuadruplo: String(existente.estoque.quadruplo),
       });
     }
   }, [open, retiroId, existente]);
 
   function set<K extends keyof ConfigForm>(k: K, v: ConfigForm[K]) {
     setForm((f) => ({ ...f, [k]: v }));
-  }
-  function setFaixa(i: number, k: keyof FaixaForm, v: string) {
-    setForm((f) => ({
-      ...f,
-      faixas: f.faixas.map((fx, j) => (j === i ? { ...fx, [k]: v } : fx)),
-    }));
   }
 
   async function salvar() {
@@ -146,17 +166,27 @@ export function RetiroConfigDialog({
         inscricoesAbrem: isoParaTs(form.inscricoesAbrem),
         inscricoesFecham: isoParaTs(form.inscricoesFecham, true),
         precos: {
-          faixas: form.faixas.map((f) => ({
-            idadeMin: Number(f.idadeMin),
-            idadeMax: Number(f.idadeMax),
-            valor: parseReais(f.valor),
-          })),
+          quartos: {
+            individual: parseReais(form.qIndividual),
+            duplo: parseReais(form.qDuplo),
+            triplo: parseReais(form.qTriplo),
+            quadruplo: parseReais(form.qQuadruplo),
+          },
+          refeicaoInteira: parseReais(form.refeicaoInteira),
+          refeicaoMeia: parseReais(form.refeicaoMeia),
+          numRefeicoes: Number(form.numRefeicoes) || 0,
+          idadeMeiaMin: Number(form.idadeMeiaMin) || 0,
+          idadeInteiraMin: Number(form.idadeInteiraMin) || 0,
           camaExtra: parseReais(form.camaExtra),
           petPorDia: parseReais(form.petPorDia),
           palestra: parseReais(form.palestra),
         },
-        estoqueDuplos: Number(form.estoqueDuplos) || 0,
-        estoqueTriplos: Number(form.estoqueTriplos) || 0,
+        estoque: {
+          individual: Number(form.eIndividual) || 0,
+          duplo: Number(form.eDuplo) || 0,
+          triplo: Number(form.eTriplo) || 0,
+          quadruplo: Number(form.eQuadruplo) || 0,
+        },
       };
       if (!payload.titulo || !form.dataInicio || !form.dataFim) {
         throw new Error("Preencha título e período");
@@ -201,7 +231,7 @@ export function RetiroConfigDialog({
                   id="cfg-slug"
                   value={form.slug}
                   onChange={(e) => set("slug", e.target.value)}
-                  placeholder="acampa-2027"
+                  placeholder="retiro-2027"
                 />
               </div>
             )}
@@ -236,41 +266,67 @@ export function RetiroConfigDialog({
             </div>
           </div>
 
+          {/* Precos por tipo de quarto (valor cheio) */}
           <div className="space-y-2">
-            <Label>Faixas etárias (valor por pessoa)</Label>
-            {form.faixas.map((f, i) => (
-              <div key={i} className="grid grid-cols-[1fr_1fr_1.4fr] items-center gap-2">
-                <Input
-                  inputMode="numeric"
-                  aria-label={`Faixa ${i + 1}: idade mínima`}
-                  value={f.idadeMin}
-                  onChange={(e) => setFaixa(i, "idadeMin", e.target.value)}
-                  placeholder="De (anos)"
-                />
-                <Input
-                  inputMode="numeric"
-                  aria-label={`Faixa ${i + 1}: idade máxima`}
-                  value={f.idadeMax}
-                  onChange={(e) => setFaixa(i, "idadeMax", e.target.value)}
-                  placeholder="Até (anos)"
-                />
-                <Input
-                  inputMode="decimal"
-                  aria-label={`Faixa ${i + 1}: valor em reais`}
-                  value={f.valor}
-                  onChange={(e) => setFaixa(i, "valor", e.target.value)}
-                  placeholder="R$"
-                />
+            <Label>Valor por quarto — pacote completo (R$)</Label>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <div className="space-y-1">
+                <Label htmlFor="cfg-qi" className="text-xs text-muted-foreground">Individual</Label>
+                <Input id="cfg-qi" inputMode="decimal" value={form.qIndividual} onChange={(e) => set("qIndividual", e.target.value)} placeholder="R$" />
               </div>
-            ))}
+              <div className="space-y-1">
+                <Label htmlFor="cfg-qd" className="text-xs text-muted-foreground">Duplo</Label>
+                <Input id="cfg-qd" inputMode="decimal" value={form.qDuplo} onChange={(e) => set("qDuplo", e.target.value)} placeholder="R$" />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="cfg-qt" className="text-xs text-muted-foreground">Triplo</Label>
+                <Input id="cfg-qt" inputMode="decimal" value={form.qTriplo} onChange={(e) => set("qTriplo", e.target.value)} placeholder="R$" />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="cfg-qq" className="text-xs text-muted-foreground">Quádruplo</Label>
+                <Input id="cfg-qq" inputMode="decimal" value={form.qQuadruplo} onChange={(e) => set("qQuadruplo", e.target.value)} placeholder="R$" />
+              </div>
+            </div>
             <p className="text-xs text-muted-foreground">
-              Idade calculada na data de início. Ex.: 0–4 isento, 5–10 reduzido, 11–120 inteiro.
+              Cobrado pelo valor cheio do quarto. Quem excede a capacidade (ex: criança que
+              divide cama) paga só as refeições abaixo.
             </p>
           </div>
 
+          {/* Refeicoes dos extras + faixas de idade */}
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="space-y-1.5">
-              <Label htmlFor="cfg-cama">Cama extra (R$/período)</Label>
+              <Label htmlFor="cfg-rint">Refeição inteira (R$)</Label>
+              <Input id="cfg-rint" inputMode="decimal" value={form.refeicaoInteira} onChange={(e) => set("refeicaoInteira", e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="cfg-rmeia">Refeição meia (R$)</Label>
+              <Input id="cfg-rmeia" inputMode="decimal" value={form.refeicaoMeia} onChange={(e) => set("refeicaoMeia", e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="cfg-nref">Nº de refeições</Label>
+              <Input id="cfg-nref" inputMode="numeric" value={form.numRefeicoes} onChange={(e) => set("numRefeicoes", e.target.value)} />
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="cfg-imeia">Paga meia a partir de (anos)</Label>
+              <Input id="cfg-imeia" inputMode="numeric" value={form.idadeMeiaMin} onChange={(e) => set("idadeMeiaMin", e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="cfg-iint">Paga inteira a partir de (anos)</Label>
+              <Input id="cfg-iint" inputMode="numeric" value={form.idadeInteiraMin} onChange={(e) => set("idadeInteiraMin", e.target.value)} />
+            </div>
+            <p className="text-xs text-muted-foreground sm:col-span-2">
+              Abaixo da idade de meia = isento. Ex.: 0–5 isento, 6–10 meia refeição, 11+ inteira.
+            </p>
+          </div>
+
+          {/* Adicionais */}
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="cfg-cama">Cama extra (R$, única)</Label>
               <Input id="cfg-cama" inputMode="decimal" value={form.camaExtra} onChange={(e) => set("camaExtra", e.target.value)} />
             </div>
             <div className="space-y-1.5">
@@ -283,14 +339,26 @@ export function RetiroConfigDialog({
             </div>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="cfg-dup">Quartos duplos (estoque)</Label>
-              <Input id="cfg-dup" inputMode="numeric" value={form.estoqueDuplos} onChange={(e) => set("estoqueDuplos", e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="cfg-tri">Quartos triplos (estoque)</Label>
-              <Input id="cfg-tri" inputMode="numeric" value={form.estoqueTriplos} onChange={(e) => set("estoqueTriplos", e.target.value)} />
+          {/* Estoque por tipo */}
+          <div className="space-y-2">
+            <Label>Estoque de quartos</Label>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <div className="space-y-1">
+                <Label htmlFor="cfg-ei" className="text-xs text-muted-foreground">Individual</Label>
+                <Input id="cfg-ei" inputMode="numeric" value={form.eIndividual} onChange={(e) => set("eIndividual", e.target.value)} />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="cfg-ed" className="text-xs text-muted-foreground">Duplo</Label>
+                <Input id="cfg-ed" inputMode="numeric" value={form.eDuplo} onChange={(e) => set("eDuplo", e.target.value)} />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="cfg-et" className="text-xs text-muted-foreground">Triplo</Label>
+                <Input id="cfg-et" inputMode="numeric" value={form.eTriplo} onChange={(e) => set("eTriplo", e.target.value)} />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="cfg-eq" className="text-xs text-muted-foreground">Quádruplo</Label>
+                <Input id="cfg-eq" inputMode="numeric" value={form.eQuadruplo} onChange={(e) => set("eQuadruplo", e.target.value)} />
+              </div>
             </div>
           </div>
 
@@ -298,12 +366,6 @@ export function RetiroConfigDialog({
             <Checkbox checked={form.ativa} onCheckedChange={(c) => set("ativa", c === true)} />
             Ativo (página pública acessível)
           </label>
-
-          {form.faixas.some((f) => f.valor) && (
-            <p className="text-xs text-muted-foreground">
-              Conferência: faixas {form.faixas.map((f) => brl(parseReais(f.valor))).join(" · ")}
-            </p>
-          )}
 
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>

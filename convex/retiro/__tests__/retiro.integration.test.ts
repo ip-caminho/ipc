@@ -6,7 +6,8 @@ import { modules } from "../../test.setup";
 import {
   idadeNaData,
   numDiarias,
-  valorParticipante,
+  classeIdade,
+  ajustarSufixo03,
   calcularValorInscricao,
   valorFinal,
   saldoInscricao,
@@ -14,17 +15,21 @@ import {
   type PrecosRetiro,
 } from "../calculoHelpers";
 
-// Tabela de exemplo (centavos): 0-4 isento, 5-10 reduzido, 11+ inteiro
+// Tabela de exemplo (centavos). Quarto cobrado pelo valor cheio; extras (quem
+// excede a capacidade) pagam refeicoes: <6 isento, 6-10 meia, 11+ inteira.
 const PRECOS: PrecosRetiro = {
-  faixas: [
-    { idadeMin: 0, idadeMax: 4, valor: 0 },
-    { idadeMin: 5, idadeMax: 10, valor: 40_000 },
-    { idadeMin: 11, idadeMax: 120, valor: 80_000 },
-  ],
-  camaExtra: 10_000,
+  quartos: { individual: 200_000, duplo: 300_000, triplo: 360_000, quadruplo: 400_000 },
+  refeicaoInteira: 10_000,
+  refeicaoMeia: 5_000,
+  numRefeicoes: 6,
+  idadeMeiaMin: 6,
+  idadeInteiraMin: 11,
+  camaExtra: 8_000,
   petPorDia: 10_000,
   palestra: 5_000,
 };
+
+const QZERO = { individual: 0, duplo: 0, triplo: 0, quadruplo: 0 };
 
 describe("calculoHelpers", () => {
   it("idadeNaData conta anos completos (antes e depois do aniversario)", () => {
@@ -38,36 +43,65 @@ describe("calculoHelpers", () => {
     expect(numDiarias("2026-09-05", "2026-09-05")).toBe(1);
   });
 
-  it("valorParticipante usa a faixa da idade e cai na mais alta fora delas", () => {
-    expect(valorParticipante(PRECOS, "2024-01-01", "2026-09-05")).toBe(0); // 2 anos
-    expect(valorParticipante(PRECOS, "2018-01-01", "2026-09-05")).toBe(40_000); // 8
-    expect(valorParticipante(PRECOS, "1990-01-01", "2026-09-05")).toBe(80_000); // 36
-    // Fora de todas as faixas (idade > 120): cai na faixa de maior idadeMax
-    const semTopo: PrecosRetiro = {
-      ...PRECOS,
-      faixas: [{ idadeMin: 0, idadeMax: 17, valor: 40_000 }],
-    };
-    expect(valorParticipante(semTopo, "1980-01-01", "2026-09-05")).toBe(40_000);
+  it("classeIdade: isento < meiaMin <= meia < inteiraMin <= inteiro", () => {
+    expect(classeIdade(3, PRECOS)).toBe("isento"); // < 6
+    expect(classeIdade(6, PRECOS)).toBe("meia");
+    expect(classeIdade(10, PRECOS)).toBe("meia");
+    expect(classeIdade(11, PRECOS)).toBe("inteiro");
+    expect(classeIdade(40, PRECOS)).toBe("inteiro");
   });
 
-  it("calcularValorInscricao soma faixas + palestras + camas + pets x diarias", () => {
+  it("ajustarSufixo03 arredonda p/ cima ate terminar em ,03 (zero fica zero)", () => {
+    expect(ajustarSufixo03(0)).toBe(0);
+    expect(ajustarSufixo03(400_000)).toBe(400_003); // resto 0 -> +3
+    expect(ajustarSufixo03(350_002)).toBe(350_003); // resto 2 -> +1
+    expect(ajustarSufixo03(350_003)).toBe(350_003); // ja termina em 03
+    expect(ajustarSufixo03(433_720)).toBe(433_803); // resto 20 -> sobe 1 real + 03
+  });
+
+  it("familia de 4 num triplo: 3 nas vagas, crianca 8 paga so refeicoes (meia)", () => {
     const r = calcularValorInscricao(
       [
-        { nome: "Pai", dataNascimento: "1985-01-01", participaPalestras: true },
-        { nome: "Mae", dataNascimento: "1987-01-01", participaPalestras: true },
-        { nome: "Filho", dataNascimento: "2019-01-01", participaPalestras: false }, // 7
-        { nome: "Bebe", dataNascimento: "2024-01-01", participaPalestras: false }, // 2
+        { nome: "Pai", dataNascimento: "1985-01-01", participaPalestras: true }, // inteiro
+        { nome: "Mae", dataNascimento: "1987-01-01", participaPalestras: true }, // inteiro
+        { nome: "Filho", dataNascimento: "2016-01-01", participaPalestras: false }, // 10 -> meia
+        { nome: "Noah", dataNascimento: "2018-01-01", participaPalestras: false }, // 8 -> meia
       ],
-      { quartosDuplos: 1, quartosTriplos: 0, camasExtras: 1, pets: 1 },
+      { quartos: { ...QZERO, triplo: 1 }, camasExtras: 0, pets: 0 },
+      PRECOS,
+      "2026-09-05",
+      "2026-09-08",
+    );
+    // Capacidade 3. Vagas p/ os 2 adultos (inteiros = maior custo) + 1 das
+    // criancas (meia); a outra crianca (meia) fica de fora pagando refeicoes.
+    expect(r.quartos).toBe(360_000);
+    expect(r.capacidade).toBe(3);
+    // 1 crianca de fora: meia = 5000 * 6 = 30000
+    expect(r.refeicoesExtras).toBe(30_000);
+    expect(r.palestras).toBe(10_000); // 2 adultos
+    // subtotal 360000 + 30000 + 10000 = 400000 -> sufixo 400003
+    expect(r.subtotal).toBe(400_000);
+    expect(r.total).toBe(400_003);
+    expect(r.participantes.filter((p) => p.refeicoes > 0)).toHaveLength(1);
+  });
+
+  it("todos cabem nas vagas: paga so quartos + adicionais (sem refeicoes extra)", () => {
+    const r = calcularValorInscricao(
+      [
+        { nome: "A", dataNascimento: "1990-01-01", participaPalestras: true },
+        { nome: "B", dataNascimento: "1992-01-01", participaPalestras: true },
+      ],
+      { quartos: { ...QZERO, duplo: 1 }, camasExtras: 1, pets: 1 },
       PRECOS,
       "2026-09-05",
       "2026-09-08", // 3 diarias
     );
-    // 80000+80000+40000+0 (hospedagem) + 2x5000 (palestras) + 10000 (cama) + 3x10000 (pet)
-    expect(r.total).toBe(250_000);
-    expect(r.palestras).toBe(10_000);
-    expect(r.camasExtras).toBe(10_000);
+    // 300000 quarto + 0 refeicoes + 10000 palestras + 8000 cama + 30000 pet = 348000
+    expect(r.refeicoesExtras).toBe(0);
+    expect(r.camasExtras).toBe(8_000);
     expect(r.pets).toBe(30_000);
+    expect(r.subtotal).toBe(348_000);
+    expect(r.total).toBe(348_003);
   });
 
   it("valorFinal aplica descontos (nunca negativo) e ignora contribuicoes", () => {
@@ -77,11 +111,9 @@ describe("calculoHelpers", () => {
   });
 
   it("saldoInscricao e saldoFundo fecham a aritmetica do fluxo solidario", () => {
-    // Deve 100k, recebeu 120k -> saldo -20k (sobra p/ destinar ao fundo)
     expect(
       saldoInscricao(100_000, [], [{ valor: 100_000 }, { valor: 20_000 }]),
     ).toBe(-20_000);
-    // Fundo: 50k aporte + 20k contribuicao - 30k desconto = 40k
     expect(
       saldoFundo(
         [{ valor: 50_000 }],
@@ -111,24 +143,26 @@ async function seedAdmin(t: ReturnType<typeof convexTest>) {
 }
 
 const ARGS_ACAMP = {
-  slug: "acampa-2026",
-  titulo: "Retiro 2026",
+  slug: "retiro-2027",
+  titulo: "Retiro 2027",
   ativa: true,
   dataInicio: "2026-09-05",
   dataFim: "2026-09-08",
   precos: PRECOS,
-  estoqueDuplos: 2,
-  estoqueTriplos: 1,
+  estoque: { individual: 0, duplo: 2, triplo: 1, quadruplo: 0 },
 };
+
+// 1 adulto num quarto duplo: 300000 quarto + 5000 palestra = 305000 -> 305003
+const VALOR_1ADULTO_DUPLO = 305_003;
 
 function argsInscricao(whatsapp: string, extra: Record<string, unknown> = {}) {
   return {
-    slug: "acampa-2026",
+    slug: "retiro-2027",
     responsavel: { nome: "Resp Teste", whatsapp },
     participantes: [
       { nome: "Adulto", dataNascimento: "1990-01-01", participaPalestras: true },
     ],
-    hospedagem: { quartosDuplos: 1, quartosTriplos: 0, camasExtras: 0, pets: 0 },
+    hospedagem: { quartos: { ...QZERO, duplo: 1 }, camasExtras: 0, pets: 0 },
     pagamentoPreferido: { forma: "A_VISTA" as const, cpfPagante: "11144477735" },
     lgpdConsentimento: true,
     ipHash: "hash-teste",
@@ -137,7 +171,7 @@ function argsInscricao(whatsapp: string, extra: Record<string, unknown> = {}) {
 }
 
 describe("retiro (integracao)", () => {
-  it("criar exige permissao e valida faixas", async () => {
+  it("criar exige permissao e valida precos", async () => {
     const t = convexTest(schema, modules);
     // @ts-ignore Convex TS2589
     await expect(t.mutation(api.retiro.mutations.criar, ARGS_ACAMP)).rejects.toThrow();
@@ -146,13 +180,14 @@ describe("retiro (integracao)", () => {
     const id = await admin.mutation(api.retiro.mutations.criar, ARGS_ACAMP);
     expect(id).toBeTruthy();
 
+    // idadeInteiraMin < idadeMeiaMin -> rejeita
     await expect(
       admin.mutation(api.retiro.mutations.criar, {
         ...ARGS_ACAMP,
         slug: "outro",
-        precos: { ...PRECOS, faixas: [{ idadeMin: 10, idadeMax: 5, valor: 0 }] },
+        precos: { ...PRECOS, idadeMeiaMin: 11, idadeInteiraMin: 6 },
       }),
-    ).rejects.toThrow(/idadeMin/);
+    ).rejects.toThrow(/idade/i);
   });
 
   it("responder calcula valor com snapshot e reserva estoque", async () => {
@@ -162,23 +197,26 @@ describe("retiro (integracao)", () => {
 
     const r = await t.mutation(api.public.retiro.responder, argsInscricao("11911110001"));
     expect(r.status).toBe("ATIVA");
-    expect(r.valorTabela).toBe(85_000); // 80000 hospedagem + 5000 palestra
+    expect(r.valorTabela).toBe(VALOR_1ADULTO_DUPLO);
 
-    const pub = await t.query(api.public.retiro.getBySlug, { slug: "acampa-2026" });
-    expect(pub!.disponibilidade.duplos).toBe(1);
+    const pub = await t.query(api.public.retiro.getBySlug, { slug: "retiro-2027" });
+    expect(pub!.disponibilidade.duplo).toBe(1);
   });
 
   it("estoque esgotado vira LISTA_ESPERA sem reservar", async () => {
     const t = convexTest(schema, modules);
     const admin = await seedAdmin(t);
-    await admin.mutation(api.retiro.mutations.criar, { ...ARGS_ACAMP, estoqueDuplos: 1 });
+    await admin.mutation(api.retiro.mutations.criar, {
+      ...ARGS_ACAMP,
+      estoque: { individual: 0, duplo: 1, triplo: 1, quadruplo: 0 },
+    });
 
     await t.mutation(api.public.retiro.responder, argsInscricao("11911110001"));
     const r2 = await t.mutation(api.public.retiro.responder, argsInscricao("11911110002"));
     expect(r2.status).toBe("LISTA_ESPERA");
 
-    const pub = await t.query(api.public.retiro.getBySlug, { slug: "acampa-2026" });
-    expect(pub!.disponibilidade.duplos).toBe(0);
+    const pub = await t.query(api.public.retiro.getBySlug, { slug: "retiro-2027" });
+    expect(pub!.disponibilidade.duplo).toBe(0);
   });
 
   it("dedupe por whatsapp do responsavel (normalizado)", async () => {
@@ -210,7 +248,7 @@ describe("retiro (integracao)", () => {
       t.mutation(
         api.public.retiro.responder,
         argsInscricao("11911110004", {
-          hospedagem: { quartosDuplos: 0, quartosTriplos: 0, camasExtras: 0, pets: 0 },
+          hospedagem: { quartos: { ...QZERO }, camasExtras: 0, pets: 0 },
         }),
       ),
     ).rejects.toThrow(/quarto/);
@@ -229,9 +267,9 @@ describe("retiro (integracao)", () => {
     });
 
     const resumo = await admin.query(api.retiro.queries.resumoFinanceiro, { id });
-    expect(resumo!.totalTabela).toBe(85_000);
+    expect(resumo!.totalTabela).toBe(VALOR_1ADULTO_DUPLO);
     expect(resumo!.totalRecebido).toBe(0);
-    expect(resumo!.aReceber).toBe(85_000);
+    expect(resumo!.aReceber).toBe(VALOR_1ADULTO_DUPLO);
     expect(resumo!.fundo).toBe(50_000);
     expect(resumo!.inscricoes.ativas).toBe(1);
   });
@@ -241,7 +279,10 @@ describe("retiro admin (fase 3)", () => {
   it("cancelar devolve quartos; promover reserva mesmo estourando", async () => {
     const t = convexTest(schema, modules);
     const admin = await seedAdmin(t);
-    await admin.mutation(api.retiro.mutations.criar, { ...ARGS_ACAMP, estoqueDuplos: 1 });
+    await admin.mutation(api.retiro.mutations.criar, {
+      ...ARGS_ACAMP,
+      estoque: { individual: 0, duplo: 1, triplo: 1, quadruplo: 0 },
+    });
 
     await t.mutation(api.public.retiro.responder, argsInscricao("11911110001"));
     const r2 = await t.mutation(api.public.retiro.responder, argsInscricao("11911110002"));
@@ -254,18 +295,16 @@ describe("retiro admin (fase 3)", () => {
     const ativa = inscricoes.find((i) => i.status === "ATIVA")!;
     const espera = inscricoes.find((i) => i.status === "LISTA_ESPERA")!;
 
-    // Cancela a ativa -> estoque volta (1 disponivel)
     await admin.mutation(api.retiro.mutations.cancelarInscricao, {
       id: ativa._id,
       observacao: "Desistiu",
     });
-    let pub = await t.query(api.public.retiro.getBySlug, { slug: "acampa-2026" });
-    expect(pub!.disponibilidade.duplos).toBe(1);
+    let pub = await t.query(api.public.retiro.getBySlug, { slug: "retiro-2027" });
+    expect(pub!.disponibilidade.duplo).toBe(1);
 
-    // Promove a da espera -> reserva de novo (0 disponivel)
     await admin.mutation(api.retiro.mutations.promoverListaEspera, { id: espera._id });
-    pub = await t.query(api.public.retiro.getBySlug, { slug: "acampa-2026" });
-    expect(pub!.disponibilidade.duplos).toBe(0);
+    pub = await t.query(api.public.retiro.getBySlug, { slug: "retiro-2027" });
+    expect(pub!.disponibilidade.duplo).toBe(0);
     const depois = await admin.query(api.retiro.queries.getInscricao, { id: espera._id });
     expect(depois!.status).toBe("ATIVA");
   });
@@ -281,19 +320,20 @@ describe("retiro admin (fase 3)", () => {
       await admin.query(api.retiro.queries.listarInscricoes, { retiroId: acampId })
     )[0];
 
-    // Adiciona crianca de 8 anos (faixa 40k) e mais um quarto
+    // Adiciona crianca de 8 e um 2o quarto duplo (4 vagas, 2 pessoas: sem extras)
     const r = await admin.mutation(api.retiro.mutations.editarInscricao, {
       id: insc._id,
       participantes: [
         { nome: "Adulto", dataNascimento: "1990-01-01", participaPalestras: true },
         { nome: "Crianca", dataNascimento: "2018-01-01", participaPalestras: false },
       ],
-      hospedagem: { quartosDuplos: 2, quartosTriplos: 0, camasExtras: 0, pets: 0 },
+      hospedagem: { quartos: { ...QZERO, duplo: 2 }, camasExtras: 0, pets: 0 },
     });
-    expect(r.valorTabela).toBe(125_000); // 80k + 40k + 5k palestra
+    // 2 quartos (600000) + 1 palestra (5000) = 605000 -> 605003
+    expect(r.valorTabela).toBe(605_003);
 
-    const pub = await t.query(api.public.retiro.getBySlug, { slug: "acampa-2026" });
-    expect(pub!.disponibilidade.duplos).toBe(0); // estoque 2, reservados 2
+    const pub = await t.query(api.public.retiro.getBySlug, { slug: "retiro-2027" });
+    expect(pub!.disponibilidade.duplo).toBe(0); // estoque 2, reservados 2
   });
 
   it("confirmarMatching vincula participante a membro e mostra o nome", async () => {
@@ -333,7 +373,6 @@ describe("retiro admin (fase 3)", () => {
     const admin = await seedAdmin(t);
     await admin.mutation(api.retiro.mutations.criar, ARGS_ACAMP);
 
-    // Sem CPF -> rejeita
     await expect(
       t.mutation(api.public.retiro.responder, {
         ...argsInscricao("11911110001"),
@@ -341,7 +380,6 @@ describe("retiro admin (fase 3)", () => {
       }),
     ).rejects.toThrow(/CPF/);
 
-    // CPF invalido (digitos verificadores errados) -> rejeita
     await expect(
       t.mutation(api.public.retiro.responder, {
         ...argsInscricao("11911110002"),
@@ -349,7 +387,6 @@ describe("retiro admin (fase 3)", () => {
       }),
     ).rejects.toThrow(/CPF/);
 
-    // CPF valido -> aceita
     const r = await t.mutation(
       api.public.retiro.responder,
       argsInscricao("11911110003"),
@@ -366,18 +403,15 @@ describe("retiro admin (fase 3)", () => {
       comprovanteToken: "tok-abc",
     });
 
-    // Resumo publico pelo token
     const info = await t.query(api.public.retiro.getComprovanteInfo, { token: "tok-abc" });
     expect(info!.responsavelNome).toBe("Resp Teste");
-    expect(info!.valorFinal).toBe(85_000); // 80k adulto + 5k palestra
+    expect(info!.valorFinal).toBe(VALOR_1ADULTO_DUPLO);
     expect(info!.enviados).toBe(0);
 
-    // Token invalido -> null
     expect(
       await t.query(api.public.retiro.getComprovanteInfo, { token: "nao-existe" }),
     ).toBeNull();
 
-    // Envio com URL fora do CDN de comprovantes -> rejeita
     await expect(
       t.mutation(api.public.retiro.enviarComprovante, {
         token: "tok-abc",
@@ -385,11 +419,10 @@ describe("retiro admin (fase 3)", () => {
       }),
     ).rejects.toThrow();
 
-    // Envio valido -> entra em comprovantesPendentes
     await t.mutation(api.public.retiro.enviarComprovante, {
       token: "tok-abc",
       comprovanteUrl: "https://cdn.yhc.com.br/retiro-comprovantes/x.jpg",
-      valorInformado: 85_000,
+      valorInformado: VALOR_1ADULTO_DUPLO,
       obs: "pix",
     });
 
@@ -401,9 +434,8 @@ describe("retiro admin (fase 3)", () => {
 
     const detalhe = await admin.query(api.retiro.queries.getInscricao, { id: linha._id });
     expect(detalhe!.comprovantesPendentes).toHaveLength(1);
-    expect(detalhe!.comprovantesPendentes![0].valorInformado).toBe(85_000);
+    expect(detalhe!.comprovantesPendentes![0].valorInformado).toBe(VALOR_1ADULTO_DUPLO);
 
-    // Secretaria descarta apos conferir
     await admin.mutation(api.retiro.mutations.removerComprovantePendente, {
       id: linha._id,
       index: 0,
@@ -417,7 +449,6 @@ describe("retiro admin (fase 3)", () => {
     const admin = await seedAdmin(t);
     await admin.mutation(api.retiro.mutations.criar, ARGS_ACAMP);
 
-    // Membro com cadastro na base (vira o usuario logado)
     const userId = await t.run((ctx) => ctx.db.insert("users", {}));
     const membroId = await t.run(async (ctx) => {
       const eid = await ctx.db.insert("entidades", {
@@ -429,7 +460,6 @@ describe("retiro admin (fase 3)", () => {
       });
       return ctx.db.insert("membros", { entidadeId: eid, role: "membro", userId });
     });
-    // Membro de OUTRA familia — membroId que o cliente nao pode reivindicar
     const foreignMembroId = await t.run(async (ctx) => {
       const eid = await ctx.db.insert("entidades", {
         tipoEntidade: "PF",
@@ -441,14 +471,11 @@ describe("retiro admin (fase 3)", () => {
     });
     const asMembro = t.withIdentity({ subject: `${userId}|s` });
 
-    // Pre-preenchimento traz o membroId do proprio membro
     const fam = await asMembro.query(api.public.retiro.minhaFamilia, {});
     expect(fam!.participantes[0].membroId).toBe(membroId);
 
-    // Participante 0: membroId da propria familia -> auto-vincula.
-    // Participante 1: membroId forjado (fora da familia) -> entra sem vinculo.
     await asMembro.mutation(api.public.retiro.responder, {
-      slug: "acampa-2026",
+      slug: "retiro-2027",
       responsavel: { nome: "Joao Membro", whatsapp: "11999990000" },
       participantes: [
         { nome: "Joao Membro", dataNascimento: "1990-01-01", participaPalestras: true, membroId },
@@ -459,7 +486,7 @@ describe("retiro admin (fase 3)", () => {
           membroId: foreignMembroId,
         },
       ],
-      hospedagem: { quartosDuplos: 1, quartosTriplos: 0, camasExtras: 0, pets: 0 },
+      hospedagem: { quartos: { ...QZERO, duplo: 1 }, camasExtras: 0, pets: 0 },
       pagamentoPreferido: { forma: "A_VISTA", cpfPagante: "11144477735" },
       lgpdConsentimento: true,
       ipHash: "hash-teste",
@@ -493,7 +520,6 @@ describe("retiro admin (fase 3)", () => {
     });
     const asMembro = t.withIdentity({ subject: `${userId}|s` });
 
-    // Sem login -> lista vazia
     expect(await t.query(api.public.retiro.minhasInscricoes, {})).toEqual([]);
 
     await asMembro.mutation(api.public.retiro.responder, {
@@ -504,9 +530,8 @@ describe("retiro admin (fase 3)", () => {
     const lista = await asMembro.query(api.public.retiro.minhasInscricoes, {});
     expect(lista).toHaveLength(1);
     expect(lista[0].comprovanteToken).toBe("meu-tok");
-    expect(lista[0].valorFinal).toBe(85_000);
+    expect(lista[0].valorFinal).toBe(VALOR_1ADULTO_DUPLO);
 
-    // Cancelada nao aparece mais p/ o membro
     await admin.mutation(api.retiro.mutations.cancelarInscricao, { id: lista[0]._id });
     expect(await asMembro.query(api.public.retiro.minhasInscricoes, {})).toHaveLength(0);
   });
@@ -518,9 +543,9 @@ describe("retiro financeiro (fase 4)", () => {
     const admin = await seedAdmin(t);
     const id = await admin.mutation(api.retiro.mutations.criar, ARGS_ACAMP);
 
-    // Inscricao A: deve 85k, paga 100k -> sobra 15k destinada ao fundo
+    // A: deve 305003, paga 320003 -> sobra 15000 destinada ao fundo
     await t.mutation(api.public.retiro.responder, argsInscricao("11911110001"));
-    // Inscricao B: deve 85k, ganha 30k de desconto do fundo
+    // B: deve 305003, ganha 30000 de desconto do fundo
     await t.mutation(api.public.retiro.responder, argsInscricao("11911110002"));
 
     const inscricoes = await admin.query(api.retiro.queries.listarInscricoes, {
@@ -530,7 +555,7 @@ describe("retiro financeiro (fase 4)", () => {
 
     await admin.mutation(api.retiro.mutations.registrarRecebimento, {
       id: a._id,
-      valor: 100_000,
+      valor: 320_003,
       data: "2026-07-05",
       obs: "Pix",
     });
@@ -548,11 +573,10 @@ describe("retiro financeiro (fase 4)", () => {
     const resumo = await admin.query(api.retiro.queries.resumoFinanceiro, { id });
     expect(resumo!.fundo).toBe(-15_000); // 15k contribuicao - 30k desconto
     expect(resumo!.totalDescontos).toBe(30_000);
-    expect(resumo!.totalRecebido).toBe(100_000);
-    // A quitada (sobra ja destinada); B deve 55k
-    expect(resumo!.aReceber).toBe(55_000);
+    expect(resumo!.totalRecebido).toBe(320_003);
+    // A quitada (sobra destinada); B deve 305003 - 30000 = 275003
+    expect(resumo!.aReceber).toBe(275_003);
 
-    // Aporte da igreja cobre o fundo
     await admin.mutation(api.retiro.mutations.aportarFundo, {
       id,
       valor: 50_000,
@@ -586,12 +610,12 @@ describe("retiro financeiro (fase 4)", () => {
       motivo: "Teste",
     });
     let det = await admin.query(api.retiro.queries.getInscricao, { id: insc._id });
-    expect(det!.saldo).toBe(35_000); // 85k - 10k - 40k
+    expect(det!.saldo).toBe(255_003); // 305003 - 10000 - 40000
 
     await admin.mutation(api.retiro.mutations.removerRecebimento, { id: insc._id, index: 0 });
     await admin.mutation(api.retiro.mutations.removerAjuste, { id: insc._id, index: 0 });
     det = await admin.query(api.retiro.queries.getInscricao, { id: insc._id });
-    expect(det!.saldo).toBe(85_000);
+    expect(det!.saldo).toBe(VALOR_1ADULTO_DUPLO);
   });
 
   it("plano de pagamento editavel valida datas/valores", async () => {
@@ -635,7 +659,7 @@ describe("retiro quartos (fase 5)", () => {
           { nome: "Mae", dataNascimento: "1987-01-01", participaPalestras: true },
           { nome: "Filho", dataNascimento: "2018-01-01", participaPalestras: false },
         ],
-        hospedagem: { quartosDuplos: 1, quartosTriplos: 0, camasExtras: 1, pets: 0 },
+        hospedagem: { quartos: { ...QZERO, duplo: 1 }, camasExtras: 1, pets: 0 },
       }),
     );
 
@@ -646,7 +670,7 @@ describe("retiro quartos (fase 5)", () => {
     const r2 = await admin.mutation(api.retiro.quartos.gerarQuartosDoPedido, {
       retiroId: id,
     });
-    expect(r2.criados).toBe(0); // ja alocada
+    expect(r2.criados).toBe(0);
 
     const board = await admin.query(api.retiro.quartos.listarQuartos, { retiroId: id });
     expect(board.quartos).toHaveLength(1);
@@ -668,7 +692,7 @@ describe("retiro quartos (fase 5)", () => {
           { nome: "C", dataNascimento: "1990-01-01", participaPalestras: false },
           { nome: "D", dataNascimento: "1990-01-01", participaPalestras: false },
         ],
-        hospedagem: { quartosDuplos: 1, quartosTriplos: 0, camasExtras: 0, pets: 0 },
+        hospedagem: { quartos: { ...QZERO, duplo: 1 }, camasExtras: 0, pets: 0 },
       }),
     );
     const inscId = (
@@ -697,7 +721,6 @@ describe("retiro quartos (fase 5)", () => {
       }),
     ).rejects.toThrow(/cheio/);
 
-    // Desaloca um -> volta pro sem-quarto
     await admin.mutation(api.retiro.quartos.moverOcupante, {
       retiroId: id,
       inscricaoId: inscId,

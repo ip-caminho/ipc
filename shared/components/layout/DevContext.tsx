@@ -1218,7 +1218,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     ],
     queries: ["retiro.queries.listar", "retiro.queries.getById"],
     mutations: ["retiro.mutations.criar", "retiro.mutations.atualizar"],
-    componentes: ["RetiroConfigDialog (precos por faixa etaria + estoque de quartos)"],
+    componentes: ["RetiroConfigDialog (preco por tipo de quarto + refeicoes dos extras + faixas de idade + estoque)"],
     notas: ["Permissao: inscricoes:manage. Valores em centavos no backend, R$ na UI"],
   },
   "/admin/retiro/[id]": {

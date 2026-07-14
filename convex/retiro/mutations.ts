@@ -2,28 +2,61 @@ import { mutation } from "../_generated/server";
 import { v } from "convex/values";
 import { requirePermission } from "../_shared/requirePermission";
 import { createActionAuditLog, createFieldAuditLogs } from "../_shared/auditHelpers";
-import { calcularValorInscricao, saldoInscricao } from "./calculoHelpers";
+import {
+  calcularValorInscricao,
+  saldoInscricao,
+  somaQuartos,
+  subQuartosClamp,
+  mapQuartos,
+  type PrecosRetiro,
+} from "./calculoHelpers";
 
 // Config do retiro — gestao sob inscricoes:manage (secretaria).
 // Valores monetarios em CENTAVOS.
 
+const quartosValidator = v.object({
+  individual: v.number(),
+  duplo: v.number(),
+  triplo: v.number(),
+  quadruplo: v.number(),
+});
+
 const precosValidator = v.object({
-  faixas: v.array(
-    v.object({ idadeMin: v.number(), idadeMax: v.number(), valor: v.number() }),
-  ),
+  quartos: quartosValidator,
+  refeicaoInteira: v.number(),
+  refeicaoMeia: v.number(),
+  numRefeicoes: v.number(),
+  idadeMeiaMin: v.number(),
+  idadeInteiraMin: v.number(),
   camaExtra: v.number(),
   petPorDia: v.number(),
   palestra: v.number(),
 });
 
-function validarPrecos(precos: {
-  faixas: { idadeMin: number; idadeMax: number; valor: number }[];
-}) {
-  if (precos.faixas.length === 0) throw new Error("Defina ao menos uma faixa etária");
-  for (const f of precos.faixas) {
-    if (f.idadeMin > f.idadeMax) throw new Error("Faixa etária com idadeMin > idadeMax");
-    if (f.valor < 0) throw new Error("Valor de faixa negativo");
+function validarPrecos(precos: PrecosRetiro) {
+  const valores = [
+    precos.quartos.individual,
+    precos.quartos.duplo,
+    precos.quartos.triplo,
+    precos.quartos.quadruplo,
+    precos.refeicaoInteira,
+    precos.refeicaoMeia,
+    precos.camaExtra,
+    precos.petPorDia,
+    precos.palestra,
+  ];
+  if (valores.some((x) => x < 0)) throw new Error("Valor de preço negativo");
+  if (precos.numRefeicoes < 0) throw new Error("Número de refeições inválido");
+  if (precos.idadeMeiaMin < 0 || precos.idadeInteiraMin < precos.idadeMeiaMin) {
+    throw new Error("Faixas de idade inválidas (meia deve ser ≤ inteira)");
   }
+  const algumQuarto = [
+    precos.quartos.individual,
+    precos.quartos.duplo,
+    precos.quartos.triplo,
+    precos.quartos.quadruplo,
+  ].some((v) => v > 0);
+  if (!algumQuarto) throw new Error("Defina o preço de ao menos um tipo de quarto");
 }
 
 export const criar = mutation({
@@ -37,8 +70,7 @@ export const criar = mutation({
     inscricoesAbrem: v.optional(v.number()),
     inscricoesFecham: v.optional(v.number()),
     precos: precosValidator,
-    estoqueDuplos: v.number(),
-    estoqueTriplos: v.number(),
+    estoque: quartosValidator,
   },
   handler: async (ctx, args) => {
     const { membro } = await requirePermission(ctx, "inscricoes:manage");
@@ -57,8 +89,7 @@ export const criar = mutation({
     const id = await ctx.db.insert("retiros", {
       ...args,
       slug,
-      duplosReservados: 0,
-      triplosReservados: 0,
+      reservados: { individual: 0, duplo: 0, triplo: 0, quadruplo: 0 },
       aportesFundo: [],
       criadoPor: membro._id,
       criadoEm: Date.now(),
@@ -79,8 +110,7 @@ export const atualizar = mutation({
     inscricoesAbrem: v.optional(v.number()),
     inscricoesFecham: v.optional(v.number()),
     precos: v.optional(precosValidator),
-    estoqueDuplos: v.optional(v.number()),
-    estoqueTriplos: v.optional(v.number()),
+    estoque: v.optional(quartosValidator),
   },
   handler: async (ctx, { id, ...updates }) => {
     await requirePermission(ctx, "inscricoes:manage");
@@ -142,8 +172,7 @@ const participanteValidator = v.object({
 });
 
 const hospedagemValidator = v.object({
-  quartosDuplos: v.number(),
-  quartosTriplos: v.number(),
+  quartos: quartosValidator,
   camasExtras: v.number(),
   pets: v.number(),
 });
@@ -179,14 +208,11 @@ export const editarInscricao = mutation({
 
     // Delta de quartos ajusta os contadores (so p/ inscricao ATIVA)
     if (antes.status === "ATIVA" && updates.hospedagem) {
+      const nova = hospedagem.quartos;
+      const velha = antes.hospedagem.quartos;
       await ctx.db.patch(acamp._id, {
-        duplosReservados: Math.max(
-          0,
-          acamp.duplosReservados + hospedagem.quartosDuplos - antes.hospedagem.quartosDuplos,
-        ),
-        triplosReservados: Math.max(
-          0,
-          acamp.triplosReservados + hospedagem.quartosTriplos - antes.hospedagem.quartosTriplos,
+        reservados: mapQuartos((t) =>
+          Math.max(0, acamp.reservados[t] + nova[t] - velha[t]),
         ),
       });
     }
@@ -263,8 +289,7 @@ export const cancelarInscricao = mutation({
       const acamp = await ctx.db.get(insc.retiroId);
       if (acamp) {
         await ctx.db.patch(acamp._id, {
-          duplosReservados: Math.max(0, acamp.duplosReservados - insc.hospedagem.quartosDuplos),
-          triplosReservados: Math.max(0, acamp.triplosReservados - insc.hospedagem.quartosTriplos),
+          reservados: subQuartosClamp(acamp.reservados, insc.hospedagem.quartos),
         });
       }
     }
@@ -291,8 +316,7 @@ export const promoverListaEspera = mutation({
     const acamp = await ctx.db.get(insc.retiroId);
     if (acamp) {
       await ctx.db.patch(acamp._id, {
-        duplosReservados: acamp.duplosReservados + insc.hospedagem.quartosDuplos,
-        triplosReservados: acamp.triplosReservados + insc.hospedagem.quartosTriplos,
+        reservados: somaQuartos(acamp.reservados, insc.hospedagem.quartos),
       });
     }
     await ctx.db.patch(id, { status: "ATIVA", atualizadoEm: Date.now() });

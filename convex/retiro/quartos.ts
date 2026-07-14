@@ -3,15 +3,44 @@ import { v } from "convex/values";
 import { requirePermission } from "../_shared/requirePermission";
 import { createActionAuditLog } from "../_shared/auditHelpers";
 
-// Alocacao de quartos do retiro (fase 5). Capacidade base: DUPLO=2,
-// TRIPLO=3; +1 tolerancia p/ cama extra — acima disso a mutation recusa.
+// Alocacao de quartos do retiro (fase 5). Capacidade base por tipo; +1
+// tolerancia p/ cama extra — acima disso a mutation recusa.
 
-const CAPACIDADE: Record<"DUPLO" | "TRIPLO", number> = { DUPLO: 2, TRIPLO: 3 };
+type TipoQuarto = "INDIVIDUAL" | "DUPLO" | "TRIPLO" | "QUADRUPLO";
+
+const CAPACIDADE: Record<TipoQuarto, number> = {
+  INDIVIDUAL: 1,
+  DUPLO: 2,
+  TRIPLO: 3,
+  QUADRUPLO: 4,
+};
+
+const tipoValidator = v.union(
+  v.literal("INDIVIDUAL"),
+  v.literal("DUPLO"),
+  v.literal("TRIPLO"),
+  v.literal("QUADRUPLO"),
+);
 
 type Ocupante = { inscricaoId: string; participanteIndex: number };
 
 function chaveOcupante(o: Ocupante): string {
   return `${o.inscricaoId}:${o.participanteIndex}`;
+}
+
+// Resumo compacto do pedido de quartos (so os tipos com quantidade > 0).
+function resumoPedido(q: {
+  individual: number;
+  duplo: number;
+  triplo: number;
+  quadruplo: number;
+}): string {
+  const parts: string[] = [];
+  if (q.individual) parts.push(`${q.individual}I`);
+  if (q.duplo) parts.push(`${q.duplo}D`);
+  if (q.triplo) parts.push(`${q.triplo}T`);
+  if (q.quadruplo) parts.push(`${q.quadruplo}Q`);
+  return parts.join("+") || "—";
 }
 
 // Quartos com nomes resolvidos + participantes de inscricoes ATIVAS ainda sem
@@ -70,7 +99,7 @@ export const listarQuartos = query({
             nome: p.nome,
             responsavel: insc.responsavel.nome,
             colegaDeQuarto: insc.extras?.colegaDeQuarto,
-            pediu: `${insc.hospedagem.quartosDuplos}D+${insc.hospedagem.quartosTriplos}T`,
+            pediu: resumoPedido(insc.hospedagem.quartos),
           },
         ];
       }),
@@ -81,8 +110,8 @@ export const listarQuartos = query({
 });
 
 // Gera quartos a partir do pedido das inscricoes ATIVAS que ainda nao tem
-// nenhum participante alocado: cria os N duplos/triplos pedidos e distribui
-// os participantes da propria inscricao na ordem (o ajuste fino e manual).
+// nenhum participante alocado: cria os quartos pedidos e distribui os
+// participantes da propria inscricao na ordem (o ajuste fino e manual).
 export const gerarQuartosDoPedido = mutation({
   args: { retiroId: v.id("retiros") },
   handler: async (ctx, { retiroId }) => {
@@ -108,9 +137,12 @@ export const gerarQuartosDoPedido = mutation({
     let criados = 0;
     for (const insc of inscricoes) {
       if (inscricoesJaAlocadas.has(insc._id)) continue;
-      const pedidos: ("DUPLO" | "TRIPLO")[] = [
-        ...Array<"DUPLO">(insc.hospedagem.quartosDuplos).fill("DUPLO"),
-        ...Array<"TRIPLO">(insc.hospedagem.quartosTriplos).fill("TRIPLO"),
+      const q = insc.hospedagem.quartos;
+      const pedidos: TipoQuarto[] = [
+        ...Array<TipoQuarto>(q.individual).fill("INDIVIDUAL"),
+        ...Array<TipoQuarto>(q.duplo).fill("DUPLO"),
+        ...Array<TipoQuarto>(q.triplo).fill("TRIPLO"),
+        ...Array<TipoQuarto>(q.quadruplo).fill("QUADRUPLO"),
       ];
       if (pedidos.length === 0) continue;
 
@@ -141,7 +173,7 @@ export const gerarQuartosDoPedido = mutation({
 export const criarQuarto = mutation({
   args: {
     retiroId: v.id("retiros"),
-    tipo: v.union(v.literal("DUPLO"), v.literal("TRIPLO")),
+    tipo: tipoValidator,
     identificacao: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
@@ -206,10 +238,9 @@ export const moverOcupante = mutation({
       const destino = quartos.find((qd) => qd._id === quartoId);
       if (!destino) throw new Error("Quarto não encontrado");
       const atuais = destino.ocupantes.filter((o) => chaveOcupante(o) !== chave);
-      if (atuais.length >= CAPACIDADE[destino.tipo] + 1) {
-        throw new Error(
-          `Quarto ${destino.tipo === "DUPLO" ? "duplo" : "triplo"} cheio (máx ${CAPACIDADE[destino.tipo] + 1} com cama extra)`,
-        );
+      const maximo = CAPACIDADE[destino.tipo] + 1;
+      if (atuais.length >= maximo) {
+        throw new Error(`Quarto cheio (máx ${maximo} com cama extra)`);
       }
       await ctx.db.patch(quartoId, {
         ocupantes: [...atuais, { inscricaoId, participanteIndex }],

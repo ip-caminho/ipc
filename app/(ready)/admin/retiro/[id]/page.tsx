@@ -32,7 +32,7 @@ import {
 import { ArrowLeft, BedDouble } from "lucide-react";
 import { InscricaoDetalheDrawer } from "@features/retiro/components/InscricaoDetalheDrawer";
 import { FundoEventoCard } from "@features/retiro/components/FundoEventoCard";
-import { brl, dataBR } from "@features/retiro/lib/format";
+import { brl, dataBR, resumoQuartos, LABEL_QUARTO, TIPOS_QUARTO } from "@features/retiro/lib/format";
 import { consolidadoEvento } from "@convex/retiro/calculoHelpers";
 
 type FiltroStatus = "TODAS" | "ATIVA" | "LISTA_ESPERA" | "CANCELADA";
@@ -127,8 +127,9 @@ function Conteudo({ retiroId }: { retiroId: Id<"retiros"> }) {
             ["Inscrições ativas", resumo.ativas],
             ["Pessoas", resumo.pessoas],
             ["Lista de espera", resumo.espera],
-            ["Duplos", `${acamp.duplosReservados}/${acamp.estoqueDuplos}`],
-            ["Triplos", `${acamp.triplosReservados}/${acamp.estoqueTriplos}`],
+            ...TIPOS_QUARTO.filter((t) => acamp.estoque[t] > 0).map(
+              (t) => [LABEL_QUARTO[t], `${acamp.reservados[t]}/${acamp.estoque[t]}`] as const,
+            ),
           ].map(([label, valor]) => (
             <div key={label} className="rounded-md border p-3">
               <p className="text-2xl font-semibold leading-none tabular-nums">{valor}</p>
@@ -201,7 +202,7 @@ function Conteudo({ retiroId }: { retiroId: Id<"retiros"> }) {
                       )}
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">
-                      {i.hospedagem.quartosDuplos}D + {i.hospedagem.quartosTriplos}T
+                      {resumoQuartos(i.hospedagem.quartos)}
                     </TableCell>
                     <TableCell className="text-right tabular-nums">{brl(i.valorFinal)}</TableCell>
                     <TableCell className="text-right tabular-nums">
@@ -238,8 +239,8 @@ function Conteudo({ retiroId }: { retiroId: Id<"retiros"> }) {
                   </Badge>
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {i.participantesQtd} pessoa(s) · {i.hospedagem.quartosDuplos}D+
-                  {i.hospedagem.quartosTriplos}T · {brl(i.valorFinal)}
+                  {i.participantesQtd} pessoa(s) · {resumoQuartos(i.hospedagem.quartos)} ·{" "}
+                  {brl(i.valorFinal)}
                   {i.saldo > 0 ? ` · falta ${brl(i.saldo)}` : " · quitada"}
                 </p>
               </button>
