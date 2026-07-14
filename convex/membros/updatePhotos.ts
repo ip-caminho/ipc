@@ -1,4 +1,4 @@
-import { mutation } from "../_generated/server";
+import { internalMutation } from "../_generated/server";
 import { v } from "convex/values";
 
 function normalize(name: string): string {
@@ -16,7 +16,7 @@ function nameWords(name: string): string[] {
   return normalize(name).split(" ").filter((w) => w.length > 1);
 }
 
-export const updatePhotos = mutation({
+export const updatePhotos = internalMutation({
   args: {
     photos: v.array(
       v.object({

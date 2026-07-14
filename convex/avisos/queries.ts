@@ -1,5 +1,11 @@
 import { query } from "../_generated/server";
 import { v } from "convex/values";
+import { getAuthUserId } from "@convex-dev/auth/server";
+
+async function requireAuth(ctx: any) {
+  const userId = await getAuthUserId(ctx);
+  if (!userId) throw new Error("Not authenticated");
+}
 
 async function resolveNomeCriador(ctx: any, criadoPor: any): Promise<string> {
   if (!criadoPor) return "";
@@ -12,6 +18,7 @@ async function resolveNomeCriador(ctx: any, criadoPor: any): Promise<string> {
 export const list = query({
   args: {},
   handler: async (ctx) => {
+    await requireAuth(ctx);
     const avisos = await ctx.db
       .query("avisos")
       .order("desc")
@@ -32,6 +39,7 @@ export const list = query({
 export const listByData = query({
   args: { data: v.string() },
   handler: async (ctx, { data }) => {
+    await requireAuth(ctx);
     const avisos = await ctx.db
       .query("avisos")
       .collect();

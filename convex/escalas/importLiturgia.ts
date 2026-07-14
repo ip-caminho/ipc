@@ -1,4 +1,4 @@
-import { mutation } from "../_generated/server";
+import { internalMutation } from "../_generated/server";
 import { v } from "convex/values";
 
 /**
@@ -10,8 +10,9 @@ import { v } from "convex/values";
  * - Observações (campo Notas do CSV)
  *
  * Executar: npx convex run escalas/importLiturgia:importar '{"items": [...]}'
+ * (INTERNAL — só via `convex run` / dashboard, nunca do cliente.)
  */
-export const importar = mutation({
+export const importar = internalMutation({
   args: {
     items: v.array(v.object({
       data: v.string(), // YYYY-MM-DD

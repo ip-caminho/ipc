@@ -37,6 +37,14 @@ export const relinkAdmin = mutation({
     const admin = membros.find((m) => m.role === "admin");
     if (!admin) throw new Error("No admin membro found");
 
+    // SEGURANCA: so permite religar um admin ORFAO (sem userId). Se o admin ja
+    // esta vinculado a um usuario, recusar — senao qualquer usuario autenticado
+    // poderia se tornar admin roubando o vinculo. Em producao o admin ja esta
+    // vinculado, entao esta funcao vira inofensiva.
+    if (admin.userId) {
+      throw new Error("Admin ja vinculado a um usuario");
+    }
+
     // Atualiza o userId do admin pro user atual
     await ctx.db.patch(admin._id, { userId });
     return { ok: true, oldUserId: admin.userId, newUserId: userId };

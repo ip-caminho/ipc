@@ -1,5 +1,6 @@
 import { query } from "../_generated/server";
 import { v } from "convex/values";
+import { checkPermission } from "../_shared/requirePermission";
 
 /**
  * Frequência de uso de cada louvor, baseado em cultoLouvores.
@@ -8,6 +9,8 @@ import { v } from "convex/values";
 export const louvorFrequencia = query({
   args: { meses: v.optional(v.number()) },
   handler: async (ctx, { meses }) => {
+    // Sem permissao: lista vazia (a pagina roda o useQuery sem gate de render).
+    if (!(await checkPermission(ctx, "louvor:read"))) return [];
     const items = await ctx.db.query("cultoLouvores").collect();
     const louvores = await ctx.db.query("louvores").collect();
 
@@ -83,6 +86,7 @@ export const louvorFrequencia = query({
 export const louvoresNaoTocados = query({
   args: { meses: v.optional(v.number()) },
   handler: async (ctx, { meses }) => {
+    if (!(await checkPermission(ctx, "louvor:read"))) return [];
     const louvores = await ctx.db.query("louvores").collect();
     const ativos = louvores.filter((l) => l.status === "ATIVO");
     const items = await ctx.db.query("cultoLouvores").collect();
