@@ -48,6 +48,13 @@ export function DatePickerBR({
   if (min) bloqueio.push({ before: parseISO(min) });
   if (max) bloqueio.push({ after: parseISO(max) });
 
+  // Range do dropdown de ano/mes: derivado de min/max quando existem. No
+  // fallback, janela ampla (100 anos atras -> +10 anos) para cobrir datas de
+  // nascimento (jump direto ao ano) sem quebrar datas de evento futuras.
+  const hoje = new Date();
+  const inicioMes = min ? parseISO(min) : new Date(hoje.getFullYear() - 100, 0);
+  const fimMes = max ? parseISO(max) : new Date(hoje.getFullYear() + 10, 11);
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -72,8 +79,8 @@ export function DatePickerBR({
           locale={ptBR}
           selected={valid}
           captionLayout="dropdown"
-          startMonth={new Date(2015, 0)}
-          endMonth={new Date(2035, 11)}
+          startMonth={inicioMes}
+          endMonth={fimMes}
           defaultMonth={valid ?? new Date()}
           disabled={bloqueio.length ? bloqueio : undefined}
           onSelect={(d) => {
