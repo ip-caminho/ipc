@@ -30,6 +30,12 @@ const hojeIso = () => new Date().toISOString().slice(0, 10);
 // Palestras: marcadas por padrao so a partir dos 15 anos (crianca nao paga palestra)
 const IDADE_PALESTRA = 15;
 
+// Pre-preenchimento com os dados do membro logado. Desativado nesta edicao
+// (Carnaval 2027): muitos membros ainda nao tem acesso ao sistema, entao o
+// atalho de login so geraria atrito. Reativar (=true) quando a base estiver
+// toda no sistema.
+const PRE_PREENCHER_MEMBRO: boolean = false;
+
 const participanteSchema = z.object({
   nome: z.string().trim().min(3, "Nome completo"),
   dataNascimento: z
@@ -241,7 +247,10 @@ export function RetiroForm({
 }) {
   const { isAuthenticated } = useConvexAuth();
   // @ts-ignore Convex TS2589
-  const familia = useQuery(api.public.retiro.minhaFamilia, isAuthenticated ? {} : "skip");
+  const familia = useQuery(
+    api.public.retiro.minhaFamilia,
+    isAuthenticated && PRE_PREENCHER_MEMBRO ? {} : "skip",
+  );
   const [loginOpen, setLoginOpen] = useState(false);
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [resultado, setResultado] = useState<{
@@ -450,28 +459,32 @@ export function RetiroForm({
       noValidate
       className={`space-y-10 ${temTotal ? "pb-24 md:pb-0" : ""}`}
     >
-      {/* Pre-preenchimento p/ membro */}
-      {!isAuthenticated ? (
-        <button
-          type="button"
-          onClick={() => setLoginOpen(true)}
-          className={`flex min-h-[48px] w-full items-center justify-center gap-2 border ${BORDA} bg-[#F4F0E8] px-4 py-3 ${FONT_BODY} text-[13px] ${COR_TEXTO} transition-colors hover:bg-[#ECE6DC]`}
-        >
-          É membro da IPC? <span className="underline underline-offset-2">Entre</span> e preenchemos
-          com os dados da sua família.
-        </button>
-      ) : familia && familia.participantes.length > 0 ? (
-        <Button
-          type="button"
-          variant="outline"
-          onClick={preencherComFamilia}
-          className={`h-12 w-full border ${BORDA} ${FONT_BODY} text-[14px] ${COR_TEXTO} hover:bg-[#F4F0E8]`}
-        >
-          <UserRound className="mr-2 h-4 w-4 text-[#2563EB]" />
-          Preencher com minha família ({familia.participantes.length})
-        </Button>
-      ) : null}
-      <LoginModalInline open={loginOpen} onOpenChange={setLoginOpen} />
+      {/* Pre-preenchimento p/ membro — desativado nesta edicao (PRE_PREENCHER_MEMBRO) */}
+      {PRE_PREENCHER_MEMBRO && (
+        <>
+          {!isAuthenticated ? (
+            <button
+              type="button"
+              onClick={() => setLoginOpen(true)}
+              className={`flex min-h-[48px] w-full items-center justify-center gap-2 border ${BORDA} bg-[#F4F0E8] px-4 py-3 ${FONT_BODY} text-[13px] ${COR_TEXTO} transition-colors hover:bg-[#ECE6DC]`}
+            >
+              É membro da IPC? <span className="underline underline-offset-2">Entre</span> e preenchemos
+              com os dados da sua família.
+            </button>
+          ) : familia && familia.participantes.length > 0 ? (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={preencherComFamilia}
+              className={`h-12 w-full border ${BORDA} ${FONT_BODY} text-[14px] ${COR_TEXTO} hover:bg-[#F4F0E8]`}
+            >
+              <UserRound className="mr-2 h-4 w-4 text-[#2563EB]" />
+              Preencher com minha família ({familia.participantes.length})
+            </Button>
+          ) : null}
+          <LoginModalInline open={loginOpen} onOpenChange={setLoginOpen} />
+        </>
+      )}
 
       {/* 1 — Responsavel */}
       <div className="space-y-4">
