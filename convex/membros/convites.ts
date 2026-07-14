@@ -1,14 +1,21 @@
 import { mutation, query } from "../_generated/server";
 import { v } from "convex/values";
-import { getAuthUserId } from "@convex-dev/auth/server";
+import { requirePermission } from "../_shared/requirePermission";
 
 export const generateInvite = mutation({
   args: {
     role: v.optional(v.string()),
   },
   handler: async (ctx, { role }) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+    // O convite define o papel do membro que sera criado em acceptInvite, entao
+    // exige a mesma permissao (e a mesma guarda de papel) de membros/mutations
+    // create — senao qualquer usuario autenticado convidaria com papel admin.
+    const { membro: caller } = await requirePermission(ctx, "membros:create");
+
+    // Papel admin so pode ser atribuido por outro admin
+    if (role === "admin" && caller.role !== "admin") {
+      throw new Error("Somente admin pode convidar com papel admin");
+    }
 
     // Generate secure token
     const token = Array.from(crypto.getRandomValues(new Uint8Array(32)))
@@ -17,15 +24,10 @@ export const generateInvite = mutation({
 
     const twentyFourHoursMs = 24 * 60 * 60 * 1000;
 
-    const callerMembro = await ctx.db
-      .query("membros")
-      .withIndex("by_user_id", (q) => q.eq("userId", userId))
-      .first();
-
     await ctx.db.insert("membroConvites", {
       token,
       status: "PENDENTE",
-      criadoPor: callerMembro?._id,
+      criadoPor: caller._id,
       expiraEm: Date.now() + twentyFourHoursMs,
       role: role || "membro",
     });
