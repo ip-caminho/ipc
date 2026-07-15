@@ -27,8 +27,7 @@ export const create = mutation({
     status: v.optional(v.union(v.literal("RASCUNHO"), v.literal("PUBLICADO"))),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+    await requirePermission(ctx, "gravacoes:create");
 
     const id = await ctx.db.insert("gravacoes", {
       ...args,
@@ -46,8 +45,7 @@ export const update = mutation({
     data: v.any(),
   },
   handler: async (ctx, { id, data }) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+    await requirePermission(ctx, "gravacoes:update");
 
     const oldRecord = await ctx.db.get(id);
     if (!oldRecord) throw new Error("Gravacao not found");
@@ -70,8 +68,9 @@ export const update = mutation({
 export const publish = mutation({
   args: { id: v.id("gravacoes") },
   handler: async (ctx, { id }) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+    // Publicar/despublicar e o mesmo poder editorial que editar (a UI usa
+    // can("gravacoes:update") para os dois botoes).
+    await requirePermission(ctx, "gravacoes:update");
 
     const oldRecord = await ctx.db.get(id);
     if (!oldRecord) throw new Error("Gravacao not found");
@@ -87,8 +86,8 @@ export const publish = mutation({
 export const remove = mutation({
   args: { id: v.id("gravacoes") },
   handler: async (ctx, { id }) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+    // Apaga tambem o audio no B2, comentarios, reacoes e escutas — destrutivo.
+    await requirePermission(ctx, "gravacoes:delete");
 
     const gravacao = await ctx.db.get(id);
     if (!gravacao) throw new Error("Gravacao nao encontrada");

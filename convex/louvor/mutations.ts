@@ -1,6 +1,6 @@
 import { mutation, internalMutation } from "../_generated/server";
 import { v } from "convex/values";
-import { getAuthUserId } from "@convex-dev/auth/server";
+import { requirePermission } from "../_shared/requirePermission";
 import { createFieldAuditLogs, createActionAuditLog } from "../_shared/auditHelpers";
 
 export const create = mutation({
@@ -19,8 +19,7 @@ export const create = mutation({
     estrutura: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+    await requirePermission(ctx, "louvor:create");
 
     const id = await ctx.db.insert("louvores", {
       ...args,
@@ -39,8 +38,7 @@ export const update = mutation({
     data: v.any(),
   },
   handler: async (ctx, { id, data }) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+    await requirePermission(ctx, "louvor:update");
 
     const oldRecord = await ctx.db.get(id);
     if (!oldRecord) throw new Error("Louvor nao encontrado");
@@ -83,8 +81,7 @@ export const seed = internalMutation({
 export const remove = mutation({
   args: { id: v.id("louvores") },
   handler: async (ctx, { id }) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+    await requirePermission(ctx, "louvor:delete");
 
     const louvor = await ctx.db.get(id);
     if (!louvor) throw new Error("Louvor nao encontrado");
