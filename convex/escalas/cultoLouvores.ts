@@ -1,6 +1,7 @@
 import { mutation, query } from "../_generated/server";
 import { v } from "convex/values";
 import { requirePermission } from "../_shared/requirePermission";
+import { getAuthUserId } from "@convex-dev/auth/server";
 
 // Item do setlist enviado pelo frontend
 const cultoLouvorItemValidator = v.object({
@@ -84,6 +85,8 @@ export const updateCultoLouvorTom = mutation({
 export const getCultoLouvoresEnriched = query({
   args: { cultoId: v.id("cultos") },
   handler: async (ctx, { cultoId }) => {
+    if (!(await getAuthUserId(ctx))) return [];
+
     const items = await ctx.db
       .query("cultoLouvores")
       .withIndex("by_culto", (q) => q.eq("cultoId", cultoId))

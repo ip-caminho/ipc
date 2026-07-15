@@ -7,6 +7,10 @@ import { requirePermission } from "../_shared/requirePermission";
 export const listEquipes = query({
   args: {},
   handler: async (ctx) => {
+    // Organograma: nome completo, foto e instrumentos de cada membro.
+    // Retorna o mesmo shape agrupado (Record) para nao mudar o tipo no frontend.
+    if (!(await getAuthUserId(ctx))) return {};
+
     const allMembers = await ctx.db.query("equipeMembros").collect();
 
     // Agrupar por funcao
