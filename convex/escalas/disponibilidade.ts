@@ -64,6 +64,9 @@ export const minhasIndisponibilidades = query({
 export const listPorData = query({
   args: { data: v.string() },
   handler: async (ctx, { data }) => {
+    // Quem esta indisponivel numa data, com nome e motivo. Exige login.
+    if (!(await getAuthUserId(ctx))) return [];
+
     const indisps = await ctx.db
       .query("indisponibilidades")
       .withIndex("by_data", (q: any) => q.eq("data", data))

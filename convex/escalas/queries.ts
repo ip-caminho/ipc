@@ -79,6 +79,12 @@ export const listCultos = query({
     status: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    // Escala/boletim expoem nomes completos, fotos e (no proximo domingo) o
+    // motivo de ausencia. Exige login — nao permissao: membro e obreiro nao tem
+    // escalas:read e sao justamente o publico destas telas. O site publico usa
+    // convex/public/*, que nao passa por aqui.
+    if (!(await getAuthUserId(ctx))) return [];
+
     let cultos = await ctx.db.query("cultos").order("desc").collect();
 
     if (args.tipo) {
@@ -111,6 +117,8 @@ export const listCultos = query({
 export const getCultoById = query({
   args: { id: v.id("cultos") },
   handler: async (ctx, { id }) => {
+    if (!(await getAuthUserId(ctx))) return null;
+
     const culto = await ctx.db.get(id);
     if (!culto) return null;
 
@@ -191,6 +199,8 @@ export const minhasEscalas = query({
 export const listProximosCultos = query({
   args: { limit: v.optional(v.number()) },
   handler: async (ctx, { limit = 3 }) => {
+    if (!(await getAuthUserId(ctx))) return [];
+
     const today = getSaoPauloDateString();
 
     const cultos = await ctx.db
@@ -226,6 +236,8 @@ export const listProximosCultos = query({
 export const getProximoDomingo = query({
   args: { data: v.optional(v.string()) },
   handler: async (ctx, { data }) => {
+    if (!(await getAuthUserId(ctx))) return null;
+
     const today = getSaoPauloDateString();
 
     const cultos = await ctx.db.query("cultos").order("asc").collect();
@@ -303,6 +315,8 @@ export const getProximoDomingo = query({
 export const getBoletim = query({
   args: { data: v.optional(v.string()) },
   handler: async (ctx, { data }) => {
+    if (!(await getAuthUserId(ctx))) return null;
+
     const today = getSaoPauloDateString();
 
     const cultos = await ctx.db
