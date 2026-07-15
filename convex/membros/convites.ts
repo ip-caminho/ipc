@@ -1,6 +1,12 @@
 import { mutation, query } from "../_generated/server";
 import { v } from "convex/values";
 import { requirePermission } from "../_shared/requirePermission";
+import { INITIAL_ROLE_PERMISSIONS } from "../preferencias/rbacHelpers";
+
+// Papeis validos = os definidos no codigo. A tabela rolePermissions pode conter
+// papel legado orfao (ex: "comunicacao", removido do codigo em 07/2026) — esses
+// nao podem ser concedidos por convite.
+const PAPEIS_VALIDOS = new Set(Object.keys(INITIAL_ROLE_PERMISSIONS));
 
 export const generateInvite = mutation({
   args: {
@@ -8,13 +14,22 @@ export const generateInvite = mutation({
   },
   handler: async (ctx, { role }) => {
     // O convite define o papel do membro que sera criado em acceptInvite, entao
-    // exige a mesma permissao (e a mesma guarda de papel) de membros/mutations
-    // create — senao qualquer usuario autenticado convidaria com papel admin.
+    // exige a mesma permissao de membros/mutations create — senao qualquer
+    // usuario autenticado convidaria com papel privilegiado.
     const { membro: caller } = await requirePermission(ctx, "membros:create");
 
-    // Papel admin so pode ser atribuido por outro admin
-    if (role === "admin" && caller.role !== "admin") {
-      throw new Error("Somente admin pode convidar com papel admin");
+    const papel = role || "membro";
+
+    if (!PAPEIS_VALIDOS.has(papel)) {
+      throw new Error(`Papel invalido: ${papel}`);
+    }
+
+    // Conceder qualquer papel com poder (isto e, diferente de "membro") e
+    // decisao de admin — nao basta ter membros:create. Guarda por poder e nao
+    // pelo literal "admin": senao secretaria convidaria pastor/secretaria, ou um
+    // papel que recebesse "*" em runtime passaria batido.
+    if (papel !== "membro" && caller.role !== "admin") {
+      throw new Error("Somente admin pode convidar com papel diferente de membro");
     }
 
     // Generate secure token
@@ -29,7 +44,7 @@ export const generateInvite = mutation({
       status: "PENDENTE",
       criadoPor: caller._id,
       expiraEm: Date.now() + twentyFourHoursMs,
-      role: role || "membro",
+      role: papel,
     });
 
     return token;

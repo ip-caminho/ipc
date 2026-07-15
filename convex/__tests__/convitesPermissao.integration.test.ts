@@ -47,6 +47,42 @@ describe("membros.convites.generateInvite — exige permissao", () => {
     ).rejects.toThrow();
   });
 
+  // A guarda e por poder, nao pelo literal "admin": qualquer papel != membro
+  // concede permissoes que quem so tem membros:create nao pode distribuir.
+  it.each(["pastor", "secretaria", "presbitero", "obreiro", "secretario_executivo"])(
+    "quem tem membros:create nao pode convidar com papel %s",
+    async (papel) => {
+      const t = convexTest(schema, modules);
+      const userId = await seedUser(t, {
+        role: "secretaria",
+        permissions: ["membros:create"],
+      });
+      await expect(
+        as(t, userId).mutation(api.membros.convites.generateInvite, { role: papel })
+      ).rejects.toThrow();
+    }
+  );
+
+  it("papel inexistente recusa (role e string livre no validador)", async () => {
+    const t = convexTest(schema, modules);
+    const userId = await seedUser(t, { role: "admin" });
+    await expect(
+      as(t, userId).mutation(api.membros.convites.generateInvite, { role: "pastorr" })
+    ).rejects.toThrow(/Papel invalido/);
+  });
+
+  // "comunicacao" foi removido do codigo em 07/2026 mas segue orfao na tabela
+  // rolePermissions em prod — nao pode ser concedido.
+  it("papel legado orfao (comunicacao) recusa, mesmo para admin", async () => {
+    const t = convexTest(schema, modules);
+    const userId = await seedUser(t, { role: "admin" });
+    await expect(
+      as(t, userId).mutation(api.membros.convites.generateInvite, {
+        role: "comunicacao",
+      })
+    ).rejects.toThrow(/Papel invalido/);
+  });
+
   it("quem tem membros:create convida membro comum (sem regressao)", async () => {
     const t = convexTest(schema, modules);
     const userId = await seedUser(t, {
