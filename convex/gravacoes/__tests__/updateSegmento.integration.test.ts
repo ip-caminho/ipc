@@ -3,11 +3,16 @@ import { describe, it, expect } from "vitest";
 import { api } from "../../_generated/api";
 import schema from "../../schema";
 import { modules } from "../../test.setup";
+import { seedUser, as } from "../../__tests__/helpers";
 
 describe("gravacoes.update — sync de inicioConteudo", () => {
   it("ao editar inicioSermao/fimSermao, sincroniza inicioConteudo/fimConteudo", async () => {
     const t = convexTest(schema, modules);
-    const userId = await t.run(async (ctx) => ctx.db.insert("users", {}));
+    // update exige gravacoes:update (antes bastava estar logado)
+    const userId = await seedUser(t, {
+      role: "secretaria",
+      permissions: ["gravacoes:update"],
+    });
 
     const gravacaoId = await t.run(async (ctx) =>
       ctx.db.insert("gravacoes", {
@@ -23,8 +28,7 @@ describe("gravacoes.update — sync de inicioConteudo", () => {
       })
     );
 
-    const asUser = t.withIdentity({ subject: `${userId}|s` });
-    await asUser.mutation(api.gravacoes.mutations.update, {
+    await as(t, userId).mutation(api.gravacoes.mutations.update, {
       id: gravacaoId,
       data: { inicioSermao: 120, fimSermao: 1700 },
     });
