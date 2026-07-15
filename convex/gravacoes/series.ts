@@ -5,6 +5,8 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 export const list = query({
   args: {},
   handler: async (ctx) => {
+    if (!(await getAuthUserId(ctx))) return [];
+
     return await ctx.db.query("serieGravacoes").collect();
   },
 });

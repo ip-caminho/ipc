@@ -62,6 +62,12 @@ export const getById = query({
 export const getPublicProfile = query({
   args: { id: v.id("membros") },
   handler: async (ctx, { id }) => {
+    // "Public" = perfil visivel dentro da igreja, nao publico na internet:
+    // devolve whatsapp, nascimento, profissao e bairro. Exige login. Nao exige
+    // permissao porque o popover de perfil aparece para qualquer membro (ex:
+    // autor de comentario em gravacoes) e membro nao tem diretorio:read.
+    if (!(await getAuthUserId(ctx))) return null;
+
     const membro = await ctx.db.get(id);
     if (!membro) return null;
     const entidade = await ctx.db.get(membro.entidadeId);
