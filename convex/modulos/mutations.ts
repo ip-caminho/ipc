@@ -1,10 +1,11 @@
-import { mutation } from "../_generated/server";
+import { mutation, internalMutation } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { createActionAuditLog } from "../_shared/auditHelpers";
 import { MODULOS_INICIAIS } from "./constants";
 
-export const seedModulos = mutation({
+// INTERNAL: seed — rodar via `npx convex run`, nunca do cliente.
+export const seedModulos = internalMutation({
   args: {},
   handler: async (ctx) => {
     for (const modulo of MODULOS_INICIAIS) {

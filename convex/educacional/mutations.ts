@@ -1,4 +1,4 @@
-import { mutation } from "../_generated/server";
+import { mutation, internalMutation } from "../_generated/server";
 import { v } from "convex/values";
 import { requirePermission } from "../_shared/requirePermission";
 import { createActionAuditLog } from "../_shared/auditHelpers";
@@ -677,7 +677,8 @@ const CRIANCAS_SEED: CriancaSeed[] = [
   { nome: "Yumi", turma: "9-10", usoImagem: "AUTORIZADO", dataNascimento: "2017-07-18", ovelhinha: "Luana" },
 ];
 
-export const seedCriancas = mutation({
+// INTERNAL: seed — rodar via `npx convex run`, nunca do cliente.
+export const seedCriancas = internalMutation({
   args: {},
   handler: async (ctx) => {
     // Verifica se ja tem criancas cadastradas

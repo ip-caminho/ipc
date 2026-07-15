@@ -1,4 +1,4 @@
-import { query, mutation } from "../_generated/server";
+import { query, mutation, internalMutation } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 
@@ -119,7 +119,8 @@ export const toggle = mutation({
   },
 });
 
-export const seedFuncoes = mutation({
+// INTERNAL: seed — rodar via `npx convex run`, nunca do cliente.
+export const seedFuncoes = internalMutation({
   args: {},
   handler: async (ctx) => {
     for (const funcao of FUNCOES_INICIAIS) {

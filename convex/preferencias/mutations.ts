@@ -1,4 +1,4 @@
-import { mutation } from "../_generated/server";
+import { mutation, internalMutation } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { requirePermission } from "../_shared/requirePermission";
@@ -49,7 +49,8 @@ export const upsertPreferencia = mutation({
   },
 });
 
-export const seedIgrejaInfo = mutation({
+// INTERNAL: seed — rodar via `npx convex run`, nunca do cliente.
+export const seedIgrejaInfo = internalMutation({
   args: {},
   handler: async (ctx) => {
     const defaults: Record<string, any> = {

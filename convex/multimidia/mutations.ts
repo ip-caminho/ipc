@@ -1,4 +1,4 @@
-import { mutation } from "../_generated/server";
+import { mutation, internalMutation } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { createActionAuditLog } from "../_shared/auditHelpers";
@@ -136,7 +136,8 @@ export const removeNota = mutation({
 
 // ===== Template =====
 
-export const seedChecklistTemplate = mutation({
+// INTERNAL: seed — rodar via `npx convex run`, nunca do cliente.
+export const seedChecklistTemplate = internalMutation({
   args: {},
   handler: async (ctx) => {
     const existing = await ctx.db.query("multimidiaChecklistTemplate").collect();
