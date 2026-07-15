@@ -3,42 +3,13 @@ import { describe, it, expect } from "vitest";
 import { api } from "../_generated/api";
 import schema from "../schema";
 import { modules } from "../test.setup";
+import { seedUser, seedUserSemMembro, as } from "./helpers";
 
 // generateInvite define o `role` do membro criado depois por acceptInvite.
 // Antes, exigia apenas login — qualquer usuario autenticado (inclusive um sem
 // membro, recem-criado pelo OTP) conseguia emitir convite com papel admin e,
 // via autoLink por telefone, assumir esse membro. Agora exige "membros:create"
 // e mantem a guarda de papel admin de membros/mutations.create.
-
-async function seedUser(
-  t: ReturnType<typeof convexTest>,
-  opts: { role: string; permissions?: string[] }
-) {
-  return await t.run(async (ctx) => {
-    const userId = await ctx.db.insert("users", {});
-    const entidadeId = await ctx.db.insert("entidades", {
-      tipoEntidade: "PF",
-      papeis: [],
-      status: "ATIVO",
-      nomeCompleto: `Membro ${opts.role}`,
-    });
-    await ctx.db.insert("membros", {
-      entidadeId,
-      role: opts.role,
-      userId,
-      permissions: opts.permissions,
-    });
-    return userId;
-  });
-}
-
-// Usuario autenticado SEM membro — o estado de quem acabou de logar pelo OTP.
-async function seedUserSemMembro(t: ReturnType<typeof convexTest>) {
-  return await t.run(async (ctx) => await ctx.db.insert("users", {}));
-}
-
-const as = (t: ReturnType<typeof convexTest>, userId: string) =>
-  t.withIdentity({ subject: `${userId}|session-1` });
 
 describe("membros.convites.generateInvite — exige permissao", () => {
   it("sem autenticacao: recusa", async () => {
