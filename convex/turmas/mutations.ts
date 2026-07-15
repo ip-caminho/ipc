@@ -1,7 +1,9 @@
 import { mutation } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { requirePermission, checkPermission } from "../_shared/requirePermission";
 import { createActionAuditLog, createFieldAuditLogs } from "../_shared/auditHelpers";
+import type { Id } from "../_generated/dataModel";
 
 async function requireAuth(ctx: any) {
   const userId = await getAuthUserId(ctx);
@@ -12,6 +14,24 @@ async function requireAuth(ctx: any) {
     .first();
   if (!membro) throw new Error("Membro nao encontrado");
   return { userId, membro };
+}
+
+/**
+ * Encontros e presencas: quem gerencia inscricoes acessa qualquer turma; o
+ * instrutor acessa apenas a propria (a chamada sai tambem do widget do
+ * dashboard, e instrutor pode ser membro comum — exigir so a permissao
+ * quebraria esse fluxo).
+ */
+async function requireGestaoTurma(ctx: any, turmaId: Id<"turmas">) {
+  const turma = await ctx.db.get(turmaId);
+  if (!turma) throw new Error("Turma nao encontrada");
+
+  const gestor = await checkPermission(ctx, "turmas:manage_inscricoes");
+  if (gestor) return { turma, membro: gestor.membro };
+
+  const { membro } = await requireAuth(ctx);
+  if (turma.instrutorId !== membro._id) throw new Error("Sem permissao");
+  return { turma, membro };
 }
 
 function generateToken(): string {
@@ -47,7 +67,7 @@ export const create = mutation({
     }))),
   },
   handler: async (ctx, args) => {
-    const { membro } = await requireAuth(ctx);
+    const { membro } = await requirePermission(ctx, "turmas:create");
     const id = await ctx.db.insert("turmas", {
       ...args,
       nome: args.nome.trim(),
@@ -77,7 +97,7 @@ export const update = mutation({
     vagas: v.optional(v.number()),
   },
   handler: async (ctx, { id, ...updates }) => {
-    await requireAuth(ctx);
+    await requirePermission(ctx, "turmas:update");
     const oldRecord = await ctx.db.get(id);
     const patch: Record<string, unknown> = {};
     for (const [key, val] of Object.entries(updates)) {
@@ -102,7 +122,7 @@ export const updateStatus = mutation({
     ),
   },
   handler: async (ctx, { id, status }) => {
-    await requireAuth(ctx);
+    await requirePermission(ctx, "turmas:update");
     const turma = await ctx.db.get(id);
     if (!turma) throw new Error("Turma nao encontrada");
 
@@ -118,7 +138,8 @@ export const updateStatus = mutation({
 export const duplicar = mutation({
   args: { id: v.id("turmas"), nome: v.string() },
   handler: async (ctx, { id, nome }) => {
-    const { membro } = await requireAuth(ctx);
+    // Duplicar cria uma turma nova a partir de outra.
+    const { membro } = await requirePermission(ctx, "turmas:create");
     const original = await ctx.db.get(id);
     if (!original) throw new Error("Turma nao encontrada");
 
@@ -245,6 +266,7 @@ export const registrar = mutation({
 export const cancelarInscricao = mutation({
   args: { id: v.id("inscricoes") },
   handler: async (ctx, { id }) => {
+    await requirePermission(ctx, "turmas:manage_inscricoes");
     const inscricao = await ctx.db.get(id);
     if (!inscricao) throw new Error("Inscricao nao encontrada");
     if (inscricao.status === "CANCELADA") throw new Error("Inscricao ja cancelada");
@@ -283,7 +305,7 @@ export const createEncontro = mutation({
     titulo: v.optional(v.string()),
   },
   handler: async (ctx, { turmaId, data, titulo }) => {
-    const { membro } = await requireAuth(ctx);
+    const { membro } = await requireGestaoTurma(ctx, turmaId);
     return await ctx.db.insert("turmaEncontros", {
       turmaId,
       data,
@@ -297,7 +319,9 @@ export const createEncontro = mutation({
 export const removeEncontro = mutation({
   args: { id: v.id("turmaEncontros") },
   handler: async (ctx, { id }) => {
-    await requireAuth(ctx);
+    const encontro = await ctx.db.get(id);
+    if (!encontro) throw new Error("Encontro nao encontrado");
+    await requireGestaoTurma(ctx, encontro.turmaId);
     // Remove presencas associadas
     const presencas = await ctx.db
       .query("turmaPresencas")
@@ -317,7 +341,9 @@ export const salvarPresencas = mutation({
     })),
   },
   handler: async (ctx, { encontroId, presencas }) => {
-    const { membro } = await requireAuth(ctx);
+    const encontro = await ctx.db.get(encontroId);
+    if (!encontro) throw new Error("Encontro nao encontrado");
+    const { membro } = await requireGestaoTurma(ctx, encontro.turmaId);
 
     for (const { inscricaoId, presente } of presencas) {
       const existing = await ctx.db

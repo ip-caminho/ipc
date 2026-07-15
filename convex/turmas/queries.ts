@@ -2,6 +2,7 @@ import { query } from "../_generated/server";
 import { getSaoPauloDateString, getSaoPauloWeekday } from "../_shared/datetime";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { checkPermission } from "../_shared/requirePermission";
 
 import { resolveMembroNome } from "../_shared/membroResolver";
 
@@ -234,8 +235,10 @@ export const listInscricoes = query({
     status: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) return [];
+    // Traz PII dos inscritos (whatsapp, email, nascimento): exige turmas:read.
+    // Degrada para [] em vez de lancar — a pagina roda o useQuery antes do gate
+    // de render.
+    if (!(await checkPermission(ctx, "turmas:read"))) return [];
 
     let inscricoes = await ctx.db
       .query("inscricoes")
