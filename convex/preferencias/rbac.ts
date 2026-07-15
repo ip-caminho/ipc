@@ -1,7 +1,6 @@
-import { query, mutation, type MutationCtx, type QueryCtx } from "../_generated/server";
+import { query, mutation, type MutationCtx, type QueryCtx, internalMutation } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { internalMutation } from "../_generated/server";
 import { INITIAL_ROLE_PERMISSIONS as ROLE_DEFAULTS, resolvePermissions, VOLUNTEER_PERMISSION_SETS } from "./rbacHelpers";
 import { derivedEduVoluntarioPerms, mergeDerived } from "../_shared/eduVoluntarioPerms";
 
@@ -457,7 +456,8 @@ export const listRolePermissions = query({
 
 // ===== MUTATIONS =====
 
-export const seedRolePermissions = mutation({
+// INTERNAL: seed — rodar via `npx convex run`, nunca do cliente.
+export const seedRolePermissions = internalMutation({
   args: {},
   handler: async (ctx) => {
     for (const [role, permissions] of Object.entries(ROLE_DEFAULTS) as [string, string[]][]) {

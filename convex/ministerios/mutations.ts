@@ -1,4 +1,4 @@
-import { mutation } from "../_generated/server";
+import { mutation, internalMutation } from "../_generated/server";
 import { v } from "convex/values";
 import { createActionAuditLog, createFieldAuditLogs } from "../_shared/auditHelpers";
 import { requirePermission } from "../_shared/requirePermission";
@@ -152,7 +152,8 @@ export const removeMembro = mutation({
   },
 });
 
-export const seedMinisterios = mutation({
+// INTERNAL: seed — rodar via `npx convex run`, nunca do cliente.
+export const seedMinisterios = internalMutation({
   args: {},
   handler: async (ctx) => {
     const seeds = [

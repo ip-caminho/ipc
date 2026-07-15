@@ -1,4 +1,4 @@
-import { mutation } from "../_generated/server";
+import { mutation, internalMutation } from "../_generated/server";
 import { v } from "convex/values";
 import { requirePermission } from "../_shared/requirePermission";
 import { createActionAuditLog } from "../_shared/auditHelpers";
@@ -74,7 +74,8 @@ export const cancelReserva = mutation({
   },
 });
 
-export const seedSalas = mutation({
+// INTERNAL: seed — rodar via `npx convex run`, nunca do cliente.
+export const seedSalas = internalMutation({
   args: {},
   handler: async (ctx) => {
     const existing = await ctx.db.query("salas").collect();

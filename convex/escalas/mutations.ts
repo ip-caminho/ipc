@@ -3,11 +3,17 @@ import { getSaoPauloDate } from "../_shared/datetime";
 import { v, ConvexError } from "convex/values";
 import { createActionAuditLog, createFieldAuditLogs } from "../_shared/auditHelpers";
 import { requirePermission } from "../_shared/requirePermission";
+import { getAuthUserId } from "@convex-dev/auth/server";
 
 // Garante que existem cultos dominicais para os próximos N meses
 export const garantirCultosFuturos = mutation({
   args: {},
   handler: async (ctx) => {
+    // Escreve cultos no banco. Exige login — nao permissao nem internal: o
+    // layout de /escalas dispara isto no mount para qualquer membro que abre a
+    // tela. Sem gate, um anonimo inseria cultos (idempotente ate 31/dez).
+    if (!(await getAuthUserId(ctx))) throw new Error("Nao autenticado");
+
     const sp = getSaoPauloDate();
     const hoje = new Date(sp.year, sp.month - 1, sp.day);
     const limite = new Date(hoje.getFullYear(), 11, 31);

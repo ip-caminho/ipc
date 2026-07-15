@@ -1,6 +1,6 @@
 import { convexTest } from "convex-test";
 import { describe, it, expect } from "vitest";
-import { api } from "../../_generated/api";
+import { api, internal } from "../../_generated/api";
 import schema from "../../schema";
 import { modules } from "../../test.setup";
 import { Id } from "../../_generated/dataModel";
@@ -32,6 +32,7 @@ async function seedMembroWithRole(
 describe("RBAC — getUserPermissionContext", () => {
   it("retorna null sem autenticação", async () => {
     const t = convexTest(schema, modules);
+    // @ts-ignore Convex TS2589 (instanciacao de tipo profunda)
     const result = await t.query(api.preferencias.rbac.getUserPermissionContext, {});
     expect(result).toBeNull();
   });
@@ -146,7 +147,8 @@ describe("RBAC — seedRolePermissions", () => {
   it("cria registros iniciais se não existem", async () => {
     const t = convexTest(schema, modules);
 
-    await t.mutation(api.preferencias.rbac.seedRolePermissions, {});
+    // @ts-ignore Convex TS2589 (instanciacao de tipo profunda)
+    await t.mutation(internal.preferencias.rbac.seedRolePermissions, {});
 
     const roles = await t.run(async (ctx) => ctx.db.query("rolePermissions").collect());
 
@@ -163,8 +165,8 @@ describe("RBAC — seedRolePermissions", () => {
   it("não duplica registros em execuções múltiplas", async () => {
     const t = convexTest(schema, modules);
 
-    await t.mutation(api.preferencias.rbac.seedRolePermissions, {});
-    await t.mutation(api.preferencias.rbac.seedRolePermissions, {});
+    await t.mutation(internal.preferencias.rbac.seedRolePermissions, {});
+    await t.mutation(internal.preferencias.rbac.seedRolePermissions, {});
 
     const roles = await t.run(async (ctx) => ctx.db.query("rolePermissions").collect());
     const adminRoles = roles.filter((r) => r.role === "admin");
