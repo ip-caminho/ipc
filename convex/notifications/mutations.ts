@@ -1,4 +1,4 @@
-import { mutation } from "../_generated/server";
+import { mutation, internalMutation } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 
@@ -41,7 +41,12 @@ export const savePushSubscription = mutation({
   },
 });
 
-export const removePushSubscription = mutation({
+// INTERNAL: so o backend chama (deliverPush limpa subscription invalida apos
+// 410/404). Nao ha uso no cliente. Como mutation publica, sem auth nem
+// ownership, qualquer um cancelava as notificacoes de outra pessoa passando o
+// endpoint dela. sendPushToRoles e internalAction (sem identidade de usuario),
+// entao exigir login aqui quebraria a limpeza — internal resolve os dois lados.
+export const removePushSubscription = internalMutation({
   args: { endpoint: v.string() },
   handler: async (ctx, { endpoint }) => {
     const existing = await ctx.db
