@@ -3,6 +3,7 @@ import { getSaoPauloDateString } from "../_shared/datetime";
 import { extrairFrases, titulosSimilares } from "./iaHelpers";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { requirePermission } from "../_shared/requirePermission";
 
 // Lazy-load to avoid TS2589 "type instantiation excessively deep"
 function getProcessSermonRef() {
@@ -151,15 +152,9 @@ export const createFromAudio = mutation({
     data: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
-
-    const membro = await ctx.db
-      .query("membros")
-      .withIndex("by_user_id", (q) => q.eq("userId", userId))
-      .first();
-
-    if (!membro) throw new Error("Membro nao encontrado");
+    // Dispara o pipeline pago (Deepgram + Claude): mesmo gate de startProcessing,
+    // senao criar-com-IA seria um desvio do controle de custo.
+    const { membro } = await requirePermission(ctx, "gravacoes:process_ai");
 
     const id = await ctx.db.insert("gravacoes", {
       titulo: "Processando...",
@@ -195,15 +190,8 @@ export const createFromYouTube = mutation({
     data: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
-
-    const membro = await ctx.db
-      .query("membros")
-      .withIndex("by_user_id", (q) => q.eq("userId", userId))
-      .first();
-
-    if (!membro) throw new Error("Membro nao encontrado");
+    // Baixa do YouTube e dispara o pipeline pago — mesmo gate de startProcessing.
+    const { membro } = await requirePermission(ctx, "gravacoes:process_ai");
 
     const id = await ctx.db.insert("gravacoes", {
       titulo: "Importando do YouTube...",
