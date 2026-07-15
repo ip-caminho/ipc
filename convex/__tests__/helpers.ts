@@ -29,6 +29,29 @@ export async function seedUser(
   });
 }
 
+/** Como seedUser, mas devolve tambem o membroId (evita reconsultar no teste). */
+export async function seedUserComMembro(
+  t: T,
+  opts: { role: string; permissions?: string[] }
+) {
+  return await t.run(async (ctx) => {
+    const userId = await ctx.db.insert("users", {});
+    const entidadeId = await ctx.db.insert("entidades", {
+      tipoEntidade: "PF",
+      papeis: [],
+      status: "ATIVO",
+      nomeCompleto: `Membro ${opts.role}`,
+    });
+    const membroId = await ctx.db.insert("membros", {
+      entidadeId,
+      role: opts.role,
+      userId,
+      permissions: opts.permissions,
+    });
+    return { userId, membroId };
+  });
+}
+
 /** Usuario autenticado SEM membro — o estado de quem acabou de logar pelo OTP. */
 export async function seedUserSemMembro(t: T) {
   return await t.run(async (ctx) => await ctx.db.insert("users", {}));

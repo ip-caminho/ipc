@@ -2,6 +2,7 @@ import { mutation } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { createActionAuditLog } from "../_shared/auditHelpers";
+import { requirePermission } from "../_shared/requirePermission";
 
 async function requireAuth(ctx: any) {
   const userId = await getAuthUserId(ctx);
@@ -26,7 +27,7 @@ export const enviarArquivo = mutation({
     descricao: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const { membro } = await requireAuth(ctx);
+    const { membro } = await requirePermission(ctx, "multimidia:create");
     const id = await ctx.db.insert("multimidiaArquivos", {
       ...args,
       enviadoPor: membro._id,
@@ -44,7 +45,7 @@ export const revisarArquivo = mutation({
     status: v.union(v.literal("REVISADO"), v.literal("APROVADO")),
   },
   handler: async (ctx, { id, status }) => {
-    const { membro } = await requireAuth(ctx);
+    const { membro } = await requirePermission(ctx, "multimidia:update");
     await ctx.db.patch(id, { status, revisadoPor: membro._id });
   },
 });
@@ -52,7 +53,7 @@ export const revisarArquivo = mutation({
 export const removeArquivo = mutation({
   args: { id: v.id("multimidiaArquivos") },
   handler: async (ctx, { id }) => {
-    await requireAuth(ctx);
+    await requirePermission(ctx, "multimidia:update");
     await ctx.db.delete(id);
     await createActionAuditLog(ctx, "DELETE", "multimidiaArquivos", id as string);
   },
@@ -63,7 +64,7 @@ export const removeArquivo = mutation({
 export const initChecklist = mutation({
   args: { cultoId: v.id("cultos") },
   handler: async (ctx, { cultoId }) => {
-    await requireAuth(ctx);
+    await requirePermission(ctx, "multimidia:update");
 
     // Verificar se ja tem checklist
     const existing = await ctx.db
@@ -90,7 +91,7 @@ export const initChecklist = mutation({
 export const toggleChecklistItem = mutation({
   args: { id: v.id("multimidiaChecklist") },
   handler: async (ctx, { id }) => {
-    const { membro } = await requireAuth(ctx);
+    const { membro } = await requirePermission(ctx, "multimidia:update");
 
     const item = await ctx.db.get(id);
     if (!item) throw new Error("Item nao encontrado");
@@ -111,7 +112,7 @@ export const criarNota = mutation({
     texto: v.string(),
   },
   handler: async (ctx, { cultoId, texto }) => {
-    const { membro } = await requireAuth(ctx);
+    const { membro } = await requirePermission(ctx, "multimidia:update");
     return await ctx.db.insert("multimidiaNotas", {
       cultoId,
       membroId: membro._id,
