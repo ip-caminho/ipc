@@ -2,6 +2,7 @@ import { mutation } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { createActionAuditLog, createFieldAuditLogs } from "../_shared/auditHelpers";
+import { requirePermission, checkPermission } from "../_shared/requirePermission";
 
 async function requireAuth(ctx: any) {
   const userId = await getAuthUserId(ctx);
@@ -69,7 +70,7 @@ export const create = mutation({
     doadorNome: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const { membro } = await requireAuth(ctx);
+    const { membro } = await requirePermission(ctx, "biblioteca:create");
 
     const livroId = await ctx.db.insert("livros", {
       titulo: args.titulo.trim(),
@@ -121,7 +122,7 @@ export const update = mutation({
     capaUrl: v.optional(v.string()),
   },
   handler: async (ctx, { id, ...updates }) => {
-    await requireAuth(ctx);
+    await requirePermission(ctx, "biblioteca:update");
     const oldRecord = await ctx.db.get(id);
     const patch: Record<string, unknown> = {};
     for (const [key, val] of Object.entries(updates)) {
@@ -153,7 +154,7 @@ export const createBatch = mutation({
     })),
   },
   handler: async (ctx, { doadorNome, livros }) => {
-    const { membro } = await requireAuth(ctx);
+    const { membro } = await requirePermission(ctx, "biblioteca:create");
     let count = 0;
 
     for (const l of livros) {
@@ -199,7 +200,7 @@ export const addExemplar = mutation({
     doadorNome: v.optional(v.string()),
   },
   handler: async (ctx, { livroId, condicao, doadorNome }) => {
-    const { membro } = await requireAuth(ctx);
+    const { membro } = await requirePermission(ctx, "biblioteca:create");
     const codigo = await gerarCodigo(ctx);
     const exemplarId = await ctx.db.insert("exemplares", {
       livroId,
@@ -227,7 +228,7 @@ export const emprestar = mutation({
     diasEmprestimo: v.optional(v.number()),
   },
   handler: async (ctx, { exemplarId, membroId, diasEmprestimo }) => {
-    const { membro: registrador } = await requireAuth(ctx);
+    const { membro: registrador } = await requirePermission(ctx, "biblioteca:emprestar");
 
     const exemplar = await ctx.db.get(exemplarId);
     if (!exemplar) throw new Error("Exemplar nao encontrado");
@@ -383,11 +384,20 @@ export const devolverSelfService = mutation({
 export const devolver = mutation({
   args: { emprestimoId: v.id("emprestimos") },
   handler: async (ctx, { emprestimoId }) => {
-    const { membro } = await requireAuth(ctx);
-
     const emprestimo = await ctx.db.get(emprestimoId);
     if (!emprestimo) throw new Error("Emprestimo nao encontrado");
     if (emprestimo.status !== "ATIVO") throw new Error("Emprestimo ja devolvido");
+
+    // Quem registra emprestimos devolve qualquer um; o membro devolve o
+    // proprio (a pagina /biblioteca/meus-emprestimos usa esta mutation, e
+    // membro comum nao tem biblioteca:emprestar).
+    const gestor = await checkPermission(ctx, "biblioteca:emprestar");
+    const membro = gestor
+      ? gestor.membro
+      : (await requireAuth(ctx)).membro;
+    if (!gestor && emprestimo.membroId !== membro._id) {
+      throw new Error("Sem permissao");
+    }
 
     const hoje = new Date().toISOString().split("T")[0];
     await ctx.db.patch(emprestimoId, { status: "DEVOLVIDO", dataDevolucao: hoje });
