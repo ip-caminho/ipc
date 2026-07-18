@@ -17,7 +17,9 @@ export function RetiroPagina({ retiro }: { retiro: RetiroPublico }) {
   const [enviado, setEnviado] = useState(false);
   return (
     <>
-      <div className="page-intro" style={{ paddingBottom: 0 }}>
+      {/* hub-section já dá o respiro do topo; page-intro sem padding vertical
+          evita o vão morto (2 paddings somados) antes do título no mobile. */}
+      <div className="page-intro" style={{ paddingTop: 0, paddingBottom: 0 }}>
         <h1>{retiro.titulo}</h1>
       </div>
       <p style={{ color: "var(--text-muted)", marginTop: "var(--space-2)" }}>

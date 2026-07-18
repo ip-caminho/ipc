@@ -114,10 +114,21 @@ function Erro({ msg }: { msg?: string }) {
 // Cabecalho de etapa: numero em Spectral + regua — o form e uma sequencia real
 function Etapa({ n, titulo, hint }: { n: number; titulo: string; hint?: string }) {
   return (
-    <div className="flex items-baseline gap-3 border-b border-[#E5E3DC] pb-2">
-      <span className={`${FONT_DISPLAY} text-[20px] leading-none text-[#2563EB]`}>{n}</span>
-      <h2 className={`${FONT_DISPLAY} text-[19px] leading-tight ${COR_TEXTO}`}>{titulo}</h2>
-      {hint && <span className={`${FONT_BODY} ml-auto text-[12px] ${COR_MUTED}`}>{hint}</span>}
+    <div className="border-b border-[#E5E3DC] pb-2">
+      <div className="flex items-baseline gap-3">
+        <span className={`${FONT_DISPLAY} text-[20px] leading-none text-[#2563EB]`}>{n}</span>
+        <h2 className={`${FONT_DISPLAY} text-[19px] leading-tight ${COR_TEXTO}`}>{titulo}</h2>
+        {/* Desktop: hint alinhado à direita. Mobile: vai abaixo (evita quebrar
+            apertado ao lado do título em telas estreitas). */}
+        {hint && (
+          <span className={`${FONT_BODY} ml-auto hidden text-[12px] ${COR_MUTED} md:inline`}>
+            {hint}
+          </span>
+        )}
+      </div>
+      {hint && (
+        <span className={`${FONT_BODY} mt-1 block text-[12px] ${COR_MUTED} md:hidden`}>{hint}</span>
+      )}
     </div>
   );
 }
