@@ -5,8 +5,12 @@
  * Modelo de preco: o quarto e cobrado pelo VALOR CHEIO do tipo (individual,
  * duplo, triplo, quadruplo). Quem cabe nas vagas do(s) quarto(s) ja esta
  * incluso nesse valor. Participante que EXCEDE a capacidade (ex: crianca que
- * divide cama) paga apenas as REFEICOES do periodo: isento ate `idadeMeiaMin`,
- * meia entre `idadeMeiaMin` e `idadeInteiraMin`, inteira a partir dai.
+ * divide cama) paga as REFEICOES do periodo: isento ate `idadeMeiaMin`, meia
+ * entre `idadeMeiaMin` e `idadeInteiraMin`, inteira a partir dai.
+ *
+ * O que a IGREJA cobra na inscricao (`total`): quartos + palestras. As
+ * refeicoes extras, camas extras e pets sao pagos DIRETO ao hotel no checkout
+ * -> entram apenas em `estimativaHotel` (informativo), fora do total cobrado.
  */
 
 export type TipoQuarto = "individual" | "duplo" | "triplo" | "quadruplo";
@@ -146,8 +150,8 @@ export type ParticipanteDetalhe = {
 };
 
 export type CalculoInscricao = {
-  total: number; // com sufixo ,03
-  subtotal: number; // antes do arredondamento
+  total: number; // COBRADO pela igreja (quartos + palestras), com sufixo ,03
+  subtotal: number; // cobrado antes do arredondamento
   ajusteCentavos: number; // total - subtotal
   quartos: number; // custo cheio dos quartos
   capacidade: number;
@@ -155,13 +159,16 @@ export type CalculoInscricao = {
   palestras: number;
   camasExtras: number;
   pets: number;
+  // Estimativa paga DIRETO ao hotel no checkout (nao cobrada na inscricao):
+  // refeicoes extras + camas extras + pets. Informativa, sem sufixo.
+  estimativaHotel: number;
   participantes: ParticipanteDetalhe[];
 };
 
 /**
- * Total da inscricao: quartos (valor cheio) + refeicoes dos participantes que
- * excedem a capacidade + palestras + camas extras + pets × diarias, com o
- * sufixo ,03 aplicado no total.
+ * Total COBRADO na inscricao: quartos (valor cheio) + palestras, com o sufixo
+ * ,03 aplicado. Refeicoes de quem excede a capacidade, camas extras e pets ×
+ * diarias entram em `estimativaHotel` (pago direto ao hotel), nao no total.
  *
  * Alocacao de vagas: participantes de maior custo-de-refeicao (inteiros)
  * ocupam as vagas primeiro — quem sobra paga so refeicoes. Isso minimiza o
@@ -213,8 +220,12 @@ export function calcularValorInscricao(
   const camasExtras = hospedagem.camasExtras * precos.camaExtra;
   const pets = hospedagem.pets * precos.petPorDia * numDiarias(dataInicio, dataFim);
 
-  const subtotal = quartos + refeicoesExtras + palestras + camasExtras + pets;
+  // Cobrado pela igreja: quartos (pacote) + palestras. Refeicoes extras, camas
+  // extras e pets sao pagos direto ao hotel no checkout -> estimativa, fora do
+  // total cobrado.
+  const subtotal = quartos + palestras;
   const total = ajustarSufixo03(subtotal);
+  const estimativaHotel = refeicoesExtras + camasExtras + pets;
   return {
     total,
     subtotal,
@@ -225,6 +236,7 @@ export function calcularValorInscricao(
     palestras,
     camasExtras,
     pets,
+    estimativaHotel,
     participantes: detalhe,
   };
 }

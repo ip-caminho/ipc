@@ -745,21 +745,7 @@ export function RetiroForm({
               />
             ))}
 
-            {extrasRefeicao.length > 0 && (
-              <li className={`${FONT_BODY} text-[11px] uppercase tracking-[0.08em] ${COR_MUTED} pt-2 pb-0.5`}>
-                Alimentação
-              </li>
-            )}
-            {extrasRefeicao.map((p, i) => (
-              <LinhaConta
-                key={`r-${i}`}
-                nome={p.nome}
-                detalhe={`${p.idade} anos · sem cama própria`}
-                valor={brl(p.refeicoes)}
-              />
-            ))}
-
-            {(resumo.palestras > 0 || resumo.camasExtras > 0 || resumo.pets > 0) && (
+            {resumo.palestras > 0 && (
               <li className={`${FONT_BODY} text-[11px] uppercase tracking-[0.08em] ${COR_MUTED} pt-2 pb-0.5`}>
                 Adicionais
               </li>
@@ -769,20 +755,6 @@ export function RetiroForm({
                 nome="Palestras"
                 detalhe={`${nPalestras} × ${brl(retiro.precos.palestra)}`}
                 valor={brl(resumo.palestras)}
-              />
-            )}
-            {resumo.camasExtras > 0 && (
-              <LinhaConta
-                nome="Camas extras"
-                detalhe={`${valores.camasExtras} × ${brl(retiro.precos.camaExtra)}`}
-                valor={brl(resumo.camasExtras)}
-              />
-            )}
-            {resumo.pets > 0 && (
-              <LinhaConta
-                nome="Pets"
-                detalhe={`${valores.pets} × ${brl(retiro.precos.petPorDia)}/dia × ${diarias} ${diarias > 1 ? "diárias" : "diária"}`}
-                valor={brl(resumo.pets)}
               />
             )}
           </ul>
@@ -798,6 +770,54 @@ export function RetiroForm({
             Total ajustado para terminar em R$ 0,03 (identificação do financeiro). Condições
             especiais podem ser combinadas com a secretaria.
           </p>
+
+          {/* Estimativa paga DIRETO ao hotel no checkout — informativa, fora do
+              total cobrado na inscrição. */}
+          {resumo.estimativaHotel > 0 && (
+            <div className="mt-6 border-t border-dashed border-[#C9C2B4] pt-5">
+              <p className={`${FONT_BODY} text-[11px] font-semibold uppercase tracking-[0.1em] ${COR_MUTED}`}>
+                Estimativa paga no hotel
+              </p>
+              <p className={`${FONT_BODY} mt-1 text-[12px] leading-relaxed ${COR_MUTED}`}>
+                Não incluída no total acima — paga diretamente ao hotel no checkout.
+              </p>
+              <ul className="mt-4 space-y-2.5">
+                {extrasRefeicao.map((p, i) => (
+                  <LinhaConta
+                    key={`r-${i}`}
+                    nome={`Alimentação — ${p.nome}`}
+                    detalhe={`${p.idade} anos · sem cama própria`}
+                    valor={brl(p.refeicoes)}
+                  />
+                ))}
+                {resumo.camasExtras > 0 && (
+                  <LinhaConta
+                    nome="Camas extras"
+                    detalhe={`${valores.camasExtras} × ${brl(retiro.precos.camaExtra)}`}
+                    valor={brl(resumo.camasExtras)}
+                  />
+                )}
+                {resumo.pets > 0 && (
+                  <LinhaConta
+                    nome="Pets"
+                    detalhe={`${valores.pets} × ${brl(retiro.precos.petPorDia)}/dia × ${diarias} ${diarias > 1 ? "diárias" : "diária"}`}
+                    valor={brl(resumo.pets)}
+                  />
+                )}
+              </ul>
+              <div className="mt-4 flex items-baseline justify-between border-t border-[#C9C2B4] pt-3">
+                <span className={`${FONT_BODY} text-[12px] uppercase tracking-[0.08em] ${COR_MUTED}`}>
+                  Estimativa hotel
+                </span>
+                <span className={`${FONT_BODY} text-[16px] font-semibold tabular-nums ${COR_TEXTO}`}>
+                  {brl(resumo.estimativaHotel)}
+                </span>
+              </div>
+              <p className={`${FONT_BODY} mt-3 text-[12px] leading-relaxed ${COR_MUTED}`}>
+                Estimativa — o hotel também cobra bebidas e outros consumos no checkout.
+              </p>
+            </div>
+          )}
         </div>
       )}
 
