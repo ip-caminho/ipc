@@ -73,7 +73,7 @@ export function DateInputBR({
   const invalido = tocado && texto.length > 0 && brParaISO(texto) === null;
 
   return (
-    <div className={className}>
+    <div>
       <Input
         id={id}
         type="text"
@@ -83,6 +83,7 @@ export function DateInputBR({
         value={texto}
         maxLength={10}
         disabled={disabled}
+        className={className}
         aria-invalid={invalido || undefined}
         onBlur={() => setTocado(true)}
         onChange={(e) => {
