@@ -35,21 +35,25 @@ export function ValoresRetiro({ precos }: { precos: RetiroPublico["precos"] }) {
     .map((tipo) => ({ tipo, label: LABEL[tipo], valor: precos.quartos[tipo] }))
     .filter((q) => q.valor > 0);
 
-  // Texto das faixas de idade — robusto a configs degeneradas (meiaMin=0,
-  // meiaMin==inteiraMin) para nao exibir "Até -1 anos" ou faixa invertida.
-  const partesIdade: string[] = [];
+  // Faixas de idade em tópicos — derivadas das configs de preço para não
+  // desalinhar do cálculo. Robusto a configs degeneradas (meiaMin=0,
+  // meiaMin==inteiraMin) para não exibir "Até -1 anos" ou faixa invertida.
+  const topicosIdade: string[] = [];
   if (precos.idadeMeiaMin > 0) {
     const ate = precos.idadeMeiaMin - 1;
-    partesIdade.push(`até ${ate} ${ate === 1 ? "ano" : "anos"} não pagam`);
+    topicosIdade.push(
+      `Crianças até ${ate} ${ate === 1 ? "ano" : "anos"} estão isentas do valor da refeição.`,
+    );
   }
   if (precos.idadeInteiraMin > precos.idadeMeiaMin) {
     const de = precos.idadeMeiaMin;
     const ateMeia = precos.idadeInteiraMin - 1;
-    partesIdade.push(de === ateMeia ? `aos ${de} pagam meia` : `de ${de} a ${ateMeia} pagam meia`);
+    topicosIdade.push(
+      de === ateMeia
+        ? `Crianças com ${de} anos pagam apenas 50% da alimentação.`
+        : `Crianças de ${de} a ${ateMeia} anos pagam apenas 50% da alimentação.`,
+    );
   }
-  partesIdade.push(`a partir de ${precos.idadeInteiraMin} pagam inteira`);
-  const textoIdade =
-    partesIdade.join(" · ").replace(/^./, (c) => c.toUpperCase()) + ".";
 
   return (
     <div className="border border-[#E5E3DC] bg-[#F4F0E8] p-6 md:p-7">
@@ -76,14 +80,12 @@ export function ValoresRetiro({ precos }: { precos: RetiroPublico["precos"] }) {
       <p className={`${FONT_BODY} mt-7 text-[11px] uppercase tracking-[0.08em] ${COR_MUTED}`}>
         Crianças
       </p>
-      <ul className="mt-2 space-y-1.5">
-        <li className={`${FONT_BODY} text-[13px] leading-relaxed ${COR_MUTED}`}>
-          {textoIdade}
-        </li>
-        <li className={`${FONT_BODY} text-[13px] leading-relaxed ${COR_MUTED}`}>
-          Quem dividir cama com outra pessoa paga apenas a alimentação (as {precos.numRefeicoes}{" "}
-          refeições do período) — sem a diária do quarto.
-        </li>
+      <ul className="mt-2 list-disc space-y-1.5 pl-5">
+        {topicosIdade.map((topico) => (
+          <li key={topico} className={`${FONT_BODY} text-[13px] leading-relaxed ${COR_MUTED}`}>
+            {topico}
+          </li>
+        ))}
       </ul>
 
       <p className={`${FONT_BODY} mt-7 text-[11px] uppercase tracking-[0.08em] ${COR_MUTED}`}>
