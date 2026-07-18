@@ -121,6 +121,20 @@ html:has(.site-v2) {
   --measure: 64ch;
   --ease: var(--ease-out);
 
+  /* Componentes shadcn (Input/Select/Textarea) dentro do site público são
+     SEMPRE tema claro. Sem isto herdam as vars do .dark que o next-themes
+     (enableSystem) aplica no <html> quando o SO está em modo escuro — os
+     campos ficavam com fundo/borda azul-escuro. --accent fica de fora: o
+     site v2 reusa esse nome para o azul de marca. */
+  --background: oklch(1.0000 0 0);
+  --foreground: oklch(0.1371 0.0360 258.5258);
+  --muted-foreground: oklch(0.5547 0.0407 257.4404);
+  --primary: oklch(0.5460 0.2153 262.8719);
+  --primary-foreground: oklch(0.9838 0.0035 247.8583);
+  --border: oklch(0.9290 0.0126 255.5317);
+  --input: oklch(0.9290 0.0126 255.5317);
+  --ring: oklch(0.5460 0.2153 262.8719);
+
   background: var(--surface-page);
   color: var(--text-body);
   font-family: var(--font-body);
