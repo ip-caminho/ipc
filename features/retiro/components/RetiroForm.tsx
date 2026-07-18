@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
-import { DatePickerBR } from "@/shared/components/ui/date-picker-br";
+import { DateInputBR } from "@/shared/components/ui/date-input-br";
 import { Plus, Trash2, UserRound, Loader2, Copy, Check, Receipt } from "lucide-react";
 import { calcularValorInscricao, idadeNaData, numDiarias } from "@convex/retiro/calculoHelpers";
 import { isValidCPF } from "@shared/lib/validations/brazilian";
@@ -551,11 +551,10 @@ export function RetiroForm({
                       control={form.control}
                       name={`participantes.${i}.dataNascimento`}
                       render={({ field }) => (
-                        <DatePickerBR
+                        <DateInputBR
                           id={`p-nasc-${i}`}
                           value={field.value}
                           onChange={(iso) => aoMudarNascimento(i, iso)}
-                          max={hojeIso()}
                         />
                       )}
                     />
