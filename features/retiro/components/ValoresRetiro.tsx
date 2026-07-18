@@ -38,6 +38,8 @@ export function ValoresRetiro({ precos }: { precos: RetiroPublico["precos"] }) {
   // Faixas de idade em tópicos — derivadas das configs de preço para não
   // desalinhar do cálculo. Robusto a configs degeneradas (meiaMin=0,
   // meiaMin==inteiraMin) para não exibir "Até -1 anos" ou faixa invertida.
+  const valorMeia = brl(precos.refeicaoMeia * precos.numRefeicoes);
+  const temMeia = precos.idadeInteiraMin > precos.idadeMeiaMin;
   const topicosIdade: string[] = [];
   if (precos.idadeMeiaMin > 0) {
     const ate = precos.idadeMeiaMin - 1;
@@ -45,10 +47,9 @@ export function ValoresRetiro({ precos }: { precos: RetiroPublico["precos"] }) {
       `Crianças até ${ate} ${ate === 1 ? "ano" : "anos"} estão isentas do valor da refeição.`,
     );
   }
-  if (precos.idadeInteiraMin > precos.idadeMeiaMin) {
+  if (temMeia) {
     const de = precos.idadeMeiaMin;
     const ateMeia = precos.idadeInteiraMin - 1;
-    const valorMeia = brl(precos.refeicaoMeia * precos.numRefeicoes);
     topicosIdade.push(
       de === ateMeia
         ? `Crianças com ${de} anos pagam apenas 50% da alimentação (${valorMeia}).`
@@ -88,6 +89,12 @@ export function ValoresRetiro({ precos }: { precos: RetiroPublico["precos"] }) {
           </li>
         ))}
       </ul>
+      {temMeia && (
+        <p className={`${FONT_BODY} mt-2 text-[12px] leading-relaxed ${COR_MUTED}`}>
+          O valor de {valorMeia} é pago diretamente ao hotel no momento do checkout, junto com
+          outros extras (bebidas, taxa de cama extra, taxa de pet e demais consumos).
+        </p>
+      )}
 
       <p className={`${FONT_BODY} mt-7 text-[11px] uppercase tracking-[0.08em] ${COR_MUTED}`}>
         Adicionais
