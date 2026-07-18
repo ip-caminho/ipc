@@ -20,6 +20,20 @@ function LinhaValor({ nome, detalhe, valor }: { nome: string; detalhe?: string; 
   );
 }
 
+// Rótulo de seção. Usa <div> (não <p>) de propósito: a regra global
+// `.site-v2 p { margin: 0 0 1em }` venceria as classes Tailwind e zeraria o
+// margin-top, colando o título no conteúdo acima. Espaço grande em cima
+// (separa da seção anterior) e pequeno embaixo (agrupa com o próprio conteúdo).
+function RotuloSecao({ children, primeiro }: { children: React.ReactNode; primeiro?: boolean }) {
+  return (
+    <div
+      className={`${primeiro ? "" : "mt-8"} mb-2.5 ${FONT_BODY} text-[11px] font-semibold uppercase tracking-[0.1em] ${COR_MUTED}`}
+    >
+      {children}
+    </div>
+  );
+}
+
 // Tabela de valores mostrada ANTES de preencher — quem quer entender os preços
 // (por tipo de quarto + refeições dos extras + adicionais) sem começar a
 // inscrição.
@@ -59,10 +73,8 @@ export function ValoresRetiro({ precos }: { precos: RetiroPublico["precos"] }) {
 
   return (
     <div className="border border-[#E5E3DC] bg-[#F4F0E8] p-6 md:p-7">
-      <p className={`${FONT_BODY} text-[11px] font-semibold uppercase tracking-[0.1em] ${COR_MUTED}`}>
-        Valores por quarto
-      </p>
-      <p className={`${FONT_BODY} mt-1 text-[12px] leading-relaxed ${COR_MUTED}`}>
+      <RotuloSecao primeiro>Valores por quarto</RotuloSecao>
+      <p className={`${FONT_BODY} text-[12px] leading-relaxed ${COR_MUTED}`}>
         Pacote completo, valor por quarto (por pessoa entre parênteses).
       </p>
       <ul className="mt-4 space-y-2.5">
@@ -79,9 +91,7 @@ export function ValoresRetiro({ precos }: { precos: RetiroPublico["precos"] }) {
         })}
       </ul>
 
-      <p className={`${FONT_BODY} mt-7 text-[11px] uppercase tracking-[0.08em] ${COR_MUTED}`}>
-        Crianças
-      </p>
+      <RotuloSecao>Crianças</RotuloSecao>
       <ul className="mt-2 list-disc space-y-1.5 pl-5">
         {topicosIdade.map((topico) => (
           <li key={topico} className={`${FONT_BODY} text-[13px] leading-relaxed ${COR_MUTED}`}>
@@ -91,18 +101,14 @@ export function ValoresRetiro({ precos }: { precos: RetiroPublico["precos"] }) {
       </ul>
       {precos.palestra > 0 && (
         <>
-          <p className={`${FONT_BODY} mt-7 text-[11px] uppercase tracking-[0.08em] ${COR_MUTED}`}>
-            Adicionais (cobrado na inscrição)
-          </p>
+          <RotuloSecao>Adicionais (cobrado na inscrição)</RotuloSecao>
           <ul className="mt-2 space-y-2.5">
             <LinhaValor nome="Palestras (por pessoa)" valor={brl(precos.palestra)} />
           </ul>
         </>
       )}
 
-      <p className={`${FONT_BODY} mt-7 text-[11px] uppercase tracking-[0.08em] ${COR_MUTED}`}>
-        Pago direto ao hotel
-      </p>
+      <RotuloSecao>Pago direto ao hotel</RotuloSecao>
       <ul className="mt-2 space-y-2.5">
         <LinhaValor nome="Cama extra (cobrança única)" valor={brl(precos.camaExtra)} />
         <LinhaValor nome="Pet (por dia)" valor={brl(precos.petPorDia)} />
