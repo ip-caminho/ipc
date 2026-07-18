@@ -103,6 +103,8 @@ const FONT_DISPLAY = "font-[family-name:var(--font-spectral)]";
 const COR_TEXTO = "text-[#1A1A1A]";
 const COR_MUTED = "text-[#595959]";
 const BORDA = "border-[#E5E3DC]";
+// Alvo de toque confortavel no mobile (44px); desktop mantem a altura compacta.
+const ALTURA_CAMPO = "h-11 md:h-9";
 
 function Erro({ msg }: { msg?: string }) {
   if (!msg) return null;
@@ -492,12 +494,12 @@ export function RetiroForm({
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-1">
             <CampoLabel htmlFor="respNome">Nome</CampoLabel>
-            <Input id="respNome" {...form.register("responsavelNome")} />
+            <Input id="respNome" className={ALTURA_CAMPO} {...form.register("responsavelNome")} />
             <Erro msg={errs.responsavelNome?.message} />
           </div>
           <div className="space-y-1">
             <CampoLabel htmlFor="respZap">WhatsApp</CampoLabel>
-            <Input id="respZap" type="tel" placeholder="(11) 9…" {...form.register("responsavelWhatsapp")} />
+            <Input id="respZap" type="tel" className={ALTURA_CAMPO} placeholder="(11) 9…" {...form.register("responsavelWhatsapp")} />
             <Erro msg={errs.responsavelWhatsapp?.message} />
           </div>
         </div>
@@ -539,6 +541,7 @@ export function RetiroForm({
                     <CampoLabel htmlFor={`p-nome-${i}`}>Nome completo</CampoLabel>
                     <Input
                       id={`p-nome-${i}`}
+                      className={ALTURA_CAMPO}
                       {...form.register(`participantes.${i}.nome`, {
                         onChange: () => aoMudarNome(i),
                       })}
@@ -553,6 +556,7 @@ export function RetiroForm({
                       render={({ field }) => (
                         <DateInputBR
                           id={`p-nasc-${i}`}
+                          className={ALTURA_CAMPO}
                           value={field.value}
                           onChange={(iso) => aoMudarNascimento(i, iso)}
                         />
@@ -639,7 +643,7 @@ export function RetiroForm({
         <div className="space-y-4">
           <div className="space-y-1">
             <CampoLabel htmlFor="colega">Dividir quarto com</CampoLabel>
-            <Input id="colega" placeholder="Nome de quem você quer por perto" {...form.register("colegaDeQuarto")} />
+            <Input id="colega" className={ALTURA_CAMPO} placeholder="Nome de quem você quer por perto" {...form.register("colegaDeQuarto")} />
           </div>
           <label className={`flex min-h-[44px] items-center gap-2.5 ${FONT_BODY} text-[13px] ${COR_TEXTO} md:min-h-0`}>
             <Controller
@@ -655,6 +659,7 @@ export function RetiroForm({
             <CampoLabel htmlFor="especiais">Necessidades especiais</CampoLabel>
             <Input
               id="especiais"
+              className={ALTURA_CAMPO}
               placeholder="Acessibilidade, alergias, restrições…"
               {...form.register("necessidadesEspeciais")}
             />
@@ -677,7 +682,7 @@ export function RetiroForm({
               name="forma"
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger>
+                  <SelectTrigger className={`w-full ${ALTURA_CAMPO}`}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -696,7 +701,7 @@ export function RetiroForm({
                 name="parcelas"
                 render={({ field }) => (
                   <Select value={field.value ?? ""} onValueChange={field.onChange}>
-                    <SelectTrigger>
+                    <SelectTrigger className={`w-full ${ALTURA_CAMPO}`}>
                       <SelectValue placeholder="Quantas?" />
                     </SelectTrigger>
                     <SelectContent>
@@ -714,7 +719,7 @@ export function RetiroForm({
           )}
           <div className="space-y-1">
             <CampoLabel htmlFor="cpf">CPF do pagante</CampoLabel>
-            <Input id="cpf" inputMode="numeric" placeholder="Somente números" {...form.register("cpfPagante")} />
+            <Input id="cpf" inputMode="numeric" className={ALTURA_CAMPO} placeholder="Somente números" {...form.register("cpfPagante")} />
             <Erro msg={errs.cpfPagante?.message} />
           </div>
         </div>
@@ -873,7 +878,7 @@ export function RetiroForm({
       {/* Mobile: barra fixa com o total ao vivo — so existe quando ha valor
           calculado (antes disso seria um "—" flutuando sobre a descricao) */}
       {temTotal && (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[#E5E3DC] bg-white/95 px-4 py-3 backdrop-blur md:hidden">
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[#E5E3DC] bg-white/95 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur md:hidden">
           <div className="mx-auto flex max-w-[680px] items-center gap-3">
             <div className="min-w-0">
               <p className={`${FONT_BODY} text-[11px] uppercase tracking-[0.08em] ${COR_MUTED}`}>Total</p>
