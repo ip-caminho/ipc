@@ -682,7 +682,7 @@ export function RetiroForm({
               name="forma"
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger className={`w-full ${ALTURA_CAMPO}`}>
+                  <SelectTrigger className="w-full min-h-11 md:min-h-9">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -701,7 +701,7 @@ export function RetiroForm({
                 name="parcelas"
                 render={({ field }) => (
                   <Select value={field.value ?? ""} onValueChange={field.onChange}>
-                    <SelectTrigger className={`w-full ${ALTURA_CAMPO}`}>
+                    <SelectTrigger className="w-full min-h-11 md:min-h-9">
                       <SelectValue placeholder="Quantas?" />
                     </SelectTrigger>
                     <SelectContent>
