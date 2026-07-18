@@ -134,6 +134,7 @@ html:has(.site-v2) {
   --border: oklch(0.9290 0.0126 255.5317);
   --input: oklch(0.9290 0.0126 255.5317);
   --ring: oklch(0.5460 0.2153 262.8719);
+  --destructive: oklch(0.6368 0.2078 25.3259);
 
   background: var(--surface-page);
   color: var(--text-body);

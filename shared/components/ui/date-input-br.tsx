@@ -61,28 +61,41 @@ export function DateInputBR({
   disabled,
 }: Props) {
   const [texto, setTexto] = React.useState(() => isoParaBR(value));
+  const [tocado, setTocado] = React.useState(false);
 
   // Sincroniza quando o valor externo muda (ex: pre-preenchimento da familia).
   React.useEffect(() => {
     setTexto((atual) => (brParaISO(atual) === value ? atual : isoParaBR(value)));
   }, [value]);
 
+  // Inválido só depois de sair do campo: evita "erro" enquanto ainda digita.
+  // Pega tanto data incompleta (ano com 2 dígitos) quanto impossível (31/02).
+  const invalido = tocado && texto.length > 0 && brParaISO(texto) === null;
+
   return (
-    <Input
-      id={id}
-      type="text"
-      inputMode="numeric"
-      autoComplete="off"
-      placeholder={placeholder}
-      value={texto}
-      maxLength={10}
-      disabled={disabled}
-      className={className}
-      onChange={(e) => {
-        const mascarado = mascara(e.target.value);
-        setTexto(mascarado);
-        onChange(brParaISO(mascarado) ?? "");
-      }}
-    />
+    <div className={className}>
+      <Input
+        id={id}
+        type="text"
+        inputMode="numeric"
+        autoComplete="off"
+        placeholder={placeholder}
+        value={texto}
+        maxLength={10}
+        disabled={disabled}
+        aria-invalid={invalido || undefined}
+        onBlur={() => setTocado(true)}
+        onChange={(e) => {
+          const mascarado = mascara(e.target.value);
+          setTexto(mascarado);
+          onChange(brParaISO(mascarado) ?? "");
+        }}
+      />
+      {invalido && (
+        <p className="mt-1 text-[12px] text-[#B3261E]">
+          Informe dia, mês e ano completos (dd/mm/aaaa).
+        </p>
+      )}
+    </div>
   );
 }
