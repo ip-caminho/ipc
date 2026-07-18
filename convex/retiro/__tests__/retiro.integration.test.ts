@@ -76,16 +76,18 @@ describe("calculoHelpers", () => {
     // criancas (meia); a outra crianca (meia) fica de fora pagando refeicoes.
     expect(r.quartos).toBe(360_000);
     expect(r.capacidade).toBe(3);
-    // 1 crianca de fora: meia = 5000 * 6 = 30000
+    // 1 crianca de fora: meia = 5000 * 6 = 30000 (pago ao hotel, nao cobrado)
     expect(r.refeicoesExtras).toBe(30_000);
     expect(r.palestras).toBe(10_000); // 2 adultos
-    // subtotal 360000 + 30000 + 10000 = 400000 -> sufixo 400003
-    expect(r.subtotal).toBe(400_000);
-    expect(r.total).toBe(400_003);
+    // COBRADO: quartos 360000 + palestras 10000 = 370000 -> sufixo 370003
+    expect(r.subtotal).toBe(370_000);
+    expect(r.total).toBe(370_003);
+    // Estimativa hotel: so as refeicoes extras (sem cama/pet aqui)
+    expect(r.estimativaHotel).toBe(30_000);
     expect(r.participantes.filter((p) => p.refeicoes > 0)).toHaveLength(1);
   });
 
-  it("todos cabem nas vagas: paga so quartos + adicionais (sem refeicoes extra)", () => {
+  it("todos cabem nas vagas: cobra quartos + palestras; cama/pet viram estimativa hotel", () => {
     const r = calcularValorInscricao(
       [
         { nome: "A", dataNascimento: "1990-01-01", participaPalestras: true },
@@ -96,12 +98,14 @@ describe("calculoHelpers", () => {
       "2026-09-05",
       "2026-09-08", // 3 diarias
     );
-    // 300000 quarto + 0 refeicoes + 10000 palestras + 8000 cama + 30000 pet = 348000
     expect(r.refeicoesExtras).toBe(0);
     expect(r.camasExtras).toBe(8_000);
-    expect(r.pets).toBe(30_000);
-    expect(r.subtotal).toBe(348_000);
-    expect(r.total).toBe(348_003);
+    expect(r.pets).toBe(30_000); // 10000/dia * 3 diarias
+    // COBRADO: 300000 quarto + 10000 palestras = 310000 -> sufixo 310003
+    expect(r.subtotal).toBe(310_000);
+    expect(r.total).toBe(310_003);
+    // Estimativa hotel: cama 8000 + pet 30000 = 38000 (refeicoes 0)
+    expect(r.estimativaHotel).toBe(38_000);
   });
 
   it("valorFinal aplica descontos (nunca negativo) e ignora contribuicoes", () => {

@@ -89,23 +89,29 @@ export function ValoresRetiro({ precos }: { precos: RetiroPublico["precos"] }) {
           </li>
         ))}
       </ul>
-      {temMeia && (
-        <p className={`${FONT_BODY} mt-2 text-[12px] leading-relaxed ${COR_MUTED}`}>
-          O valor de {valorMeia} é pago diretamente ao hotel no momento do checkout, junto com
-          outros extras (bebidas, taxa de cama extra, taxa de pet e demais consumos).
-        </p>
+      {precos.palestra > 0 && (
+        <>
+          <p className={`${FONT_BODY} mt-7 text-[11px] uppercase tracking-[0.08em] ${COR_MUTED}`}>
+            Adicionais (cobrado na inscrição)
+          </p>
+          <ul className="mt-2 space-y-2.5">
+            <LinhaValor nome="Palestras (por pessoa)" valor={brl(precos.palestra)} />
+          </ul>
+        </>
       )}
 
       <p className={`${FONT_BODY} mt-7 text-[11px] uppercase tracking-[0.08em] ${COR_MUTED}`}>
-        Adicionais
+        Pago direto ao hotel
       </p>
       <ul className="mt-2 space-y-2.5">
-        {precos.palestra > 0 && (
-          <LinhaValor nome="Palestras (por pessoa)" valor={brl(precos.palestra)} />
-        )}
         <LinhaValor nome="Cama extra (cobrança única)" valor={brl(precos.camaExtra)} />
         <LinhaValor nome="Pet (por dia)" valor={brl(precos.petPorDia)} />
       </ul>
+      <p className={`${FONT_BODY} mt-3 text-[12px] leading-relaxed ${COR_MUTED}`}>
+        {temMeia ? `A meia alimentação (${valorMeia}), a cama extra e o pet` : "A cama extra e o pet"}{" "}
+        são pagos diretamente ao hotel no checkout, junto com bebidas e demais consumos. Não
+        entram no total da inscrição.
+      </p>
 
       <p className={`${FONT_BODY} mt-5 text-[12px] leading-relaxed ${COR_MUTED}`}>
         Preencha abaixo para ver o total da sua inscrição.
