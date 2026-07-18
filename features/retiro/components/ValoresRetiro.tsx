@@ -48,10 +48,11 @@ export function ValoresRetiro({ precos }: { precos: RetiroPublico["precos"] }) {
   if (precos.idadeInteiraMin > precos.idadeMeiaMin) {
     const de = precos.idadeMeiaMin;
     const ateMeia = precos.idadeInteiraMin - 1;
+    const valorMeia = brl(precos.refeicaoMeia * precos.numRefeicoes);
     topicosIdade.push(
       de === ateMeia
-        ? `Crianças com ${de} anos pagam apenas 50% da alimentação.`
-        : `Crianças de ${de} a ${ateMeia} anos pagam apenas 50% da alimentação.`,
+        ? `Crianças com ${de} anos pagam apenas 50% da alimentação (${valorMeia}).`
+        : `Crianças de ${de} a ${ateMeia} anos pagam apenas 50% da alimentação (${valorMeia}).`,
     );
   }
 
