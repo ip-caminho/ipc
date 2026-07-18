@@ -176,7 +176,7 @@ function CampoNumero({
 function LinhaConta({ nome, detalhe, valor }: { nome: string; detalhe?: string; valor: string }) {
   return (
     <li className={`flex items-baseline gap-2 py-1 ${FONT_BODY} text-[14px]`}>
-      <span className={`shrink-0 ${COR_TEXTO}`}>
+      <span className={`min-w-0 ${COR_TEXTO}`}>
         {nome}
         {detalhe && <span className={`ml-1.5 text-[12px] ${COR_MUTED}`}>{detalhe}</span>}
       </span>
@@ -782,10 +782,15 @@ export function RetiroForm({
                 Não incluída no total acima — paga diretamente ao hotel no checkout.
               </p>
               <ul className="mt-4 space-y-2.5">
+                {extrasRefeicao.length > 0 && (
+                  <li className={`${FONT_BODY} text-[11px] uppercase tracking-[0.08em] ${COR_MUTED} pb-0.5`}>
+                    Alimentação
+                  </li>
+                )}
                 {extrasRefeicao.map((p, i) => (
                   <LinhaConta
                     key={`r-${i}`}
-                    nome={`Alimentação — ${p.nome}`}
+                    nome={p.nome}
                     detalhe={`${p.idade} anos · sem cama própria`}
                     valor={brl(p.refeicoes)}
                   />
