@@ -54,8 +54,6 @@ export const ALL_PERMISSIONS = [
   "turmas:read", "turmas:create", "turmas:update", "turmas:delete", "turmas:manage_inscricoes",
   // Auditoria
   "audit:read",
-  // Campanhas
-  "campanhas:manage",
   // Atos Pastorais
   "atos_pastorais:manage",
   // Site Publico

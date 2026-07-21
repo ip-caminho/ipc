@@ -971,11 +971,11 @@ const CONTEXT_MAP: Record<string, PageContext> = {
   "/signin": {
     nome: "Login",
     pagina: "app/(auth)/signin/page.tsx",
-    arquivos: ["app/(auth)/signin/page.tsx", "convex/auth/phoneOTP.ts", "shared/lib/acesso.ts"],
+    arquivos: ["app/(auth)/signin/page.tsx", "shared/lib/acesso.ts"],
     mutations: ["audit.mutations.logLogin", "membros.acesso.verificarAcessoDireto"],
     notas: [
       "Abas: Entrar (telefone+senha) e Primeiro acesso (telefone + 5 digitos do CPF)",
-      "WhatsApp OTP mantido como opcao secundaria; bypass em dev",
+      "Login por senha (provider Password); bypass em dev via NEXT_PUBLIC_AUTH_BYPASS_MODE",
       "Identificador de login derivado do telefone (loginIdFromPhone)",
     ],
   },
@@ -1052,60 +1052,6 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "CPF/RG ja mascarados pelo auditHelpers do _shared",
     ],
   },
-  "/admin/campanhas": {
-    nome: "Campanhas (Admin)",
-    pagina: "app/(ready)/admin/campanhas/page.tsx",
-    arquivos: [
-      "app/(ready)/admin/campanhas/page.tsx",
-      "convex/messaging/campanhas.ts",
-    ],
-    queries: ["messaging.campanhas.listCampanhas"],
-    componentes: ["Link para /admin/campanhas/nova", "Card por campanha com stats"],
-    notas: [
-      "Permissao: campanhas:manage (admin only)",
-      "Lista campanhas ordenadas por criadoEm desc",
-      "Cada card mostra taxa de atualizacao (atualizaram / total)",
-    ],
-  },
-  "/admin/campanhas/nova": {
-    nome: "Nova Campanha (Admin)",
-    pagina: "app/(ready)/admin/campanhas/nova/page.tsx",
-    arquivos: [
-      "app/(ready)/admin/campanhas/nova/page.tsx",
-      "features/campanhas/components/CampaignForm.tsx",
-      "convex/messaging/campanhas.ts",
-    ],
-    queries: ["messaging.campanhas.previewDestinatarios"],
-    mutations: ["messaging.campanhas.criarCampanha", "messaging.campanhas.dispararCampanha"],
-    componentes: ["CampaignForm com filtros e preview de destinatarios"],
-    notas: [
-      "Permissao: campanhas:manage (admin only)",
-      "Filtros padrao: MEMBRO + ATIVO + com WhatsApp",
-      "Preview mostra total elegivel + pulados por anti-spam (3 envios/30d)",
-      "Template suporta {nome} e {apelido}",
-      "Pode salvar como rascunho ou criar e disparar direto",
-    ],
-  },
-  "/admin/campanhas/[id]": {
-    nome: "Detalhe da Campanha (Admin)",
-    pagina: "app/(ready)/admin/campanhas/[id]/page.tsx",
-    arquivos: [
-      "app/(ready)/admin/campanhas/[id]/page.tsx",
-      "features/campanhas/components/CampaignStats.tsx",
-      "convex/messaging/campanhas.ts",
-    ],
-    queries: ["messaging.campanhas.getCampanha"],
-    mutations: ["messaging.campanhas.dispararCampanha", "messaging.campanhas.reenviarPendentes"],
-    componentes: ["CampaignStats (cards de KPIs)", "Tabela de envios"],
-    notas: [
-      "Permissao: campanhas:manage (admin only)",
-      "Status: RASCUNHO -> EM_EXECUCAO -> CONCLUIDA",
-      "Pipeline reagendavel: _processarProximo + _enviarMensagem + _registrarResultado",
-      "Jitter 30-90s entre envios via scheduler.runAfter",
-      "Reenviar reabre FALHOU como PENDENTE",
-    ],
-  },
-
   // ===== Site Publico (rotas sem auth) =====
   "/": {
     nome: "Home / Hub (publico)",
@@ -1569,10 +1515,6 @@ function resolveRoute(pathname: string): PageContext | null {
   if (/^\/g\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/g/[token]"];
   // /educacional/turma/[id]
   if (/^\/educacional\/turma\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/educacional/turma/[id]"];
-  // /admin/campanhas/[id] (mas nao /admin/campanhas/nova)
-  if (/^\/admin\/campanhas\/[^/]+$/.test(pathname) && pathname !== "/admin/campanhas/nova") {
-    return CONTEXT_MAP["/admin/campanhas/[id]"];
-  }
   // /inscricoes/[slug] (formulario publico)
   // /admin/retiro/[id]/quartos
   if (/^\/admin\/retiro\/[^/]+\/quartos$/.test(pathname)) return CONTEXT_MAP["/admin/retiro/[id]/quartos"];

@@ -23,14 +23,13 @@ shared/
 ```
 convex/
 ├── schema.ts         # All tables
-├── auth/             # Auth system (phoneOTP, auth config)
+├── auth/             # Auth system (Password provider, auth config)
 ├── entidades/        # Entity CRUD
 ├── membros/          # Member CRUD, self-service, invites
 ├── gravacoes/        # Recordings CRUD
 ├── preferencias/     # RBAC
 ├── audit/            # Audit logs
-├── messaging/        # WhatsApp provider abstraction
-├── _shared/          # auditHelpers
+├── _shared/          # auditHelpers, phoneUtils
 └── http.ts           # HTTP routes
 ```
 

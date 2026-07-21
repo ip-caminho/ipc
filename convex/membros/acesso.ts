@@ -2,7 +2,7 @@ import { mutation, query, type QueryCtx } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { requirePermission } from "../_shared/requirePermission";
-import { normalizeToE164 } from "../messaging/phoneUtils";
+import { normalizeToE164 } from "../_shared/phoneUtils";
 import type { Doc } from "../_generated/dataModel";
 
 const SETE_DIAS_MS = 7 * 24 * 60 * 60 * 1000;

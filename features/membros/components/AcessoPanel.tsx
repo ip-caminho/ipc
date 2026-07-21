@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { normalizeToE164 } from "@convex/messaging/phoneUtils";
+import { normalizeToE164 } from "@convex/_shared/phoneUtils";
 import { cn } from "@shared/lib/utils/cn";
 import { Button } from "@/shared/components/ui/button";
 import { Textarea } from "@/shared/components/ui/textarea";

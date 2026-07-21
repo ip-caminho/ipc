@@ -4,7 +4,7 @@ Sistema de gestão da Igreja Presbiteriana do Caminho (membros, gravações de
 sermões, escalas, calendário, etc.).
 
 **Stack:** Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS 4 ·
-shadcn/ui · Convex (backend real-time) · Convex Auth (OTP WhatsApp) ·
+shadcn/ui · Convex (backend real-time) · Convex Auth (senha) ·
 Backblaze B2 + Cloudflare (arquivos/áudio) · Vercel (deploy).
 
 ## Setup

@@ -7,7 +7,7 @@ Regras e contexto para o projeto. Rules em `.claude/rules/` sao carregadas autom
 - **Frontend**: Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4
 - **UI**: shadcn/ui (New York) + Sonner (obrigatorio, sem HTML cru)
 - **Backend**: Convex (real-time serverless)
-- **Auth**: Convex Auth + WhatsApp OTP (bypass em dev via NODE_ENV !== 'production')
+- **Auth**: Convex Auth (provider Password, login por telefone+senha; bypass em dev via `NEXT_PUBLIC_AUTH_BYPASS_MODE`)
 - **State**: nuqs (URL) → React Hook Form (forms) → useState (local)
 - **Forms**: React Hook Form + Zod 4
 - **Tables**: TanStack Table v8
@@ -41,7 +41,7 @@ types/            # TypeScript types
 - **Entidades**: Tabela polimorfica base (PF/PJ com papeis). Membros e extensao com auth + RBAC
 - **Criacao atomica**: Entidade + Membro criados na mesma mutation
 - **RBAC**: 3 roles iniciais (admin, secretaria, membro). Sem heranca — permissoes explicitas
-- **Bypass mode**: Hardcoded `NODE_ENV !== 'production'` — nunca configuravel por env var
+- **Bypass de login (dev)**: controlado pela env var `NEXT_PUBLIC_AUTH_BYPASS_MODE` em `signin/page.tsx` — login direto sem verificacao. Nunca habilitar em producao
 - **Audit**: Campos CPF/RG mascarados nos logs (ex: ***.456.789-**)
 - **Self-service**: Ownership check no backend (membro.userId === ctx.auth.userId)
 - **Status check**: Membros TRANSFERIDO/DESLIGADO/INATIVO bloqueados no login

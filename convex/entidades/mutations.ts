@@ -56,8 +56,8 @@ export const update = mutation({
     data: v.any(),
   },
   handler: async (ctx, { id, data }) => {
-    // `data` e um patch livre (v.any()) — inclui `whatsapp`, que autoLinkByPhone
-    // usa para casar entidade -> membro. Sem esta permissao, qualquer usuario
+    // `data` e um patch livre (v.any()) — inclui `whatsapp`, usado para casar
+    // entidade -> membro em fluxos de acesso. Sem esta permissao, qualquer usuario
     // autenticado apontaria o telefone de um membro ainda nao ativado para si e
     // assumiria o papel dele.
     await requirePermission(ctx, "entidades:update");
