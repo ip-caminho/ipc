@@ -1,4 +1,4 @@
-import { normalizeToE164 } from "@convex/messaging/phoneUtils";
+import { normalizeToE164 } from "@convex/_shared/phoneUtils";
 
 /**
  * Identificador interno usado no Password provider, derivado do telefone.

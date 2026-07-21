@@ -1,20 +1,10 @@
-import { query, mutation, type MutationCtx } from "../_generated/server";
+import { query, mutation } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { createFieldAuditLogs } from "../_shared/auditHelpers";
 import { filterSelfServiceFields } from "./selfServiceHelpers";
 import { espelharConjuge, vincularCriancaAoConjuge } from "./familiaHelpers";
-import type { Id } from "../_generated/dataModel";
-import { phonesMatch } from "../messaging/phoneUtils";
-import { makeFunctionReference } from "convex/server";
-
-// Referencia construida por string: evita TS2589 (a arvore de tipos
-// `internal` ficou profunda demais para o scheduler resolver).
-const enviarConfirmacaoRef = makeFunctionReference<
-  "action",
-  { telefone: string },
-  void
->("messaging/campanhas:_enviarConfirmacao");
+import { limparOverridePorAtualizacao } from "../cron/paradeiroIgnorado";
 
 export const getMyProfile = query({
   args: {},
@@ -70,96 +60,13 @@ export const updateMyProfile = mutation({
 
     await createFieldAuditLogs(ctx, oldEntidade, newEntidade, "entidades", membro.entidadeId);
 
-    // Hook: se ha campanhasEnvios pendentes ou enviadas para este membro
-    // sem atualizacao ainda, marca como ATUALIZOU. Permite o dashboard
-    // refletir conversao em tempo real.
-    await marcarCampanhasAtualizadas(ctx, membro._id, now);
+    // Confirmou/atualizou cadastro: limpa o override PARADEIRO_IGNORADO se houver.
+    await limparOverridePorAtualizacao(ctx, membro._id);
 
     return membro._id;
   },
 });
 
-/**
- * Marca todos os envios ENVIADO/PENDENTE/PROCESSANDO deste membro como ATUALIZOU.
- * Idempotente — envios ja em ATUALIZOU sao ignorados.
- *
- * Faz match duplo:
- *   1) primario por `membroId` (rota normal)
- *   2) fallback por telefone (caso o envio tenha sido criado para outro membroId
- *      que aponta para a mesma pessoa — ex.: duplicata, troca de membro
- *      vinculado ao user, etc). Sem esse fallback a conversao nao e detectada
- *      mesmo quando a pessoa atualizou o perfil pelo link da campanha.
- *
- * Agenda uma confirmacao WhatsApp para o membro (uma so por chamada, mesmo
- * se houver multiplos envios em estados diferentes).
- */
-async function marcarCampanhasAtualizadas(
-  ctx: MutationCtx,
-  membroId: Id<"membros">,
-  agora: number
-): Promise<void> {
-  const membro = await ctx.db.get(membroId);
-  const entidade = membro ? await ctx.db.get(membro.entidadeId) : null;
-  const meuTelefone = entidade?.whatsapp ?? entidade?.telefone ?? null;
-
-  // Membro confirmou cadastro -> nao e mais paradeiro ignorado
-  if (membro?.tipoRolOverride === "PARADEIRO_IGNORADO") {
-    await ctx.db.patch(membroId, { tipoRolOverride: undefined });
-  }
-
-  const enviosPorMembro = await ctx.db
-    .query("campanhasEnvios")
-    .withIndex("by_membro_enviadoEm", (q) => q.eq("membroId", membroId))
-    .collect();
-
-  let enviosPorTelefone: typeof enviosPorMembro = [];
-  if (meuTelefone) {
-    // Sem indice por telefone — scan completo. Tabela e pequena (~centenas).
-    const todos = await ctx.db.query("campanhasEnvios").collect();
-    enviosPorTelefone = todos.filter(
-      (e) => e.status !== "ATUALIZOU" && phonesMatch(e.telefone, meuTelefone)
-    );
-  }
-
-  const seen = new Set<string>();
-  const candidatos = [...enviosPorMembro, ...enviosPorTelefone].filter((e) => {
-    if (seen.has(e._id)) return false;
-    seen.add(e._id);
-    return true;
-  });
-
-  let confirmarTelefone: string | null = null;
-
-  for (const envio of candidatos) {
-    if (
-      envio.status === "ENVIADO" ||
-      envio.status === "PENDENTE" ||
-      envio.status === "PROCESSANDO"
-    ) {
-      await ctx.db.patch(envio._id, {
-        status: "ATUALIZOU",
-        atualizouEm: agora,
-      });
-      // Confirma so para envios que ja sairam (estavam ENVIADO).
-      // Para PENDENTE/PROCESSANDO o membro entrou direto sem receber, nao manda nada.
-      if (envio.status === "ENVIADO" && !confirmarTelefone) {
-        confirmarTelefone = envio.telefone;
-      }
-    }
-  }
-
-  if (confirmarTelefone) {
-    await ctx.scheduler.runAfter(0, enviarConfirmacaoRef, {
-      telefone: confirmarTelefone,
-    });
-  }
-}
-
-/**
- * Endpoint "confirmar dados sem mudar nada" — usado quando o membro
- * abre /meu-perfil pela campanha e clica "Confirmar dados" sem editar.
- * Apenas grava perfilAtualizadoEm/Por e dispara hook de campanha.
- */
 // ============ FAMILIA (self-service) ============
 
 /**
@@ -415,7 +322,7 @@ export const confirmProfile = mutation({
       perfilAtualizadoPor: membro._id,
     });
 
-    await marcarCampanhasAtualizadas(ctx, membro._id, now);
+    await limparOverridePorAtualizacao(ctx, membro._id);
     return membro._id;
   },
 });
@@ -483,7 +390,7 @@ export const updateMembresiaDatas = mutation({
         perfilAtualizadoEm: now,
         perfilAtualizadoPor: membro._id,
       });
-      await marcarCampanhasAtualizadas(ctx, membro._id, now);
+      await limparOverridePorAtualizacao(ctx, membro._id);
     }
 
     return { changed: true, camposTocados };

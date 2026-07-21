@@ -149,13 +149,6 @@ export const GESTAO_SECTIONS: NavSection[] = [
         permission: "inscricoes:manage",
       },
       {
-        label: "Campanhas",
-        href: "/admin/campanhas",
-        icon: Megaphone,
-        description: "WhatsApp em massa para atualização de cadastro",
-        permission: "campanhas:manage",
-      },
-      {
         label: "Site público",
         href: "/admin/site-publico",
         icon: Globe,

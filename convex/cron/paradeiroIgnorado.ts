@@ -1,5 +1,5 @@
-import { internalMutation } from "../_generated/server";
-import { v } from "convex/values";
+import { internalMutation, type MutationCtx } from "../_generated/server";
+import type { Id } from "../_generated/dataModel";
 
 /**
  * Marca como PARADEIRO_IGNORADO os membros ativos cujo perfilAtualizadoEm
@@ -58,16 +58,16 @@ export const run = internalMutation({
 });
 
 /**
- * Limpa override quando membro confirma o cadastro novamente.
- * Chamado automaticamente por selfService.updateMyProfile/confirmProfile.
+ * Limpa o override PARADEIRO_IGNORADO quando o membro confirma/atualiza o
+ * cadastro novamente (Art. 23 IPB — deixa de estar "sem contato").
+ * Chamado inline por selfService.updateMyProfile/confirmProfile/updateMembresiaDatas.
  */
-export const limparOverridePorAtualizacao = internalMutation({
-  args: { membroId: v.id("membros") },
-  handler: async (ctx, { membroId }) => {
-    const membro = await ctx.db.get(membroId);
-    if (!membro) return;
-    if (membro.tipoRolOverride === "PARADEIRO_IGNORADO") {
-      await ctx.db.patch(membroId, { tipoRolOverride: undefined });
-    }
-  },
-});
+export async function limparOverridePorAtualizacao(
+  ctx: MutationCtx,
+  membroId: Id<"membros">
+): Promise<void> {
+  const membro = await ctx.db.get(membroId);
+  if (membro?.tipoRolOverride === "PARADEIRO_IGNORADO") {
+    await ctx.db.patch(membroId, { tipoRolOverride: undefined });
+  }
+}

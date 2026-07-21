@@ -1,8 +1,7 @@
 "use client";
 
-import { createContext, useContext, useMemo, useEffect, useRef, useState, useCallback } from "react";
-import { useQuery, useMutation } from "convex/react";
-import { useConvexAuth } from "convex/react";
+import { createContext, useContext, useMemo, useEffect, useState, useCallback } from "react";
+import { useQuery } from "convex/react";
 import { usePathname, useRouter } from "next/navigation";
 import { api } from "@/convex/_generated/api";
 import { INITIAL_ROLE_PERMISSIONS } from "@convex/preferencias/rbacHelpers";
@@ -15,7 +14,6 @@ export function PermissionsProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const { isAuthenticated: isConvexAuthenticated } = useConvexAuth();
   // @ts-ignore Convex TS2589
   const data = useQuery(api.preferencias.rbac.getUserPermissionContext);
   // Permissoes reais por papel (tabela rolePermissions). So carrega p/ admin;
@@ -26,9 +24,6 @@ export function PermissionsProvider({
     api.preferencias.rbac.getAllRolesWithPermissions,
     data?.role === "admin" ? {} : "skip",
   ) as { role: string; permissions: string[] }[] | undefined;
-  const autoLink = useMutation(api.membros.autoLink.autoLinkByPhone);
-  const autoLinkAttempted = useRef(false);
-
   const pathname = usePathname();
   const router = useRouter();
   // Persiste a impersonacao na aba (sessionStorage): sem isso, F5 ou abrir uma
@@ -48,21 +43,6 @@ export function PermissionsProvider({
     sessionStorage.removeItem("impersonated-role");
     setImpersonatedRole(null);
   }, []);
-
-  // Auto-vincular pelo telefone se logado mas sem membro
-  useEffect(() => {
-    if (
-      isConvexAuthenticated &&
-      data === null && // logado mas sem membro
-      !autoLinkAttempted.current
-    ) {
-      autoLinkAttempted.current = true;
-      autoLink().catch(() => {});
-    }
-    if (!isConvexAuthenticated) {
-      autoLinkAttempted.current = false;
-    }
-  }, [isConvexAuthenticated, data, autoLink]);
 
   // Redirecionar para onboarding se primeiro acesso
   useEffect(() => {

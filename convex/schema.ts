@@ -1237,39 +1237,6 @@ export default defineSchema({
     userAgent: v.optional(v.string()),
   }).index("by_em", ["em"]),
 
-  // ===== Campanhas de WhatsApp (envio em massa) =====
-  // Cada campanha enfileira um lote de envios; pipeline `_processarProximo`
-  // pega um por vez e auto-reagenda com jitter aleatorio.
-  campanhas: defineTable({
-    titulo: v.string(),
-    tipo: v.union(
-      v.literal("ATUALIZACAO_CADASTRO"),
-      v.literal("BOAS_VINDAS_FREQUENTADOR"),
-      v.literal("AVISO_GERAL")
-    ),
-    template: v.string(),
-    filtros: v.object({
-      vinculoIgreja: v.optional(v.array(v.string())),
-      status: v.optional(v.array(v.string())),
-      apenasComWhatsapp: v.optional(v.boolean()),
-      naoAtualizadoHaMeses: v.optional(v.number()),
-      membroIds: v.optional(v.array(v.id("membros"))),
-    }),
-    status: v.union(
-      v.literal("RASCUNHO"),
-      v.literal("EM_EXECUCAO"),
-      v.literal("PAUSADA"),
-      v.literal("CONCLUIDA")
-    ),
-    totalDestinatarios: v.number(),
-    criadoEm: v.number(),
-    criadoPor: v.id("membros"),
-    iniciadoEm: v.optional(v.number()),
-    concluidoEm: v.optional(v.number()),
-  })
-    .index("by_status", ["status"])
-    .index("by_criadoEm", ["criadoEm"]),
-
   cargosEclesiasticosHistorico: defineTable({
     membroId: v.id("membros"),
     cargo: v.union(
@@ -1329,28 +1296,6 @@ export default defineSchema({
     .index("by_membro", ["membroId"])
     .index("by_tipo", ["tipo"])
     .index("by_data", ["data"]),
-
-  campanhasEnvios: defineTable({
-    campanhaId: v.id("campanhas"),
-    membroId: v.id("membros"),
-    entidadeId: v.id("entidades"),
-    telefone: v.string(),
-    status: v.union(
-      v.literal("PENDENTE"),
-      v.literal("PROCESSANDO"),
-      v.literal("ENVIADO"),
-      v.literal("FALHOU"),
-      v.literal("ATUALIZOU")
-    ),
-    enviadoEm: v.optional(v.number()),
-    atualizouEm: v.optional(v.number()),
-    erro: v.optional(v.string()),
-    tentativas: v.number(),
-  })
-    .index("by_campanha", ["campanhaId"])
-    .index("by_campanha_status", ["campanhaId", "status"])
-    .index("by_membro_enviadoEm", ["membroId", "enviadoEm"])
-    .index("by_membro_campanha", ["membroId", "campanhaId"]),
 
   // ===== Site Publico — Inscricoes de Evento (genericas) =====
   // Independente de `turmas` (que e especifico de cursos). Form arbitrario:
