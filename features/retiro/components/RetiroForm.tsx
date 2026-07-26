@@ -267,7 +267,6 @@ export function RetiroForm({
   const [loginOpen, setLoginOpen] = useState(false);
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [resultado, setResultado] = useState<{
-    status: string;
     valorTabela: number;
     comprovanteToken?: string;
   } | null>(null);
@@ -417,7 +416,6 @@ export function RetiroForm({
       const json = await res.json();
       if (!res.ok || !json.ok) throw new Error(json.error || "Erro ao enviar inscrição");
       setResultado({
-        status: json.status,
         valorTabela: json.valorTabela,
         comprovanteToken: json.comprovanteToken,
       });
@@ -431,19 +429,14 @@ export function RetiroForm({
   }
 
   if (status === "success" && resultado) {
-    const espera = resultado.status === "LISTA_ESPERA";
     return (
       <div className={`border ${BORDA} bg-white p-6 text-center md:p-10`}>
-        <p className={`${FONT_DISPLAY} text-[24px] ${COR_TEXTO}`}>
-          {espera ? "Você está na lista de espera" : "Inscrição recebida!"}
-        </p>
+        <p className={`${FONT_DISPLAY} text-[24px] ${COR_TEXTO}`}>Inscrição recebida!</p>
         {/* Wrapper <div> centraliza o bloco: `.site-v2 p` (margin:0 0 1em) anula
             o mx-auto do <p> por especificidade. */}
         <div className="mx-auto mt-3 max-w-[42ch]">
           <p className={`${FONT_BODY} text-[14px] leading-[1.6] ${COR_MUTED}`}>
-            {espera
-              ? "Os quartos disponíveis se esgotaram. A secretaria entrará em contato assim que abrir vaga."
-              : `Valor da inscrição: ${brl(resultado.valorTabela)}. A secretaria entrará em contato pelo WhatsApp para combinar o pagamento.`}
+            {`Valor da inscrição: ${brl(resultado.valorTabela)}. A secretaria entrará em contato pelo WhatsApp para combinar o pagamento.`}
           </p>
         </div>
         {resultado.comprovanteToken && (
@@ -613,7 +606,7 @@ export function RetiroForm({
               render={({ field }) => (
                 <CampoNumero
                   label={`Quarto ${t.label.toLowerCase()}`}
-                  hint={`${brl(retiro.precos.quartos[t.tipo])} · ${retiro.disponibilidade[t.tipo]} disp.`}
+                  hint={brl(retiro.precos.quartos[t.tipo])}
                   value={field.value}
                   onChange={field.onChange}
                 />

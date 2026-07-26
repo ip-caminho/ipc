@@ -8,10 +8,8 @@ import {
   valorFinal,
   totalRecebido,
   saldoInscricao,
-  mapQuartos,
   somaQuartos,
   totalQuartos,
-  TIPOS_QUARTO,
 } from "../retiro/calculoHelpers";
 import { createFieldAuditLogs } from "../_shared/auditHelpers";
 
@@ -103,7 +101,7 @@ function inscricoesAbertas(a: Doc<"retiros">, agora: number): boolean {
   return true;
 }
 
-// Shape publico: sem contadores internos alem da disponibilidade por tipo.
+// Shape publico: sem contadores internos (estoque/reservados sao so do admin).
 export const getBySlug = query({
   args: { slug: v.string() },
   handler: async (ctx, { slug }) => {
@@ -121,7 +119,6 @@ export const getBySlug = query({
       dataFim: a.dataFim,
       inscricoesAbertas: inscricoesAbertas(a, Date.now()),
       precos: a.precos,
-      disponibilidade: mapQuartos((t) => Math.max(0, a.estoque[t] - a.reservados[t])),
     };
   },
 });
@@ -220,7 +217,7 @@ function cpfValido(raw: string): boolean {
 }
 
 // Submissao publica da inscricao de grupo. Calcula o valor com snapshot da
-// tabela vigente; estoque esgotado -> LISTA_ESPERA.
+// tabela vigente. Sem limite de vagas por estoque de quartos.
 export const responder = mutation({
   args: {
     slug: v.string(),
@@ -354,14 +351,14 @@ export const responder = mutation({
       acamp.dataFim,
     );
 
-    // Estoque: cabe -> ATIVA e reserva; esgotou algum tipo pedido -> LISTA_ESPERA.
-    const cabe = TIPOS_QUARTO.every((t) => acamp.reservados[t] + qh[t] <= acamp.estoque[t]);
-    const status: "ATIVA" | "LISTA_ESPERA" = cabe ? "ATIVA" : "LISTA_ESPERA";
-    if (status === "ATIVA" && totalQuartos(qh) > 0) {
-      await ctx.db.patch(acamp._id, {
-        reservados: somaQuartos(acamp.reservados, qh),
-      });
-    }
+    // Sem limite de estoque: toda inscricao entra ATIVA. `reservados` segue
+    // somado so para o board de alocacao de quartos (fase 5) — nao bloqueia
+    // inscricao nem gera LISTA_ESPERA (esse status so existe hoje via acao
+    // manual da secretaria, ver convex/retiro/mutations.ts). totalQuartos(qh)
+    // > 0 aqui e garantido pelo throw acima ("Escolha ao menos um quarto").
+    await ctx.db.patch(acamp._id, {
+      reservados: somaQuartos(acamp.reservados, qh),
+    });
 
     const inscricaoId = await ctx.db.insert("inscricoesRetiro", {
       retiroId: acamp._id,
@@ -392,7 +389,7 @@ export const responder = mutation({
       recebimentos: [],
       planoPagamento: [],
       comprovanteToken: args.comprovanteToken,
-      status,
+      status: "ATIVA",
       lgpdConsentimento: true,
       ipHash: args.ipHash,
       criadoEm: agora,
@@ -474,7 +471,7 @@ export const responder = mutation({
       }
     }
 
-    return { status, valorTabela: calculo.total, comprovanteToken: args.comprovanteToken };
+    return { status: "ATIVA" as const, valorTabela: calculo.total, comprovanteToken: args.comprovanteToken };
   },
 });
 

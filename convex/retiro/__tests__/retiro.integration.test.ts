@@ -194,7 +194,7 @@ describe("retiro (integracao)", () => {
     ).rejects.toThrow(/idade/i);
   });
 
-  it("responder calcula valor com snapshot e reserva estoque", async () => {
+  it("responder calcula valor com snapshot e reserva (sem limite de estoque)", async () => {
     const t = convexTest(schema, modules);
     const admin = await seedAdmin(t);
     await admin.mutation(api.retiro.mutations.criar, ARGS_ACAMP);
@@ -203,11 +203,11 @@ describe("retiro (integracao)", () => {
     expect(r.status).toBe("ATIVA");
     expect(r.valorTabela).toBe(VALOR_1ADULTO_DUPLO);
 
-    const pub = await t.query(api.public.retiro.getBySlug, { slug: "retiro-2027" });
-    expect(pub!.disponibilidade.duplo).toBe(1);
+    const acamp = (await admin.query(api.retiro.queries.listar, {}))[0];
+    expect(acamp.reservados.duplo).toBe(1);
   });
 
-  it("estoque esgotado vira LISTA_ESPERA sem reservar", async () => {
+  it("estoque esgotado nao bloqueia mais: inscricao continua ATIVA e reserva mesmo estourando", async () => {
     const t = convexTest(schema, modules);
     const admin = await seedAdmin(t);
     await admin.mutation(api.retiro.mutations.criar, {
@@ -217,10 +217,10 @@ describe("retiro (integracao)", () => {
 
     await t.mutation(api.public.retiro.responder, argsInscricao("11911110001"));
     const r2 = await t.mutation(api.public.retiro.responder, argsInscricao("11911110002"));
-    expect(r2.status).toBe("LISTA_ESPERA");
+    expect(r2.status).toBe("ATIVA");
 
-    const pub = await t.query(api.public.retiro.getBySlug, { slug: "retiro-2027" });
-    expect(pub!.disponibilidade.duplo).toBe(0);
+    const acamp = (await admin.query(api.retiro.queries.listar, {}))[0];
+    expect(acamp.reservados.duplo).toBe(2); // estourou o estoque (1) mas nao bloqueia
   });
 
   it("dedupe por whatsapp do responsavel (normalizado)", async () => {
@@ -280,36 +280,55 @@ describe("retiro (integracao)", () => {
 });
 
 describe("retiro admin (fase 3)", () => {
-  it("cancelar devolve quartos; promover reserva mesmo estourando", async () => {
+  it("cancelar devolve quartos; promover reserva mesmo estourando (registro legado em lista de espera)", async () => {
     const t = convexTest(schema, modules);
     const admin = await seedAdmin(t);
-    await admin.mutation(api.retiro.mutations.criar, {
+    const acampId = await admin.mutation(api.retiro.mutations.criar, {
       ...ARGS_ACAMP,
       estoque: { individual: 0, duplo: 1, triplo: 1, quadruplo: 0 },
     });
 
     await t.mutation(api.public.retiro.responder, argsInscricao("11911110001"));
-    const r2 = await t.mutation(api.public.retiro.responder, argsInscricao("11911110002"));
-    expect(r2.status).toBe("LISTA_ESPERA");
 
-    const acampId = (await admin.query(api.retiro.queries.listar, {}))[0]._id;
+    // `responder` nao gera mais LISTA_ESPERA (sem limite de estoque) — simula
+    // um registro legado (fluxo antigo / mudanca manual da secretaria) para
+    // exercitar cancelar/promover.
+    const esperaId = await t.run((ctx) =>
+      ctx.db.insert("inscricoesRetiro", {
+        retiroId: acampId,
+        responsavel: { nome: "Resp Espera", whatsapp: "+5511911110002" },
+        participantes: [
+          { nome: "Adulto", dataNascimento: "1990-01-01", participaPalestras: true },
+        ],
+        hospedagem: { quartos: { ...QZERO, duplo: 1 }, camasExtras: 0, pets: 0 },
+        pagamentoPreferido: { forma: "A_VISTA", cpfPagante: "11144477735" },
+        valorTabela: VALOR_1ADULTO_DUPLO,
+        precosSnapshot: PRECOS,
+        ajustes: [],
+        recebimentos: [],
+        planoPagamento: [],
+        status: "LISTA_ESPERA",
+        lgpdConsentimento: true,
+        criadoEm: 0,
+      }),
+    );
+
     const inscricoes = await admin.query(api.retiro.queries.listarInscricoes, {
       retiroId: acampId,
     });
     const ativa = inscricoes.find((i) => i.status === "ATIVA")!;
-    const espera = inscricoes.find((i) => i.status === "LISTA_ESPERA")!;
 
     await admin.mutation(api.retiro.mutations.cancelarInscricao, {
       id: ativa._id,
       observacao: "Desistiu",
     });
-    let pub = await t.query(api.public.retiro.getBySlug, { slug: "retiro-2027" });
-    expect(pub!.disponibilidade.duplo).toBe(1);
+    let acamp = (await admin.query(api.retiro.queries.listar, {}))[0];
+    expect(acamp.reservados.duplo).toBe(0);
 
-    await admin.mutation(api.retiro.mutations.promoverListaEspera, { id: espera._id });
-    pub = await t.query(api.public.retiro.getBySlug, { slug: "retiro-2027" });
-    expect(pub!.disponibilidade.duplo).toBe(0);
-    const depois = await admin.query(api.retiro.queries.getInscricao, { id: espera._id });
+    await admin.mutation(api.retiro.mutations.promoverListaEspera, { id: esperaId });
+    acamp = (await admin.query(api.retiro.queries.listar, {}))[0];
+    expect(acamp.reservados.duplo).toBe(1);
+    const depois = await admin.query(api.retiro.queries.getInscricao, { id: esperaId });
     expect(depois!.status).toBe("ATIVA");
   });
 
@@ -336,8 +355,8 @@ describe("retiro admin (fase 3)", () => {
     // 2 quartos (600000) + 1 palestra (5000) = 605000 -> 605003
     expect(r.valorTabela).toBe(605_003);
 
-    const pub = await t.query(api.public.retiro.getBySlug, { slug: "retiro-2027" });
-    expect(pub!.disponibilidade.duplo).toBe(0); // estoque 2, reservados 2
+    const acamp = (await admin.query(api.retiro.queries.listar, {}))[0];
+    expect(acamp.reservados.duplo).toBe(2); // estoque 2, reservados 2
   });
 
   it("confirmarMatching vincula participante a membro e mostra o nome", async () => {

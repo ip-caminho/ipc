@@ -13,7 +13,7 @@ function httpClient(): ConvexHttpClient | null {
   return url ? new ConvexHttpClient(url) : null;
 }
 
-// Disponibilidade de quartos muda — cache curto (mesmo padrão das inscrições).
+// Precos/status mudam — cache curto (mesmo padrão das inscrições).
 export const getRetiroBySlug = unstable_cache(
   async (slug: string): Promise<RetiroPublico | null> => {
     try {
