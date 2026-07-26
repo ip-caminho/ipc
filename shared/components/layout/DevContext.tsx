@@ -1235,7 +1235,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     ],
     notas: [
       "Inscricao POR GRUPO com calculo ao vivo (calculoHelpers compartilhado com o backend)",
-      "Estoque esgotado -> LISTA_ESPERA; dedupe por whatsapp; honeypot + LGPD + rate-limit",
+      "Sem limite de vagas por estoque de quartos (sempre ATIVA); dedupe por whatsapp; honeypot + LGPD + rate-limit",
       "CPF do pagante obrigatorio (isValidCPF no form; cpfValido inline na mutation)",
       "Membro logado: minhaFamilia traz membroId por familiar; auto-vincula os participantes no responder (revalida a familia no servidor, anti-forja). Editar o nome quebra o vinculo",
       "Write-back de cadastro (so membro logado, entidades da propria familia): WhatsApp do responsavel e dataNascimento dos participantes vinculados. Campo vazio no cadastro -> preenche + audita (createFieldAuditLogs). Divergente -> nao sobrescreve, grava em inscricoesRetiro.divergenciasCadastro p/ a secretaria revisar",

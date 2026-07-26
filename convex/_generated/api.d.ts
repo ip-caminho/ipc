@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as __tests___helpers from "../__tests__/helpers.js";
 import type * as _shared_auditHelpers from "../_shared/auditHelpers.js";
 import type * as _shared_datetime from "../_shared/datetime.js";
 import type * as _shared_eduVoluntarioPerms from "../_shared/eduVoluntarioPerms.js";
@@ -160,6 +161,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  "__tests__/helpers": typeof __tests___helpers;
   "_shared/auditHelpers": typeof _shared_auditHelpers;
   "_shared/datetime": typeof _shared_datetime;
   "_shared/eduVoluntarioPerms": typeof _shared_eduVoluntarioPerms;
