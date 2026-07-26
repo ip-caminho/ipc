@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod/v4";
@@ -292,6 +292,11 @@ export function RetiroForm({
   });
   const { fields, append, remove } = useFieldArray({ control: form.control, name: "participantes" });
 
+  // Responsavel normalmente e o 1o participante — segue o nome digitado ali
+  // ate o usuario editar o nome do participante 1 diretamente (divergiu:
+  // outra pessoa). Ref (nao state) pra nao re-renderizar a cada tecla.
+  const participante1SegueResponsavelRef = useRef(true);
+
   const valores = form.watch();
 
   // Resumo do valor ao vivo — mesma aritmetica do backend (helper compartilhado)
@@ -355,6 +360,7 @@ export function RetiroForm({
 
   function preencherComFamilia() {
     if (!familia) return;
+    participante1SegueResponsavelRef.current = false;
     form.setValue("responsavelNome", familia.responsavel.nome);
     form.setValue("responsavelWhatsapp", familia.responsavel.whatsapp);
     form.setValue(
@@ -374,6 +380,22 @@ export function RetiroForm({
   function aoMudarNome(index: number) {
     if (form.getValues(`participantes.${index}.membroId`)) {
       form.setValue(`participantes.${index}.membroId`, undefined);
+    }
+    // Usuario digitou no nome do participante 1 diretamente -> nao e mais o
+    // responsavel (ou o nome diverge do dele); para de seguir.
+    if (index === 0) {
+      participante1SegueResponsavelRef.current = false;
+    }
+  }
+
+  // Responsavel = participante 1 no caso comum: repete o nome ali pra so
+  // faltar o nascimento. setValue não dispara o onChange do campo do
+  // participante, entao nao aciona aoMudarNome (nao quebra o "segue").
+  function aoMudarNomeResponsavel(nome: string) {
+    if (participante1SegueResponsavelRef.current) {
+      // Sem shouldValidate: evita erro de "min 3 caracteres" piscando no
+      // participante 1 enquanto o responsavel ainda esta digitando o nome.
+      form.setValue("participantes.0.nome", nome);
     }
   }
 
@@ -498,7 +520,13 @@ export function RetiroForm({
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-1">
             <CampoLabel htmlFor="respNome">Nome</CampoLabel>
-            <Input id="respNome" className={ALTURA_CAMPO} {...form.register("responsavelNome")} />
+            <Input
+              id="respNome"
+              className={ALTURA_CAMPO}
+              {...form.register("responsavelNome", {
+                onChange: (e) => aoMudarNomeResponsavel(e.target.value),
+              })}
+            />
             <Erro msg={errs.responsavelNome?.message} />
           </div>
           <div className="space-y-1">
