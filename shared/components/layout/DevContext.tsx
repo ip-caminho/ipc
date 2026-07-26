@@ -1214,9 +1214,10 @@ const CONTEXT_MAP: Record<string, PageContext> = {
   },
   "/retiro/[slug]": {
     nome: "Retiro - inscricao publica",
-    pagina: "app/(public)/(site)/retiro/[slug]/page.tsx",
+    pagina: "app/(public)/retiro/[slug]/page.tsx",
     arquivos: [
-      "app/(public)/(site)/retiro/[slug]/page.tsx",
+      "app/(public)/retiro/[slug]/page.tsx",
+      "app/(public)/retiro/layout.tsx",
       "features/retiro/components/RetiroForm.tsx",
       "features/retiro/lib/data.ts",
       "convex/public/retiro.ts",
@@ -1234,6 +1235,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "LoginModalInline (reuso do site publico)",
     ],
     notas: [
+      "Rota fora do grupo (site) — layout proprio (app/(public)/retiro/layout.tsx) sem SiteHeader/SiteFooter, so fontes + landing.css (mesmo padrao de /comprovante, /culto). Cobre inscricao e confirmacao (mesma rota, estado local em RetiroPagina)",
       "Inscricao POR GRUPO com calculo ao vivo (calculoHelpers compartilhado com o backend)",
       "Sem limite de vagas por estoque de quartos (sempre ATIVA); dedupe por whatsapp; honeypot + LGPD + rate-limit",
       "CPF do pagante obrigatorio (isValidCPF no form; cpfValido inline na mutation)",
