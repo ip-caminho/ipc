@@ -18,7 +18,7 @@ export function useFileUpload() {
     setProgress(10);
 
     try {
-      const { uploadUrl, publicUrl } = await getUploadUrl({
+      const { uploadUrl, publicUrl, cacheControl } = await getUploadUrl({
         folder,
         entityId,
         mimeType: file.type,
@@ -27,11 +27,13 @@ export function useFileUpload() {
 
       setProgress(30);
 
+      // Cache-Control precisa ser identico ao assinado no backend, senao o B2
+      // rejeita o PUT (403) — por isso o valor vem de la, nao hardcoded aqui.
       const response = await fetch(uploadUrl, {
         method: "PUT",
         headers: {
           "Content-Type": file.type,
-          "Cache-Control": "public, max-age=31536000",
+          "Cache-Control": cacheControl,
         },
         body: file,
       });

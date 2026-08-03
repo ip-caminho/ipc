@@ -67,6 +67,7 @@ import type * as files_authz from "../files/authz.js";
 import type * as files_helpers from "../files/helpers.js";
 import type * as files_signing from "../files/signing.js";
 import type * as files_upload from "../files/upload.js";
+import type * as files_urls from "../files/urls.js";
 import type * as gravacoes_ai from "../gravacoes/ai.js";
 import type * as gravacoes_aiAction from "../gravacoes/aiAction.js";
 import type * as gravacoes_avisosLeituras from "../gravacoes/avisosLeituras.js";
@@ -220,6 +221,7 @@ declare const fullApi: ApiFromModules<{
   "files/helpers": typeof files_helpers;
   "files/signing": typeof files_signing;
   "files/upload": typeof files_upload;
+  "files/urls": typeof files_urls;
   "gravacoes/ai": typeof gravacoes_ai;
   "gravacoes/aiAction": typeof gravacoes_aiAction;
   "gravacoes/avisosLeituras": typeof gravacoes_avisosLeituras;

@@ -1,5 +1,28 @@
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { bucketForKey, getBucketName, getStorageUrl, parseFileUrl } from "./urls";
+
+// Reexporta o que nao depende do SDK, para os call sites existentes seguirem
+// importando de "files/helpers". Codigo novo em runtime V8 deve importar de
+// "files/urls" direto (sem SDK no bundle).
+export {
+  CDN_BASE,
+  FOLDER_BUCKET,
+  generateObjectKey,
+  getPublicUrl,
+  getStorageUrl,
+  parseFileUrl,
+  toCdnUrl,
+  bucketForKey,
+  folderFromKey,
+  privadoIndisponivel,
+  type BucketKey,
+} from "./urls";
+
+// Cache-Control assinado no PUT. O cliente PRECISA enviar exatamente este valor
+// no header, senao a assinatura nao bate (403). Por isso ele volta junto da
+// uploadUrl: quem faz o PUT usa o valor que veio daqui, em vez de hardcodar.
+const UPLOAD_CACHE_CONTROL = "public, max-age=31536000";
 
 export function createS3Client(): S3Client {
   return new S3Client({
@@ -14,75 +37,58 @@ export function createS3Client(): S3Client {
   });
 }
 
-export function getBucketName(): string {
-  return process.env.BACKBLAZE_BUCKET_NAME!;
-}
-
-const CDN_BASE = "https://cdn.yhc.com.br";
-
-export function getPublicUrl(key: string): string {
-  return `${CDN_BASE}/${key}`;
-}
-
 /**
- * Convert any B2 direct URL or CDN URL to the CDN URL.
- * Handles legacy URLs stored in the DB (f005.backblazeb2.com/file/bucket/...).
+ * Presigned PUT. O bucket vem da pasta da chave (fail-closed em bucketForKey),
+ * nunca do chamador. `publicUrl` e a URL a persistir no banco: CDN no bucket
+ * aberto, canonica S3 no fechado.
  */
-export function toCdnUrl(url: string): string {
-  if (url.startsWith(CDN_BASE)) return url;
-  const key = extractKeyFromUrl(url);
-  if (key) return `${CDN_BASE}/${key}`;
-  return url;
-}
-
-export function generateObjectKey(
-  folder: string,
-  entityId: string,
-  extension: string
-): string {
-  const timestamp = Date.now();
-  return `${folder}/${entityId}_${timestamp}.${extension}`;
-}
-
-export function extractKeyFromUrl(url: string): string | null {
-  // CDN URL: https://cdn.yhc.com.br/gravacoes-audio/abc.mp3 → gravacoes-audio/abc.mp3
-  if (url.startsWith(CDN_BASE + "/")) {
-    return url.substring(CDN_BASE.length + 1);
-  }
-  // Legacy B2 URL: https://f005.backblazeb2.com/file/ipc-files/gravacoes-audio/abc.mp3
-  const bucketName = getBucketName();
-  const pattern = `/file/${bucketName}/`;
-  const idx = url.indexOf(pattern);
-  if (idx === -1) return null;
-  return url.substring(idx + pattern.length);
-}
-
 export async function generatePresignedUploadUrl(
   key: string,
   contentType: string
-): Promise<{ uploadUrl: string; publicUrl: string }> {
+): Promise<{ uploadUrl: string; publicUrl: string; cacheControl: string }> {
   const s3 = createS3Client();
   const command = new PutObjectCommand({
-    Bucket: getBucketName(),
+    Bucket: getBucketName(bucketForKey(key)),
     Key: key,
     ContentType: contentType,
-    CacheControl: "public, max-age=31536000",
+    CacheControl: UPLOAD_CACHE_CONTROL,
   });
   const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
-  const publicUrl = getPublicUrl(key);
-  return { uploadUrl, publicUrl };
+  return { uploadUrl, publicUrl: getStorageUrl(key), cacheControl: UPLOAD_CACHE_CONTROL };
+}
+
+/**
+ * Upload server-side (sem passar pelo browser). Mesma resolucao de bucket do
+ * presigned — usado pelo import de foto do Tally e pela extracao de audio.
+ */
+export async function putObject(
+  key: string,
+  body: Uint8Array | Buffer,
+  contentType: string
+): Promise<string> {
+  const s3 = createS3Client();
+  await s3.send(
+    new PutObjectCommand({
+      Bucket: getBucketName(bucketForKey(key)),
+      Key: key,
+      Body: body,
+      ContentType: contentType,
+      CacheControl: UPLOAD_CACHE_CONTROL,
+    })
+  );
+  return getStorageUrl(key);
 }
 
 export async function deleteFromB2(url: string): Promise<boolean> {
-  const key = extractKeyFromUrl(url);
-  if (!key) return false;
+  const parsed = parseFileUrl(url);
+  if (!parsed) return false;
 
   const s3 = createS3Client();
   try {
     await s3.send(
       new DeleteObjectCommand({
-        Bucket: getBucketName(),
-        Key: key,
+        Bucket: getBucketName(parsed.bucketKey),
+        Key: parsed.key,
       })
     );
     return true;

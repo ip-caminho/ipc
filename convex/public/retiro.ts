@@ -12,10 +12,18 @@ import {
   totalQuartos,
 } from "../retiro/calculoHelpers";
 import { createFieldAuditLogs } from "../_shared/auditHelpers";
+import { parseFileUrl } from "../files/urls";
 
-// Prefixo valido de comprovante no CDN (evita injetar URL arbitraria).
-// Hardcoded p/ nao puxar o SDK do B2 (files/helpers e "use node") p/ a mutation.
-const COMPROVANTE_URL_PREFIXO = "https://cdn.yhc.com.br/retiro-comprovantes/";
+// So aceita URL de um bucket nosso, na pasta de comprovantes (evita injetar
+// URL arbitraria). Vale tanto a canonica do bucket fechado quanto a do CDN
+// (comprovantes antigos). files/urls nao importa o SDK do B2, entao pode ser
+// usado aqui no runtime V8.
+const COMPROVANTE_PASTA = "retiro-comprovantes/";
+
+function comprovanteUrlValida(url: string): boolean {
+  const parsed = parseFileUrl(url);
+  return !!parsed && parsed.key.startsWith(COMPROVANTE_PASTA);
+}
 
 // Resolve a familia do membro logado (ele + conjuge + filhos) a partir da base,
 // com o membroId de cada um quando existir registro de `membros` (crianças
@@ -558,7 +566,7 @@ export const enviarComprovante = mutation({
     if (!insc || insc.status === "CANCELADA") {
       throw new Error("Link inválido ou inscrição cancelada");
     }
-    if (!args.comprovanteUrl.startsWith(COMPROVANTE_URL_PREFIXO)) {
+    if (!comprovanteUrlValida(args.comprovanteUrl)) {
       throw new Error("Arquivo inválido");
     }
     const atuais = insc.comprovantesPendentes ?? [];

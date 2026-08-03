@@ -3,9 +3,8 @@
 import { action, internalAction } from "../_generated/server";
 import { internal } from "../_generated/api";
 import { v } from "convex/values";
-import { getAuthUserId } from "@convex-dev/auth/server";
 import { generateObjectKey, generatePresignedUploadUrl, deleteFromB2 } from "./helpers";
-import { generatePresignedReadUrl } from "./signing";
+import { generatePresignedReadUrl, generatePresignedReadUrls } from "./signing";
 
 export const getUploadUrl = action({
   args: {
@@ -15,23 +14,35 @@ export const getUploadUrl = action({
     fileName: v.string(),
   },
   handler: async (ctx, args) => {
-    // Login + permissao compativel com a pasta (ver files/authz.ts)
+    // Login + permissao compativel com a pasta (ver files/authz.ts). O bucket
+    // de destino sai da propria pasta, dentro do helper (ver files/urls.ts).
     // @ts-ignore Convex TS2589 (instanciacao de tipo profunda)
     await ctx.runQuery(internal.files.authz.checkUploadAccess, { folder: args.folder });
     const ext = args.fileName.split(".").pop() || "bin";
     const key = generateObjectKey(args.folder, args.entityId, ext);
-    const result = await generatePresignedUploadUrl(key, args.mimeType);
-    console.log("[getUploadUrl] key:", key, "uploadUrl:", result.uploadUrl.substring(0, 100) + "...");
-    return result;
+    return await generatePresignedUploadUrl(key, args.mimeType);
   },
 });
 
 export const getReadUrl = action({
   args: { url: v.string() },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+    // @ts-ignore Convex TS2589 (instanciacao de tipo profunda)
+    await ctx.runQuery(internal.files.authz.checkReadAccess, { urls: [args.url] });
     return await generatePresignedReadUrl(args.url);
+  },
+});
+
+// Assina a tela inteira de uma vez (listas de avatar) em vez de uma action por
+// imagem.
+export const getReadUrls = action({
+  args: { urls: v.array(v.string()) },
+  handler: async (ctx, args) => {
+    if (args.urls.length === 0) return [];
+    if (args.urls.length > 200) throw new Error("Muitas URLs por chamada (max 200)");
+    // @ts-ignore Convex TS2589 (instanciacao de tipo profunda)
+    await ctx.runQuery(internal.files.authz.checkReadAccess, { urls: args.urls });
+    return await generatePresignedReadUrls(args.urls);
   },
 });
 

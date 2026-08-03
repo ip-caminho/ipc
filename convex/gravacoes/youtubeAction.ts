@@ -3,8 +3,7 @@
 import { internalAction } from "../_generated/server";
 import { v } from "convex/values";
 import { Innertube } from "youtubei.js";
-import { createS3Client, getBucketName, getPublicUrl, generateObjectKey } from "../files/helpers";
-import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { generateObjectKey, putObject } from "../files/helpers";
 
 // Lazy-load to avoid TS2589 "type instantiation excessively deep"
 function getUpdateRef() {
@@ -90,19 +89,7 @@ export const downloadYouTubeAudio = internalAction({
 
       // Upload to B2
       const key = generateObjectKey("gravacoes-audio", gravacaoId, ext);
-      const s3 = createS3Client();
-
-      await s3.send(
-        new PutObjectCommand({
-          Bucket: getBucketName(),
-          Key: key,
-          Body: audioBuffer,
-          ContentType: contentType,
-          CacheControl: "public, max-age=31536000",
-        })
-      );
-
-      const audioUrl = getPublicUrl(key);
+      const audioUrl = await putObject(key, audioBuffer, contentType);
 
       // Update gravacao with audio URL and video title
       await ctx.runMutation(updateIaStatus, {
