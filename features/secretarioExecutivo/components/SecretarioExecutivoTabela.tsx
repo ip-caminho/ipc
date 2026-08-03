@@ -17,7 +17,8 @@ import {
 import { Input } from "@/shared/components/ui/input";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
+import { PrivateAvatarImage } from "@/shared/files/components/PrivateImage";
 import {
   Select,
   SelectContent,
@@ -89,7 +90,7 @@ function iniciais(nome?: string): string {
 function AvatarMembro({ nome, foto, className }: { nome?: string; foto?: string; className?: string }) {
   return (
     <Avatar className={cn("h-7 w-7 shrink-0", className)}>
-      {foto && <AvatarImage src={foto} alt={nome ?? ""} />}
+      {foto && <PrivateAvatarImage src={foto} alt={nome ?? ""} />}
       <AvatarFallback className="text-[10px]">{iniciais(nome)}</AvatarFallback>
     </Avatar>
   );

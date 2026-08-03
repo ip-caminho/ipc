@@ -7,7 +7,8 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { useAuth } from "@shared/providers/PermissionsProvider";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
+import { PrivateAvatarImage } from "@/shared/files/components/PrivateImage";
 import {
   AvatarGroup,
   AvatarGroupTooltip,
@@ -187,7 +188,7 @@ export function PedidoOracaoDetalhe({
             <div className="flex items-start gap-3">
               <Avatar className="h-10 w-10">
                 {pedido.autor?.foto && (
-                  <AvatarImage src={pedido.autor.foto} />
+                  <PrivateAvatarImage src={pedido.autor.foto} />
                 )}
                 <AvatarFallback>
                   {pedido.autor?.nome?.charAt(0)?.toUpperCase() || "?"}
@@ -286,7 +287,7 @@ export function PedidoOracaoDetalhe({
                       key={i._id}
                       className="h-8 w-8 border-2 border-background"
                     >
-                      {i.foto && <AvatarImage src={i.foto} />}
+                      {i.foto && <PrivateAvatarImage src={i.foto} />}
                       <AvatarFallback className="text-xs">
                         {i.nome?.charAt(0)?.toUpperCase() || "?"}
                       </AvatarFallback>
@@ -369,7 +370,7 @@ export function PedidoOracaoDetalhe({
                   }`}
                 >
                   <Avatar className="h-8 w-8 shrink-0">
-                    {c.autorFoto && <AvatarImage src={c.autorFoto} />}
+                    {c.autorFoto && <PrivateAvatarImage src={c.autorFoto} />}
                     <AvatarFallback className="text-xs">
                       {c.autorNome?.charAt(0)?.toUpperCase() || "?"}
                     </AvatarFallback>

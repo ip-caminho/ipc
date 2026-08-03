@@ -4,7 +4,8 @@ import { useState, useRef } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
+import { PrivateAvatarImage } from "@/shared/files/components/PrivateImage";
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { X, ChevronLeft, ChevronRight, Heart, Megaphone } from "lucide-react";
@@ -60,7 +61,7 @@ function PedidoSlide({ pedidoId }: { pedidoId: Id<"pedidosOracao"> }) {
     <div className="flex flex-col items-center px-6 py-4 overflow-y-auto flex-1">
       {/* Autor */}
       <Avatar className="h-16 w-16 mb-3">
-        {pedido.autor?.foto && <AvatarImage src={pedido.autor.foto} />}
+        {pedido.autor?.foto && <PrivateAvatarImage src={pedido.autor.foto} />}
         <AvatarFallback className="text-lg bg-blue-100 text-blue-600 dark:bg-blue-950/40 dark:text-blue-300">
           {pedido.autor?.nome?.charAt(0)?.toUpperCase() || "?"}
         </AvatarFallback>
@@ -105,7 +106,7 @@ function PedidoSlide({ pedidoId }: { pedidoId: Id<"pedidosOracao"> }) {
           <div className="flex -space-x-2">
             {pedido.intercessores.slice(0, 5).map((i: any) => (
               <Avatar key={i._id} className="h-7 w-7 border-2 border-background">
-                {i.foto && <AvatarImage src={i.foto} />}
+                {i.foto && <PrivateAvatarImage src={i.foto} />}
                 <AvatarFallback className="text-[10px]">
                   {i.nome?.charAt(0)?.toUpperCase() || "?"}
                 </AvatarFallback>

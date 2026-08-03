@@ -10,7 +10,8 @@ import { toast } from "sonner";
 import { Archive, Megaphone } from "lucide-react";
 import { ModuloGuard } from "@shared/components/auth/ModuloGuard";
 import { DetailHeader } from "@shared/components/layout/DetailHeader";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
+import { PrivateAvatarImage } from "@/shared/files/components/PrivateImage";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
@@ -126,7 +127,7 @@ export default function PedidoDetalhePage() {
 
             <div className="flex items-center gap-2">
               <Avatar className="h-9 w-9">
-                {foto && <AvatarImage src={foto} alt={nome} />}
+                {foto && <PrivateAvatarImage src={foto} alt={nome} />}
                 <AvatarFallback
                   className={cn("text-sm", pedido.anonimo && "bg-secondary")}
                 >

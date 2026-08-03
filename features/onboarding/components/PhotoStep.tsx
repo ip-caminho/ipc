@@ -1,7 +1,8 @@
 "use client";
 
 import { Button } from "@/shared/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
+import { PrivateAvatarImage } from "@/shared/files/components/PrivateImage";
 import { FileUpload } from "@/shared/files/components/FileUpload";
 import { ArrowRight } from "lucide-react";
 
@@ -26,7 +27,7 @@ export function PhotoStep({ foto, nomeCompleto, entidadeId, onUpdate, onNext }: 
       </div>
 
       <Avatar className="h-32 w-32 border-2 border-border">
-        {foto && <AvatarImage src={foto} alt={nomeCompleto} />}
+        {foto && <PrivateAvatarImage src={foto} alt={nomeCompleto} />}
         <AvatarFallback className="text-4xl">{initial}</AvatarFallback>
       </Avatar>
 
