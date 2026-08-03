@@ -61,7 +61,7 @@ export function EnviarComprovanteDialog({
     }
     try {
       setEnviando(true);
-      const { uploadUrl, publicUrl } = await getUploadUrl({
+      const { uploadUrl, publicUrl, cacheControl } = await getUploadUrl({
         token,
         mimeType: file.type || "application/octet-stream",
         fileName: file.name,
@@ -70,7 +70,7 @@ export function EnviarComprovanteDialog({
         method: "PUT",
         headers: {
           "Content-Type": file.type || "application/octet-stream",
-          "Cache-Control": "public, max-age=31536000",
+          "Cache-Control": cacheControl,
         },
         body: file,
       });

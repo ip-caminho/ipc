@@ -75,7 +75,7 @@ export function SubirAudioForm() {
 
       // 2. Presigned + upload direto pro B2
       setStep("enviando");
-      const { uploadUrl, publicUrl } = await getUploadUrl({
+      const { uploadUrl, publicUrl, cacheControl } = await getUploadUrl({
         token,
         mimeType: comprimido.type || "audio/mpeg",
         fileName: comprimido.name,
@@ -84,7 +84,7 @@ export function SubirAudioForm() {
         method: "PUT",
         headers: {
           "Content-Type": comprimido.type || "audio/mpeg",
-          "Cache-Control": "public, max-age=31536000",
+          "Cache-Control": cacheControl,
         },
         body: comprimido,
       });

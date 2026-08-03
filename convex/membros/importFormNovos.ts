@@ -3,8 +3,7 @@ import { internal } from "../_generated/api";
 import { v } from "convex/values";
 import { createActionAuditLog, createFieldAuditLogs } from "../_shared/auditHelpers";
 import { espelharConjuge } from "./familiaHelpers";
-import { createS3Client, getBucketName, getPublicUrl, generateObjectKey } from "../files/helpers";
-import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { generateObjectKey, putObject } from "../files/helpers";
 
 // Importador de cadastros vindos do formulario Tally de novos membros.
 // Rodar via CLI (npx convex run ... --prod) com os dados como args — nada de
@@ -201,7 +200,7 @@ export const setFotoSeVazia = internalMutation({
 });
 
 // Baixa a foto do formulario (URL assinada Tally) e sobe para o B2 na pasta
-// padrao de fotos de membros; grava a URL do CDN se a entidade nao tem foto.
+// padrao de fotos de membros — bucket fechado — se a entidade nao tem foto.
 export const importarFotoTally = internalAction({
   args: { cpf: v.string(), url: v.string() },
   handler: async (ctx, { cpf, url }): Promise<string> => {
@@ -216,18 +215,10 @@ export const importarFotoTally = internalAction({
     const ext = contentType.includes("png") ? "png" : contentType.includes("webp") ? "webp" : "jpg";
     const body = new Uint8Array(await res.arrayBuffer());
 
+    // Foto de pessoa vai para o bucket fechado (ver FOLDER_BUCKET); a URL
+    // gravada e a canonica, nao a do CDN.
     const key = generateObjectKey("membros/fotos", ent.id, ext);
-    const s3 = createS3Client();
-    await s3.send(
-      new PutObjectCommand({
-        Bucket: getBucketName(),
-        Key: key,
-        Body: body,
-        ContentType: contentType,
-        CacheControl: "public, max-age=31536000",
-      }),
-    );
-    const publicUrl = getPublicUrl(key);
+    const publicUrl = await putObject(key, body, contentType);
     const gravou = await ctx.runMutation(internal.membros.importFormNovos.setFotoSeVazia, {
       entidadeId: ent.id,
       foto: publicUrl,

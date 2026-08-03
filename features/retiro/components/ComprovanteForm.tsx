@@ -59,7 +59,7 @@ export function ComprovanteForm({ codigo }: { codigo: string }) {
     try {
       setStep("enviando");
       // 1. Presigned + upload direto pro B2
-      const { uploadUrl, publicUrl } = await getUploadUrl({
+      const { uploadUrl, publicUrl, cacheControl } = await getUploadUrl({
         token,
         mimeType: file.type || "application/octet-stream",
         fileName: file.name,
@@ -68,7 +68,7 @@ export function ComprovanteForm({ codigo }: { codigo: string }) {
         method: "PUT",
         headers: {
           "Content-Type": file.type || "application/octet-stream",
-          "Cache-Control": "public, max-age=31536000",
+          "Cache-Control": cacheControl,
         },
         body: file,
       });
