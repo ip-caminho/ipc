@@ -12,6 +12,7 @@ import {
   getPrivateCanonicalUrl,
   getStorageUrl,
   parseFileUrl,
+  privadoIndisponivel,
 } from "./urls";
 
 // Reexporta o que nao depende do SDK, para os call sites existentes seguirem
@@ -42,6 +43,11 @@ const CACHE_CONTROL_PUBLICO = "public, max-age=31536000";
 const CACHE_CONTROL_PRIVADO = "private, max-age=3600";
 
 function cacheControlDe(key: string): string {
+  // Enquanto o bucket fechado nao existir, o arquivo vai para o aberto de
+  // qualquer forma — e, mais importante, o frontend ainda no ar manda o valor
+  // antigo hardcoded no PUT. Mudar aqui antes dele quebraria todo upload de
+  // foto/documento com 403 (o header assinado tem que bater com o enviado).
+  if (privadoIndisponivel()) return CACHE_CONTROL_PUBLICO;
   return bucketForKey(key) === "privado" ? CACHE_CONTROL_PRIVADO : CACHE_CONTROL_PUBLICO;
 }
 
