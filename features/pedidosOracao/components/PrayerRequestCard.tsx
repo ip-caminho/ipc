@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { Megaphone } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
+import { PrivateAvatarImage } from "@/shared/files/components/PrivateImage";
 import { Badge } from "@/shared/components/ui/badge";
 import { cn } from "@shared/lib/utils/cn";
 import { formatDistanceToNow, fromUnixTime } from "date-fns";
@@ -81,7 +82,7 @@ export function PrayerRequestCard({ pedido, onClick }: Props) {
 
       <div className="flex items-center gap-2">
         <Avatar className="h-7 w-7">
-          {foto && <AvatarImage src={foto} alt={nome} />}
+          {foto && <PrivateAvatarImage src={foto} alt={nome} />}
           <AvatarFallback className={cn("text-xs", pedido.anonimo && "bg-secondary")}>
             {pedido.anonimo ? "🙏" : nome.charAt(0).toUpperCase()}
           </AvatarFallback>

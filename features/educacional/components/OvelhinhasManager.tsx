@@ -14,7 +14,8 @@ import {
 } from "@/shared/components/ui/dialog";
 import { Input } from "@/shared/components/ui/input";
 import { Checkbox } from "@/shared/components/ui/checkbox";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
+import { PrivateAvatarImage } from "@/shared/files/components/PrivateImage";
 
 interface OvelhinhasManagerProps {
   open: boolean;
@@ -81,7 +82,7 @@ export function OvelhinhasManager({ open, onOpenChange }: OvelhinhasManagerProps
                   onCheckedChange={(v) => toggle(m.membroId, v === true)}
                 />
                 <Avatar className="h-8 w-8 shrink-0">
-                  {m.foto && <AvatarImage src={m.foto} alt={m.nome} />}
+                  {m.foto && <PrivateAvatarImage src={m.foto} alt={m.nome} />}
                   <AvatarFallback className="text-xs">{m.nome.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <span className="text-sm truncate">{m.nome}</span>

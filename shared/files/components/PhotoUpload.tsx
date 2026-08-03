@@ -5,7 +5,8 @@ import Cropper from "react-easy-crop";
 import type { Area } from "react-easy-crop";
 import { useFileUpload } from "../hooks/useFileUpload";
 import { Button } from "@/shared/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
+import { PrivateAvatarImage } from "@/shared/files/components/PrivateImage";
 import {
   Dialog,
   DialogContent,
@@ -115,7 +116,7 @@ export function PhotoUpload({ folder, entityId, value, onChange, fallback }: Pho
       <div className="flex items-center gap-4">
         <div className="relative group">
           <Avatar className="h-20 w-20">
-            {value && <AvatarImage src={value} />}
+            {value && <PrivateAvatarImage src={value} />}
             <AvatarFallback className="text-2xl">{fallback?.charAt(0)?.toUpperCase() || "?"}</AvatarFallback>
           </Avatar>
           <button

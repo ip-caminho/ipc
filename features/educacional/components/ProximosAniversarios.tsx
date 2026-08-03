@@ -5,7 +5,8 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { Badge } from "@/shared/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
+import { PrivateAvatarImage } from "@/shared/files/components/PrivateImage";
 import {
   Select,
   SelectContent,
@@ -52,7 +53,7 @@ function AniversarioCard({ a, hoje }: { a: Aniversario; hoje: boolean }) {
       <CardContent className="py-3">
         <div className="flex items-center gap-3">
           <Avatar className="h-9 w-9 shrink-0">
-            {a.foto && <AvatarImage src={a.foto} alt={a.nome} />}
+            {a.foto && <PrivateAvatarImage src={a.foto} alt={a.nome} />}
             <AvatarFallback className="text-sm">{a.nome?.charAt(0)}</AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">

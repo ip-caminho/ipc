@@ -1,7 +1,8 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
+import { PrivateAvatarImage } from "@/shared/files/components/PrivateImage";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { User, MapPin, Phone, Users, Pencil } from "lucide-react";
@@ -107,7 +108,7 @@ export function DadosBasicosSection({
       <Card className="overflow-hidden border-0 shadow-sm bg-gradient-to-br from-primary/10 via-primary/5 to-background">
         <CardContent className="p-5 flex flex-col sm:flex-row items-center sm:items-end gap-5">
           <Avatar className="h-20 w-20">
-            <AvatarImage src={entidade.foto} />
+            <PrivateAvatarImage src={entidade.foto} />
             <AvatarFallback>
               {initials(entidade.nomeCompleto || "?")}
             </AvatarFallback>
@@ -192,7 +193,7 @@ export function DadosBasicosSection({
             {familia.conjuge && (
               <div className="flex items-center gap-2 p-2 rounded-md border">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src={familia.conjuge.foto} />
+                  <PrivateAvatarImage src={familia.conjuge.foto} />
                   <AvatarFallback>
                     {initials(familia.conjuge.nomeCompleto)}
                   </AvatarFallback>
@@ -209,7 +210,7 @@ export function DadosBasicosSection({
                 className="flex items-center gap-2 p-2 rounded-md border"
               >
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src={f.foto} />
+                  <PrivateAvatarImage src={f.foto} />
                   <AvatarFallback>{initials(f.nomeCompleto)}</AvatarFallback>
                 </Avatar>
                 <div>

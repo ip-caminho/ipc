@@ -3,6 +3,7 @@
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { MessageCircle } from "lucide-react";
+import { PrivateImage } from "@/shared/files/components/PrivateImage";
 
 const AVATAR_COLORS = [
   "bg-violet-500", "bg-blue-500", "bg-emerald-500",
@@ -41,13 +42,24 @@ interface PersonData {
 function AvatarCircle({ nome, foto, size = "md" }: { nome: string; foto?: string; size?: "sm" | "md" }) {
   const px = size === "sm" ? "h-7 w-7" : "h-8 w-8";
   const textSize = size === "sm" ? "text-[10px]" : "text-xs";
-  if (foto) {
-    return <img src={foto} alt={nome} className={`${px} rounded-full object-cover ring-2 ring-white/50 shrink-0`} />;
-  }
-  return (
+  // Enquanto a foto (bucket fechado) nao e assinada, fica a inicial.
+  const inicial = (
     <div className={`${px} rounded-full ${avatarColor(nome)} flex items-center justify-center ${textSize} font-bold text-white ring-2 ring-white/50 shrink-0`}>
       {nome.charAt(0).toUpperCase()}
     </div>
+  );
+  if (foto) {
+    return (
+      <PrivateImage
+        src={foto}
+        alt={nome}
+        className={`${px} rounded-full object-cover ring-2 ring-white/50 shrink-0`}
+        fallback={inicial}
+      />
+    );
+  }
+  return (
+    <>{inicial}</>
   );
 }
 

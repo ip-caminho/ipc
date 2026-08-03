@@ -2,7 +2,8 @@
 
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { Badge } from "@/shared/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
+import { PrivateAvatarImage } from "@/shared/files/components/PrivateImage";
 import { Button } from "@/shared/components/ui/button";
 import { Pencil, Trash2, TriangleAlert } from "lucide-react";
 import { format, parseISO } from "date-fns";
@@ -18,7 +19,7 @@ function MembroChip({ m }: { m: EscalaMembro }) {
   return (
     <div className="flex items-center gap-1.5">
       <Avatar className="h-6 w-6 shrink-0">
-        {m.foto && <AvatarImage src={m.foto} alt={m.nome} />}
+        {m.foto && <PrivateAvatarImage src={m.foto} alt={m.nome} />}
         <AvatarFallback className="text-[10px]">
           {m.nome?.charAt(0)}
         </AvatarFallback>

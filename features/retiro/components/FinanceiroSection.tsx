@@ -17,6 +17,7 @@ import {
 } from "@/shared/components/ui/dialog";
 import { FileUpload } from "@shared/files/components/FileUpload";
 import { Plus, Trash2, PiggyBank, Receipt, BadgePercent, FileCheck2, ExternalLink } from "lucide-react";
+import { SignedFileLink } from "@/shared/files/components/SignedFileLink";
 import { brl, parseReais, dataBR } from "../lib/format";
 
 type Recebimento = {
@@ -57,6 +58,7 @@ export function FinanceiroSection({
   comprovantesPendentes?: ComprovantePendente[];
   cancelada: boolean;
 }) {
+  // @ts-ignore Convex TS2589
   const registrar = useMutation(api.retiro.mutations.registrarRecebimento);
   const removerReceb = useMutation(api.retiro.mutations.removerRecebimento);
   const conceder = useMutation(api.retiro.mutations.concederDesconto);
@@ -147,14 +149,12 @@ export function FinanceiroSection({
                 className="flex items-center justify-between gap-2 rounded-md border bg-background px-3 py-2 text-sm"
               >
                 <div className="min-w-0">
-                  <a
-                    href={c.comprovanteUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <SignedFileLink
+                    url={c.comprovanteUrl}
                     className="inline-flex items-center gap-1 font-medium underline underline-offset-2"
                   >
                     <ExternalLink className="h-3.5 w-3.5" /> Ver comprovante
-                  </a>
+                  </SignedFileLink>
                   <span className="ml-2 text-xs text-muted-foreground">
                     {c.valorInformado ? `informado ${brl(c.valorInformado)} · ` : ""}
                     {dataBR(new Date(c.enviadoEm).toISOString().slice(0, 10))}
@@ -219,14 +219,12 @@ export function FinanceiroSection({
                   <span className="ml-2 text-xs text-muted-foreground">{dataBR(r.data)}</span>
                   {r.obs && <span className="ml-2 truncate text-xs text-muted-foreground">{r.obs}</span>}
                   {r.comprovanteUrl && (
-                    <a
-                      href={r.comprovanteUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <SignedFileLink
+                      url={r.comprovanteUrl}
                       className="ml-2 text-xs underline underline-offset-2"
                     >
                       comprovante
-                    </a>
+                    </SignedFileLink>
                   )}
                 </div>
                 <Button

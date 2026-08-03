@@ -5,7 +5,8 @@ import Link from "next/link";
 import { Input } from "@/shared/components/ui/input";
 import { Badge } from "@/shared/components/ui/badge";
 import { Progress } from "@shared/components/ui/progress";
-import { Avatar, AvatarImage, AvatarFallback } from "@/shared/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
+import { PrivateAvatarImage } from "@/shared/files/components/PrivateImage";
 import {
   Select,
   SelectContent,
@@ -101,7 +102,7 @@ export function MembrosTable({ membros }: Props) {
             className="flex items-center gap-3 rounded-xl border bg-card p-3 active:opacity-80 transition-opacity"
           >
             <Avatar className="h-9 w-9">
-              {m.foto && <AvatarImage src={m.foto} alt={m.nome} />}
+              {m.foto && <PrivateAvatarImage src={m.foto} alt={m.nome} />}
               <AvatarFallback className="text-xs">{getInitials(m.nome)}</AvatarFallback>
             </Avatar>
 

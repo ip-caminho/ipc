@@ -7,7 +7,8 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { useDebounce } from "@shared/hooks/useDebounce";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { Input } from "@/shared/components/ui/input";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
+import { PrivateAvatarImage } from "@/shared/files/components/PrivateImage";
 import { Badge } from "@/shared/components/ui/badge";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import {
@@ -224,7 +225,7 @@ function CriancasGrid({
             >
               <CardContent className="p-4 flex items-center gap-3">
                 <Avatar className="h-12 w-12">
-                  {c.foto && <AvatarImage src={c.foto} />}
+                  {c.foto && <PrivateAvatarImage src={c.foto} />}
                   <AvatarFallback className="text-base">
                     {c.nome?.charAt(0) || "?"}
                   </AvatarFallback>

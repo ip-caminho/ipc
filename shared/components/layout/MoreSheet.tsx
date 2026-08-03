@@ -11,7 +11,8 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/shared/components/ui/sheet";
-import { Avatar, AvatarImage, AvatarFallback } from "@/shared/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
+import { PrivateAvatarImage } from "@/shared/files/components/PrivateImage";
 import { Separator } from "@/shared/components/ui/separator";
 import { LogOut, User, Moon, Sun, Globe, ClipboardList } from "lucide-react";
 import { useAuth } from "@shared/providers/PermissionsProvider";
@@ -79,7 +80,7 @@ export function MoreSheet({ open, onOpenChange }: Props) {
         <SheetHeader className="px-5 pb-3">
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10">
-              {foto && <AvatarImage src={foto} alt={name || ""} />}
+              {foto && <PrivateAvatarImage src={foto} alt={name || ""} />}
               <AvatarFallback className="text-sm">{initials}</AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">

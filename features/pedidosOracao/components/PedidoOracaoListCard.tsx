@@ -5,7 +5,8 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { Badge } from "@/shared/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
+import { PrivateAvatarImage } from "@/shared/files/components/PrivateImage";
 import {
   AvatarGroup,
   AvatarGroupTooltip,
@@ -70,7 +71,7 @@ export function PedidoOracaoListCard({
   const avatarItems = [
     ...(pedido.intercessoresResumo ?? []).map((i, idx) => (
       <Avatar key={idx} className="h-6 w-6 border-2 border-background">
-        {i.foto && <AvatarImage src={i.foto} />}
+        {i.foto && <PrivateAvatarImage src={i.foto} />}
         <AvatarFallback className="text-[9px]">
           {i.nome?.charAt(0)?.toUpperCase() || "?"}
         </AvatarFallback>

@@ -10,7 +10,8 @@ import { ptBR } from "date-fns/locale";
 import { MoreVertical, Contact } from "lucide-react";
 import { ModuloGuard } from "@shared/components/auth/ModuloGuard";
 import { DetailHeader } from "@shared/components/layout/DetailHeader";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
+import { PrivateAvatarImage } from "@/shared/files/components/PrivateImage";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { Button } from "@/shared/components/ui/button";
 import {
@@ -104,7 +105,7 @@ export default function MembroPerfilPage() {
         {/* Cabeçalho do perfil */}
         <div className="flex flex-col items-center text-center gap-3">
           <Avatar className="h-24 w-24" style={{ background: gradient }}>
-            {perfil.foto && <AvatarImage src={perfil.foto} alt={perfil.nome} />}
+            {perfil.foto && <PrivateAvatarImage src={perfil.foto} alt={perfil.nome} />}
             <AvatarFallback className="text-2xl text-white font-medium bg-transparent">
               {iniciais}
             </AvatarFallback>

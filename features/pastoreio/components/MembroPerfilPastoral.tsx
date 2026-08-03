@@ -5,7 +5,8 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Badge } from "@/shared/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
+import { PrivateAvatarImage } from "@/shared/files/components/PrivateImage";
 import { Button } from "@/shared/components/ui/button";
 import { Separator } from "@/shared/components/ui/separator";
 import {
@@ -141,7 +142,7 @@ export function MembroPerfilPastoral({
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <Avatar className="h-12 w-12">
-          {entidade.foto && <AvatarImage src={entidade.foto} />}
+          {entidade.foto && <PrivateAvatarImage src={entidade.foto} />}
           <AvatarFallback>
             {entidade.nomeCompleto?.charAt(0)?.toUpperCase() || "?"}
           </AvatarFallback>
