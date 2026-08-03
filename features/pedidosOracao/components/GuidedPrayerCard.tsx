@@ -7,7 +7,8 @@ import { formatDistanceToNow, fromUnixTime } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
+import { PrivateAvatarImage } from "@/shared/files/components/PrivateImage";
 import { Heart } from "lucide-react";
 import { cn } from "@shared/lib/utils/cn";
 import { haptic } from "@shared/lib/haptic";
@@ -128,7 +129,7 @@ export function GuidedPrayerCard({
     >
       <div className="flex flex-col items-center gap-2">
         <Avatar className="h-[54px] w-[54px]">
-          {foto && <AvatarImage src={foto} alt={nome} />}
+          {foto && <PrivateAvatarImage src={foto} alt={nome} />}
           <AvatarFallback className={cn("text-lg", pedido.anonimo && "bg-secondary")}>
             {pedido.anonimo ? "🙏" : nome.charAt(0).toUpperCase()}
           </AvatarFallback>
@@ -187,7 +188,7 @@ export function GuidedPrayerCard({
             <div className="flex -space-x-2">
               {pedido.primeirosOrantes.slice(0, 3).map((o, i) => (
                 <Avatar key={i} className="h-6 w-6 ring-2 ring-background">
-                  {o.foto && <AvatarImage src={o.foto} alt={o.nome} />}
+                  {o.foto && <PrivateAvatarImage src={o.foto} alt={o.nome} />}
                   <AvatarFallback className="text-[10px]">
                     {(o.nome || "?").charAt(0).toUpperCase()}
                   </AvatarFallback>

@@ -13,7 +13,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
+import { PrivateAvatarImage } from "@/shared/files/components/PrivateImage";
 import { Badge } from "@/shared/components/ui/badge";
 import {
   Plus,
@@ -284,7 +285,7 @@ export default function PastoreioPage() {
                   >
                     <CardContent className="flex items-center gap-3 py-3">
                       <Avatar className="h-10 w-10">
-                        {m.foto && <AvatarImage src={m.foto} />}
+                        {m.foto && <PrivateAvatarImage src={m.foto} />}
                         <AvatarFallback>
                           {m.nome?.charAt(0)?.toUpperCase() || "?"}
                         </AvatarFallback>

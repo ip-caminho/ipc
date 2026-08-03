@@ -14,7 +14,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
+import { PrivateAvatarImage } from "@/shared/files/components/PrivateImage";
 import { Calendar, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { TarefaStatusBadge } from "@features/tarefas/components/TarefaStatusBadge";
@@ -115,7 +116,7 @@ export default function TarefaDetalhePage() {
                 <p className="text-muted-foreground mb-1">Responsável</p>
                 <div className="flex items-center gap-2">
                   <Avatar className="h-6 w-6">
-                    {tarefa.responsavelFoto && <AvatarImage src={tarefa.responsavelFoto} />}
+                    {tarefa.responsavelFoto && <PrivateAvatarImage src={tarefa.responsavelFoto} />}
                     <AvatarFallback className="text-[10px]">{tarefa.responsavelNome?.charAt(0)}</AvatarFallback>
                   </Avatar>
                   <span>{tarefa.responsavelNome}</span>
@@ -125,7 +126,7 @@ export default function TarefaDetalhePage() {
                 <p className="text-muted-foreground mb-1">Criado por</p>
                 <div className="flex items-center gap-2">
                   <Avatar className="h-6 w-6">
-                    {tarefa.criadorFoto && <AvatarImage src={tarefa.criadorFoto} />}
+                    {tarefa.criadorFoto && <PrivateAvatarImage src={tarefa.criadorFoto} />}
                     <AvatarFallback className="text-[10px]">{tarefa.criadorNome?.charAt(0)}</AvatarFallback>
                   </Avatar>
                   <span>{tarefa.criadorNome}</span>

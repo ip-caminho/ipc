@@ -2,7 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import type { Id } from "@/convex/_generated/dataModel";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
+import { PrivateAvatarImage } from "@/shared/files/components/PrivateImage";
 import { getDeterministicGradient } from "@shared/lib/utils/gradient";
 import { getIniciais } from "../lib/splitNome";
 
@@ -28,7 +29,7 @@ export function MemberListItem({ membro }: Props) {
       className="flex items-center gap-2.5 py-2 border-b w-full text-left active:opacity-80 transition-opacity"
     >
       <Avatar className="h-9 w-9 shrink-0" style={{ background: gradient }}>
-        {membro.foto && <AvatarImage src={membro.foto} alt={membro.nomeCompleto} />}
+        {membro.foto && <PrivateAvatarImage src={membro.foto} alt={membro.nomeCompleto} />}
         <AvatarFallback className="text-[11px] text-white font-medium bg-transparent">
           {iniciais}
         </AvatarFallback>

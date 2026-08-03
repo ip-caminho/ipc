@@ -9,7 +9,8 @@ import "d3-transition"; // habilita selection.transition()
 import { ExternalLink, ArrowLeft, Plus, Minus, Maximize2, Locate, Pencil } from "lucide-react";
 import type { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/shared/components/ui/button";
-import { Avatar, AvatarImage, AvatarFallback } from "@/shared/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
+import { PrivateAvatarImage } from "@/shared/files/components/PrivateImage";
 import { cn } from "@/shared/lib/utils/cn";
 
 // Espelha o retorno de convex/membros/familia.ts (redeFamiliar). Tipos locais —
@@ -497,7 +498,7 @@ export function ArvoreFamiliar({
                                 "ring-primary/40",
                             )}
                           >
-                            <AvatarImage src={p.foto} alt={p.nomeCompleto} />
+                            <PrivateAvatarImage src={p.foto} alt={p.nomeCompleto} />
                             <AvatarFallback>{initials(p.nomeCompleto)}</AvatarFallback>
                           </Avatar>
                         </button>

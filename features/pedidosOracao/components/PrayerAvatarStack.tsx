@@ -1,6 +1,7 @@
 "use client";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
+import { PrivateAvatarImage } from "@/shared/files/components/PrivateImage";
 
 interface Orante {
   nome: string;
@@ -38,7 +39,7 @@ export function PrayerAvatarStack({ orantes, total, euOrando }: PrayerAvatarStac
               key={i}
               className="h-5 w-5 ring-2 ring-background"
             >
-              {o.foto && <AvatarImage src={o.foto} alt={o.nome} />}
+              {o.foto && <PrivateAvatarImage src={o.foto} alt={o.nome} />}
               <AvatarFallback className="text-[9px]">
                 {(o.nome || "?").charAt(0).toUpperCase()}
               </AvatarFallback>

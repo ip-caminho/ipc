@@ -2,7 +2,8 @@
 
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { Badge } from "@/shared/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
+import { PrivateAvatarImage } from "@/shared/files/components/PrivateImage";
 import {
   Tooltip,
   TooltipContent,
@@ -57,7 +58,7 @@ export function CriancaCard({ crianca, onClick }: CriancaCardProps) {
           <Avatar
             className={`h-10 w-10 shrink-0 ring-2 ring-offset-2 ring-offset-background ${turmaRing}`}
           >
-            {crianca.foto && <AvatarImage src={crianca.foto} alt={crianca.nome} />}
+            {crianca.foto && <PrivateAvatarImage src={crianca.foto} alt={crianca.nome} />}
             <AvatarFallback className="text-sm">{crianca.nome?.charAt(0)}</AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">

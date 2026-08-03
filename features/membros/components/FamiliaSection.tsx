@@ -10,7 +10,8 @@ import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Badge } from "@/shared/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
+import { PrivateAvatarImage } from "@/shared/files/components/PrivateImage";
 import {
   ResponsiveDialog,
   ResponsiveDialogContent,
@@ -252,7 +253,7 @@ export function FamiliaSection() {
             <div className="flex items-center justify-between gap-2 p-2 rounded-md border">
               <div className="flex items-center gap-2">
                 <Avatar className="h-9 w-9">
-                  <AvatarImage src={familia.conjuge.foto} />
+                  <PrivateAvatarImage src={familia.conjuge.foto} />
                   <AvatarFallback>{initials(familia.conjuge.nomeCompleto)}</AvatarFallback>
                 </Avatar>
                 <p className="text-sm">{familia.conjuge.nomeCompleto}</p>
@@ -292,7 +293,7 @@ export function FamiliaSection() {
                         className="w-full text-left p-2 hover:bg-muted text-sm flex items-center gap-2"
                       >
                         <Avatar className="h-7 w-7">
-                          <AvatarImage src={m.foto} />
+                          <PrivateAvatarImage src={m.foto} />
                           <AvatarFallback>{initials(m.nomeCompleto)}</AvatarFallback>
                         </Avatar>
                         <span>{m.nomeCompleto}</span>
@@ -392,7 +393,7 @@ export function FamiliaSection() {
                 >
                   <div className="flex items-center gap-2">
                     <Avatar className="h-9 w-9">
-                      <AvatarImage src={f.foto} />
+                      <PrivateAvatarImage src={f.foto} />
                       <AvatarFallback>{initials(f.nomeCompleto)}</AvatarFallback>
                     </Avatar>
                     <div>
@@ -448,7 +449,7 @@ export function FamiliaSection() {
                     className="w-full text-left p-2 hover:bg-muted text-sm flex items-center gap-2"
                   >
                     <Avatar className="h-7 w-7">
-                      <AvatarImage src={m.foto} />
+                      <PrivateAvatarImage src={m.foto} />
                       <AvatarFallback>{initials(m.nomeCompleto)}</AvatarFallback>
                     </Avatar>
                     <span>{m.nomeCompleto}</span>

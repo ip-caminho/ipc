@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
+import { PrivateAvatarImage } from "@/shared/files/components/PrivateImage";
 import { Button } from "@/shared/components/ui/button";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Badge } from "@/shared/components/ui/badge";
@@ -107,7 +108,7 @@ export function ComentariosThread({ entidadeTipo, entidadeId, showTipo }: Coment
       <div key={c._id} className={`${isReply ? "ml-8 border-l-2 border-muted pl-3" : ""}`}>
         <div className="flex gap-2 py-2">
           <Avatar className="h-7 w-7 shrink-0">
-            {c.autorFoto && <AvatarImage src={c.autorFoto} />}
+            {c.autorFoto && <PrivateAvatarImage src={c.autorFoto} />}
             <AvatarFallback className="text-[10px]">{c.autorNome?.charAt(0)}</AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">

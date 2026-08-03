@@ -8,7 +8,8 @@ import { Input } from "@/shared/components/ui/input";
 import { DatePickerBR } from "@/shared/components/ui/date-picker-br";
 import { Badge } from "@/shared/components/ui/badge";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
+import { PrivateAvatarImage } from "@/shared/files/components/PrivateImage";
 import { PermissionGate } from "@shared/components/auth/PermissionGate";
 import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
 import { TURMA_OPTIONS, TURMA_COLORS } from "@features/educacional/lib/constants";
@@ -208,7 +209,7 @@ export default function PresencaPage() {
                 >
                   <div className="relative">
                     <Avatar className="h-20 w-20">
-                      {c.foto && <AvatarImage src={c.foto} alt={c.nome} />}
+                      {c.foto && <PrivateAvatarImage src={c.foto} alt={c.nome} />}
                       <AvatarFallback className="text-2xl">{c.nome?.charAt(0)}</AvatarFallback>
                     </Avatar>
                     {isPresente && (

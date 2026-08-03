@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { X } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
+import { PrivateAvatarImage } from "@/shared/files/components/PrivateImage";
 import { cn } from "@shared/lib/utils/cn";
 import { GuidedPrayerCard, type GuidedCardData } from "./GuidedPrayerCard";
 import { GuidedPrayerComplete } from "./GuidedPrayerComplete";
@@ -29,7 +30,7 @@ function NextCardPreview({ pedido }: { pedido: GuidedCardData }) {
     >
       <div className="flex flex-col items-center gap-2">
         <Avatar className="h-[54px] w-[54px]">
-          {foto && <AvatarImage src={foto} alt={nome} />}
+          {foto && <PrivateAvatarImage src={foto} alt={nome} />}
           <AvatarFallback className={cn("text-lg", pedido.anonimo && "bg-secondary")}>
             {pedido.anonimo ? "🙏" : nome.charAt(0).toUpperCase()}
           </AvatarFallback>

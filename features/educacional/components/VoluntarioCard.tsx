@@ -2,9 +2,11 @@
 
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { Badge } from "@/shared/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
+import { PrivateAvatarImage } from "@/shared/files/components/PrivateImage";
 import { Button } from "@/shared/components/ui/button";
 import { Edit, Trash2, FileText, Phone, Mail, TriangleAlert } from "lucide-react";
+import { SignedFileLink } from "@/shared/files/components/SignedFileLink";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
@@ -64,7 +66,7 @@ export function VoluntarioCard({
       <CardContent className="py-3 space-y-2">
         <div className="flex items-start gap-3">
           <Avatar className="h-10 w-10 shrink-0">
-            {v.foto && <AvatarImage src={v.foto} alt={v.nome} />}
+            {v.foto && <PrivateAvatarImage src={v.foto} alt={v.nome} />}
             <AvatarFallback className="text-sm">{v.nome?.charAt(0)}</AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
@@ -123,10 +125,13 @@ export function VoluntarioCard({
               asChild
               className="h-auto p-0 text-xs"
             >
-              <a href={v.certificadoCacUrl} target="_blank" rel="noopener noreferrer">
+              <SignedFileLink
+                url={v.certificadoCacUrl}
+                className="inline-flex items-center gap-1"
+              >
                 <FileText className="h-3 w-3" />
                 Certificado
-              </a>
+              </SignedFileLink>
             </Button>
           )}
         </div>

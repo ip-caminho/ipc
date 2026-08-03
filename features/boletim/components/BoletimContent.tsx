@@ -6,7 +6,8 @@ import { Skeleton } from "@/shared/components/ui/skeleton";
 import { Button } from "@/shared/components/ui/button";
 import { ChevronLeft, ChevronRight, Church, Printer, BookOpen, Copy, Check, AArrowUp, AArrowDown } from "lucide-react";
 import { Logo } from "@shared/components/layout/Logo";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
+import { PrivateAvatarImage } from "@/shared/files/components/PrivateImage";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useState, useMemo } from "react";
@@ -432,7 +433,7 @@ export function BoletimContent() {
                 {pessoas.map((p, i) => (
                   <div key={i} className="flex flex-col items-center gap-1.5">
                     <Avatar className="h-12 w-12">
-                      {p.foto && <AvatarImage src={p.foto} />}
+                      {p.foto && <PrivateAvatarImage src={p.foto} />}
                       <AvatarFallback className="text-sm bg-accent text-primary">
                         {p.nome?.charAt(0)?.toUpperCase() || "?"}
                       </AvatarFallback>

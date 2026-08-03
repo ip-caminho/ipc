@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
+import { PrivateAvatarImage } from "@/shared/files/components/PrivateImage";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { MessageSquare, Calendar } from "lucide-react";
 import { TarefaStatusBadge } from "./TarefaStatusBadge";
@@ -59,7 +60,7 @@ export function TarefaCard({ tarefa }: TarefaCardProps) {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Avatar className="h-5 w-5">
-                {tarefa.responsavelFoto && <AvatarImage src={tarefa.responsavelFoto} />}
+                {tarefa.responsavelFoto && <PrivateAvatarImage src={tarefa.responsavelFoto} />}
                 <AvatarFallback className="text-[10px]">
                   {tarefa.responsavelNome.charAt(0)}
                 </AvatarFallback>

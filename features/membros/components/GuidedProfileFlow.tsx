@@ -14,7 +14,8 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
+import { PrivateAvatarImage } from "@/shared/files/components/PrivateImage";
 import { FileUpload } from "@/shared/files/components/FileUpload";
 import { toast } from "sonner";
 import { calculateCompleteness } from "@convex/membros/completeness";
@@ -189,7 +190,7 @@ export function GuidedProfileFlow() {
             >
               <div className="flex flex-col items-center gap-4">
                 <Avatar className="h-32 w-32 border-2 border-border">
-                  {ent.foto && <AvatarImage src={ent.foto} alt={ent.nomeCompleto || ""} />}
+                  {ent.foto && <PrivateAvatarImage src={ent.foto} alt={ent.nomeCompleto || ""} />}
                   <AvatarFallback className="text-4xl">{firstName.charAt(0).toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <FileUpload

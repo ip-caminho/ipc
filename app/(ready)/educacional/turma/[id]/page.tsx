@@ -10,7 +10,8 @@ import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
 import { DetailHeader } from "@shared/components/layout/DetailHeader";
 import { useAuth } from "@shared/providers/PermissionsProvider";
 import { Button } from "@/shared/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
+import { PrivateAvatarImage } from "@/shared/files/components/PrivateImage";
 import { Check, X, Minus, Send } from "lucide-react";
 import { TURMA_OPTIONS } from "@features/educacional/lib/constants";
 import { toast } from "sonner";
@@ -166,7 +167,7 @@ export default function TurmaProfessorPage() {
                   }`}
                 >
                   <Avatar className="h-12 w-12">
-                    {c.foto && <AvatarImage src={c.foto} alt={c.nome} />}
+                    {c.foto && <PrivateAvatarImage src={c.foto} alt={c.nome} />}
                     <AvatarFallback>
                       {c.nome?.charAt(0)?.toUpperCase() || "?"}
                     </AvatarFallback>

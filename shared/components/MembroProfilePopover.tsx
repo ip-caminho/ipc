@@ -2,7 +2,8 @@
 
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
+import { PrivateAvatarImage } from "@/shared/files/components/PrivateImage";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/components/ui/popover";
 import { Badge } from "@/shared/components/ui/badge";
 import { Skeleton } from "@/shared/components/ui/skeleton";
@@ -58,7 +59,7 @@ function ProfileCard({ membroId }: { membroId: Id<"membros"> }) {
     <div className="p-5 space-y-4">
       <div className="flex items-center gap-4">
         <Avatar className="h-16 w-16">
-          {profile.foto && <AvatarImage src={profile.foto} alt={profile.nome} />}
+          {profile.foto && <PrivateAvatarImage src={profile.foto} alt={profile.nome} />}
           <AvatarFallback className="text-xl">{profile.nome?.charAt(0)?.toUpperCase() || "?"}</AvatarFallback>
         </Avatar>
         <div className="min-w-0">

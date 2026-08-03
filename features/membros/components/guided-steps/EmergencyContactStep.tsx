@@ -5,7 +5,8 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
+import { PrivateAvatarImage } from "@/shared/files/components/PrivateImage";
 import { useDebounce } from "@shared/hooks/useDebounce";
 import { StepShell } from "./StepShell";
 
@@ -67,7 +68,7 @@ export function EmergencyContactStep({ percentage, value, onSave, onSkip, onBack
                   className="flex items-center gap-2 w-full px-3 py-2 text-left hover:bg-muted transition-colors"
                 >
                   <Avatar className="h-7 w-7">
-                    {m.foto && <AvatarImage src={m.foto} alt={m.nomeCompleto} />}
+                    {m.foto && <PrivateAvatarImage src={m.foto} alt={m.nomeCompleto} />}
                     <AvatarFallback className="text-xs">
                       {m.nomeCompleto.charAt(0)}
                     </AvatarFallback>

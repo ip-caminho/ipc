@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Image from "next/image";
+import { PrivateImage } from "@/shared/files/components/PrivateImage";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { format } from "date-fns";
@@ -90,15 +90,15 @@ function BirthdayAvatar({
       ? "ring-2 ring-blue-500 ring-offset-2 ring-offset-background"
       : "";
   const dotSize = size === "lg" ? "h-4 w-4" : "h-3 w-3";
+  // Foto de pessoa vive no bucket fechado: a URL e assinada e expira, entao
+  // nao passa pelo otimizador do next/image.
   const inner = p.foto ? (
-    <Image
+    <PrivateImage
       src={p.foto}
       alt={p.nome}
       width={size === "lg" ? 80 : 44}
       height={size === "lg" ? 80 : 44}
-      sizes={size === "lg" ? "80px" : "44px"}
       className={cn(sizeClass, "rounded-full object-cover", ring)}
-      unoptimized={!p.foto.startsWith("https://cdn.yhc.com.br")}
     />
   ) : (
     <div

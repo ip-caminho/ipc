@@ -31,7 +31,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/shared/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
+import { PrivateAvatarImage } from "@/shared/files/components/PrivateImage";
 import { LogOut, Globe, User, ClipboardList, Moon, Sun, ChevronsUpDown } from "lucide-react";
 import { Logo } from "@shared/components/layout/Logo";
 import { api } from "@/convex/_generated/api";
@@ -157,7 +158,7 @@ export function AppSidebar() {
                   className="data-[state=open]:bg-sidebar-accent"
                 >
                   <Avatar className="h-8 w-8">
-                    {foto && <AvatarImage src={foto} alt={name || "Usuario"} />}
+                    {foto && <PrivateAvatarImage src={foto} alt={name || "Usuario"} />}
                     <AvatarFallback>
                       {name?.charAt(0)?.toUpperCase() || "?"}
                     </AvatarFallback>
