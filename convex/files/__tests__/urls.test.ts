@@ -187,13 +187,20 @@ describe("files/urls", () => {
       );
     });
 
-    it("toda pasta tem regra de leitura definida", () => {
+    it("toda pasta tem regra de leitura explicita", () => {
       for (const folder of Object.keys(FOLDER_BUCKET)) {
         const perms = readPermissionsForKey(`${folder}/x_1.bin`);
+        // null aqui significaria pasta sem regra — leitura negada por engano.
+        expect(perms, `pasta "${folder}" sem regra de leitura`).not.toBeNull();
         expect(perms === "autenticado" || (Array.isArray(perms) && perms.length > 0)).toBe(
           true,
         );
       }
+    });
+
+    it("pasta desconhecida nega leitura (fail-closed)", () => {
+      expect(readPermissionsForKey("pasta-inventada/x.bin")).toBeNull();
+      expect(readPermissionsForKey("semPasta.bin")).toBeNull();
     });
   });
 });

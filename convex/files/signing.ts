@@ -52,7 +52,8 @@ export async function generatePresignedReadUrl(url: string): Promise<string | nu
  * em vez de uma chamada por imagem.
  */
 export async function generatePresignedReadUrls(
-  urls: string[]
+  urls: (string | null)[]
 ): Promise<(string | null)[]> {
-  return await Promise.all(urls.map((url) => generatePresignedReadUrl(url)));
+  // null = leitura negada para este usuario; nao assina.
+  return await Promise.all(urls.map((url) => (url ? generatePresignedReadUrl(url) : null)));
 }
