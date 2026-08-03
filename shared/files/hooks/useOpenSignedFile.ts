@@ -17,15 +17,26 @@ export function useOpenSignedFile() {
 
   async function abrir(url: string | null | undefined) {
     if (!url) return;
+    // A aba precisa ser aberta AGORA, ainda dentro do clique: depois do await
+    // da assinatura o browser ja perdeu a ativacao do usuario e bloqueia o
+    // popup (Safari e Firefox silenciosamente).
+    const aba = window.open("", "_blank", "noopener,noreferrer");
     try {
       setAbrindo(url);
       const assinada = await getReadUrl({ url });
       if (!assinada) {
+        aba?.close();
         toast.error("Você não tem permissão para abrir este arquivo");
         return;
       }
-      window.open(assinada, "_blank", "noopener,noreferrer");
+      if (aba) {
+        aba.location.href = assinada;
+      } else {
+        // Popup bloqueado mesmo assim: navega na propria aba.
+        window.location.href = assinada;
+      }
     } catch {
+      aba?.close();
       toast.error("Não foi possível abrir o arquivo");
     } finally {
       setAbrindo(null);

@@ -26,23 +26,31 @@ export const getUploadUrl = action({
 
 export const getReadUrl = action({
   args: { url: v.string() },
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<string | null> => {
     // @ts-ignore Convex TS2589 (instanciacao de tipo profunda)
-    await ctx.runQuery(internal.files.authz.checkReadAccess, { urls: [args.url] });
+    const permitidas: boolean[] = await ctx.runQuery(internal.files.authz.checkReadAccess, {
+      urls: [args.url],
+    });
+    if (!permitidas[0]) return null;
     return await generatePresignedReadUrl(args.url);
   },
 });
 
 // Assina a tela inteira de uma vez (listas de avatar) em vez de uma action por
-// imagem.
+// imagem. Arquivo sem permissao volta como null, sem derrubar o resto do lote.
 export const getReadUrls = action({
   args: { urls: v.array(v.string()) },
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<(string | null)[]> => {
     if (args.urls.length === 0) return [];
     if (args.urls.length > 200) throw new Error("Muitas URLs por chamada (max 200)");
     // @ts-ignore Convex TS2589 (instanciacao de tipo profunda)
-    await ctx.runQuery(internal.files.authz.checkReadAccess, { urls: args.urls });
-    return await generatePresignedReadUrls(args.urls);
+    const permitidas: boolean[] = await ctx.runQuery(internal.files.authz.checkReadAccess, {
+      urls: args.urls,
+    });
+    const assinadas = await generatePresignedReadUrls(
+      args.urls.map((url, i) => (permitidas[i] ? url : null)),
+    );
+    return assinadas;
   },
 });
 
