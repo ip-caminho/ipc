@@ -1,6 +1,18 @@
-import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import {
+  S3Client,
+  PutObjectCommand,
+  DeleteObjectCommand,
+  CopyObjectCommand,
+  HeadObjectCommand,
+} from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { bucketForKey, getBucketName, getStorageUrl, parseFileUrl } from "./urls";
+import {
+  bucketForKey,
+  getBucketName,
+  getPrivateCanonicalUrl,
+  getStorageUrl,
+  parseFileUrl,
+} from "./urls";
 
 // Reexporta o que nao depende do SDK, para os call sites existentes seguirem
 // importando de "files/helpers". Codigo novo em runtime V8 deve importar de
@@ -77,6 +89,33 @@ export async function putObject(
     })
   );
   return getStorageUrl(key);
+}
+
+/**
+ * Copia um objeto do bucket aberto para o fechado, mantendo a mesma chave.
+ * Usado pela migracao. Idempotente: se ja existe no destino, nao copia de novo.
+ * Devolve a URL canonica do destino.
+ */
+export async function copiarParaPrivado(key: string): Promise<string> {
+  const s3 = createS3Client();
+  const destino = getBucketName("privado");
+
+  try {
+    await s3.send(new HeadObjectCommand({ Bucket: destino, Key: key }));
+    return getPrivateCanonicalUrl(key);
+  } catch {
+    // Nao existe no destino ainda — segue para a copia.
+  }
+
+  await s3.send(
+    new CopyObjectCommand({
+      Bucket: destino,
+      Key: key,
+      // O B2 espera "<bucket>/<key>" com a chave escapada.
+      CopySource: `${getBucketName("publico")}/${key.split("/").map(encodeURIComponent).join("/")}`,
+    })
+  );
+  return getPrivateCanonicalUrl(key);
 }
 
 export async function deleteFromB2(url: string): Promise<boolean> {
