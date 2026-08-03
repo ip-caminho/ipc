@@ -40,10 +40,15 @@ const FOLDER_READ_PERMISSIONS: Record<string, string[] | "autenticado"> = {
   "retiro-comprovantes": ["inscricoes:manage"],
 };
 
-export function readPermissionsForKey(key: string): string[] | "autenticado" {
+/**
+ * Permissoes de leitura da chave. `null` = pasta nao registrada: nega, do mesmo
+ * jeito que o upload nega pasta fora do FOLDER_BUCKET. Sem isso, bastaria estar
+ * logado para assinar qualquer chave de pasta esquecida no mapa.
+ */
+export function readPermissionsForKey(key: string): string[] | "autenticado" | null {
   const folder = folderFromKey(key);
-  if (!folder) return "autenticado";
-  return FOLDER_READ_PERMISSIONS[folder] ?? "autenticado";
+  if (!folder) return null;
+  return FOLDER_READ_PERMISSIONS[folder] ?? null;
 }
 
 // Chamada pelo action getUploadUrl (Node) via runQuery — actions nao tem ctx.db.
@@ -60,27 +65,51 @@ export const checkUploadAccess = internalQuery({
 });
 
 /**
- * Autoriza a assinatura de leitura das URLs pedidas. URL de host desconhecido
- * (foto ainda no Tally) passa com login — nao ha bucket nosso a proteger.
+ * Diz, por URL, se este usuario pode ler. Devolve um array em vez de lancar:
+ * uma tela costuma misturar avatar (qualquer autenticado) com documento
+ * restrito, e lancar faria a tela inteira perder as imagens por causa de um
+ * unico arquivo proibido.
+ *
+ * URL de host desconhecido (foto ainda no Tally) e bucket aberto passam — nao
+ * ha nada nosso a proteger ali.
  */
 export const checkReadAccess = internalQuery({
   args: { urls: v.array(v.string()) },
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<boolean[]> => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
 
-    const exigidas = new Set<string>();
+    // Uma checagem por conjunto de permissoes, nao por URL.
+    const jaAvaliado = new Map<string, boolean>();
+    const permitidas: boolean[] = [];
+
     for (const url of args.urls) {
       const parsed = parseFileUrl(url);
-      if (!parsed) continue;
+      if (!parsed || parsed.bucketKey === "publico") {
+        permitidas.push(true);
+        continue;
+      }
       const perms = readPermissionsForKey(parsed.key);
-      if (perms === "autenticado") continue;
-      exigidas.add(JSON.stringify(perms));
+      if (perms === "autenticado") {
+        permitidas.push(true);
+        continue;
+      }
+      if (perms === null) {
+        permitidas.push(false);
+        continue;
+      }
+      const chave = perms.join("|");
+      if (!jaAvaliado.has(chave)) {
+        try {
+          await requireAnyPermission(ctx, perms);
+          jaAvaliado.set(chave, true);
+        } catch {
+          jaAvaliado.set(chave, false);
+        }
+      }
+      permitidas.push(jaAvaliado.get(chave)!);
     }
 
-    for (const serializada of exigidas) {
-      await requireAnyPermission(ctx, JSON.parse(serializada) as string[]);
-    }
-    return true;
+    return permitidas;
   },
 });

@@ -90,17 +90,7 @@ function BirthdayAvatar({
       ? "ring-2 ring-blue-500 ring-offset-2 ring-offset-background"
       : "";
   const dotSize = size === "lg" ? "h-4 w-4" : "h-3 w-3";
-  // Foto de pessoa vive no bucket fechado: a URL e assinada e expira, entao
-  // nao passa pelo otimizador do next/image.
-  const inner = p.foto ? (
-    <PrivateImage
-      src={p.foto}
-      alt={p.nome}
-      width={size === "lg" ? 80 : 44}
-      height={size === "lg" ? 80 : 44}
-      className={cn(sizeClass, "rounded-full object-cover", ring)}
-    />
-  ) : (
+  const inicial = (
     <div
       aria-label={p.nome}
       className={cn(
@@ -114,6 +104,21 @@ function BirthdayAvatar({
     >
       {initial}
     </div>
+  );
+  // Foto de pessoa vive no bucket fechado: a URL e assinada e expira, entao
+  // nao passa pelo otimizador do next/image. Enquanto assina (ou se a leitura
+  // falhar) fica a inicial, para o layout nao saltar.
+  const inner = p.foto ? (
+    <PrivateImage
+      src={p.foto}
+      alt={p.nome}
+      width={size === "lg" ? 80 : 44}
+      height={size === "lg" ? 80 : 44}
+      className={cn(sizeClass, "rounded-full object-cover", ring)}
+      fallback={inicial}
+    />
+  ) : (
+    inicial
   );
 
   // Dot ambar no canto sinaliza "do seu PG" mesmo fora da janela de destaque.

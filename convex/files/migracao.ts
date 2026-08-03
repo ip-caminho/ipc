@@ -3,8 +3,8 @@
 import { v } from "convex/values";
 import { internalAction } from "../_generated/server";
 import { internal } from "../_generated/api";
-import { copiarParaPrivado, putObject } from "./helpers";
-import { bucketForKey, generateObjectKey, parseFileUrl } from "./urls";
+import { apagarDoPublico, copiarParaPrivado, putObject } from "./helpers";
+import { bucketForKey, generateObjectKey, parseFileUrl, privadoIndisponivel } from "./urls";
 import { ALVOS } from "./migracaoDb";
 
 // Migracao dos arquivos que ja existem para o bucket fechado (fase 3 do PRD
@@ -19,8 +19,13 @@ import { ALVOS } from "./migracaoDb";
 //  - falha em um arquivo nao derruba o lote; a URL antiga fica e entra na
 //    proxima rodada
 //
-//   npx convex run files/migracao:migrar '{"dryRun":true}'
-//   npx convex run files/migracao:migrar '{}'
+//   npx convex run files/migracao:migrar '{"dryRun":true}'   ve o que faria
+//   npx convex run files/migracao:migrar '{}'                copia/re-hospeda
+//   npx convex run files/migracao:migrar '{"apagarOrigem":true}'  fecha o antigo
+//
+// ATENCAO: enquanto `pendentesDeLimpeza` nao chegar a zero, o arquivo migrado
+// continua acessivel SEM login na chave antiga do CDN — o vazamento so fecha na
+// rodada com apagarOrigem.
 
 const PASTA_POR_ALVO: Record<string, string> = {
   "entidades.foto": "membros/fotos",
@@ -36,6 +41,10 @@ type Resultado = {
   jaMigrados: number;
   ignorados: number;
   falhas: number;
+  // Objetos copiados que continuam no bucket ABERTO — ou seja, ainda abrem sem
+  // login na chave antiga do CDN. Zerar isto e o que fecha o vazamento.
+  pendentesDeLimpeza: number;
+  apagadosDoPublico: number;
   detalhes: string[];
 };
 
@@ -57,12 +66,21 @@ async function migrarUrl(
   pastaDestino: string,
   entityId: string,
   dryRun: boolean,
+  apagarOrigem: boolean,
   r: Resultado,
+  // Chaves copiadas que ficam para apagar do bucket aberto DEPOIS do patch.
+  aLimpar: string[],
 ): Promise<string | null> {
   const parsed = parseFileUrl(url);
 
   if (parsed?.bucketKey === "privado") {
     r.jaMigrados++;
+    // Uma rodada anterior pode ter copiado e deixado o original no bucket
+    // aberto (mesma chave) — sem isto, o fluxo recomendado (rodar sem apagar,
+    // conferir, rodar apagando) nunca apagaria nada. So entra na fila quando a
+    // limpeza foi pedida: aqui nao se sabe se ha original la, e contar como
+    // pendente inflaria o numero com os arquivos re-hospedados.
+    if (!dryRun && apagarOrigem) aLimpar.push(parsed.key);
     return null;
   }
 
@@ -85,6 +103,7 @@ async function migrarUrl(
     }
     const nova = await copiarParaPrivado(parsed.key);
     r.copiados++;
+    aLimpar.push(parsed.key);
     return nova;
   }
 
@@ -115,11 +134,24 @@ export const migrar = internalAction({
     alvo: v.optional(v.string()),
     // So relata o que faria, sem tocar em B2 nem banco.
     dryRun: v.optional(v.boolean()),
+    // Apaga o original do bucket aberto depois de copiar E reescrever o banco.
+    // Padrao false: rode uma vez sem, confira, e so entao rode com true. So
+    // enquanto isso nao rodar o arquivo continua aberto na chave antiga.
+    apagarOrigem: v.optional(v.boolean()),
     loteTamanho: v.optional(v.number()),
   },
   handler: async (ctx, args): Promise<Record<string, Resultado>> => {
+    // Sem o bucket fechado configurado, getBucketName("privado") cai no aberto:
+    // a "copia" acharia o proprio arquivo de origem e a migracao reescreveria a
+    // base inteira sem ter movido nada. Melhor nao comecar.
+    if (privadoIndisponivel()) {
+      throw new Error(
+        "BACKBLAZE_BUCKET_PRIVADO nao configurado — configure antes de migrar",
+      );
+    }
     const alvos = args.alvo ? [args.alvo] : [...ALVOS];
     const dryRun = args.dryRun ?? false;
+    const apagarOrigem = args.apagarOrigem ?? false;
     const limite = args.loteTamanho ?? 50;
     const geral: Record<string, Resultado> = {};
 
@@ -130,6 +162,8 @@ export const migrar = internalAction({
         jaMigrados: 0,
         ignorados: 0,
         falhas: 0,
+        pendentesDeLimpeza: 0,
+        apagadosDoPublico: 0,
         detalhes: [],
       };
       const pasta = PASTA_POR_ALVO[alvo];
@@ -142,9 +176,18 @@ export const migrar = internalAction({
 
         for (const doc of lote.docs) {
           const trocas: { de: string; para: string }[] = [];
+          const aLimpar: string[] = [];
           for (const url of doc.urls) {
             try {
-              const nova = await migrarUrl(url, pasta, doc.entityId, dryRun, r);
+              const nova = await migrarUrl(
+                url,
+                pasta,
+                doc.entityId,
+                dryRun,
+                apagarOrigem,
+                r,
+                aLimpar,
+              );
               if (nova) trocas.push({ de: url, para: nova });
             } catch (e) {
               r.falhas++;
@@ -160,6 +203,23 @@ export const migrar = internalAction({
               id: doc.id,
               trocas,
             });
+          }
+
+          // So agora o original pode sair: a copia esta no destino e o banco ja
+          // aponta para ela. Na ordem inversa, uma falha no patch deixaria o
+          // registro apontando para arquivo apagado.
+          for (const key of aLimpar) {
+            if (!apagarOrigem) {
+              r.pendentesDeLimpeza++;
+              continue;
+            }
+            const res = await apagarDoPublico(key);
+            if (res === "apagado") r.apagadosDoPublico++;
+            else if (res === "falha") {
+              r.pendentesDeLimpeza++;
+              r.detalhes.push(`FALHA apagar do publico: ${key}`);
+            }
+            // "inexistente": arquivo re-hospedado, nunca esteve no publico.
           }
         }
 
