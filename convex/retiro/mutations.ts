@@ -1,4 +1,5 @@
 import { mutation } from "../_generated/server";
+import { apagarArquivosSumidos } from "../files/orfaos";
 import { v } from "convex/values";
 import { requirePermission } from "../_shared/requirePermission";
 import { createActionAuditLog, createFieldAuditLogs } from "../_shared/auditHelpers";
@@ -363,10 +364,12 @@ export const removerRecebimento = mutation({
     await requirePermission(ctx, "inscricoes:manage");
     const insc = await ctx.db.get(id);
     if (!insc || !insc.recebimentos[index]) throw new Error("Recebimento não encontrado");
-    await ctx.db.patch(id, {
-      recebimentos: insc.recebimentos.filter((_, i) => i !== index),
-      atualizadoEm: Date.now(),
-    });
+    const recebimentos = insc.recebimentos.filter((_, i) => i !== index);
+    await ctx.db.patch(id, { recebimentos, atualizadoEm: Date.now() });
+    // O mesmo comprovante pode estar tambem em comprovantesPendentes (a
+    // secretaria registra a partir do que o pagante enviou) — o helper compara
+    // os dois arrays, entao so apaga o arquivo quando ninguem mais o referencia.
+    await apagarArquivosSumidos(ctx, "inscricoesRetiro", insc, { ...insc, recebimentos });
     await createActionAuditLog(ctx, "RECEBIMENTO_REMOVIDO", "inscricoesRetiro", id);
     return id;
   },
@@ -382,9 +385,11 @@ export const removerComprovantePendente = mutation({
     const insc = await ctx.db.get(id);
     const pendentes = insc?.comprovantesPendentes ?? [];
     if (!insc || !pendentes[index]) throw new Error("Comprovante não encontrado");
-    await ctx.db.patch(id, {
-      comprovantesPendentes: pendentes.filter((_, i) => i !== index),
-      atualizadoEm: Date.now(),
+    const comprovantesPendentes = pendentes.filter((_, i) => i !== index);
+    await ctx.db.patch(id, { comprovantesPendentes, atualizadoEm: Date.now() });
+    await apagarArquivosSumidos(ctx, "inscricoesRetiro", insc, {
+      ...insc,
+      comprovantesPendentes,
     });
     return id;
   },

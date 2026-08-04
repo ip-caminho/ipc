@@ -1,4 +1,5 @@
 import { mutation, internalMutation } from "../_generated/server";
+import { apagarArquivosSumidos } from "../files/orfaos";
 import { v } from "convex/values";
 import { requirePermission } from "../_shared/requirePermission";
 import { createActionAuditLog } from "../_shared/auditHelpers";
@@ -108,7 +109,12 @@ export const updateCrianca = mutation({
     if (updates.sexo !== undefined) entidadeUpdates.sexo = updates.sexo;
     if (updates.foto !== undefined) entidadeUpdates.foto = updates.foto;
     if (Object.keys(entidadeUpdates).length > 0) {
+      const entidadeAntes = await ctx.db.get(entidadeId);
       await ctx.db.patch(entidadeId, entidadeUpdates);
+      await apagarArquivosSumidos(ctx, "entidades", entidadeAntes, {
+        ...entidadeAntes,
+        ...entidadeUpdates,
+      });
     }
 
     // Atualizar perfil
@@ -324,6 +330,8 @@ export const updateVoluntario = mutation({
     if (Object.keys(patch).length > 0) {
       patch.atualizadoEm = Date.now();
       await ctx.db.patch(id, patch);
+      // Trocar ou limpar o certificado tem que levar o arquivo antigo junto.
+      await apagarArquivosSumidos(ctx, "eduVoluntarios", vol, { ...vol, ...patch });
     }
     await createActionAuditLog(ctx, "UPDATE", "eduVoluntarios", id);
     return id;
@@ -339,6 +347,7 @@ export const removeVoluntario = mutation({
     if (!vol) throw new Error("Voluntario nao encontrado");
 
     await ctx.db.delete(id);
+    await apagarArquivosSumidos(ctx, "eduVoluntarios", vol, null);
     await createActionAuditLog(ctx, "DELETE", "eduVoluntarios", id);
   },
 });
