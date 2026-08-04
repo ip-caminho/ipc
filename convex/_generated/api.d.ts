@@ -67,6 +67,7 @@ import type * as files_authz from "../files/authz.js";
 import type * as files_helpers from "../files/helpers.js";
 import type * as files_migracao from "../files/migracao.js";
 import type * as files_migracaoDb from "../files/migracaoDb.js";
+import type * as files_orfaos from "../files/orfaos.js";
 import type * as files_signing from "../files/signing.js";
 import type * as files_upload from "../files/upload.js";
 import type * as files_urls from "../files/urls.js";
@@ -223,6 +224,7 @@ declare const fullApi: ApiFromModules<{
   "files/helpers": typeof files_helpers;
   "files/migracao": typeof files_migracao;
   "files/migracaoDb": typeof files_migracaoDb;
+  "files/orfaos": typeof files_orfaos;
   "files/signing": typeof files_signing;
   "files/upload": typeof files_upload;
   "files/urls": typeof files_urls;
