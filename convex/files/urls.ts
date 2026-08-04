@@ -24,6 +24,10 @@ export const FOLDER_BUCKET: Record<string, BucketKey> = {
   "educacional/fotos": "privado",
   "educacional/certificados-cac": "privado",
   "retiro-comprovantes": "privado",
+  // Legado: comprovantes do acampamento, antes de virar "retiro". Nao ha mais
+  // upload por aqui, mas os arquivos existem em producao e precisam fechar
+  // junto — sem esta linha eles ficariam publicos para sempre.
+  "acampamento-comprovantes": "privado",
 };
 
 export function getBucketName(bucketKey: BucketKey): string {
