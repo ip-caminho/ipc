@@ -6,6 +6,7 @@ import {
   generateObjectKey,
   getStorageUrl,
   parseFileUrl,
+  readTtlSegundos,
   toCdnUrl,
 } from "../urls";
 import { FOLDER_PERMISSIONS, readPermissionsForKey } from "../authz";
@@ -202,5 +203,22 @@ describe("files/urls", () => {
       expect(readPermissionsForKey("pasta-inventada/x.bin")).toBeNull();
       expect(readPermissionsForKey("semPasta.bin")).toBeNull();
     });
+  });
+});
+
+describe("TTL de leitura por sensibilidade", () => {
+  it("foto de pessoa dura 24h (corta re-assinatura em lista)", () => {
+    expect(readTtlSegundos("membros/fotos/m_1.jpg")).toBe(86400);
+    expect(readTtlSegundos("educacional/fotos/c_1.jpg")).toBe(86400);
+  });
+
+  it("documento sensivel dura 1h", () => {
+    expect(readTtlSegundos("retiro-comprovantes/i_1.pdf")).toBe(3600);
+    expect(readTtlSegundos("membros/cartas-transferencia/m_1.pdf")).toBe(3600);
+    expect(readTtlSegundos("educacional/certificados-cac/v_1.pdf")).toBe(3600);
+  });
+
+  it("pasta desconhecida cai no prazo curto", () => {
+    expect(readTtlSegundos("pasta-inventada/x.bin")).toBe(3600);
   });
 });
