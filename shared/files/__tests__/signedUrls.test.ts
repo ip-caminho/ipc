@@ -75,3 +75,32 @@ describe("signedUrls", () => {
     });
   });
 });
+
+describe("cache acompanha a validade da assinatura", () => {
+  const ENDPOINT_URL = "https://s3.us-east-005.backblazeb2.com/ipc-privado";
+
+  it("foto (24h) fica em cache muito mais que documento (1h)", async () => {
+    const foto = `${ENDPOINT_URL}/membros/fotos/f_1.jpg`;
+    const doc = `${ENDPOINT_URL}/retiro-comprovantes/c_1.pdf`;
+    const resolver = vi.fn(async ({ urls: u }: { urls: string[] }) =>
+      u.map((x) =>
+        x.includes("membros/fotos")
+          ? `${x}?X-Amz-Expires=86400&X-Amz-Signature=a`
+          : `${x}?X-Amz-Expires=3600&X-Amz-Signature=b`,
+      ),
+    );
+
+    await Promise.all([resolverUrl(foto, resolver), resolverUrl(doc, resolver)]);
+
+    // Ambas em cache agora; a diferenca esta em quanto tempo sobrevivem.
+    expect(doCache(foto)).toContain("X-Amz-Expires=86400");
+    expect(doCache(doc)).toContain("X-Amz-Expires=3600");
+
+    // Passadas 2h: a do documento expirou, a da foto continua valendo.
+    const agora = Date.now();
+    vi.spyOn(Date, "now").mockReturnValue(agora + 2 * 60 * 60 * 1000);
+    expect(doCache(doc)).toBeUndefined();
+    expect(doCache(foto)).toContain("X-Amz-Expires=86400");
+    vi.mocked(Date.now).mockRestore();
+  });
+});

@@ -8,12 +8,26 @@
 
 type Resolver = (args: { urls: string[] }) => Promise<(string | null)[]>;
 
-// A URL assinada vale 1h no backend; renovamos antes para nao entregar uma
-// que expira no meio do uso.
-const TTL_MS = 50 * 60 * 1000;
+// Quanto da validade da assinatura usamos antes de pedir outra. Renovar um
+// pouco antes evita entregar URL que expira no meio do uso.
+const FRACAO_DA_VALIDADE = 0.9;
+// Se a URL nao disser a validade (CDN, host externo), nao ha o que renovar.
+const TTL_PADRAO_MS = 50 * 60 * 1000;
 // Falha (sem permissao, rede) fica pouco tempo em cache, so para nao repetir
 // a chamada em loop a cada render.
 const TTL_ERRO_MS = 30 * 1000;
+
+/**
+ * Validade real da assinatura, lida do proprio link (`X-Amz-Expires`). Assim o
+ * cache acompanha o TTL que o backend escolheu para aquela pasta — hoje 24h
+ * para foto e 1h para documento — sem um segundo campo no contrato.
+ */
+function validadeDaUrl(url: string | null): number {
+  if (!url) return TTL_ERRO_MS;
+  const m = url.match(/[?&]X-Amz-Expires=(\d+)/);
+  if (!m) return TTL_PADRAO_MS;
+  return Number(m[1]) * 1000 * FRACAO_DA_VALIDADE;
+}
 // Espelha o limite validado em files/upload.ts (getReadUrls).
 const MAX_POR_CHAMADA = 200;
 
@@ -40,10 +54,7 @@ export function doCache(url: string): string | null | undefined {
 }
 
 function guardar(url: string, valor: string | null) {
-  cache.set(url, {
-    valor,
-    expira: Date.now() + (valor === null ? TTL_ERRO_MS : TTL_MS),
-  });
+  cache.set(url, { valor, expira: Date.now() + validadeDaUrl(valor) });
 }
 
 function entregar(url: string, valor: string | null) {

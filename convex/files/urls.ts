@@ -30,6 +30,25 @@ export const FOLDER_BUCKET: Record<string, BucketKey> = {
   "acampamento-comprovantes": "privado",
 };
 
+// Validade da URL assinada de leitura, por sensibilidade da pasta.
+//
+// Foto de pessoa aparece em lista (dezenas por tela) e qualquer autenticado ja
+// pode ve-la no sistema: a assinatura serve para barrar acesso anonimo, nao
+// para compartimentar. Janela longa corta a re-assinatura — que e egress puro,
+// 442 bytes por imagem a cada expiracao — sem mudar quem consegue acesso.
+//
+// Documento (comprovante, carta, certificado) e o dado sensivel de verdade e
+// abre por clique, um de cada vez: janela curta, custo irrisorio.
+const TTL_LEITURA_LONGO = 24 * 60 * 60;
+const TTL_LEITURA_CURTO = 60 * 60;
+
+const PASTAS_TTL_LONGO = new Set(["membros/fotos", "educacional/fotos"]);
+
+export function readTtlSegundos(key: string): number {
+  const folder = folderFromKey(key);
+  return folder && PASTAS_TTL_LONGO.has(folder) ? TTL_LEITURA_LONGO : TTL_LEITURA_CURTO;
+}
+
 export function getBucketName(bucketKey: BucketKey): string {
   if (bucketKey === "publico") {
     const nome = process.env.BACKBLAZE_BUCKET_PUBLICO || process.env.BACKBLAZE_BUCKET_NAME;
