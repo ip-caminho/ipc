@@ -1,8 +1,58 @@
 # Segregação de arquivos em buckets B2 por sensibilidade (LGPD)
 
-> Status: **not-started** · Planejado, aguardando implementação.
-> v3 — incorpora 2 rodadas de revisão adversarial (2 bloqueadores + 4 altos + 7 médios corrigidos).
-> Delete de órfãos (direito ao esquecimento) fica para fase separada.
+> Status: **CONCLUÍDO em produção** (04/08/2026) · issue #206 · PRs #207, #208, #209, #210.
+> Uma pendência fora do código: purgar o cache do Cloudflare (ver "Estado final").
+
+## Estado final (verificado em produção)
+
+| | Bucket aberto `ipc-files` | Bucket fechado `ipc-privado` |
+|---|---|---|
+| Conteúdo | 155 áudios de sermão + 1 capa | 269 fotos + 1 comprovante |
+| Dado pessoal | **nenhum** | todo |
+| Acesso sem assinatura | público (é o objetivo) | **401** |
+| Lifecycle | versão antiga expira em 1 dia | idem |
+
+Migração: 122 fotos re-hospedadas (vinham do Tally), 18 arquivos copiados entre
+buckets, 17 originais apagados, 12 órfãos removidos. Zero falhas.
+
+### Pendência (ação no painel, fora do código)
+
+**Purgar o cache do Cloudflare.** Arquivos apagados do B2 seguem sendo servidos
+pelo CDN enquanto o cache viver — herdaram `max-age` de 1 ano de quando eram
+públicos. Verificado em 04/08: o comprovante do retiro ainda responde 200 com
+`cf-cache-status: HIT` apesar de o B2 devolver 404. Caching → Purge Everything.
+
+## O que o plano não previu (e apareceu na execução)
+
+- **Pasta legada `acampamento-comprovantes`** — o dry-run em produção acusou 1
+  arquivo "ignorado": um comprovante numa pasta anterior à renomeação do módulo
+  para "retiro", que não existia em nenhum mapa. Sem registrá-la, aquele
+  comprovante ficaria público para sempre. O dry-run passou a denunciar pasta
+  não registrada em vez de ignorar em silêncio.
+- **12 arquivos órfãos** — fotos de pessoas no bucket aberto sem nenhum registro
+  apontando para elas (resíduo de troca de foto: cada troca gravava chave nova e
+  abandonava a anterior). A migração percorre o BANCO, então nunca as veria.
+  Apagadas após identificação.
+- **Cache do CDN** — apagar do bucket não fecha o acesso enquanto o CDN tiver
+  cópia. Só descoberto ao conferir o resultado da limpeza.
+- **`ContentType` perdido na cópia** — `MetadataDirective: REPLACE` substitui
+  todos os metadados; sem repassar o tipo, o comprovante virava
+  `binary/octet-stream` e baixaria em vez de exibir. Reparado antes de apagar os
+  originais — depois disso não haveria mais de onde recuperar o tipo.
+- **Retrocompatibilidade do `Cache-Control`** — o backend vai a produção antes do
+  frontend; assinar o upload com `private` enquanto o frontend ainda mandava o
+  valor antigo quebraria todo upload com 403. O valor só muda junto com a env.
+
+## Fase futura (não feita)
+
+**Direito ao esquecimento / órfãos novos.** Trocar ou remover foto continua
+deixando o arquivo no bucket: `PhotoUpload` só desassocia no banco. Hoje apenas
+a exclusão de gravação apaga no B2 (`convex/gravacoes/mutations.ts`). Enquanto
+isso não for tratado, a lista de órfãos volta a crescer.
+
+---
+
+> Plano original abaixo, mantido como registro do que foi desenhado.
 
 ## Context
 
