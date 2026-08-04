@@ -89,3 +89,50 @@ describe("apagarArquivosSumidos", () => {
     expect(spy).not.toHaveBeenCalled();
   });
 });
+
+describe("documento legal nao some por esvaziamento de campo", () => {
+  const CARTA = "https://s3.us-east-005.backblazeb2.com/ipc-privado/membros/cartas-transferencia/m_1.pdf";
+  const CARTA2 = "https://s3.us-east-005.backblazeb2.com/ipc-privado/membros/cartas-transferencia/m_2.pdf";
+
+  it("esvaziar o campo NAO apaga a carta", async () => {
+    // O form eclesiastico limpa a carta ao trocar a forma de demissao; um
+    // clique errado nao pode destruir documento legal.
+    const { ctx, agendados } = ctxFake();
+    await apagarArquivosSumidos(ctx, "membros", { cartaTransferencia: CARTA }, {});
+    expect(agendados).toEqual([]);
+  });
+
+  it("substituir por outra carta apaga a antiga", async () => {
+    const { ctx, agendados } = ctxFake();
+    await apagarArquivosSumidos(
+      ctx,
+      "membros",
+      { cartaTransferencia: CARTA },
+      { cartaTransferencia: CARTA2 },
+    );
+    expect(agendados).toEqual([CARTA]);
+  });
+
+  it("excluir o documento inteiro apaga a carta", async () => {
+    const { ctx, agendados } = ctxFake();
+    await apagarArquivosSumidos(ctx, "membros", { cartaTransferencia: CARTA }, null);
+    expect(agendados).toEqual([CARTA]);
+  });
+
+  it("foto continua sendo apagada ao esvaziar (remover foto e intencional)", async () => {
+    const { ctx, agendados } = ctxFake();
+    await apagarArquivosSumidos(ctx, "entidades", { foto: A }, {});
+    expect(agendados).toEqual([A]);
+  });
+
+  it("mesma URL em dois campos gera um unico delete", async () => {
+    const { ctx, agendados } = ctxFake();
+    await apagarArquivosSumidos(
+      ctx,
+      "inscricoesRetiro",
+      { recebimentos: [{ comprovanteUrl: COMP1 }], comprovantesPendentes: [{ comprovanteUrl: COMP1 }] },
+      null,
+    );
+    expect(agendados).toEqual([COMP1]);
+  });
+});

@@ -4,6 +4,7 @@ import { action, internalAction } from "../_generated/server";
 import { internal } from "../_generated/api";
 import { v } from "convex/values";
 import { generateObjectKey, generatePresignedUploadUrl, deleteFromB2 } from "./helpers";
+import { parseFileUrl } from "./urls";
 import { generatePresignedReadUrl, generatePresignedReadUrls } from "./signing";
 
 export const getUploadUrl = action({
@@ -54,11 +55,20 @@ export const getReadUrls = action({
   },
 });
 
-// Somente backend (scheduler em gravacoes/mutations) — nao expor ao cliente
+// Somente backend (agendado pelas mutations via files/orfaos) — nao expor ao
+// cliente. Lanca quando o B2 recusa: falhar em silencio deixaria dado pessoal
+// no bucket sem ninguem saber, e sem erro o scheduler nao tenta de novo.
 export const deleteFile = internalAction({
   args: { url: v.string() },
   handler: async (_ctx, args) => {
-    return await deleteFromB2(args.url);
+    const apagado = await deleteFromB2(args.url);
+    if (!apagado) {
+      // parseFileUrl devolve null p/ host que nao e nosso (foto ainda no Tally,
+      // capa vinda do Google Books): nao ha o que apagar, nao e erro.
+      if (!parseFileUrl(args.url)) return false;
+      throw new Error(`Falha ao apagar no B2: ${args.url}`);
+    }
+    return true;
   },
 });
 

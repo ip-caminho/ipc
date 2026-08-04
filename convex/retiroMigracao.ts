@@ -1,4 +1,5 @@
 import { internalMutation } from "./_generated/server";
+import { apagarArquivosSumidos } from "./files/orfaos";
 
 // Migracao unica acampamento* -> retiro* — JA CONCLUIDA e desativada. O modelo
 // de precos do retiro mudou (precos por tipo de quarto + refeicoes), tornando o
@@ -26,6 +27,9 @@ export const resetRetiros = internalMutation({
     for (const t of ["quartosRetiro", "inscricoesRetiro", "retiros"] as const) {
       for (const d of await ctx.db.query(t).collect()) {
         await ctx.db.delete(d._id);
+        // Comprovante de pagamento e dado pessoal: apagar a inscricao sem
+        // levar o arquivo junto deixaria PII orfa no bucket fechado.
+        await apagarArquivosSumidos(ctx, t, d, null);
         n++;
       }
     }
@@ -42,6 +46,9 @@ export const limpar = internalMutation({
     for (const t of ["quartosAcampamento", "inscricoesAcampamento", "acampamentos"] as const) {
       for (const d of await ctx.db.query(t).collect()) {
         await ctx.db.delete(d._id);
+        // Comprovante de pagamento e dado pessoal: apagar a inscricao sem
+        // levar o arquivo junto deixaria PII orfa no bucket fechado.
+        await apagarArquivosSumidos(ctx, t, d, null);
         n++;
       }
     }
