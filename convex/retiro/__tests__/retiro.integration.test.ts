@@ -476,6 +476,15 @@ describe("retiro admin (fase 3)", () => {
     expect(deletes[0].args[0].url).toBe(
       "https://cdn.yhc.com.br/retiro-comprovantes/x.jpg",
     );
+
+    // Cancela o agendamento: deixar o convex-test executar o action de delete
+    // (que tentaria falar com o B2) faz a lib estourar ao gravar o status em
+    // _scheduled_functions. O que importa aqui ja foi verificado acima.
+    await t.run(async (ctx) => {
+      for (const f of await ctx.db.system.query("_scheduled_functions").collect()) {
+        await ctx.scheduler.cancel(f._id);
+      }
+    });
   });
 
   it("membro logado auto-vincula a propria familia e ignora membroId forjado", async () => {
