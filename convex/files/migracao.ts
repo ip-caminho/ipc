@@ -22,6 +22,7 @@ import { ALVOS } from "./migracaoDb";
 //   npx convex run files/migracao:migrar '{"dryRun":true}'   ve o que faria
 //   npx convex run files/migracao:migrar '{}'                copia/re-hospeda
 //   npx convex run files/migracao:migrar '{"apagarOrigem":true}'  fecha o antigo
+//   npx convex run files/migracao:migrar '{"repararTipos":true}' conserta tipo
 //
 // ATENCAO: enquanto `pendentesDeLimpeza` nao chegar a zero, o arquivo migrado
 // continua acessivel SEM login na chave antiga do CDN — o vazamento so fecha na
@@ -45,6 +46,11 @@ type Resultado = {
   // login na chave antiga do CDN. Zerar isto e o que fecha o vazamento.
   pendentesDeLimpeza: number;
   apagadosDoPublico: number;
+  // Copias que estavam sem o tipo do arquivo e foram refeitas.
+  reparados: number;
+  // Copias possivelmente sem tipo cujo original ja foi apagado — nao ha mais
+  // de onde recuperar o ContentType. Precisa de reupload manual.
+  semOrigemParaReparar: number;
   detalhes: string[];
 };
 
@@ -67,6 +73,7 @@ async function migrarUrl(
   entityId: string,
   dryRun: boolean,
   apagarOrigem: boolean,
+  repararTipos: boolean,
   r: Resultado,
   // Chaves copiadas que ficam para apagar do bucket aberto DEPOIS do patch.
   aLimpar: string[],
@@ -78,8 +85,11 @@ async function migrarUrl(
     // Uma rodada anterior pode ter copiado e deixado o original no bucket
     // aberto (mesma chave) — sem isto, o fluxo recomendado (rodar sem apagar,
     // conferir, rodar apagando) nunca apagaria nada. A fila tambem serve para
-    // reparar copia antiga que ficou sem o tipo do arquivo.
-    if (!dryRun) aLimpar.push(parsed.key);
+    // reparar copia que ficou sem o tipo do arquivo.
+    //
+    // So entra na fila quando ha o que fazer com ela: cada chave aqui custa
+    // 3 HEADs no B2, e numa base grande isso sozinho estoura o tempo da action.
+    if (!dryRun && (apagarOrigem || repararTipos)) aLimpar.push(parsed.key);
     return null;
   }
 
@@ -107,10 +117,18 @@ async function migrarUrl(
       r.detalhes.push(`COPIAR ${parsed.key}`);
       return null;
     }
-    const nova = await copiarParaPrivado(parsed.key);
+    const copia = await copiarParaPrivado(parsed.key);
+    if (copia.acao === "semOrigem") {
+      // O HEAD so devolve isto em 404 real: o arquivo sumiu do bucket aberto
+      // sem nunca ter sido copiado. Nao reescreve o banco — a URL antiga fica
+      // e o caso aparece no relatorio.
+      r.falhas++;
+      r.detalhes.push(`ORIGINAL AUSENTE (nao migrado): ${parsed.key}`);
+      return null;
+    }
     r.copiados++;
     aLimpar.push(parsed.key);
-    return nova;
+    return copia.url;
   }
 
   // Host externo (foto que veio do formulario Tally): baixa e re-hospeda, para
@@ -144,6 +162,9 @@ export const migrar = internalAction({
     // Padrao false: rode uma vez sem, confira, e so entao rode com true. So
     // enquanto isso nao rodar o arquivo continua aberto na chave antiga.
     apagarOrigem: v.optional(v.boolean()),
+    // Revisita arquivos ja migrados so para consertar copia que ficou sem o
+    // tipo. Opt-in porque custa 3 HEADs por arquivo.
+    repararTipos: v.optional(v.boolean()),
     loteTamanho: v.optional(v.number()),
   },
   handler: async (ctx, args): Promise<Record<string, Resultado>> => {
@@ -158,6 +179,7 @@ export const migrar = internalAction({
     const alvos = args.alvo ? [args.alvo] : [...ALVOS];
     const dryRun = args.dryRun ?? false;
     const apagarOrigem = args.apagarOrigem ?? false;
+    const repararTipos = args.repararTipos ?? false;
     const limite = args.loteTamanho ?? 50;
     const geral: Record<string, Resultado> = {};
 
@@ -170,6 +192,8 @@ export const migrar = internalAction({
         falhas: 0,
         pendentesDeLimpeza: 0,
         apagadosDoPublico: 0,
+        reparados: 0,
+        semOrigemParaReparar: 0,
         detalhes: [],
       };
       const pasta = PASTA_POR_ALVO[alvo];
@@ -191,6 +215,7 @@ export const migrar = internalAction({
                 doc.entityId,
                 dryRun,
                 apagarOrigem,
+                repararTipos,
                 r,
                 aLimpar,
               );
@@ -215,22 +240,39 @@ export const migrar = internalAction({
           // aponta para ela. Na ordem inversa, uma falha no patch deixaria o
           // registro apontando para arquivo apagado.
           for (const key of aLimpar) {
-            // No-op quando a copia ja esta integra; recopia se ficou sem o
-            // tipo do arquivo. Tem que vir ANTES de apagar: e o original que
-            // guarda o ContentType certo.
-            await copiarParaPrivado(key);
+            // Isolado: uma falha aqui nao pode abortar a acao inteira e perder
+            // os contadores de tudo que ja rodou.
+            try {
+              // No-op quando a copia ja esta integra; recopia se ficou sem o
+              // tipo do arquivo. Tem que vir ANTES de apagar: e o original que
+              // guarda o ContentType certo.
+              const copia = await copiarParaPrivado(key);
+              if (copia.acao === "reparado") {
+                r.reparados++;
+                r.detalhes.push(`TIPO REPARADO: ${key}`);
+              } else if (copia.acao === "semOrigem") {
+                // Sem o original nao da para saber o tipo certo. Se a copia
+                // estiver como octet-stream, so um reupload resolve.
+                r.semOrigemParaReparar++;
+              }
 
-            if (!apagarOrigem) {
-              if (await existeNoPublico(key)) r.pendentesDeLimpeza++;
-              continue;
+              if (!apagarOrigem) {
+                if (await existeNoPublico(key)) r.pendentesDeLimpeza++;
+                continue;
+              }
+              const res = await apagarDoPublico(key);
+              if (res === "apagado") r.apagadosDoPublico++;
+              else if (res === "falha") {
+                r.pendentesDeLimpeza++;
+                r.detalhes.push(`FALHA apagar do publico: ${key}`);
+              }
+              // "inexistente": arquivo re-hospedado, nunca esteve no publico.
+            } catch (e) {
+              r.falhas++;
+              r.detalhes.push(
+                `FALHA na limpeza de ${key} — ${e instanceof Error ? e.message : e}`,
+              );
             }
-            const res = await apagarDoPublico(key);
-            if (res === "apagado") r.apagadosDoPublico++;
-            else if (res === "falha") {
-              r.pendentesDeLimpeza++;
-              r.detalhes.push(`FALHA apagar do publico: ${key}`);
-            }
-            // "inexistente": arquivo re-hospedado, nunca esteve no publico.
           }
         }
 
