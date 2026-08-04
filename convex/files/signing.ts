@@ -3,11 +3,7 @@
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { createS3Client } from "./helpers";
-import { getBucketName, parseFileUrl, toCdnUrl } from "./urls";
-
-// Validade da URL assinada de leitura. Curta o bastante para o link vazado
-// morrer sozinho, longa o bastante para o browser cachear a imagem na sessao.
-const READ_URL_TTL_SECONDS = 3600;
+import { getBucketName, parseFileUrl, readTtlSegundos, toCdnUrl } from "./urls";
 
 /**
  * Download de arquivo do bucket aberto (via CDN). Nao serve para o bucket
@@ -44,7 +40,9 @@ export async function generatePresignedReadUrl(url: string): Promise<string | nu
     Bucket: getBucketName("privado"),
     Key: parsed.key,
   });
-  return await getSignedUrl(s3, command, { expiresIn: READ_URL_TTL_SECONDS });
+  // A validade vai na propria URL (X-Amz-Expires), e e de la que o cliente
+  // deriva por quanto tempo pode cachear — sem precisar de um segundo campo.
+  return await getSignedUrl(s3, command, { expiresIn: readTtlSegundos(parsed.key) });
 }
 
 /**
