@@ -107,29 +107,62 @@ export async function putObject(
   return getStorageUrl(key);
 }
 
+// Tipo default do S3 quando o objeto sobe sem ContentType. Fixar o fallback
+// evita recopiar para sempre: sem ele, comparar `undefined` (origem) com o
+// default (destino) nunca converge.
+const TIPO_DESCONHECIDO = "application/octet-stream";
+
+/** So 404 significa "nao existe". Timeout, throttle e 403 tem que estourar. */
+function ehNaoEncontrado(e: unknown): boolean {
+  const err = e as { name?: string; $metadata?: { httpStatusCode?: number } };
+  return (
+    err?.name === "NotFound" ||
+    err?.name === "NoSuchKey" ||
+    err?.$metadata?.httpStatusCode === 404
+  );
+}
+
+/**
+ * HEAD que devolve null so quando o objeto realmente nao existe.
+ *
+ * Tratar erro transitorio como ausencia e perigoso aqui: a migracao concluiria
+ * que a copia ja foi feita, reescreveria o banco para um objeto inexistente e,
+ * numa rodada com apagarOrigem, apagaria o unico arquivo real.
+ */
+async function headOuNull(s3: S3Client, bucket: string, key: string) {
+  try {
+    return await s3.send(new HeadObjectCommand({ Bucket: bucket, Key: key }));
+  } catch (e) {
+    if (ehNaoEncontrado(e)) return null;
+    throw e;
+  }
+}
+
+export type ResultadoCopia = {
+  url: string;
+  // "semOrigem": original ja apagado — se a copia estiver sem tipo, nao ha
+  // mais de onde recuperar o ContentType correto.
+  acao: "copiado" | "reparado" | "jaOk" | "semOrigem";
+};
+
 /**
  * Copia um objeto do bucket aberto para o fechado, mantendo a mesma chave.
- * Usado pela migracao. Idempotente: se ja existe no destino, nao copia de novo.
- * Devolve a URL canonica do destino.
+ * Idempotente: nao recopia quando o destino ja esta integro, mas recopia se a
+ * copia perdeu o tipo do arquivo.
  */
-export async function copiarParaPrivado(key: string): Promise<string> {
+export async function copiarParaPrivado(key: string): Promise<ResultadoCopia> {
   const s3 = createS3Client();
   const destino = getBucketName("privado");
   const origem = getBucketName("publico");
+  const url = getPrivateCanonicalUrl(key);
 
-  const original = await s3
-    .send(new HeadObjectCommand({ Bucket: origem, Key: key }))
-    .catch(() => null);
-  // Origem ja limpa numa rodada anterior: nada a copiar.
-  if (!original) return getPrivateCanonicalUrl(key);
+  const original = await headOuNull(s3, origem, key);
+  if (!original) return { url, acao: "semOrigem" };
 
-  const copia = await s3
-    .send(new HeadObjectCommand({ Bucket: destino, Key: key }))
-    .catch(() => null);
-  // Recopia tambem quando a copia existe mas perdeu o tipo do arquivo — sem
-  // ContentType o browser baixa o comprovante em vez de exibir.
-  if (copia && copia.ContentType === original.ContentType) {
-    return getPrivateCanonicalUrl(key);
+  const tipo = original.ContentType ?? TIPO_DESCONHECIDO;
+  const copia = await headOuNull(s3, destino, key);
+  if (copia && (copia.ContentType ?? TIPO_DESCONHECIDO) === tipo) {
+    return { url, acao: "jaOk" };
   }
 
   await s3.send(
@@ -142,20 +175,21 @@ export async function copiarParaPrivado(key: string): Promise<string> {
       // do objeto antigo, mas por isso o ContentType tem que ser repassado na
       // mao, senao vira binary/octet-stream.
       MetadataDirective: "REPLACE",
-      ContentType: original.ContentType,
+      ContentType: tipo,
       CacheControl: CACHE_CONTROL_PRIVADO,
     })
   );
-  return getPrivateCanonicalUrl(key);
+  return { url, acao: copia ? "reparado" : "copiado" };
 }
 
-/** Se o original ainda ocupa a chave antiga no bucket aberto. */
+/**
+ * Se o original ainda ocupa a chave antiga no bucket aberto. Erro que nao seja
+ * 404 estoura: dizer "nao existe" por falha de rede reportaria o vazamento
+ * como fechado sem estar.
+ */
 export async function existeNoPublico(key: string): Promise<boolean> {
   const s3 = createS3Client();
-  return await s3
-    .send(new HeadObjectCommand({ Bucket: getBucketName("publico"), Key: key }))
-    .then(() => true)
-    .catch(() => false);
+  return (await headOuNull(s3, getBucketName("publico"), key)) !== null;
 }
 
 /**
@@ -171,11 +205,12 @@ export async function apagarDoPublico(
 
   // Distingue "nao havia nada" de "nao consegui apagar" — sem isso, arquivo
   // re-hospedado (chave nova, que nunca esteve no publico) contaria como
-  // limpeza feita e mascararia uma falha real.
+  // limpeza feita e mascararia uma falha real. Erro transitorio vira "falha",
+  // nunca "inexistente".
   try {
-    await s3.send(new HeadObjectCommand({ Bucket: bucket, Key: key }));
+    if ((await headOuNull(s3, bucket, key)) === null) return "inexistente";
   } catch {
-    return "inexistente";
+    return "falha";
   }
 
   try {
