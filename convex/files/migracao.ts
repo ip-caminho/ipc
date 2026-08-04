@@ -87,13 +87,20 @@ async function migrarUrl(
   if (parsed?.bucketKey === "publico") {
     // Audio e capa continuam publicos; so migra o que a pasta manda fechar.
     let vaiParaPrivado = false;
+    let pastaDesconhecida = false;
     try {
       vaiParaPrivado = bucketForKey(parsed.key) === "privado";
     } catch {
-      vaiParaPrivado = false; // pasta nao registrada: nao mexe
+      // Pasta que ninguem registrou: pode ser um formato legado que ficaria
+      // publico para sempre sem ninguem perceber. Denuncia em vez de ignorar
+      // em silencio (foi assim que "acampamento-comprovantes" apareceu).
+      pastaDesconhecida = true;
     }
     if (!vaiParaPrivado) {
       r.ignorados++;
+      if (pastaDesconhecida) {
+        r.detalhes.push(`PASTA NAO REGISTRADA (segue publica): ${parsed.key}`);
+      }
       return null;
     }
     if (dryRun) {
