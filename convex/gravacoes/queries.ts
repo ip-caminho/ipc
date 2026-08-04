@@ -136,15 +136,15 @@ export const listRecentesByTipo = query({
     if (!(await checkPermission(ctx, "gravacoes:read"))) return [];
     const limit = args.limit ?? 4;
 
-    const doTipo = await ctx.db
+    // O indice ja entrega na ordem certa: le exatamente `limit` documentos em
+    // vez de trazer todas as gravacoes do tipo para descartar quase todas.
+    const recentes = await ctx.db
       .query("gravacoes")
-      .withIndex("by_tipo", (q) => q.eq("tipo", args.tipo as Doc<"gravacoes">["tipo"]))
-      .collect();
-
-    const recentes = doTipo
-      .filter((g) => g.status === "PUBLICADO")
-      .sort((a, b) => b.data.localeCompare(a.data))
-      .slice(0, limit);
+      .withIndex("by_tipo_status_data", (q) =>
+        q.eq("tipo", args.tipo as Doc<"gravacoes">["tipo"]).eq("status", "PUBLICADO"),
+      )
+      .order("desc")
+      .take(limit);
 
     return Promise.all(
       recentes.map(async (g) => {

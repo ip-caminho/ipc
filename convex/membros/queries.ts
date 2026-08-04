@@ -125,8 +125,6 @@ export const birthdaysThisMonth = query({
     const { month: currentMonth, day: currentDay } = getSaoPauloDate();
     const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
 
-    const membros = await ctx.db.query("membros").collect();
-
     const aniversariantes: Array<{
       _id: string;
       nome: string;
@@ -138,15 +136,17 @@ export const birthdaysThisMonth = query({
       jaPassou: boolean;
     }> = [];
 
-    const seenEntidades = new Set<string>();
+    // A data de aniversario mora em `entidades`. Ler `membros` inteira so para
+    // chegar la custava a tabela toda MAIS um get por membro (225 idas ao banco
+    // em sequencia). Aqui le so as entidades ATIVAS pelo indice e busca o
+    // membro apenas de quem faz aniversario — punhado de docs, nao a base.
+    const ativas = await ctx.db
+      .query("entidades")
+      .withIndex("by_status", (q) => q.eq("status", "ATIVO"))
+      .collect();
 
-    for (const m of membros) {
-      const entidadeIdStr = m.entidadeId.toString();
-      if (seenEntidades.has(entidadeIdStr)) continue;
-      seenEntidades.add(entidadeIdStr);
-
-      const entidade = await ctx.db.get(m.entidadeId);
-      if (!entidade || entidade.status !== "ATIVO" || !entidade.dataNascimento) continue;
+    for (const entidade of ativas) {
+      if (!entidade.dataNascimento) continue;
 
       const parts = entidade.dataNascimento.split("-");
       if (parts.length < 3) continue;
@@ -155,18 +155,26 @@ export const birthdaysThisMonth = query({
       const birthDay = parseInt(parts[2], 10);
 
       // Include current month + next month (7-day lookahead across month boundary)
-      if (birthMonth === currentMonth || birthMonth === nextMonth) {
-        aniversariantes.push({
-          _id: m._id,
-          nome: (entidade as any).apelido || entidade.nomeCompleto || "Sem nome",
-          foto: (entidade as any).foto || undefined,
-          whatsapp: temDiretorio ? ((entidade as any).whatsapp || undefined) : undefined,
-          dataNascimento: entidade.dataNascimento,
-          dia: birthDay,
-          mes: birthMonth,
-          jaPassou: birthMonth === currentMonth && birthDay < currentDay,
-        });
-      }
+      if (birthMonth !== currentMonth && birthMonth !== nextMonth) continue;
+
+      // O card usa o membroId; quem nao tem cadastro de membro (crianca, por
+      // exemplo) nao entra, igual ao comportamento anterior.
+      const membro = await ctx.db
+        .query("membros")
+        .withIndex("by_entidade", (q) => q.eq("entidadeId", entidade._id))
+        .first();
+      if (!membro) continue;
+
+      aniversariantes.push({
+        _id: membro._id,
+        nome: (entidade as any).apelido || entidade.nomeCompleto || "Sem nome",
+        foto: (entidade as any).foto || undefined,
+        whatsapp: temDiretorio ? ((entidade as any).whatsapp || undefined) : undefined,
+        dataNascimento: entidade.dataNascimento,
+        dia: birthDay,
+        mes: birthMonth,
+        jaPassou: birthMonth === currentMonth && birthDay < currentDay,
+      });
     }
 
     // Sort: today first, then upcoming by proximity, then past
