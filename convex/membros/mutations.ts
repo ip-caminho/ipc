@@ -3,6 +3,7 @@ import { v } from "convex/values";
 import { requirePermission } from "../_shared/requirePermission";
 import { createFieldAuditLogs, createActionAuditLog } from "../_shared/auditHelpers";
 import { espelharConjuge, limparEspelhoConjuge } from "./familiaHelpers";
+import { apagarArquivosSumidos } from "../files/orfaos";
 
 export const create = mutation({
   args: {
@@ -134,6 +135,7 @@ export const update = mutation({
       await ctx.db.patch(membro.entidadeId, entidadeData);
       const newEntidade = await ctx.db.get(membro.entidadeId);
       await createFieldAuditLogs(ctx, oldEntidade, newEntidade, "entidades", membro.entidadeId);
+      await apagarArquivosSumidos(ctx, "entidades", oldEntidade, newEntidade);
     }
 
     // Update membro if data provided
@@ -142,6 +144,7 @@ export const update = mutation({
       await ctx.db.patch(id, membroData);
       const newMembro = await ctx.db.get(id);
       await createFieldAuditLogs(ctx, oldMembro, newMembro, "membros", id);
+      await apagarArquivosSumidos(ctx, "membros", oldMembro, newMembro);
 
       // Vinculo de conjuge e bilateral: espelha o novo e limpa o antigo
       if ("conjugeId" in membroData && membroData.conjugeId !== oldMembro.conjugeId) {
