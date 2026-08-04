@@ -314,6 +314,9 @@ export default defineSchema({
     .index("by_tipo", ["tipo"])
     .index("by_status", ["status"])
     .index("by_data", ["data"])
+    // "Ultimos N publicados de um tipo" sai direto do indice, sem ler a
+    // tabela toda para jogar quase tudo fora (ver listRecentesByTipo).
+    .index("by_tipo_status_data", ["tipo", "status", "data"])
     .index("by_pregador", ["pregadorId"])
     .index("by_serie", ["serieId"])
     .index("by_share_token", ["shareToken"])
