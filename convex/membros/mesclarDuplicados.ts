@@ -1,4 +1,5 @@
 import { internalQuery, internalMutation } from "../_generated/server";
+import { apagarArquivosSumidos } from "../files/orfaos";
 import { v } from "convex/values";
 import { createActionAuditLog, createFieldAuditLogs } from "../_shared/auditHelpers";
 
@@ -154,10 +155,22 @@ export const mesclar = internalMutation({
     if (dupMem) {
       await createActionAuditLog(ctx, "DELETE", "membros", dupMem._id);
       await ctx.db.delete(dupMem._id);
+      // Comparar com o destino DEPOIS da copia de campos: se a carta do
+      // duplicado foi aproveitada, ela continua referenciada e nao pode sumir.
+      await apagarArquivosSumidos(
+        ctx,
+        "membros",
+        dupMem,
+        destinoMem ? await ctx.db.get(destinoMem._id) : null,
+      );
       acoes.push(`membro duplicado apagado (${dupMem._id})`);
     }
     await createActionAuditLog(ctx, "DELETE", "entidades", dupEntidadeId);
     await ctx.db.delete(dupEntidadeId);
+    // A copia so preenche campo vazio no destino: se ele ja tinha foto, a do
+    // duplicado nao foi aproveitada e o arquivo ficaria orfao. Le o destino
+    // atualizado para nao apagar justamente o que acabou de ser herdado.
+    await apagarArquivosSumidos(ctx, "entidades", dup, await ctx.db.get(destinoEntidadeId));
     acoes.push(`entidade duplicada apagada (${dupEntidadeId})`);
 
     return acoes;

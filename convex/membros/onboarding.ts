@@ -1,6 +1,7 @@
 import { query, mutation } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { apagarArquivosSumidos } from "../files/orfaos";
 
 export const getOnboardingData = query({
   args: {},
@@ -103,8 +104,13 @@ export const completeOnboarding = mutation({
     updates.perfilAtualizadoEm = Date.now();
     updates.perfilAtualizadoPor = membro._id;
 
+    const entidadeAntes = await ctx.db.get(membro.entidadeId);
     await ctx.db.patch(membro.entidadeId, updates);
     await ctx.db.patch(membro._id, { onboardingCompleto: true });
+    await apagarArquivosSumidos(ctx, "entidades", entidadeAntes, {
+      ...entidadeAntes,
+      ...updates,
+    });
 
     return { ok: true };
   },

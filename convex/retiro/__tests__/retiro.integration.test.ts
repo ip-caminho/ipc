@@ -465,6 +465,17 @@ describe("retiro admin (fase 3)", () => {
     });
     const depois = await admin.query(api.retiro.queries.getInscricao, { id: linha._id });
     expect(depois!.comprovantesPendentes ?? []).toHaveLength(0);
+
+    // Sem ninguem mais apontando para o arquivo, o delete no B2 foi agendado —
+    // e o que impede o comprovante de virar orfao no bucket fechado.
+    const agendadas = await t.run(async (ctx) =>
+      await ctx.db.system.query("_scheduled_functions").collect(),
+    );
+    const deletes = agendadas.filter((f: any) => f.name.includes("deleteFile"));
+    expect(deletes).toHaveLength(1);
+    expect(deletes[0].args[0].url).toBe(
+      "https://cdn.yhc.com.br/retiro-comprovantes/x.jpg",
+    );
   });
 
   it("membro logado auto-vincula a propria familia e ignora membroId forjado", async () => {

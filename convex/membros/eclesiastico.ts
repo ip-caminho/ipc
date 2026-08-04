@@ -17,6 +17,7 @@ import { createFieldAuditLogs, createActionAuditLog } from "../_shared/auditHelp
 import { getTipoRol, type CargoEclesiastico, type StatusEntidade, type TipoRol } from "./tipoRolHelpers";
 import { calcularResumoSecretario, type ResumoSecretario as ResumoSecretarioT } from "./resumoSecretarioHelpers";
 import type { Doc, Id } from "../_generated/dataModel";
+import { apagarArquivosSumidos } from "../files/orfaos";
 
 export type RolCategoria = "PRINCIPAL" | "SEPARADO" | "AUSENTE" | "ARQUIVO";
 
@@ -98,6 +99,7 @@ export const updateEclesiastico = mutation({
     await ctx.db.patch(membroId, filtered);
     const newMembro = await ctx.db.get(membroId);
     await createFieldAuditLogs(ctx, oldMembro, newMembro, "membros", membroId);
+    await apagarArquivosSumidos(ctx, "membros", oldMembro, newMembro);
 
     return { changed: true, fields: Object.keys(filtered) };
   },

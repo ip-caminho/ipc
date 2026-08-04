@@ -1,4 +1,5 @@
 import { mutation, internalMutation } from "../_generated/server";
+import { apagarArquivosSumidos } from "../files/orfaos";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { createActionAuditLog } from "../_shared/auditHelpers";
@@ -54,7 +55,9 @@ export const removeArquivo = mutation({
   args: { id: v.id("multimidiaArquivos") },
   handler: async (ctx, { id }) => {
     await requirePermission(ctx, "multimidia:update");
+    const arquivo = await ctx.db.get(id);
     await ctx.db.delete(id);
+    await apagarArquivosSumidos(ctx, "multimidiaArquivos", arquivo, null);
     await createActionAuditLog(ctx, "DELETE", "multimidiaArquivos", id as string);
   },
 });

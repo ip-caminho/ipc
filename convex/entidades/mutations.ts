@@ -2,6 +2,7 @@ import { mutation } from "../_generated/server";
 import { v } from "convex/values";
 import { requirePermission } from "../_shared/requirePermission";
 import { createFieldAuditLogs, createActionAuditLog } from "../_shared/auditHelpers";
+import { apagarArquivosSumidos } from "../files/orfaos";
 
 export const create = mutation({
   args: {
@@ -69,6 +70,7 @@ export const update = mutation({
     const newRecord = await ctx.db.get(id);
 
     await createFieldAuditLogs(ctx, oldRecord, newRecord, "entidades", id);
+    await apagarArquivosSumidos(ctx, "entidades", oldRecord, newRecord);
     return id;
   },
 });
@@ -103,7 +105,9 @@ export const remove = mutation({
   handler: async (ctx, { id }) => {
     await requirePermission(ctx, "entidades:delete");
 
+    const antes = await ctx.db.get(id);
     await createActionAuditLog(ctx, "DELETE", "entidades", id);
     await ctx.db.delete(id);
+    await apagarArquivosSumidos(ctx, "entidades", antes, null);
   },
 });

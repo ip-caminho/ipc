@@ -3,6 +3,7 @@ import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { createActionAuditLog, createFieldAuditLogs } from "../_shared/auditHelpers";
 import { requirePermission, checkPermission } from "../_shared/requirePermission";
+import { apagarArquivosSumidos } from "../files/orfaos";
 
 async function requireAuth(ctx: any) {
   const userId = await getAuthUserId(ctx);
@@ -132,6 +133,7 @@ export const update = mutation({
       await ctx.db.patch(id, patch);
       const newRecord = await ctx.db.get(id);
       await createFieldAuditLogs(ctx, oldRecord, newRecord, "livros");
+      await apagarArquivosSumidos(ctx, "livros", oldRecord, newRecord);
     }
   },
 });

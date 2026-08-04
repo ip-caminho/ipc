@@ -5,6 +5,7 @@ import { createFieldAuditLogs } from "../_shared/auditHelpers";
 import { filterSelfServiceFields } from "./selfServiceHelpers";
 import { espelharConjuge, vincularCriancaAoConjuge } from "./familiaHelpers";
 import { limparOverridePorAtualizacao } from "../cron/paradeiroIgnorado";
+import { apagarArquivosSumidos } from "../files/orfaos";
 
 export const getMyProfile = query({
   args: {},
@@ -59,6 +60,7 @@ export const updateMyProfile = mutation({
     const newEntidade = await ctx.db.get(membro.entidadeId);
 
     await createFieldAuditLogs(ctx, oldEntidade, newEntidade, "entidades", membro.entidadeId);
+    await apagarArquivosSumidos(ctx, "entidades", oldEntidade, newEntidade);
 
     // Confirmou/atualizou cadastro: limpa o override PARADEIRO_IGNORADO se houver.
     await limparOverridePorAtualizacao(ctx, membro._id);

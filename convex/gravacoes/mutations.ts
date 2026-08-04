@@ -4,6 +4,7 @@ import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { createFieldAuditLogs, createActionAuditLog } from "../_shared/auditHelpers";
 import { requirePermission } from "../_shared/requirePermission";
+import { apagarArquivosSumidos } from "../files/orfaos";
 
 export const create = mutation({
   args: {
@@ -61,6 +62,7 @@ export const update = mutation({
     const newRecord = await ctx.db.get(id);
 
     await createFieldAuditLogs(ctx, oldRecord, newRecord, "gravacoes", id);
+    await apagarArquivosSumidos(ctx, "gravacoes", oldRecord, newRecord);
     return id;
   },
 });
