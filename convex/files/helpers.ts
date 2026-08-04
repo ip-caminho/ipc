@@ -115,12 +115,21 @@ export async function putObject(
 export async function copiarParaPrivado(key: string): Promise<string> {
   const s3 = createS3Client();
   const destino = getBucketName("privado");
+  const origem = getBucketName("publico");
 
-  try {
-    await s3.send(new HeadObjectCommand({ Bucket: destino, Key: key }));
+  const original = await s3
+    .send(new HeadObjectCommand({ Bucket: origem, Key: key }))
+    .catch(() => null);
+  // Origem ja limpa numa rodada anterior: nada a copiar.
+  if (!original) return getPrivateCanonicalUrl(key);
+
+  const copia = await s3
+    .send(new HeadObjectCommand({ Bucket: destino, Key: key }))
+    .catch(() => null);
+  // Recopia tambem quando a copia existe mas perdeu o tipo do arquivo — sem
+  // ContentType o browser baixa o comprovante em vez de exibir.
+  if (copia && copia.ContentType === original.ContentType) {
     return getPrivateCanonicalUrl(key);
-  } catch {
-    // Nao existe no destino ainda — segue para a copia.
   }
 
   await s3.send(
@@ -128,14 +137,25 @@ export async function copiarParaPrivado(key: string): Promise<string> {
       Bucket: destino,
       Key: key,
       // O B2 espera "<bucket>/<key>" com a chave escapada.
-      CopySource: `${getBucketName("publico")}/${key.split("/").map(encodeURIComponent).join("/")}`,
-      // Sem REPLACE, a copia herdaria o "public, max-age=1 ano" do objeto
-      // antigo — justamente o que nao pode valer no bucket fechado.
+      CopySource: `${origem}/${key.split("/").map(encodeURIComponent).join("/")}`,
+      // REPLACE troca TODOS os metadados: sem herdar o "public, max-age=1 ano"
+      // do objeto antigo, mas por isso o ContentType tem que ser repassado na
+      // mao, senao vira binary/octet-stream.
       MetadataDirective: "REPLACE",
+      ContentType: original.ContentType,
       CacheControl: CACHE_CONTROL_PRIVADO,
     })
   );
   return getPrivateCanonicalUrl(key);
+}
+
+/** Se o original ainda ocupa a chave antiga no bucket aberto. */
+export async function existeNoPublico(key: string): Promise<boolean> {
+  const s3 = createS3Client();
+  return await s3
+    .send(new HeadObjectCommand({ Bucket: getBucketName("publico"), Key: key }))
+    .then(() => true)
+    .catch(() => false);
 }
 
 /**

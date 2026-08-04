@@ -3,7 +3,7 @@
 import { v } from "convex/values";
 import { internalAction } from "../_generated/server";
 import { internal } from "../_generated/api";
-import { apagarDoPublico, copiarParaPrivado, putObject } from "./helpers";
+import { apagarDoPublico, copiarParaPrivado, existeNoPublico, putObject } from "./helpers";
 import { bucketForKey, generateObjectKey, parseFileUrl, privadoIndisponivel } from "./urls";
 import { ALVOS } from "./migracaoDb";
 
@@ -77,10 +77,9 @@ async function migrarUrl(
     r.jaMigrados++;
     // Uma rodada anterior pode ter copiado e deixado o original no bucket
     // aberto (mesma chave) — sem isto, o fluxo recomendado (rodar sem apagar,
-    // conferir, rodar apagando) nunca apagaria nada. So entra na fila quando a
-    // limpeza foi pedida: aqui nao se sabe se ha original la, e contar como
-    // pendente inflaria o numero com os arquivos re-hospedados.
-    if (!dryRun && apagarOrigem) aLimpar.push(parsed.key);
+    // conferir, rodar apagando) nunca apagaria nada. A fila tambem serve para
+    // reparar copia antiga que ficou sem o tipo do arquivo.
+    if (!dryRun) aLimpar.push(parsed.key);
     return null;
   }
 
@@ -216,8 +215,13 @@ export const migrar = internalAction({
           // aponta para ela. Na ordem inversa, uma falha no patch deixaria o
           // registro apontando para arquivo apagado.
           for (const key of aLimpar) {
+            // No-op quando a copia ja esta integra; recopia se ficou sem o
+            // tipo do arquivo. Tem que vir ANTES de apagar: e o original que
+            // guarda o ContentType certo.
+            await copiarParaPrivado(key);
+
             if (!apagarOrigem) {
-              r.pendentesDeLimpeza++;
+              if (await existeNoPublico(key)) r.pendentesDeLimpeza++;
               continue;
             }
             const res = await apagarDoPublico(key);
