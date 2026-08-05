@@ -51,6 +51,12 @@ const ARRAYS_COM_ARQUIVO: Record<string, { array: string; campo: string }[]> = {
 
 type Doc = Record<string, unknown> | null | undefined;
 
+/** Toda tabela que guarda URL de arquivo — usada pela varredura de orfaos. */
+export const TABELAS_COM_ARQUIVO = [
+  ...Object.keys(CAMPOS_ARQUIVO),
+  ...Object.keys(ARRAYS_COM_ARQUIVO),
+] as TableNames[];
+
 /** Todas as URLs de arquivo que um documento referencia. */
 export function urlsDoDocumento(tabela: string, doc: Doc): string[] {
   if (!doc) return [];

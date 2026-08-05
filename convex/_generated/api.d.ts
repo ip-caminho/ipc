@@ -71,6 +71,8 @@ import type * as files_orfaos from "../files/orfaos.js";
 import type * as files_signing from "../files/signing.js";
 import type * as files_upload from "../files/upload.js";
 import type * as files_urls from "../files/urls.js";
+import type * as files_varredura from "../files/varredura.js";
+import type * as files_varreduraDb from "../files/varreduraDb.js";
 import type * as gravacoes_ai from "../gravacoes/ai.js";
 import type * as gravacoes_aiAction from "../gravacoes/aiAction.js";
 import type * as gravacoes_avisosLeituras from "../gravacoes/avisosLeituras.js";
@@ -228,6 +230,8 @@ declare const fullApi: ApiFromModules<{
   "files/signing": typeof files_signing;
   "files/upload": typeof files_upload;
   "files/urls": typeof files_urls;
+  "files/varredura": typeof files_varredura;
+  "files/varreduraDb": typeof files_varreduraDb;
   "gravacoes/ai": typeof gravacoes_ai;
   "gravacoes/aiAction": typeof gravacoes_aiAction;
   "gravacoes/avisosLeituras": typeof gravacoes_avisosLeituras;
