@@ -5,6 +5,8 @@ import { requirePermission, checkPermission } from "../_shared/requirePermission
 import { createActionAuditLog, createFieldAuditLogs } from "../_shared/auditHelpers";
 import { FREQUENCIA_MINIMA_PADRAO } from "./lib/constants";
 import { gerarDatasAulas } from "./lib/aulas";
+import { avaliarJanelaInscricao } from "./lib/inscricoes";
+import { getSaoPauloDateString } from "../_shared/datetime";
 import type { Id } from "../_generated/dataModel";
 
 async function requireAuth(ctx: any) {
@@ -88,6 +90,8 @@ export const create = mutation({
     descricao: v.optional(v.string()),
     dataInicio: v.string(),
     dataFim: v.optional(v.string()),
+    inscricoesDe: v.optional(v.string()),
+    inscricoesAte: v.optional(v.string()),
     diaSemana: v.optional(v.string()),
     horario: v.optional(v.string()),
     local: v.optional(v.string()),
@@ -101,6 +105,14 @@ export const create = mutation({
   },
   handler: async (ctx, args) => {
     const { membro } = await requirePermission(ctx, "turmas:create");
+
+    if (
+      args.inscricoesDe &&
+      args.inscricoesAte &&
+      args.inscricoesAte < args.inscricoesDe
+    ) {
+      throw new Error("O fim das inscricoes nao pode ser antes da abertura");
+    }
 
     const curso = args.cursoId ? await ctx.db.get(args.cursoId) : null;
     if (args.cursoId && !curso) throw new Error("Curso nao encontrado");
@@ -188,6 +200,8 @@ export const update = mutation({
     descricao: v.optional(v.string()),
     dataInicio: v.optional(v.string()),
     dataFim: v.optional(v.string()),
+    inscricoesDe: v.optional(v.string()),
+    inscricoesAte: v.optional(v.string()),
     diaSemana: v.optional(v.string()),
     horario: v.optional(v.string()),
     local: v.optional(v.string()),
@@ -199,6 +213,13 @@ export const update = mutation({
     const patch: Record<string, unknown> = {};
     for (const [key, val] of Object.entries(updates)) {
       if (val !== undefined) patch[key] = typeof val === "string" ? val.trim() : val;
+    }
+
+    // Valida a janela no estado final (o patch pode mexer em so uma ponta).
+    const de = (patch.inscricoesDe as string) ?? oldRecord?.inscricoesDe;
+    const ate = (patch.inscricoesAte as string) ?? oldRecord?.inscricoesAte;
+    if (de && ate && ate < de) {
+      throw new Error("O fim das inscricoes nao pode ser antes da abertura");
     }
     if (Object.keys(patch).length > 0) {
       await ctx.db.patch(id, patch);
@@ -301,7 +322,19 @@ export const registrar = mutation({
       .withIndex("by_token", (q) => q.eq("token", token))
       .first();
     if (!turma) throw new Error("Turma nao encontrada");
-    if (turma.status !== "ABERTA") throw new Error("Turma nao esta aceitando inscricoes");
+
+    // Janela de inscricao checada no servidor: a pagina publica tambem esconde
+    // o formulario, mas o token e a mutation sao acessiveis sem auth.
+    const janela = avaliarJanelaInscricao(turma, getSaoPauloDateString());
+    if (!janela.aberta) {
+      if (janela.motivo === "AINDA_NAO_COMECOU") {
+        throw new Error("As inscricoes ainda nao comecaram");
+      }
+      if (janela.motivo === "ENCERRADA") {
+        throw new Error("As inscricoes para esta turma foram encerradas");
+      }
+      throw new Error("Turma nao esta aceitando inscricoes");
+    }
 
     // Normalizar WhatsApp
     const dados = { ...dadosSistema };

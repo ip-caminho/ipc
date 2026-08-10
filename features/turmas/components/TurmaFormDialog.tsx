@@ -75,6 +75,8 @@ export function TurmaFormDialog({ open, onOpenChange }: Props) {
         descricao: values.descricao || undefined,
         dataInicio: values.dataInicio,
         dataFim: values.dataFim || undefined,
+        inscricoesDe: values.inscricoesDe || undefined,
+        inscricoesAte: values.inscricoesAte || undefined,
         diaSemana: values.diaSemana || undefined,
         horario: values.horario || undefined,
         local: values.local || undefined,
@@ -171,6 +173,31 @@ export function TurmaFormDialog({ open, onOpenChange }: Props) {
               <Label htmlFor="dataFim">Fim</Label>
               <DateFieldBR control={form.control} name="dataFim" id="dataFim" />
             </div>
+          </div>
+
+          <div className="rounded-lg border p-3 space-y-3">
+            <div>
+              <Label className="text-sm">Inscricoes</Label>
+              <p className="text-xs text-muted-foreground">
+                Periodo em que o formulario publico aceita inscricao. Deixe vazio para
+                aceitar enquanto a turma estiver aberta e houver vaga.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="inscricoesDe">Abrem em</Label>
+                <DateFieldBR control={form.control} name="inscricoesDe" id="inscricoesDe" />
+              </div>
+              <div>
+                <Label htmlFor="inscricoesAte">Encerram em</Label>
+                <DateFieldBR control={form.control} name="inscricoesAte" id="inscricoesAte" />
+              </div>
+            </div>
+            {form.formState.errors.inscricoesAte && (
+              <p className="text-xs text-destructive">
+                {form.formState.errors.inscricoesAte.message}
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

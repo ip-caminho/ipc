@@ -189,6 +189,105 @@ describe("turmas.gerarAulas", () => {
   });
 });
 
+describe("turmas: janela de inscricao", () => {
+  it("recusa criar com encerramento antes da abertura", async () => {
+    const t = convexTest(schema, modules);
+    const gestor = await seedGestor(t);
+    await expect(
+      as(t, gestor).mutation(api.turmas.mutations.create, {
+        ...turmaBase,
+        inscricoesDe: "2026-08-20",
+        inscricoesAte: "2026-08-10",
+      })
+    ).rejects.toThrow();
+  });
+
+  it("registrar recusa fora da janela e aceita dentro", async () => {
+    const t = convexTest(schema, modules);
+    const gestor = await seedGestor(t);
+
+    // Janela no passado: encerrada
+    const fechadaId = await as(t, gestor).mutation(api.turmas.mutations.create, {
+      ...turmaBase,
+      inscricoesAte: "2020-01-01",
+    });
+    // Janela no futuro: ainda nao comecou
+    const futuraId = await as(t, gestor).mutation(api.turmas.mutations.create, {
+      ...turmaBase,
+      inscricoesDe: "2090-01-01",
+    });
+    // Sem janela: aceita
+    const livreId = await as(t, gestor).mutation(api.turmas.mutations.create, turmaBase);
+
+    const tokens = await t.run(async (ctx) => ({
+      fechada: (await ctx.db.get(fechadaId))!.token!,
+      futura: (await ctx.db.get(futuraId))!.token!,
+      livre: (await ctx.db.get(livreId))!.token!,
+    }));
+
+    const inscricao = {
+      dadosSistema: { nomeCompleto: "Visitante" },
+      lgpdConsentimento: true,
+    };
+
+    await expect(
+      // @ts-ignore Convex TS2589 (instanciacao de tipo profunda)
+      t.mutation(api.turmas.mutations.registrar, { token: tokens.fechada, ...inscricao })
+    ).rejects.toThrow(/encerradas/i);
+
+    await expect(
+      // @ts-ignore Convex TS2589 (instanciacao de tipo profunda)
+      t.mutation(api.turmas.mutations.registrar, { token: tokens.futura, ...inscricao })
+    ).rejects.toThrow(/ainda nao comecaram/i);
+
+    const id = await t.mutation(api.turmas.mutations.registrar, {
+      token: tokens.livre,
+      ...inscricao,
+    });
+    expect(id).toBeDefined();
+  });
+
+  it("getByToken informa se as inscricoes estao abertas e por que nao", async () => {
+    const t = convexTest(schema, modules);
+    const gestor = await seedGestor(t);
+    const turmaId = await as(t, gestor).mutation(api.turmas.mutations.create, {
+      ...turmaBase,
+      inscricoesAte: "2020-01-01",
+    });
+    const token = await t.run(async (ctx) => (await ctx.db.get(turmaId))!.token!);
+
+    const publica = await t.query(api.turmas.queries.getByToken, { token });
+    expect(publica?.inscricoesAbertas).toBe(false);
+    expect(publica?.motivoFechado).toBe("ENCERRADA");
+    expect(publica?.inscricoesAte).toBe("2020-01-01");
+  });
+
+  it("update valida a janela no estado final (patch de uma ponta so)", async () => {
+    const t = convexTest(schema, modules);
+    const gestor = await seedGestor(t);
+    const turmaId = await as(t, gestor).mutation(api.turmas.mutations.create, {
+      ...turmaBase,
+      inscricoesDe: "2026-08-10",
+      inscricoesAte: "2026-08-20",
+    });
+
+    await expect(
+      as(t, gestor).mutation(api.turmas.mutations.update, {
+        id: turmaId,
+        inscricoesAte: "2026-08-01", // antes do inscricoesDe que ja esta salvo
+      })
+    ).rejects.toThrow();
+
+    await as(t, gestor).mutation(api.turmas.mutations.update, {
+      id: turmaId,
+      inscricoesAte: "2026-08-25",
+    });
+    expect(
+      (await t.run(async (ctx) => await ctx.db.get(turmaId)))?.inscricoesAte
+    ).toBe("2026-08-25");
+  });
+});
+
 describe("turmas.setFrequenciaMinima", () => {
   it("ajusta com turmas:manage_inscricoes e valida a faixa", async () => {
     const t = convexTest(schema, modules);

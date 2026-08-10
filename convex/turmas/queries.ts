@@ -6,6 +6,7 @@ import { checkPermission } from "../_shared/requirePermission";
 import type { Doc, Id } from "../_generated/dataModel";
 
 import { resolveMembroNome } from "../_shared/membroResolver";
+import { avaliarJanelaInscricao } from "./lib/inscricoes";
 
 /**
  * Leitura de uma turma: quem tem turmas:read ve qualquer uma; o instrutor ve
@@ -199,6 +200,7 @@ export const getById = query({
 export const listTurmasAbertas = query({
   args: {},
   handler: async (ctx) => {
+    const hoje = getSaoPauloDateString();
     const abertas = (
       await ctx.db
         .query("turmas")
@@ -219,6 +221,9 @@ export const listTurmasAbertas = query({
           descricao: t.descricao,
           dataInicio: t.dataInicio,
           dataFim: t.dataFim,
+          inscricoesDe: t.inscricoesDe,
+          inscricoesAte: t.inscricoesAte,
+          inscricoesAbertas: avaliarJanelaInscricao(t, hoje).aberta,
           diaSemana: t.diaSemana,
           horario: t.horario,
           local: t.local,
@@ -241,6 +246,8 @@ export const getByToken = query({
       .first();
     if (!turma) return null;
 
+    const janela = avaliarJanelaInscricao(turma, getSaoPauloDateString());
+
     return {
       _id: turma._id,
       nome: turma.nome,
@@ -248,10 +255,16 @@ export const getByToken = query({
       descricao: turma.descricao,
       dataInicio: turma.dataInicio,
       dataFim: turma.dataFim,
+      inscricoesDe: turma.inscricoesDe,
+      inscricoesAte: turma.inscricoesAte,
       diaSemana: turma.diaSemana,
       horario: turma.horario,
       local: turma.local,
       status: turma.status,
+      // A pagina publica usa isto para decidir se mostra o formulario; a
+      // mutation registrar refaz a checagem no servidor.
+      inscricoesAbertas: janela.aberta,
+      motivoFechado: janela.motivo,
       camposSistema: turma.camposSistema,
       perguntasExtras: turma.perguntasExtras,
       vagasRestantes: turma.vagas ? Math.max(0, turma.vagas - turma.vagasOcupadas) : null,

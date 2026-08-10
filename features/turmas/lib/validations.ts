@@ -23,6 +23,8 @@ export const turmaFormSchema = z.object({
   descricao: z.string().optional(),
   dataInicio: z.string().min(1, "Data de inicio obrigatoria"),
   dataFim: z.string().optional(),
+  inscricoesDe: z.string().optional(),
+  inscricoesAte: z.string().optional(),
   diaSemana: z.string().optional(),
   horario: z.string().optional(),
   local: z.string().optional(),
@@ -33,7 +35,10 @@ export const turmaFormSchema = z.object({
     label: z.string(),
     obrigatorio: z.boolean(),
   })).optional(),
-});
+}).refine(
+  (v) => !v.inscricoesDe || !v.inscricoesAte || v.inscricoesAte >= v.inscricoesDe,
+  { message: "Encerramento antes da abertura", path: ["inscricoesAte"] }
+);
 
 export type TurmaFormValues = z.infer<typeof turmaFormSchema>;
 
