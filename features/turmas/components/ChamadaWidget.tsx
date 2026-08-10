@@ -5,8 +5,8 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
-import { Checkbox } from "@/shared/components/ui/checkbox";
-import { GraduationCap, Check, ChevronDown, ChevronUp, Clock } from "lucide-react";
+import { Textarea } from "@/shared/components/ui/textarea";
+import { GraduationCap, Check, ChevronDown, ChevronUp, Clock, X } from "lucide-react";
 import { toast } from "sonner";
 import { DIA_SEMANA_LABELS } from "../lib/constants";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -16,12 +16,14 @@ function formatDate(d: string) {
   return `${day}/${m}/${y}`;
 }
 
+// Prazo agora e de 7 dias: em horas ficaria "168h", que nao diz nada.
 function formatRemaining(ms: number): string {
   if (ms <= 0) return "expirado";
+  const dias = Math.floor(ms / (24 * 60 * 60 * 1000));
+  if (dias >= 1) return `${dias} ${dias === 1 ? "dia" : "dias"}`;
   const horas = Math.floor(ms / (60 * 60 * 1000));
-  const minutos = Math.floor((ms % (60 * 60 * 1000)) / (60 * 1000));
-  if (horas >= 1) return `${horas}h${minutos > 0 ? ` ${minutos}min` : ""}`;
-  return `${minutos}min`;
+  if (horas >= 1) return `${horas}h`;
+  return `${Math.floor(ms / (60 * 1000))}min`;
 }
 
 export function ChamadaWidget() {
@@ -33,6 +35,8 @@ export function ChamadaWidget() {
   const [chamadaAberta, setChamadaAberta] = useState<string | null>(null);
   const [encontroAtivo, setEncontroAtivo] = useState<string | null>(null);
   const [presencaLocal, setPresencaLocal] = useState<Record<string, boolean>>({});
+  const [anotacao, setAnotacao] = useState("");
+  const [anotacaoAberta, setAnotacaoAberta] = useState(false);
   const [salvando, setSalvando] = useState(false);
 
   // Tick do relogio para contagem regressiva
@@ -49,16 +53,25 @@ export function ChamadaWidget() {
 
   if (!turmas || turmas.length === 0) return null;
 
+  function fechar() {
+    setChamadaAberta(null);
+    setEncontroAtivo(null);
+    setPresencaLocal({});
+    setAnotacao("");
+    setAnotacaoAberta(false);
+  }
+
   async function handleAbrir(item: NonNullable<typeof turmas>[number]) {
     const key = `${item._id}-${item.encontroData}`;
     if (chamadaAberta === key) {
-      setChamadaAberta(null);
-      setEncontroAtivo(null);
+      fechar();
       return;
     }
 
     setChamadaAberta(key);
     setPresencaLocal({});
+    setAnotacao("");
+    setAnotacaoAberta(false);
 
     if (item.encontroId) {
       setEncontroAtivo(item.encontroId);
@@ -87,10 +100,10 @@ export function ChamadaWidget() {
       await salvarPresencas({
         encontroId: encontroAtivo as Id<"turmaEncontros">,
         presencas: lista,
+        observacoes: anotacao.trim() || undefined,
       });
       toast.success("Presenca salva");
-      setChamadaAberta(null);
-      setEncontroAtivo(null);
+      fechar();
     } catch (err: unknown) {
       toast.error((err as Error).message);
     }
@@ -104,13 +117,21 @@ export function ChamadaWidget() {
         const key = `${t._id}-${t.encontroData}`;
         const isOpen = chamadaAberta === key;
         const remaining = t.expiraEm - now;
-        const isExpiring = remaining > 0 && remaining < 6 * 60 * 60 * 1000; // < 6h
+        const isExpiring = remaining > 0 && remaining < 24 * 60 * 60 * 1000; // < 1 dia
+
+        // Contagem do que sera salvo — pre-marcado como presente, o instrutor
+        // desmarca so quem faltou.
+        const total = presencas?.length ?? 0;
+        const faltas =
+          presencas?.filter((p) => !(presencaLocal[p.inscricaoId] ?? p.presente)).length ?? 0;
+        const presentes = total - faltas;
 
         return (
           <Card key={key} className={isOpen ? "ring-2 ring-primary" : ""}>
             <CardContent className="p-4 space-y-3">
-              <div
-                className="flex items-center justify-between cursor-pointer gap-3"
+              <button
+                type="button"
+                className="w-full flex items-center justify-between gap-3 text-left min-h-[44px]"
                 onClick={() => handleAbrir(t)}
               >
                 <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -120,61 +141,121 @@ export function ChamadaWidget() {
                     <p className="text-xs text-muted-foreground">
                       {t.isDiaDeAula
                         ? `Aula de hoje${t.horario ? ` - ${t.horario}` : ""} · ${t.totalInscritos} inscritos`
-                        : `Encontro de ${formatDate(t.encontroData)} · ${t.totalInscritos} inscritos`}
+                        : `Aula de ${formatDate(t.encontroData)} · ${t.totalInscritos} inscritos`}
                     </p>
                     {t.encontroId && (
-                      <p className={`text-xs mt-0.5 flex items-center gap-1 ${isExpiring ? "text-red-600 font-medium" : "text-muted-foreground"}`}>
+                      <p
+                        className={`text-xs mt-0.5 flex items-center gap-1 ${isExpiring ? "text-red-600 font-medium" : "text-muted-foreground"}`}
+                      >
                         <Clock className="h-3 w-3" />
-                        Tempo restante: {formatRemaining(remaining)}
+                        {remaining > 0 ? `Some em ${formatRemaining(remaining)}` : "Prazo expirado"}
+                      </p>
+                    )}
+                    {!t.isDiaDeAula && t.diaSemana && (
+                      <p className="text-xs text-muted-foreground">
+                        {DIA_SEMANA_LABELS[t.diaSemana] ?? t.diaSemana}
                       </p>
                     )}
                   </div>
                 </div>
-                <Button variant="default" size="sm">
+                <span className="shrink-0 inline-flex items-center h-11 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium">
                   {isOpen ? (
-                    <><ChevronUp className="h-4 w-4 mr-1" /> Fechar</>
+                    <>
+                      <ChevronUp className="h-4 w-4 mr-1" /> Fechar
+                    </>
                   ) : (
-                    <><ChevronDown className="h-4 w-4 mr-1" /> Chamada</>
+                    <>
+                      <ChevronDown className="h-4 w-4 mr-1" /> Chamada
+                    </>
                   )}
-                </Button>
-              </div>
+                </span>
+              </button>
 
               {isOpen && presencas && (
-                <div className="border-t pt-3 space-y-1">
+                <div className="border-t pt-3 space-y-2">
                   {presencas.length === 0 ? (
                     <p className="text-sm text-muted-foreground">Nenhum inscrito confirmado</p>
                   ) : (
                     <>
-                      {presencas.map((p) => {
-                        const checked = presencaLocal[p.inscricaoId] ?? p.presente;
-                        return (
-                          <label
-                            key={p.inscricaoId}
-                            className="flex items-center gap-3 py-2 px-2 rounded hover:bg-accent cursor-pointer min-h-[44px]"
-                          >
-                            <Checkbox
-                              checked={checked}
-                              onCheckedChange={(v) =>
+                      <p className="text-xs text-muted-foreground">
+                        Todos comecam como presentes. Toque em quem faltou.
+                      </p>
+
+                      <div className="space-y-1">
+                        {presencas.map((p) => {
+                          const presente = presencaLocal[p.inscricaoId] ?? p.presente;
+                          return (
+                            <button
+                              key={p.inscricaoId}
+                              type="button"
+                              aria-pressed={presente}
+                              onClick={() =>
                                 setPresencaLocal((prev) => ({
                                   ...prev,
-                                  [p.inscricaoId]: v === true,
+                                  [p.inscricaoId]: !presente,
                                 }))
                               }
-                            />
-                            <span className={`text-sm ${checked ? "font-medium" : "text-muted-foreground"}`}>
-                              {p.nome}
-                            </span>
-                          </label>
-                        );
-                      })}
+                              className={`w-full flex items-center justify-between gap-3 min-h-[48px] px-3 rounded-lg border text-left transition-colors ${
+                                presente
+                                  ? "bg-background border-border"
+                                  : "bg-red-50 border-red-200 dark:bg-red-950/30 dark:border-red-900"
+                              }`}
+                            >
+                              <span
+                                className={`text-sm ${presente ? "font-medium" : "text-muted-foreground line-through"}`}
+                              >
+                                {p.nome}
+                              </span>
+                              <span className="shrink-0 flex items-center gap-1 text-xs">
+                                {presente ? (
+                                  <>
+                                    <Check className="h-4 w-4 text-green-600" />
+                                    <span className="text-green-700 dark:text-green-500">
+                                      Presente
+                                    </span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <X className="h-4 w-4 text-red-600" />
+                                    <span className="text-red-700 dark:text-red-400">Faltou</span>
+                                  </>
+                                )}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {anotacaoAberta ? (
+                        <Textarea
+                          value={anotacao}
+                          onChange={(e) => setAnotacao(e.target.value)}
+                          rows={3}
+                          maxLength={500}
+                          placeholder="Como foi a aula? (opcional)"
+                          className="mt-2"
+                        />
+                      ) : (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-10 px-2 text-muted-foreground"
+                          onClick={() => setAnotacaoAberta(true)}
+                        >
+                          + Anotar algo sobre a aula (opcional)
+                        </Button>
+                      )}
+
                       <Button
-                        size="sm"
-                        className="w-full mt-2"
+                        className="w-full h-11"
                         onClick={handleSalvar}
                         disabled={salvando}
                       >
                         <Check className="h-4 w-4 mr-1" />
-                        {salvando ? "Salvando..." : "Salvar presenca"}
+                        {salvando
+                          ? "Salvando..."
+                          : `Salvar — ${presentes} ${presentes === 1 ? "presente" : "presentes"}, ${faltas} ${faltas === 1 ? "falta" : "faltas"}`}
                       </Button>
                     </>
                   )}

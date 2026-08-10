@@ -3,7 +3,7 @@ import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { requirePermission, checkPermission } from "../_shared/requirePermission";
 import { createActionAuditLog, createFieldAuditLogs } from "../_shared/auditHelpers";
-import { FREQUENCIA_MINIMA_PADRAO } from "./lib/constants";
+import { FREQUENCIA_MINIMA_PADRAO, truncarObservacao } from "./lib/constants";
 import { gerarDatasAulas } from "./lib/aulas";
 import { avaliarJanelaInscricao } from "./lib/inscricoes";
 import { getSaoPauloDateString } from "../_shared/datetime";
@@ -471,8 +471,10 @@ export const salvarPresencas = mutation({
       inscricaoId: v.id("inscricoes"),
       presente: v.boolean(),
     })),
+    // Anotacao da aula (opcional): "como foi", assunto que sobrou, etc.
+    observacoes: v.optional(v.string()),
   },
-  handler: async (ctx, { encontroId, presencas }) => {
+  handler: async (ctx, { encontroId, presencas, observacoes }) => {
     const encontro = await ctx.db.get(encontroId);
     if (!encontro) throw new Error("Encontro nao encontrado");
     const { membro } = await requireGestaoTurma(ctx, encontro.turmaId);
@@ -507,6 +509,12 @@ export const salvarPresencas = mutation({
     // Marca a chamada como feita: o widget do dashboard passa a checar este
     // campo em vez de ler as presencas, e o calculo de frequencia ignora aula
     // sem chamada (nao vira falta de ninguem).
-    await ctx.db.patch(encontroId, { presencaRegistradaEm: Date.now() });
+    const patch: { presencaRegistradaEm: number; observacoes?: string } = {
+      presencaRegistradaEm: Date.now(),
+    };
+    // Nao apaga a anotacao existente quando a chamada e salva de novo sem texto.
+    const nota = truncarObservacao(observacoes);
+    if (nota) patch.observacoes = nota;
+    await ctx.db.patch(encontroId, patch);
   },
 });

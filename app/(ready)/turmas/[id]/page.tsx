@@ -36,6 +36,9 @@ export default function TurmaDetalhePage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { can } = useAuth();
+  // @ts-ignore Convex TS2589 — tsc do projeto inteiro estoura o limite de
+  // instanciacao aqui; o build do Next nao. @ts-ignore por isso: @ts-expect-error
+  // quebraria o build por diretiva nao usada.
   const turma = useQuery(api.turmas.queries.getById, { id: id as Id<"turmas"> });
   const inscricoes = useQuery(api.turmas.queries.listInscricoes, { turmaId: id as Id<"turmas"> });
   const encontros = useQuery(api.turmas.queries.listEncontros, { turmaId: id as Id<"turmas"> });
@@ -332,12 +335,15 @@ export default function TurmaDetalhePage() {
                             <p className="text-sm text-muted-foreground">Nenhum inscrito confirmado</p>
                           ) : (
                             <>
+                              <p className="text-xs text-muted-foreground">
+                                Todos comecam como presentes. Desmarque quem faltou.
+                              </p>
                               {presencas.map((p) => {
                                 const checked = presencaLocal[p.inscricaoId] ?? p.presente;
                                 return (
                                   <label
                                     key={p.inscricaoId}
-                                    className="flex items-center gap-3 py-1.5 px-2 rounded hover:bg-accent cursor-pointer"
+                                    className="flex items-center gap-3 py-1.5 px-2 rounded hover:bg-accent cursor-pointer min-h-[44px]"
                                   >
                                     <Checkbox
                                       checked={checked}
@@ -354,8 +360,19 @@ export default function TurmaDetalhePage() {
                                   </label>
                                 );
                               })}
-                              <Button size="sm" className="w-full mt-2" onClick={handleSalvarPresencas}>
-                                <Check className="h-4 w-4 mr-1" /> Salvar presenca
+                              <Button
+                                size="sm"
+                                className="w-full mt-2 h-11"
+                                onClick={handleSalvarPresencas}
+                              >
+                                <Check className="h-4 w-4 mr-1" />
+                                {(() => {
+                                  const faltas = presencas.filter(
+                                    (p) => !(presencaLocal[p.inscricaoId] ?? p.presente)
+                                  ).length;
+                                  const presentes = presencas.length - faltas;
+                                  return `Salvar — ${presentes} ${presentes === 1 ? "presente" : "presentes"}, ${faltas} ${faltas === 1 ? "falta" : "faltas"}`;
+                                })()}
                               </Button>
                             </>
                           )}
