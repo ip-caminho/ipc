@@ -167,6 +167,7 @@ import type * as turmas_lib_inscricoes from "../turmas/lib/inscricoes.js";
 import type * as turmas_lib_resumo from "../turmas/lib/resumo.js";
 import type * as turmas_mutations from "../turmas/mutations.js";
 import type * as turmas_queries from "../turmas/queries.js";
+import type * as turmas_seedDemo from "../turmas/seedDemo.js";
 
 import type {
   ApiFromModules,
@@ -334,6 +335,7 @@ declare const fullApi: ApiFromModules<{
   "turmas/lib/resumo": typeof turmas_lib_resumo;
   "turmas/mutations": typeof turmas_mutations;
   "turmas/queries": typeof turmas_queries;
+  "turmas/seedDemo": typeof turmas_seedDemo;
 }>;
 
 /**
