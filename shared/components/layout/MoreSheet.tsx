@@ -3,8 +3,6 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
 import {
   Sheet,
   SheetContent,
@@ -18,8 +16,8 @@ import { LogOut, User, Moon, Sun, Globe, ClipboardList } from "lucide-react";
 import { useAuth } from "@shared/providers/PermissionsProvider";
 import {
   GESTAO_SECTIONS,
-  type NavItem,
 } from "@shared/constants/navigation";
+import { useNavItemVisible } from "@shared/hooks/useNavItemVisible";
 import { cn } from "@shared/lib/utils/cn";
 import { useTheme } from "next-themes";
 import { useAuthActions } from "@convex-dev/auth/react";
@@ -41,21 +39,13 @@ export function MoreSheet({ open, onOpenChange }: Props) {
     const t = setTimeout(() => setArmed(open), open ? 550 : 0);
     return () => clearTimeout(t);
   }, [open]);
-  const { name, role, foto, can, hasAnyRole } = useAuth();
+  const { name, role, foto } = useAuth();
   const { theme, setTheme } = useTheme();
   const { signOut } = useAuthActions();
-  // @ts-ignore Convex TS2589
-  const modulosAtivos = useQuery(api.modulos.queries.listModulosAtivos);
-
   // Mesma lista do sidebar desktop, filtrada por RBAC. Sem "modo gestao".
   const sections = GESTAO_SECTIONS;
 
-  const isVisible = (item: NavItem) => {
-    if (item.modulo && modulosAtivos && !modulosAtivos.includes(item.modulo)) return false;
-    if (item.permission && !can(item.permission)) return false;
-    if (item.roles && !hasAnyRole(item.roles)) return false;
-    return true;
-  };
+  const isVisible = useNavItemVisible();
 
   const isActive = (href: string) => {
     if (href === "/dashboard") return pathname === "/dashboard";
