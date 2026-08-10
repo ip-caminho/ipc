@@ -1,6 +1,8 @@
 import { internalMutation } from "../_generated/server";
 import type { Id } from "../_generated/dataModel";
 import { PASTOR_TITULAR } from "./lib/constants";
+import { getSaoPauloDateString } from "../_shared/datetime";
+import { v } from "convex/values";
 
 /**
  * Dados de teste para validar a IMPRESSAO dos certificados em papel.
@@ -208,6 +210,122 @@ export const limparCertificadosDemo = internalMutation({
     );
     for (const c of cursos) {
       await ctx.db.delete(c._id);
+      removidos++;
+    }
+
+    return `Documentos removidos: ${removidos}`;
+  },
+});
+
+// ===== Chamada: turma temporaria para ver o widget do dashboard =====
+//
+// O widget "Chamadas pendentes" so aparece para quem e INSTRUTOR de uma turma
+// com aula dentro da janela de 7 dias e sem presenca registrada. Este seed cria
+// exatamente esse cenario para um membro (achado pelo email), para conferir a
+// tela do professor com dados na mao. Remover depois com limparChamadaDemo.
+
+const TURMA_CHAMADA = `${PREFIXO} Chamada (temporaria)`;
+
+const ALUNOS_CHAMADA = [
+  "Ana Beatriz Ferreira",
+  "Carlos Eduardo Lima",
+  "Joana Ribeiro dos Santos",
+  "Marcos Vinicius Alves",
+  "Patricia Nogueira",
+];
+
+export const seedChamadaDemo = internalMutation({
+  args: { email: v.string() },
+  handler: async (ctx, { email }) => {
+    const entidade = (await ctx.db.query("entidades").collect()).find(
+      (e) => e.email?.toLowerCase() === email.toLowerCase()
+    );
+    if (!entidade) return `Nenhuma entidade com o email ${email}.`;
+
+    const membro = await ctx.db
+      .query("membros")
+      .withIndex("by_entidade", (q) => q.eq("entidadeId", entidade._id))
+      .first();
+    if (!membro) return `A entidade ${entidade.nomeCompleto} nao e membro.`;
+
+    const jaExiste = (await ctx.db.query("turmas").collect()).find(
+      (t) => t.nome === TURMA_CHAMADA
+    );
+    if (jaExiste) return "Turma de chamada ja existe. Rode limparChamadaDemo antes.";
+
+    const agora = Date.now();
+    const ontem = getSaoPauloDateString(new Date(agora - 24 * 60 * 60 * 1000));
+
+    const turmaId = await ctx.db.insert("turmas", {
+      nome: TURMA_CHAMADA,
+      // Sem diaSemana de proposito: evita o caso "aula de hoje", que criaria um
+      // encontro ao abrir. O cenario aqui e a aula de ontem ainda pendente.
+      dataInicio: ontem,
+      horario: "19:30",
+      local: "Sala 1",
+      instrutorId: membro._id,
+      vagasOcupadas: ALUNOS_CHAMADA.length,
+      status: "EM_ANDAMENTO",
+      camposSistema: ["nomeCompleto"],
+      criadoEm: agora,
+    });
+
+    // Aula de ontem, criada dentro da janela e SEM presencaRegistradaEm.
+    await ctx.db.insert("turmaEncontros", {
+      turmaId,
+      data: ontem,
+      titulo: "Aula 3",
+      criadoEm: agora - 24 * 60 * 60 * 1000,
+    });
+
+    for (const nome of ALUNOS_CHAMADA) {
+      await ctx.db.insert("inscricoes", {
+        turmaId,
+        dadosSistema: { nomeCompleto: nome },
+        status: "CONFIRMADA",
+        lgpdConsentimento: true,
+        criadoEm: agora - 30 * 24 * 60 * 60 * 1000,
+      });
+    }
+
+    return `Turma criada para ${entidade.nomeCompleto}: ${ALUNOS_CHAMADA.length} alunos, aula de ${ontem} pendente. O card aparece no dashboard dele.`;
+  },
+});
+
+export const limparChamadaDemo = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const turmas = (await ctx.db.query("turmas").collect()).filter(
+      (t) => t.nome === TURMA_CHAMADA
+    );
+    let removidos = 0;
+
+    for (const turma of turmas) {
+      const aulas = await ctx.db
+        .query("turmaEncontros")
+        .withIndex("by_turma", (q) => q.eq("turmaId", turma._id))
+        .collect();
+      for (const aula of aulas) {
+        const presencas = await ctx.db
+          .query("turmaPresencas")
+          .withIndex("by_encontro_inscricao", (q) => q.eq("encontroId", aula._id))
+          .collect();
+        for (const p of presencas) {
+          await ctx.db.delete(p._id);
+          removidos++;
+        }
+        await ctx.db.delete(aula._id);
+        removidos++;
+      }
+      const inscricoes = await ctx.db
+        .query("inscricoes")
+        .withIndex("by_turma", (q) => q.eq("turmaId", turma._id))
+        .collect();
+      for (const i of inscricoes) {
+        await ctx.db.delete(i._id);
+        removidos++;
+      }
+      await ctx.db.delete(turma._id);
       removidos++;
     }
 
