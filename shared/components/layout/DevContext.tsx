@@ -931,6 +931,38 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "Turma nova pode ser vinculada a um curso (gera aulas e copia frequencia minima)",
     ],
   },
+  "/minhas-turmas": {
+    nome: "Minhas Turmas (instrutor)",
+    pagina: "app/(ready)/minhas-turmas/page.tsx",
+    arquivos: [
+      "app/(ready)/minhas-turmas/page.tsx",
+      "features/turmas/components/MinhasTurmasCard.tsx",
+    ],
+    queries: ["turmas.instrutor.minhasTurmas"],
+    mutations: [],
+    notas: [
+      "Consulta do instrutor: sem edicao, sem PermissionGate — acesso vem de ser instrutor da turma",
+      "Vazia para quem nao da aula; o card do dashboard se esconde do mesmo jeito",
+    ],
+  },
+  "/minhas-turmas/[id]": {
+    nome: "Consulta da Turma (instrutor)",
+    pagina: "app/(ready)/minhas-turmas/[id]/page.tsx",
+    arquivos: [
+      "app/(ready)/minhas-turmas/[id]/page.tsx",
+      "features/turmas/components/RespostasChart.tsx",
+      "convex/turmas/instrutor.ts",
+    ],
+    queries: ["turmas.instrutor.painel"],
+    mutations: [],
+    componentes: ["RespostasChart"],
+    notas: [
+      "Gate: instrutor da turma OU turmas:read",
+      "Indicadores + contagem por opcao das perguntas de escolha + lista de inscritos",
+      "Botao de WhatsApp por inscrito; respostas em Collapsible",
+      "Inscricao cancelada nao aparece",
+    ],
+  },
   "/cursos": {
     nome: "Cursos",
     pagina: "app/(ready)/cursos/page.tsx",
@@ -1570,6 +1602,8 @@ function resolveRoute(pathname: string): PageContext | null {
   if (/^\/membros\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/membros/[id]"];
   // /biblioteca/[id]
   if (/^\/biblioteca\/[^/]+$/.test(pathname) && pathname !== "/biblioteca/novo") return CONTEXT_MAP["/biblioteca/[id]"];
+  // /minhas-turmas/[id]
+  if (/^\/minhas-turmas\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/minhas-turmas/[id]"];
   // /turmas/[id]/certificados/imprimir
   if (/^\/turmas\/[^/]+\/certificados\/imprimir$/.test(pathname))
     return CONTEXT_MAP["/turmas/[id]/certificados/imprimir"];

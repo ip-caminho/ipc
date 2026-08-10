@@ -399,3 +399,129 @@ export const abrirInscricoesDemo = internalMutation({
     return `/inscricao/${token} — aberta de ${hoje} a ${em30}, 10 vagas (${turma.vagasOcupadas} ocupadas).`;
   },
 });
+
+/**
+ * DEV: turma com instrutor, formulario de Catecumenos e inscritos que ja
+ * responderam — para conferir a tela de consulta do instrutor com dados.
+ */
+export const seedConsultaInstrutorDemo = internalMutation({
+  args: { email: v.string() },
+  handler: async (ctx, { email }) => {
+    const entidade = (await ctx.db.query("entidades").collect()).find(
+      (e) => e.email?.toLowerCase() === email.toLowerCase()
+    );
+    if (!entidade) return `Nenhuma entidade com o email ${email}.`;
+    const membro = await ctx.db
+      .query("membros")
+      .withIndex("by_entidade", (q) => q.eq("entidadeId", entidade._id))
+      .first();
+    if (!membro) return "Entidade nao e membro.";
+
+    const NOME = `${PREFIXO} Consulta instrutor`;
+    if ((await ctx.db.query("turmas").collect()).some((t) => t.nome === NOME)) {
+      return "Ja existe.";
+    }
+
+    const agora = Date.now();
+    const perguntas = [
+      {
+        id: "tempo_igreja",
+        label: "Ha quanto tempo voce frequenta a Igreja Presbiteriana do Caminho?",
+        obrigatorio: true,
+        tipo: "ESCOLHA_UNICA" as const,
+        opcoes: ["Menos de 3 meses", "Entre 3 meses e 1 ano", "Mais de 1 ano"],
+      },
+      {
+        id: "motivacao",
+        label: "O que motivou voce a se inscrever neste estudo?",
+        obrigatorio: true,
+        tipo: "ESCOLHA_MULTIPLA" as const,
+        opcoes: [
+          "Quero conhecer mais sobre a fe crista",
+          "Desejo professar publicamente minha fe em Cristo",
+          "Quero ser batizado(a)",
+        ],
+      },
+      {
+        id: "expectativa",
+        label: "O que voce espera aprender com este estudo?",
+        obrigatorio: false,
+        tipo: "TEXTO_LONGO" as const,
+      },
+    ];
+
+    const turmaId = await ctx.db.insert("turmas", {
+      nome: NOME,
+      instrutorId: membro._id,
+      frequenciaMinima: 75,
+      dataInicio: "2026-08-16",
+      diaSemana: "DOMINGO",
+      horario: "08:30",
+      local: "Na Igreja, 1o andar",
+      vagasOcupadas: 4,
+      status: "EM_ANDAMENTO",
+      camposSistema: ["nomeCompleto", "whatsapp", "email", "dataNascimento"],
+      perguntasExtras: perguntas,
+      criadoEm: agora,
+    });
+
+    for (const [i, data] of ["2026-08-16", "2026-08-23", "2026-08-30"].entries()) {
+      await ctx.db.insert("turmaEncontros", {
+        turmaId,
+        data,
+        titulo: `Aula ${i + 1}`,
+        presencaRegistradaEm: i === 0 ? agora : undefined,
+        criadoEm: agora,
+      });
+    }
+
+    const pessoas: Array<{ nome: string; tempo: string; motivos: string[]; texto: string }> = [
+      {
+        nome: "Ana Beatriz Ferreira",
+        tempo: "Mais de 1 ano",
+        motivos: ["Desejo professar publicamente minha fe em Cristo", "Quero ser batizado(a)"],
+        texto: "Quero entender melhor a doutrina antes de professar minha fe.",
+      },
+      {
+        nome: "Carlos Eduardo Lima",
+        tempo: "Menos de 3 meses",
+        motivos: ["Quero conhecer mais sobre a fe crista"],
+        texto: "Comecei a frequentar agora e quero conhecer o basico.",
+      },
+      {
+        nome: "Joana Ribeiro dos Santos",
+        tempo: "Entre 3 meses e 1 ano",
+        motivos: ["Quero conhecer mais sobre a fe crista", "Quero ser batizado(a)"],
+        texto: "",
+      },
+      {
+        nome: "Marcos Vinicius Alves",
+        tempo: "Mais de 1 ano",
+        motivos: ["Quero ser batizado(a)"],
+        texto: "Fui criado na igreja mas nunca fui batizado.",
+      },
+    ];
+
+    for (const [i, p] of pessoas.entries()) {
+      await ctx.db.insert("inscricoes", {
+        turmaId,
+        dadosSistema: {
+          nomeCompleto: p.nome,
+          whatsapp: `+551199999000${i}`,
+          email: `${p.nome.split(" ")[0].toLowerCase()}@exemplo.com`,
+          dataNascimento: "1990-05-1" + i,
+        },
+        status: i === 3 ? "LISTA_ESPERA" : "CONFIRMADA",
+        lgpdConsentimento: true,
+        respostasExtras: [
+          { perguntaId: "tempo_igreja", valor: p.tempo },
+          { perguntaId: "motivacao", valor: p.motivos.join("; "), valores: p.motivos },
+          ...(p.texto ? [{ perguntaId: "expectativa", valor: p.texto }] : []),
+        ],
+        criadoEm: agora - i * 86400000,
+      });
+    }
+
+    return `Turma "${NOME}" criada com 4 inscritos respondidos. /minhas-turmas/${turmaId}`;
+  },
+});
