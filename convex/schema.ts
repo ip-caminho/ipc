@@ -1049,6 +1049,10 @@ export default defineSchema({
     descricao: v.optional(v.string()), // sobrescreve a descricao do curso
     dataInicio: v.string(), // YYYY-MM-DD
     dataFim: v.optional(v.string()),
+    // Janela de inscricao (YYYY-MM-DD, inclusiva nas duas pontas). Vazio = sem
+    // restricao de data: fecha so por status ou por vagas esgotadas.
+    inscricoesDe: v.optional(v.string()),
+    inscricoesAte: v.optional(v.string()),
     diaSemana: v.optional(v.string()),
     horario: v.optional(v.string()),
     local: v.optional(v.string()),

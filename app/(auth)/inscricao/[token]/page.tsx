@@ -45,11 +45,27 @@ export default function InscricaoPublicPage() {
 
   if (turma === undefined) return <div className="min-h-screen flex items-center justify-center">Carregando...</div>;
   if (turma === null) return <div className="min-h-screen flex items-center justify-center">Link invalido ou turma nao encontrada</div>;
-  if (turma.status !== "ABERTA") return (
-    <div className="min-h-screen flex items-center justify-center">
-      <p className="text-muted-foreground">Esta turma nao esta aceitando inscricoes no momento.</p>
-    </div>
-  );
+  if (!turma.inscricoesAbertas) {
+    const mensagem =
+      turma.motivoFechado === "AINDA_NAO_COMECOU" && turma.inscricoesDe
+        ? `As inscricoes abrem em ${formatDate(turma.inscricoesDe)}.`
+        : turma.motivoFechado === "ENCERRADA" && turma.inscricoesAte
+          ? `As inscricoes foram encerradas em ${formatDate(turma.inscricoesAte)}.`
+          : "Esta turma nao esta aceitando inscricoes no momento.";
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <Card className="max-w-md w-full">
+          <CardContent className="p-6 text-center space-y-3">
+            <CardTitle className="text-lg">{turma.nome}</CardTitle>
+            <p className="text-sm text-muted-foreground">{mensagem}</p>
+            <Button asChild variant="outline" className="w-full">
+              <Link href="/">Voltar para o site</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (success) {
     return (
@@ -110,6 +126,11 @@ export default function InscricaoPublicPage() {
             </span>
             {turma.local && (
               <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{turma.local}</span>
+            )}
+            {turma.inscricoesAte && (
+              <span className="flex items-center gap-1">
+                Inscricoes ate {formatDate(turma.inscricoesAte)}
+              </span>
             )}
             {turma.vagasRestantes !== null && turma.vagasRestantes < 5 && (
               <Badge variant="outline" className="bg-yellow-100 text-yellow-800">
