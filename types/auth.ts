@@ -61,6 +61,8 @@ export type Permission =
   | "site_publico:manage"
   // Inscricoes de evento (gestao pela secretaria)
   | "inscricoes:manage"
+  // Retiro (gestao do retiro anual: grupos, quartos, pagamentos)
+  | "retiro:manage"
   // Acesso ao sistema (links de ativacao, reset de senha, link de convidado)
   | "acesso:manage"
   // Wildcards

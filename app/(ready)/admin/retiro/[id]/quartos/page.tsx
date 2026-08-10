@@ -43,7 +43,7 @@ export default function QuartosPage() {
   const params = useParams<{ id: string }>();
   return (
     <PermissionGate
-      permission="inscricoes:manage"
+      permission="retiro:manage"
       fallback={
         <HeaderLayout>
           <Card>
