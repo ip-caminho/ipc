@@ -3,7 +3,8 @@ import { v } from "convex/values";
 import { requirePermission, checkPermission } from "../_shared/requirePermission";
 import { createActionAuditLog } from "../_shared/auditHelpers";
 import { resumoFrequenciaTurma } from "./lib/resumo";
-import { truncarObservacao } from "./lib/constants";
+import { truncarObservacao, PASTOR_TITULAR } from "./lib/constants";
+import { resolveMembroNome } from "../_shared/membroResolver";
 import type { Doc, Id } from "../_generated/dataModel";
 
 /**
@@ -44,6 +45,18 @@ async function certificadoAtivo(ctx: MutationCtx, inscricaoId: Id<"inscricoes">)
   return emitidos.find((c) => !c.revogadoEm) ?? null;
 }
 
+/** Nome do instrutor da turma: membro vinculado ou texto livre (externo). */
+async function nomeDoInstrutor(
+  ctx: MutationCtx,
+  turma: Doc<"turmas">
+): Promise<string | undefined> {
+  if (turma.instrutorId) {
+    const nome = await resolveMembroNome(ctx, turma.instrutorId);
+    if (nome) return nome;
+  }
+  return turma.instrutorNome?.trim() || undefined;
+}
+
 async function emitirUm(
   ctx: MutationCtx,
   params: {
@@ -52,6 +65,7 @@ async function emitirUm(
     cursoNome: string;
     cargaHoraria?: number;
     nomeImpresso: string;
+    instrutorNome?: string;
     percentualFrequencia: number;
     aulasPresentes: number;
     aulasConsideradas: number;
@@ -68,6 +82,8 @@ async function emitirUm(
     cursoNome: params.cursoNome,
     turmaNome: params.turma.nome,
     cargaHoraria: params.cargaHoraria,
+    instrutorNome: params.instrutorNome,
+    pastorNome: PASTOR_TITULAR,
     codigo: await codigoUnico(ctx),
     emitidoPor: params.emitidoPor,
     emitidoEm: Date.now(),
@@ -160,6 +176,7 @@ export const emitir = mutation({
       cursoNome: curso?.nome ?? turma.nome,
       cargaHoraria: curso?.cargaHoraria,
       nomeImpresso: (nomeImpresso?.trim() || inscricao.dadosSistema.nomeCompleto).trim(),
+      instrutorNome: await nomeDoInstrutor(ctx, turma),
       percentualFrequencia: resumo.percentual,
       aulasPresentes: resumo.aulasPresentes,
       aulasConsideradas: resumo.aulasConsideradas,
@@ -179,6 +196,7 @@ export const emitirAptos = mutation({
     const curso = turma.cursoId ? await ctx.db.get(turma.cursoId) : null;
 
     const alunos = await resumoFrequenciaTurma(ctx, turmaId);
+    const instrutorNome = await nomeDoInstrutor(ctx, turma);
     let emitidos = 0;
 
     for (const a of alunos) {
@@ -193,6 +211,7 @@ export const emitirAptos = mutation({
         cursoNome: curso?.nome ?? turma.nome,
         cargaHoraria: curso?.cargaHoraria,
         nomeImpresso: inscricao.dadosSistema.nomeCompleto.trim(),
+        instrutorNome,
         percentualFrequencia: a.percentual,
         aulasPresentes: a.aulasPresentes,
         aulasConsideradas: a.aulasConsideradas,

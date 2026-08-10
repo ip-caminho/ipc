@@ -13,6 +13,10 @@ export const OBSERVACAO_MAX_CHARS = 500;
 // turma, que lista todas as aulas.
 export const JANELA_CHAMADA_MS = 7 * 24 * 60 * 60 * 1000;
 
+// Segunda assinatura do certificado. Constante por enquanto: nao existe campo
+// de pastor titular na config da igreja — quando existir, ler de la.
+export const PASTOR_TITULAR = "Bernardo Kyu Cho";
+
 export function truncarObservacao(texto: string | undefined): string | undefined {
   const limpo = texto?.trim();
   if (!limpo) return undefined;

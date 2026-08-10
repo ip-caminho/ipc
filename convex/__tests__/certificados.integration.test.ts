@@ -4,6 +4,7 @@ import { api } from "../_generated/api";
 import schema from "../schema";
 import { modules } from "../test.setup";
 import { seedUser, as } from "./helpers";
+import { PASTOR_TITULAR } from "../turmas/lib/constants";
 
 // Certificado = snapshot do que foi impresso. Um ativo por inscricao; corrigir
 // e revogar e emitir novo. Frequencia abaixo do minimo NAO bloqueia (o minimo e
@@ -183,6 +184,35 @@ describe("certificados.emitir", () => {
     await expect(
       as(t, comum).mutation(api.turmas.certificados.revogar, { id: certId })
     ).rejects.toThrow();
+  });
+});
+
+describe("certificados — assinaturas em snapshot", () => {
+  it("grava o instrutor da turma e o pastor titular; trocar o instrutor depois nao muda o emitido", async () => {
+    const t = novoTeste();
+    const { gestor, turmaId, inscricaoId } = await seedTurmaComChamada(t, [true, true, true, true]);
+
+    // Instrutor externo (texto livre) — o caso do membro vinculado usa o mesmo
+    // resolvedor de nome das listagens.
+    await as(t, gestor).mutation(api.turmas.mutations.update, {
+      id: turmaId,
+      instrutorNome: "Leandro Luiz Novaes",
+    });
+
+    const certId = await as(t, gestor).mutation(api.turmas.certificados.emitir, {
+      inscricaoId,
+    });
+    const cert = await t.run(async (ctx) => await ctx.db.get(certId));
+    expect(cert?.instrutorNome).toBe("Leandro Luiz Novaes");
+    expect(cert?.pastorNome).toBe(PASTOR_TITULAR);
+
+    await as(t, gestor).mutation(api.turmas.mutations.update, {
+      id: turmaId,
+      instrutorNome: "Outro Professor",
+    });
+    expect(
+      (await t.run(async (ctx) => await ctx.db.get(certId)))?.instrutorNome
+    ).toBe("Leandro Luiz Novaes");
   });
 });
 
