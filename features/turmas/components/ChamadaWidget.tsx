@@ -7,16 +7,28 @@ import { Card, CardContent } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Switch } from "@/shared/components/ui/switch";
+import { Badge } from "@/shared/components/ui/badge";
+import { Separator } from "@/shared/components/ui/separator";
+import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
 import { Label } from "@/shared/components/ui/label";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/shared/components/ui/collapsible";
-import { GraduationCap, Check, ChevronDown, Clock } from "lucide-react";
+import { GraduationCap, Check, ChevronDown, Clock, UserCheck, UserX } from "lucide-react";
 import { toast } from "sonner";
 import { DIA_SEMANA_LABELS } from "../lib/constants";
 import type { Id } from "@/convex/_generated/dataModel";
+
+/** Iniciais para o avatar: primeiro e ultimo nome. */
+function iniciais(nome: string): string {
+  const partes = nome.trim().split(/\s+/).filter(Boolean);
+  if (partes.length === 0) return "?";
+  const primeira = partes[0][0] ?? "";
+  const ultima = partes.length > 1 ? (partes[partes.length - 1][0] ?? "") : "";
+  return (primeira + ultima).toUpperCase();
+}
 
 function formatDate(d: string) {
   const [y, m, day] = d.split("-");
@@ -145,13 +157,20 @@ export function ChamadaWidget() {
                     className="w-full h-auto min-h-[56px] justify-between gap-3 px-2 py-2 text-left whitespace-normal"
                   >
                     <span className="flex items-center gap-3 min-w-0 flex-1">
-                      <GraduationCap className="h-5 w-5 text-muted-foreground shrink-0" />
+                      <span className="grid size-10 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">
+                        <GraduationCap className="h-5 w-5" />
+                      </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block font-medium text-sm truncate">{t.nome}</span>
-                        <span className="block text-xs text-muted-foreground font-normal">
-                          {t.isDiaDeAula
-                            ? `Aula de hoje${t.horario ? ` - ${t.horario}` : ""} · ${t.totalInscritos} inscritos`
-                            : `Aula de ${formatDate(t.encontroData)} · ${t.totalInscritos} inscritos`}
+                        <span className="block font-semibold text-sm truncate">{t.nome}</span>
+                        <span className="mt-1 flex flex-wrap items-center gap-1.5">
+                          <Badge variant="secondary" className="font-normal">
+                            {t.isDiaDeAula
+                              ? `Hoje${t.horario ? ` · ${t.horario}` : ""}`
+                              : formatDate(t.encontroData)}
+                          </Badge>
+                          <Badge variant="outline" className="font-normal">
+                            {t.totalInscritos} {t.totalInscritos === 1 ? "aluno" : "alunos"}
+                          </Badge>
                         </span>
                         {t.encontroId && (
                           <span
@@ -185,9 +204,25 @@ export function ChamadaWidget() {
                     </p>
                   ) : (
                     <>
-                      <p className="text-xs text-muted-foreground px-2">
-                        Todos comecam como presentes. Desligue quem faltou.
-                      </p>
+                      <Separator />
+
+                      <div className="flex items-center justify-between gap-2 px-2">
+                        <span className="flex items-center gap-3 text-xs">
+                          <span className="flex items-center gap-1 font-medium">
+                            <UserCheck className="h-4 w-4 text-primary" />
+                            {presentes}
+                          </span>
+                          <span
+                            className={`flex items-center gap-1 ${faltas > 0 ? "text-destructive font-medium" : "text-muted-foreground"}`}
+                          >
+                            <UserX className="h-4 w-4" />
+                            {faltas}
+                          </span>
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          Desligue quem faltou
+                        </span>
+                      </div>
 
                       <div className="space-y-1">
                         {presencas.map((p) => {
@@ -201,7 +236,17 @@ export function ChamadaWidget() {
                                 presente ? "" : "border-destructive/30 bg-destructive/10"
                               }`}
                             >
-                              <span className="flex flex-col min-w-0">
+                              <span className="flex items-center gap-3 min-w-0">
+                                <Avatar className="size-9 shrink-0">
+                                  <AvatarFallback
+                                    className={
+                                      presente ? "" : "bg-destructive/15 text-destructive"
+                                    }
+                                  >
+                                    {iniciais(p.nome)}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span className="flex flex-col min-w-0">
                                 <span
                                   className={`text-sm ${presente ? "font-medium" : "text-muted-foreground line-through"}`}
                                 >
@@ -211,6 +256,7 @@ export function ChamadaWidget() {
                                   className={`text-xs font-normal ${presente ? "text-muted-foreground" : "text-destructive"}`}
                                 >
                                   {presente ? "Presente" : "Faltou"}
+                                </span>
                                 </span>
                               </span>
                               <Switch
