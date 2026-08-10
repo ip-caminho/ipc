@@ -25,6 +25,7 @@ import { ProfileCompletenessCard } from "@features/dashboard/components/ProfileC
 import { ProfileNudgeDialog } from "@features/dashboard/components/ProfileNudgeDialog";
 import { MinhasInscricoesCard } from "@features/retiro/components/MinhasInscricoesCard";
 import { ChamadaWidget } from "@features/turmas/components/ChamadaWidget";
+import { MinhasTurmasCard } from "@features/turmas/components/MinhasTurmasCard";
 
 function BootstrapForm() {
   // @ts-ignore Convex TS2589
@@ -147,6 +148,8 @@ export default function DashboardPage() {
         {/* Chamada pendente vem primeiro: e acao com prazo. O widget se
             esconde sozinho quando nao ha nada a marcar. */}
         <ChamadaWidget />
+
+        <MinhasTurmasCard />
 
         <BoletimCard />
 
