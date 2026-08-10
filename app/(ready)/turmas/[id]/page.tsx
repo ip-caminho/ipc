@@ -167,6 +167,13 @@ export default function TurmaDetalhePage() {
                 {turma.totalInscritos} inscritos
                 {turma.totalListaEspera > 0 && ` (${turma.totalListaEspera} na espera)`}
               </span>
+              {(turma.inscricoesDe || turma.inscricoesAte) && (
+                <span>
+                  Inscricoes
+                  {turma.inscricoesDe && ` de ${formatDate(turma.inscricoesDe)}`}
+                  {turma.inscricoesAte && ` ate ${formatDate(turma.inscricoesAte)}`}
+                </span>
+              )}
             </div>
 
             {turma.descricao && <p className="text-sm">{turma.descricao}</p>}
