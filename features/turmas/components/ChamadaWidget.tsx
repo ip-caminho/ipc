@@ -6,7 +6,14 @@ import { api } from "@/convex/_generated/api";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { Textarea } from "@/shared/components/ui/textarea";
-import { GraduationCap, Check, ChevronDown, ChevronUp, Clock, X } from "lucide-react";
+import { Switch } from "@/shared/components/ui/switch";
+import { Label } from "@/shared/components/ui/label";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/shared/components/ui/collapsible";
+import { GraduationCap, Check, ChevronDown, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { DIA_SEMANA_LABELS } from "../lib/constants";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -27,6 +34,7 @@ function formatRemaining(ms: number): string {
 }
 
 export function ChamadaWidget() {
+  // @ts-ignore Convex TS2589 (instanciacao de tipo profunda)
   const turmas = useQuery(api.turmas.queries.minhasTurmasInstrutor);
   const createEncontro = useMutation(api.turmas.mutations.createEncontro);
   const salvarPresencas = useMutation(api.turmas.mutations.salvarPresencas);
@@ -61,31 +69,27 @@ export function ChamadaWidget() {
     setAnotacaoAberta(false);
   }
 
-  async function handleAbrir(item: NonNullable<typeof turmas>[number]) {
-    const key = `${item._id}-${item.encontroData}`;
-    if (chamadaAberta === key) {
-      fechar();
-      return;
-    }
-
-    setChamadaAberta(key);
+  async function abrir(item: NonNullable<typeof turmas>[number]) {
+    setChamadaAberta(`${item._id}-${item.encontroData}`);
     setPresencaLocal({});
     setAnotacao("");
     setAnotacaoAberta(false);
 
     if (item.encontroId) {
       setEncontroAtivo(item.encontroId);
-    } else {
-      // Criar encontro de hoje
-      try {
-        const id = await createEncontro({
-          turmaId: item._id as Id<"turmas">,
-          data: item.encontroData,
-        });
-        setEncontroAtivo(id as string);
-      } catch (err: unknown) {
-        toast.error((err as Error).message);
-      }
+      return;
+    }
+
+    // Dia de aula sem encontro criado: cria o de hoje
+    try {
+      const novo = await createEncontro({
+        turmaId: item._id as Id<"turmas">,
+        data: item.encontroData,
+      });
+      setEncontroAtivo(novo as string);
+    } catch (err: unknown) {
+      toast.error((err as Error).message);
+      fechar();
     }
   }
 
@@ -127,125 +131,125 @@ export function ChamadaWidget() {
         const presentes = total - faltas;
 
         return (
-          <Card key={key} className={isOpen ? "ring-2 ring-primary" : ""}>
-            <CardContent className="p-4 space-y-3">
-              <button
-                type="button"
-                className="w-full flex items-center justify-between gap-3 text-left min-h-[44px]"
-                onClick={() => handleAbrir(t)}
-              >
-                <div className="flex items-center gap-3 min-w-0 flex-1">
-                  <GraduationCap className="h-5 w-5 text-muted-foreground shrink-0" />
-                  <div className="min-w-0 flex-1">
-                    <p className="font-medium text-sm truncate">{t.nome}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {t.isDiaDeAula
-                        ? `Aula de hoje${t.horario ? ` - ${t.horario}` : ""} · ${t.totalInscritos} inscritos`
-                        : `Aula de ${formatDate(t.encontroData)} · ${t.totalInscritos} inscritos`}
-                    </p>
-                    {t.encontroId && (
-                      <p
-                        className={`text-xs mt-0.5 flex items-center gap-1 ${isExpiring ? "text-red-600 font-medium" : "text-muted-foreground"}`}
-                      >
-                        <Clock className="h-3 w-3" />
-                        {remaining > 0 ? `Some em ${formatRemaining(remaining)}` : "Prazo expirado"}
-                      </p>
-                    )}
-                    {!t.isDiaDeAula && t.diaSemana && (
-                      <p className="text-xs text-muted-foreground">
-                        {DIA_SEMANA_LABELS[t.diaSemana] ?? t.diaSemana}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                <span className="shrink-0 inline-flex items-center h-11 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium">
-                  {isOpen ? (
-                    <>
-                      <ChevronUp className="h-4 w-4 mr-1" /> Fechar
-                    </>
-                  ) : (
-                    <>
-                      <ChevronDown className="h-4 w-4 mr-1" /> Chamada
-                    </>
-                  )}
-                </span>
-              </button>
+          <Collapsible
+            key={key}
+            open={isOpen}
+            onOpenChange={(aberto) => (aberto ? abrir(t) : fechar())}
+            asChild
+          >
+            <Card className={isOpen ? "ring-2 ring-primary" : undefined}>
+              <CardContent className="p-3 space-y-3">
+                <CollapsibleTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="w-full h-auto min-h-[56px] justify-between gap-3 px-2 py-2 text-left whitespace-normal"
+                  >
+                    <span className="flex items-center gap-3 min-w-0 flex-1">
+                      <GraduationCap className="h-5 w-5 text-muted-foreground shrink-0" />
+                      <span className="min-w-0 flex-1">
+                        <span className="block font-medium text-sm truncate">{t.nome}</span>
+                        <span className="block text-xs text-muted-foreground font-normal">
+                          {t.isDiaDeAula
+                            ? `Aula de hoje${t.horario ? ` - ${t.horario}` : ""} · ${t.totalInscritos} inscritos`
+                            : `Aula de ${formatDate(t.encontroData)} · ${t.totalInscritos} inscritos`}
+                        </span>
+                        {t.encontroId && (
+                          <span
+                            className={`mt-0.5 flex items-center gap-1 text-xs font-normal ${isExpiring ? "text-destructive font-medium" : "text-muted-foreground"}`}
+                          >
+                            <Clock className="h-3 w-3" />
+                            {remaining > 0
+                              ? `Some em ${formatRemaining(remaining)}`
+                              : "Prazo expirado"}
+                          </span>
+                        )}
+                        {!t.isDiaDeAula && t.diaSemana && (
+                          <span className="block text-xs text-muted-foreground font-normal">
+                            {DIA_SEMANA_LABELS[t.diaSemana] ?? t.diaSemana}
+                          </span>
+                        )}
+                      </span>
+                    </span>
+                    <ChevronDown
+                      className={`h-5 w-5 shrink-0 text-muted-foreground transition-transform ${isOpen ? "rotate-180" : ""}`}
+                    />
+                  </Button>
+                </CollapsibleTrigger>
 
-              {isOpen && presencas && (
-                <div className="border-t pt-3 space-y-2">
-                  {presencas.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">Nenhum inscrito confirmado</p>
+                <CollapsibleContent className="space-y-2">
+                  {!presencas ? (
+                    <p className="text-sm text-muted-foreground px-2">Carregando...</p>
+                  ) : presencas.length === 0 ? (
+                    <p className="text-sm text-muted-foreground px-2">
+                      Nenhum inscrito confirmado
+                    </p>
                   ) : (
                     <>
-                      <p className="text-xs text-muted-foreground">
-                        Todos comecam como presentes. Toque em quem faltou.
+                      <p className="text-xs text-muted-foreground px-2">
+                        Todos comecam como presentes. Desligue quem faltou.
                       </p>
 
                       <div className="space-y-1">
                         {presencas.map((p) => {
                           const presente = presencaLocal[p.inscricaoId] ?? p.presente;
+                          const inputId = `presenca-${p.inscricaoId}`;
                           return (
-                            <button
+                            <Label
                               key={p.inscricaoId}
-                              type="button"
-                              aria-pressed={presente}
-                              onClick={() =>
-                                setPresencaLocal((prev) => ({
-                                  ...prev,
-                                  [p.inscricaoId]: !presente,
-                                }))
-                              }
-                              className={`w-full flex items-center justify-between gap-3 min-h-[48px] px-3 rounded-lg border text-left transition-colors ${
-                                presente
-                                  ? "bg-background border-border"
-                                  : "bg-red-50 border-red-200 dark:bg-red-950/30 dark:border-red-900"
+                              htmlFor={inputId}
+                              className={`flex items-center justify-between gap-3 min-h-[52px] px-3 rounded-lg border cursor-pointer transition-colors ${
+                                presente ? "" : "border-destructive/30 bg-destructive/10"
                               }`}
                             >
-                              <span
-                                className={`text-sm ${presente ? "font-medium" : "text-muted-foreground line-through"}`}
-                              >
-                                {p.nome}
+                              <span className="flex flex-col min-w-0">
+                                <span
+                                  className={`text-sm ${presente ? "font-medium" : "text-muted-foreground line-through"}`}
+                                >
+                                  {p.nome}
+                                </span>
+                                <span
+                                  className={`text-xs font-normal ${presente ? "text-muted-foreground" : "text-destructive"}`}
+                                >
+                                  {presente ? "Presente" : "Faltou"}
+                                </span>
                               </span>
-                              <span className="shrink-0 flex items-center gap-1 text-xs">
-                                {presente ? (
-                                  <>
-                                    <Check className="h-4 w-4 text-green-600" />
-                                    <span className="text-green-700 dark:text-green-500">
-                                      Presente
-                                    </span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <X className="h-4 w-4 text-red-600" />
-                                    <span className="text-red-700 dark:text-red-400">Faltou</span>
-                                  </>
-                                )}
-                              </span>
-                            </button>
+                              <Switch
+                                id={inputId}
+                                checked={presente}
+                                onCheckedChange={(v) =>
+                                  setPresencaLocal((prev) => ({
+                                    ...prev,
+                                    [p.inscricaoId]: v,
+                                  }))
+                                }
+                              />
+                            </Label>
                           );
                         })}
                       </div>
 
-                      {anotacaoAberta ? (
-                        <Textarea
-                          value={anotacao}
-                          onChange={(e) => setAnotacao(e.target.value)}
-                          rows={3}
-                          maxLength={500}
-                          placeholder="Como foi a aula? (opcional)"
-                          className="mt-2"
-                        />
-                      ) : (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="h-10 px-2 text-muted-foreground"
-                          onClick={() => setAnotacaoAberta(true)}
-                        >
-                          + Anotar algo sobre a aula (opcional)
-                        </Button>
-                      )}
+                      <Collapsible open={anotacaoAberta} onOpenChange={setAnotacaoAberta}>
+                        <CollapsibleTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-10 px-2 text-muted-foreground"
+                          >
+                            {anotacaoAberta
+                              ? "Ocultar anotacao"
+                              : "+ Anotar algo sobre a aula (opcional)"}
+                          </Button>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="pt-2">
+                          <Textarea
+                            value={anotacao}
+                            onChange={(e) => setAnotacao(e.target.value)}
+                            rows={3}
+                            maxLength={500}
+                            placeholder="Como foi a aula?"
+                          />
+                        </CollapsibleContent>
+                      </Collapsible>
 
                       <Button
                         className="w-full h-11"
@@ -259,10 +263,10 @@ export function ChamadaWidget() {
                       </Button>
                     </>
                   )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                </CollapsibleContent>
+              </CardContent>
+            </Card>
+          </Collapsible>
         );
       })}
     </div>
