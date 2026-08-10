@@ -1,5 +1,6 @@
 import { internalMutation } from "../_generated/server";
 import type { Id } from "../_generated/dataModel";
+import { PASTOR_TITULAR } from "./lib/constants";
 
 /**
  * Dados de teste para validar a IMPRESSAO dos certificados em papel.
@@ -12,6 +13,8 @@ import type { Id } from "../_generated/dataModel";
  */
 
 const PREFIXO = "[TESTE]";
+// Instrutor real, para o certificado sair com a assinatura de quem assina.
+const INSTRUTOR_NOME = "Leandro Luiz Novaes";
 const CURSO_NOME = `${PREFIXO} Curso de Novos Membros`;
 const TURMA_NOME = `${PREFIXO} Novos Membros 2/2026`;
 
@@ -47,6 +50,18 @@ export const seedCertificadosDemo = internalMutation({
       .first();
     if (!admin) return "Nenhum membro admin encontrado — nao consigo assinar a emissao.";
 
+    // Instrutor: busca pelo nome na lista de membros. Se nao achar, a turma
+    // fica sem instrutor e a linha do professor sai em branco no impresso.
+    const entidadeInstrutor = (await ctx.db.query("entidades").collect()).find(
+      (e) => e.nomeCompleto === INSTRUTOR_NOME
+    );
+    const membroInstrutor = entidadeInstrutor
+      ? await ctx.db
+          .query("membros")
+          .withIndex("by_entidade", (q) => q.eq("entidadeId", entidadeInstrutor._id))
+          .first()
+      : null;
+
     const agora = Date.now();
 
     const cursoId = await ctx.db.insert("cursos", {
@@ -67,6 +82,7 @@ export const seedCertificadosDemo = internalMutation({
       diaSemana: "SEGUNDA",
       horario: "19:30",
       local: "Sala 1",
+      instrutorId: membroInstrutor?._id,
       vagasOcupadas: ALUNOS.length,
       // ENCERRADA: turma de teste nao deve aceitar inscricao de ninguem
       status: "ENCERRADA",
@@ -125,6 +141,8 @@ export const seedCertificadosDemo = internalMutation({
           cursoNome: CURSO_NOME,
           turmaNome: TURMA_NOME,
           cargaHoraria: 12,
+          instrutorNome: membroInstrutor ? INSTRUTOR_NOME : undefined,
+          pastorNome: PASTOR_TITULAR,
           codigo: Array.from(bytes, (b) => b.toString(16).padStart(2, "0"))
             .join("")
             .toUpperCase(),
@@ -135,7 +153,7 @@ export const seedCertificadosDemo = internalMutation({
       }
     }
 
-    return `Turma de teste criada: ${ALUNOS.length} alunos, ${emitidos} certificados emitidos. Turma ${turmaId}`;
+    return `Turma de teste criada: ${ALUNOS.length} alunos, ${emitidos} certificados emitidos, instrutor ${membroInstrutor ? INSTRUTOR_NOME : "NAO ENCONTRADO"}. Turma ${turmaId}`;
   },
 });
 
