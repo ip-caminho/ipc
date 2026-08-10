@@ -1,8 +1,10 @@
-import { mutation } from "../_generated/server";
+import { mutation, type MutationCtx } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { requirePermission, checkPermission } from "../_shared/requirePermission";
 import { createActionAuditLog, createFieldAuditLogs } from "../_shared/auditHelpers";
+import { FREQUENCIA_MINIMA_PADRAO } from "./lib/constants";
+import { gerarDatasAulas } from "./lib/aulas";
 import type { Id } from "../_generated/dataModel";
 
 async function requireAuth(ctx: any) {
@@ -42,9 +44,40 @@ function generateToken(): string {
 
 // ===== Turmas =====
 
+/**
+ * Cria as aulas semanais da turma. Chamado na criacao (quando o curso define
+ * totalAulas) e pelo botao da tela da turma. Nao gera se a turma ja tem aula —
+ * evita duplicar em clique repetido.
+ */
+async function criarAulas(
+  ctx: MutationCtx,
+  turmaId: Id<"turmas">,
+  opts: { dataInicio: string; diaSemana?: string; totalAulas: number; membroId: Id<"membros"> }
+): Promise<number> {
+  const existentes = await ctx.db
+    .query("turmaEncontros")
+    .withIndex("by_turma", (q) => q.eq("turmaId", turmaId))
+    .first();
+  if (existentes) return 0;
+
+  const datas = gerarDatasAulas(opts.dataInicio, opts.diaSemana, opts.totalAulas);
+  const agora = Date.now();
+  for (const [i, data] of datas.entries()) {
+    await ctx.db.insert("turmaEncontros", {
+      turmaId,
+      data,
+      titulo: `Aula ${i + 1}`,
+      criadoPor: opts.membroId,
+      criadoEm: agora,
+    });
+  }
+  return datas.length;
+}
+
 export const create = mutation({
   args: {
     nome: v.string(),
+    cursoId: v.optional(v.id("cursos")),
     tipo: v.optional(v.union(
       v.literal("NOVOS_MEMBROS"),
       v.literal("CATACUMENOS"),
@@ -68,9 +101,15 @@ export const create = mutation({
   },
   handler: async (ctx, args) => {
     const { membro } = await requirePermission(ctx, "turmas:create");
+
+    const curso = args.cursoId ? await ctx.db.get(args.cursoId) : null;
+    if (args.cursoId && !curso) throw new Error("Curso nao encontrado");
+
     const id = await ctx.db.insert("turmas", {
       ...args,
       nome: args.nome.trim(),
+      // Copia do curso: congela a regra de aprovacao no inicio da turma.
+      frequenciaMinima: curso?.frequenciaMinima ?? FREQUENCIA_MINIMA_PADRAO,
       vagasOcupadas: 0,
       status: "ABERTA",
       token: generateToken(),
@@ -78,7 +117,65 @@ export const create = mutation({
       criadoEm: Date.now(),
     });
     await createActionAuditLog(ctx, "CREATE", "turmas", id as string);
+
+    // Aulas ja saem criadas: o instrutor nunca precisa criar encontro.
+    if (curso?.totalAulas) {
+      await criarAulas(ctx, id, {
+        dataInicio: args.dataInicio,
+        diaSemana: args.diaSemana,
+        totalAulas: curso.totalAulas,
+        membroId: membro._id,
+      });
+    }
+
     return id;
+  },
+});
+
+export const gerarAulas = mutation({
+  args: {
+    turmaId: v.id("turmas"),
+    totalAulas: v.optional(v.number()),
+  },
+  handler: async (ctx, { turmaId, totalAulas }) => {
+    const { membro } = await requirePermission(ctx, "turmas:update");
+    const turma = await ctx.db.get(turmaId);
+    if (!turma) throw new Error("Turma nao encontrada");
+
+    const curso = turma.cursoId ? await ctx.db.get(turma.cursoId) : null;
+    const quantas = totalAulas ?? curso?.totalAulas;
+    if (!quantas || quantas < 1) {
+      throw new Error("Informe quantas aulas gerar (ou defina no curso)");
+    }
+
+    const criadas = await criarAulas(ctx, turmaId, {
+      dataInicio: turma.dataInicio,
+      diaSemana: turma.diaSemana,
+      totalAulas: quantas,
+      membroId: membro._id,
+    });
+    if (criadas === 0) throw new Error("Esta turma ja tem aulas");
+    return criadas;
+  },
+});
+
+export const setFrequenciaMinima = mutation({
+  args: { turmaId: v.id("turmas"), frequenciaMinima: v.number() },
+  handler: async (ctx, { turmaId, frequenciaMinima }) => {
+    await requirePermission(ctx, "turmas:manage_inscricoes");
+    if (
+      !Number.isFinite(frequenciaMinima) ||
+      frequenciaMinima < 0 ||
+      frequenciaMinima > 100
+    ) {
+      throw new Error("Frequencia minima deve estar entre 0 e 100");
+    }
+    const oldRecord = await ctx.db.get(turmaId);
+    if (!oldRecord) throw new Error("Turma nao encontrada");
+
+    await ctx.db.patch(turmaId, { frequenciaMinima: Math.round(frequenciaMinima) });
+    const newRecord = await ctx.db.get(turmaId);
+    await createFieldAuditLogs(ctx, oldRecord, newRecord, "turmas");
   },
 });
 
@@ -145,6 +242,8 @@ export const duplicar = mutation({
 
     const newId = await ctx.db.insert("turmas", {
       nome: nome.trim(),
+      cursoId: original.cursoId,
+      frequenciaMinima: original.frequenciaMinima,
       instrutorId: original.instrutorId,
       instrutorNome: original.instrutorNome,
       descricao: original.descricao,

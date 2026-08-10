@@ -1,7 +1,22 @@
 import { z } from "zod/v4";
 
+export const cursoFormSchema = z.object({
+  nome: z.string().min(1, "Nome obrigatorio"),
+  descricao: z.string().optional(),
+  ementa: z.string().optional(),
+  cargaHoraria: z.number().min(1).optional(),
+  totalAulas: z.number().min(1).optional(),
+  frequenciaMinima: z
+    .number()
+    .min(0, "Minimo 0")
+    .max(100, "Maximo 100"),
+});
+
+export type CursoFormValues = z.infer<typeof cursoFormSchema>;
+
 export const turmaFormSchema = z.object({
   nome: z.string().min(1, "Nome obrigatorio"),
+  cursoId: z.string().optional(),
   tipo: z.enum(["NOVOS_MEMBROS", "CATACUMENOS", "OUTRO"]).optional(),
   instrutorId: z.string().optional(),
   instrutorNome: z.string().optional(),

@@ -30,6 +30,7 @@ import { ResponsiveSelect } from "@/shared/components/ui/responsive-select";
 import { turmaFormSchema, type TurmaFormValues } from "../lib/validations";
 import { DIA_SEMANA_OPTIONS, DIA_SEMANA_LABELS, CAMPOS_SISTEMA_OPTIONS, TIPOS_TURMA, type TipoTurma } from "../lib/constants";
 import { Checkbox } from "@/shared/components/ui/checkbox";
+import type { Id } from "@/convex/_generated/dataModel";
 
 interface Props {
   open: boolean;
@@ -40,6 +41,7 @@ export function TurmaFormDialog({ open, onOpenChange }: Props) {
   const createTurma = useMutation(api.turmas.mutations.create);
   // @ts-expect-error Convex TS2589
   const membros = useQuery(api.membros.queries.list);
+  const cursos = useQuery(api.cursos.queries.listAtivos, {});
 
   const form = useForm<TurmaFormValues>({
     resolver: zodResolver(turmaFormSchema),
@@ -66,6 +68,7 @@ export function TurmaFormDialog({ open, onOpenChange }: Props) {
     try {
       await createTurma({
         nome: values.nome,
+        cursoId: values.cursoId ? (values.cursoId as Id<"cursos">) : undefined,
         tipo: values.tipo,
         instrutorId: values.instrutorId ? values.instrutorId as any : undefined,
         instrutorNome: values.instrutorNome || undefined,
@@ -98,6 +101,39 @@ export function TurmaFormDialog({ open, onOpenChange }: Props) {
           <div>
             <Label htmlFor="nome">Nome</Label>
             <Input id="nome" {...form.register("nome")} placeholder="Ex: Novos Membros - Turma 1/2026" />
+          </div>
+
+          <div>
+            <Label>Curso</Label>
+            <Select
+              value={form.watch("cursoId") || "__none__"}
+              onValueChange={(v) => {
+                if (v === "__none__") {
+                  form.setValue("cursoId", undefined);
+                  return;
+                }
+                form.setValue("cursoId", v);
+                const curso = (cursos ?? []).find((c) => c._id === v);
+                if (curso?.descricao && !form.getValues("descricao")) {
+                  form.setValue("descricao", curso.descricao);
+                }
+              }}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Selecione o curso" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">Sem curso (avulsa)</SelectItem>
+                {(cursos ?? []).map((c) => (
+                  <SelectItem key={c._id} value={c._id}>
+                    {c.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground mt-1">
+              O curso define a frequencia minima e gera as aulas automaticamente.
+            </p>
           </div>
 
           <div>
