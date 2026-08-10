@@ -1066,10 +1066,20 @@ export default defineSchema({
     ),
     // Formulario
     camposSistema: v.array(v.string()),
+    // Perguntas do formulario publico. `tipo` ausente = TEXTO (turmas criadas
+    // antes dos tipos existirem). `opcoes` so vale para as de escolha.
     perguntasExtras: v.optional(v.array(v.object({
       id: v.string(),
       label: v.string(),
       obrigatorio: v.boolean(),
+      tipo: v.optional(v.union(
+        v.literal("TEXTO"),
+        v.literal("TEXTO_LONGO"),
+        v.literal("ESCOLHA_UNICA"),
+        v.literal("ESCOLHA_MULTIPLA")
+      )),
+      opcoes: v.optional(v.array(v.string())),
+      ajuda: v.optional(v.string()),
     }))),
     token: v.optional(v.string()),
     criadoPor: v.optional(v.id("membros")),
@@ -1092,7 +1102,9 @@ export default defineSchema({
     }),
     respostasExtras: v.optional(v.array(v.object({
       perguntaId: v.string(),
+      // valor para texto e escolha unica; valores para escolha multipla.
       valor: v.string(),
+      valores: v.optional(v.array(v.string())),
     }))),
     status: v.union(
       v.literal("CONFIRMADA"),

@@ -15,6 +15,8 @@ import { PhoneInputBR } from "@/shared/components/ui/phone-input-br";
 import { Label } from "@/shared/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Checkbox } from "@/shared/components/ui/checkbox";
+import { Textarea } from "@/shared/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/shared/components/ui/radio-group";
 import { Badge } from "@/shared/components/ui/badge";
 import { Calendar, MapPin, Users, CheckCircle } from "lucide-react";
 import { inscricaoPublicSchema } from "@features/turmas/lib/validations";
@@ -32,6 +34,8 @@ export default function InscricaoPublicPage() {
   const registrar = useMutation(api.turmas.mutations.registrar);
   const [success, setSuccess] = useState(false);
   const [resultStatus, setResultStatus] = useState<string>("");
+  // Perguntas extras ficam fora do react-hook-form: sao dinamicas por turma.
+  const [respostas, setRespostas] = useState<Record<string, string | string[]>>({});
 
   const form = useForm({
     resolver: zodResolver(inscricaoPublicSchema),
@@ -89,6 +93,29 @@ export default function InscricaoPublicPage() {
   }
 
   async function onSubmit(values: Record<string, unknown>) {
+    const extras = turma?.perguntasExtras ?? [];
+
+    // Obrigatorias das perguntas extras: validadas aqui porque o schema do
+    // react-hook-form so conhece os campos fixos.
+    for (const p of extras) {
+      const r = respostas[p.id];
+      const vazia = Array.isArray(r) ? r.length === 0 : !r?.trim();
+      if (p.obrigatorio && vazia) {
+        toast.error(`Responda: ${p.label}`);
+        return;
+      }
+    }
+
+    const respostasExtras = extras
+      .map((p) => {
+        const r = respostas[p.id];
+        if (Array.isArray(r)) {
+          return r.length ? { perguntaId: p.id, valor: r.join("; "), valores: r } : null;
+        }
+        return r?.trim() ? { perguntaId: p.id, valor: r.trim() } : null;
+      })
+      .filter((r): r is { perguntaId: string; valor: string; valores?: string[] } => r !== null);
+
     try {
       const inscricaoId = await registrar({
         token,
@@ -99,6 +126,7 @@ export default function InscricaoPublicPage() {
           dataNascimento: (values.dataNascimento as string) || undefined,
           sexo: (values.sexo as string) || undefined,
         },
+        respostasExtras: respostasExtras.length ? respostasExtras : undefined,
         lgpdConsentimento: true,
       });
       // Verificar se ficou em lista de espera
@@ -186,6 +214,92 @@ export default function InscricaoPublicPage() {
                 </p>
               </div>
             )}
+
+            {(turma.perguntasExtras ?? []).map((p) => {
+              const valor = respostas[p.id];
+              const tipo = p.tipo ?? "TEXTO";
+              return (
+                <div key={p.id}>
+                  <Label htmlFor={`extra-${p.id}`}>
+                    {p.label}
+                    {p.obrigatorio && <span className="text-destructive"> *</span>}
+                  </Label>
+                  {p.ajuda && (
+                    <p className="text-xs text-muted-foreground mb-1">{p.ajuda}</p>
+                  )}
+
+                  {tipo === "TEXTO" && (
+                    <Input
+                      id={`extra-${p.id}`}
+                      value={(valor as string) ?? ""}
+                      onChange={(e) =>
+                        setRespostas((prev) => ({ ...prev, [p.id]: e.target.value }))
+                      }
+                    />
+                  )}
+
+                  {tipo === "TEXTO_LONGO" && (
+                    <Textarea
+                      id={`extra-${p.id}`}
+                      rows={3}
+                      value={(valor as string) ?? ""}
+                      onChange={(e) =>
+                        setRespostas((prev) => ({ ...prev, [p.id]: e.target.value }))
+                      }
+                    />
+                  )}
+
+                  {tipo === "ESCOLHA_UNICA" && (
+                    <RadioGroup
+                      className="mt-1 gap-1"
+                      value={(valor as string) ?? ""}
+                      onValueChange={(v) => setRespostas((prev) => ({ ...prev, [p.id]: v }))}
+                    >
+                      {(p.opcoes ?? []).map((opcao) => (
+                        <Label
+                          key={opcao}
+                          htmlFor={`${p.id}-${opcao}`}
+                          className="flex items-center gap-3 min-h-[44px] px-3 rounded-lg border cursor-pointer font-normal"
+                        >
+                          <RadioGroupItem id={`${p.id}-${opcao}`} value={opcao} />
+                          <span className="text-sm">{opcao}</span>
+                        </Label>
+                      ))}
+                    </RadioGroup>
+                  )}
+
+                  {tipo === "ESCOLHA_MULTIPLA" && (
+                    <div className="mt-1 space-y-1">
+                      {(p.opcoes ?? []).map((opcao) => {
+                        const marcadas = (valor as string[]) ?? [];
+                        const marcada = marcadas.includes(opcao);
+                        return (
+                          <Label
+                            key={opcao}
+                            htmlFor={`${p.id}-${opcao}`}
+                            className="flex items-center gap-3 min-h-[44px] px-3 rounded-lg border cursor-pointer font-normal"
+                          >
+                            <Checkbox
+                              id={`${p.id}-${opcao}`}
+                              checked={marcada}
+                              onCheckedChange={(c) =>
+                                setRespostas((prev) => ({
+                                  ...prev,
+                                  [p.id]: c
+                                    ? [...marcadas, opcao]
+                                    : marcadas.filter((m) => m !== opcao),
+                                }))
+                              }
+                            />
+                            <span className="text-sm">{opcao}</span>
+                          </Label>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
 
             <div className="flex items-start gap-2">
               <Checkbox

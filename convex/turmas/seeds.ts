@@ -159,3 +159,111 @@ export const limparInscricoesDaTurma = internalMutation({
       : `Removidas ${inscricoes.length} inscricoes (${nomes.join(", ")}) e ${presencasRemovidas} presencas. vagasOcupadas zerado.`;
   },
 });
+
+/**
+ * Formulario do Estudo de Catecumenos, transcrito do questionario que a igreja
+ * ja usava no Notion. Obrigatoriedade: marquei como obrigatorias as de
+ * identificacao e as de decisao; as abertas ficaram opcionais (o Notion nao
+ * expoe essa marcacao no HTML publico) — ajustavel depois.
+ */
+const PERGUNTAS_CATECUMENOS = [
+  { id: "endereco", label: "Endereço (bairro/cidade)", obrigatorio: true, tipo: "TEXTO" as const },
+  {
+    id: "tempo_igreja",
+    label: "Há quanto tempo você frequenta a Igreja Presbiteriana do Caminho?",
+    obrigatorio: true,
+    tipo: "ESCOLHA_UNICA" as const,
+    opcoes: ["Menos de 3 meses", "Entre 3 meses e 1 ano", "Mais de 1 ano"],
+  },
+  {
+    id: "como_conheceu",
+    label: "Como conheceu a Igreja Presbiteriana do Caminho?",
+    obrigatorio: true,
+    tipo: "ESCOLHA_UNICA" as const,
+    opcoes: [
+      "Indicação de familiares ou amigos",
+      "Redes sociais ou site da igreja",
+      "Conheci de outra forma",
+    ],
+  },
+  {
+    id: "estudo_anterior",
+    label: "Você já participou de algum estudo bíblico ou discipulado? Se sim, qual?",
+    obrigatorio: false,
+    tipo: "TEXTO" as const,
+  },
+  {
+    id: "motivacao",
+    label: "O que motivou você a se inscrever neste estudo?",
+    ajuda: "Marque as opções que mais se aplicam",
+    obrigatorio: true,
+    tipo: "ESCOLHA_MULTIPLA" as const,
+    opcoes: [
+      "Quero conhecer mais sobre a fé cristã",
+      "Desejo professar publicamente minha fé em Cristo",
+      "Quero ser batizado(a)",
+      "Tenho dúvidas sobre o Evangelho de Cristo e quero esclarecê-las",
+      "Outro",
+    ],
+  },
+  { id: "motivacao_outro", label: "Se outro, qual?", obrigatorio: false, tipo: "TEXTO" as const },
+  {
+    id: "batismo",
+    label: "Você já foi batizado(a) anteriormente?",
+    obrigatorio: true,
+    tipo: "ESCOLHA_UNICA" as const,
+    opcoes: ["Sim. Na infância.", "Sim. Na fase adulta.", "Não."],
+  },
+  {
+    id: "outra_denominacao",
+    label: "Você tem alguma experiência anterior em outra denominação cristã? Se sim, qual?",
+    obrigatorio: false,
+    tipo: "TEXTO" as const,
+  },
+  {
+    id: "expectativa",
+    label: "O que você espera aprender e aplicar na sua vida com este estudo?",
+    obrigatorio: false,
+    tipo: "TEXTO_LONGO" as const,
+  },
+  {
+    id: "compromisso",
+    label: "Você se compromete a participar ativamente das leituras e discussões nos encontros?",
+    obrigatorio: true,
+    tipo: "ESCOLHA_UNICA" as const,
+    opcoes: ["Sim", "Tentarei ao máximo", "Não sei se conseguirei acompanhar tudo"],
+  },
+];
+
+const APRESENTACAO_CATECUMENOS =
+  "Seja bem-vindo(a)! Este questionário tem o propósito de conhecer melhor os participantes " +
+  "interessados no Estudo de Catecúmenos, um curso voltado para aqueles que desejam aprender " +
+  "sobre a fé cristã, professar publicamente sua fé e receber o batismo. Ao enviar este " +
+  "formulário, confirmo meu interesse em participar e estou ciente dos compromissos envolvidos.";
+
+export const aplicarFormularioCatecumenos = internalMutation({
+  args: { nomeTurma: v.string() },
+  handler: async (ctx, { nomeTurma }) => {
+    const turma = (await ctx.db.query("turmas").collect()).find((t) => t.nome === nomeTurma);
+    if (!turma) return `Turma "${nomeTurma}" nao encontrada.`;
+
+    const inscricao = await ctx.db
+      .query("inscricoes")
+      .withIndex("by_turma", (q) => q.eq("turmaId", turma._id))
+      .first();
+    if (inscricao) {
+      // Mudar o formulario com inscricao feita orfanizaria respostas ja
+      // enviadas — a mesma regra que a tela aplica.
+      return `Turma "${nomeTurma}" ja tem inscricao — nao alterei o formulario.`;
+    }
+
+    await ctx.db.patch(turma._id, {
+      descricao: APRESENTACAO_CATECUMENOS,
+      local: turma.local || "Na Igreja, 1º andar",
+      camposSistema: ["nomeCompleto", "whatsapp", "email", "dataNascimento"],
+      perguntasExtras: PERGUNTAS_CATECUMENOS,
+    });
+
+    return `Formulario aplicado em "${nomeTurma}": 4 campos do sistema + ${PERGUNTAS_CATECUMENOS.length} perguntas.`;
+  },
+});

@@ -101,6 +101,14 @@ export const create = mutation({
       id: v.string(),
       label: v.string(),
       obrigatorio: v.boolean(),
+      tipo: v.optional(v.union(
+        v.literal("TEXTO"),
+        v.literal("TEXTO_LONGO"),
+        v.literal("ESCOLHA_UNICA"),
+        v.literal("ESCOLHA_MULTIPLA")
+      )),
+      opcoes: v.optional(v.array(v.string())),
+      ajuda: v.optional(v.string()),
     }))),
   },
   handler: async (ctx, args) => {
@@ -299,6 +307,7 @@ export const registrar = mutation({
     respostasExtras: v.optional(v.array(v.object({
       perguntaId: v.string(),
       valor: v.string(),
+      valores: v.optional(v.array(v.string())),
     }))),
     lgpdConsentimento: v.boolean(),
   },
