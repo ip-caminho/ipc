@@ -8,6 +8,7 @@ import type { Doc, Id } from "../_generated/dataModel";
 import { resolveMembroNome } from "../_shared/membroResolver";
 import { avaliarJanelaInscricao } from "./lib/inscricoes";
 import { JANELA_CHAMADA_MS } from "./lib/constants";
+import { resumoFrequenciaTurma } from "./lib/resumo";
 
 /**
  * Leitura de uma turma: quem tem turmas:read ve qualquer uma; o instrutor ve
@@ -394,35 +395,6 @@ export const getFrequenciaResumo = query({
   handler: async (ctx, { turmaId }) => {
     if (!(await canReadTurma(ctx, turmaId))) return [];
 
-    const encontros = await ctx.db
-      .query("turmaEncontros")
-      .withIndex("by_turma", (q) => q.eq("turmaId", turmaId))
-      .collect();
-    const totalEncontros = encontros.length;
-    if (totalEncontros === 0) return [];
-
-    const inscricoes = await ctx.db
-      .query("inscricoes")
-      .withIndex("by_turma_status", (q) =>
-        q.eq("turmaId", turmaId).eq("status", "CONFIRMADA")
-      )
-      .collect();
-
-    return Promise.all(
-      inscricoes.map(async (i) => {
-        const presencas = await ctx.db
-          .query("turmaPresencas")
-          .withIndex("by_inscricao", (q) => q.eq("inscricaoId", i._id))
-          .collect();
-        const presentes = presencas.filter((p) => p.presente).length;
-        return {
-          inscricaoId: i._id,
-          nome: i.dadosSistema.nomeCompleto,
-          presentes,
-          totalEncontros,
-          percentual: Math.round((presentes / totalEncontros) * 100),
-        };
-      })
-    );
+    return await resumoFrequenciaTurma(ctx, turmaId);
   },
 });

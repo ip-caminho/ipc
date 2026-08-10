@@ -952,10 +952,49 @@ const CONTEXT_MAP: Record<string, PageContext> = {
   "/turmas/[id]": {
     nome: "Detalhe da Turma",
     pagina: "app/(ready)/turmas/[id]/page.tsx",
-    arquivos: ["app/(ready)/turmas/[id]/page.tsx"],
-    queries: ["turmas.queries.getById", "turmas.queries.listInscricoes", "turmas.queries.listEncontros"],
-    mutations: ["turmas.mutations.updateStatus", "turmas.mutations.cancelarInscricao"],
-    notas: ["Tabs: Inscricoes, Presenca", "Link de inscricao copiavel"],
+    arquivos: [
+      "app/(ready)/turmas/[id]/page.tsx",
+      "features/turmas/components/CertificadosTab.tsx",
+    ],
+    queries: [
+      "turmas.queries.getById",
+      "turmas.queries.listInscricoes",
+      "turmas.queries.listEncontros",
+      "turmas.queries.getPresencas",
+      "turmas.certificados.painel",
+    ],
+    mutations: [
+      "turmas.mutations.updateStatus",
+      "turmas.mutations.cancelarInscricao",
+      "turmas.mutations.createEncontro",
+      "turmas.mutations.removeEncontro",
+      "turmas.mutations.salvarPresencas",
+      "turmas.mutations.setFrequenciaMinima",
+      "turmas.certificados.emitir",
+      "turmas.certificados.emitirAptos",
+      "turmas.certificados.revogar",
+      "turmas.certificados.setObservacoesInstrutor",
+    ],
+    componentes: ["CertificadosTab"],
+    notas: [
+      "Tabs: Inscricoes, Presenca, Certificados (esta so com turmas:manage_inscricoes)",
+      "Link de inscricao copiavel; janela de inscricao (inscricoesDe/Ate) exibida",
+      "Chamada pre-marcada como presente — desmarcar quem faltou",
+      "Frequencia: aula sem chamada e aula anterior a inscricao ficam fora do denominador",
+      "Certificado e snapshot; um ativo por inscricao (revogar para reemitir)",
+    ],
+  },
+  "/turmas/[id]/certificados/imprimir": {
+    nome: "Impressao de Certificados",
+    pagina: "app/(ready)/turmas/[id]/certificados/imprimir/page.tsx",
+    arquivos: ["app/(ready)/turmas/[id]/certificados/imprimir/page.tsx"],
+    queries: ["turmas.certificados.listParaImpressao"],
+    mutations: [],
+    notas: [
+      "Impressao em lote: um certificado por pagina A4 paisagem (page-break-after)",
+      "Sem PDF no backend e sem arquivo no B2 — o navegador imprime; entrega presencial",
+      "Permissao: turmas:manage_inscricoes",
+    ],
   },
   "/tarefas": {
     nome: "Tarefas",
@@ -1527,6 +1566,9 @@ function resolveRoute(pathname: string): PageContext | null {
   if (/^\/membros\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/membros/[id]"];
   // /biblioteca/[id]
   if (/^\/biblioteca\/[^/]+$/.test(pathname) && pathname !== "/biblioteca/novo") return CONTEXT_MAP["/biblioteca/[id]"];
+  // /turmas/[id]/certificados/imprimir
+  if (/^\/turmas\/[^/]+\/certificados\/imprimir$/.test(pathname))
+    return CONTEXT_MAP["/turmas/[id]/certificados/imprimir"];
   // /turmas/[id]
   if (/^\/turmas\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/turmas/[id]"];
   // /tarefas/[id]
