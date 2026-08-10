@@ -19,15 +19,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
-import { Calendar, Copy, MapPin, Users, Plus, Check, Trash2, Pencil } from "lucide-react";
+import { Calendar, Copy, MapPin, Users, Plus, Check, Trash2, Pencil, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { STATUS_TURMA, DIA_SEMANA_LABELS } from "@features/turmas/lib/constants";
 import { CertificadosTab } from "@features/turmas/components/CertificadosTab";
+import { cleanPhoneForWhatsApp, formatPhone } from "@shared/lib/validations/brazilian";
 import { TurmaFormDialog } from "@features/turmas/components/TurmaFormDialog";
 import { ModuloGuard } from "@/shared/components/auth/ModuloGuard";
 import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
 import { DetailHeader } from "@shared/components/layout/DetailHeader";
 import type { Id } from "@/convex/_generated/dataModel";
+
+/** Link do WhatsApp com uma saudacao pronta — a secretaria so completa. */
+function linkWhatsApp(whatsapp: string, nome: string, turmaNome: string): string {
+  const primeiro = nome.trim().split(/\s+/)[0] ?? "";
+  const texto = `Ola, ${primeiro}! Falo da Igreja Presbiteriana do Caminho sobre a turma ${turmaNome}.`;
+  return `https://wa.me/${cleanPhoneForWhatsApp(whatsapp)}?text=${encodeURIComponent(texto)}`;
+}
 
 function formatDate(d: string) {
   const [y, m, day] = d.split("-");
@@ -250,15 +258,39 @@ export default function TurmaDetalhePage() {
               <div className="space-y-2">
                 {inscricoes.map((i) => (
                   <Card key={i._id}>
-                    <CardContent className="p-3 flex items-center justify-between">
-                      <div>
+                    <CardContent className="p-3 flex flex-wrap items-center justify-between gap-2">
+                      <div className="min-w-0">
                         <p className="font-medium text-sm">{i.dadosSistema.nomeCompleto}</p>
-                        <div className="flex gap-2 text-xs text-muted-foreground">
-                          {i.dadosSistema.whatsapp && <span>{i.dadosSistema.whatsapp}</span>}
+                        <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                          {i.dadosSistema.whatsapp && (
+                            <span>{formatPhone(i.dadosSistema.whatsapp)}</span>
+                          )}
                           {i.dadosSistema.email && <span>{i.dadosSistema.email}</span>}
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
+                        {i.dadosSistema.whatsapp && i.status !== "CANCELADA" && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-10 px-3"
+                            asChild
+                            title={`Conversar com ${i.dadosSistema.nomeCompleto} no WhatsApp`}
+                          >
+                            <a
+                              href={linkWhatsApp(
+                                i.dadosSistema.whatsapp,
+                                i.dadosSistema.nomeCompleto,
+                                turma.nome
+                              )}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <MessageCircle className="h-4 w-4" />
+                              <span className="sr-only">WhatsApp</span>
+                            </a>
+                          </Button>
+                        )}
                         <Badge variant="outline" className={
                           i.status === "CONFIRMADA" ? "bg-green-100 text-green-800" :
                           i.status === "LISTA_ESPERA" ? "bg-yellow-100 text-yellow-800" :
