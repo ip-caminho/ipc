@@ -220,6 +220,14 @@ export const GESTAO_SECTIONS: NavSection[] = [
         modulo: "turmas",
       },
       {
+        label: "Cursos",
+        href: "/cursos",
+        icon: GraduationCap,
+        description: "Catalogo: ementa, carga horaria e frequencia minima",
+        permission: "turmas:read",
+        modulo: "turmas",
+      },
+      {
         label: "Educacional",
         href: "/educacional",
         icon: Baby,

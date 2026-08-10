@@ -1,3 +1,11 @@
+// Espelha convex/turmas/lib/constants.ts (o backend nao importa de features/)
+export const FREQUENCIA_MINIMA_PADRAO = 75;
+
+export const STATUS_CURSO = [
+  { value: "ATIVO", label: "Ativo", color: "bg-green-100 text-green-800" },
+  { value: "INATIVO", label: "Inativo", color: "bg-gray-100 text-gray-800" },
+] as const;
+
 export const STATUS_TURMA = [
   { value: "ABERTA", label: "Aberta", color: "bg-green-100 text-green-800" },
   { value: "EM_ANDAMENTO", label: "Em andamento", color: "bg-blue-100 text-blue-800" },
