@@ -1014,13 +1014,33 @@ export default defineSchema({
     .index("by_membro", ["membroId"]),
 
   // ===== Turmas =====
+  // Catalogo de cursos. Uma turma e uma oferta datada de um curso (2 por ano,
+  // tipicamente). O que precisa ser estavel entre ofertas — ementa, carga
+  // horaria, frequencia minima para certificado — vive aqui, nao na turma.
+  cursos: defineTable({
+    nome: v.string(),
+    descricao: v.optional(v.string()),
+    ementa: v.optional(v.string()),
+    cargaHoraria: v.optional(v.number()), // horas, impresso no certificado
+    totalAulas: v.optional(v.number()), // base da geracao automatica de aulas
+    frequenciaMinima: v.number(), // percentual (padrao 75)
+    status: v.union(v.literal("ATIVO"), v.literal("INATIVO")),
+    criadoPor: v.optional(v.id("membros")),
+    criadoEm: v.number(),
+  })
+    .index("by_status", ["status"]),
+
   turmas: defineTable({
     nome: v.string(),
+    cursoId: v.optional(v.id("cursos")),
+    // Legado: substituido por cursoId. Turmas antigas mantem o valor.
     tipo: v.optional(v.union(
       v.literal("NOVOS_MEMBROS"),
       v.literal("CATACUMENOS"),
       v.literal("OUTRO")
     )),
+    // Override do curso, ajustavel na tela de certificados
+    frequenciaMinima: v.optional(v.number()),
     instrutorId: v.optional(v.id("membros")),
     instrutorNome: v.optional(v.string()),
     descricao: v.optional(v.string()),
@@ -1050,6 +1070,7 @@ export default defineSchema({
   })
     .index("by_status", ["status"])
     .index("by_instrutor", ["instrutorId"])
+    .index("by_curso", ["cursoId"])
     .index("by_token", ["token"]),
 
   inscricoes: defineTable({
@@ -1072,6 +1093,8 @@ export default defineSchema({
       v.literal("LISTA_ESPERA")
     ),
     lgpdConsentimento: v.boolean(),
+    // Nota do instrutor sobre o aluno, base para decidir o certificado
+    observacoesInstrutor: v.optional(v.string()),
     criadoEm: v.number(),
     canceladoEm: v.optional(v.number()),
   })
@@ -1083,7 +1106,11 @@ export default defineSchema({
     turmaId: v.id("turmas"),
     data: v.string(), // YYYY-MM-DD
     titulo: v.optional(v.string()),
-    observacoes: v.optional(v.string()),
+    observacoes: v.optional(v.string()), // como foi a aula (opcional)
+    // Chamada feita. Denormalizado para o widget do dashboard nao precisar ler
+    // as presencas, e para o calculo de frequencia ignorar aula sem chamada
+    // (aula nao preenchida nao vira falta de ninguem).
+    presencaRegistradaEm: v.optional(v.number()),
     criadoPor: v.optional(v.id("membros")),
     criadoEm: v.number(),
   })
@@ -1166,12 +1193,36 @@ export default defineSchema({
   turmaPresencas: defineTable({
     encontroId: v.id("turmaEncontros"),
     inscricaoId: v.id("inscricoes"),
-    presente: v.boolean(),
+    presente: v.boolean(), // sem "justificada": excecao e resolvida no certificado
     observacoes: v.optional(v.string()),
     registradoPor: v.optional(v.id("membros")),
   })
     .index("by_encontro", ["encontroId"])
-    .index("by_inscricao", ["inscricaoId"]),
+    .index("by_inscricao", ["inscricaoId"])
+    .index("by_encontro_inscricao", ["encontroId", "inscricaoId"]),
+
+  // Certificado emitido. Guarda SNAPSHOT dos dados impressos — frequencia e
+  // nome mudam depois, o papel entregue nao. Entrega e presencial (impressao em
+  // lote no ultimo dia de aula), por isso nada vai para o B2.
+  certificados: defineTable({
+    turmaId: v.id("turmas"),
+    inscricaoId: v.id("inscricoes"),
+    nomeImpresso: v.string(), // editavel na emissao
+    percentualFrequencia: v.number(),
+    aulasPresentes: v.number(),
+    aulasConsideradas: v.number(), // denominador efetivo
+    cursoNome: v.string(),
+    turmaNome: v.string(),
+    cargaHoraria: v.optional(v.number()),
+    codigo: v.string(), // identificador impresso no rodape
+    emitidoPor: v.id("membros"),
+    emitidoEm: v.number(),
+    revogadoEm: v.optional(v.number()),
+    revogadoPor: v.optional(v.id("membros")),
+  })
+    .index("by_turma", ["turmaId"])
+    .index("by_inscricao", ["inscricaoId"])
+    .index("by_codigo", ["codigo"]),
 
   // ===== Multimidia =====
   multimidiaArquivos: defineTable({
