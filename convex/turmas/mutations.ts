@@ -345,15 +345,23 @@ export const salvarPresencas = mutation({
     if (!encontro) throw new Error("Encontro nao encontrado");
     const { membro } = await requireGestaoTurma(ctx, encontro.turmaId);
 
-    for (const { inscricaoId, presente } of presencas) {
-      const existing = await ctx.db
-        .query("turmaPresencas")
-        .withIndex("by_encontro_inscricao", (q) => q.eq("encontroId", encontroId))
-        .collect()
-        .then((list) => list.find((p) => p.inscricaoId === inscricaoId));
+    // Le as presencas existentes UMA vez (antes era um collect por aluno
+    // dentro do loop: O(N^2) em bytes lidos).
+    const existentes = new Map(
+      (
+        await ctx.db
+          .query("turmaPresencas")
+          .withIndex("by_encontro_inscricao", (q) => q.eq("encontroId", encontroId))
+          .collect()
+      ).map((p) => [p.inscricaoId, p])
+    );
 
+    for (const { inscricaoId, presente } of presencas) {
+      const existing = existentes.get(inscricaoId);
       if (existing) {
-        await ctx.db.patch(existing._id, { presente });
+        if (existing.presente !== presente) {
+          await ctx.db.patch(existing._id, { presente });
+        }
       } else {
         await ctx.db.insert("turmaPresencas", {
           encontroId,
@@ -363,5 +371,10 @@ export const salvarPresencas = mutation({
         });
       }
     }
+
+    // Marca a chamada como feita: o widget do dashboard passa a checar este
+    // campo em vez de ler as presencas, e o calculo de frequencia ignora aula
+    // sem chamada (nao vira falta de ninguem).
+    await ctx.db.patch(encontroId, { presencaRegistradaEm: Date.now() });
   },
 });

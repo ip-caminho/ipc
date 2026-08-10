@@ -1,10 +1,35 @@
-import { query } from "../_generated/server";
+import { query, type QueryCtx } from "../_generated/server";
 import { getSaoPauloDateString, getSaoPauloWeekday } from "../_shared/datetime";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { checkPermission } from "../_shared/requirePermission";
+import type { Doc, Id } from "../_generated/dataModel";
 
 import { resolveMembroNome } from "../_shared/membroResolver";
+
+/**
+ * Leitura de uma turma: quem tem turmas:read ve qualquer uma; o instrutor ve
+ * apenas a propria (pode ser membro comum sem a permissao — a chamada sai do
+ * widget do dashboard). Devolve null em vez de lancar, porque as telas rodam o
+ * useQuery antes do gate de render.
+ */
+async function canReadTurma(ctx: QueryCtx, turmaId: Id<"turmas">) {
+  const leitor = await checkPermission(ctx, "turmas:read");
+  if (leitor) return leitor.membro;
+
+  const userId = await getAuthUserId(ctx);
+  if (!userId) return null;
+
+  const membro = await ctx.db
+    .query("membros")
+    .withIndex("by_user_id", (q) => q.eq("userId", userId))
+    .first();
+  if (!membro) return null;
+
+  const turma = await ctx.db.get(turmaId);
+  if (!turma || turma.instrutorId !== membro._id) return null;
+  return membro;
+}
 
 // Turmas onde o membro logado e instrutor, com info de chamada
 // Mostra:
@@ -85,12 +110,10 @@ export const minhasTurmasInstrutor = query({
         if (e.data === hoje) continue; // ja tratado acima
         if (e.criadoEm < limite48h) continue; // ja passou da janela
 
-        // Verificar se ja tem presencas marcadas
-        const presencas = await ctx.db
-          .query("turmaPresencas")
-          .withIndex("by_encontro_inscricao", (q) => q.eq("encontroId", e._id))
-          .collect();
-        if (presencas.length > 0) continue; // ja preencheu
+        // Chamada ja feita? Le o campo do encontro em vez das presencas.
+        // Encontros criados antes deste campo existir aparecem como pendentes
+        // durante a janela — some sozinho quando ela expira.
+        if (e.presencaRegistradaEm) continue;
 
         resultados.push({
           _id: t._id,
@@ -116,15 +139,21 @@ export const listTurmas = query({
     status: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) return [];
+    if (!(await checkPermission(ctx, "turmas:read"))) return [];
 
-    let turmas = await ctx.db.query("turmas").collect();
-    if (args.status) turmas = turmas.filter((t) => t.status === args.status);
+    // Ordem por _creationTime desc equivale a criadoEm desc (criadoEm e
+    // Date.now() no insert) e sai do indice, sem sort em memoria.
+    const status = args.status as Doc<"turmas">["status"] | undefined;
+    const turmas = status
+      ? await ctx.db
+          .query("turmas")
+          .withIndex("by_status", (q) => q.eq("status", status))
+          .order("desc")
+          .collect()
+      : await ctx.db.query("turmas").order("desc").collect();
 
     return Promise.all(
       turmas
-        .sort((a, b) => b.criadoEm - a.criadoEm)
         .map(async (t) => {
           const instrutorNome = t.instrutorId
             ? await resolveMembroNome(ctx, t.instrutorId)
@@ -142,8 +171,7 @@ export const listTurmas = query({
 export const getById = query({
   args: { id: v.id("turmas") },
   handler: async (ctx, { id }) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) return null;
+    if (!(await canReadTurma(ctx, id))) return null;
 
     const turma = await ctx.db.get(id);
     if (!turma) return null;
@@ -171,10 +199,12 @@ export const getById = query({
 export const listTurmasAbertas = query({
   args: {},
   handler: async (ctx) => {
-    const turmas = await ctx.db.query("turmas").collect();
-    const abertas = turmas
-      .filter((t) => t.status === "ABERTA")
-      .sort((a, b) => a.dataInicio.localeCompare(b.dataInicio));
+    const abertas = (
+      await ctx.db
+        .query("turmas")
+        .withIndex("by_status", (q) => q.eq("status", "ABERTA"))
+        .collect()
+    ).sort((a, b) => a.dataInicio.localeCompare(b.dataInicio));
 
     return Promise.all(
       abertas.map(async (t) => {
@@ -282,8 +312,7 @@ export const minhasInscricoes = query({
 export const listEncontros = query({
   args: { turmaId: v.id("turmas") },
   handler: async (ctx, { turmaId }) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) return [];
+    if (!(await canReadTurma(ctx, turmaId))) return [];
 
     const encontros = await ctx.db
       .query("turmaEncontros")
@@ -311,11 +340,9 @@ export const listEncontros = query({
 export const getPresencas = query({
   args: { encontroId: v.id("turmaEncontros") },
   handler: async (ctx, { encontroId }) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) return [];
-
     const encontro = await ctx.db.get(encontroId);
     if (!encontro) return [];
+    if (!(await canReadTurma(ctx, encontro.turmaId))) return [];
 
     const inscricoes = await ctx.db
       .query("inscricoes")
@@ -346,8 +373,7 @@ export const getPresencas = query({
 export const getFrequenciaResumo = query({
   args: { turmaId: v.id("turmas") },
   handler: async (ctx, { turmaId }) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) return [];
+    if (!(await canReadTurma(ctx, turmaId))) return [];
 
     const encontros = await ctx.db
       .query("turmaEncontros")
