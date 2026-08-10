@@ -38,8 +38,14 @@ imprimir certificado) é da secretaria.
   emitido não muda quando a frequência ou o nome mudarem depois.
 - **Quem emite**: apenas `turmas:manage_inscricoes` (secretaria). O professor **não** entra
   nessa tela; é consultado nos casos-limite por conversa.
-- **Frequência mínima**: padrão **75%**, definida no curso e **ajustável por turma** na própria
-  tela de certificados por quem tem `turmas:manage_inscricoes`.
+- **Frequência mínima**: padrão **75%**, definida no curso e **copiada para a turma na criação**
+  (congela a regra no início — mudar o curso depois não mexe em turma em andamento). Ajustável
+  na tela de certificados por quem tem `turmas:manage_inscricoes`. Turmas legadas, sem o campo,
+  caem em `FREQUENCIA_MINIMA_PADRAO`.
+- **Descrição**: a da turma **sobrescreve** a do curso na página pública de inscrição.
+- **Um certificado ativo por inscrição**: corrigir nome ou reemitir = revogar e emitir novo
+  (garantido na mutation; `by_inscricao` não é índice único).
+- **Anotações limitadas a `OBSERVACAO_MAX_CHARS` (500)** — vivem em documentos lidos em lista.
 - **Único critério é frequência** — sem nota/avaliação.
 - **Sem permissões novas**: reusa `turmas:read/create/update/delete/manage_inscricoes`
   (evita migração de RBAC).
@@ -50,10 +56,10 @@ imprimir certificado) é da secretaria.
 |--------|-----------------|
 | `cursos` (nova) | `nome`, `descricao?`, `ementa?`, `cargaHoraria?` (horas), `totalAulas?`, `frequenciaMinima` (número, default 75), `status` ATIVO/INATIVO, `criadoPor?`, `criadoEm`. Índice `by_status` |
 | `certificados` (nova) | snapshot da emissão — ver abaixo |
-| `turmas` | + `cursoId?` (`Id<"cursos">`), + `frequenciaMinima?` (override da turma), + índice `by_curso`. `tipo` mantido como legado |
+| `turmas` | + `cursoId?` (`Id<"cursos">`), + `frequenciaMinima?` (cópia do curso na criação), + índice `by_curso`. `tipo` mantido como legado |
 | `turmaEncontros` | + `presencaRegistradaEm?` (número) — denormaliza "chamada feita", evita ler presenças no widget do dashboard. `titulo` passa a receber "Aula N" na geração. `observacoes` (já existe) vira a anotação da aula |
 | `inscricoes` | + `observacoesInstrutor?` (texto curto — nota do professor sobre o aluno) |
-| `turmaPresencas` | **sem mudança** de schema (`presente` boolean serve para 2 estados). Ganha índice `by_encontro_inscricao` |
+| `turmaPresencas` | **sem mudança** de schema (`presente` boolean serve para 2 estados). Troca `by_encontro` pelo composto `by_encontro_inscricao`, que atende os dois filtros (prefixo) |
 
 ```
 certificados: {
