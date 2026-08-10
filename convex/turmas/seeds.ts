@@ -73,3 +73,38 @@ export const criarTurmaDeCurso = internalMutation({
     return `Turma "${nomeTurma}" criada (${datas.length} aulas, a partir de ${dataInicio}). Link: /inscricao/${turma?.token}. Ajuste horario, local e instrutor em Editar.`;
   },
 });
+
+/**
+ * Remove uma turma pelo nome, SO se estiver vazia: sem inscricao e sem presenca
+ * registrada. Serve para desfazer turma criada por engano (ex: duplicata de
+ * seed) sem risco de apagar historico.
+ */
+export const removerTurmaVazia = internalMutation({
+  args: { nome: v.string() },
+  handler: async (ctx, { nome }) => {
+    const turma = (await ctx.db.query("turmas").collect()).find((t) => t.nome === nome);
+    if (!turma) return `Turma "${nome}" nao encontrada.`;
+
+    const inscricao = await ctx.db
+      .query("inscricoes")
+      .withIndex("by_turma", (q) => q.eq("turmaId", turma._id))
+      .first();
+    if (inscricao) return `Turma "${nome}" tem inscricao — nao removida.`;
+
+    const aulas = await ctx.db
+      .query("turmaEncontros")
+      .withIndex("by_turma", (q) => q.eq("turmaId", turma._id))
+      .collect();
+    for (const aula of aulas) {
+      const presenca = await ctx.db
+        .query("turmaPresencas")
+        .withIndex("by_encontro_inscricao", (q) => q.eq("encontroId", aula._id))
+        .first();
+      if (presenca) return `Turma "${nome}" tem presenca registrada — nao removida.`;
+    }
+
+    for (const aula of aulas) await ctx.db.delete(aula._id);
+    await ctx.db.delete(turma._id);
+    return `Turma "${nome}" removida (${aulas.length} aulas).`;
+  },
+});
