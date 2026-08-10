@@ -161,6 +161,7 @@ import type * as tarefas_migrations from "../tarefas/migrations.js";
 import type * as tarefas_mutations from "../tarefas/mutations.js";
 import type * as tarefas_queries from "../tarefas/queries.js";
 import type * as turmas_certificados from "../turmas/certificados.js";
+import type * as turmas_instrutor from "../turmas/instrutor.js";
 import type * as turmas_lib_aulas from "../turmas/lib/aulas.js";
 import type * as turmas_lib_constants from "../turmas/lib/constants.js";
 import type * as turmas_lib_frequencia from "../turmas/lib/frequencia.js";
@@ -331,6 +332,7 @@ declare const fullApi: ApiFromModules<{
   "tarefas/mutations": typeof tarefas_mutations;
   "tarefas/queries": typeof tarefas_queries;
   "turmas/certificados": typeof turmas_certificados;
+  "turmas/instrutor": typeof turmas_instrutor;
   "turmas/lib/aulas": typeof turmas_lib_aulas;
   "turmas/lib/constants": typeof turmas_lib_constants;
   "turmas/lib/frequencia": typeof turmas_lib_frequencia;
