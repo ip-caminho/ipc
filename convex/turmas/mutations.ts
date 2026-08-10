@@ -212,12 +212,31 @@ export const update = mutation({
     const oldRecord = await ctx.db.get(id);
     const patch: Record<string, unknown> = {};
     for (const [key, val] of Object.entries(updates)) {
-      if (val !== undefined) patch[key] = typeof val === "string" ? val.trim() : val;
+      if (val === undefined) continue;
+      if (typeof val !== "string") {
+        patch[key] = val;
+        continue;
+      }
+      const texto = val.trim();
+      // String vazia = remover o campo (e assim que a tela apaga um prazo de
+      // inscricao ja definido). Nome nao pode ser apagado.
+      if (texto === "") {
+        if (key === "nome") continue;
+        patch[key] = undefined;
+        continue;
+      }
+      patch[key] = texto;
     }
 
     // Valida a janela no estado final (o patch pode mexer em so uma ponta).
-    const de = (patch.inscricoesDe as string) ?? oldRecord?.inscricoesDe;
-    const ate = (patch.inscricoesAte as string) ?? oldRecord?.inscricoesAte;
+    // Testa a PRESENCA da chave: com "vazio = remover", o valor no patch pode
+    // ser undefined de proposito — `??` cairia no valor antigo por engano.
+    const de = ("inscricoesDe" in patch
+      ? (patch.inscricoesDe as string | undefined)
+      : oldRecord?.inscricoesDe) as string | undefined;
+    const ate = ("inscricoesAte" in patch
+      ? (patch.inscricoesAte as string | undefined)
+      : oldRecord?.inscricoesAte) as string | undefined;
     if (de && ate && ate < de) {
       throw new Error("O fim das inscricoes nao pode ser antes da abertura");
     }
