@@ -13,7 +13,6 @@ import { Input } from "@/shared/components/ui/input";
 import { DateInputBR } from "@/shared/components/ui/date-input-br";
 import { PhoneInputBR } from "@/shared/components/ui/phone-input-br";
 import { Label } from "@/shared/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/shared/components/ui/radio-group";
@@ -21,6 +20,16 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Calendar, MapPin, Users, CheckCircle } from "lucide-react";
 import { inscricaoPublicSchema } from "@features/turmas/lib/validations";
 import { DIA_SEMANA_LABELS } from "@features/turmas/lib/constants";
+
+// Escala do formulario publico, no espirito do Tally: rotulo grande, input alto
+// e respiro generoso entre perguntas. text-base (16px) tambem impede o Safari
+// do iOS de dar zoom ao focar o campo.
+const CAMPO = "space-y-2";
+const ROTULO = "block text-[17px] font-medium leading-snug";
+const AJUDA = "text-sm text-muted-foreground";
+const ENTRADA = "h-12 text-base";
+const OPCAO =
+  "flex items-center gap-3 min-h-14 px-4 rounded-xl border text-base font-normal cursor-pointer transition-colors hover:bg-accent has-[:checked]:border-primary has-[:checked]:bg-primary/5";
 
 function formatDate(d: string) {
   const [y, m, day] = d.split("-");
@@ -50,44 +59,40 @@ export default function InscricaoPublicPage() {
   });
 
   if (turma === undefined) return <div className="min-h-screen flex items-center justify-center">Carregando...</div>;
-  if (turma === null) return <div className="min-h-screen flex items-center justify-center">Link invalido ou turma nao encontrada</div>;
+  if (turma === null) return <div className="min-h-screen flex items-center justify-center">Link inválido ou turma não encontrada</div>;
   if (!turma.inscricoesAbertas) {
     const mensagem =
       turma.motivoFechado === "AINDA_NAO_COMECOU" && turma.inscricoesDe
-        ? `As inscricoes abrem em ${formatDate(turma.inscricoesDe)}.`
+        ? `As inscrições abrem em ${formatDate(turma.inscricoesDe)}.`
         : turma.motivoFechado === "ENCERRADA" && turma.inscricoesAte
-          ? `As inscricoes foram encerradas em ${formatDate(turma.inscricoesAte)}.`
-          : "Esta turma nao esta aceitando inscricoes no momento.";
+          ? `As inscrições foram encerradas em ${formatDate(turma.inscricoesAte)}.`
+          : "Esta turma não está aceitando inscrições no momento.";
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <Card className="max-w-md w-full">
-          <CardContent className="p-6 text-center space-y-3">
-            <CardTitle className="text-lg">{turma.nome}</CardTitle>
-            <p className="text-sm text-muted-foreground">{mensagem}</p>
-            <Button asChild variant="outline" className="w-full">
-              <Link href="/">Voltar para o site</Link>
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-background flex items-center justify-center px-5 py-10">
+        <div className="w-full max-w-xl text-center space-y-5">
+          <h1 className="text-2xl font-bold leading-tight">{turma.nome}</h1>
+          <p className="text-base leading-relaxed text-muted-foreground">{mensagem}</p>
+          <Button asChild variant="outline" className="h-12 text-base w-full">
+            <Link href="/">Voltar para o site</Link>
+          </Button>
+        </div>
       </div>
     );
   }
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <Card className="max-w-md w-full">
-          <CardContent className="p-6 text-center space-y-4">
-            <CheckCircle className="h-12 w-12 text-green-500 mx-auto" />
-            <h2 className="text-xl font-bold">Inscricao realizada!</h2>
-            <p className="text-sm text-muted-foreground">{turma.nome}</p>
-            {resultStatus === "LISTA_ESPERA" && (
-              <p className="text-sm text-yellow-700 bg-yellow-50 p-3 rounded-lg">
-                Voce esta na lista de espera. Entraremos em contato quando houver vaga.
-              </p>
-            )}
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-background flex items-center justify-center px-5 py-10">
+        <div className="w-full max-w-xl text-center space-y-5">
+          <CheckCircle className="h-14 w-14 text-green-500 mx-auto" />
+          <h1 className="text-2xl font-bold leading-tight">Inscrição realizada!</h1>
+          <p className="text-base text-muted-foreground">{turma.nome}</p>
+          {resultStatus === "LISTA_ESPERA" && (
+            <p className="text-base leading-relaxed text-yellow-800 bg-yellow-50 p-4 rounded-xl">
+              Você está na lista de espera. Entraremos em contato quando houver vaga.
+            </p>
+          )}
+        </div>
       </div>
     );
   }
@@ -140,48 +145,61 @@ export default function InscricaoPublicPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <Card className="max-w-lg w-full">
-        <CardHeader>
-          <CardTitle className="text-xl">{turma.nome}</CardTitle>
-          <div className="flex items-center gap-3 text-xs text-muted-foreground mt-2 flex-wrap">
-            <span className="flex items-center gap-1">
-              <Calendar className="h-3 w-3" />
+    // Sem Card: formulario ocupa a pagina, com respiro. Fonte base de 16px nos
+    // inputs tambem evita o zoom automatico do Safari no iOS.
+    <div className="min-h-screen bg-background">
+      <div className="mx-auto w-full max-w-xl px-5 py-10 sm:py-14">
+        <header className="mb-10">
+          <h1 className="text-3xl font-bold leading-tight tracking-tight">{turma.nome}</h1>
+          <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              <Calendar className="h-4 w-4" />
               {formatDate(turma.dataInicio)}
               {turma.diaSemana && ` - ${DIA_SEMANA_LABELS[turma.diaSemana] ?? turma.diaSemana}`}
               {turma.horario && ` ${turma.horario}`}
             </span>
             {turma.local && (
-              <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{turma.local}</span>
+              <span className="flex items-center gap-1.5">
+                <MapPin className="h-4 w-4" />
+                {turma.local}
+              </span>
             )}
             {turma.inscricoesAte && (
-              <span className="flex items-center gap-1">
-                Inscricoes ate {formatDate(turma.inscricoesAte)}
-              </span>
+              <span>Inscrições até {formatDate(turma.inscricoesAte)}</span>
             )}
             {turma.vagasRestantes !== null && turma.vagasRestantes < 5 && (
               <Badge variant="outline" className="bg-yellow-100 text-yellow-800">
-                <Users className="h-3 w-3 mr-1" />{turma.vagasRestantes} vagas restantes
+                <Users className="h-3 w-3 mr-1" />
+                {turma.vagasRestantes} vagas restantes
               </Badge>
             )}
           </div>
-          {turma.descricao && <p className="text-sm mt-2">{turma.descricao}</p>}
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div>
-              <Label htmlFor="nomeCompleto">Nome completo *</Label>
-              <Input id="nomeCompleto" {...form.register("nomeCompleto")} />
+          {turma.descricao && (
+            <p className="mt-5 text-base leading-relaxed text-muted-foreground">
+              {turma.descricao}
+            </p>
+          )}
+        </header>
+
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <div className={CAMPO}>
+              <Label htmlFor="nomeCompleto" className={ROTULO}>
+                Nome completo <span className="text-destructive">*</span>
+              </Label>
+              <Input id="nomeCompleto" className={ENTRADA} {...form.register("nomeCompleto")} />
               {form.formState.errors.nomeCompleto && (
-                <p className="text-xs text-red-500 mt-1">{form.formState.errors.nomeCompleto.message as string}</p>
+                <p className="text-sm text-destructive">{form.formState.errors.nomeCompleto.message as string}</p>
               )}
             </div>
 
             {turma.camposSistema.includes("whatsapp") && (
-              <div>
-                <Label htmlFor="whatsapp">WhatsApp</Label>
+              <div className={CAMPO}>
+                <Label htmlFor="whatsapp" className={ROTULO}>
+                  WhatsApp
+                </Label>
                 <PhoneInputBR
                   id="whatsapp"
+                  className={ENTRADA}
                   value={(form.watch("whatsapp") as string) ?? ""}
                   onChange={(d) => form.setValue("whatsapp", d)}
                 />
@@ -189,29 +207,32 @@ export default function InscricaoPublicPage() {
             )}
 
             {turma.camposSistema.includes("email") && (
-              <div>
-                <Label htmlFor="email">E-mail</Label>
-                <Input id="email" type="email" {...form.register("email")} />
+              <div className={CAMPO}>
+                <Label htmlFor="email" className={ROTULO}>
+                  E-mail
+                </Label>
+                <Input id="email" type="email" className={ENTRADA} {...form.register("email")} />
               </div>
             )}
 
             {turma.camposSistema.includes("dataNascimento") && (
-              <div>
-                <Label htmlFor="dataNascimento">Data de nascimento</Label>
+              <div className={CAMPO}>
+                <Label htmlFor="dataNascimento" className={ROTULO}>
+                  Data de nascimento
+                </Label>
                 <Controller
                   control={form.control}
                   name="dataNascimento"
                   render={({ field }) => (
                     <DateInputBR
                       id="dataNascimento"
+                      className={ENTRADA}
                       value={(field.value as string) ?? ""}
                       onChange={field.onChange}
                     />
                   )}
                 />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Digite so os numeros: 25121990
-                </p>
+                <p className={AJUDA}>Digite só os números: 25121990</p>
               </div>
             )}
 
@@ -219,18 +240,17 @@ export default function InscricaoPublicPage() {
               const valor = respostas[p.id];
               const tipo = p.tipo ?? "TEXTO";
               return (
-                <div key={p.id}>
-                  <Label htmlFor={`extra-${p.id}`}>
+                <div key={p.id} className={CAMPO}>
+                  <Label htmlFor={`extra-${p.id}`} className={ROTULO}>
                     {p.label}
                     {p.obrigatorio && <span className="text-destructive"> *</span>}
                   </Label>
-                  {p.ajuda && (
-                    <p className="text-xs text-muted-foreground mb-1">{p.ajuda}</p>
-                  )}
+                  {p.ajuda && <p className={AJUDA}>{p.ajuda}</p>}
 
                   {tipo === "TEXTO" && (
                     <Input
                       id={`extra-${p.id}`}
+                      className={ENTRADA}
                       value={(valor as string) ?? ""}
                       onChange={(e) =>
                         setRespostas((prev) => ({ ...prev, [p.id]: e.target.value }))
@@ -241,6 +261,7 @@ export default function InscricaoPublicPage() {
                   {tipo === "TEXTO_LONGO" && (
                     <Textarea
                       id={`extra-${p.id}`}
+                      className="text-base"
                       rows={3}
                       value={(valor as string) ?? ""}
                       onChange={(e) =>
@@ -251,7 +272,7 @@ export default function InscricaoPublicPage() {
 
                   {tipo === "ESCOLHA_UNICA" && (
                     <RadioGroup
-                      className="mt-1 gap-1"
+                      className="gap-2"
                       value={(valor as string) ?? ""}
                       onValueChange={(v) => setRespostas((prev) => ({ ...prev, [p.id]: v }))}
                     >
@@ -259,17 +280,17 @@ export default function InscricaoPublicPage() {
                         <Label
                           key={opcao}
                           htmlFor={`${p.id}-${opcao}`}
-                          className="flex items-center gap-3 min-h-[44px] px-3 rounded-lg border cursor-pointer font-normal"
+                          className={OPCAO}
                         >
-                          <RadioGroupItem id={`${p.id}-${opcao}`} value={opcao} />
-                          <span className="text-sm">{opcao}</span>
+                          <RadioGroupItem id={`${p.id}-${opcao}`} value={opcao} className="size-5" />
+                          <span>{opcao}</span>
                         </Label>
                       ))}
                     </RadioGroup>
                   )}
 
                   {tipo === "ESCOLHA_MULTIPLA" && (
-                    <div className="mt-1 space-y-1">
+                    <div className="space-y-2">
                       {(p.opcoes ?? []).map((opcao) => {
                         const marcadas = (valor as string[]) ?? [];
                         const marcada = marcadas.includes(opcao);
@@ -277,10 +298,11 @@ export default function InscricaoPublicPage() {
                           <Label
                             key={opcao}
                             htmlFor={`${p.id}-${opcao}`}
-                            className="flex items-center gap-3 min-h-[44px] px-3 rounded-lg border cursor-pointer font-normal"
+                            className={OPCAO}
                           >
                             <Checkbox
                               id={`${p.id}-${opcao}`}
+                              className="size-5"
                               checked={marcada}
                               onCheckedChange={(c) =>
                                 setRespostas((prev) => ({
@@ -291,7 +313,7 @@ export default function InscricaoPublicPage() {
                                 }))
                               }
                             />
-                            <span className="text-sm">{opcao}</span>
+                            <span>{opcao}</span>
                           </Label>
                         );
                       })}
@@ -301,26 +323,43 @@ export default function InscricaoPublicPage() {
               );
             })}
 
-            <div className="flex items-start gap-2">
-              <Checkbox
-                id="lgpd"
-                checked={form.watch("lgpdConsentimento") === true}
-                onCheckedChange={(checked) => form.setValue("lgpdConsentimento", checked === true ? true : false as unknown as true)}
-              />
-              <Label htmlFor="lgpd" className="text-xs leading-tight cursor-pointer">
-                Concordo com o uso dos meus dados para gestao desta turma *
+            <div className="space-y-2 border-t pt-8">
+              <Label
+                htmlFor="lgpd"
+                className="flex items-start gap-3 text-sm leading-relaxed font-normal cursor-pointer"
+              >
+                <Checkbox
+                  id="lgpd"
+                  className="mt-0.5"
+                  checked={form.watch("lgpdConsentimento") === true}
+                  onCheckedChange={(checked) =>
+                    form.setValue(
+                      "lgpdConsentimento",
+                      checked === true ? true : (false as unknown as true)
+                    )
+                  }
+                />
+                <span>
+                  Concordo com o uso dos meus dados para gestão desta turma{" "}
+                  <span className="text-destructive">*</span>
+                </span>
               </Label>
+              {form.formState.errors.lgpdConsentimento && (
+                <p className="text-sm text-destructive">
+                  {form.formState.errors.lgpdConsentimento.message as string}
+                </p>
+              )}
             </div>
-            {form.formState.errors.lgpdConsentimento && (
-              <p className="text-xs text-red-500">{form.formState.errors.lgpdConsentimento.message as string}</p>
-            )}
 
-            <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+            <Button
+              type="submit"
+              className="w-full h-12 text-base"
+              disabled={form.formState.isSubmitting}
+            >
               {form.formState.isSubmitting ? "Enviando..." : "Inscrever-se"}
             </Button>
           </form>
-        </CardContent>
-      </Card>
+      </div>
     </div>
   );
 }
