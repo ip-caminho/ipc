@@ -22,6 +22,7 @@ import {
 import { Calendar, Copy, MapPin, Users, Plus, Check, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { STATUS_TURMA, DIA_SEMANA_LABELS } from "@features/turmas/lib/constants";
+import { CertificadosTab } from "@features/turmas/components/CertificadosTab";
 import { ModuloGuard } from "@/shared/components/auth/ModuloGuard";
 import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
 import { DetailHeader } from "@shared/components/layout/DetailHeader";
@@ -208,6 +209,9 @@ export default function TurmaDetalhePage() {
           <TabsList>
             <TabsTrigger value="inscricoes">Inscricoes ({inscricoes?.length ?? 0})</TabsTrigger>
             <TabsTrigger value="presenca">Presenca ({encontros?.length ?? 0})</TabsTrigger>
+            {can("turmas:manage_inscricoes") && (
+              <TabsTrigger value="certificados">Certificados</TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="inscricoes" className="mt-4">
@@ -384,6 +388,12 @@ export default function TurmaDetalhePage() {
               </div>
             )}
           </TabsContent>
+
+          {can("turmas:manage_inscricoes") && (
+            <TabsContent value="certificados" className="mt-4">
+              <CertificadosTab turmaId={id as Id<"turmas">} />
+            </TabsContent>
+          )}
         </Tabs>
       </div>
       </HeaderLayout>

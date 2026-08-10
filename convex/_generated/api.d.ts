@@ -159,9 +159,12 @@ import type * as site_queries from "../site/queries.js";
 import type * as tarefas_migrations from "../tarefas/migrations.js";
 import type * as tarefas_mutations from "../tarefas/mutations.js";
 import type * as tarefas_queries from "../tarefas/queries.js";
+import type * as turmas_certificados from "../turmas/certificados.js";
 import type * as turmas_lib_aulas from "../turmas/lib/aulas.js";
 import type * as turmas_lib_constants from "../turmas/lib/constants.js";
+import type * as turmas_lib_frequencia from "../turmas/lib/frequencia.js";
 import type * as turmas_lib_inscricoes from "../turmas/lib/inscricoes.js";
+import type * as turmas_lib_resumo from "../turmas/lib/resumo.js";
 import type * as turmas_mutations from "../turmas/mutations.js";
 import type * as turmas_queries from "../turmas/queries.js";
 
@@ -323,9 +326,12 @@ declare const fullApi: ApiFromModules<{
   "tarefas/migrations": typeof tarefas_migrations;
   "tarefas/mutations": typeof tarefas_mutations;
   "tarefas/queries": typeof tarefas_queries;
+  "turmas/certificados": typeof turmas_certificados;
   "turmas/lib/aulas": typeof turmas_lib_aulas;
   "turmas/lib/constants": typeof turmas_lib_constants;
+  "turmas/lib/frequencia": typeof turmas_lib_frequencia;
   "turmas/lib/inscricoes": typeof turmas_lib_inscricoes;
+  "turmas/lib/resumo": typeof turmas_lib_resumo;
   "turmas/mutations": typeof turmas_mutations;
   "turmas/queries": typeof turmas_queries;
 }>;
