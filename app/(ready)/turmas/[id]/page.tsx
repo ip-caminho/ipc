@@ -19,10 +19,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
-import { Calendar, Copy, MapPin, Users, Plus, Check, Trash2 } from "lucide-react";
+import { Calendar, Copy, MapPin, Users, Plus, Check, Trash2, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { STATUS_TURMA, DIA_SEMANA_LABELS } from "@features/turmas/lib/constants";
 import { CertificadosTab } from "@features/turmas/components/CertificadosTab";
+import { TurmaFormDialog } from "@features/turmas/components/TurmaFormDialog";
 import { ModuloGuard } from "@/shared/components/auth/ModuloGuard";
 import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
 import { DetailHeader } from "@shared/components/layout/DetailHeader";
@@ -48,10 +49,13 @@ export default function TurmaDetalhePage() {
   const createEncontro = useMutation(api.turmas.mutations.createEncontro);
   const removeEncontro = useMutation(api.turmas.mutations.removeEncontro);
   const salvarPresencas = useMutation(api.turmas.mutations.salvarPresencas);
+  const gerarAulas = useMutation(api.turmas.mutations.gerarAulas);
 
   const [novoEncontroData, setNovoEncontroData] = useState("");
   const [novoEncontroTitulo, setNovoEncontroTitulo] = useState("");
   const [encontroAberto, setEncontroAberto] = useState<string | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
+  const [qtdAulas, setQtdAulas] = useState("");
 
   // Presencas do encontro aberto
   const presencas = useQuery(
@@ -94,6 +98,17 @@ export default function TurmaDetalhePage() {
       setNovoEncontroData("");
       setNovoEncontroTitulo("");
       toast.success("Encontro criado");
+    } catch (err: unknown) {
+      toast.error((err as Error).message);
+    }
+  }
+
+  async function handleGerarAulas() {
+    try {
+      const total = qtdAulas.trim() ? Number(qtdAulas) : undefined;
+      const criadas = await gerarAulas({ turmaId: id as Id<"turmas">, totalAulas: total });
+      setQtdAulas("");
+      toast.success(`${criadas} aulas geradas`);
     } catch (err: unknown) {
       toast.error((err as Error).message);
     }
@@ -194,6 +209,12 @@ export default function TurmaDetalhePage() {
                     ))}
                   </SelectContent>
                 </Select>
+              )}
+              {can("turmas:update") && (
+                <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
+                  <Pencil className="h-3.5 w-3.5 mr-1" />
+                  Editar
+                </Button>
               )}
               {shareUrl && (
                 <Button variant="outline" size="sm" onClick={handleCopyLink}>
@@ -296,7 +317,31 @@ export default function TurmaDetalhePage() {
             {!encontros ? (
               <p className="text-sm text-muted-foreground">Carregando...</p>
             ) : encontros.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-8">Nenhum encontro registrado</p>
+              <div className="text-center py-8 space-y-3">
+                <p className="text-sm text-muted-foreground">Nenhuma aula registrada</p>
+                {can("turmas:update") && (
+                  <div className="flex items-end justify-center gap-2 flex-wrap">
+                    <div className="text-left">
+                      <label className="text-xs text-muted-foreground">Quantas aulas</label>
+                      <Input
+                        type="number"
+                        inputMode="numeric"
+                        className="w-24 h-10"
+                        value={qtdAulas}
+                        onChange={(e) => setQtdAulas(e.target.value)}
+                        placeholder="Ex: 8"
+                      />
+                    </div>
+                    <Button className="h-10" onClick={handleGerarAulas}>
+                      Gerar aulas semanais
+                    </Button>
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  Gera a partir da data de inicio, no dia da semana da turma. Em branco,
+                  usa o total de aulas definido no curso.
+                </p>
+              </div>
             ) : (
               <div className="space-y-2">
                 {encontros.map((e) => (
@@ -306,6 +351,11 @@ export default function TurmaDetalhePage() {
                         <div className="cursor-pointer flex-1" onClick={() => handleAbrirPresenca(e._id)}>
                           <p className="font-medium text-sm">{formatDate(e.data)}</p>
                           {e.titulo && <p className="text-xs text-muted-foreground">{e.titulo}</p>}
+                          {e.observacoes && (
+                            <p className="text-xs text-muted-foreground mt-1 italic">
+                              &ldquo;{e.observacoes}&rdquo;
+                            </p>
+                          )}
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="text-xs text-muted-foreground">
@@ -397,6 +447,8 @@ export default function TurmaDetalhePage() {
         </Tabs>
       </div>
       </HeaderLayout>
+
+      <TurmaFormDialog open={editOpen} onOpenChange={setEditOpen} turma={turma} />
     </ModuloGuard>
   );
 }

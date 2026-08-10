@@ -390,11 +390,6 @@ export const getPresencas = query({
   },
 });
 
-export const getFrequenciaResumo = query({
-  args: { turmaId: v.id("turmas") },
-  handler: async (ctx, { turmaId }) => {
-    if (!(await canReadTurma(ctx, turmaId))) return [];
-
-    return await resumoFrequenciaTurma(ctx, turmaId);
-  },
-});
+// getFrequenciaResumo foi removida: nenhuma tela a consumia. A frequencia
+// aparece na aba Certificados, que usa resumoFrequenciaTurma (lib/resumo.ts)
+// diretamente — a mesma regra, sem endpoint duplicado exposto.

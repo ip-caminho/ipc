@@ -262,6 +262,40 @@ describe("turmas: janela de inscricao", () => {
     expect(publica?.inscricoesAte).toBe("2020-01-01");
   });
 
+  it("update com string vazia REMOVE o prazo (e assim que a tela apaga)", async () => {
+    const t = convexTest(schema, modules);
+    const gestor = await seedGestor(t);
+    const turmaId = await as(t, gestor).mutation(api.turmas.mutations.create, {
+      ...turmaBase,
+      inscricoesAte: "2026-08-20",
+    });
+
+    await as(t, gestor).mutation(api.turmas.mutations.update, {
+      id: turmaId,
+      inscricoesAte: "",
+    });
+    const turma = await t.run(async (ctx) => await ctx.db.get(turmaId));
+    expect(turma?.inscricoesAte).toBeUndefined();
+    // Sem prazo, volta a aceitar inscricao
+    const token = turma!.token!;
+    const id = await t.mutation(api.turmas.mutations.registrar, {
+      token,
+      dadosSistema: { nomeCompleto: "Visitante" },
+      lgpdConsentimento: true,
+    });
+    expect(id).toBeDefined();
+  });
+
+  it("update nao apaga o nome com string vazia", async () => {
+    const t = convexTest(schema, modules);
+    const gestor = await seedGestor(t);
+    const turmaId = await as(t, gestor).mutation(api.turmas.mutations.create, turmaBase);
+    await as(t, gestor).mutation(api.turmas.mutations.update, { id: turmaId, nome: "  " });
+    expect((await t.run(async (ctx) => await ctx.db.get(turmaId)))?.nome).toBe(
+      turmaBase.nome
+    );
+  });
+
   it("update valida a janela no estado final (patch de uma ponta so)", async () => {
     const t = convexTest(schema, modules);
     const gestor = await seedGestor(t);

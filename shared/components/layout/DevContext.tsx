@@ -965,6 +965,8 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     ],
     mutations: [
       "turmas.mutations.updateStatus",
+      "turmas.mutations.update",
+      "turmas.mutations.gerarAulas",
       "turmas.mutations.cancelarInscricao",
       "turmas.mutations.createEncontro",
       "turmas.mutations.removeEncontro",
@@ -975,13 +977,15 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "turmas.certificados.revogar",
       "turmas.certificados.setObservacoesInstrutor",
     ],
-    componentes: ["CertificadosTab"],
+    componentes: ["CertificadosTab", "TurmaFormDialog"],
     notas: [
       "Tabs: Inscricoes, Presenca, Certificados (esta so com turmas:manage_inscricoes)",
       "Link de inscricao copiavel; janela de inscricao (inscricoesDe/Ate) exibida",
       "Chamada pre-marcada como presente — desmarcar quem faltou",
       "Frequencia: aula sem chamada e aula anterior a inscricao ficam fora do denominador",
       "Certificado e snapshot; um ativo por inscricao (revogar para reemitir)",
+      "Editar turma reusa o TurmaFormDialog (sem curso e sem campos do formulario)",
+      "Turma sem aula tem botao de gerar aulas semanais em lote",
     ],
   },
   "/turmas/[id]/certificados/imprimir": {

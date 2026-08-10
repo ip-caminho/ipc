@@ -201,8 +201,8 @@ describe("turmas: encontros/presencas — permissao OU instrutor da propria turm
   });
 });
 
-// Leitura: getById/listEncontros/getPresencas/getFrequenciaResumo checavam
-// apenas login e devolviam nome de inscritos a qualquer membro logado. Gate
+// Leitura: getById/listEncontros/getPresencas checavam apenas login e
+// devolviam nome de inscritos a qualquer membro logado. Gate
 // agora e "turmas:read OU instrutor da propria turma" (o instrutor faz a
 // chamada pelo widget e pode nao ter a permissao).
 describe("turmas.queries — leitura exige turmas:read ou ser instrutor", () => {
@@ -300,10 +300,6 @@ describe("turmas.queries — leitura exige turmas:read ou ser instrutor", () => 
     expect(
       await as(t, comum).query(api.turmas.queries.getPresencas, { encontroId })
     ).toEqual([]);
-    expect(
-      await as(t, comum).query(api.turmas.queries.getFrequenciaResumo, { turmaId })
-    ).toEqual([]);
-
     // Instrutor da propria turma continua vendo (widget de chamada)
     expect(
       (await as(t, userId).query(api.turmas.queries.getPresencas, { encontroId })).length
