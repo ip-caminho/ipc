@@ -1,4 +1,4 @@
-import { internalMutation } from "../_generated/server";
+import { internalMutation, internalQuery } from "../_generated/server";
 import { v } from "convex/values";
 import { getSaoPauloDateString } from "../_shared/datetime";
 import { gerarDatasAulas } from "./lib/aulas";
@@ -265,5 +265,115 @@ export const aplicarFormularioCatecumenos = internalMutation({
     });
 
     return `Formulario aplicado em "${nomeTurma}": 4 campos do sistema + ${PERGUNTAS_CATECUMENOS.length} perguntas.`;
+  },
+});
+
+/** Inventario das turmas: quanto dado cada uma tem, antes de apagar nada. */
+export const inventarioTurmas = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    const turmas = await ctx.db.query("turmas").collect();
+    return await Promise.all(
+      turmas.map(async (t) => {
+        const inscricoes = await ctx.db
+          .query("inscricoes")
+          .withIndex("by_turma", (q) => q.eq("turmaId", t._id))
+          .collect();
+        const aulas = await ctx.db
+          .query("turmaEncontros")
+          .withIndex("by_turma", (q) => q.eq("turmaId", t._id))
+          .collect();
+        let presencas = 0;
+        for (const a of aulas) {
+          presencas += (
+            await ctx.db
+              .query("turmaPresencas")
+              .withIndex("by_encontro_inscricao", (q) => q.eq("encontroId", a._id))
+              .collect()
+          ).length;
+        }
+        const certificados = await ctx.db
+          .query("certificados")
+          .withIndex("by_turma", (q) => q.eq("turmaId", t._id))
+          .collect();
+        return {
+          nome: t.nome,
+          status: t.status,
+          dataInicio: t.dataInicio,
+          inscricoes: inscricoes.length,
+          aulas: aulas.length,
+          presencas,
+          certificados: certificados.length,
+        };
+      })
+    );
+  },
+});
+
+/**
+ * Apaga turmas, mantendo as listadas em `manter` (por nome). Devolve o que
+ * removeu, incluindo os nomes dos inscritos — sem isso a limpeza seria cega e
+ * nao restaria registro de quem havia ali.
+ *
+ * Recusa turma com certificado emitido: papel entregue nao se apaga sem decisao
+ * explicita.
+ */
+export const removerTurmasExceto = internalMutation({
+  args: { manter: v.array(v.string()) },
+  handler: async (ctx, { manter }) => {
+    const turmas = await ctx.db.query("turmas").collect();
+    const relatorio: string[] = [];
+    const preservadas: string[] = [];
+
+    for (const turma of turmas) {
+      if (manter.includes(turma.nome)) {
+        preservadas.push(turma.nome);
+        continue;
+      }
+
+      const certificado = await ctx.db
+        .query("certificados")
+        .withIndex("by_turma", (q) => q.eq("turmaId", turma._id))
+        .first();
+      if (certificado) {
+        relatorio.push(`MANTIDA "${turma.nome}": tem certificado emitido`);
+        continue;
+      }
+
+      const aulas = await ctx.db
+        .query("turmaEncontros")
+        .withIndex("by_turma", (q) => q.eq("turmaId", turma._id))
+        .collect();
+      let presencas = 0;
+      for (const aula of aulas) {
+        const ps = await ctx.db
+          .query("turmaPresencas")
+          .withIndex("by_encontro_inscricao", (q) => q.eq("encontroId", aula._id))
+          .collect();
+        for (const p of ps) {
+          await ctx.db.delete(p._id);
+          presencas++;
+        }
+        await ctx.db.delete(aula._id);
+      }
+
+      const inscricoes = await ctx.db
+        .query("inscricoes")
+        .withIndex("by_turma", (q) => q.eq("turmaId", turma._id))
+        .collect();
+      const nomes = inscricoes.map((i) => i.dadosSistema.nomeCompleto);
+      for (const i of inscricoes) await ctx.db.delete(i._id);
+
+      await ctx.db.delete(turma._id);
+      relatorio.push(
+        `REMOVIDA "${turma.nome}": ${aulas.length} aulas, ${presencas} presencas, ` +
+          `${inscricoes.length} inscricoes${nomes.length ? ` (${nomes.join(", ")})` : ""}`
+      );
+    }
+
+    return {
+      preservadas,
+      acoes: relatorio,
+    };
   },
 });
