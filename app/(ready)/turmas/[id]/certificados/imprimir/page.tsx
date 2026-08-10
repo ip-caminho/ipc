@@ -52,17 +52,60 @@ export default function ImprimirCertificadosPage() {
           size: A4 landscape;
           margin: 0;
         }
+        @media screen {
+          /* Na tela cada certificado tem 297mm fixos: rola na horizontal em
+             vez de estourar a pagina, e ganha borda para separar as folhas. */
+          #certificados-print {
+            overflow-x: auto;
+            background: #f4f4f5;
+            padding: 12px;
+          }
+          .certificado {
+            background: #fff;
+            border: 1px dashed #d4d4d8;
+            margin: 0 auto 12px;
+          }
+        }
         @media print {
+          /* Esconde qualquer coisa fora do certificado — inclui o que vem do
+             layout raiz (toaster, banners), que nao passa pelo .no-print. */
+          body * {
+            visibility: hidden !important;
+          }
+          #certificados-print,
+          #certificados-print * {
+            visibility: visible !important;
+          }
+          #certificados-print {
+            position: absolute;
+            left: 0;
+            top: 0;
+            margin: 0;
+            padding: 0;
+          }
           .no-print {
             display: none !important;
+          }
+          html,
+          body {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #fff !important;
           }
           .certificado {
             page-break-after: always;
             break-after: page;
+            /* Nao pode passar de 1 pagina: sobra deixaria folha em branco. */
+            overflow: hidden;
           }
           .certificado:last-child {
             page-break-after: auto;
             break-after: auto;
+          }
+          /* Mantem a logo e os cinzas no papel. */
+          * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
         }
       `}</style>
@@ -79,15 +122,17 @@ export default function ImprimirCertificadosPage() {
         </Button>
       </div>
 
-      <div className="bg-white text-black">
+      <div id="certificados-print" className="bg-white text-black">
         {certificados.map((c) => (
           <section
             key={c._id}
             className="certificado mx-auto flex flex-col items-center justify-center text-center"
             style={{
               width: "297mm",
-              height: "210mm",
-              padding: "24mm 28mm",
+              // 208mm em vez de 210: a folha tem 210 e qualquer fracao a mais
+              // empurra uma pagina em branco entre os certificados.
+              height: "208mm",
+              padding: "16mm 24mm",
               boxSizing: "border-box",
             }}
           >
