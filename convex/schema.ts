@@ -1039,11 +1039,14 @@ export default defineSchema({
       v.literal("CATACUMENOS"),
       v.literal("OUTRO")
     )),
-    // Override do curso, ajustavel na tela de certificados
+    // Copiado do curso na criacao da turma: congela a regra de aprovacao no
+    // inicio (mudar o curso depois nao muda turma em andamento). Ajustavel na
+    // tela de certificados. Opcional so por causa das turmas legadas, que caem
+    // em FREQUENCIA_MINIMA_PADRAO.
     frequenciaMinima: v.optional(v.number()),
     instrutorId: v.optional(v.id("membros")),
     instrutorNome: v.optional(v.string()),
-    descricao: v.optional(v.string()),
+    descricao: v.optional(v.string()), // sobrescreve a descricao do curso
     dataInicio: v.string(), // YYYY-MM-DD
     dataFim: v.optional(v.string()),
     diaSemana: v.optional(v.string()),
@@ -1197,13 +1200,16 @@ export default defineSchema({
     observacoes: v.optional(v.string()),
     registradoPor: v.optional(v.id("membros")),
   })
-    .index("by_encontro", ["encontroId"])
+    // by_encontro_inscricao tambem atende quem filtra so por encontroId
+    // (prefixo do indice composto) — nao existe by_encontro separado.
     .index("by_inscricao", ["inscricaoId"])
     .index("by_encontro_inscricao", ["encontroId", "inscricaoId"]),
 
   // Certificado emitido. Guarda SNAPSHOT dos dados impressos — frequencia e
   // nome mudam depois, o papel entregue nao. Entrega e presencial (impressao em
   // lote no ultimo dia de aula), por isso nada vai para o B2.
+  // Um certificado ativo por inscricao: corrigir = revogar e emitir novo (a
+  // mutation garante, o indice by_inscricao nao e unico).
   certificados: defineTable({
     turmaId: v.id("turmas"),
     inscricaoId: v.id("inscricoes"),
