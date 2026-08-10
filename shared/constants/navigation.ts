@@ -42,6 +42,11 @@ export type NavItem = {
   // Restringe o item a papeis especificos. Usado para itens administrativos
   // que nao tem uma permission natural no catalogo (Permissoes, Modulos).
   roles?: Role[];
+  // Visibilidade por VINCULO, nao por permissao: "instrutor" aparece so para
+  // quem da aula em alguma turma. O professor costuma ser membro comum, sem
+  // permissao de turmas — sem isto, ou o item some para ele ou aparece para
+  // todos os membros levando a uma pagina vazia.
+  vinculo?: "instrutor";
 };
 
 export type NavSection = {
@@ -217,6 +222,14 @@ export const GESTAO_SECTIONS: NavSection[] = [
         icon: GraduationCap,
         description: "Catecúmenos, novos membros e inscrições",
         permission: "turmas:read",
+        modulo: "turmas",
+      },
+      {
+        label: "Minhas turmas",
+        href: "/minhas-turmas",
+        icon: ClipboardCheck,
+        description: "Quem se inscreveu nas turmas que voce ministra",
+        vinculo: "instrutor",
         modulo: "turmas",
       },
       {

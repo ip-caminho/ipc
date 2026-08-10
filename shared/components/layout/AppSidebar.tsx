@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useQuery } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useTheme } from "next-themes";
 import {
@@ -35,32 +34,13 @@ import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
 import { PrivateAvatarImage } from "@/shared/files/components/PrivateImage";
 import { LogOut, Globe, User, ClipboardList, Moon, Sun, ChevronsUpDown } from "lucide-react";
 import { Logo } from "@shared/components/layout/Logo";
-import { api } from "@/convex/_generated/api";
 import { useAuth } from "@shared/providers/PermissionsProvider";
 import {
   PRIMARY_TABS,
   GESTAO_SECTIONS,
   type NavItem,
 } from "@shared/constants/navigation";
-
-function useIsItemVisible() {
-  const { can, hasAnyRole } = useAuth();
-  // @ts-ignore Convex TS2589
-  const modulosAtivos = useQuery(api.modulos.queries.listModulosAtivos);
-
-  return (item: NavItem): boolean => {
-    if (item.modulo && modulosAtivos && !modulosAtivos.includes(item.modulo)) {
-      return false;
-    }
-    if (item.permission && !can(item.permission)) {
-      return false;
-    }
-    if (item.roles && !hasAnyRole(item.roles)) {
-      return false;
-    }
-    return true;
-  };
-}
+import { useNavItemVisible } from "@shared/hooks/useNavItemVisible";
 
 export function AppSidebar() {
   const pathname = usePathname();
@@ -68,7 +48,7 @@ export function AppSidebar() {
   const { signOut } = useAuthActions();
   const { theme, setTheme } = useTheme();
   const isDark = theme === "dark";
-  const isItemVisible = useIsItemVisible();
+  const isItemVisible = useNavItemVisible();
 
   const isActive = (href: string) => {
     if (href === "/dashboard") return pathname === "/dashboard";
