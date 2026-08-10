@@ -325,7 +325,7 @@ export const removeEncontro = mutation({
     // Remove presencas associadas
     const presencas = await ctx.db
       .query("turmaPresencas")
-      .withIndex("by_encontro", (q) => q.eq("encontroId", id))
+      .withIndex("by_encontro_inscricao", (q) => q.eq("encontroId", id))
       .collect();
     for (const p of presencas) await ctx.db.delete(p._id);
     await ctx.db.delete(id);
@@ -348,7 +348,7 @@ export const salvarPresencas = mutation({
     for (const { inscricaoId, presente } of presencas) {
       const existing = await ctx.db
         .query("turmaPresencas")
-        .withIndex("by_encontro", (q) => q.eq("encontroId", encontroId))
+        .withIndex("by_encontro_inscricao", (q) => q.eq("encontroId", encontroId))
         .collect()
         .then((list) => list.find((p) => p.inscricaoId === inscricaoId));
 

@@ -88,7 +88,7 @@ export const minhasTurmasInstrutor = query({
         // Verificar se ja tem presencas marcadas
         const presencas = await ctx.db
           .query("turmaPresencas")
-          .withIndex("by_encontro", (q) => q.eq("encontroId", e._id))
+          .withIndex("by_encontro_inscricao", (q) => q.eq("encontroId", e._id))
           .collect();
         if (presencas.length > 0) continue; // ja preencheu
 
@@ -296,7 +296,7 @@ export const listEncontros = query({
         .map(async (e) => {
           const presencas = await ctx.db
             .query("turmaPresencas")
-            .withIndex("by_encontro", (q) => q.eq("encontroId", e._id))
+            .withIndex("by_encontro_inscricao", (q) => q.eq("encontroId", e._id))
             .collect();
           return {
             ...e,
@@ -326,7 +326,7 @@ export const getPresencas = query({
 
     const presencas = await ctx.db
       .query("turmaPresencas")
-      .withIndex("by_encontro", (q) => q.eq("encontroId", encontroId))
+      .withIndex("by_encontro_inscricao", (q) => q.eq("encontroId", encontroId))
       .collect();
 
     const presencaMap = new Map(presencas.map((p) => [p.inscricaoId, p]));
