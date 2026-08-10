@@ -108,3 +108,54 @@ export const removerTurmaVazia = internalMutation({
     return `Turma "${nome}" removida (${aulas.length} aulas).`;
   },
 });
+
+/**
+ * Zera as inscricoes de uma turma: apaga inscricoes, presencas ligadas a elas e
+ * volta vagasOcupadas para 0. As AULAS ficam — o que se descarta e quem se
+ * inscreveu, nao o calendario da turma.
+ *
+ * Recusa se houver certificado emitido: ali ja existe papel entregue, e apagar
+ * a inscricao deixaria o certificado orfao.
+ */
+export const limparInscricoesDaTurma = internalMutation({
+  args: { nomeTurma: v.string() },
+  handler: async (ctx, { nomeTurma }) => {
+    const turma = (await ctx.db.query("turmas").collect()).find((t) => t.nome === nomeTurma);
+    if (!turma) return `Turma "${nomeTurma}" nao encontrada.`;
+
+    const certificado = await ctx.db
+      .query("certificados")
+      .withIndex("by_turma", (q) => q.eq("turmaId", turma._id))
+      .first();
+    if (certificado) {
+      return `Turma "${nomeTurma}" tem certificado emitido — nao mexi nas inscricoes.`;
+    }
+
+    const inscricoes = await ctx.db
+      .query("inscricoes")
+      .withIndex("by_turma", (q) => q.eq("turmaId", turma._id))
+      .collect();
+
+    const nomes: string[] = [];
+    let presencasRemovidas = 0;
+
+    for (const inscricao of inscricoes) {
+      const presencas = await ctx.db
+        .query("turmaPresencas")
+        .withIndex("by_inscricao", (q) => q.eq("inscricaoId", inscricao._id))
+        .collect();
+      for (const p of presencas) {
+        await ctx.db.delete(p._id);
+        presencasRemovidas++;
+      }
+      nomes.push(inscricao.dadosSistema.nomeCompleto);
+      await ctx.db.delete(inscricao._id);
+    }
+
+    await ctx.db.patch(turma._id, { vagasOcupadas: 0 });
+
+    return inscricoes.length === 0
+      ? `Turma "${nomeTurma}" ja estava sem inscricao.`
+      : `Removidas ${inscricoes.length} inscricoes (${nomes.join(", ")}) e ${presencasRemovidas} presencas. vagasOcupadas zerado.`;
+  },
+});
