@@ -1,4 +1,5 @@
 import { internalMutation } from "../_generated/server";
+import { v } from "convex/values";
 import { FREQUENCIA_MINIMA_PADRAO } from "../turmas/lib/constants";
 
 /**
@@ -10,6 +11,32 @@ import { FREQUENCIA_MINIMA_PADRAO } from "../turmas/lib/constants";
  * aulas gera os encontros da turma automaticamente. Preencher em /cursos.
  */
 const CURSOS = ["Curso de Novos Membros", "Catecumenos"];
+
+/**
+ * Remove um curso pelo nome, mas SO se ele estiver vazio (sem descricao,
+ * ementa, carga horaria, total de aulas) e sem nenhuma turma vinculada. Serve
+ * para desfazer um seed duplicado sem risco de apagar catalogo real.
+ */
+export const removerCursoVazio = internalMutation({
+  args: { nome: v.string() },
+  handler: async (ctx, { nome }) => {
+    const curso = (await ctx.db.query("cursos").collect()).find((c) => c.nome === nome);
+    if (!curso) return `Curso "${nome}" nao encontrado.`;
+
+    if (curso.descricao || curso.ementa || curso.cargaHoraria || curso.totalAulas) {
+      return `Curso "${nome}" tem conteudo preenchido — nao removido.`;
+    }
+
+    const turma = await ctx.db
+      .query("turmas")
+      .withIndex("by_curso", (q) => q.eq("cursoId", curso._id))
+      .first();
+    if (turma) return `Curso "${nome}" tem turma vinculada — nao removido.`;
+
+    await ctx.db.delete(curso._id);
+    return `Curso "${nome}" removido.`;
+  },
+});
 
 export const seedCursosIniciais = internalMutation({
   args: {},
