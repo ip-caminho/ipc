@@ -1,5 +1,19 @@
 # Cursos, Frequência e Certificados
 
+## Status: CONCLUIDO (10/08/2026) — PR #218
+
+As 8 etapas foram implementadas e o backend esta em producao
+(`earnest-husky-324`). Ajustes surgidos na revisao e ja incorporados:
+
+- **Janela de inscricao** (`turmas.inscricoesDe` / `inscricoesAte`, inclusivas):
+  faltava programar abertura e prazo do formulario publico. Checada no servidor
+  em fuso de Sao Paulo; `duplicar` nao a carrega (ficaria no passado).
+- **`frequenciaMinima` copiada** do curso na criacao da turma, em vez de
+  override com cascata de fallback — congela a regra no inicio.
+- **Indice `by_encontro` removido** de `turmaPresencas`: o composto
+  `by_encontro_inscricao` atende os dois filtros.
+- **Prazo da chamada** de 48h para 7 dias (`JANELA_CHAMADA_MS`).
+
 ## Escopo
 
 Transformar o módulo `turmas` (hoje uma tabela única, MVP de inscrições) em gestão de
