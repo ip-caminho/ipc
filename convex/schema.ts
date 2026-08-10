@@ -1224,6 +1224,10 @@ export default defineSchema({
     cursoNome: v.string(),
     turmaNome: v.string(),
     cargaHoraria: v.optional(v.number()),
+    // Quem assina, tambem em snapshot: o instrutor da turma pode mudar depois,
+    // e o papel entregue tem o nome de quem assinou naquele dia.
+    instrutorNome: v.optional(v.string()),
+    pastorNome: v.optional(v.string()),
     codigo: v.string(), // identificador impresso no rodape
     emitidoPor: v.id("membros"),
     emitidoEm: v.number(),

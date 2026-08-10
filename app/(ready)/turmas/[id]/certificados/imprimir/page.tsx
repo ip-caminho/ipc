@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useParams } from "next/navigation";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -24,6 +25,7 @@ function formatDateLong(ts: number) {
 export default function ImprimirCertificadosPage() {
   const { id } = useParams<{ id: string }>();
   const turmaId = id as Id<"turmas">;
+  // @ts-ignore Convex TS2589 (instanciacao de tipo profunda)
   const certificados = useQuery(api.turmas.certificados.listParaImpressao, { turmaId });
 
   if (certificados === undefined) {
@@ -89,17 +91,31 @@ export default function ImprimirCertificadosPage() {
               boxSizing: "border-box",
             }}
           >
+            <Image
+              src="/logo.png"
+              alt="Igreja Presbiteriana do Caminho"
+              width={234}
+              height={179}
+              priority
+              style={{ height: "20mm", width: "auto" }}
+            />
+
             <p
-              style={{ letterSpacing: "0.3em", fontSize: "11pt", textTransform: "uppercase" }}
+              style={{
+                letterSpacing: "0.3em",
+                fontSize: "10pt",
+                textTransform: "uppercase",
+                marginTop: "4mm",
+              }}
             >
               Igreja Presbiteriana do Caminho
             </p>
 
-            <h1 style={{ fontSize: "30pt", fontWeight: 700, marginTop: "12mm" }}>
+            <h1 style={{ fontSize: "28pt", fontWeight: 700, marginTop: "8mm" }}>
               Certificado
             </h1>
 
-            <p style={{ fontSize: "12pt", marginTop: "10mm" }}>Certificamos que</p>
+            <p style={{ fontSize: "12pt", marginTop: "8mm" }}>Certificamos que</p>
 
             <p
               style={{
@@ -121,23 +137,44 @@ export default function ImprimirCertificadosPage() {
               {c.aulasConsideradas} aulas).
             </p>
 
-            <p style={{ fontSize: "11pt", marginTop: "14mm" }}>
+            <p style={{ fontSize: "11pt", marginTop: "10mm" }}>
               Sao Paulo, {formatDateLong(c.emitidoEm)}
             </p>
 
             <div
               style={{
-                marginTop: "16mm",
-                borderTop: "1px solid #333",
-                width: "90mm",
-                paddingTop: "2mm",
-                fontSize: "10pt",
+                marginTop: "14mm",
+                display: "flex",
+                gap: "24mm",
+                justifyContent: "center",
+                width: "100%",
               }}
             >
-              Assinatura
+              <div
+                style={{
+                  borderTop: "1px solid #333",
+                  width: "80mm",
+                  paddingTop: "2mm",
+                  fontSize: "10pt",
+                }}
+              >
+                <p style={{ fontWeight: 600 }}>{c.instrutorNome ?? " "}</p>
+                <p style={{ fontSize: "9pt", color: "#555" }}>Professor</p>
+              </div>
+              <div
+                style={{
+                  borderTop: "1px solid #333",
+                  width: "80mm",
+                  paddingTop: "2mm",
+                  fontSize: "10pt",
+                }}
+              >
+                <p style={{ fontWeight: 600 }}>{c.pastorNome ?? " "}</p>
+                <p style={{ fontSize: "9pt", color: "#555" }}>Pastor titular</p>
+              </div>
             </div>
 
-            <p style={{ fontSize: "8pt", color: "#666", marginTop: "10mm" }}>
+            <p style={{ fontSize: "8pt", color: "#666", marginTop: "8mm" }}>
               {c.turmaNome} · Codigo {c.codigo}
             </p>
           </section>
