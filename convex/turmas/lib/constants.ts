@@ -7,6 +7,12 @@ export const FREQUENCIA_MINIMA_PADRAO = 75;
 // da turma — dai o corte.
 export const OBSERVACAO_MAX_CHARS = 500;
 
+// Janela em que a chamada aparece no widget do dashboard do instrutor. Eram
+// 48h; 7 dias porque o prazo curto fazia a aula sumir antes de ele preencher.
+// A secretaria (turmas:manage_inscricoes) nao tem prazo: marca pela tela da
+// turma, que lista todas as aulas.
+export const JANELA_CHAMADA_MS = 7 * 24 * 60 * 60 * 1000;
+
 export function truncarObservacao(texto: string | undefined): string | undefined {
   const limpo = texto?.trim();
   if (!limpo) return undefined;
