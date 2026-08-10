@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { AuthGuard } from "@shared/components/auth/AuthGuard";
@@ -54,11 +55,22 @@ function ShellSelector({ children }: { children: React.ReactNode }) {
   return <NormalShell>{children}</NormalShell>;
 }
 
+// Rotas feitas para sair no papel: sidebar, header, player e bottom bar nao
+// podem aparecer na folha. Continuam atras do AuthGuard — o que muda e so o
+// shell.
+const ROTAS_SEM_SHELL = [/^\/turmas\/[^/]+\/certificados\/imprimir$/];
+
 export default function ReadyLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+
+  if (ROTAS_SEM_SHELL.some((r) => r.test(pathname))) {
+    return <AuthGuard>{children}</AuthGuard>;
+  }
+
   return (
     <AuthGuard>
       <AudioPlayerProvider>
