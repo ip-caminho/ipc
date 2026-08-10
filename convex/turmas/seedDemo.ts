@@ -332,3 +332,70 @@ export const limparChamadaDemo = internalMutation({
     return `Documentos removidos: ${removidos}`;
   },
 });
+
+/**
+ * Nova aula pendente na turma de demo, para rever o card de chamada depois de
+ * ter salvado a anterior (chamada feita sai do widget de proposito).
+ */
+export const novaAulaPendenteDemo = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const turma = (await ctx.db.query("turmas").collect()).find(
+      (t) => t.nome === TURMA_CHAMADA
+    );
+    if (!turma) return "Turma de chamada nao existe. Rode seedChamadaDemo primeiro.";
+
+    const agora = Date.now();
+    const anteontem = getSaoPauloDateString(new Date(agora - 2 * 24 * 60 * 60 * 1000));
+
+    const jaTem = (
+      await ctx.db
+        .query("turmaEncontros")
+        .withIndex("by_turma", (q) => q.eq("turmaId", turma._id))
+        .collect()
+    ).find((e) => e.data === anteontem && !e.presencaRegistradaEm);
+    if (jaTem) return `Ja existe aula pendente em ${anteontem}.`;
+
+    await ctx.db.insert("turmaEncontros", {
+      turmaId: turma._id,
+      data: anteontem,
+      titulo: "Aula 4",
+      criadoEm: agora - 2 * 24 * 60 * 60 * 1000,
+    });
+    return `Aula pendente de ${anteontem} criada. O card volta a aparecer no dashboard.`;
+  },
+});
+
+/**
+ * Abre a turma de demo para inscricao publica e devolve o link. A janela vai de
+ * hoje ate 30 dias, para exercitar o formulario e o prazo.
+ */
+export const abrirInscricoesDemo = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const turma = (await ctx.db.query("turmas").collect()).find(
+      (t) => t.nome === TURMA_CHAMADA
+    );
+    if (!turma) return "Turma de chamada nao existe. Rode seedChamadaDemo primeiro.";
+
+    const agora = Date.now();
+    const hoje = getSaoPauloDateString(new Date(agora));
+    const em30 = getSaoPauloDateString(new Date(agora + 30 * 24 * 60 * 60 * 1000));
+
+    const token =
+      turma.token ??
+      Array.from(crypto.getRandomValues(new Uint8Array(32)), (b) =>
+        b.toString(16).padStart(2, "0")
+      ).join("");
+
+    await ctx.db.patch(turma._id, {
+      status: "ABERTA",
+      inscricoesDe: hoje,
+      inscricoesAte: em30,
+      vagas: 10,
+      token,
+    });
+
+    return `/inscricao/${token} — aberta de ${hoje} a ${em30}, 10 vagas (${turma.vagasOcupadas} ocupadas).`;
+  },
+});
