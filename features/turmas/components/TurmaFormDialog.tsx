@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "convex/react";
@@ -28,17 +28,28 @@ import {
 } from "@/shared/components/ui/select";
 import { ResponsiveSelect } from "@/shared/components/ui/responsive-select";
 import { turmaFormSchema, type TurmaFormValues } from "../lib/validations";
-import { DIA_SEMANA_OPTIONS, DIA_SEMANA_LABELS, CAMPOS_SISTEMA_OPTIONS, TIPOS_TURMA, type TipoTurma } from "../lib/constants";
+import { DIA_SEMANA_OPTIONS, DIA_SEMANA_LABELS, CAMPOS_SISTEMA_OPTIONS } from "../lib/constants";
 import { Checkbox } from "@/shared/components/ui/checkbox";
-import type { Id } from "@/convex/_generated/dataModel";
+import type { Doc, Id } from "@/convex/_generated/dataModel";
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /**
+   * Presente = edicao. Na edicao NAO aparecem o curso (a turma copiou a
+   * frequencia minima dele na criacao; trocar depois mudaria a regra no meio)
+   * nem os campos do formulario de inscricao (orfanizaria respostas ja
+   * enviadas).
+   */
+  turma?: Doc<"turmas">;
 }
 
-export function TurmaFormDialog({ open, onOpenChange }: Props) {
+export function TurmaFormDialog({ open, onOpenChange, turma }: Props) {
+  const editando = !!turma;
+  // @ts-ignore Convex TS2589 (instanciacao de tipo profunda)
   const createTurma = useMutation(api.turmas.mutations.create);
+  // @ts-ignore Convex TS2589 (instanciacao de tipo profunda)
+  const updateTurma = useMutation(api.turmas.mutations.update);
   // @ts-expect-error Convex TS2589
   const membros = useQuery(api.membros.queries.list);
   const cursos = useQuery(api.cursos.queries.listAtivos, {});
@@ -53,6 +64,27 @@ export function TurmaFormDialog({ open, onOpenChange }: Props) {
     },
   });
 
+  useEffect(() => {
+    if (!open) return;
+    form.reset({
+      nome: turma?.nome ?? "",
+      cursoId: turma?.cursoId ?? undefined,
+      instrutorId: turma?.instrutorId ?? "",
+      instrutorNome: turma?.instrutorNome ?? "",
+      descricao: turma?.descricao ?? "",
+      dataInicio: turma?.dataInicio ?? "",
+      dataFim: turma?.dataFim ?? "",
+      inscricoesDe: turma?.inscricoesDe ?? "",
+      inscricoesAte: turma?.inscricoesAte ?? "",
+      diaSemana: turma?.diaSemana ?? "",
+      horario: turma?.horario ?? "",
+      local: turma?.local ?? "",
+      vagas: turma?.vagas,
+      camposSistema: turma?.camposSistema ?? ["nomeCompleto"],
+      perguntasExtras: turma?.perguntasExtras ?? [],
+    });
+  }, [open, turma, form]);
+
   const instrutorOptions = useMemo(
     () => [
       { value: "", label: "Nenhum" },
@@ -66,11 +98,33 @@ export function TurmaFormDialog({ open, onOpenChange }: Props) {
 
   async function onSubmit(values: TurmaFormValues) {
     try {
+      if (turma) {
+        // Campos vazios chegam como "" e a mutation trata isso como "remover"
+        // — e assim que se apaga um prazo de inscricao ja definido.
+        await updateTurma({
+          id: turma._id,
+          nome: values.nome,
+          instrutorId: values.instrutorId ? (values.instrutorId as Id<"membros">) : undefined,
+          instrutorNome: values.instrutorNome ?? "",
+          descricao: values.descricao ?? "",
+          dataInicio: values.dataInicio,
+          dataFim: values.dataFim ?? "",
+          inscricoesDe: values.inscricoesDe ?? "",
+          inscricoesAte: values.inscricoesAte ?? "",
+          diaSemana: values.diaSemana ?? "",
+          horario: values.horario ?? "",
+          local: values.local ?? "",
+          vagas: values.vagas,
+        });
+        toast.success("Turma atualizada");
+        onOpenChange(false);
+        return;
+      }
+
       await createTurma({
         nome: values.nome,
         cursoId: values.cursoId ? (values.cursoId as Id<"cursos">) : undefined,
-        tipo: values.tipo,
-        instrutorId: values.instrutorId ? values.instrutorId as any : undefined,
+        instrutorId: values.instrutorId ? (values.instrutorId as Id<"membros">) : undefined,
         instrutorNome: values.instrutorNome || undefined,
         descricao: values.descricao || undefined,
         dataInicio: values.dataInicio,
@@ -88,7 +142,7 @@ export function TurmaFormDialog({ open, onOpenChange }: Props) {
       form.reset();
       onOpenChange(false);
     } catch (err: unknown) {
-      toast.error((err as Error).message || "Erro ao criar turma");
+      toast.error((err as Error).message || "Erro ao salvar turma");
     }
   }
 
@@ -96,7 +150,7 @@ export function TurmaFormDialog({ open, onOpenChange }: Props) {
     <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
       <ResponsiveDialogContent>
         <ResponsiveDialogHeader>
-          <ResponsiveDialogTitle>Nova Turma</ResponsiveDialogTitle>
+          <ResponsiveDialogTitle>{editando ? "Editar turma" : "Nova Turma"}</ResponsiveDialogTitle>
         </ResponsiveDialogHeader>
         <form onSubmit={form.handleSubmit(onSubmit)} className="contents">
           <ResponsiveDialogBody className="space-y-4">
@@ -105,6 +159,7 @@ export function TurmaFormDialog({ open, onOpenChange }: Props) {
             <Input id="nome" {...form.register("nome")} placeholder="Ex: Novos Membros - Turma 1/2026" />
           </div>
 
+          {!editando && (
           <div>
             <Label>Curso</Label>
             <Select
@@ -137,32 +192,7 @@ export function TurmaFormDialog({ open, onOpenChange }: Props) {
               O curso define a frequencia minima e gera as aulas automaticamente.
             </p>
           </div>
-
-          <div>
-            <Label>Tipo</Label>
-            <Select
-              value={form.watch("tipo") || "__none__"}
-              onValueChange={(v) => {
-                if (v === "__none__") {
-                  form.setValue("tipo", undefined);
-                  return;
-                }
-                form.setValue("tipo", v as TipoTurma);
-                const tipo = TIPOS_TURMA.find((t) => t.value === v);
-                if (tipo && tipo.descricaoTemplate && !form.getValues("descricao")) {
-                  form.setValue("descricao", tipo.descricaoTemplate);
-                }
-              }}
-            >
-              <SelectTrigger className="w-full"><SelectValue placeholder="Selecione o tipo" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__none__">Selecione...</SelectItem>
-                {TIPOS_TURMA.map((t) => (
-                  <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          )}
 
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -249,6 +279,7 @@ export function TurmaFormDialog({ open, onOpenChange }: Props) {
             <Textarea id="descricao" {...form.register("descricao")} rows={2} />
           </div>
 
+          {!editando && (
           <div>
             <Label>Campos do formulario de inscricao</Label>
             <div className="space-y-2 mt-1">
@@ -271,13 +302,14 @@ export function TurmaFormDialog({ open, onOpenChange }: Props) {
               ))}
             </div>
           </div>
+          )}
           </ResponsiveDialogBody>
           <ResponsiveDialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
             <Button type="submit" disabled={form.formState.isSubmitting}>
-              Criar
+              {editando ? "Salvar" : "Criar"}
             </Button>
           </ResponsiveDialogFooter>
         </form>
