@@ -157,6 +157,7 @@ import type * as site_queries from "../site/queries.js";
 import type * as tarefas_migrations from "../tarefas/migrations.js";
 import type * as tarefas_mutations from "../tarefas/mutations.js";
 import type * as tarefas_queries from "../tarefas/queries.js";
+import type * as turmas_lib_constants from "../turmas/lib/constants.js";
 import type * as turmas_mutations from "../turmas/mutations.js";
 import type * as turmas_queries from "../turmas/queries.js";
 
@@ -316,6 +317,7 @@ declare const fullApi: ApiFromModules<{
   "tarefas/migrations": typeof tarefas_migrations;
   "tarefas/mutations": typeof tarefas_mutations;
   "tarefas/queries": typeof tarefas_queries;
+  "turmas/lib/constants": typeof turmas_lib_constants;
   "turmas/mutations": typeof turmas_mutations;
   "turmas/queries": typeof turmas_queries;
 }>;
