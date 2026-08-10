@@ -7,6 +7,7 @@ import type { Doc, Id } from "../_generated/dataModel";
 
 import { resolveMembroNome } from "../_shared/membroResolver";
 import { avaliarJanelaInscricao } from "./lib/inscricoes";
+import { JANELA_CHAMADA_MS } from "./lib/constants";
 
 /**
  * Leitura de uma turma: quem tem turmas:read ve qualquer uma; o instrutor ve
@@ -35,7 +36,7 @@ async function canReadTurma(ctx: QueryCtx, turmaId: Id<"turmas">) {
 // Turmas onde o membro logado e instrutor, com info de chamada
 // Mostra:
 // 1. Turmas com aula hoje (criar encontro se nao existe)
-// 2. Encontros criados nas ultimas 48h sem presenca marcada (janela para preencher)
+// 2. Encontros criados dentro da janela de chamada, sem presenca marcada
 export const minhasTurmasInstrutor = query({
   args: {},
   handler: async (ctx) => {
@@ -59,7 +60,7 @@ export const minhasTurmasInstrutor = query({
     const hoje = getSaoPauloDateString();
     const diaSemanaHoje = ["DOMINGO", "SEGUNDA", "TERCA", "QUARTA", "QUINTA", "SEXTA", "SABADO"][getSaoPauloWeekday()];
     const agora = Date.now();
-    const limite48h = agora - 48 * 60 * 60 * 1000;
+    const limiteJanela = agora - JANELA_CHAMADA_MS;
 
     const resultados: Array<{
       _id: string;
@@ -71,7 +72,7 @@ export const minhasTurmasInstrutor = query({
       encontroId: string | null;
       encontroData: string;
       criadoEm: number;
-      expiraEm: number; // timestamp do limite (criadoEm + 48h)
+      expiraEm: number; // timestamp do limite (criadoEm + JANELA_CHAMADA_MS)
     }> = [];
 
     for (const t of minhas) {
@@ -102,14 +103,14 @@ export const minhasTurmasInstrutor = query({
           encontroId: encontroHoje?._id || null,
           encontroData: hoje,
           criadoEm: encontroHoje?.criadoEm || agora,
-          expiraEm: (encontroHoje?.criadoEm || agora) + 48 * 60 * 60 * 1000,
+          expiraEm: (encontroHoje?.criadoEm || agora) + JANELA_CHAMADA_MS,
         });
       }
 
-      // Caso 2: encontros pendentes (criados nas ultimas 48h, nao foi hoje)
+      // Caso 2: encontros pendentes dentro da janela (nao foi hoje)
       for (const e of encontros) {
         if (e.data === hoje) continue; // ja tratado acima
-        if (e.criadoEm < limite48h) continue; // ja passou da janela
+        if (e.criadoEm < limiteJanela) continue; // ja passou da janela
 
         // Chamada ja feita? Le o campo do encontro em vez das presencas.
         // Encontros criados antes deste campo existir aparecem como pendentes
@@ -126,7 +127,7 @@ export const minhasTurmasInstrutor = query({
           encontroId: e._id,
           encontroData: e.data,
           criadoEm: e.criadoEm,
-          expiraEm: e.criadoEm + 48 * 60 * 60 * 1000,
+          expiraEm: e.criadoEm + JANELA_CHAMADA_MS,
         });
       }
     }
@@ -376,7 +377,12 @@ export const getPresencas = query({
       return {
         inscricaoId: i._id,
         nome: i.dadosSistema.nomeCompleto,
-        presente: p?.presente ?? false,
+        // Aula ainda sem chamada vem PRE-MARCADA como presente: o instrutor
+        // desmarca so quem faltou (2 toques em vez de 20). Isso e default de
+        // tela — nada e gravado enquanto ele nao salvar, e o calculo de
+        // frequencia ignora aula sem presencaRegistradaEm.
+        presente: p?.presente ?? true,
+        registrado: !!p,
         presencaId: p?._id,
       };
     });
