@@ -37,7 +37,7 @@ function formatDate(d: string) {
 export default function TurmaDetalhePage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const { can } = useAuth();
+  const { can, membroId } = useAuth();
   // @ts-ignore Convex TS2589 — tsc do projeto inteiro estoura o limite de
   // instanciacao aqui; o build do Next nao. @ts-ignore por isso: @ts-expect-error
   // quebraria o build por diretiva nao usada.
@@ -66,6 +66,12 @@ export default function TurmaDetalhePage() {
 
   if (turma === undefined) return <div className="p-6">Carregando...</div>;
   if (turma === null) return <div className="p-6">Turma nao encontrada</div>;
+
+  // O instrutor da turma faz a chamada mesmo sem turmas:manage_inscricoes — e
+  // o mesmo gate do backend (requireGestaoTurma). Sem isso, professor que e
+  // membro comum nao tem por onde marcar presenca.
+  const podeChamada =
+    can("turmas:manage_inscricoes") || (!!membroId && turma.instrutorId === membroId);
 
   const statusOpt = STATUS_TURMA.find((s) => s.value === turma.status);
   const shareUrl = turma.token ? `${window.location.origin}/inscricao/${turma.token}` : "";
@@ -361,11 +367,12 @@ export default function TurmaDetalhePage() {
                           <span className="text-xs text-muted-foreground">
                             {e.totalPresentes}/{e.totalPresentes + e.totalAusentes}
                           </span>
-                          {can("turmas:manage_inscricoes") && (
+                          {podeChamada && (
                             <>
                               <Button
                                 variant="outline"
                                 size="sm"
+                                className="h-10"
                                 onClick={() => handleAbrirPresenca(e._id)}
                               >
                                 {encontroAberto === e._id ? "Fechar" : "Chamada"}
