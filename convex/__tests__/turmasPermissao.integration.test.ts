@@ -201,6 +201,159 @@ describe("turmas: encontros/presencas — permissao OU instrutor da propria turm
   });
 });
 
+// Leitura: getById/listEncontros/getPresencas/getFrequenciaResumo checavam
+// apenas login e devolviam nome de inscritos a qualquer membro logado. Gate
+// agora e "turmas:read OU instrutor da propria turma" (o instrutor faz a
+// chamada pelo widget e pode nao ter a permissao).
+describe("turmas.queries — leitura exige turmas:read ou ser instrutor", () => {
+  it("getById: membro comum recebe null; instrutor da propria turma recebe a turma", async () => {
+    const t = convexTest(schema, modules);
+    const userId = await seedUser(t, { role: "membro" });
+    const membroId = await t.run(async (ctx) => {
+      const m = await ctx.db
+        .query("membros")
+        .withIndex("by_user_id", (q) => q.eq("userId", userId))
+        .first();
+      return m!._id;
+    });
+    const minha = await seedTurma(t, membroId);
+    const alheia = await seedTurma(t);
+
+    const comum = await seedUser(t, { role: "membro" });
+    expect(await as(t, comum).query(api.turmas.queries.getById, { id: minha })).toBeNull();
+
+    expect(
+      await as(t, userId).query(api.turmas.queries.getById, { id: minha })
+    ).not.toBeNull();
+    expect(
+      await as(t, userId).query(api.turmas.queries.getById, { id: alheia })
+    ).toBeNull();
+  });
+
+  it("listTurmas: membro comum recebe []; com turmas:read recebe as turmas", async () => {
+    const t = convexTest(schema, modules);
+    await seedTurma(t);
+    const comum = await seedUser(t, { role: "membro" });
+    expect(await as(t, comum).query(api.turmas.queries.listTurmas, {})).toEqual([]);
+
+    const gestor = await seedUser(t, {
+      role: "secretaria",
+      permissions: ["turmas:read"],
+    });
+    const r = await as(t, gestor).query(api.turmas.queries.listTurmas, {});
+    expect(r.length).toBe(1);
+  });
+
+  it("listTurmas: filtro por status usa o indice e nao vaza outros status", async () => {
+    const t = convexTest(schema, modules);
+    const aberta = await seedTurma(t);
+    await t.run(async (ctx) => {
+      await ctx.db.insert("turmas", {
+        ...turmaBase,
+        nome: "Encerrada",
+        vagasOcupadas: 0,
+        status: "ENCERRADA",
+        criadoEm: 2,
+      });
+    });
+    const gestor = await seedUser(t, {
+      role: "secretaria",
+      permissions: ["turmas:read"],
+    });
+    const r = await as(t, gestor).query(api.turmas.queries.listTurmas, {
+      status: "ABERTA",
+    });
+    expect(r.map((x) => x._id)).toEqual([aberta]);
+  });
+
+  it("listEncontros e getPresencas: membro comum nao ve nomes de inscritos", async () => {
+    const t = convexTest(schema, modules);
+    const userId = await seedUser(t, { role: "membro" });
+    const membroId = await t.run(async (ctx) => {
+      const m = await ctx.db
+        .query("membros")
+        .withIndex("by_user_id", (q) => q.eq("userId", userId))
+        .first();
+      return m!._id;
+    });
+    const turmaId = await seedTurma(t, membroId);
+    const { encontroId } = await t.run(async (ctx) => {
+      await ctx.db.insert("inscricoes", {
+        turmaId,
+        dadosSistema: { nomeCompleto: "Inscrito" },
+        status: "CONFIRMADA",
+        lgpdConsentimento: true,
+        criadoEm: 1,
+      });
+      const encontroId = await ctx.db.insert("turmaEncontros", {
+        turmaId,
+        data: "2026-08-05",
+        criadoEm: 1,
+      });
+      return { encontroId };
+    });
+
+    const comum = await seedUser(t, { role: "membro" });
+    expect(
+      await as(t, comum).query(api.turmas.queries.listEncontros, { turmaId })
+    ).toEqual([]);
+    expect(
+      await as(t, comum).query(api.turmas.queries.getPresencas, { encontroId })
+    ).toEqual([]);
+    expect(
+      await as(t, comum).query(api.turmas.queries.getFrequenciaResumo, { turmaId })
+    ).toEqual([]);
+
+    // Instrutor da propria turma continua vendo (widget de chamada)
+    expect(
+      (await as(t, userId).query(api.turmas.queries.getPresencas, { encontroId })).length
+    ).toBe(1);
+  });
+});
+
+describe("turmas.salvarPresencas — registro da chamada", () => {
+  it("marca presencaRegistradaEm e nao duplica ao salvar de novo", async () => {
+    const t = convexTest(schema, modules);
+    const gestor = await seedUser(t, {
+      role: "secretaria",
+      permissions: ["turmas:manage_inscricoes"],
+    });
+    const turmaId = await seedTurma(t);
+    const { encontroId, inscricaoId } = await t.run(async (ctx) => {
+      const inscricaoId = await ctx.db.insert("inscricoes", {
+        turmaId,
+        dadosSistema: { nomeCompleto: "Inscrito" },
+        status: "CONFIRMADA",
+        lgpdConsentimento: true,
+        criadoEm: 1,
+      });
+      const encontroId = await ctx.db.insert("turmaEncontros", {
+        turmaId,
+        data: "2026-08-05",
+        criadoEm: 1,
+      });
+      return { encontroId, inscricaoId };
+    });
+
+    await as(t, gestor).mutation(api.turmas.mutations.salvarPresencas, {
+      encontroId,
+      presencas: [{ inscricaoId, presente: true }],
+    });
+    await as(t, gestor).mutation(api.turmas.mutations.salvarPresencas, {
+      encontroId,
+      presencas: [{ inscricaoId, presente: false }],
+    });
+
+    const { encontro, presencas } = await t.run(async (ctx) => ({
+      encontro: await ctx.db.get(encontroId),
+      presencas: await ctx.db.query("turmaPresencas").collect(),
+    }));
+    expect(encontro?.presencaRegistradaEm).toBeGreaterThan(0);
+    expect(presencas.length).toBe(1); // atualizou, nao inseriu de novo
+    expect(presencas[0].presente).toBe(false);
+  });
+});
+
 describe("turmas.queries.listInscricoes — PII dos inscritos", () => {
   it("sem turmas:read degrada para [] (nao vaza whatsapp/email)", async () => {
     const t = convexTest(schema, modules);
