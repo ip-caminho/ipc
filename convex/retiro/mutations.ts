@@ -12,7 +12,7 @@ import {
   type PrecosRetiro,
 } from "./calculoHelpers";
 
-// Config do retiro — gestao sob inscricoes:manage (secretaria).
+// Config do retiro — gestao sob retiro:manage (secretaria).
 // Valores monetarios em CENTAVOS.
 
 const quartosValidator = v.object({
@@ -74,7 +74,7 @@ export const criar = mutation({
     estoque: quartosValidator,
   },
   handler: async (ctx, args) => {
-    const { membro } = await requirePermission(ctx, "inscricoes:manage");
+    const { membro } = await requirePermission(ctx, "retiro:manage");
 
     const slug = args.slug.trim().toLowerCase();
     if (!slug) throw new Error("Slug obrigatório");
@@ -114,7 +114,7 @@ export const atualizar = mutation({
     estoque: v.optional(quartosValidator),
   },
   handler: async (ctx, { id, ...updates }) => {
-    await requirePermission(ctx, "inscricoes:manage");
+    await requirePermission(ctx, "retiro:manage");
     const antes = await ctx.db.get(id);
     if (!antes) throw new Error("Retiro não encontrado");
     if (updates.precos) validarPrecos(updates.precos);
@@ -141,7 +141,7 @@ export const confirmarMatching = mutation({
     membroId: v.union(v.id("membros"), v.null()),
   },
   handler: async (ctx, { inscricaoId, participanteIndex, membroId }) => {
-    await requirePermission(ctx, "inscricoes:manage");
+    await requirePermission(ctx, "retiro:manage");
     const insc = await ctx.db.get(inscricaoId);
     if (!insc) throw new Error("Inscrição não encontrada");
     const parts = [...insc.participantes];
@@ -197,7 +197,7 @@ export const editarInscricao = mutation({
     ),
   },
   handler: async (ctx, { id, ...updates }) => {
-    await requirePermission(ctx, "inscricoes:manage");
+    await requirePermission(ctx, "retiro:manage");
     const antes = await ctx.db.get(id);
     if (!antes) throw new Error("Inscrição não encontrada");
     const acamp = await ctx.db.get(antes.retiroId);
@@ -254,7 +254,7 @@ export const editarInscricao = mutation({
 export const recalcularValor = mutation({
   args: { id: v.id("inscricoesRetiro") },
   handler: async (ctx, { id }) => {
-    await requirePermission(ctx, "inscricoes:manage");
+    await requirePermission(ctx, "retiro:manage");
     const insc = await ctx.db.get(id);
     if (!insc) throw new Error("Inscrição não encontrada");
     const acamp = await ctx.db.get(insc.retiroId);
@@ -281,7 +281,7 @@ export const recalcularValor = mutation({
 export const cancelarInscricao = mutation({
   args: { id: v.id("inscricoesRetiro"), observacao: v.optional(v.string()) },
   handler: async (ctx, { id, observacao }) => {
-    await requirePermission(ctx, "inscricoes:manage");
+    await requirePermission(ctx, "retiro:manage");
     const insc = await ctx.db.get(id);
     if (!insc) throw new Error("Inscrição não encontrada");
     if (insc.status === "CANCELADA") return id;
@@ -309,7 +309,7 @@ export const cancelarInscricao = mutation({
 export const promoverListaEspera = mutation({
   args: { id: v.id("inscricoesRetiro") },
   handler: async (ctx, { id }) => {
-    await requirePermission(ctx, "inscricoes:manage");
+    await requirePermission(ctx, "retiro:manage");
     const insc = await ctx.db.get(id);
     if (!insc) throw new Error("Inscrição não encontrada");
     if (insc.status !== "LISTA_ESPERA") throw new Error("Inscrição não está na lista de espera");
@@ -340,7 +340,7 @@ export const registrarRecebimento = mutation({
     obs: v.optional(v.string()),
   },
   handler: async (ctx, { id, valor, data, comprovanteUrl, obs }) => {
-    const { membro } = await requirePermission(ctx, "inscricoes:manage");
+    const { membro } = await requirePermission(ctx, "retiro:manage");
     if (valor <= 0) throw new Error("Valor deve ser positivo");
     if (!/^\d{4}-\d{2}-\d{2}$/.test(data)) throw new Error("Data inválida");
 
@@ -361,7 +361,7 @@ export const registrarRecebimento = mutation({
 export const removerRecebimento = mutation({
   args: { id: v.id("inscricoesRetiro"), index: v.number() },
   handler: async (ctx, { id, index }) => {
-    await requirePermission(ctx, "inscricoes:manage");
+    await requirePermission(ctx, "retiro:manage");
     const insc = await ctx.db.get(id);
     if (!insc || !insc.recebimentos[index]) throw new Error("Recebimento não encontrado");
     const recebimentos = insc.recebimentos.filter((_, i) => i !== index);
@@ -381,7 +381,7 @@ export const removerRecebimento = mutation({
 export const removerComprovantePendente = mutation({
   args: { id: v.id("inscricoesRetiro"), index: v.number() },
   handler: async (ctx, { id, index }) => {
-    await requirePermission(ctx, "inscricoes:manage");
+    await requirePermission(ctx, "retiro:manage");
     const insc = await ctx.db.get(id);
     const pendentes = insc?.comprovantesPendentes ?? [];
     if (!insc || !pendentes[index]) throw new Error("Comprovante não encontrado");
@@ -404,7 +404,7 @@ export const concederDesconto = mutation({
     motivo: v.string(),
   },
   handler: async (ctx, { id, valor, motivo }) => {
-    const { membro } = await requirePermission(ctx, "inscricoes:manage");
+    const { membro } = await requirePermission(ctx, "retiro:manage");
     if (valor <= 0) throw new Error("Valor deve ser positivo");
     if (!motivo.trim()) throw new Error("Informe o motivo do desconto");
 
@@ -426,7 +426,7 @@ export const concederDesconto = mutation({
 export const destinarSobraAoFundo = mutation({
   args: { id: v.id("inscricoesRetiro") },
   handler: async (ctx, { id }) => {
-    const { membro } = await requirePermission(ctx, "inscricoes:manage");
+    const { membro } = await requirePermission(ctx, "retiro:manage");
     const insc = await ctx.db.get(id);
     if (!insc) throw new Error("Inscrição não encontrada");
 
@@ -454,7 +454,7 @@ export const destinarSobraAoFundo = mutation({
 export const removerAjuste = mutation({
   args: { id: v.id("inscricoesRetiro"), index: v.number() },
   handler: async (ctx, { id, index }) => {
-    await requirePermission(ctx, "inscricoes:manage");
+    await requirePermission(ctx, "retiro:manage");
     const insc = await ctx.db.get(id);
     if (!insc || !insc.ajustes[index]) throw new Error("Ajuste não encontrado");
     await ctx.db.patch(id, {
@@ -473,7 +473,7 @@ export const editarPlanoPagamento = mutation({
     plano: v.array(v.object({ data: v.string(), valor: v.number() })),
   },
   handler: async (ctx, { id, plano }) => {
-    await requirePermission(ctx, "inscricoes:manage");
+    await requirePermission(ctx, "retiro:manage");
     const insc = await ctx.db.get(id);
     if (!insc) throw new Error("Inscrição não encontrada");
     for (const p of plano) {
@@ -495,7 +495,7 @@ export const aportarFundo = mutation({
     descricao: v.string(),
   },
   handler: async (ctx, { id, valor, descricao }) => {
-    const { membro } = await requirePermission(ctx, "inscricoes:manage");
+    const { membro } = await requirePermission(ctx, "retiro:manage");
     if (valor <= 0) throw new Error("Valor do aporte deve ser positivo");
     if (!descricao.trim()) throw new Error("Descreva a origem do aporte");
 

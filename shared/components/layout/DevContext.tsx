@@ -1262,7 +1262,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     queries: ["retiro.queries.listar", "retiro.queries.getById"],
     mutations: ["retiro.mutations.criar", "retiro.mutations.atualizar"],
     componentes: ["RetiroConfigDialog (preco por tipo de quarto + refeicoes dos extras + faixas de idade + estoque)"],
-    notas: ["Permissao: inscricoes:manage. Valores em centavos no backend, R$ na UI"],
+    notas: ["Permissao: retiro:manage. Valores em centavos no backend, R$ na UI"],
   },
   "/admin/retiro/[id]": {
     nome: "Secretaria - Inscricoes do retiro",
@@ -1290,7 +1290,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "Tabela desktop -> cards mobile (regra mobile-ux)",
       "InscricaoDetalheDrawer (matching, financeiro resumido, acoes, 'Copiar link do comprovante', secao 'Divergencias de cadastro' quando o membro informou dado diferente do cadastro no submit publico)",
     ],
-    notas: ["Permissao: inscricoes:manage. Financeiro: FinanceiroSection no drawer (comprovantes 'a conferir' enviados pelo pagante -> registrar/descartar, recebimentos c/ comprovante, descontos c/ saldo do fundo, sobra -> fundo, plano editavel) + FundoEventoCard (consolidado + aporte avulso)"],
+    notas: ["Permissao: retiro:manage. Financeiro: FinanceiroSection no drawer (comprovantes 'a conferir' enviados pelo pagante -> registrar/descartar, recebimentos c/ comprovante, descontos c/ saldo do fundo, sobra -> fundo, plano editavel) + FundoEventoCard (consolidado + aporte avulso)"],
   },
   "/admin/retiro/[id]/quartos": {
     nome: "Secretaria - Quartos do retiro",
@@ -1307,7 +1307,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "retiro.quartos.criarQuarto / renomearQuarto / removerQuarto",
     ],
     componentes: ["QuartosBoard (dnd-kit, padrao PGGrid; coluna Sem quarto tambem e alvo de drop)"],
-    notas: ["Permissao: inscricoes:manage"],
+    notas: ["Permissao: retiro:manage"],
   },
   "/retiro/[slug]": {
     nome: "Retiro - inscricao publica",

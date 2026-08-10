@@ -262,7 +262,7 @@ export default function RetiroDetalhePage() {
   const params = useParams<{ id: string }>();
   return (
     <PermissionGate
-      permission="inscricoes:manage"
+      permission="retiro:manage"
       fallback={
         <HeaderLayout>
           <Card>

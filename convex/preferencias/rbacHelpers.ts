@@ -51,6 +51,8 @@ export const INITIAL_ROLE_PERMISSIONS: Record<string, string[]> = {
     "site_publico:manage",
     // Inscricoes de evento
     "inscricoes:manage",
+    // Retiro
+    "retiro:manage",
     // Acesso ao sistema
     "acesso:manage",
     // Auditoria
@@ -140,6 +142,8 @@ export const INITIAL_ROLE_PERMISSIONS: Record<string, string[]> = {
     "acesso:manage",
     // Inscricoes de evento (gestao pela secretaria)
     "inscricoes:manage",
+    // Retiro
+    "retiro:manage",
     // Auditoria
     "audit:read",
   ],
@@ -170,6 +174,8 @@ export const INITIAL_ROLE_PERMISSIONS: Record<string, string[]> = {
     "site_publico:manage",
     // Inscricoes de evento
     "inscricoes:manage",
+    // Retiro
+    "retiro:manage",
     // Auditoria
     "audit:read",
     // Operacao basica

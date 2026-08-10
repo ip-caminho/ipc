@@ -3,13 +3,13 @@ import { v } from "convex/values";
 import { requirePermission } from "../_shared/requirePermission";
 import { consolidadoEvento, saldoInscricao, totalRecebido, valorFinal } from "./calculoHelpers";
 
-// Queries admin do retiro (inscricoes:manage). Volume baixo (1 evento/ano,
+// Queries admin do retiro (retiro:manage). Volume baixo (1 evento/ano,
 // dezenas de inscricoes) — collect por indice e agregacao em memoria.
 
 export const listar = query({
   args: {},
   handler: async (ctx) => {
-    await requirePermission(ctx, "inscricoes:manage");
+    await requirePermission(ctx, "retiro:manage");
     const docs = await ctx.db.query("retiros").collect();
     return docs
       .sort((a, b) => b.criadoEm - a.criadoEm)
@@ -29,7 +29,7 @@ export const listar = query({
 export const getById = query({
   args: { id: v.id("retiros") },
   handler: async (ctx, { id }) => {
-    await requirePermission(ctx, "inscricoes:manage");
+    await requirePermission(ctx, "retiro:manage");
     return await ctx.db.get(id);
   },
 });
@@ -42,7 +42,7 @@ export const getById = query({
 export const listarInscricoes = query({
   args: { retiroId: v.id("retiros") },
   handler: async (ctx, { retiroId }) => {
-    await requirePermission(ctx, "inscricoes:manage");
+    await requirePermission(ctx, "retiro:manage");
     const docs = await ctx.db
       .query("inscricoesRetiro")
       .withIndex("by_retiro", (q) => q.eq("retiroId", retiroId))
@@ -73,7 +73,7 @@ export const listarInscricoes = query({
 export const getInscricao = query({
   args: { id: v.id("inscricoesRetiro") },
   handler: async (ctx, { id }) => {
-    await requirePermission(ctx, "inscricoes:manage");
+    await requirePermission(ctx, "retiro:manage");
     const insc = await ctx.db.get(id);
     if (!insc) return null;
     // membroNome ja e denormalizado no matching — sem N+1 aqui. Shape sem
@@ -97,7 +97,7 @@ export const getInscricao = query({
 export const sugerirMembros = query({
   args: { nome: v.string() },
   handler: async (ctx, { nome }) => {
-    await requirePermission(ctx, "inscricoes:manage");
+    await requirePermission(ctx, "retiro:manage");
     const termo = nome.trim();
     if (termo.length < 3) return [];
     const ents = await ctx.db
@@ -129,7 +129,7 @@ export const sugerirMembros = query({
 export const resumoFinanceiro = query({
   args: { id: v.id("retiros") },
   handler: async (ctx, { id }) => {
-    await requirePermission(ctx, "inscricoes:manage");
+    await requirePermission(ctx, "retiro:manage");
     const acamp = await ctx.db.get(id);
     if (!acamp) return null;
 

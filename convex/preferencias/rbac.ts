@@ -60,6 +60,8 @@ export const ALL_PERMISSIONS = [
   "site_publico:manage",
   // Inscricoes de evento
   "inscricoes:manage",
+  // Retiro
+  "retiro:manage",
   // Acesso ao sistema
   "acesso:manage",
 ] as const;
@@ -151,6 +153,7 @@ function getPermissionLabel(perm: string): string {
     "turmas:manage_inscricoes": "Gerenciar Inscricoes",
     "acesso:manage": "Gerenciar Acesso ao Sistema",
     "inscricoes:manage": "Inscricoes de Evento",
+    "retiro:manage": "Gerenciar Retiro",
   };
   return labels[perm] ?? perm;
 }
@@ -181,6 +184,7 @@ function getPermissionModule(perm: string): string {
   if (perm.startsWith("tarefas:")) return "Tarefas";
   if (perm.startsWith("turmas:")) return "Turmas";
   if (perm.startsWith("acesso:")) return "Acesso";
+  if (perm.startsWith("retiro:")) return "Retiro";
   return "Geral";
 }
 
@@ -267,6 +271,7 @@ function getPermissionDescription(perm: string): string {
     "turmas:manage_inscricoes": "Gerenciar inscricoes de alunos",
     "acesso:manage": "Gerenciar acesso ao sistema: links de ativacao, reset de senha, link de convidado e atividade",
     "inscricoes:manage": "Criar e editar inscricoes de evento e ver as respostas",
+    "retiro:manage": "Gerenciar o retiro anual: inscricoes, quartos, pagamentos e comprovantes",
   };
   return descriptions[perm] ?? "";
 }
@@ -845,6 +850,50 @@ export const grantInscricoesManage = internalMutation({
       if (!m.permissions.includes("site_publico:manage")) continue;
       await ctx.db.patch(m._id, {
         permissions: [...m.permissions, "inscricoes:manage"],
+      });
+      membrosUpdated++;
+    }
+    return { rolesUpdated, membrosUpdated };
+  },
+});
+
+/**
+ * Concede retiro:manage a quem hoje gerencia o retiro via inscricoes:manage.
+ * O retiro passou a ter chave propria (antes dividia inscricoes:manage com as
+ * inscricoes genericas de evento), entao sem isso a secretaria perde a tela no
+ * deploy. Direcionada e idempotente.
+ * Rodar em prod apos deploy:
+ * npx convex run preferencias/rbac:grantRetiroManage --prod
+ */
+export const grantRetiroManage = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const roles = ["pastor", "secretaria", "secretario_executivo"];
+    const rolesUpdated: string[] = [];
+    for (const role of roles) {
+      const row = await ctx.db
+        .query("rolePermissions")
+        .withIndex("by_role", (q) => q.eq("role", role))
+        .first();
+      // Sem row: resolvePermissions cai no INITIAL do codigo (ja atualizado).
+      if (!row) continue;
+      if (row.permissions.includes("retiro:manage")) continue;
+      await ctx.db.patch(row._id, {
+        permissions: [...row.permissions, "retiro:manage"],
+        updatedAt: Date.now(),
+      });
+      rolesUpdated.push(role);
+    }
+    // Preserva grants individuais: quem tinha inscricoes:manage no snapshot
+    // ganha retiro:manage (senao perderia o retiro apos o re-gate).
+    const membros = await ctx.db.query("membros").collect();
+    let membrosUpdated = 0;
+    for (const m of membros) {
+      if (!m.permissions || m.permissions.length === 0) continue;
+      if (m.permissions.includes("retiro:manage")) continue;
+      if (!m.permissions.includes("inscricoes:manage")) continue;
+      await ctx.db.patch(m._id, {
+        permissions: [...m.permissions, "retiro:manage"],
       });
       membrosUpdated++;
     }

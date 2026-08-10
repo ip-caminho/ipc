@@ -146,7 +146,7 @@ export const GESTAO_SECTIONS: NavSection[] = [
         href: "/admin/retiro",
         icon: Tent,
         description: "Inscrições do retiro anual: grupos, quartos e pagamentos",
-        permission: "inscricoes:manage",
+        permission: "retiro:manage",
       },
       {
         label: "Site público",
