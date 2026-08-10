@@ -525,3 +525,80 @@ export const seedConsultaInstrutorDemo = internalMutation({
     return `Turma "${NOME}" criada com 4 inscritos respondidos. /minhas-turmas/${turmaId}`;
   },
 });
+
+/**
+ * Limpeza unica de tudo que este arquivo cria: qualquer turma com o prefixo
+ * [TESTE] (com aulas, presencas e inscricoes) e o curso [TESTE]. Assim nao ha
+ * um comando por seed — a razao pela qual a primeira limpeza removeu 0.
+ *
+ * Recusa turma com certificado emitido: ali houve papel entregue, e apagar a
+ * inscricao deixaria o certificado orfao.
+ */
+export const limparDemos = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const turmas = (await ctx.db.query("turmas").collect()).filter((t) =>
+      t.nome.startsWith(PREFIXO)
+    );
+
+    const removidas: string[] = [];
+    const mantidas: string[] = [];
+    let docs = 0;
+
+    for (const turma of turmas) {
+      const certificado = await ctx.db
+        .query("certificados")
+        .withIndex("by_turma", (q) => q.eq("turmaId", turma._id))
+        .first();
+      if (certificado) {
+        mantidas.push(`${turma.nome} (tem certificado emitido)`);
+        continue;
+      }
+
+      const aulas = await ctx.db
+        .query("turmaEncontros")
+        .withIndex("by_turma", (q) => q.eq("turmaId", turma._id))
+        .collect();
+      for (const aula of aulas) {
+        const presencas = await ctx.db
+          .query("turmaPresencas")
+          .withIndex("by_encontro_inscricao", (q) => q.eq("encontroId", aula._id))
+          .collect();
+        for (const p of presencas) {
+          await ctx.db.delete(p._id);
+          docs++;
+        }
+        await ctx.db.delete(aula._id);
+        docs++;
+      }
+
+      const inscricoes = await ctx.db
+        .query("inscricoes")
+        .withIndex("by_turma", (q) => q.eq("turmaId", turma._id))
+        .collect();
+      for (const i of inscricoes) {
+        await ctx.db.delete(i._id);
+        docs++;
+      }
+
+      await ctx.db.delete(turma._id);
+      docs++;
+      removidas.push(turma.nome);
+    }
+
+    const cursos = (await ctx.db.query("cursos").collect()).filter((c) =>
+      c.nome.startsWith(PREFIXO)
+    );
+    for (const c of cursos) {
+      await ctx.db.delete(c._id);
+      docs++;
+    }
+
+    const partes = [
+      removidas.length ? `Removidas: ${removidas.join(", ")}` : "Nenhuma turma [TESTE] encontrada",
+      `${docs} documentos apagados`,
+    ];
+    if (mantidas.length) partes.push(`Mantidas: ${mantidas.join(", ")}`);
+    return partes.join(". ") + ".";
+  },
+});
