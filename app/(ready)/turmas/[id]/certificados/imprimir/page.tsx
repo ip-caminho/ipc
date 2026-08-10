@@ -52,15 +52,24 @@ export default function ImprimirCertificadosPage() {
           size: A4 landscape;
           margin: 0;
         }
+        /* Geometria da folha fica no CSS (nao em style inline) porque a tela e a
+           impressora precisam de larguras diferentes: na tela, 297mm fixos para
+           simular o A4; na impressora, 100% da area imprimivel — assim o
+           conteudo continua centralizado mesmo se o navegador aplicar escala ou
+           margem propria. */
+        .certificado {
+          box-sizing: border-box;
+          height: 208mm;
+          padding: 14mm 20mm;
+        }
         @media screen {
-          /* Na tela cada certificado tem 297mm fixos: rola na horizontal em
-             vez de estourar a pagina, e ganha borda para separar as folhas. */
           #certificados-print {
             overflow-x: auto;
             background: #f4f4f5;
             padding: 12px;
           }
           .certificado {
+            width: 297mm;
             background: #fff;
             border: 1px dashed #d4d4d8;
             margin: 0 auto 12px;
@@ -76,12 +85,18 @@ export default function ImprimirCertificadosPage() {
           #certificados-print * {
             visibility: visible !important;
           }
+          /* Sem position:absolute aqui: fora do fluxo, a paginacao de varias
+             folhas fica a cargo do motor de impressao e desalinha. */
           #certificados-print {
-            position: absolute;
-            left: 0;
-            top: 0;
             margin: 0;
             padding: 0;
+            width: 100%;
+            background: #fff;
+          }
+          .certificado {
+            width: 100%;
+            margin: 0;
+            border: 0;
           }
           .no-print {
             display: none !important;
@@ -126,15 +141,7 @@ export default function ImprimirCertificadosPage() {
         {certificados.map((c) => (
           <section
             key={c._id}
-            className="certificado mx-auto flex flex-col items-center justify-center text-center"
-            style={{
-              width: "297mm",
-              // 208mm em vez de 210: a folha tem 210 e qualquer fracao a mais
-              // empurra uma pagina em branco entre os certificados.
-              height: "208mm",
-              padding: "16mm 24mm",
-              boxSizing: "border-box",
-            }}
+            className="certificado flex flex-col items-center justify-center text-center"
           >
             <Image
               src="/logo.png"
@@ -169,13 +176,15 @@ export default function ImprimirCertificadosPage() {
                 marginTop: "4mm",
                 borderBottom: "1px solid #999",
                 paddingBottom: "3mm",
-                minWidth: "160mm",
+                // Relativo, nao em mm: se o navegador imprimir com escala ou
+                // margem propria, o bloco acompanha e continua centralizado.
+                width: "80%",
               }}
             >
               {c.nomeImpresso}
             </p>
 
-            <p style={{ fontSize: "12pt", marginTop: "8mm", maxWidth: "200mm", lineHeight: 1.6 }}>
+            <p style={{ fontSize: "12pt", marginTop: "8mm", maxWidth: "85%", lineHeight: 1.6 }}>
               concluiu o curso <strong>{c.cursoNome}</strong>
               {c.cargaHoraria ? `, com carga horaria de ${c.cargaHoraria} horas` : ""}, com
               frequencia de {c.percentualFrequencia}% ({c.aulasPresentes} de{" "}
@@ -190,7 +199,7 @@ export default function ImprimirCertificadosPage() {
               style={{
                 marginTop: "14mm",
                 display: "flex",
-                gap: "24mm",
+                gap: "8%",
                 justifyContent: "center",
                 width: "100%",
               }}
@@ -198,7 +207,7 @@ export default function ImprimirCertificadosPage() {
               <div
                 style={{
                   borderTop: "1px solid #333",
-                  width: "80mm",
+                  width: "38%",
                   paddingTop: "2mm",
                   fontSize: "10pt",
                 }}
@@ -209,7 +218,7 @@ export default function ImprimirCertificadosPage() {
               <div
                 style={{
                   borderTop: "1px solid #333",
-                  width: "80mm",
+                  width: "38%",
                   paddingTop: "2mm",
                   fontSize: "10pt",
                 }}
