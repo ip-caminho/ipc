@@ -21,14 +21,6 @@ export const list = query({
   },
 });
 
-export const getById = query({
-  args: { id: v.id("cursos") },
-  handler: async (ctx, { id }) => {
-    if (!(await checkPermission(ctx, "turmas:read"))) return null;
-    return await ctx.db.get(id);
-  },
-});
-
 // Cursos disponiveis para vincular a uma turma nova
 export const listAtivos = query({
   args: {},

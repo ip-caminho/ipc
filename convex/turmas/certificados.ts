@@ -1,7 +1,7 @@
 import { mutation, query, type MutationCtx } from "../_generated/server";
 import { v } from "convex/values";
 import { requirePermission, checkPermission } from "../_shared/requirePermission";
-import { createActionAuditLog } from "../_shared/auditHelpers";
+import { createActionAuditLog, createFieldAuditLogs } from "../_shared/auditHelpers";
 import { resumoFrequenciaTurma } from "./lib/resumo";
 import { truncarObservacao, PASTOR_TITULAR } from "./lib/constants";
 import { resolveMembroNome } from "../_shared/membroResolver";
@@ -242,10 +242,13 @@ export const setObservacoesInstrutor = mutation({
   args: { inscricaoId: v.id("inscricoes"), texto: v.optional(v.string()) },
   handler: async (ctx, { inscricaoId, texto }) => {
     await requirePermission(ctx, "turmas:manage_inscricoes");
-    const inscricao = await ctx.db.get(inscricaoId);
-    if (!inscricao) throw new Error("Inscricao nao encontrada");
+    const oldRecord = await ctx.db.get(inscricaoId);
+    if (!oldRecord) throw new Error("Inscricao nao encontrada");
+
     await ctx.db.patch(inscricaoId, {
       observacoesInstrutor: truncarObservacao(texto),
     });
+    const newRecord = await ctx.db.get(inscricaoId);
+    await createFieldAuditLogs(ctx, oldRecord, newRecord, "inscricoes");
   },
 });

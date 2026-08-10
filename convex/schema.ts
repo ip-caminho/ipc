@@ -1201,7 +1201,6 @@ export default defineSchema({
     encontroId: v.id("turmaEncontros"),
     inscricaoId: v.id("inscricoes"),
     presente: v.boolean(), // sem "justificada": excecao e resolvida no certificado
-    observacoes: v.optional(v.string()),
     registradoPor: v.optional(v.id("membros")),
   })
     // by_encontro_inscricao tambem atende quem filtra so por encontroId

@@ -198,45 +198,10 @@ export const getById = query({
   },
 });
 
-// Query publica (sem auth) — lista turmas abertas para landing page
-export const listTurmasAbertas = query({
-  args: {},
-  handler: async (ctx) => {
-    const hoje = getSaoPauloDateString();
-    const abertas = (
-      await ctx.db
-        .query("turmas")
-        .withIndex("by_status", (q) => q.eq("status", "ABERTA"))
-        .collect()
-    ).sort((a, b) => a.dataInicio.localeCompare(b.dataInicio));
-
-    return Promise.all(
-      abertas.map(async (t) => {
-        const instrutorNome = t.instrutorId
-          ? await resolveMembroNome(ctx, t.instrutorId)
-          : t.instrutorNome || "";
-
-        return {
-          _id: t._id,
-          nome: t.nome,
-          tipo: t.tipo,
-          descricao: t.descricao,
-          dataInicio: t.dataInicio,
-          dataFim: t.dataFim,
-          inscricoesDe: t.inscricoesDe,
-          inscricoesAte: t.inscricoesAte,
-          inscricoesAbertas: avaliarJanelaInscricao(t, hoje).aberta,
-          diaSemana: t.diaSemana,
-          horario: t.horario,
-          local: t.local,
-          token: t.token,
-          instrutorNome,
-          vagasRestantes: t.vagas ? Math.max(0, t.vagas - t.vagasOcupadas) : null,
-        };
-      })
-    );
-  },
-});
+// listTurmasAbertas foi removida: era publica (sem auth), nenhuma tela a
+// consumia e devolvia o token de inscricao de todas as turmas abertas — ou
+// seja, qualquer pessoa listava os links. Quando existir landing page, expor de
+// novo sem o token.
 
 // Query publica (sem auth) — para pagina de inscricao
 export const getByToken = query({
