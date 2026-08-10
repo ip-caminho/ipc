@@ -11,6 +11,11 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Input } from "@/shared/components/ui/input";
 import { DatePickerBR } from "@/shared/components/ui/date-picker-br";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/shared/components/ui/collapsible";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import {
   Select,
@@ -29,6 +34,14 @@ import { ModuloGuard } from "@/shared/components/auth/ModuloGuard";
 import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
 import { DetailHeader } from "@shared/components/layout/DetailHeader";
 import type { Id } from "@/convex/_generated/dataModel";
+
+/** Texto da pergunta pelo id — a resposta guarda so o perguntaId. */
+function rotuloPergunta(
+  perguntas: { id: string; label: string }[] | undefined,
+  perguntaId: string
+): string {
+  return perguntas?.find((p) => p.id === perguntaId)?.label ?? perguntaId;
+}
 
 /** Link do WhatsApp com uma saudacao pronta — a secretaria so completa. */
 function linkWhatsApp(whatsapp: string, nome: string, turmaNome: string): string {
@@ -313,6 +326,40 @@ export default function TurmaDetalhePage() {
                           </Button>
                         )}
                       </div>
+
+                      {i.respostasExtras && i.respostasExtras.length > 0 && (
+                        <Collapsible className="w-full">
+                          <CollapsibleTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-10 px-2 text-xs text-muted-foreground"
+                            >
+                              Ver respostas ({i.respostasExtras.length})
+                            </Button>
+                          </CollapsibleTrigger>
+                          <CollapsibleContent className="pt-2 space-y-2 border-t mt-2">
+                            {i.respostasExtras.map((r) => (
+                              <div key={r.perguntaId}>
+                                <p className="text-xs font-medium">
+                                  {rotuloPergunta(turma.perguntasExtras, r.perguntaId)}
+                                </p>
+                                {r.valores && r.valores.length > 1 ? (
+                                  <ul className="text-xs text-muted-foreground list-disc pl-4">
+                                    {r.valores.map((v) => (
+                                      <li key={v}>{v}</li>
+                                    ))}
+                                  </ul>
+                                ) : (
+                                  <p className="text-xs text-muted-foreground whitespace-pre-wrap">
+                                    {r.valor}
+                                  </p>
+                                )}
+                              </div>
+                            ))}
+                          </CollapsibleContent>
+                        </Collapsible>
+                      )}
                     </CardContent>
                   </Card>
                 ))}
