@@ -19,7 +19,7 @@ export const FOLDER_PERMISSIONS: Record<string, string[]> = {
   // recebimento). O pagante tambem envia sem login pelo link tokenizado —
   // esse caminho usa files.upload.getPublicComprovanteUploadUrl (validado
   // pelo token da inscricao), nao passa por aqui.
-  "retiro-comprovantes": ["inscricoes:manage"],
+  "retiro-comprovantes": ["retiro:manage"],
   // Legado do acampamento (ver FOLDER_BUCKET em files/urls.ts). Nao ha fluxo
   // de upload novo aqui; fica registrado para os arquivos antigos seguirem
   // gerenciaveis e para os dois mapas continuarem espelhados.
@@ -41,7 +41,7 @@ const FOLDER_READ_PERMISSIONS: Record<string, string[] | "autenticado"> = {
   "educacional/fotos": "autenticado",
   "membros/cartas-transferencia": ["membros:read", "rol:read", "rol:update"],
   "educacional/certificados-cac": ["voluntarios_edu:read", "voluntarios_edu:manage"],
-  "retiro-comprovantes": ["inscricoes:manage"],
+  "retiro-comprovantes": ["retiro:manage"],
   "acampamento-comprovantes": ["inscricoes:manage"],
 };
 

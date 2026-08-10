@@ -48,7 +48,7 @@ function resumoPedido(q: {
 export const listarQuartos = query({
   args: { retiroId: v.id("retiros") },
   handler: async (ctx, { retiroId }) => {
-    await requirePermission(ctx, "inscricoes:manage");
+    await requirePermission(ctx, "retiro:manage");
 
     const [quartos, inscricoes] = await Promise.all([
       ctx.db
@@ -115,7 +115,7 @@ export const listarQuartos = query({
 export const gerarQuartosDoPedido = mutation({
   args: { retiroId: v.id("retiros") },
   handler: async (ctx, { retiroId }) => {
-    await requirePermission(ctx, "inscricoes:manage");
+    await requirePermission(ctx, "retiro:manage");
 
     const [quartos, inscricoes] = await Promise.all([
       ctx.db
@@ -177,7 +177,7 @@ export const criarQuarto = mutation({
     identificacao: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    await requirePermission(ctx, "inscricoes:manage");
+    await requirePermission(ctx, "retiro:manage");
     const id = await ctx.db.insert("quartosRetiro", { ...args, ocupantes: [] });
     await createActionAuditLog(ctx, "CREATE", "quartosRetiro", id);
     return id;
@@ -187,7 +187,7 @@ export const criarQuarto = mutation({
 export const renomearQuarto = mutation({
   args: { quartoId: v.id("quartosRetiro"), identificacao: v.string() },
   handler: async (ctx, { quartoId, identificacao }) => {
-    await requirePermission(ctx, "inscricoes:manage");
+    await requirePermission(ctx, "retiro:manage");
     const qd = await ctx.db.get(quartoId);
     if (!qd) throw new Error("Quarto não encontrado");
     await ctx.db.patch(quartoId, { identificacao: identificacao.trim() || undefined });
@@ -198,7 +198,7 @@ export const renomearQuarto = mutation({
 export const removerQuarto = mutation({
   args: { quartoId: v.id("quartosRetiro") },
   handler: async (ctx, { quartoId }) => {
-    await requirePermission(ctx, "inscricoes:manage");
+    await requirePermission(ctx, "retiro:manage");
     const qd = await ctx.db.get(quartoId);
     if (!qd) return quartoId;
     await createActionAuditLog(ctx, "DELETE", "quartosRetiro", quartoId);
@@ -217,7 +217,7 @@ export const moverOcupante = mutation({
     quartoId: v.union(v.id("quartosRetiro"), v.null()),
   },
   handler: async (ctx, { retiroId, inscricaoId, participanteIndex, quartoId }) => {
-    await requirePermission(ctx, "inscricoes:manage");
+    await requirePermission(ctx, "retiro:manage");
     const chave = chaveOcupante({ inscricaoId, participanteIndex });
 
     const quartos = await ctx.db

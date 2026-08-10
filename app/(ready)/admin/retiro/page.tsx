@@ -104,7 +104,7 @@ function Conteudo() {
 export default function RetiroAdminPage() {
   return (
     <PermissionGate
-      permission="inscricoes:manage"
+      permission="retiro:manage"
       fallback={
         <HeaderLayout>
           <Card>
