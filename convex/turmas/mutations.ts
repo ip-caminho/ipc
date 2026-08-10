@@ -272,39 +272,8 @@ export const updateStatus = mutation({
   },
 });
 
-export const duplicar = mutation({
-  args: { id: v.id("turmas"), nome: v.string() },
-  handler: async (ctx, { id, nome }) => {
-    // Duplicar cria uma turma nova a partir de outra.
-    const { membro } = await requirePermission(ctx, "turmas:create");
-    const original = await ctx.db.get(id);
-    if (!original) throw new Error("Turma nao encontrada");
-
-    const newId = await ctx.db.insert("turmas", {
-      nome: nome.trim(),
-      cursoId: original.cursoId,
-      frequenciaMinima: original.frequenciaMinima,
-      instrutorId: original.instrutorId,
-      instrutorNome: original.instrutorNome,
-      descricao: original.descricao,
-      dataInicio: original.dataInicio,
-      dataFim: original.dataFim,
-      diaSemana: original.diaSemana,
-      horario: original.horario,
-      local: original.local,
-      vagas: original.vagas,
-      vagasOcupadas: 0,
-      status: "ABERTA",
-      camposSistema: original.camposSistema,
-      perguntasExtras: original.perguntasExtras,
-      token: generateToken(),
-      criadoPor: membro._id,
-      criadoEm: Date.now(),
-    });
-    await createActionAuditLog(ctx, "CREATE", "turmas", newId as string);
-    return newId;
-  },
-});
+// duplicar foi removida: nao tinha botao em tela nenhuma e virou redundante —
+// criar turma escolhendo o curso faz o mesmo com menos conceito.
 
 // ===== Inscricoes =====
 

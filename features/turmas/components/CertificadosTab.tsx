@@ -45,11 +45,16 @@ export function CertificadosTab({ turmaId }: Props) {
   const minima = painel.frequenciaMinima ?? 75;
   const aptosSemCertificado = painel.alunos.filter((a) => a.apto && !a.certificado).length;
 
-  async function comBloqueio(fn: () => Promise<unknown>, sucesso: string) {
+  // sucesso pode ser funcao para usar o RETORNO da mutation na mensagem — a
+  // contagem calculada no render mentiria se o estado mudasse antes do clique.
+  async function comBloqueio(
+    fn: () => Promise<unknown>,
+    sucesso: string | ((resultado: unknown) => string)
+  ) {
     setOcupado(true);
     try {
-      await fn();
-      toast.success(sucesso);
+      const resultado = await fn();
+      toast.success(typeof sucesso === "function" ? sucesso(resultado) : sucesso);
     } catch (err: unknown) {
       toast.error((err as Error).message);
     }
@@ -98,10 +103,10 @@ export function CertificadosTab({ turmaId }: Props) {
                 className="h-10"
                 disabled={ocupado || aptosSemCertificado === 0}
                 onClick={() =>
-                  comBloqueio(async () => {
-                    const n = await emitirAptos({ turmaId });
-                    return n;
-                  }, `Certificados emitidos: ${aptosSemCertificado}`)
+                  comBloqueio(
+                    () => emitirAptos({ turmaId }),
+                    (n) => `Certificados emitidos: ${n}`
+                  )
                 }
               >
                 <Award className="h-4 w-4 mr-1" />
