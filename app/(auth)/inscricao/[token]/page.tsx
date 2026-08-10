@@ -5,12 +5,13 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
-import { DateFieldBR } from "@/shared/components/ui/date-picker-br";
+import { DateInputBR } from "@/shared/components/ui/date-input-br";
+import { PhoneInputBR } from "@/shared/components/ui/phone-input-br";
 import { Label } from "@/shared/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Checkbox } from "@/shared/components/ui/checkbox";
@@ -26,6 +27,7 @@ function formatDate(d: string) {
 
 export default function InscricaoPublicPage() {
   const { token } = useParams<{ token: string }>();
+  // @ts-ignore Convex TS2589 (instanciacao de tipo profunda)
   const turma = useQuery(api.turmas.queries.getByToken, { token });
   const registrar = useMutation(api.turmas.mutations.registrar);
   const [success, setSuccess] = useState(false);
@@ -80,9 +82,6 @@ export default function InscricaoPublicPage() {
                 Voce esta na lista de espera. Entraremos em contato quando houver vaga.
               </p>
             )}
-            <Button asChild className="w-full">
-              <Link href="/">Voltar para o site</Link>
-            </Button>
           </CardContent>
         </Card>
       </div>
@@ -153,7 +152,11 @@ export default function InscricaoPublicPage() {
             {turma.camposSistema.includes("whatsapp") && (
               <div>
                 <Label htmlFor="whatsapp">WhatsApp</Label>
-                <Input id="whatsapp" {...form.register("whatsapp")} placeholder="(11) 99999-9999" />
+                <PhoneInputBR
+                  id="whatsapp"
+                  value={(form.watch("whatsapp") as string) ?? ""}
+                  onChange={(d) => form.setValue("whatsapp", d)}
+                />
               </div>
             )}
 
@@ -167,7 +170,20 @@ export default function InscricaoPublicPage() {
             {turma.camposSistema.includes("dataNascimento") && (
               <div>
                 <Label htmlFor="dataNascimento">Data de nascimento</Label>
-                <DateFieldBR control={form.control} name="dataNascimento" id="dataNascimento" />
+                <Controller
+                  control={form.control}
+                  name="dataNascimento"
+                  render={({ field }) => (
+                    <DateInputBR
+                      id="dataNascimento"
+                      value={(field.value as string) ?? ""}
+                      onChange={field.onChange}
+                    />
+                  )}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Digite so os numeros: 25121990
+                </p>
               </div>
             )}
 

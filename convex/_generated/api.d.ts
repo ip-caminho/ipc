@@ -67,7 +67,6 @@ import type * as escalas_migrations from "../escalas/migrations.js";
 import type * as escalas_mutations from "../escalas/mutations.js";
 import type * as escalas_queries from "../escalas/queries.js";
 import type * as files_authz from "../files/authz.js";
-import type * as files_diag from "../files/diag.js";
 import type * as files_helpers from "../files/helpers.js";
 import type * as files_migracao from "../files/migracao.js";
 import type * as files_migracaoDb from "../files/migracaoDb.js";
@@ -237,7 +236,6 @@ declare const fullApi: ApiFromModules<{
   "escalas/mutations": typeof escalas_mutations;
   "escalas/queries": typeof escalas_queries;
   "files/authz": typeof files_authz;
-  "files/diag": typeof files_diag;
   "files/helpers": typeof files_helpers;
   "files/migracao": typeof files_migracao;
   "files/migracaoDb": typeof files_migracaoDb;
