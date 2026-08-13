@@ -89,8 +89,25 @@ export const minhasTurmasInstrutor = query({
         )
         .collect();
 
-      const isDiaDeAula = t.diaSemana === diaSemanaHoje;
       const encontroHoje = encontros.find((e) => e.data === hoje);
+
+      // Turma com calendario cadastrado: "hoje tem aula" e existir encontro com
+      // a data de hoje — nao coincidir com o dia da semana da turma.
+      //
+      // Isso existe porque o calendario real pula datas: Novos Membros tem 8
+      // domingos com tres intervalos de 14 dias. Pelo dia da semana, o widget
+      // apareceria nos domingos vazios e o instrutor CRIARIA uma aula que nao
+      // existe (o card cria o encontro ao abrir). Sob "maximo de N faltas" essa
+      // aula fantasma entra no denominador e vira falta real, reprovando quem
+      // estava dentro do combinado.
+      //
+      // A heuristica do dia da semana sobrevive so para turma SEM nenhuma aula
+      // cadastrada: ali nao ha calendario para contradizer, e e o fluxo do MVP
+      // (instrutor marca presenca no dia e a aula nasce ali).
+      const temCalendario = encontros.length > 0;
+      const isDiaDeAula = temCalendario
+        ? !!encontroHoje
+        : t.diaSemana === diaSemanaHoje;
 
       // Caso 1: e dia de aula hoje
       if (isDiaDeAula) {

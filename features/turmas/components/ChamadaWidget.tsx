@@ -92,7 +92,10 @@ export function ChamadaWidget() {
       return;
     }
 
-    // Dia de aula sem encontro criado: cria o de hoje
+    // Sem encontro: cria o de hoje. Só chega aqui quando a turma NÃO tem
+    // calendário cadastrado — minhasTurmasInstrutor deixou de deduzir "hoje tem
+    // aula" pelo dia da semana quando existem aulas, justamente para o
+    // instrutor não materializar aula em data que o curso pulou.
     try {
       const novo = await createEncontro({
         turmaId: item._id as Id<"turmas">,

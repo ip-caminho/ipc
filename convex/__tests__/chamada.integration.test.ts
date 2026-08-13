@@ -101,6 +101,115 @@ describe("salvarPresencas — anotacao da aula", () => {
   });
 });
 
+// Calendario real pula datas (Novos Membros: 8 domingos com tres intervalos de
+// 14 dias). Se o widget deduzir "hoje tem aula" pelo dia da semana, o instrutor
+// abre a chamada num domingo vazio e o card CRIA a aula — que entra no
+// denominador e, sob "maximo de N faltas", vira falta real.
+describe("minhasTurmasInstrutor — aula fantasma", () => {
+  /** Data de hoje e o nome do dia da semana no fuso da igreja. */
+  function hojeSaoPaulo() {
+    const fmt = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "America/Sao_Paulo",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+    const p = fmt.formatToParts(new Date());
+    const get = (t: string) => p.find((x) => x.type === t)!.value;
+    const data = `${get("year")}-${get("month")}-${get("day")}`;
+    const DIAS = ["DOMINGO", "SEGUNDA", "TERCA", "QUARTA", "QUINTA", "SEXTA", "SABADO"];
+    const diaSemana = DIAS[new Date(`${data}T12:00:00Z`).getUTCDay()];
+    return { data, diaSemana };
+  }
+
+  async function seedTurmaDoInstrutor(
+    t: Teste,
+    opts: { diaSemana?: string; datasDeAula: string[] }
+  ) {
+    const userId = await seedUser(t, { role: "membro" });
+    await t.run(async (ctx) => {
+      const membro = await ctx.db
+        .query("membros")
+        .withIndex("by_user_id", (q) => q.eq("userId", userId))
+        .first();
+      const turmaId = await ctx.db.insert("turmas", {
+        nome: "Turma com calendario",
+        dataInicio: "2026-09-20",
+        diaSemana: opts.diaSemana,
+        camposSistema: ["nomeCompleto"],
+        instrutorId: membro!._id,
+        vagasOcupadas: 0,
+        status: "EM_ANDAMENTO",
+        criadoEm: 1,
+      });
+      for (const data of opts.datasDeAula) {
+        await ctx.db.insert("turmaEncontros", {
+          turmaId,
+          data,
+          // criadoEm antigo: fica fora da janela de 7 dias, para nao aparecer
+          // como pendente e poluir a assercao.
+          criadoEm: Date.now() - 60 * DIA,
+        });
+      }
+    });
+    return userId;
+  }
+
+  it("turma COM calendario nao oferece chamada em dia sem encontro", async () => {
+    const t = novoTeste();
+    const { diaSemana } = hojeSaoPaulo();
+    // O dia da semana da turma é justamente hoje, mas o calendário pulou hoje.
+    const userId = await seedTurmaDoInstrutor(t, {
+      diaSemana,
+      datasDeAula: ["2020-01-05", "2020-01-19"],
+    });
+
+    const r = await as(t, userId).query(api.turmas.queries.minhasTurmasInstrutor, {});
+    expect(r).toEqual([]);
+  });
+
+  it("turma COM calendario oferece a aula de hoje, ja com encontro existente", async () => {
+    const t = novoTeste();
+    const { data, diaSemana } = hojeSaoPaulo();
+    const userId = await seedTurmaDoInstrutor(t, {
+      diaSemana,
+      datasDeAula: [data, "2020-01-19"],
+    });
+
+    const r = await as(t, userId).query(api.turmas.queries.minhasTurmasInstrutor, {});
+    expect(r.length).toBe(1);
+    expect(r[0].isDiaDeAula).toBe(true);
+    // encontroId preenchido = o widget nao vai criar nada
+    expect(r[0].encontroId).not.toBeNull();
+    expect(r[0].encontroData).toBe(data);
+  });
+
+  it("turma SEM nenhuma aula mantem o fluxo antigo (cria a aula do dia)", async () => {
+    const t = novoTeste();
+    const { data, diaSemana } = hojeSaoPaulo();
+    const userId = await seedTurmaDoInstrutor(t, { diaSemana, datasDeAula: [] });
+
+    const r = await as(t, userId).query(api.turmas.queries.minhasTurmasInstrutor, {});
+    expect(r.length).toBe(1);
+    expect(r[0].encontroId).toBeNull(); // sem calendario, o card cria a aula
+    expect(r[0].encontroData).toBe(data);
+  });
+
+  it("turma SEM aulas e fora do dia da semana nao aparece", async () => {
+    const t = novoTeste();
+    const { diaSemana } = hojeSaoPaulo();
+    const outroDia = diaSemana === "DOMINGO" ? "QUARTA" : "DOMINGO";
+    const userId = await seedTurmaDoInstrutor(t, {
+      diaSemana: outroDia,
+      datasDeAula: [],
+    });
+
+    expect(
+      await as(t, userId).query(api.turmas.queries.minhasTurmasInstrutor, {})
+    ).toEqual([]);
+  });
+});
+
 describe("minhasTurmasInstrutor — janela de 7 dias", () => {
   async function seedInstrutorComEncontro(t: Teste, criadoEm: number) {
     const instrutorUserId = await seedUser(t, { role: "membro" });
