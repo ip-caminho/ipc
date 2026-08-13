@@ -2,6 +2,7 @@ import { internalMutation } from "../_generated/server";
 import type { Id } from "../_generated/dataModel";
 import { PASTOR_TITULAR } from "./lib/constants";
 import { getSaoPauloDateString } from "../_shared/datetime";
+import { calcularFrequencia } from "./lib/frequencia";
 import { v } from "convex/values";
 
 /**
@@ -127,10 +128,25 @@ export const seedCertificadosDemo = internalMutation({
 
       const aulasPresentes = aluno.presencas.filter(Boolean).length;
       const percentual = Math.round((aulasPresentes / aluno.presencas.length) * 100);
+      const faltas = aluno.presencas.length - aulasPresentes;
+      // Usa a MESMA regra do sistema em vez de reimplementar o corte aqui —
+      // antes era `percentual >= 75` chumbado, que divergiria do criterio novo.
+      const { apto } = calcularFrequencia({
+        aulas: aluno.presencas.map((_, i) => ({
+          _id: String(i),
+          data: "2026-08-03",
+          presencaRegistradaEm: agora,
+        })),
+        presencaPorAula: new Map(
+          aluno.presencas.map((presente, i) => [String(i), presente])
+        ),
+        inscritoDesde: "2026-08-01",
+        regra: { criterio: "PERCENTUAL", frequenciaMinima: 75 },
+      });
 
       // Emite so para os aptos — os demais ficam para testar a emissao manual
       // pela tela (inclusive a edicao do nome).
-      if (percentual >= 75) {
+      if (apto) {
         const bytes = new Uint8Array(6);
         crypto.getRandomValues(bytes);
         await ctx.db.insert("certificados", {
@@ -140,6 +156,8 @@ export const seedCertificadosDemo = internalMutation({
           percentualFrequencia: percentual,
           aulasPresentes,
           aulasConsideradas: aluno.presencas.length,
+          faltas,
+          criterioAprovacao: "PERCENTUAL",
           cursoNome: CURSO_NOME,
           turmaNome: TURMA_NOME,
           cargaHoraria: 12,

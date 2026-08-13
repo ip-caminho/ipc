@@ -91,7 +91,11 @@ export default function CursosPage() {
                       </div>
 
                       <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                        <span>Frequencia minima: {curso.frequenciaMinima}%</span>
+                        <span>
+                          {curso.criterioAprovacao === "MAX_FALTAS"
+                            ? `Maximo de ${curso.maxFaltas ?? 0} ${(curso.maxFaltas ?? 0) === 1 ? "falta" : "faltas"}`
+                            : `Frequencia minima: ${curso.frequenciaMinima}%`}
+                        </span>
                         {curso.totalAulas ? <span>{curso.totalAulas} aulas</span> : null}
                         {curso.cargaHoraria ? <span>{curso.cargaHoraria}h</span> : null}
                       </div>

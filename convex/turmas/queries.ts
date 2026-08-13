@@ -8,7 +8,6 @@ import type { Doc, Id } from "../_generated/dataModel";
 import { resolveMembroNome } from "../_shared/membroResolver";
 import { avaliarJanelaInscricao } from "./lib/inscricoes";
 import { JANELA_CHAMADA_MS } from "./lib/constants";
-import { resumoFrequenciaTurma } from "./lib/resumo";
 
 /**
  * Leitura de uma turma: quem tem turmas:read ve qualquer uma; o instrutor ve

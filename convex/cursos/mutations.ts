@@ -4,6 +4,17 @@ import { requirePermission } from "../_shared/requirePermission";
 import { createActionAuditLog, createFieldAuditLogs } from "../_shared/auditHelpers";
 import { FREQUENCIA_MINIMA_PADRAO } from "../turmas/lib/constants";
 
+/** Criterio e valor andam juntos: MAX_FALTAS sem numero de faltas nao decide nada. */
+function validaCriterio(
+  criterio: "PERCENTUAL" | "MAX_FALTAS" | undefined,
+  maxFaltas: number | undefined
+) {
+  if (criterio !== "MAX_FALTAS") return;
+  if (maxFaltas === undefined || !Number.isFinite(maxFaltas) || maxFaltas < 0) {
+    throw new Error("Informe o maximo de faltas permitido");
+  }
+}
+
 function validaFrequencia(valor: number | undefined): number | undefined {
   if (valor === undefined) return undefined;
   if (!Number.isFinite(valor) || valor < 0 || valor > 100) {
@@ -20,9 +31,15 @@ export const create = mutation({
     cargaHoraria: v.optional(v.number()),
     totalAulas: v.optional(v.number()),
     frequenciaMinima: v.optional(v.number()),
+    criterioAprovacao: v.optional(v.union(
+      v.literal("PERCENTUAL"),
+      v.literal("MAX_FALTAS")
+    )),
+    maxFaltas: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const { membro } = await requirePermission(ctx, "turmas:create");
+    validaCriterio(args.criterioAprovacao, args.maxFaltas);
 
     const id = await ctx.db.insert("cursos", {
       nome: args.nome.trim(),
@@ -32,6 +49,8 @@ export const create = mutation({
       totalAulas: args.totalAulas,
       frequenciaMinima:
         validaFrequencia(args.frequenciaMinima) ?? FREQUENCIA_MINIMA_PADRAO,
+      criterioAprovacao: args.criterioAprovacao,
+      maxFaltas: args.criterioAprovacao === "MAX_FALTAS" ? args.maxFaltas : undefined,
       status: "ATIVO",
       criadoPor: membro._id,
       criadoEm: Date.now(),
@@ -50,6 +69,11 @@ export const update = mutation({
     cargaHoraria: v.optional(v.number()),
     totalAulas: v.optional(v.number()),
     frequenciaMinima: v.optional(v.number()),
+    criterioAprovacao: v.optional(v.union(
+      v.literal("PERCENTUAL"),
+      v.literal("MAX_FALTAS")
+    )),
+    maxFaltas: v.optional(v.number()),
   },
   handler: async (ctx, { id, ...updates }) => {
     await requirePermission(ctx, "turmas:update");
@@ -57,6 +81,11 @@ export const update = mutation({
     if (!oldRecord) throw new Error("Curso nao encontrado");
 
     validaFrequencia(updates.frequenciaMinima);
+    // Valida no estado final: o patch pode trocar so uma das duas pontas.
+    validaCriterio(
+      updates.criterioAprovacao ?? oldRecord.criterioAprovacao,
+      updates.maxFaltas ?? oldRecord.maxFaltas
+    );
 
     const patch: Record<string, unknown> = {};
     for (const [key, val] of Object.entries(updates)) {

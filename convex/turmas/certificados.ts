@@ -69,6 +69,9 @@ async function emitirUm(
     percentualFrequencia: number;
     aulasPresentes: number;
     aulasConsideradas: number;
+    faltas: number;
+    criterioAprovacao: "PERCENTUAL" | "MAX_FALTAS";
+    maxFaltas?: number;
     emitidoPor: Id<"membros">;
   }
 ) {
@@ -79,6 +82,9 @@ async function emitirUm(
     percentualFrequencia: params.percentualFrequencia,
     aulasPresentes: params.aulasPresentes,
     aulasConsideradas: params.aulasConsideradas,
+    faltas: params.faltas,
+    criterioAprovacao: params.criterioAprovacao,
+    maxFaltas: params.maxFaltas,
     cursoNome: params.cursoNome,
     turmaNome: params.turma.nome,
     cargaHoraria: params.cargaHoraria,
@@ -117,6 +123,10 @@ export const painel = query({
       cursoNome: curso?.nome ?? turma.nome,
       cargaHoraria: curso?.cargaHoraria,
       frequenciaMinima: alunos[0]?.frequenciaMinima ?? turma.frequenciaMinima,
+      // A regra em uso, para a tela escrever "3 de 3 faltas permitidas" em vez
+      // de assumir percentual.
+      criterioAprovacao: turma.criterioAprovacao ?? "PERCENTUAL",
+      maxFaltas: turma.maxFaltas,
       alunos: alunos.map((a) => ({
         ...a,
         certificado: ativoPorInscricao.get(a.inscricaoId) ?? null,
@@ -180,6 +190,9 @@ export const emitir = mutation({
       percentualFrequencia: resumo.percentual,
       aulasPresentes: resumo.aulasPresentes,
       aulasConsideradas: resumo.aulasConsideradas,
+      faltas: resumo.faltas,
+      criterioAprovacao: resumo.criterioAprovacao,
+      maxFaltas: resumo.maxFaltas,
       emitidoPor: membro._id,
     });
   },
@@ -215,6 +228,9 @@ export const emitirAptos = mutation({
         percentualFrequencia: a.percentual,
         aulasPresentes: a.aulasPresentes,
         aulasConsideradas: a.aulasConsideradas,
+        faltas: a.faltas,
+        criterioAprovacao: a.criterioAprovacao,
+        maxFaltas: a.maxFaltas,
         emitidoPor: membro._id,
       });
       emitidos++;

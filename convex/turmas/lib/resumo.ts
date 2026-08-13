@@ -2,13 +2,21 @@ import type { QueryCtx } from "../../_generated/server";
 import type { Id } from "../../_generated/dataModel";
 import { getSaoPauloDateString } from "../../_shared/datetime";
 import { FREQUENCIA_MINIMA_PADRAO } from "./constants";
-import { calcularFrequencia, type ResumoFrequencia } from "./frequencia";
+import {
+  calcularFrequencia,
+  type CriterioAprovacao,
+  type ResumoFrequencia,
+} from "./frequencia";
 
 export type AlunoFrequencia = ResumoFrequencia & {
   inscricaoId: Id<"inscricoes">;
   nome: string;
   observacoesInstrutor?: string;
+  // A regra sob a qual este aluno foi avaliado, para a tela nao precisar
+  // reconstruir nada.
   frequenciaMinima: number;
+  criterioAprovacao: CriterioAprovacao;
+  maxFaltas?: number;
 };
 
 /**
@@ -55,17 +63,21 @@ export async function resumoFrequenciaTurma(
   }
 
   const minima = turma.frequenciaMinima ?? FREQUENCIA_MINIMA_PADRAO;
+  const criterio: CriterioAprovacao = turma.criterioAprovacao ?? "PERCENTUAL";
+  const regra = { criterio, frequenciaMinima: minima, maxFaltas: turma.maxFaltas };
 
   return inscricoes.map((i) => ({
     inscricaoId: i._id,
     nome: i.dadosSistema.nomeCompleto,
     observacoesInstrutor: i.observacoesInstrutor,
     frequenciaMinima: minima,
+    criterioAprovacao: criterio,
+    maxFaltas: turma.maxFaltas,
     ...calcularFrequencia({
       aulas,
       presencaPorAula: presencaPorAluno.get(i._id) ?? new Map(),
       inscritoDesde: getSaoPauloDateString(new Date(i.criadoEm)),
-      frequenciaMinima: minima,
+      regra,
     }),
   }));
 }

@@ -186,9 +186,10 @@ export default function ImprimirCertificadosPage() {
 
             <p style={{ fontSize: "12pt", marginTop: "8mm", maxWidth: "85%", lineHeight: 1.6 }}>
               concluiu o curso <strong>{c.cursoNome}</strong>
-              {c.cargaHoraria ? `, com carga horaria de ${c.cargaHoraria} horas` : ""}, com
-              frequencia de {c.percentualFrequencia}% ({c.aulasPresentes} de{" "}
-              {c.aulasConsideradas} aulas).
+              {c.cargaHoraria ? `, com carga horaria de ${c.cargaHoraria} horas` : ""},
+              {c.criterioAprovacao === "MAX_FALTAS"
+                ? ` com ${c.faltas ?? 0} ${(c.faltas ?? 0) === 1 ? "falta" : "faltas"} em ${c.aulasConsideradas} encontros.`
+                : ` com frequencia de ${c.percentualFrequencia}% (${c.aulasPresentes} de ${c.aulasConsideradas} aulas).`}
             </p>
 
             <p style={{ fontSize: "11pt", marginTop: "10mm" }}>

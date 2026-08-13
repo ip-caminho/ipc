@@ -278,3 +278,187 @@ describe("certificados.setObservacoesInstrutor", () => {
     );
   });
 });
+
+// Novos Membros aprova por "maximo de 3 faltas nos 8 encontros". O criterio
+// nasce no curso, e copiado pela turma e fica gravado no certificado.
+describe("criterio MAX_FALTAS ponta a ponta", () => {
+  it("curso por faltas: turma herda, aluno no limite e apto, snapshot registra a regra", async () => {
+    const t = novoTeste();
+    const gestor = await seedGestor(t);
+
+    // @ts-ignore Convex TS2589 (instanciacao de tipo profunda)
+    const cursoId = await as(t, gestor).mutation(api.cursos.mutations.create, {
+      nome: "Novos Membros",
+      totalAulas: 4,
+      criterioAprovacao: "MAX_FALTAS",
+      maxFaltas: 1,
+    });
+
+    // @ts-ignore Convex TS2589 (instanciacao de tipo profunda)
+    const turmaId = await as(t, gestor).mutation(api.turmas.mutations.create, {
+      nome: "Novos Membros 2/2026",
+      dataInicio: "2026-09-20",
+      diaSemana: "DOMINGO",
+      camposSistema: ["nomeCompleto"],
+      cursoId,
+    });
+
+    const turma = await t.run(async (ctx) => await ctx.db.get(turmaId));
+    expect(turma?.criterioAprovacao).toBe("MAX_FALTAS");
+    expect(turma?.maxFaltas).toBe(1);
+
+    const inscricaoId = await t.run(async (ctx) =>
+      await ctx.db.insert("inscricoes", {
+        turmaId,
+        dadosSistema: { nomeCompleto: "No Limite" },
+        status: "CONFIRMADA",
+        lgpdConsentimento: true,
+        criadoEm: new Date("2026-09-01T12:00:00Z").getTime(),
+      })
+    );
+    const aulas = await t.run(async (ctx) =>
+      await ctx.db
+        .query("turmaEncontros")
+        .withIndex("by_turma", (q) => q.eq("turmaId", turmaId))
+        .collect()
+    );
+
+    // 3 presencas e 1 falta: 75% (reprovaria pelo padrao de percentual), mas
+    // dentro do limite de 1 falta.
+    for (const [i, aula] of aulas.entries()) {
+      await as(t, gestor).mutation(api.turmas.mutations.salvarPresencas, {
+        encontroId: aula._id,
+        presencas: [{ inscricaoId, presente: i !== 0 }],
+      });
+    }
+
+    const painel = await as(t, gestor).query(api.turmas.certificados.painel, { turmaId });
+    expect(painel?.criterioAprovacao).toBe("MAX_FALTAS");
+    expect(painel?.maxFaltas).toBe(1);
+    expect(painel?.alunos[0].faltas).toBe(1);
+    expect(painel?.alunos[0].percentual).toBe(75);
+    expect(painel?.alunos[0].apto).toBe(true);
+
+    const emitidos = await as(t, gestor).mutation(api.turmas.certificados.emitirAptos, {
+      turmaId,
+    });
+    expect(emitidos).toBe(1);
+
+    const cert = await t.run(async (ctx) =>
+      (await ctx.db.query("certificados").collect())[0]
+    );
+    expect(cert?.criterioAprovacao).toBe("MAX_FALTAS");
+    expect(cert?.faltas).toBe(1);
+    expect(cert?.maxFaltas).toBe(1);
+  });
+
+  it("segunda falta reprova e emitirAptos ignora", async () => {
+    const t = novoTeste();
+    const gestor = await seedGestor(t);
+    // @ts-ignore Convex TS2589 (instanciacao de tipo profunda)
+    const cursoId = await as(t, gestor).mutation(api.cursos.mutations.create, {
+      nome: "Novos Membros",
+      totalAulas: 4,
+      criterioAprovacao: "MAX_FALTAS",
+      maxFaltas: 1,
+    });
+    // @ts-ignore Convex TS2589 (instanciacao de tipo profunda)
+    const turmaId = await as(t, gestor).mutation(api.turmas.mutations.create, {
+      nome: "Turma",
+      dataInicio: "2026-09-20",
+      diaSemana: "DOMINGO",
+      camposSistema: ["nomeCompleto"],
+      cursoId,
+    });
+    const inscricaoId = await t.run(async (ctx) =>
+      await ctx.db.insert("inscricoes", {
+        turmaId,
+        dadosSistema: { nomeCompleto: "Duas Faltas" },
+        status: "CONFIRMADA",
+        lgpdConsentimento: true,
+        criadoEm: new Date("2026-09-01T12:00:00Z").getTime(),
+      })
+    );
+    const aulas = await t.run(async (ctx) =>
+      await ctx.db
+        .query("turmaEncontros")
+        .withIndex("by_turma", (q) => q.eq("turmaId", turmaId))
+        .collect()
+    );
+    for (const [i, aula] of aulas.entries()) {
+      await as(t, gestor).mutation(api.turmas.mutations.salvarPresencas, {
+        encontroId: aula._id,
+        presencas: [{ inscricaoId, presente: i > 1 }],
+      });
+    }
+
+    const painel = await as(t, gestor).query(api.turmas.certificados.painel, { turmaId });
+    expect(painel?.alunos[0].faltas).toBe(2);
+    expect(painel?.alunos[0].apto).toBe(false);
+    expect(
+      await as(t, gestor).mutation(api.turmas.certificados.emitirAptos, { turmaId })
+    ).toBe(0);
+
+    // Mas emitir na mao continua permitido: o criterio e semaforo.
+    const certId = await as(t, gestor).mutation(api.turmas.certificados.emitir, {
+      inscricaoId,
+    });
+    expect((await t.run(async (ctx) => await ctx.db.get(certId)))?.faltas).toBe(2);
+  });
+
+  it("curso MAX_FALTAS sem numero de faltas e recusado", async () => {
+    const t = novoTeste();
+    const gestor = await seedGestor(t);
+    await expect(
+      // @ts-ignore Convex TS2589 (instanciacao de tipo profunda)
+      as(t, gestor).mutation(api.cursos.mutations.create, {
+        nome: "Sem limite",
+        criterioAprovacao: "MAX_FALTAS",
+      })
+    ).rejects.toThrow(/maximo de faltas/i);
+  });
+
+  it("setCriterioAprovacao troca a regra da turma e exige gestao", async () => {
+    const t = novoTeste();
+    const gestor = await seedGestor(t);
+    // @ts-ignore Convex TS2589 (instanciacao de tipo profunda)
+    const turmaId = await as(t, gestor).mutation(api.turmas.mutations.create, {
+      nome: "Turma",
+      dataInicio: "2026-09-20",
+      camposSistema: ["nomeCompleto"],
+    });
+
+    await as(t, gestor).mutation(api.turmas.mutations.setCriterioAprovacao, {
+      turmaId,
+      criterioAprovacao: "MAX_FALTAS",
+      maxFaltas: 3,
+    });
+    let turma = await t.run(async (ctx) => await ctx.db.get(turmaId));
+    expect(turma?.criterioAprovacao).toBe("MAX_FALTAS");
+    expect(turma?.maxFaltas).toBe(3);
+
+    // Voltar para percentual limpa o numero de faltas
+    await as(t, gestor).mutation(api.turmas.mutations.setCriterioAprovacao, {
+      turmaId,
+      criterioAprovacao: "PERCENTUAL",
+    });
+    turma = await t.run(async (ctx) => await ctx.db.get(turmaId));
+    expect(turma?.maxFaltas).toBeUndefined();
+
+    await expect(
+      as(t, gestor).mutation(api.turmas.mutations.setCriterioAprovacao, {
+        turmaId,
+        criterioAprovacao: "MAX_FALTAS",
+      })
+    ).rejects.toThrow(/maximo de faltas/i);
+
+    const comum = await seedUser(t, { role: "membro" });
+    await expect(
+      as(t, comum).mutation(api.turmas.mutations.setCriterioAprovacao, {
+        turmaId,
+        criterioAprovacao: "MAX_FALTAS",
+        maxFaltas: 2,
+      })
+    ).rejects.toThrow();
+  });
+});

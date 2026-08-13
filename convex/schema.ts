@@ -1024,6 +1024,15 @@ export default defineSchema({
     cargaHoraria: v.optional(v.number()), // horas, impresso no certificado
     totalAulas: v.optional(v.number()), // base da geracao automatica de aulas
     frequenciaMinima: v.number(), // percentual (padrao 75)
+    // Como o curso aprova. Ausente = PERCENTUAL (todos os cursos anteriores).
+    // MAX_FALTAS existe porque e assim que a igreja comunica: "limite de 3
+    // faltas nos 8 encontros". Em percentual isso quebraria se uma aula fosse
+    // cancelada (3 faltas em 7 aulas = 57%, reprovaria quem estava no limite).
+    criterioAprovacao: v.optional(v.union(
+      v.literal("PERCENTUAL"),
+      v.literal("MAX_FALTAS")
+    )),
+    maxFaltas: v.optional(v.number()),
     status: v.union(v.literal("ATIVO"), v.literal("INATIVO")),
     criadoPor: v.optional(v.id("membros")),
     criadoEm: v.number(),
@@ -1044,6 +1053,11 @@ export default defineSchema({
     // tela de certificados. Opcional so por causa das turmas legadas, que caem
     // em FREQUENCIA_MINIMA_PADRAO.
     frequenciaMinima: v.optional(v.number()),
+    criterioAprovacao: v.optional(v.union(
+      v.literal("PERCENTUAL"),
+      v.literal("MAX_FALTAS")
+    )),
+    maxFaltas: v.optional(v.number()),
     instrutorId: v.optional(v.id("membros")),
     instrutorNome: v.optional(v.string()),
     descricao: v.optional(v.string()), // sobrescreve a descricao do curso
@@ -1232,6 +1246,14 @@ export default defineSchema({
     percentualFrequencia: v.number(),
     aulasPresentes: v.number(),
     aulasConsideradas: v.number(), // denominador efetivo
+    // Sob qual regra este papel foi emitido. Ausente = PERCENTUAL (emitidos
+    // antes do criterio por faltas existir).
+    faltas: v.optional(v.number()),
+    criterioAprovacao: v.optional(v.union(
+      v.literal("PERCENTUAL"),
+      v.literal("MAX_FALTAS")
+    )),
+    maxFaltas: v.optional(v.number()),
     cursoNome: v.string(),
     turmaNome: v.string(),
     cargaHoraria: v.optional(v.number()),
