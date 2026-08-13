@@ -8,6 +8,14 @@ import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { Badge } from "@/shared/components/ui/badge";
 import { Input } from "@/shared/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/components/ui/select";
+import { FREQUENCIA_MINIMA_PADRAO } from "../lib/constants";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Label } from "@/shared/components/ui/label";
 import { Award, Printer, Pencil, Undo2 } from "lucide-react";
@@ -26,11 +34,13 @@ export function CertificadosTab({ turmaId }: Props) {
   const revogar = useMutation(api.turmas.certificados.revogar);
   const setObservacoes = useMutation(api.turmas.certificados.setObservacoesInstrutor);
   const setFrequenciaMinima = useMutation(api.turmas.mutations.setFrequenciaMinima);
+  const setCriterio = useMutation(api.turmas.mutations.setCriterioAprovacao);
 
   const [nomeEditado, setNomeEditado] = useState<Record<string, string>>({});
   const [notaAberta, setNotaAberta] = useState<string | null>(null);
   const [notaTexto, setNotaTexto] = useState("");
   const [minimaEditada, setMinimaEditada] = useState<string>("");
+  const [faltasEditadas, setFaltasEditadas] = useState<string>("");
   const [ocupado, setOcupado] = useState(false);
 
   if (painel === undefined) return <p className="text-sm text-muted-foreground">Carregando...</p>;
@@ -42,7 +52,9 @@ export function CertificadosTab({ turmaId }: Props) {
     );
   }
 
-  const minima = painel.frequenciaMinima ?? 75;
+  const minima = painel.frequenciaMinima ?? FREQUENCIA_MINIMA_PADRAO;
+  const porFaltas = painel.criterioAprovacao === "MAX_FALTAS";
+  const maxFaltas = painel.maxFaltas ?? 0;
   const aptosSemCertificado = painel.alunos.filter((a) => a.apto && !a.certificado).length;
 
   // sucesso pode ser funcao para usar o RETORNO da mutation na mensagem — a
@@ -66,36 +78,95 @@ export function CertificadosTab({ turmaId }: Props) {
       <Card>
         <CardContent className="pt-4 space-y-3">
           <div className="flex flex-wrap items-end gap-3">
-            <div>
-              <Label htmlFor="minima" className="text-xs">
-                Frequencia minima (%)
-              </Label>
-              <div className="flex gap-2">
-                <Input
-                  id="minima"
-                  type="number"
-                  inputMode="numeric"
-                  className="w-24 h-10"
-                  value={minimaEditada === "" ? String(minima) : minimaEditada}
-                  onChange={(e) => setMinimaEditada(e.target.value)}
-                />
-                <Button
-                  variant="outline"
-                  className="h-10"
-                  disabled={ocupado || minimaEditada === "" || Number(minimaEditada) === minima}
-                  onClick={() =>
-                    comBloqueio(async () => {
-                      await setFrequenciaMinima({
-                        turmaId,
-                        frequenciaMinima: Number(minimaEditada),
-                      });
-                      setMinimaEditada("");
-                    }, "Frequencia minima atualizada")
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <Label className="text-xs">Criterio de aprovacao</Label>
+                <Select
+                  value={painel.criterioAprovacao}
+                  onValueChange={(v) =>
+                    comBloqueio(
+                      () =>
+                        setCriterio({
+                          turmaId,
+                          criterioAprovacao: v as "PERCENTUAL" | "MAX_FALTAS",
+                          // Troca para faltas sem numero definido comeca em 0:
+                          // a secretaria ajusta no campo ao lado.
+                          maxFaltas: v === "MAX_FALTAS" ? maxFaltas : undefined,
+                        }),
+                      "Criterio atualizado"
+                    )
                   }
                 >
-                  Salvar
-                </Button>
+                  <SelectTrigger className="h-10 w-[190px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="PERCENTUAL">Frequencia minima (%)</SelectItem>
+                    <SelectItem value="MAX_FALTAS">Maximo de faltas</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
+
+              {porFaltas ? (
+                <div className="flex gap-2">
+                  <Input
+                    id="maxFaltas"
+                    type="number"
+                    inputMode="numeric"
+                    className="w-24 h-10"
+                    value={faltasEditadas === "" ? String(maxFaltas) : faltasEditadas}
+                    onChange={(e) => setFaltasEditadas(e.target.value)}
+                  />
+                  <Button
+                    variant="outline"
+                    className="h-10"
+                    disabled={
+                      ocupado ||
+                      faltasEditadas === "" ||
+                      Number(faltasEditadas) === maxFaltas
+                    }
+                    onClick={() =>
+                      comBloqueio(async () => {
+                        await setCriterio({
+                          turmaId,
+                          criterioAprovacao: "MAX_FALTAS",
+                          maxFaltas: Number(faltasEditadas),
+                        });
+                        setFaltasEditadas("");
+                      }, "Limite de faltas atualizado")
+                    }
+                  >
+                    Salvar
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <Input
+                    id="minima"
+                    type="number"
+                    inputMode="numeric"
+                    className="w-24 h-10"
+                    value={minimaEditada === "" ? String(minima) : minimaEditada}
+                    onChange={(e) => setMinimaEditada(e.target.value)}
+                  />
+                  <Button
+                    variant="outline"
+                    className="h-10"
+                    disabled={ocupado || minimaEditada === "" || Number(minimaEditada) === minima}
+                    onClick={() =>
+                      comBloqueio(async () => {
+                        await setFrequenciaMinima({
+                          turmaId,
+                          frequenciaMinima: Number(minimaEditada),
+                        });
+                        setMinimaEditada("");
+                      }, "Frequencia minima atualizada")
+                    }
+                  >
+                    Salvar
+                  </Button>
+                </div>
+              )}
             </div>
 
             <div className="flex flex-wrap gap-2 ml-auto">
@@ -121,7 +192,7 @@ export function CertificadosTab({ turmaId }: Props) {
             </div>
           </div>
           <p className="text-xs text-muted-foreground">
-            O minimo e semaforo, nao trava: da para emitir para quem ficou abaixo. A
+            O criterio e semaforo, nao trava: da para emitir para quem ficou fora. A
             impressao sai em lote, um certificado por pagina, com os dados congelados no
             momento da emissao.
           </p>
@@ -146,7 +217,9 @@ export function CertificadosTab({ turmaId }: Props) {
                       <p className="text-xs text-muted-foreground">
                         {semApuracao
                           ? "Sem aula com chamada feita"
-                          : `${a.percentual}% · ${a.aulasPresentes} de ${a.aulasConsideradas} aulas`}
+                          : porFaltas
+                            ? `${a.faltas} ${a.faltas === 1 ? "falta" : "faltas"} · ${a.aulasPresentes} de ${a.aulasConsideradas} aulas`
+                            : `${a.percentual}% · ${a.aulasPresentes} de ${a.aulasConsideradas} aulas`}
                       </p>
                     </div>
                     {a.certificado ? (
@@ -166,7 +239,11 @@ export function CertificadosTab({ turmaId }: Props) {
                             : "bg-yellow-100 text-yellow-800 shrink-0"
                         }
                       >
-                        {a.apto ? "Apto" : `Abaixo de ${minima}%`}
+                        {a.apto
+                          ? "Apto"
+                          : porFaltas
+                            ? `Acima de ${maxFaltas} ${maxFaltas === 1 ? "falta" : "faltas"}`
+                            : `Abaixo de ${minima}%`}
                       </Badge>
                     )}
                   </div>
@@ -176,7 +253,9 @@ export function CertificadosTab({ turmaId }: Props) {
                       <p>
                         Nome impresso: <span className="font-medium">{a.certificado.nomeImpresso}</span>
                         {" · "}
-                        {a.certificado.percentualFrequencia}% no momento da emissao
+                        {a.certificado.criterioAprovacao === "MAX_FALTAS"
+                          ? `${a.certificado.faltas ?? 0} faltas no momento da emissao`
+                          : `${a.certificado.percentualFrequencia}% no momento da emissao`}
                       </p>
                       <p>Codigo: {a.certificado.codigo}</p>
                       <Button
