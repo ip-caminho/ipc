@@ -30,6 +30,10 @@ export const create = mutation({
     ementa: v.optional(v.string()),
     cargaHoraria: v.optional(v.number()),
     totalAulas: v.optional(v.number()),
+    planoAulas: v.optional(v.array(v.object({
+      titulo: v.string(),
+      detalhe: v.optional(v.string()),
+    }))),
     frequenciaMinima: v.optional(v.number()),
     criterioAprovacao: v.optional(v.union(
       v.literal("PERCENTUAL"),
@@ -47,6 +51,7 @@ export const create = mutation({
       ementa: args.ementa?.trim() || undefined,
       cargaHoraria: args.cargaHoraria,
       totalAulas: args.totalAulas,
+      planoAulas: args.planoAulas,
       frequenciaMinima:
         validaFrequencia(args.frequenciaMinima) ?? FREQUENCIA_MINIMA_PADRAO,
       criterioAprovacao: args.criterioAprovacao,
@@ -68,6 +73,10 @@ export const update = mutation({
     ementa: v.optional(v.string()),
     cargaHoraria: v.optional(v.number()),
     totalAulas: v.optional(v.number()),
+    planoAulas: v.optional(v.array(v.object({
+      titulo: v.string(),
+      detalhe: v.optional(v.string()),
+    }))),
     frequenciaMinima: v.optional(v.number()),
     criterioAprovacao: v.optional(v.union(
       v.literal("PERCENTUAL"),
