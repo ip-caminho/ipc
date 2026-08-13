@@ -1023,6 +1023,12 @@ export default defineSchema({
     ementa: v.optional(v.string()),
     cargaHoraria: v.optional(v.number()), // horas, impresso no certificado
     totalAulas: v.optional(v.number()), // base da geracao automatica de aulas
+    // Plano por encontro: o titulo nomeia a aula gerada, o detalhe guarda o que
+    // ler antes (capitulo, passagem). Sem plano, a aula nasce "Aula N".
+    planoAulas: v.optional(v.array(v.object({
+      titulo: v.string(),
+      detalhe: v.optional(v.string()),
+    }))),
     frequenciaMinima: v.number(), // percentual (padrao 75)
     // Como o curso aprova. Ausente = PERCENTUAL (todos os cursos anteriores).
     // MAX_FALTAS existe porque e assim que a igreja comunica: "limite de 3

@@ -69,6 +69,9 @@ export const minhasTurmasInstrutor = query({
       horario?: string;
       totalInscritos: number;
       isDiaDeAula: boolean;
+      // Titulo da aula (vem do plano do curso quando existe): "Efesios 1.1-14"
+      // diz ao professor onde ele esta, melhor que "Aula 3".
+      tituloAula?: string;
       encontroId: string | null;
       encontroData: string;
       criadoEm: number;
@@ -117,6 +120,7 @@ export const minhasTurmasInstrutor = query({
           horario: t.horario,
           totalInscritos: inscricoes.length,
           isDiaDeAula: true,
+          tituloAula: encontroHoje?.titulo,
           encontroId: encontroHoje?._id || null,
           encontroData: hoje,
           criadoEm: encontroHoje?.criadoEm || agora,
@@ -141,6 +145,7 @@ export const minhasTurmasInstrutor = query({
           horario: t.horario,
           totalInscritos: inscricoes.length,
           isDiaDeAula: false,
+          tituloAula: e.titulo,
           encontroId: e._id,
           encontroData: e.data,
           criadoEm: e.criadoEm,

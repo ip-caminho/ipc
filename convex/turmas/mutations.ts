@@ -46,15 +46,30 @@ function generateToken(): string {
 
 // ===== Turmas =====
 
+type PlanoAula = { titulo: string; detalhe?: string };
+
 /**
- * Cria as aulas semanais da turma. Chamado na criacao (quando o curso define
- * totalAulas) e pelo botao da tela da turma. Nao gera se a turma ja tem aula —
- * evita duplicar em clique repetido.
+ * Cria as aulas da turma. Dois modos:
+ *
+ * - `datas`: lista explicita. Existe porque calendario real pula datas — Novos
+ *   Membros tem 8 domingos com tres intervalos de 14 dias, impossivel de
+ *   descrever com cadencia fixa.
+ * - `totalAulas`: N aulas semanais a partir de dataInicio (o caso simples).
+ *
+ * O titulo vem do plano do curso quando existe; senao, "Aula N". Nao gera se a
+ * turma ja tem aula — evita duplicar em clique repetido.
  */
 async function criarAulas(
   ctx: MutationCtx,
   turmaId: Id<"turmas">,
-  opts: { dataInicio: string; diaSemana?: string; totalAulas: number; membroId: Id<"membros"> }
+  opts: {
+    dataInicio: string;
+    diaSemana?: string;
+    totalAulas?: number;
+    datas?: string[];
+    plano?: PlanoAula[];
+    membroId: Id<"membros">;
+  }
 ): Promise<number> {
   const existentes = await ctx.db
     .query("turmaEncontros")
@@ -62,13 +77,18 @@ async function criarAulas(
     .first();
   if (existentes) return 0;
 
-  const datas = gerarDatasAulas(opts.dataInicio, opts.diaSemana, opts.totalAulas);
+  const datas = opts.datas?.length
+    ? [...opts.datas].sort()
+    : gerarDatasAulas(opts.dataInicio, opts.diaSemana, opts.totalAulas ?? 0);
+
   const agora = Date.now();
   for (const [i, data] of datas.entries()) {
+    const doPlano = opts.plano?.[i];
     await ctx.db.insert("turmaEncontros", {
       turmaId,
       data,
-      titulo: `Aula ${i + 1}`,
+      titulo: doPlano?.titulo ?? `Aula ${i + 1}`,
+      observacoes: doPlano?.detalhe,
       criadoPor: opts.membroId,
       criadoEm: agora,
     });
@@ -110,6 +130,10 @@ export const create = mutation({
       opcoes: v.optional(v.array(v.string())),
       ajuda: v.optional(v.string()),
     }))),
+    // Datas dos encontros. Quando vem, manda mais que o totalAulas do curso —
+    // sem isso a turma nasceria com cadencia semanal errada e gerarAulas
+    // passaria a recusar ("Esta turma ja tem aulas").
+    datasAulas: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
     const { membro } = await requirePermission(ctx, "turmas:create");
@@ -125,8 +149,10 @@ export const create = mutation({
     const curso = args.cursoId ? await ctx.db.get(args.cursoId) : null;
     if (args.cursoId && !curso) throw new Error("Curso nao encontrado");
 
+    const { datasAulas, ...camposDaTurma } = args;
+
     const id = await ctx.db.insert("turmas", {
-      ...args,
+      ...camposDaTurma,
       nome: args.nome.trim(),
       // Copia do curso: congela a regra de aprovacao no inicio da turma.
       frequenciaMinima: curso?.frequenciaMinima ?? FREQUENCIA_MINIMA_PADRAO,
@@ -141,11 +167,13 @@ export const create = mutation({
     await createActionAuditLog(ctx, "CREATE", "turmas", id as string);
 
     // Aulas ja saem criadas: o instrutor nunca precisa criar encontro.
-    if (curso?.totalAulas) {
+    if (datasAulas?.length || curso?.totalAulas) {
       await criarAulas(ctx, id, {
         dataInicio: args.dataInicio,
         diaSemana: args.diaSemana,
-        totalAulas: curso.totalAulas,
+        totalAulas: curso?.totalAulas,
+        datas: datasAulas,
+        plano: curso?.planoAulas,
         membroId: membro._id,
       });
     }
@@ -158,22 +186,32 @@ export const gerarAulas = mutation({
   args: {
     turmaId: v.id("turmas"),
     totalAulas: v.optional(v.number()),
+    // Datas explicitas: o caminho para calendario que pula datas.
+    datas: v.optional(v.array(v.string())),
   },
-  handler: async (ctx, { turmaId, totalAulas }) => {
+  handler: async (ctx, { turmaId, totalAulas, datas }) => {
     const { membro } = await requirePermission(ctx, "turmas:update");
     const turma = await ctx.db.get(turmaId);
     if (!turma) throw new Error("Turma nao encontrada");
 
     const curso = turma.cursoId ? await ctx.db.get(turma.cursoId) : null;
-    const quantas = totalAulas ?? curso?.totalAulas;
-    if (!quantas || quantas < 1) {
-      throw new Error("Informe quantas aulas gerar (ou defina no curso)");
+
+    if (datas?.length) {
+      const invalida = datas.find((d) => !/^\d{4}-\d{2}-\d{2}$/.test(d));
+      if (invalida) throw new Error(`Data invalida: ${invalida}`);
+    } else {
+      const quantas = totalAulas ?? curso?.totalAulas;
+      if (!quantas || quantas < 1) {
+        throw new Error("Informe as datas ou quantas aulas gerar");
+      }
     }
 
     const criadas = await criarAulas(ctx, turmaId, {
       dataInicio: turma.dataInicio,
       diaSemana: turma.diaSemana,
-      totalAulas: quantas,
+      totalAulas: totalAulas ?? curso?.totalAulas,
+      datas,
+      plano: curso?.planoAulas,
       membroId: membro._id,
     });
     if (criadas === 0) throw new Error("Esta turma ja tem aulas");
@@ -365,6 +403,41 @@ export const registrar = mutation({
       throw new Error("Turma nao esta aceitando inscricoes");
     }
 
+    // Respostas validadas AQUI, nao so no cliente: `registrar` e publica e
+    // alcancavel por quem tem o token. Sem isto, pergunta obrigatoria em branco
+    // ou opcao inventada entrariam no banco.
+    const perguntas = turma.perguntasExtras ?? [];
+    const respostaPorId = new Map(
+      (respostasExtras ?? []).map((r) => [r.perguntaId, r])
+    );
+    for (const pergunta of perguntas) {
+      const resposta = respostaPorId.get(pergunta.id);
+      const marcadas = resposta?.valores ?? (resposta?.valor ? [resposta.valor] : []);
+      const vazia = marcadas.every((v) => !v.trim());
+
+      if (pergunta.obrigatorio && vazia) {
+        throw new Error(`Responda: ${pergunta.label}`);
+      }
+      if (vazia) continue;
+
+      const escolha =
+        pergunta.tipo === "ESCOLHA_UNICA" || pergunta.tipo === "ESCOLHA_MULTIPLA";
+      if (escolha) {
+        const validas = new Set(pergunta.opcoes ?? []);
+        const invalida = marcadas.find((v) => !validas.has(v));
+        if (invalida) {
+          throw new Error(`Opcao invalida em "${pergunta.label}": ${invalida}`);
+        }
+        if (pergunta.tipo === "ESCOLHA_UNICA" && marcadas.length > 1) {
+          throw new Error(`"${pergunta.label}" aceita uma resposta so`);
+        }
+      }
+    }
+    // Resposta de pergunta que nao existe na turma nao entra.
+    const respostasValidas = (respostasExtras ?? []).filter((r) =>
+      perguntas.some((p) => p.id === r.perguntaId)
+    );
+
     // Normalizar WhatsApp
     const dados = { ...dadosSistema };
     if (dados.whatsapp) dados.whatsapp = normalizeWhatsApp(dados.whatsapp);
@@ -414,7 +487,7 @@ export const registrar = mutation({
       turmaId: turma._id,
       membroId,
       dadosSistema: dados,
-      respostasExtras,
+      respostasExtras: respostasValidas.length ? respostasValidas : undefined,
       status,
       lgpdConsentimento,
       criadoEm: Date.now(),

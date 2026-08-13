@@ -35,10 +35,15 @@ export const turmaFormSchema = z.object({
   local: z.string().optional(),
   vagas: z.number().min(1).optional(),
   camposSistema: z.array(z.string()),
+  // Espelha convex/schema.ts: sem tipo/opcoes/ajuda o form perderia a
+  // definicao ao passar por aqui.
   perguntasExtras: z.array(z.object({
     id: z.string(),
     label: z.string(),
     obrigatorio: z.boolean(),
+    tipo: z.enum(["TEXTO", "TEXTO_LONGO", "ESCOLHA_UNICA", "ESCOLHA_MULTIPLA"]).optional(),
+    opcoes: z.array(z.string()).optional(),
+    ajuda: z.string().optional(),
   })).optional(),
 }).refine(
   (v) => !v.inscricoesDe || !v.inscricoesAte || v.inscricoesAte >= v.inscricoesDe,

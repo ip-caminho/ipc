@@ -165,6 +165,11 @@ export function ChamadaWidget() {
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block font-semibold text-sm truncate">{t.nome}</span>
+                        {t.tituloAula && (
+                          <span className="block text-xs text-muted-foreground font-normal">
+                            {t.tituloAula}
+                          </span>
+                        )}
                         <span className="mt-1 flex flex-wrap items-center gap-1.5">
                           <Badge variant="secondary" className="font-normal">
                             {t.isDiaDeAula
