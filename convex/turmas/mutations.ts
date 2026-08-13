@@ -130,6 +130,8 @@ export const create = mutation({
       nome: args.nome.trim(),
       // Copia do curso: congela a regra de aprovacao no inicio da turma.
       frequenciaMinima: curso?.frequenciaMinima ?? FREQUENCIA_MINIMA_PADRAO,
+      criterioAprovacao: curso?.criterioAprovacao,
+      maxFaltas: curso?.maxFaltas,
       vagasOcupadas: 0,
       status: "ABERTA",
       token: generateToken(),
@@ -194,6 +196,36 @@ export const setFrequenciaMinima = mutation({
     if (!oldRecord) throw new Error("Turma nao encontrada");
 
     await ctx.db.patch(turmaId, { frequenciaMinima: Math.round(frequenciaMinima) });
+    const newRecord = await ctx.db.get(turmaId);
+    await createFieldAuditLogs(ctx, oldRecord, newRecord, "turmas");
+  },
+});
+
+/**
+ * Troca o criterio de aprovacao da turma (percentual ou maximo de faltas). Vive
+ * na tela de certificados, junto do numero — e ali que a secretaria decide.
+ */
+export const setCriterioAprovacao = mutation({
+  args: {
+    turmaId: v.id("turmas"),
+    criterioAprovacao: v.union(v.literal("PERCENTUAL"), v.literal("MAX_FALTAS")),
+    maxFaltas: v.optional(v.number()),
+  },
+  handler: async (ctx, { turmaId, criterioAprovacao, maxFaltas }) => {
+    await requirePermission(ctx, "turmas:manage_inscricoes");
+    const oldRecord = await ctx.db.get(turmaId);
+    if (!oldRecord) throw new Error("Turma nao encontrada");
+
+    if (criterioAprovacao === "MAX_FALTAS") {
+      if (maxFaltas === undefined || !Number.isFinite(maxFaltas) || maxFaltas < 0) {
+        throw new Error("Informe o maximo de faltas permitido");
+      }
+    }
+
+    await ctx.db.patch(turmaId, {
+      criterioAprovacao,
+      maxFaltas: criterioAprovacao === "MAX_FALTAS" ? Math.round(maxFaltas!) : undefined,
+    });
     const newRecord = await ctx.db.get(turmaId);
     await createFieldAuditLogs(ctx, oldRecord, newRecord, "turmas");
   },

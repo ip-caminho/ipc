@@ -1,8 +1,11 @@
 import { FREQUENCIA_MINIMA_PADRAO } from "./constants";
 
+export type CriterioAprovacao = "PERCENTUAL" | "MAX_FALTAS";
+
 export type ResumoFrequencia = {
   aulasConsideradas: number;
   aulasPresentes: number;
+  faltas: number;
   /** null quando nenhuma aula foi apurada ainda (denominador zero). */
   percentual: number | null;
   apto: boolean;
@@ -13,6 +16,21 @@ export type AulaApuravel = {
   data: string; // YYYY-MM-DD
   presencaRegistradaEm?: number;
 };
+
+export type RegraAprovacao = {
+  criterio?: CriterioAprovacao;
+  frequenciaMinima?: number;
+  maxFaltas?: number;
+};
+
+/** Texto curto da regra, para tela e certificado impresso. */
+export function descreverRegra(regra: RegraAprovacao): string {
+  if (regra.criterio === "MAX_FALTAS") {
+    const max = regra.maxFaltas ?? 0;
+    return `maximo de ${max} ${max === 1 ? "falta" : "faltas"}`;
+  }
+  return `frequencia minima de ${regra.frequenciaMinima ?? FREQUENCIA_MINIMA_PADRAO}%`;
+}
 
 /**
  * Frequencia de um aluno na turma. Regra unica, usada na tela e na emissao do
@@ -28,6 +46,11 @@ export type AulaApuravel = {
  *
  * Ausencia de registro de presenca numa aula COM chamada conta como falta: a
  * chamada foi feita e ele nao estava na lista.
+ *
+ * Dois criterios de aprovacao:
+ * - PERCENTUAL (padrao): percentual >= frequenciaMinima
+ * - MAX_FALTAS: faltas <= maxFaltas. E como a igreja comunica ("limite de 3
+ *   faltas nos 8 encontros") e nao quebra quando uma aula e cancelada.
  */
 export function calcularFrequencia(params: {
   aulas: AulaApuravel[];
@@ -35,9 +58,10 @@ export function calcularFrequencia(params: {
   presencaPorAula: Map<string, boolean>;
   /** YYYY-MM-DD da inscricao do aluno. */
   inscritoDesde: string;
-  frequenciaMinima?: number;
+  regra?: RegraAprovacao;
 }): ResumoFrequencia {
-  const minima = params.frequenciaMinima ?? FREQUENCIA_MINIMA_PADRAO;
+  const regra = params.regra ?? {};
+  const minima = regra.frequenciaMinima ?? FREQUENCIA_MINIMA_PADRAO;
 
   const apuraveis = params.aulas.filter(
     (a) => a.presencaRegistradaEm && a.data >= params.inscritoDesde
@@ -47,16 +71,23 @@ export function calcularFrequencia(params: {
   const aulasPresentes = apuraveis.filter(
     (a) => params.presencaPorAula.get(a._id) === true
   ).length;
+  const faltas = aulasConsideradas - aulasPresentes;
 
   if (aulasConsideradas === 0) {
-    return { aulasConsideradas: 0, aulasPresentes: 0, percentual: null, apto: false };
+    return {
+      aulasConsideradas: 0,
+      aulasPresentes: 0,
+      faltas: 0,
+      percentual: null,
+      apto: false,
+    };
   }
 
   const percentual = Math.round((aulasPresentes / aulasConsideradas) * 100);
-  return {
-    aulasConsideradas,
-    aulasPresentes,
-    percentual,
-    apto: percentual >= minima,
-  };
+  const apto =
+    regra.criterio === "MAX_FALTAS"
+      ? faltas <= (regra.maxFaltas ?? 0)
+      : percentual >= minima;
+
+  return { aulasConsideradas, aulasPresentes, faltas, percentual, apto };
 }

@@ -10,7 +10,12 @@ export const cursoFormSchema = z.object({
     .number()
     .min(0, "Minimo 0")
     .max(100, "Maximo 100"),
-});
+  criterioAprovacao: z.enum(["PERCENTUAL", "MAX_FALTAS"]).optional(),
+  maxFaltas: z.number().min(0, "Minimo 0").optional(),
+}).refine(
+  (v) => v.criterioAprovacao !== "MAX_FALTAS" || typeof v.maxFaltas === "number",
+  { message: "Informe o maximo de faltas", path: ["maxFaltas"] }
+);
 
 export type CursoFormValues = z.infer<typeof cursoFormSchema>;
 
