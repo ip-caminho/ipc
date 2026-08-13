@@ -72,6 +72,7 @@ export default function TurmaDetalhePage() {
   const removeEncontro = useMutation(api.turmas.mutations.removeEncontro);
   const salvarPresencas = useMutation(api.turmas.mutations.salvarPresencas);
   const gerarAulas = useMutation(api.turmas.mutations.gerarAulas);
+  const criarEventos = useMutation(api.turmas.mutations.criarEventosDaTurma);
 
   const [novoEncontroData, setNovoEncontroData] = useState("");
   const [novoEncontroTitulo, setNovoEncontroTitulo] = useState("");
@@ -79,6 +80,9 @@ export default function TurmaDetalhePage() {
   const [editOpen, setEditOpen] = useState(false);
   const [qtdAulas, setQtdAulas] = useState("");
   const [datasAulas, setDatasAulas] = useState("");
+  const [marcoTitulo, setMarcoTitulo] = useState("");
+  const [marcoData, setMarcoData] = useState("");
+  const [marcoPublicar, setMarcoPublicar] = useState(false);
 
   // Presencas do encontro aberto
   const presencas = useQuery(
@@ -162,6 +166,27 @@ export default function TurmaDetalhePage() {
       const criadas = await gerarAulas({ turmaId: id as Id<"turmas">, datas });
       setDatasAulas("");
       toast.success(`${criadas} aulas geradas`);
+    } catch (err: unknown) {
+      toast.error((err as Error).message);
+    }
+  }
+
+  async function handleCriarMarco() {
+    if (!marcoTitulo.trim() || !marcoData) {
+      toast.error("Informe titulo e data do marco");
+      return;
+    }
+    try {
+      const criados = await criarEventos({
+        turmaId: id as Id<"turmas">,
+        marcos: [{ titulo: marcoTitulo.trim(), data: marcoData }],
+        publicarNoSite: marcoPublicar,
+      });
+      setMarcoTitulo("");
+      setMarcoData("");
+      toast.success(
+        criados.length ? "Marco criado no calendario" : "Esse marco ja estava no calendario"
+      );
     } catch (err: unknown) {
       toast.error((err as Error).message);
     }
@@ -422,6 +447,61 @@ export default function TurmaDetalhePage() {
                   </div>
                 </CardContent>
               </Card>
+            )}
+
+            {/* Marcos: datas do curso que NAO sao aula (entrevistas,
+                apresentacao, batismo). Vao para o calendario da igreja, nao
+                para turmaEncontros — nao tem chamada nem entram na frequencia. */}
+            {can("turmas:update") && (
+              <Collapsible>
+                <Card>
+                  <CardContent className="p-3">
+                    <CollapsibleTrigger asChild>
+                      <Button variant="ghost" className="h-10 px-2 w-full justify-between">
+                        <span className="text-sm font-medium">
+                          Marcos no calendario (entrevistas, batismo)
+                        </span>
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="pt-3 space-y-3">
+                      <div className="flex items-end gap-2 flex-wrap">
+                        <div className="flex-1 min-w-[160px]">
+                          <label className="text-xs text-muted-foreground">Titulo</label>
+                          <Input
+                            className="h-10"
+                            value={marcoTitulo}
+                            onChange={(e) => setMarcoTitulo(e.target.value)}
+                            placeholder="Ex: Apresentacao dos Novos Membros e Batismo"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs text-muted-foreground">Data</label>
+                          <DatePickerBR
+                            value={marcoData}
+                            onChange={(iso) => setMarcoData(iso)}
+                            className="w-[160px]"
+                          />
+                        </div>
+                        <Button className="h-10" onClick={handleCriarMarco}>
+                          Adicionar
+                        </Button>
+                      </div>
+                      <label className="flex items-center gap-2 text-xs text-muted-foreground min-h-[44px]">
+                        <Checkbox
+                          checked={marcoPublicar}
+                          onCheckedChange={(c) => setMarcoPublicar(c === true)}
+                        />
+                        Publicar tambem na agenda do site
+                      </label>
+                      <p className="text-xs text-muted-foreground">
+                        Vai para o calendario da igreja, nao para a lista de aulas — sem
+                        chamada e fora da conta de frequencia.
+                      </p>
+                    </CollapsibleContent>
+                  </CardContent>
+                </Card>
+              </Collapsible>
             )}
 
             {/* Gerar aulas em lote. Fora do estado vazio de proposito: a turma
