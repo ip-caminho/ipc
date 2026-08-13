@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import Link from "next/link";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Controller, useForm } from "react-hook-form";
@@ -72,9 +71,6 @@ export default function InscricaoPublicPage() {
         <div className="w-full max-w-xl text-center space-y-5">
           <h1 className="text-2xl font-bold leading-tight">{turma.nome}</h1>
           <p className="text-base leading-relaxed text-muted-foreground">{mensagem}</p>
-          <Button asChild variant="outline" className="h-12 text-base w-full">
-            <Link href="/">Voltar para o site</Link>
-          </Button>
         </div>
       </div>
     );
@@ -122,7 +118,7 @@ export default function InscricaoPublicPage() {
       .filter((r): r is { perguntaId: string; valor: string; valores?: string[] } => r !== null);
 
     try {
-      const inscricaoId = await registrar({
+      await registrar({
         token,
         dadosSistema: {
           nomeCompleto: values.nomeCompleto as string,
