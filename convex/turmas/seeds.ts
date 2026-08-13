@@ -641,3 +641,39 @@ export const criarTurmaNovosMembros2026 = internalMutation({
     return `Turma "${nome}" criada: ${NM_DATAS.length} aulas (20/09 a 29/11), inscricao de 16/08 a 13/09, ${NM_PERGUNTAS.length} perguntas. Link: /inscricao/${turma?.token}`;
   },
 });
+
+/** Marcos de dezembro da turma de Novos Membros, no calendario da igreja. */
+export const criarMarcosNovosMembros2026 = internalMutation({
+  args: { nomeTurma: v.optional(v.string()) },
+  handler: async (ctx, { nomeTurma }) => {
+    const nome = nomeTurma ?? "Novos Membros 2/2026";
+    const turma = (await ctx.db.query("turmas").collect()).find((t) => t.nome === nome);
+    if (!turma) return `Turma "${nome}" nao encontrada.`;
+
+    const marcos = [
+      { titulo: "Periodo de entrevistas com os candidatos", data: "2026-12-06" },
+      { titulo: "Apresentacao dos Novos Membros e Batismo", data: "2026-12-13" },
+    ];
+
+    const existentes = new Set(
+      (await ctx.db.query("calendarioEventos").collect()).map((e) => `${e.data}|${e.titulo}`)
+    );
+
+    const criados: string[] = [];
+    for (const marco of marcos) {
+      const titulo = `${marco.titulo} — ${turma.nome}`;
+      if (existentes.has(`${marco.data}|${titulo}`)) continue;
+      await ctx.db.insert("calendarioEventos", {
+        titulo,
+        data: marco.data,
+        descricao: `Marco da turma ${turma.nome}.`,
+        tipo: "evento",
+        publicadoNoSite: false,
+        criadoEm: Date.now(),
+      });
+      criados.push(`${marco.data} ${titulo}`);
+    }
+
+    return criados.length ? `Criados: ${criados.join(" | ")}` : "Marcos ja estavam no calendario.";
+  },
+});
