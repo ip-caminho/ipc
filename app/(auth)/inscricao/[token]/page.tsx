@@ -215,6 +215,27 @@ export default function InscricaoPublicPage() {
               </div>
             )}
 
+            {turma.camposSistema.includes("sexo") && (
+              <div className={CAMPO}>
+                <Label className={ROTULO}>Sexo</Label>
+                <RadioGroup
+                  className="gap-2"
+                  value={(form.watch("sexo") as string) ?? ""}
+                  onValueChange={(v) => form.setValue("sexo", v)}
+                >
+                  {[
+                    { valor: "M", label: "Masculino" },
+                    { valor: "F", label: "Feminino" },
+                  ].map((o) => (
+                    <Label key={o.valor} htmlFor={`sexo-${o.valor}`} className={OPCAO}>
+                      <RadioGroupItem id={`sexo-${o.valor}`} value={o.valor} className="size-5" />
+                      <span>{o.label}</span>
+                    </Label>
+                  ))}
+                </RadioGroup>
+              </div>
+            )}
+
             {turma.camposSistema.includes("dataNascimento") && (
               <div className={CAMPO}>
                 <Label htmlFor="dataNascimento" className={ROTULO}>

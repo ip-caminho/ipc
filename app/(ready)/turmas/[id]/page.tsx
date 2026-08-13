@@ -9,6 +9,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Badge } from "@/shared/components/ui/badge";
 import { Input } from "@/shared/components/ui/input";
+import { Textarea } from "@/shared/components/ui/textarea";
 import { DatePickerBR } from "@/shared/components/ui/date-picker-br";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
 import {
@@ -77,6 +78,7 @@ export default function TurmaDetalhePage() {
   const [encontroAberto, setEncontroAberto] = useState<string | null>(null);
   const [editOpen, setEditOpen] = useState(false);
   const [qtdAulas, setQtdAulas] = useState("");
+  const [datasAulas, setDatasAulas] = useState("");
 
   // Presencas do encontro aberto
   const presencas = useQuery(
@@ -135,6 +137,30 @@ export default function TurmaDetalhePage() {
       const total = qtdAulas.trim() ? Number(qtdAulas) : undefined;
       const criadas = await gerarAulas({ turmaId: id as Id<"turmas">, totalAulas: total });
       setQtdAulas("");
+      toast.success(`${criadas} aulas geradas`);
+    } catch (err: unknown) {
+      toast.error((err as Error).message);
+    }
+  }
+
+  /** dd/mm/aaaa (ou aaaa-mm-dd) por linha -> YYYY-MM-DD, ignorando linha vazia. */
+  function parseDatas(texto: string): string[] {
+    return texto
+      .split(/[\n,;]+/)
+      .map((l) => l.trim())
+      .filter(Boolean)
+      .map((l) => {
+        const br = l.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+        if (br) return `${br[3]}-${br[2]}-${br[1]}`;
+        return l;
+      });
+  }
+
+  async function handleGerarAulasComDatas() {
+    try {
+      const datas = parseDatas(datasAulas);
+      const criadas = await gerarAulas({ turmaId: id as Id<"turmas">, datas });
+      setDatasAulas("");
       toast.success(`${criadas} aulas geradas`);
     } catch (err: unknown) {
       toast.error((err as Error).message);
@@ -398,15 +424,16 @@ export default function TurmaDetalhePage() {
               </Card>
             )}
 
-            {/* Lista de encontros */}
-            {!encontros ? (
-              <p className="text-sm text-muted-foreground">Carregando...</p>
-            ) : encontros.length === 0 ? (
-              <div className="text-center py-8 space-y-3">
-                <p className="text-sm text-muted-foreground">Nenhuma aula registrada</p>
-                {can("turmas:update") && (
-                  <div className="flex items-end justify-center gap-2 flex-wrap">
-                    <div className="text-left">
+            {/* Gerar aulas em lote. Fora do estado vazio de proposito: a turma
+                pode ter nascido com datas erradas, e a secretaria precisa do
+                acesso depois de apagar as antigas. */}
+            {can("turmas:update") && encontros?.length === 0 && (
+              <Card>
+                <CardContent className="p-3 space-y-3">
+                  <p className="text-sm font-medium">Gerar aulas em lote</p>
+
+                  <div className="flex items-end gap-2 flex-wrap">
+                    <div>
                       <label className="text-xs text-muted-foreground">Quantas aulas</label>
                       <Input
                         type="number"
@@ -418,15 +445,49 @@ export default function TurmaDetalhePage() {
                       />
                     </div>
                     <Button className="h-10" onClick={handleGerarAulas}>
-                      Gerar aulas semanais
+                      Gerar semanais
                     </Button>
                   </div>
-                )}
-                <p className="text-xs text-muted-foreground">
-                  Gera a partir da data de inicio, no dia da semana da turma. Em branco,
-                  usa o total de aulas definido no curso.
-                </p>
-              </div>
+                  <p className="text-xs text-muted-foreground">
+                    Semanais: a partir da data de inicio, no dia da semana da turma. Em
+                    branco, usa o total de aulas do curso.
+                  </p>
+
+                  <div className="border-t pt-3 space-y-2">
+                    <label className="text-xs text-muted-foreground">
+                      Ou informe as datas (uma por linha, dd/mm/aaaa)
+                    </label>
+                    <Textarea
+                      rows={4}
+                      className="font-mono text-sm"
+                      value={datasAulas}
+                      onChange={(e) => setDatasAulas(e.target.value)}
+                      placeholder={"20/09/2026\n27/09/2026\n04/10/2026"}
+                    />
+                    <Button
+                      variant="outline"
+                      className="h-10"
+                      disabled={!datasAulas.trim()}
+                      onClick={handleGerarAulasComDatas}
+                    >
+                      Gerar nas datas informadas
+                    </Button>
+                    <p className="text-xs text-muted-foreground">
+                      Use quando o curso pula datas. O titulo de cada aula vem do plano do
+                      curso, quando existir.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Lista de encontros */}
+            {!encontros ? (
+              <p className="text-sm text-muted-foreground">Carregando...</p>
+            ) : encontros.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                Nenhuma aula registrada
+              </p>
             ) : (
               <div className="space-y-2">
                 {encontros.map((e) => (
