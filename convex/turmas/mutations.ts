@@ -219,6 +219,63 @@ export const gerarAulas = mutation({
   },
 });
 
+/**
+ * Cria os marcos da turma no calendario da igreja (entrevistas, apresentacao e
+ * batismo). Nao sao aulas: nao tem chamada e nao entram na frequencia — por isso
+ * viram evento, nao encontro.
+ *
+ * Exige turmas:update E calendario:create. requireAnyPermission seria OU, o que
+ * nao serve; o padrao do repo para "exige A, precisa de B tambem" e
+ * requirePermission + checkPermission.
+ */
+export const criarEventosDaTurma = mutation({
+  args: {
+    turmaId: v.id("turmas"),
+    marcos: v.array(v.object({ titulo: v.string(), data: v.string() })),
+    publicarNoSite: v.optional(v.boolean()),
+  },
+  handler: async (ctx, { turmaId, marcos, publicarNoSite }) => {
+    await requirePermission(ctx, "turmas:update");
+    const turma = await ctx.db.get(turmaId);
+    if (!turma) throw new Error("Turma nao encontrada");
+
+    if (!(await checkPermission(ctx, "calendario:create"))) {
+      throw new Error(
+        "Sem permissao para criar evento no calendario (calendario:create)"
+      );
+    }
+
+    const existentes = new Set(
+      (await ctx.db.query("calendarioEventos").collect()).map(
+        (e) => `${e.data}|${e.titulo}`
+      )
+    );
+
+    const criados: string[] = [];
+    for (const marco of marcos) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(marco.data)) {
+        throw new Error(`Data invalida: ${marco.data}`);
+      }
+      const titulo = `${marco.titulo.trim()} — ${turma.nome}`;
+      // Idempotente: rodar de novo nao duplica o evento.
+      if (existentes.has(`${marco.data}|${titulo}`)) continue;
+
+      const id = await ctx.db.insert("calendarioEventos", {
+        titulo,
+        data: marco.data,
+        descricao: `Marco da turma ${turma.nome}.`,
+        tipo: "evento",
+        publicadoNoSite: publicarNoSite ?? false,
+        criadoEm: Date.now(),
+      });
+      await createActionAuditLog(ctx, "CREATE", "calendarioEventos", id as string);
+      criados.push(titulo);
+    }
+
+    return criados;
+  },
+});
+
 export const setFrequenciaMinima = mutation({
   args: { turmaId: v.id("turmas"), frequenciaMinima: v.number() },
   handler: async (ctx, { turmaId, frequenciaMinima }) => {
