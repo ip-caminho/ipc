@@ -963,6 +963,23 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "Inscricao cancelada nao aparece",
     ],
   },
+  "/inscricao/[token]": {
+    nome: "Inscricao Publica (turma)",
+    pagina: "app/(public)/(site)/inscricao/[token]/page.tsx",
+    arquivos: [
+      "app/(public)/(site)/inscricao/[token]/page.tsx",
+      "features/turmas/components/InscricaoPublicaForm.tsx",
+    ],
+    queries: ["turmas.queries.getByToken", "site-publico/lib/data.getTurmaPorToken"],
+    mutations: ["turmas.mutations.registrar"],
+    componentes: ["InscricaoPublicaForm"],
+    notas: [
+      "Rota PUBLICA por token (middleware isPublicRoute); vive em (site) para herdar SiteHeader/SiteFooter",
+      "Servidor so gera a metadata (previa do link); o formulario e client e le por useQuery",
+      "Corpo NAO entra em .site-v2 — convencao do layout: chrome compartilhado, corpo com estilo do app",
+      "registrar valida obrigatorias e opcoes no servidor; a janela de inscricao e conferida em fuso de SP",
+    ],
+  },
   "/cursos": {
     nome: "Cursos",
     pagina: "app/(ready)/cursos/page.tsx",
@@ -1602,6 +1619,8 @@ function resolveRoute(pathname: string): PageContext | null {
   if (/^\/membros\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/membros/[id]"];
   // /biblioteca/[id]
   if (/^\/biblioteca\/[^/]+$/.test(pathname) && pathname !== "/biblioteca/novo") return CONTEXT_MAP["/biblioteca/[id]"];
+  // /inscricao/[token] (formulario publico da turma)
+  if (/^\/inscricao\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/inscricao/[token]"];
   // /minhas-turmas/[id]
   if (/^\/minhas-turmas\/[^/]+$/.test(pathname)) return CONTEXT_MAP["/minhas-turmas/[id]"];
   // /turmas/[id]/certificados/imprimir

@@ -96,6 +96,24 @@ export const getTurmasAbertas = unstable_cache(
   { revalidate: 300, tags: ["public-turmas-abertas"] },
 );
 
+// Turma pelo token, só para a prévia do link (título/descrição). O formulário
+// em si continua lendo por `useQuery`, reativo — a janela de inscrição precisa
+// ser conferida no momento do envio, não no cache.
+export const getTurmaPorToken = unstable_cache(
+  async (token: string) => {
+    try {
+      const client = httpClient();
+      if (!client) return null;
+      // @ts-ignore Convex TS2589 (instanciacao de tipo profunda)
+      return (await client.query(api.turmas.queries.getByToken, { token })) ?? null;
+    } catch {
+      return null;
+    }
+  },
+  ["public-turma-por-token"],
+  { revalidate: 60, tags: ["public-turmas-abertas"] },
+);
+
 // Detalhe de uma inscrição por slug (/inscricoes/[slug]). Cache curto: vagas
 // mudam. O slug entra na chave de cache (arg posicional do unstable_cache).
 export const getInscricaoBySlug = unstable_cache(
