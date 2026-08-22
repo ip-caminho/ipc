@@ -2,7 +2,7 @@
 // na landing de produção (não inventados).
 
 export const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "https://ipc-pi-ten.vercel.app";
+  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "https://www.ipdocaminho.com";
 
 export const IGREJA_SEO = {
   nome: "Igreja Presbiteriana do Caminho",

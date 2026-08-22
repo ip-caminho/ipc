@@ -16,7 +16,6 @@ export default function robots(): MetadataRoute.Robots {
         "/g/",
         "/livro/",
         "/subir-audio",
-        "/inscricao/",
         "/dashboard",
         "/entidades",
         "/diretorio",
