@@ -677,3 +677,14 @@ export const criarMarcosNovosMembros2026 = internalMutation({
     return criados.length ? `Criados: ${criados.join(" | ")}` : "Marcos ja estavam no calendario.";
   },
 });
+
+/** Liga/desliga a divulgacao de uma turma no site publico. */
+export const definirPublicacaoNoSite = internalMutation({
+  args: { nomeTurma: v.string(), publicar: v.boolean() },
+  handler: async (ctx, { nomeTurma, publicar }) => {
+    const turma = (await ctx.db.query("turmas").collect()).find((t) => t.nome === nomeTurma);
+    if (!turma) return `Turma "${nomeTurma}" nao encontrada.`;
+    await ctx.db.patch(turma._id, { publicarNoSite: publicar });
+    return `Turma "${nomeTurma}": divulgacao no site ${publicar ? "ligada" : "desligada"}.`;
+  },
+});

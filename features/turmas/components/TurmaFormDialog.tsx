@@ -76,6 +76,7 @@ export function TurmaFormDialog({ open, onOpenChange, turma }: Props) {
       dataFim: turma?.dataFim ?? "",
       inscricoesDe: turma?.inscricoesDe ?? "",
       inscricoesAte: turma?.inscricoesAte ?? "",
+      publicarNoSite: turma?.publicarNoSite ?? false,
       diaSemana: turma?.diaSemana ?? "",
       horario: turma?.horario ?? "",
       local: turma?.local ?? "",
@@ -111,6 +112,7 @@ export function TurmaFormDialog({ open, onOpenChange, turma }: Props) {
           dataFim: values.dataFim ?? "",
           inscricoesDe: values.inscricoesDe ?? "",
           inscricoesAte: values.inscricoesAte ?? "",
+          publicarNoSite: values.publicarNoSite ?? false,
           diaSemana: values.diaSemana ?? "",
           horario: values.horario ?? "",
           local: values.local ?? "",
@@ -131,6 +133,7 @@ export function TurmaFormDialog({ open, onOpenChange, turma }: Props) {
         dataFim: values.dataFim || undefined,
         inscricoesDe: values.inscricoesDe || undefined,
         inscricoesAte: values.inscricoesAte || undefined,
+        publicarNoSite: values.publicarNoSite,
         diaSemana: values.diaSemana || undefined,
         horario: values.horario || undefined,
         local: values.local || undefined,
@@ -223,6 +226,20 @@ export function TurmaFormDialog({ open, onOpenChange, turma }: Props) {
                 <DateFieldBR control={form.control} name="inscricoesAte" id="inscricoesAte" />
               </div>
             </div>
+            <Label
+              htmlFor="publicarNoSite"
+              className="flex items-center gap-3 min-h-[44px] font-normal cursor-pointer"
+            >
+              <Checkbox
+                id="publicarNoSite"
+                checked={form.watch("publicarNoSite") === true}
+                onCheckedChange={(c) => form.setValue("publicarNoSite", c === true)}
+              />
+              <span className="text-sm">
+                Divulgar no site da igreja enquanto a inscricao estiver aberta
+              </span>
+            </Label>
+
             {form.formState.errors.inscricoesAte && (
               <p className="text-xs text-destructive">
                 {form.formState.errors.inscricoesAte.message}
