@@ -149,6 +149,7 @@ import type * as public_agenda from "../public/agenda.js";
 import type * as public_avisos from "../public/avisos.js";
 import type * as public_inscricoesEvento from "../public/inscricoesEvento.js";
 import type * as public_retiro from "../public/retiro.js";
+import type * as public_turmas from "../public/turmas.js";
 import type * as retiro_calculoHelpers from "../retiro/calculoHelpers.js";
 import type * as retiro_mutations from "../retiro/mutations.js";
 import type * as retiro_quartos from "../retiro/quartos.js";
@@ -320,6 +321,7 @@ declare const fullApi: ApiFromModules<{
   "public/avisos": typeof public_avisos;
   "public/inscricoesEvento": typeof public_inscricoesEvento;
   "public/retiro": typeof public_retiro;
+  "public/turmas": typeof public_turmas;
   "retiro/calculoHelpers": typeof retiro_calculoHelpers;
   "retiro/mutations": typeof retiro_mutations;
   "retiro/quartos": typeof retiro_quartos;

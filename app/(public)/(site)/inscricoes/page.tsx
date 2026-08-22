@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
-import { getInscricoesAtivas, getRetirosAtivos } from "@features/site-publico/lib/data";
+import {
+  getInscricoesAtivas,
+  getRetirosAtivos,
+  getTurmasAbertas,
+} from "@features/site-publico/lib/data";
 import { InscricaoCard } from "@features/site-publico/components/InscricaoCard";
 import { RetiroCard } from "@features/site-publico/components/RetiroCard";
+import { TurmaCardPublico } from "@features/site-publico/components/TurmaCardPublico";
 
 export const metadata: Metadata = {
   title: "Inscrições — IPC",
@@ -12,11 +17,12 @@ export const metadata: Metadata = {
 export const revalidate = 300;
 
 export default async function InscricoesPage() {
-  const [inscricoes, retiros] = await Promise.all([
+  const [inscricoes, retiros, turmas] = await Promise.all([
     getInscricoesAtivas(),
     getRetirosAtivos(),
+    getTurmasAbertas(),
   ]);
-  const vazio = inscricoes.length === 0 && retiros.length === 0;
+  const vazio = inscricoes.length === 0 && retiros.length === 0 && turmas.length === 0;
 
   return (
     <div className="site-v2">
@@ -37,6 +43,9 @@ export default async function InscricoesPage() {
               <div className="grid-insc">
                 {retiros.map((r) => (
                   <RetiroCard key={r._id} retiro={r} />
+                ))}
+                {turmas.map((t) => (
+                  <TurmaCardPublico key={t._id} turma={t} />
                 ))}
                 {inscricoes.map((insc) => (
                   <InscricaoCard key={insc._id} inscricao={insc} />

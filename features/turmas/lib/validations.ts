@@ -30,6 +30,7 @@ export const turmaFormSchema = z.object({
   dataFim: z.string().optional(),
   inscricoesDe: z.string().optional(),
   inscricoesAte: z.string().optional(),
+  publicarNoSite: z.boolean().optional(),
   diaSemana: z.string().optional(),
   horario: z.string().optional(),
   local: z.string().optional(),
