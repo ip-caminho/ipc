@@ -30,6 +30,7 @@ import { toast } from "sonner";
 import { STATUS_TURMA, DIA_SEMANA_LABELS } from "@features/turmas/lib/constants";
 import { CertificadosTab } from "@features/turmas/components/CertificadosTab";
 import { cleanPhoneForWhatsApp, formatPhone } from "@shared/lib/validations/brazilian";
+import { SITE_URL } from "@features/site-publico/lib/seo";
 import { TurmaFormDialog } from "@features/turmas/components/TurmaFormDialog";
 import { ModuloGuard } from "@/shared/components/auth/ModuloGuard";
 import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
@@ -101,7 +102,9 @@ export default function TurmaDetalhePage() {
     can("turmas:manage_inscricoes") || (!!membroId && turma.instrutorId === membroId);
 
   const statusOpt = STATUS_TURMA.find((s) => s.value === turma.status);
-  const shareUrl = turma.token ? `${window.location.origin}/inscricao/${turma.token}` : "";
+  // Dominio fixo, nao window.location.origin: copiar de um preview ou do
+  // localhost gerava link que so funciona ali.
+  const shareUrl = turma.token ? `${SITE_URL}/inscricao/${turma.token}` : "";
 
   async function handleCopyLink() {
     await navigator.clipboard.writeText(shareUrl);

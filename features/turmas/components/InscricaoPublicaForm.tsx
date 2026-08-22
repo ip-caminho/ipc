@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
+
 import { useState } from "react";
-import { useParams } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Controller, useForm } from "react-hook-form";
@@ -35,8 +36,7 @@ function formatDate(d: string) {
   return `${day}/${m}/${y}`;
 }
 
-export default function InscricaoPublicPage() {
-  const { token } = useParams<{ token: string }>();
+export function InscricaoPublicaForm({ token }: { token: string }) {
   // @ts-ignore Convex TS2589 (instanciacao de tipo profunda)
   const turma = useQuery(api.turmas.queries.getByToken, { token });
   const registrar = useMutation(api.turmas.mutations.registrar);
@@ -57,8 +57,13 @@ export default function InscricaoPublicPage() {
     },
   });
 
-  if (turma === undefined) return <div className="min-h-screen flex items-center justify-center">Carregando...</div>;
-  if (turma === null) return <div className="min-h-screen flex items-center justify-center">Link inválido ou turma não encontrada</div>;
+  if (turma === undefined) return <div className="flex items-center justify-center py-24">Carregando...</div>;
+  if (turma === null)
+    return (
+      <div className="flex items-center justify-center px-5 py-24 text-center">
+        Link inválido ou turma não encontrada
+      </div>
+    );
   if (!turma.inscricoesAbertas) {
     const mensagem =
       turma.motivoFechado === "AINDA_NAO_COMECOU" && turma.inscricoesDe
@@ -67,10 +72,16 @@ export default function InscricaoPublicPage() {
           ? `As inscrições foram encerradas em ${formatDate(turma.inscricoesAte)}.`
           : "Esta turma não está aceitando inscrições no momento.";
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center px-5 py-10">
+      <div className="flex items-center justify-center px-5 py-16">
         <div className="w-full max-w-xl text-center space-y-5">
           <h1 className="text-2xl font-bold leading-tight">{turma.nome}</h1>
           <p className="text-base leading-relaxed text-muted-foreground">{mensagem}</p>
+          <Link
+            href="/inscricoes"
+            className="inline-block text-base text-muted-foreground underline hover:text-foreground"
+          >
+            Ver outras inscrições
+          </Link>
         </div>
       </div>
     );
@@ -78,7 +89,7 @@ export default function InscricaoPublicPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center px-5 py-10">
+      <div className="flex items-center justify-center px-5 py-16">
         <div className="w-full max-w-xl text-center space-y-5">
           <CheckCircle className="h-14 w-14 text-green-500 mx-auto" />
           <h1 className="text-2xl font-bold leading-tight">Inscrição realizada!</h1>
@@ -88,6 +99,12 @@ export default function InscricaoPublicPage() {
               Você está na lista de espera. Entraremos em contato quando houver vaga.
             </p>
           )}
+          <Link
+            href="/inscricoes"
+            className="inline-block text-base text-muted-foreground underline hover:text-foreground"
+          >
+            Ver outras inscrições
+          </Link>
         </div>
       </div>
     );
@@ -143,8 +160,16 @@ export default function InscricaoPublicPage() {
   return (
     // Sem Card: formulario ocupa a pagina, com respiro. Fonte base de 16px nos
     // inputs tambem evita o zoom automatico do Safari no iOS.
-    <div className="min-h-screen bg-background">
+    // O shell (fundo e altura) vem do layout do site — aqui so o miolo.
+    <div>
       <div className="mx-auto w-full max-w-xl px-5 py-10 sm:py-14">
+        <Link
+          href="/inscricoes"
+          className="text-sm text-muted-foreground hover:text-foreground"
+        >
+          ← Inscrições
+        </Link>
+
         <header className="mb-10">
           <h1 className="text-3xl font-bold leading-tight tracking-tight">{turma.nome}</h1>
           <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
