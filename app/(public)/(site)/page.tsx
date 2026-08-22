@@ -5,9 +5,13 @@ import {
   getAgendaPublic,
   getInscricoesAtivas,
   getRetirosAtivos,
+  getTurmasAbertas,
   getTextosSitePublic,
 } from "@features/site-publico/lib/data";
 import { AvisoCard } from "@features/site-publico/components/AvisoCard";
+import { InscricaoCard } from "@features/site-publico/components/InscricaoCard";
+import { RetiroCard } from "@features/site-publico/components/RetiroCard";
+import { TurmaCardPublico } from "@features/site-publico/components/TurmaCardPublico";
 import { CultoCountdown } from "@features/site-publico/components/CultoCountdown";
 import { SITE_TEXTOS_DEFAULTS } from "@features/site-publico/lib/igreja";
 
@@ -30,17 +34,18 @@ function formatCulto(data: string, horario?: string): string {
 }
 
 export default async function HomePage() {
-  const [avisosCulto, agenda, inscricoes, retiros, textos] = await Promise.all([
+  const [avisosCulto, agenda, inscricoes, retiros, turmas, textos] = await Promise.all([
     getAvisosUltimoCulto(),
     getAgendaPublic(),
     getInscricoesAtivas(),
     getRetirosAtivos(),
+    getTurmasAbertas(),
     getTextosSitePublic(),
   ]);
   const heroTitulo = textos.heroTitulo || SITE_TEXTOS_DEFAULTS.heroTitulo;
   const heroSub = textos.heroSub || SITE_TEXTOS_DEFAULTS.heroSub;
   const proximoCulto = agenda.find((e) => e.tipo === "culto");
-  const numInscricoes = inscricoes.length + retiros.length;
+  const numInscricoes = inscricoes.length + retiros.length + turmas.length;
   const temAvisos = !!avisosCulto && avisosCulto.avisos.length > 0;
   // Agenda resumida no hero: o próximo culto UMA vez + eventos especiais. O
   // culto dominical é gerado pra 12 domingos (id "culto-*"); mostrá-los todos
@@ -127,6 +132,33 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ===================== INSCRIÇÕES ABERTAS ===================== */}
+      {/* A home so tinha o contador no atalho; quem abre uma inscricao queria
+          ve-la aqui. Compacto: titulo e a linha de datas, o detalhe fica no hub. */}
+      {numInscricoes > 0 && (
+        <section className="hub-section tight">
+          <div className="wrap-wide">
+            <div className="hub-head">
+              <h2>Inscrições abertas</h2>
+              <Link href="/inscricoes" className="aside">
+                Ver todas →
+              </Link>
+            </div>
+            <div className="grid-insc">
+              {turmas.map((t) => (
+                <TurmaCardPublico key={t._id} turma={t} compact />
+              ))}
+              {retiros.map((r) => (
+                <RetiroCard key={r._id} retiro={r} />
+              ))}
+              {inscricoes.map((insc) => (
+                <InscricaoCard key={insc._id} inscricao={insc} compact />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ===================== AVISOS DO ÚLTIMO CULTO ===================== */}
       {temAvisos && (

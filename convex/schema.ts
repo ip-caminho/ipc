@@ -1073,6 +1073,10 @@ export default defineSchema({
     // restricao de data: fecha so por status ou por vagas esgotadas.
     inscricoesDe: v.optional(v.string()),
     inscricoesAte: v.optional(v.string()),
+    // Aparece no site publico (home e /inscricoes) enquanto a janela estiver
+    // aberta. Opt-in: turma interna nao vai para o site por acidente, e o link
+    // de inscricao (token) so fica publico se a igreja quiser divulgar.
+    publicarNoSite: v.optional(v.boolean()),
     diaSemana: v.optional(v.string()),
     horario: v.optional(v.string()),
     local: v.optional(v.string()),

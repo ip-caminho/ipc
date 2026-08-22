@@ -4,6 +4,7 @@ import { unstable_cache } from "next/cache";
 import { api } from "@/convex/_generated/api";
 import type { EventoPublico } from "@convex/public/agenda";
 import type { InscricaoEventoPublica } from "@convex/public/inscricoesEvento";
+import type { TurmaPublica } from "@convex/public/turmas";
 import type { RetiroPublicoLista } from "@convex/public/retiro";
 import type { AvisosUltimoCulto } from "@convex/public/avisos";
 import type { IgrejaInfo } from "./nav";
@@ -78,6 +79,21 @@ export const getInscricoesAtivas = unstable_cache(
   },
   ["public-inscricoes-ativas"],
   { revalidate: 300, tags: ["public-inscricoes-ativas"] },
+);
+
+// Turmas de curso com inscrição aberta e marcadas para o site.
+export const getTurmasAbertas = unstable_cache(
+  async (): Promise<TurmaPublica[]> => {
+    try {
+      const client = httpClient();
+      if (!client) return [];
+      return (await client.query(api.public.turmas.listAbertas, {})) ?? [];
+    } catch {
+      return [];
+    }
+  },
+  ["public-turmas-abertas"],
+  { revalidate: 300, tags: ["public-turmas-abertas"] },
 );
 
 // Detalhe de uma inscrição por slug (/inscricoes/[slug]). Cache curto: vagas
