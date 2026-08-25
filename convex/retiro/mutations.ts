@@ -3,12 +3,14 @@ import { apagarArquivosSumidos } from "../files/orfaos";
 import { v } from "convex/values";
 import { requirePermission } from "../_shared/requirePermission";
 import { createActionAuditLog, createFieldAuditLogs } from "../_shared/auditHelpers";
+import { cpfValido } from "../_shared/cpf";
 import {
   calcularValorInscricao,
   saldoInscricao,
   somaQuartos,
   subQuartosClamp,
   mapQuartos,
+  totalQuartos,
   type PrecosRetiro,
 } from "./calculoHelpers";
 
@@ -178,9 +180,12 @@ const hospedagemValidator = v.object({
   pets: v.number(),
 });
 
+const DATA_RE = /^\d{4}-\d{2}-\d{2}$/;
+
 // Edicao pela secretaria. Recalcula valorTabela com o SNAPSHOT da inscricao
 // (preco combinado na epoca) — recalcular com a tabela vigente e acao separada.
-// Ajusta os contadores de estoque pelo delta de quartos (inscricao ATIVA).
+// Ajusta os contadores de estoque pelo delta de quartos (inscricao ATIVA) e
+// sincroniza o quadro de quartos (ocupante que nao bate mais sai da alocacao).
 export const editarInscricao = mutation({
   args: {
     id: v.id("inscricoesRetiro"),
@@ -195,17 +200,68 @@ export const editarInscricao = mutation({
         observacao: v.optional(v.string()),
       }),
     ),
+    pagamentoPreferido: v.optional(
+      v.object({
+        forma: v.union(v.literal("A_VISTA"), v.literal("PARCELADO")),
+        parcelas: v.optional(v.number()),
+        cpfPagante: v.optional(v.string()),
+      }),
+    ),
+    // Motivo da alteracao (opcional) — vai para o log de acao.
+    motivo: v.optional(v.string()),
   },
-  handler: async (ctx, { id, ...updates }) => {
+  handler: async (ctx, { id, motivo, ...updates }) => {
     await requirePermission(ctx, "retiro:manage");
     const antes = await ctx.db.get(id);
     if (!antes) throw new Error("Inscrição não encontrada");
+    if (antes.status === "CANCELADA") {
+      throw new Error("Inscrição cancelada não pode ser editada");
+    }
     const acamp = await ctx.db.get(antes.retiroId);
     if (!acamp) throw new Error("Retiro não encontrado");
 
-    const participantes = updates.participantes ?? antes.participantes;
+    // Preserva o membroNome denormalizado pelo matching (o validator de
+    // entrada nao o carrega — sem isso o vinculo sumiria da tela ao salvar).
+    const nomePorMembro = new Map<string, string>();
+    for (const p of antes.participantes) {
+      if (p.membroId && p.membroNome) nomePorMembro.set(p.membroId, p.membroNome);
+    }
+    const participantes = (updates.participantes ?? antes.participantes).map((p) => ({
+      ...p,
+      nome: p.nome.trim(),
+      membroNome: p.membroId ? nomePorMembro.get(p.membroId) : undefined,
+    }));
     const hospedagem = updates.hospedagem ?? antes.hospedagem;
+
+    // Validacoes de borda (espelham o formulario publico)
     if (participantes.length === 0) throw new Error("Informe ao menos um participante");
+    if (participantes.length > 10) {
+      throw new Error("Máximo de 10 participantes por inscrição");
+    }
+    const hojeIso = new Date(Date.now()).toISOString().slice(0, 10);
+    for (const p of participantes) {
+      if (!p.nome) throw new Error("Participante sem nome");
+      if (!DATA_RE.test(p.dataNascimento) || p.dataNascimento >= hojeIso) {
+        throw new Error(`Data de nascimento inválida: ${p.nome}`);
+      }
+    }
+    const qh = hospedagem.quartos;
+    if (
+      [qh.individual, qh.duplo, qh.triplo, qh.quadruplo, hospedagem.camasExtras, hospedagem.pets].some(
+        (n) => n < 0 || !Number.isInteger(n),
+      )
+    ) {
+      throw new Error("Quantidades de hospedagem inválidas");
+    }
+    if (totalQuartos(qh) === 0) throw new Error("Escolha ao menos um quarto");
+    if (updates.pagamentoPreferido?.forma === "PARCELADO") {
+      const n = updates.pagamentoPreferido.parcelas;
+      if (!n || n < 2 || n > 12) throw new Error("Número de parcelas inválido (2 a 12)");
+    }
+    const cpfNovo = updates.pagamentoPreferido?.cpfPagante;
+    if (cpfNovo !== undefined && cpfNovo !== "" && !cpfValido(cpfNovo)) {
+      throw new Error("CPF do pagante inválido");
+    }
 
     // Delta de quartos ajusta os contadores (so p/ inscricao ATIVA)
     if (antes.status === "ATIVA" && updates.hospedagem) {
@@ -234,6 +290,9 @@ export const editarInscricao = mutation({
     };
     if (updates.responsavel) {
       const soDigitos = updates.responsavel.whatsapp.replace(/\D/g, "");
+      if (soDigitos.length < 10 || soDigitos.length > 15) {
+        throw new Error("WhatsApp inválido");
+      }
       patch.responsavel = {
         ...antes.responsavel,
         nome: updates.responsavel.nome.trim(),
@@ -241,11 +300,49 @@ export const editarInscricao = mutation({
       };
     }
     if (updates.extras !== undefined) patch.extras = updates.extras;
+    if (updates.pagamentoPreferido !== undefined) {
+      patch.pagamentoPreferido = {
+        ...updates.pagamentoPreferido,
+        parcelas:
+          updates.pagamentoPreferido.forma === "PARCELADO"
+            ? updates.pagamentoPreferido.parcelas
+            : undefined,
+      };
+    }
 
     await ctx.db.patch(id, patch);
+
+    // Quadro de quartos: ocupante so continua alocado se o participante
+    // daquele indice for o mesmo (mesmo nome). Os demais saem — a secretaria
+    // realoca no quadro.
+    let ocupantesRemovidos = 0;
+    if (updates.participantes) {
+      const quartos = await ctx.db
+        .query("quartosRetiro")
+        .withIndex("by_retiro", (q) => q.eq("retiroId", antes.retiroId))
+        .collect();
+      for (const quarto of quartos) {
+        const mantidos = quarto.ocupantes.filter((o) => {
+          if (o.inscricaoId !== id) return true;
+          return participantes[o.participanteIndex]?.nome ===
+            antes.participantes[o.participanteIndex]?.nome;
+        });
+        if (mantidos.length !== quarto.ocupantes.length) {
+          ocupantesRemovidos += quarto.ocupantes.length - mantidos.length;
+          await ctx.db.patch(quarto._id, { ocupantes: mantidos });
+        }
+      }
+    }
+
     const depois = await ctx.db.get(id);
     await createFieldAuditLogs(ctx, antes, depois, "inscricoesRetiro");
-    return { id, valorTabela: calculo.total };
+    if (motivo && motivo.trim()) {
+      await createActionAuditLog(ctx, "EDICAO_INSCRICAO", "inscricoesRetiro", id, {
+        field: "motivo",
+        to: motivo.trim(),
+      });
+    }
+    return { id, valorTabela: calculo.total, ocupantesRemovidos };
   },
 });
 

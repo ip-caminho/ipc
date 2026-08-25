@@ -359,6 +359,168 @@ describe("retiro admin (fase 3)", () => {
     expect(acamp.reservados.duplo).toBe(2); // estoque 2, reservados 2
   });
 
+  it("editarInscricao aceita pagamento, motivo e rejeita parcelas/CPF invalidos", async () => {
+    const t = convexTest(schema, modules);
+    const admin = await seedAdmin(t);
+    await admin.mutation(api.retiro.mutations.criar, ARGS_ACAMP);
+    await t.mutation(api.public.retiro.responder, argsInscricao("11911110009"));
+    const acampId = (await admin.query(api.retiro.queries.listar, {}))[0]._id;
+    const insc = (
+      await admin.query(api.retiro.queries.listarInscricoes, { retiroId: acampId })
+    )[0];
+
+    await admin.mutation(api.retiro.mutations.editarInscricao, {
+      id: insc._id,
+      pagamentoPreferido: { forma: "PARCELADO", parcelas: 3, cpfPagante: "11144477735" },
+      motivo: "Combinado por telefone",
+    });
+    const depois = await admin.query(api.retiro.queries.getInscricao, { id: insc._id });
+    expect(depois?.pagamentoPreferido.forma).toBe("PARCELADO");
+    expect(depois?.pagamentoPreferido.parcelas).toBe(3);
+
+    // Motivo vira log de acao
+    const logs = await t.run(async (ctx) =>
+      ctx.db
+        .query("auditLogs")
+        .filter((q) => q.eq(q.field("action"), "EDICAO_INSCRICAO"))
+        .collect(),
+    );
+    expect(logs.length).toBe(1);
+    expect(logs[0].to).toBe("Combinado por telefone");
+
+    await expect(
+      admin.mutation(api.retiro.mutations.editarInscricao, {
+        id: insc._id,
+        pagamentoPreferido: { forma: "PARCELADO", parcelas: 13 },
+      }),
+    ).rejects.toThrow(/parcelas/i);
+
+    await expect(
+      admin.mutation(api.retiro.mutations.editarInscricao, {
+        id: insc._id,
+        pagamentoPreferido: { forma: "A_VISTA", cpfPagante: "11111111111" },
+      }),
+    ).rejects.toThrow(/CPF/i);
+  });
+
+  it("editarInscricao recusa inscricao cancelada e data de nascimento invalida", async () => {
+    const t = convexTest(schema, modules);
+    const admin = await seedAdmin(t);
+    await admin.mutation(api.retiro.mutations.criar, ARGS_ACAMP);
+    await t.mutation(api.public.retiro.responder, argsInscricao("11911110010"));
+    const acampId = (await admin.query(api.retiro.queries.listar, {}))[0]._id;
+    const insc = (
+      await admin.query(api.retiro.queries.listarInscricoes, { retiroId: acampId })
+    )[0];
+
+    await expect(
+      admin.mutation(api.retiro.mutations.editarInscricao, {
+        id: insc._id,
+        participantes: [
+          { nome: "Adulto", dataNascimento: "2090-01-01", participaPalestras: true },
+        ],
+      }),
+    ).rejects.toThrow(/nascimento/i);
+
+    await admin.mutation(api.retiro.mutations.cancelarInscricao, { id: insc._id });
+    await expect(
+      admin.mutation(api.retiro.mutations.editarInscricao, {
+        id: insc._id,
+        extras: { observacao: "tarde demais" },
+      }),
+    ).rejects.toThrow(/cancelada/i);
+  });
+
+  it("editarInscricao preserva o membroNome do matching", async () => {
+    const t = convexTest(schema, modules);
+    const admin = await seedAdmin(t);
+    await admin.mutation(api.retiro.mutations.criar, ARGS_ACAMP);
+    await t.mutation(api.public.retiro.responder, argsInscricao("11911110011"));
+    const acampId = (await admin.query(api.retiro.queries.listar, {}))[0]._id;
+    const insc = (
+      await admin.query(api.retiro.queries.listarInscricoes, { retiroId: acampId })
+    )[0];
+
+    const membroId = await t.run(async (ctx) => {
+      const eid = await ctx.db.insert("entidades", {
+        tipoEntidade: "PF",
+        papeis: [],
+        status: "ATIVO",
+        nomeCompleto: "Fulano da Silva",
+      });
+      return ctx.db.insert("membros", { entidadeId: eid, role: "membro" });
+    });
+    await admin.mutation(api.retiro.mutations.confirmarMatching, {
+      inscricaoId: insc._id,
+      participanteIndex: 0,
+      membroId,
+    });
+
+    await admin.mutation(api.retiro.mutations.editarInscricao, {
+      id: insc._id,
+      participantes: [
+        {
+          nome: "Adulto",
+          dataNascimento: "1990-01-01",
+          participaPalestras: true,
+          membroId,
+        },
+      ],
+    });
+    const depois = await admin.query(api.retiro.queries.getInscricao, { id: insc._id });
+    expect(depois?.participantes[0].membroNome).toBe("Fulano da Silva");
+  });
+
+  it("editarInscricao mantem no quadro quem nao mudou e remove o resto", async () => {
+    const t = convexTest(schema, modules);
+    const admin = await seedAdmin(t);
+    await admin.mutation(api.retiro.mutations.criar, ARGS_ACAMP);
+    await t.mutation(
+      api.public.retiro.responder,
+      argsInscricao("11911110012", {
+        participantes: [
+          { nome: "Adulto", dataNascimento: "1990-01-01", participaPalestras: true },
+          { nome: "Conjuge", dataNascimento: "1992-01-01", participaPalestras: true },
+        ],
+      }),
+    );
+    const acampId = (await admin.query(api.retiro.queries.listar, {}))[0]._id;
+    const insc = (
+      await admin.query(api.retiro.queries.listarInscricoes, { retiroId: acampId })
+    )[0];
+
+    const quartoId = await admin.mutation(api.retiro.quartos.criarQuarto, {
+      retiroId: acampId,
+      tipo: "DUPLO",
+    });
+    await admin.mutation(api.retiro.quartos.moverOcupante, {
+      retiroId: acampId,
+      inscricaoId: insc._id,
+      participanteIndex: 0,
+      quartoId,
+    });
+    await admin.mutation(api.retiro.quartos.moverOcupante, {
+      retiroId: acampId,
+      inscricaoId: insc._id,
+      participanteIndex: 1,
+      quartoId,
+    });
+
+    // Troca o 2o participante: o 1o continua alocado, o 2o sai do quadro.
+    const r = await admin.mutation(api.retiro.mutations.editarInscricao, {
+      id: insc._id,
+      participantes: [
+        { nome: "Adulto", dataNascimento: "1990-01-01", participaPalestras: true },
+        { nome: "Outro Nome", dataNascimento: "1995-01-01", participaPalestras: true },
+      ],
+    });
+    expect(r.ocupantesRemovidos).toBe(1);
+
+    const quarto = await t.run(async (ctx) => ctx.db.get(quartoId));
+    expect(quarto?.ocupantes.length).toBe(1);
+    expect(quarto?.ocupantes[0].participanteIndex).toBe(0);
+  });
+
   it("confirmarMatching vincula participante a membro e mostra o nome", async () => {
     const t = convexTest(schema, modules);
     const admin = await seedAdmin(t);

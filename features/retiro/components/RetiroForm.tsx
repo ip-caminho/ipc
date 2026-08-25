@@ -21,11 +21,9 @@ import {
 import { DateInputBR } from "@/shared/components/ui/date-input-br";
 import { Plus, Trash2, UserRound, Loader2, Copy, Check, Receipt } from "lucide-react";
 import { calcularValorInscricao, idadeNaData, numDiarias } from "@convex/retiro/calculoHelpers";
-import { isValidCPF } from "@shared/lib/validations/brazilian";
+import { comRegrasDeInscricao, inscricaoBaseShape } from "../lib/validations";
 import type { RetiroPublico } from "../lib/data";
 import { LoginModalInline } from "@features/site-publico/components/LoginModalInline";
-
-const hojeIso = () => new Date().toISOString().slice(0, 10);
 
 // Palestras: marcadas por padrao so a partir dos 15 anos (crianca nao paga palestra)
 const IDADE_PALESTRA = 15;
@@ -36,54 +34,13 @@ const IDADE_PALESTRA = 15;
 // toda no sistema.
 const PRE_PREENCHER_MEMBRO: boolean = false;
 
-const participanteSchema = z.object({
-  nome: z.string().trim().min(3, "Nome completo"),
-  dataNascimento: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Informe a data")
-    .refine((d) => d < hojeIso(), "Data no futuro"),
-  participaPalestras: z.boolean(),
-  // Vínculo com o cadastro de membro (vem do pré-preenchimento; some se o nome
-  // for editado). Reconfirmado no servidor.
-  membroId: z.string().optional(),
-});
-
-const formSchema = z
-  .object({
-    responsavelNome: z.string().trim().min(3, "Informe seu nome"),
-    responsavelWhatsapp: z
-      .string()
-      .refine((s) => {
-        const d = s.replace(/\D/g, "");
-        return d.length >= 10 && d.length <= 15;
-      }, "WhatsApp inválido"),
-    participantes: z.array(participanteSchema).min(1, "Adicione ao menos um participante").max(10),
-    quartosIndividual: z.number().int().min(0),
-    quartosDuplo: z.number().int().min(0),
-    quartosTriplo: z.number().int().min(0),
-    quartosQuadruplo: z.number().int().min(0),
-    camasExtras: z.number().int().min(0),
-    pets: z.number().int().min(0),
-    colegaDeQuarto: z.string().optional(),
-    berco: z.boolean(),
-    necessidadesEspeciais: z.string().optional(),
-    observacao: z.string().optional(),
-    forma: z.enum(["A_VISTA", "PARCELADO"]),
-    parcelas: z.string().optional(),
-    cpfPagante: z
-      .string()
-      .refine((s) => isValidCPF(s ?? ""), "CPF do pagante inválido"),
+const formSchema = comRegrasDeInscricao(
+  z.object({
+    ...inscricaoBaseShape,
     lgpd: z.boolean().refine((v) => v, "Confirme que leu as condições"),
     website: z.string().optional(), // honeypot
-  })
-  .refine(
-    (d) => d.quartosIndividual + d.quartosDuplo + d.quartosTriplo + d.quartosQuadruplo > 0,
-    { message: "Escolha ao menos um quarto", path: ["quartosDuplo"] },
-  )
-  .refine(
-    (d) => d.forma !== "PARCELADO" || (Number(d.parcelas) >= 2 && Number(d.parcelas) <= 12),
-    { message: "Escolha de 2 a 12 parcelas", path: ["parcelas"] },
-  );
+  }),
+);
 
 type FormValues = z.infer<typeof formSchema>;
 
