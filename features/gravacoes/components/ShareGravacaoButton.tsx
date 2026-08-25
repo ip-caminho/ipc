@@ -43,7 +43,8 @@ export function ShareGravacaoButton({
     setBusy(true);
     try {
       const { token } = await gerar({ gravacaoId });
-      setUrl(`${window.location.origin}/g/${token}`);
+      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
+      setUrl(`${baseUrl}/g/${token}`);
       setOpen(true);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao gerar link");

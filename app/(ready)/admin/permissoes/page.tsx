@@ -223,7 +223,8 @@ function ConvitesTab() {
   const handleGenerateInvite = async (role?: string) => {
     try {
       const token = await generateInvite({ role });
-      const link = `${window.location.origin}/convite/${token}`;
+      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
+      const link = `${baseUrl}/convite/${token}`;
       setInviteLink(link);
       toast.success("Convite gerado!");
     } catch (error) {
