@@ -23,6 +23,8 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useEscutaTracker } from "@features/gravacoes/hooks/useEscutaTracker";
+import { OfflineToggle } from "@features/gravacoes/components/OfflineToggle";
+import { useOfflineOpcional } from "@shared/offline/OfflineProvider";
 import { useState } from "react";
 import { cn } from "@shared/lib/utils/cn";
 import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
@@ -36,6 +38,7 @@ export default function GravacaoDetailPage() {
   const comentarios = useQuery(api.gravacoes.comentarios.listByGravacao, { gravacaoId: id as Id<"gravacoes"> });
   const { ultimoSegundo } = useEscutaTracker(id as Id<"gravacoes">);
   const globalPlayer = useAudioPlayer();
+  const offline = useOfflineOpcional();
   const [highlightId, setHighlightId] = useState<string | null>(null);
   const [resumoExpanded, setResumoExpanded] = useState(false);
 
@@ -73,14 +76,22 @@ export default function GravacaoDetailPage() {
     && globalPlayer.track?.fimSermao === segFim;
   const isThisPlaying = isThisTrack && globalPlayer.isPlaying;
 
+  // Audio guardado no aparelho tem prioridade: toca sem rede e sem gastar
+  // dados. `fonte` e null quando nada foi guardado para esta gravacao.
+  const fonte = offline?.fonteDe(gravacao._id) ?? null;
+
   const handlePlay = () => {
     if (isThisPlaying) {
       globalPlayer.pause();
     } else if (isThisTrack) {
       globalPlayer.resume();
     } else {
+      if (fonte) offline?.registrarUso(gravacao._id);
       globalPlayer.play({
-        url: gravacao.audioUrl!,
+        url: fonte?.url ?? gravacao.audioUrl!,
+        fallbackUrl: fonte ? gravacao.audioUrl! : undefined,
+        srcOffset: fonte?.offsetSegundos ?? 0,
+        onErroFonte: fonte ? () => void offline?.invalidar(gravacao._id) : undefined,
         title: gravacao.titulo,
         artist: gravacao.pregadorNome || gravacao.pregadorInfo?.nome || undefined,
         gravacaoId: gravacao._id,
@@ -168,6 +179,22 @@ export default function GravacaoDetailPage() {
                 {isThisPlaying ? "Pausar" : "Ouvir"}
               </span>
             </button>
+          )}
+
+          {/* Guardar no aparelho */}
+          {hasAudio && (
+            <OfflineToggle
+              pedido={{
+                gravacaoId: gravacao._id,
+                url: gravacao.audioUrl!,
+                titulo: gravacao.titulo,
+                pregadorNome: pregador || undefined,
+                data: gravacao.data,
+                inicio: segInicio,
+                fim: segFim,
+              }}
+              className="-ml-2"
+            />
           )}
 
           {/* 5. Reações + compartilhar */}

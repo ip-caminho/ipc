@@ -12,6 +12,7 @@ import { QuiosqueShell } from "@shared/components/layout/QuiosqueShell";
 import { ErrorBoundary } from "@shared/components/ErrorBoundary";
 import { SidebarInset, SidebarProvider } from "@/shared/components/ui/sidebar";
 import { AudioPlayerProvider } from "@shared/audio/AudioPlayerProvider";
+import { OfflineProvider } from "@shared/offline/OfflineProvider";
 import { GlobalAudioPlayer } from "@shared/audio/GlobalAudioPlayer";
 import { PlayerAwareMain } from "@shared/audio/PlayerAwareMain";
 import { useAuth } from "@shared/providers/PermissionsProvider";
@@ -73,11 +74,14 @@ export default function ReadyLayout({
 
   return (
     <AuthGuard>
-      <AudioPlayerProvider>
-        <ErrorBoundary fallback={<NormalShell>{children}</NormalShell>}>
-          <ShellSelector>{children}</ShellSelector>
-        </ErrorBoundary>
-      </AudioPlayerProvider>
+      {/* Fora do player: o download continua enquanto o membro navega. */}
+      <OfflineProvider>
+        <AudioPlayerProvider>
+          <ErrorBoundary fallback={<NormalShell>{children}</NormalShell>}>
+            <ShellSelector>{children}</ShellSelector>
+          </ErrorBoundary>
+        </AudioPlayerProvider>
+      </OfflineProvider>
     </AuthGuard>
   );
 }
