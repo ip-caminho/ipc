@@ -403,6 +403,40 @@ describe("retiro admin (fase 3)", () => {
     ).rejects.toThrow(/CPF/i);
   });
 
+  it("editarInscricao nao apaga o CPF por omissao e mascara no audit", async () => {
+    const t = convexTest(schema, modules);
+    const admin = await seedAdmin(t);
+    await admin.mutation(api.retiro.mutations.criar, ARGS_ACAMP);
+    await t.mutation(api.public.retiro.responder, argsInscricao("11911110013"));
+    const acampId = (await admin.query(api.retiro.queries.listar, {}))[0]._id;
+    const insc = (
+      await admin.query(api.retiro.queries.listarInscricoes, { retiroId: acampId })
+    )[0];
+
+    // Sem cpfPagante nos args: o CPF ja gravado se mantem
+    await admin.mutation(api.retiro.mutations.editarInscricao, {
+      id: insc._id,
+      pagamentoPreferido: { forma: "A_VISTA" },
+    });
+    const doc = await t.run(async (ctx) => ctx.db.get(insc._id));
+    expect(doc?.pagamentoPreferido.cpfPagante).toBe("11144477735");
+
+    // Troca de CPF vai mascarada para o log
+    await admin.mutation(api.retiro.mutations.editarInscricao, {
+      id: insc._id,
+      pagamentoPreferido: { forma: "A_VISTA", cpfPagante: "52998224725" },
+    });
+    const logs = await t.run(async (ctx) =>
+      ctx.db
+        .query("auditLogs")
+        .filter((q) => q.eq(q.field("field"), "pagamentoPreferido.cpfPagante"))
+        .collect(),
+    );
+    expect(logs.length).toBeGreaterThan(0);
+    expect(String(logs[logs.length - 1].to)).not.toContain("52998224725");
+    expect(String(logs[logs.length - 1].to)).toMatch(/^\*\*\*\./);
+  });
+
   it("editarInscricao recusa inscricao cancelada e data de nascimento invalida", async () => {
     const t = convexTest(schema, modules);
     const admin = await seedAdmin(t);

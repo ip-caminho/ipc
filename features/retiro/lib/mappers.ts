@@ -9,10 +9,21 @@ type InscricaoLike = Pick<
   "responsavel" | "participantes" | "hospedagem" | "extras" | "pagamentoPreferido"
 >;
 
+/**
+ * O documento guarda o whatsapp em E.164 (+5511999998888), mas o campo do
+ * formulario (PhoneInputBR) trabalha com os digitos nacionais. Sem tirar o
+ * +55 a mascara leria o codigo do pais como DDD e cortaria os 2 ultimos
+ * digitos do numero.
+ */
+export function whatsappParaForm(e164: string): string {
+  const d = (e164 ?? "").replace(/\D/g, "");
+  return d.startsWith("55") && d.length > 11 ? d.slice(2) : d;
+}
+
 export function inscricaoToForm(insc: InscricaoLike): InscricaoEditValues {
   return {
     responsavelNome: insc.responsavel.nome,
-    responsavelWhatsapp: insc.responsavel.whatsapp,
+    responsavelWhatsapp: whatsappParaForm(insc.responsavel.whatsapp),
     participantes: insc.participantes.map((p) => ({
       nome: p.nome,
       dataNascimento: p.dataNascimento,
