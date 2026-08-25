@@ -276,7 +276,15 @@ export function InscricaoEditForm({
                     <Input
                       id={`p-nome-${i}`}
                       className={ALTURA}
-                      {...form.register(`participantes.${i}.nome`)}
+                      {...form.register(`participantes.${i}.nome`, {
+                        // Trocar o nome quebra o vinculo com o cadastro —
+                        // evita salvar "Maria" apontando para o membro "Joao".
+                        onChange: () => {
+                          if (form.getValues(`participantes.${i}.membroId`)) {
+                            form.setValue(`participantes.${i}.membroId`, undefined);
+                          }
+                        },
+                      })}
                     />
                     <Erro msg={errs.participantes?.[i]?.nome?.message} />
                   </div>

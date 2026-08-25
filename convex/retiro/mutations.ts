@@ -307,6 +307,9 @@ export const editarInscricao = mutation({
           updates.pagamentoPreferido.forma === "PARCELADO"
             ? updates.pagamentoPreferido.parcelas
             : undefined,
+        // CPF em branco nao apaga o que ja estava gravado (o patch substitui o
+        // objeto inteiro — limpar so acontece de proposito, nunca por omissao).
+        cpfPagante: cpfNovo || antes.pagamentoPreferido.cpfPagante,
       };
     }
 

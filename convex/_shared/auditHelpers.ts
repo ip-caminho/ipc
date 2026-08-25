@@ -5,7 +5,7 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 type MutationCtx = GenericMutationCtx<DataModel>;
 
 export const SKIP_FIELDS = new Set(["_id", "_creationTime"]);
-export const SENSITIVE_FIELDS = new Set(["cpf", "rg"]);
+export const SENSITIVE_FIELDS = new Set(["cpf", "rg", "cpfPagante"]);
 
 export function maskSensitiveValue(field: string, value: any): any {
   if (!SENSITIVE_FIELDS.has(field) || typeof value !== "string") return value;
