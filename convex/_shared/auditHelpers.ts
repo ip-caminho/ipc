@@ -139,7 +139,10 @@ export async function createActionAuditLog(
   ctx: MutationCtx,
   action: string,
   tableName: string,
-  recordId: string
+  recordId: string,
+  // Detalhe livre da acao (ex: motivo informado pela secretaria). Reaproveita
+  // os campos field/to do log — nao ha campo dedicado no schema.
+  detalhe?: { field: string; to: any }
 ): Promise<void> {
   const { userId, membroId } = await getAuditActor(ctx);
   await ctx.db.insert("auditLogs", {
@@ -148,6 +151,8 @@ export async function createActionAuditLog(
     referenciaId: recordId,
     userId,
     membroId,
+    field: detalhe?.field,
+    to: detalhe?.to,
     createdAt: Date.now(),
   });
 }

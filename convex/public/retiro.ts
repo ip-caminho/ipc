@@ -12,6 +12,7 @@ import {
   totalQuartos,
 } from "../retiro/calculoHelpers";
 import { createFieldAuditLogs } from "../_shared/auditHelpers";
+import { cpfValido } from "../_shared/cpf";
 import { parseFileUrl } from "../files/urls";
 
 // So aceita URL de um bucket nosso, na pasta de comprovantes (evita injetar
@@ -208,21 +209,6 @@ const hospedagemValidator = v.object({
 });
 
 const DATA_RE = /^\d{4}-\d{2}-\d{2}$/;
-
-// Valida CPF (11 digitos + digitos verificadores). Inline porque o Convex nao
-// empacota imports de fora de convex/ (shared/lib/validations/brazilian).
-function cpfValido(raw: string): boolean {
-  const c = raw.replace(/\D/g, "");
-  if (c.length !== 11 || /^(\d)\1{10}$/.test(c)) return false;
-  const dig = c.split("").map(Number);
-  for (let t = 9; t < 11; t++) {
-    let soma = 0;
-    for (let i = 0; i < t; i++) soma += dig[i] * (t + 1 - i);
-    const d = ((soma * 10) % 11) % 10;
-    if (d !== dig[t]) return false;
-  }
-  return true;
-}
 
 // Submissao publica da inscricao de grupo. Calcula o valor com snapshot da
 // tabela vigente. Sem limite de vagas por estoque de quartos.

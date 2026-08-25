@@ -92,6 +92,26 @@ export const getInscricao = query({
   },
 });
 
+// Dados que so o formulario de edicao precisa: o snapshot de precos da
+// inscricao (o valor combinado na epoca) + as datas do retiro, para o resumo
+// de valor ao vivo. Query separada de propositio — getInscricao reexecuta a
+// cada acao no drawer e nao deve carregar o snapshot.
+export const getInscricaoParaEdicao = query({
+  args: { id: v.id("inscricoesRetiro") },
+  handler: async (ctx, { id }) => {
+    await requirePermission(ctx, "retiro:manage");
+    const insc = await ctx.db.get(id);
+    if (!insc) return null;
+    const retiro = await ctx.db.get(insc.retiroId);
+    if (!retiro) return null;
+    return {
+      precosSnapshot: insc.precosSnapshot,
+      dataInicio: retiro.dataInicio,
+      dataFim: retiro.dataFim,
+    };
+  },
+});
+
 // Sugestoes de membro para um nome de participante (matching manual da
 // secretaria — nunca vinculamos automatico). Usa o full-text de entidades.
 export const sugerirMembros = query({

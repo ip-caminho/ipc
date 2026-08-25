@@ -1287,12 +1287,16 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     arquivos: [
       "app/(ready)/admin/retiro/[id]/page.tsx",
       "features/retiro/components/InscricaoDetalheDrawer.tsx",
+      "features/retiro/components/InscricaoEditForm.tsx",
+      "features/retiro/lib/validations.ts (zod compartilhado c/ o form publico)",
+      "features/retiro/lib/mappers.ts (doc <-> form)",
       "convex/retiro/queries.ts",
       "convex/retiro/mutations.ts",
     ],
     queries: [
       "retiro.queries.listarInscricoes (resumo financeiro por linha)",
       "retiro.queries.getInscricao",
+      "retiro.queries.getInscricaoParaEdicao (precosSnapshot + datas; so no modo edicao)",
       "retiro.queries.sugerirMembros (matching manual)",
     ],
     mutations: [
@@ -1300,14 +1304,15 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "retiro.mutations.cancelarInscricao (devolve quartos)",
       "retiro.mutations.promoverListaEspera",
       "retiro.mutations.recalcularValor (tabela vigente, explicito)",
-      "retiro.mutations.editarInscricao (recalcula com snapshot)",
+      "retiro.mutations.editarInscricao (recalcula com snapshot, ajusta estoque pelo delta, sincroniza o quadro de quartos e aceita motivo)",
       "retiro.mutations.removerComprovantePendente (apos conferir)",
     ],
     componentes: [
       "Tabela desktop -> cards mobile (regra mobile-ux)",
       "InscricaoDetalheDrawer (matching, financeiro resumido, acoes, 'Copiar link do comprovante', secao 'Divergencias de cadastro' quando o membro informou dado diferente do cadastro no submit publico)",
+      "InscricaoEditForm (edicao pela secretaria dentro do proprio drawer: responsavel, participantes, hospedagem, preferencias, pagamento e motivo; resumo de valor ao vivo com o snapshot da inscricao)",
     ],
-    notas: ["Permissao: retiro:manage. Financeiro: FinanceiroSection no drawer (comprovantes 'a conferir' enviados pelo pagante -> registrar/descartar, recebimentos c/ comprovante, descontos c/ saldo do fundo, sobra -> fundo, plano editavel) + FundoEventoCard (consolidado + aporte avulso)"],
+    notas: ["Editar inscricao: recalcula com o snapshot (preco combinado na epoca) — para usar a tabela vigente e 'Recalcular valor'. Participante trocado/removido sai do quadro de quartos (a secretaria realoca). Inscricao CANCELADA nao pode ser editada.", "Permissao: retiro:manage. Financeiro: FinanceiroSection no drawer (comprovantes 'a conferir' enviados pelo pagante -> registrar/descartar, recebimentos c/ comprovante, descontos c/ saldo do fundo, sobra -> fundo, plano editavel) + FundoEventoCard (consolidado + aporte avulso)"],
   },
   "/admin/retiro/[id]/quartos": {
     nome: "Secretaria - Quartos do retiro",
