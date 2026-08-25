@@ -12,15 +12,34 @@ import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { toCdnUrl } from "./utils";
+import {
+  enfileirarHeartbeat,
+  lerHeartbeatsPendentes,
+  limparHeartbeat,
+} from "@shared/offline/db";
 
 export interface AudioTrack {
+  /** Fonte a tocar: URL do CDN ou object URL de um audio guardado offline. */
   url: string;
   title: string;
   artist?: string;
   gravacaoId?: Id<"gravacoes">;
+  /** Bordas do trecho, em segundos do culto completo. */
   inicioSermao?: number | null;
   fimSermao?: number | null;
+  /** Ultimo segundo ouvido (do culto completo). */
   resumeFrom?: number | null;
+  /**
+   * Segundo do culto onde a fonte comeca. 0 para o arquivo completo; > 0
+   * quando a fonte e um trecho guardado offline.
+   */
+  srcOffset?: number;
+  /** Duracao do culto completo — mantem o heartbeat coerente com fonte parcial. */
+  duracaoTotal?: number;
+  /** URL do CDN, quando `url` e um blob offline. Usada se o blob nao tocar. */
+  fallbackUrl?: string;
+  /** Chamado quando a fonte offline falha e o player cai para o CDN. */
+  onErroFonte?: () => void;
 }
 
 export interface AudioPlayerState {
@@ -32,6 +51,7 @@ export interface AudioPlayerState {
   volume: number;
   maxVolume: number;
   duration: number;
+  playbackRate: number;
 }
 
 export interface AudioPlayerActions {
@@ -42,6 +62,7 @@ export interface AudioPlayerActions {
   seek: (relativeSeconds: number) => void;
   seekRelative: (delta: number) => void;
   setVolume: (v: number) => void;
+  setPlaybackRate: (r: number) => void;
   close: () => void;
 }
 
@@ -50,10 +71,33 @@ export type AudioPlayerContextType = AudioPlayerState & AudioPlayerActions;
 export const AudioPlayerContext = createContext<AudioPlayerContextType | null>(null);
 
 function trackKey(t: AudioTrack): string {
-  return `${t.url}|${t.inicioSermao ?? ""}|${t.fimSermao ?? ""}`;
+  return `${t.gravacaoId ?? t.url}|${t.inicioSermao ?? ""}|${t.fimSermao ?? ""}`;
+}
+
+/** Bordas do trecho convertidas para o tempo da fonte que esta tocando. */
+function bordasLocais(t: AudioTrack | null, duracaoFonte: number) {
+  const offset = t?.srcOffset ?? 0;
+  const temSegmento = t?.inicioSermao != null;
+  const inicio = temSegmento ? Math.max(0, (t!.inicioSermao as number) - offset) : 0;
+  const fim = t?.fimSermao != null ? (t.fimSermao as number) - offset : duracaoFonte;
+  return { inicio, fim, temSegmento, offset };
 }
 
 const HEARTBEAT_INTERVAL = 15_000;
+
+export const VELOCIDADES = [1, 1.25, 1.5, 1.75, 2] as const;
+const STORAGE_VELOCIDADE = "ipc:audio:playbackRate";
+
+function velocidadeSalva(): number {
+  if (typeof window === "undefined") return 1;
+  try {
+    const bruto = window.localStorage.getItem(STORAGE_VELOCIDADE);
+    const valor = bruto ? parseFloat(bruto) : 1;
+    return VELOCIDADES.includes(valor as (typeof VELOCIDADES)[number]) ? valor : 1;
+  } catch {
+    return 1;
+  }
+}
 
 export function AudioPlayerProvider({ children }: { children: ReactNode }) {
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -62,11 +106,14 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolumeState] = useState(1);
+  const [playbackRate, setPlaybackRateState] = useState(1);
   const pendingResumeRef = useRef<number | null>(null);
   const pendingPlayRef = useRef(false);
   const lastHeartbeatRef = useRef(0);
   const currentTrackKeyRef = useRef<string>("");
   const trackRef = useRef<AudioTrack | null>(null);
+  const playbackRateRef = useRef(1);
+  const tentouFallbackRef = useRef(false);
 
   // GainNode for volume boost (0-2x)
   const ctxRef = useRef<AudioContext | null>(null);
@@ -77,12 +124,18 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
   // @ts-ignore Convex TS2589
   const heartbeat = useMutation(api.gravacoes.escutas.heartbeat);
 
-  const inicio = track?.inicioSermao ?? 0;
-  const hasSegment = track?.inicioSermao != null;
-  const fim = track?.fimSermao ?? duration;
-  const segmentDuration = hasSegment ? fim - inicio : duration;
-  const relativeTime = hasSegment ? currentTime - inicio : currentTime;
+  const { inicio: inicioLocal, fim: fimLocal, temSegmento } = bordasLocais(track, duration);
+  const segmentDuration = temSegmento ? fimLocal - inicioLocal : duration;
+  const relativeTime = temSegmento ? currentTime - inicioLocal : currentTime;
   const maxVolume = gainReady ? 2 : 1;
+
+  // Preferencia de velocidade e por aparelho — nao vai para o servidor.
+  useEffect(() => {
+    const salva = velocidadeSalva();
+    playbackRateRef.current = salva;
+    setPlaybackRateState(salva);
+    if (audioRef.current) audioRef.current.playbackRate = salva;
+  }, []);
 
   const initGain = useCallback(() => {
     const audio = audioRef.current;
@@ -108,6 +161,33 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => () => { ctxRef.current?.close(); }, []);
 
+  // --- Fila de progresso: o que nao subiu offline sobe quando a rede volta ---
+
+  const enviarPendentes = useCallback(async () => {
+    const pendentes = await lerHeartbeatsPendentes();
+    for (const p of pendentes) {
+      try {
+        await heartbeat({
+          gravacaoId: p.gravacaoId as Id<"gravacoes">,
+          currentTime: p.currentTime,
+          duration: p.duration,
+        });
+        await limparHeartbeat(p.gravacaoId);
+      } catch {
+        // Rede caiu de novo — tenta na proxima.
+        break;
+      }
+    }
+  }, [heartbeat]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (navigator.onLine) void enviarPendentes();
+    const aoVoltar = () => { void enviarPendentes(); };
+    window.addEventListener("online", aoVoltar);
+    return () => window.removeEventListener("online", aoVoltar);
+  }, [enviarPendentes]);
+
   // --- Audio event handlers ---
 
   const handleLoadedMetadata = useCallback(() => {
@@ -115,11 +195,14 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
     const t = trackRef.current;
     if (!audio) return;
     setDuration(audio.duration);
+    audio.preservesPitch = true;
+    audio.playbackRate = playbackRateRef.current;
 
-    const resume = pendingResumeRef.current;
-    const segStart = t?.inicioSermao ?? 0;
-    const segEnd = t?.fimSermao ?? audio.duration;
-    const hasSeg = t?.inicioSermao != null;
+    const offset = t?.srcOffset ?? 0;
+    const resumeAbs = pendingResumeRef.current;
+    const resume = resumeAbs != null ? resumeAbs - offset : null;
+    const { inicio: segStart, temSegmento: hasSeg } = bordasLocais(t, audio.duration);
+    const segEnd = t?.fimSermao != null ? (t.fimSermao as number) - offset : audio.duration;
 
     // Resume from last position, but if too close to the end (< 10s), restart from beginning
     if (resume != null && resume >= segStart && resume < segEnd - 10) {
@@ -132,11 +215,41 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
 
   const handleCanPlay = useCallback(() => {
     const audio = audioRef.current;
-    if (!audio || !pendingPlayRef.current) return;
+    if (!audio) return;
+    audio.preservesPitch = true;
+    audio.playbackRate = playbackRateRef.current;
+    if (!pendingPlayRef.current) return;
     pendingPlayRef.current = false;
     audio.play().catch(() => {
       setIsPlaying(false);
     });
+  }, []);
+
+  // Audio offline que nao toca (blob corrompido, formato recusado pelo browser):
+  // volta para o CDN e avisa quem guardou, para descartar o arquivo local.
+  const handleError = useCallback(() => {
+    const audio = audioRef.current;
+    const t = trackRef.current;
+    if (!audio || !t?.fallbackUrl || tentouFallbackRef.current) return;
+    tentouFallbackRef.current = true;
+
+    const emCdn: AudioTrack = {
+      ...t,
+      url: t.fallbackUrl,
+      fallbackUrl: undefined,
+      srcOffset: 0,
+    };
+    trackRef.current = emCdn;
+    setTrack(emCdn);
+
+    audio.crossOrigin = "anonymous";
+    audio.src = toCdnUrl(emCdn.url);
+    pendingPlayRef.current = true;
+    audio.load();
+
+    // So depois de trocar a fonte: descartar o arquivo local revoga o
+    // object URL que estava no src.
+    t.onErroFonte?.();
   }, []);
 
   const handleTimeUpdate = useCallback(() => {
@@ -144,8 +257,8 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
     const t = trackRef.current;
     if (!audio) return;
 
-    const segStart = t?.inicioSermao ?? 0;
-    const hasSegs = t?.inicioSermao != null;
+    const offset = t?.srcOffset ?? 0;
+    const { inicio: segStart, temSegmento: hasSegs } = bordasLocais(t, audio.duration);
     const dur = audio.duration;
 
     // Skip boundary checks if duration not yet available
@@ -154,7 +267,7 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const segEnd = t?.fimSermao ?? dur;
+    const segEnd = t?.fimSermao != null ? (t.fimSermao as number) - offset : dur;
 
     if (hasSegs && audio.currentTime < segStart) {
       audio.currentTime = segStart;
@@ -168,16 +281,34 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
 
     setCurrentTime(audio.currentTime);
 
-    // Heartbeat
+    // Heartbeat — sempre em segundos do culto completo, mesmo com fonte parcial.
     if (t?.gravacaoId) {
       const now = Date.now();
       if (now - lastHeartbeatRef.current >= HEARTBEAT_INTERVAL) {
         lastHeartbeatRef.current = now;
-        heartbeat({
-          gravacaoId: t.gravacaoId,
-          currentTime: Math.round(audio.currentTime),
-          duration: Math.round(audio.duration),
-        }).catch(() => {});
+        const segundoAbsoluto = Math.round(audio.currentTime + offset);
+        const duracaoAbsoluta = Math.round(t.duracaoTotal ?? audio.duration + offset);
+        if (typeof navigator !== "undefined" && navigator.onLine === false) {
+          void enfileirarHeartbeat({
+            gravacaoId: t.gravacaoId,
+            currentTime: segundoAbsoluto,
+            duration: duracaoAbsoluta,
+            registradoEm: now,
+          });
+        } else {
+          heartbeat({
+            gravacaoId: t.gravacaoId,
+            currentTime: segundoAbsoluto,
+            duration: duracaoAbsoluta,
+          }).catch(() => {
+            void enfileirarHeartbeat({
+              gravacaoId: t.gravacaoId!,
+              currentTime: segundoAbsoluto,
+              duration: duracaoAbsoluta,
+              registradoEm: now,
+            });
+          });
+        }
       }
     }
   }, [heartbeat]);
@@ -210,15 +341,21 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
     currentTrackKeyRef.current = newKey;
     pendingResumeRef.current = newTrack.resumeFrom ?? null;
     lastHeartbeatRef.current = 0;
+    tentouFallbackRef.current = false;
     trackRef.current = newTrack;
     setTrack(newTrack);
     setCurrentTime(0);
     setDuration(0);
     setIsPlaying(true);
 
-    const cdnUrl = toCdnUrl(newTrack.url);
-    audio.crossOrigin = "anonymous";
-    audio.src = cdnUrl;
+    // Fonte offline e um object URL local: same-origin, nao passa pelo CDN.
+    // O crossOrigin nao e alterado — o elemento pode estar ligado ao
+    // AudioContext (GainNode) e trocar o atributo em uso quebra o audio.
+    const ehLocal = newTrack.url.startsWith("blob:");
+    if (!ehLocal) audio.crossOrigin = "anonymous";
+    audio.src = ehLocal ? newTrack.url : toCdnUrl(newTrack.url);
+    audio.preservesPitch = true;
+    audio.playbackRate = playbackRateRef.current;
     pendingPlayRef.current = true;
     audio.load();
   }, [initGain]);
@@ -240,10 +377,9 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
     if (!audio || !track) return;
     if (audio.paused) {
       if (ctxRef.current?.state === "suspended") ctxRef.current.resume();
-      const segEnd = track.fimSermao ?? audio.duration;
-      const hasSegs = track.inicioSermao != null;
+      const { inicio: segStart, fim: segEnd, temSegmento: hasSegs } = bordasLocais(track, audio.duration);
       if (hasSegs && audio.currentTime >= segEnd) {
-        audio.currentTime = track.inicioSermao ?? 0;
+        audio.currentTime = segStart;
       }
       audio.play().catch(() => {});
       setIsPlaying(true);
@@ -256,8 +392,7 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
   const seek = useCallback((relativeSeconds: number) => {
     const audio = audioRef.current;
     if (!audio || !track) return;
-    const segStart = track.inicioSermao ?? 0;
-    const hasSegs = track.inicioSermao != null;
+    const { inicio: segStart, temSegmento: hasSegs } = bordasLocais(track, audio.duration);
     const absolute = hasSegs ? segStart + relativeSeconds : relativeSeconds;
     audio.currentTime = absolute;
     setCurrentTime(absolute);
@@ -266,8 +401,7 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
   const seekRelative = useCallback((delta: number) => {
     const audio = audioRef.current;
     if (!audio || !track) return;
-    const segStart = track.inicioSermao ?? 0;
-    const segEnd = track.fimSermao ?? audio.duration;
+    const { inicio: segStart, fim: segEnd } = bordasLocais(track, audio.duration);
     const newTime = Math.max(segStart, Math.min(segEnd, audio.currentTime + delta));
     audio.currentTime = newTime;
     setCurrentTime(newTime);
@@ -287,6 +421,23 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
     } else if (audioRef.current) {
       audioRef.current.volume = Math.min(clamped, 1);
       audioRef.current.muted = clamped === 0;
+    }
+  }, []);
+
+  const setPlaybackRate = useCallback((r: number) => {
+    const clamped = Math.max(0.5, Math.min(3, r));
+    playbackRateRef.current = clamped;
+    setPlaybackRateState(clamped);
+    const audio = audioRef.current;
+    if (audio) {
+      // Mantem o tom da voz ao acelerar (padrao, mas explicito por causa do Safari).
+      audio.preservesPitch = true;
+      audio.playbackRate = clamped;
+    }
+    try {
+      window.localStorage.setItem(STORAGE_VELOCIDADE, String(clamped));
+    } catch {
+      // Storage indisponivel — velocidade vale so nesta sessao.
     }
   }, []);
 
@@ -315,6 +466,7 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
     volume,
     maxVolume,
     duration,
+    playbackRate,
     play,
     pause,
     resume,
@@ -322,6 +474,7 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
     seek,
     seekRelative,
     setVolume,
+    setPlaybackRate,
     close,
   };
 
@@ -336,6 +489,7 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
         onTimeUpdate={handleTimeUpdate}
         onPlay={() => setIsPlaying(true)}
         onEnded={handleEnded}
+        onError={handleError}
         style={{ display: "none" }}
       />
     </AudioPlayerContext.Provider>

@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import type { AudioPlayerContextType } from "./AudioPlayerProvider";
 
 export function useMediaSession(player: AudioPlayerContextType) {
-  const { track, isPlaying, relativeTime, segmentDuration, togglePlayPause, seekRelative, close } = player;
+  const { track, isPlaying, relativeTime, segmentDuration, playbackRate, togglePlayPause, seekRelative, close } = player;
 
   // Update metadata
   useEffect(() => {
@@ -58,11 +58,13 @@ export function useMediaSession(player: AudioPlayerContextType) {
     try {
       navigator.mediaSession.setPositionState({
         duration: segmentDuration,
-        playbackRate: 1,
+        // Velocidade real: com valor fixo a barra da tela de bloqueio
+        // desanda quando o membro ouve acelerado.
+        playbackRate: playbackRate || 1,
         position: Math.min(Math.max(0, relativeTime), segmentDuration),
       });
     } catch {
       // Invalid state
     }
-  }, [track, relativeTime, segmentDuration]);
+  }, [track, relativeTime, segmentDuration, playbackRate]);
 }
