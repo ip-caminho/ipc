@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useAudioPlayer } from "./useAudioPlayer";
 import { useMediaSession } from "./useMediaSession";
 import { formatTime } from "./utils";
+import { VelocidadeButton } from "./VelocidadeButton";
 import { Slider } from "@/shared/components/ui/slider";
 import { Button } from "@/shared/components/ui/button";
 import { Play, Pause, X, Volume2, VolumeX, SkipBack, SkipForward, MessageCircle } from "lucide-react";
@@ -11,7 +12,7 @@ import Link from "next/link";
 
 export function GlobalAudioPlayer({ compact = false }: { compact?: boolean } = {}) {
   const player = useAudioPlayer();
-  const { track, isPlaying, isActive, relativeTime, segmentDuration, volume, maxVolume, togglePlayPause, seek, seekRelative, setVolume, close } = player;
+  const { track, isPlaying, isActive, relativeTime, segmentDuration, volume, maxVolume, playbackRate, togglePlayPause, seek, seekRelative, setVolume, setPlaybackRate, close } = player;
 
   useMediaSession(player);
 
@@ -116,8 +117,15 @@ export function GlobalAudioPlayer({ compact = false }: { compact?: boolean } = {
             {formatTime(segmentDuration)}
           </span>
 
+          {/* Velocidade */}
+          <VelocidadeButton
+            playbackRate={playbackRate}
+            setPlaybackRate={setPlaybackRate}
+            className="ml-1"
+          />
+
           {/* Volume */}
-          <div className="flex items-center gap-1 shrink-0 ml-1">
+          <div className="flex items-center gap-1 shrink-0">
             <Button
               variant="ghost"
               size="icon"
@@ -176,8 +184,8 @@ export function GlobalAudioPlayer({ compact = false }: { compact?: boolean } = {
             </div>
           </div>
 
-          {/* Controls: skip back, play/pause, skip forward */}
-          <div className="flex items-center justify-center gap-6">
+          {/* Controls: skip back, play/pause, skip forward, velocidade */}
+          <div className="relative flex items-center justify-center gap-6">
             <Button
               variant="ghost"
               size="icon"
@@ -202,6 +210,12 @@ export function GlobalAudioPlayer({ compact = false }: { compact?: boolean } = {
             >
               <SkipForward className="h-4 w-4" />
             </Button>
+            <VelocidadeButton
+              playbackRate={playbackRate}
+              setPlaybackRate={setPlaybackRate}
+              size="lg"
+              className="absolute right-0"
+            />
           </div>
 
           {/* Link para pregação — não mostrar para avisos */}
