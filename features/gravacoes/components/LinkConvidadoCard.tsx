@@ -25,7 +25,8 @@ export function LinkConvidadoCard() {
   if (!data) return null;
 
   const token = data.token ?? null;
-  const url = token ? `${window.location.origin}/convidado/${token}` : null;
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
+  const url = token ? `${baseUrl}/convidado/${token}` : null;
 
   async function handleGerar() {
     setBusy(true);

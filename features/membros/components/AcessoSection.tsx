@@ -52,7 +52,8 @@ export function AcessoSection({ membroId }: { membroId: Id<"membros"> }) {
     setLoading(true);
     try {
       const { token } = await gerarLink({ membroId });
-      setLink(`${window.location.origin}/ativar/${token}`);
+      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
+      setLink(`${baseUrl}/ativar/${token}`);
       setOpen(true);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro ao gerar link");

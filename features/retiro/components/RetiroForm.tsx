@@ -204,7 +204,7 @@ function LinkComprovante({ token }: { token: string }) {
   const [copiado, setCopiado] = useState(false);
   const url =
     typeof window !== "undefined"
-      ? `${window.location.origin}/comprovante/${token}`
+      ? `${process.env.NEXT_PUBLIC_SITE_URL || window.location.origin}/comprovante/${token}`
       : "";
   return (
     <div className={`mx-auto mt-6 max-w-[46ch] border ${BORDA} bg-[#F4F0E8] p-4 text-center`}>

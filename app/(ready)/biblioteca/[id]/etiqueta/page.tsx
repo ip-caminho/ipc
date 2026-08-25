@@ -17,7 +17,7 @@ export default function EtiquetaPage() {
   const [origin, setOrigin] = useState("");
 
   useEffect(() => {
-    setOrigin(window.location.origin);
+    setOrigin(process.env.NEXT_PUBLIC_SITE_URL || window.location.origin);
   }, []);
 
   if (livro === undefined) return <div className="p-6">Carregando...</div>;

@@ -113,7 +113,8 @@ export function AcessoPanel() {
   async function gerar(row: Row) {
     try {
       const { token } = await gerarLink({ membroId: row.membroId });
-      setLink({ url: `${window.location.origin}/ativar/${token}`, row });
+      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
+      setLink({ url: `${baseUrl}/ativar/${token}`, row });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro ao gerar link");
     }
@@ -122,10 +123,11 @@ export function AcessoPanel() {
   async function gerarLote(rows: Row[]) {
     setLoteLoading(true);
     try {
+      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
       const linhas: string[] = [];
       for (const row of rows) {
         const { token } = await gerarLink({ membroId: row.membroId });
-        const url = `${window.location.origin}/ativar/${token}`;
+        const url = `${baseUrl}/ativar/${token}`;
         linhas.push(`${row.nome}: ${mensagemWa(row.nome, url)}`);
       }
       setLote(linhas.join("\n\n"));
