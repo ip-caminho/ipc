@@ -153,48 +153,46 @@ export default function GravacaoDetailPage() {
             </div>
           )}
 
-          {/* Botão de áudio */}
+          {/* Botão de áudio + guardar no aparelho (mobile) */}
           {hasAudio && (
-            <button
-              onClick={handlePlay}
-              className="flex items-center gap-3 active:opacity-80 transition-opacity"
-            >
-              <div
-                className={cn(
-                  "shrink-0 h-12 w-12 rounded-full flex items-center justify-center transition-colors",
-                  isThisPlaying
-                    ? "bg-primary/10"
-                    : "bg-primary",
-                )}
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handlePlay}
+                className="flex items-center gap-3 active:opacity-80 transition-opacity"
               >
-                {isThisPlaying
-                  ? <Pause className="h-5 w-5 text-primary" fill="currentColor" strokeWidth={0} />
-                  : <Play className="h-5 w-5 text-primary-foreground ml-0.5" fill="currentColor" strokeWidth={0} />
-                }
-              </div>
-              <span className={cn(
-                "text-sm font-medium",
-                isThisPlaying ? "text-primary" : "text-foreground",
-              )}>
-                {isThisPlaying ? "Pausar" : "Ouvir"}
-              </span>
-            </button>
-          )}
+                <div
+                  className={cn(
+                    "shrink-0 h-12 w-12 rounded-full flex items-center justify-center transition-colors",
+                    isThisPlaying
+                      ? "bg-primary/10"
+                      : "bg-primary",
+                  )}
+                >
+                  {isThisPlaying
+                    ? <Pause className="h-5 w-5 text-primary" fill="currentColor" strokeWidth={0} />
+                    : <Play className="h-5 w-5 text-primary-foreground ml-0.5" fill="currentColor" strokeWidth={0} />
+                  }
+                </div>
+                <span className={cn(
+                  "text-sm font-medium",
+                  isThisPlaying ? "text-primary" : "text-foreground",
+                )}>
+                  {isThisPlaying ? "Pausar" : "Ouvir"}
+                </span>
+              </button>
 
-          {/* Guardar no aparelho */}
-          {hasAudio && (
-            <OfflineToggle
-              pedido={{
-                gravacaoId: gravacao._id,
-                url: gravacao.audioUrl!,
-                titulo: gravacao.titulo,
-                pregadorNome: pregador || undefined,
-                data: gravacao.data,
-                inicio: segInicio,
-                fim: segFim,
-              }}
-              className="-ml-2"
-            />
+              <OfflineToggle
+                pedido={{
+                  gravacaoId: gravacao._id,
+                  url: gravacao.audioUrl!,
+                  titulo: gravacao.titulo,
+                  pregadorNome: pregador || undefined,
+                  data: gravacao.data,
+                  inicio: segInicio,
+                  fim: segFim,
+                }}
+              />
+            </div>
           )}
 
           {/* 5. Reações + compartilhar */}
