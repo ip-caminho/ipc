@@ -17,7 +17,8 @@ export function ContinueListeningCard() {
 
   if (!data) return null;
 
-  const progressoPct = Math.min(100, Math.max(0, Math.round(data.progresso * 100)));
+  // `progresso` ja vem em porcentagem (0-100), como o schema define.
+  const progressoPct = Math.min(100, Math.max(0, Math.round(data.progresso)));
 
   return (
     <Link

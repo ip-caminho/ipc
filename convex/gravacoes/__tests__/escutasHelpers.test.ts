@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { calcProgress, isComplete, mergeHeartbeat } from "../escutasHelpers";
+import {
+  calcProgress,
+  emAndamento,
+  heartbeatMudou,
+  isComplete,
+  mergeHeartbeat,
+} from "../escutasHelpers";
 
 describe("calcProgress", () => {
   it("calcula percentual corretamente", () => {
@@ -90,5 +96,68 @@ describe("mergeHeartbeat", () => {
     expect(result.progresso).toBe(5);
     expect(result.ultimoSegundo).toBe(5);
     expect(result.completou).toBe(false);
+  });
+});
+
+describe("emAndamento", () => {
+  // Regressao: o filtro ja comparou 0-100 contra 0.05/0.95 (fracao). Nenhum
+  // registro passava, o card "Continuar ouvindo" nunca aparecia e a query
+  // varria o historico inteiro do membro a cada heartbeat.
+  it("aceita quem esta no meio da pregacao", () => {
+    expect(emAndamento({ completou: false, progresso: 42 })).toBe(true);
+    expect(emAndamento({ completou: false, progresso: 6 })).toBe(true);
+    expect(emAndamento({ completou: false, progresso: 94 })).toBe(true);
+  });
+
+  it("descarta quem mal comecou", () => {
+    expect(emAndamento({ completou: false, progresso: 0 })).toBe(false);
+    expect(emAndamento({ completou: false, progresso: 5 })).toBe(false);
+  });
+
+  it("descarta quem praticamente terminou", () => {
+    expect(emAndamento({ completou: false, progresso: 95 })).toBe(false);
+    expect(emAndamento({ completou: false, progresso: 100 })).toBe(false);
+  });
+
+  it("descarta quem ja completou, mesmo com progresso no meio", () => {
+    expect(emAndamento({ completou: true, progresso: 42 })).toBe(false);
+  });
+
+  it("trabalha na mesma escala que calcProgress grava", () => {
+    // 40 min de uma pregacao de 60 min = 67%, e nao 0.67
+    const progresso = calcProgress(2400, 3600);
+    expect(progresso).toBe(67);
+    expect(emAndamento({ completou: false, progresso })).toBe(true);
+  });
+});
+
+describe("heartbeatMudou", () => {
+  const base = { progresso: 40, ultimoSegundo: 1200, completou: false, duracaoTotal: 3000 };
+
+  it("nao escreve quando nada avancou", () => {
+    const merged = mergeHeartbeat(base, 40, 1200);
+    expect(heartbeatMudou(base, merged, 3000)).toBe(false);
+  });
+
+  it("nao escreve quando o ouvinte volta para tras", () => {
+    // mergeHeartbeat nunca regride: reouvir trecho ja ouvido nao muda o doc
+    const merged = mergeHeartbeat(base, 20, 600);
+    expect(heartbeatMudou(base, merged, 3000)).toBe(false);
+  });
+
+  it("escreve quando o ouvinte avanca", () => {
+    const merged = mergeHeartbeat(base, 41, 1230);
+    expect(heartbeatMudou(base, merged, 3000)).toBe(true);
+  });
+
+  it("escreve quando a escuta se completa", () => {
+    const merged = mergeHeartbeat(base, 95, 2850);
+    expect(merged.completou).toBe(true);
+    expect(heartbeatMudou(base, merged, 3000)).toBe(true);
+  });
+
+  it("escreve quando a duracao conhecida do audio muda", () => {
+    const merged = mergeHeartbeat(base, 40, 1200);
+    expect(heartbeatMudou(base, merged, 3600)).toBe(true);
   });
 });
