@@ -161,16 +161,23 @@ Entregue: `shared/offline/{db,rangeSermao,OfflineProvider}.ts(x)`,
 Decisões tomadas na implementação:
 - **Duração total** não existe no schema de `gravacoes`: é obtida com um
   `<audio preload="metadata">` antes do download (poucos KB), e sem ela o
-  download cai para o arquivo inteiro.
+  download cai para o arquivo inteiro. Isso não é contornável por constante:
+  o bitrate varia entre 64 kbps e 32 kbps (o compressor cai para 32k acima
+  de 1h), e o culto medido em prod estava em 32 kbps.
 - **Toggle só na tela de detalhe**, não na lista — é onde o membro está quando
   decide guardar; evita 20 botões numa lista. Reavaliar depois.
 - **Fallback se o blob não tocar**: `<audio onError>` troca para o CDN, e o
   arquivo local é descartado (`onErroFonte` → `invalidar`). Cobre o risco de o
   browser recusar um MP3 recortado sem header.
-- **Range não testado com arquivo real**: as URLs do deployment de dev estão
-  404 e o de prod é read-only aqui. O CORS do CDN já libera `Range`
-  (`access-control-allow-headers: Range`). O código detecta em runtime: só
-  trata como parcial se a resposta for `206`. **Validar em preview/prod.**
+- **Range validado em produção (25/08/2026)**, com um culto real
+  (`gravacoes-audio/publico_1787497916498.mp3`, 26,3 MB, 115 min, 32 kbps):
+  `accept-ranges: bytes`, resposta `206`, `content-range` correto e
+  `access-control-allow-origin: *`. Pedindo os 30 min do sermão com 2 s de
+  margem, o trecho veio com **1804 s — exatamente a duração esperada**
+  (o cálculo linear do CBR acerta no segundo), 6,9 MB, **74% de economia**.
+  Um `<audio>` carregou o blob recortado sem header e reportou a duração
+  certa, o que fecha o risco de o browser recusar o corte por bytes.
+  O código continua tratando como parcial só quando vem `206`.
 - **Economia mínima**: se o trecho passa de 85% do culto, baixa inteiro (o
   Range não compensa o risco).
 - **Retenção**: 7 dias sem uso, aplicada na abertura do app; `usadoEm`
@@ -225,8 +232,8 @@ Decisões tomadas na implementação:
 | `package.json` | Modificar | `idb`; depois `@serwist/next` |
 
 ## Ordem de Implementação
-1. ~~**Fase 0 + velocidade**~~ — feito (25/08). Falta validar em iPhone e
-   Android reais no metrô e confirmar o `206` do CDN em prod.
+1. ~~**Fase 0 + velocidade**~~ — feito e em produção (25/08); `206` do CDN
+   confirmado com arquivo real. Falta validar em iPhone e Android no metrô.
 2. Biblioteca `/gravacoes/offline` + auth offline. ~2 dias.
 3. Serwist (app shell) + preservação do push + teste de atualização. ~2-3 dias.
 4. iOS: orientação "Adicionar à Tela de Início", `storage.persist`, testes. ~1-2 dias.
