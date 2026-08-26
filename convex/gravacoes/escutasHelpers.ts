@@ -44,3 +44,54 @@ export function mergeHeartbeat(
     completou: existing.completou || isComplete(Math.max(existing.progresso, newProgresso)),
   };
 }
+
+/**
+ * Limites do "continuar ouvindo", em porcentagem (0-100) — a mesma escala que
+ * `calcProgress` grava e que o schema documenta.
+ *
+ * Abaixo do minimo a pessoa mal comecou (encostou no play); acima do maximo
+ * praticamente terminou, e retomar nos ultimos segundos nao ajuda ninguem.
+ */
+export const CONTINUAR_MIN_PCT = 5;
+export const CONTINUAR_MAX_PCT = 95;
+
+/**
+ * A escuta esta em andamento — comecou de verdade e ainda nao acabou.
+ *
+ * Cuidado com a escala: comparar contra 0.05/0.95 (fracao) descarta todos os
+ * registros e faz `continuarOuvindo` varrer o historico inteiro do membro sem
+ * nunca achar nada.
+ */
+export function emAndamento(escuta: {
+  completou: boolean;
+  progresso: number;
+}): boolean {
+  return (
+    !escuta.completou &&
+    escuta.progresso > CONTINUAR_MIN_PCT &&
+    escuta.progresso < CONTINUAR_MAX_PCT
+  );
+}
+
+/**
+ * O heartbeat so precisa escrever quando algo de fato avancou. Sem isso, um
+ * audio pausado (ou reouvindo trecho ja ouvido) grava a cada 15s e invalida
+ * todos os indices da tabela a troco de nada.
+ */
+export function heartbeatMudou(
+  existing: {
+    progresso: number;
+    ultimoSegundo: number;
+    completou: boolean;
+    duracaoTotal: number;
+  },
+  merged: { progresso: number; ultimoSegundo: number; completou: boolean },
+  duracaoTotal: number
+): boolean {
+  return (
+    merged.progresso !== existing.progresso ||
+    merged.ultimoSegundo !== existing.ultimoSegundo ||
+    merged.completou !== existing.completou ||
+    duracaoTotal !== existing.duracaoTotal
+  );
+}

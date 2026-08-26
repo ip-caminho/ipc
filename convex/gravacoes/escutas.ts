@@ -1,7 +1,13 @@
 import { query, mutation } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { calcProgress, isComplete, mergeHeartbeat } from "./escutasHelpers";
+import {
+  calcProgress,
+  emAndamento,
+  heartbeatMudou,
+  isComplete,
+  mergeHeartbeat,
+} from "./escutasHelpers";
 
 async function getMembroId(ctx: any) {
   const userId = await getAuthUserId(ctx);
@@ -37,6 +43,9 @@ export const heartbeat = mutation({
 
     if (existing) {
       const merged = mergeHeartbeat(existing, progresso, currentTime);
+      // Escrita so quando algo avancou: audio pausado ou trecho reouvido nao
+      // mudam nada, e cada patch reescreve os indices da tabela.
+      if (!heartbeatMudou(existing, merged, duration)) return;
       await ctx.db.patch(existing._id, {
         ultimoSegundo: merged.ultimoSegundo,
         duracaoTotal: duration,
@@ -74,6 +83,9 @@ export const getMyProgress = query({
   },
 });
 
+/** Teto de docs examinados por execucao de `continuarOuvindo`. */
+const LIMITE_VARREDURA = 25;
+
 /**
  * Último sermão em progresso do usuário atual.
  * Filtra por: sermão publicado, progresso entre 5% e 95%, não completado.
@@ -82,6 +94,10 @@ export const getMyProgress = query({
  * Itera lazy pelo indice by_membro_atualizado (desc) com early-exit — essa
  * query e invalidada pelo heartbeat do player a cada 15s durante a escuta,
  * entao cada re-execucao precisa ler poucos docs, nao o historico inteiro.
+ *
+ * O teto de varredura garante isso mesmo quando nenhum candidato existe (ex.:
+ * o que esta tocando agora e um culto, nao um sermao) — sem ele, cada batida
+ * do heartbeat leria o historico completo de escutas do membro.
  */
 export const continuarOuvindo = query({
   args: {},
@@ -94,8 +110,10 @@ export const continuarOuvindo = query({
       .withIndex("by_membro_atualizado", (q) => q.eq("membroId", membroId))
       .order("desc");
 
+    let examinados = 0;
     for await (const e of iter) {
-      if (e.completou || e.progresso <= 0.05 || e.progresso >= 0.95) continue;
+      if (++examinados > LIMITE_VARREDURA) break;
+      if (!emAndamento(e)) continue;
       const gravacao = await ctx.db.get(e.gravacaoId);
       if (!gravacao) continue;
       if (gravacao.tipo !== "SERMAO") continue;
