@@ -144,13 +144,16 @@ export const getAtivacaoByToken = query({
       .first();
 
     if (!convite || !convite.membroId) return { status: "invalido" as const };
-    if (convite.status !== "PENDENTE" || convite.expiraEm < Date.now()) {
-      return { status: "expirado" as const };
-    }
 
+    // Checa "ja ativado" ANTES da expiracao: apos concluirAtivacao o convite
+    // vira ACEITO e a pagina (reativa) mostraria "link expirado" por engano.
     const membro = await ctx.db.get(convite.membroId);
     if (!membro) return { status: "invalido" as const };
     if (membro.userId) return { status: "ja_ativado" as const };
+
+    if (convite.status !== "PENDENTE" || convite.expiraEm < Date.now()) {
+      return { status: "expirado" as const };
+    }
 
     const entidade = await ctx.db.get(membro.entidadeId);
     if (!entidade) return { status: "invalido" as const };
@@ -183,12 +186,18 @@ export const concluirAtivacao = mutation({
       .first();
 
     if (!convite || !convite.membroId) throw new Error("Token invalido");
-    if (convite.status !== "PENDENTE" || convite.expiraEm < Date.now()) {
-      throw new Error("Token expirado");
-    }
 
     const membro = await ctx.db.get(convite.membroId);
     if (!membro) throw new Error("Membro nao encontrado");
+
+    // Idempotente: se o effect do client reexecutar (ex: auth oscilou),
+    // a segunda chamada nao pode falhar com "Token expirado".
+    if (convite.status === "ACEITO" && membro.userId === userId) {
+      return { ok: true, membroId: membro._id };
+    }
+    if (convite.status !== "PENDENTE" || convite.expiraEm < Date.now()) {
+      throw new Error("Token expirado");
+    }
 
     const entidade = await ctx.db.get(membro.entidadeId);
     if (!entidade || entidade.status !== "ATIVO") {
