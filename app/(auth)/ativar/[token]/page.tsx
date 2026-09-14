@@ -61,7 +61,9 @@ export default function AtivarPage() {
     };
   }, [isAuthenticated, pendingToken, concluir, logLogin, router]);
 
-  if (dados === undefined) {
+  // Ativacao em andamento: a query reage ao convite ACEITO e mudaria de
+  // status antes do redirect — nao trocar a tela por mensagem de erro.
+  if (dados === undefined || pendingToken) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <Skeleton className="h-80 w-full max-w-sm" />

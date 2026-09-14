@@ -228,6 +228,30 @@ describe("acesso — concluirAtivacao", () => {
     expect(convite?.status).toBe("ACEITO");
   });
 
+  it("e idempotente para o mesmo usuario e a pagina passa a ver ja_ativado", async () => {
+    const t = convexTest(schema, modules);
+    const { membroId } = await seedMembroSemAcesso(t);
+    const { identity } = await seedUser(t);
+
+    const token = "tok-idem";
+    await t.run(async (ctx) =>
+      ctx.db.insert("membroConvites", {
+        token,
+        status: "PENDENTE",
+        expiraEm: Date.now() + 60_000,
+        membroId,
+        origem: "link",
+      })
+    );
+
+    await identity.mutation(api.membros.acesso.concluirAtivacao, { token });
+    const again = await identity.mutation(api.membros.acesso.concluirAtivacao, { token });
+    expect(again.ok).toBe(true);
+
+    const res = await t.query(api.membros.acesso.getAtivacaoByToken, { token });
+    expect(res.status).toBe("ja_ativado");
+  });
+
   it("rejeita token expirado", async () => {
     const t = convexTest(schema, modules);
     const { membroId } = await seedMembroSemAcesso(t);
