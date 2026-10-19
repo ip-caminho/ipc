@@ -123,6 +123,7 @@ export default function EducacionalPage() {
   const [escalaDiaFormOpen, setEscalaDiaFormOpen] = useState(false);
   const [editingDia, setEditingDia] = useState<DiaEscala | null>(null);
   const [mesGeneratorOpen, setMesGeneratorOpen] = useState(false);
+  const [removeCriancaOpen, setRemoveCriancaOpen] = useState(false);
   const [removeDiaTarget, setRemoveDiaTarget] = useState<string | null>(null);
   const [ovelhinhasManagerOpen, setOvelhinhasManagerOpen] = useState(false);
   const [selectedRelatorioId, setSelectedRelatorioId] = useState<Id<"eduRelatorios"> | null>(null);
@@ -275,7 +276,7 @@ export default function EducacionalPage() {
   };
 
   const handleDeleteCrianca = async () => {
-    if (!selectedEntidadeId || !confirm("Excluir esta crianca?")) return;
+    if (!selectedEntidadeId) return;
     try {
       await removeCrianca({ entidadeId: selectedEntidadeId });
       toast.success("Crianca excluida");
@@ -449,8 +450,25 @@ export default function EducacionalPage() {
               setEditingCrianca(c);
             }
           }}
-          onDelete={handleDeleteCrianca}
+          onDelete={() => setRemoveCriancaOpen(true)}
         />
+        <AlertDialog open={removeCriancaOpen} onOpenChange={setRemoveCriancaOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Excluir esta crianca?</AlertDialogTitle>
+              <AlertDialogDescription>Esta acao nao pode ser desfeita.</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="h-11 md:h-9">Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteCrianca}
+                className="h-11 md:h-9 bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Excluir
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
         {editingCrianca && (
           <CriancaForm
             open={!!editingCrianca}
@@ -480,10 +498,11 @@ export default function EducacionalPage() {
         <PageHeader
           title="Educacional Infantil"
           subtitle="Turmas, voluntarios, licoes e agenda do departamento"
+          subtitleClassName="hidden md:block"
         />
         <div className="flex items-center justify-end">
           {canWriteRelatorio && (
-            <Button asChild>
+            <Button asChild className="w-full h-12 md:w-auto md:h-9">
               <Link href="/educacional/presenca">
                 <ClipboardList className="h-4 w-4 mr-1" />
                 Presenca
@@ -495,40 +514,40 @@ export default function EducacionalPage() {
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           {/* Scroll horizontal no mobile: as tabs nao cabem em 390px */}
           <div className="overflow-x-auto -mx-1 px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <TabsList className="w-max">
-            <TabsTrigger value="resumo" className="gap-1.5">
-              <LayoutDashboard className="h-4 w-4" />
+          <TabsList className="w-full md:w-max">
+            <TabsTrigger value="resumo" className="gap-1.5 px-1 md:px-2">
+              <LayoutDashboard className="hidden h-4 w-4 md:block" />
               Resumo
             </TabsTrigger>
-            <TabsTrigger value="turmas" className="gap-1.5">
-              <Users className="h-4 w-4" />
+            <TabsTrigger value="turmas" className="gap-1.5 px-1 md:px-2">
+              <Users className="hidden h-4 w-4 md:block" />
               Turmas
             </TabsTrigger>
-            <TabsTrigger value="aniversarios" className="gap-1.5">
+            <TabsTrigger value="aniversarios" className="hidden gap-1.5 md:inline-flex">
               <Cake className="h-4 w-4" />
               Aniversarios
             </TabsTrigger>
             {canReadVol && (
-              <TabsTrigger value="voluntarios" className="gap-1.5">
+              <TabsTrigger value="voluntarios" className="hidden gap-1.5 md:inline-flex">
                 <Heart className="h-4 w-4" />
                 Voluntarios
               </TabsTrigger>
             )}
             {canReadEdu && (
-              <TabsTrigger value="agenda" className="gap-1.5">
+              <TabsTrigger value="agenda" className="hidden gap-1.5 md:inline-flex">
                 <CalendarDays className="h-4 w-4" />
                 Agenda
               </TabsTrigger>
             )}
             {canReadEdu && (
-              <TabsTrigger value="escala" className="gap-1.5">
-                <CalendarCheck className="h-4 w-4" />
+              <TabsTrigger value="escala" className="gap-1.5 px-1 md:px-2">
+                <CalendarCheck className="hidden h-4 w-4 md:block" />
                 Escala
               </TabsTrigger>
             )}
             {canReadEdu && (
-              <TabsTrigger value="relatorios" className="gap-1.5">
-                <ClipboardList className="h-4 w-4" />
+              <TabsTrigger value="relatorios" className="gap-1.5 px-1 md:px-2">
+                <ClipboardList className="hidden h-4 w-4 md:block" />
                 Relatorios
               </TabsTrigger>
             )}
@@ -551,6 +570,16 @@ export default function EducacionalPage() {
               onVerAniversarios={() => setActiveTab("aniversarios")}
               onVerVoluntarios={() => setActiveTab("voluntarios")}
             />
+            {canReadEdu && (
+              <Button
+                variant="outline"
+                className="h-11 w-full md:hidden"
+                onClick={() => setActiveTab("agenda")}
+              >
+                <CalendarDays className="h-4 w-4 mr-1" />
+                Agenda
+              </Button>
+            )}
             {minhaEscalaItens && minhaEscalaItens.length > 0 && (
               <MinhaEscala itens={minhaEscalaItens as any} />
             )}

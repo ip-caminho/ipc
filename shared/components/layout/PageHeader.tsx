@@ -1,17 +1,19 @@
 import type { ReactNode } from "react";
+import { cn } from "@shared/lib/utils/cn";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 
 interface PageHeaderProps {
   title: string;
   subtitle?: string;
+  subtitleClassName?: string;
   // Botao primario: no mobile ocupa a largura toda abaixo do titulo; no desktop fica a direita.
   action?: ReactNode;
   // Mostra "Voltar" so no mobile (no desktop a sidebar basta).
   backHref?: string;
 }
 
-export function PageHeader({ title, subtitle, action, backHref }: PageHeaderProps) {
+export function PageHeader({ title, subtitle, subtitleClassName, action, backHref }: PageHeaderProps) {
   return (
     <div className="pt-4 pb-3 md:pr-14">
       {backHref && (
@@ -30,7 +32,7 @@ export function PageHeader({ title, subtitle, action, backHref }: PageHeaderProp
             {title}
           </h1>
           {subtitle && (
-            <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
+            <p className={cn("text-sm text-muted-foreground mt-1", subtitleClassName)}>{subtitle}</p>
           )}
         </div>
         {action && (

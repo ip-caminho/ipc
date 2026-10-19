@@ -6,12 +6,15 @@ import { useState, useMemo } from "react";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { DatePickerBR } from "@/shared/components/ui/date-picker-br";
+import { Label } from "@/shared/components/ui/label";
 import { Badge } from "@/shared/components/ui/badge";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
 import { PrivateAvatarImage } from "@/shared/files/components/PrivateImage";
 import { PermissionGate } from "@shared/components/auth/PermissionGate";
 import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
+import { DetailHeader } from "@shared/components/layout/DetailHeader";
+import { StickyActionBar } from "@shared/components/layout/StickyActionBar";
 import { TURMA_OPTIONS, TURMA_COLORS } from "@features/educacional/lib/constants";
 import { Check, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
@@ -119,12 +122,7 @@ export default function PresencaPage() {
       <PermissionGate permission="relatorio_edu:write">
         <HeaderLayout>
         <div className="space-y-4">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" asChild>
-              <Link href="/educacional"><ArrowLeft className="h-4 w-4" /></Link>
-            </Button>
-            <h1 className="text-xl font-bold">Lista de Presenca</h1>
-          </div>
+          <DetailHeader backHref="/educacional" title="Lista de Presenca" />
 
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">Selecione a turma</p>
@@ -160,7 +158,7 @@ export default function PresencaPage() {
       <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => setTurma(null)}>
+          <Button variant="ghost" size="icon-tap" onClick={() => setTurma(null)}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
@@ -178,10 +176,10 @@ export default function PresencaPage() {
 
         {/* Ações rápidas */}
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" className="text-xs" onClick={marcarTodos}>
+          <Button variant="outline" size="sm" className="h-11 md:h-8 flex-1 text-sm" onClick={marcarTodos}>
             Marcar todos
           </Button>
-          <Button variant="outline" size="sm" className="text-xs" onClick={desmarcarTodos}>
+          <Button variant="outline" size="sm" className="h-11 md:h-8 flex-1 text-sm" onClick={desmarcarTodos}>
             Desmarcar todos
           </Button>
         </div>
@@ -219,7 +217,7 @@ export default function PresencaPage() {
                     )}
                   </div>
                   <span className={cn(
-                    "text-xs font-medium text-center leading-tight line-clamp-2",
+                    "text-sm font-medium text-center leading-tight line-clamp-2",
                     isPresente ? "text-green-800 dark:text-green-200" : ""
                   )}>
                     {c.nome}
@@ -232,21 +230,27 @@ export default function PresencaPage() {
 
         {/* Professores + Salvar */}
         {presentes.size > 0 && (
-          <div className="space-y-3 pb-24 md:pb-4">
-            <Input
-              value={professores}
-              onChange={(e) => setProfessores(e.target.value)}
-              placeholder="Professores (ex: Ana, Bruno)"
-              className="text-base"
-            />
-            <Button
-              className="w-full"
-              disabled={saving || presentes.size === 0}
-              onClick={handleSalvar}
-            >
-              {saving ? "Salvando..." : `Registrar presenca (${presentes.size})`}
-            </Button>
-          </div>
+          <>
+            <div className="space-y-2 pb-24 md:pb-4">
+              <Label htmlFor="professores">Professores</Label>
+              <Input
+                id="professores"
+                value={professores}
+                onChange={(e) => setProfessores(e.target.value)}
+                placeholder="Professores (ex: Ana, Bruno)"
+                autoComplete="off"
+                className="text-base"
+              />
+            </div>
+            <StickyActionBar>
+              <Button
+                disabled={saving || presentes.size === 0}
+                onClick={handleSalvar}
+              >
+                {saving ? "Salvando..." : `Registrar presenca (${presentes.size})`}
+              </Button>
+            </StickyActionBar>
+          </>
         )}
       </div>
       </HeaderLayout>

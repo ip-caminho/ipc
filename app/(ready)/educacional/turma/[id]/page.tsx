@@ -10,12 +10,14 @@ import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
 import { DetailHeader } from "@shared/components/layout/DetailHeader";
 import { useAuth } from "@shared/providers/PermissionsProvider";
 import { Button } from "@/shared/components/ui/button";
+import { Skeleton } from "@/shared/components/ui/skeleton";
 import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
 import { PrivateAvatarImage } from "@/shared/files/components/PrivateImage";
 import { Check, X, Minus, Send } from "lucide-react";
 import { TURMA_OPTIONS } from "@features/educacional/lib/constants";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { useProfessorTurmas } from "@features/educacional/hooks/useProfessorTurmas";
 
 type PresencaStatus = "presente" | "ausente" | "pendente";
@@ -41,7 +43,7 @@ export default function TurmaProfessorPage() {
   const [submitting, setSubmitting] = useState(false);
 
   const turmaLabel = useMemo(
-    () => TURMA_OPTIONS.find((t) => t.value === turmaId)?.label || `Turma ${turmaId}`,
+    () => TURMA_OPTIONS.find((t) => t.value === turmaId)?.label ?? "",
     [turmaId]
   );
 
@@ -96,8 +98,30 @@ export default function TurmaProfessorPage() {
       <ModuloGuard modulo="educacional">
         <HeaderLayout>
           <DetailHeader backHref="/educacional" />
-          <div className="max-w-xl mx-auto pt-12 text-center text-sm text-muted-foreground">
-            Carregando...
+          <div className="max-w-xl mx-auto space-y-2 pt-4">
+            {[0, 1, 2].map((i) => (
+              <Skeleton key={i} className="h-[72px] rounded-xl" />
+            ))}
+          </div>
+        </HeaderLayout>
+      </ModuloGuard>
+    );
+  }
+
+  if (!TURMA_OPTIONS.some((t) => t.value === turmaId)) {
+    return (
+      <ModuloGuard modulo="educacional">
+        <HeaderLayout>
+          <DetailHeader backHref="/educacional" />
+          <div className="max-w-md mx-auto text-center pt-12">
+            <h1 className="text-xl font-medium">Turma não encontrada</h1>
+            <Button
+              variant="outline"
+              className="mt-4 h-11"
+              onClick={() => router.replace("/educacional")}
+            >
+              Voltar
+            </Button>
           </div>
         </HeaderLayout>
       </ModuloGuard>
@@ -135,9 +159,9 @@ export default function TurmaProfessorPage() {
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
           <div className="flex-1 min-w-0">
-            <h1 className="text-2xl font-medium leading-tight">{turmaLabel}</h1>
+            <h1 className="text-2xl font-medium leading-tight break-words">{turmaLabel}</h1>
             <p className="text-sm text-muted-foreground">
-              {format(new Date(), "EEEE, dd 'de' MMMM")} · {marcadas}/{totalCriancas} marcadas
+              {format(new Date(), "EEEE, d 'de' MMMM", { locale: ptBR })} · {marcadas}/{totalCriancas} marcadas
             </p>
           </div>
         </div>

@@ -2,7 +2,7 @@
 
 import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
 import { Button } from "@/shared/components/ui/button";
-import { Trash2 } from "lucide-react";
+import { ArrowLeftRight, Trash2 } from "lucide-react";
 import type { Id } from "@/convex/_generated/dataModel";
 
 interface MembrosPGListProps {
@@ -13,9 +13,10 @@ interface MembrosPGListProps {
   }>;
   canRemove: boolean;
   onRemove: (id: Id<"pgMembros">) => void;
+  onMove?: (membroId: Id<"membros">) => void;
 }
 
-export function MembrosPGList({ membros, canRemove, onRemove }: MembrosPGListProps) {
+export function MembrosPGList({ membros, canRemove, onRemove, onMove }: MembrosPGListProps) {
   if (membros.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">
@@ -34,6 +35,17 @@ export function MembrosPGList({ membros, canRemove, onRemove }: MembrosPGListPro
             </AvatarFallback>
           </Avatar>
           <span className="text-sm flex-1">{m.nome || "—"}</span>
+          {canRemove && onMove && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-10 md:hidden"
+              aria-label="Mover para outro grupo"
+              onClick={() => onMove(m.membroId)}
+            >
+              <ArrowLeftRight className="h-4 w-4" />
+            </Button>
+          )}
           {canRemove && (
             <Button
               variant="ghost"

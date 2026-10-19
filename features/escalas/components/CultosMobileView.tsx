@@ -466,7 +466,8 @@ export function CultosMobileView({
 
   const culto = cultos[selectedIndex];
   const parsedDate = parseISO(culto.data);
-  const dataFormatada = format(parsedDate, "dd 'de' MMMM", { locale: ptBR });
+  const dataExtenso = format(parsedDate, "EEEE, d 'de' MMMM", { locale: ptBR });
+  const dataFormatada = dataExtenso.charAt(0).toUpperCase() + dataExtenso.slice(1);
   const isProximo = selectedIndex === 0;
 
   return (
@@ -483,7 +484,7 @@ export function CultosMobileView({
           <ChevronLeft className="h-5 w-5" />
         </Button>
         <div className="text-center">
-          <p className="text-base font-medium capitalize">{dataFormatada}</p>
+          <p className="text-base font-medium">{dataFormatada}</p>
           {isProximo && (
             <span className="text-[10px] font-semibold uppercase tracking-widest text-primary">Próximo culto</span>
           )}
