@@ -47,13 +47,11 @@ export default function MinhasTurmasPage() {
                         <GraduationCap className="h-5 w-5" />
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="flex items-center gap-2">
-                          <span className="font-semibold truncate">{t.nome}</span>
+                        <span className="block font-semibold line-clamp-2">{t.nome}</span>
+                        <span className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
                           <Badge variant="secondary" className={statusOpt?.color}>
                             {statusOpt?.label ?? t.status}
                           </Badge>
-                        </span>
-                        <span className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
                           <span className="flex items-center gap-1">
                             <Users className="h-4 w-4" />
                             {t.totalConfirmados}{" "}

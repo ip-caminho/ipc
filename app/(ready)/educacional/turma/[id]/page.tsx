@@ -17,7 +17,7 @@ import { Check, X, Minus, Send } from "lucide-react";
 import { TURMA_OPTIONS } from "@features/educacional/lib/constants";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { formatDataExtenso } from "@shared/lib/utils/date";
 import { useProfessorTurmas } from "@features/educacional/hooks/useProfessorTurmas";
 
 type PresencaStatus = "presente" | "ausente" | "pendente";
@@ -161,7 +161,7 @@ export default function TurmaProfessorPage() {
           <div className="flex-1 min-w-0">
             <h1 className="text-2xl font-medium leading-tight break-words">{turmaLabel}</h1>
             <p className="text-sm text-muted-foreground">
-              {format(new Date(), "EEEE, d 'de' MMMM", { locale: ptBR })} · {marcadas}/{totalCriancas} marcadas
+              {formatDataExtenso(new Date())} · {marcadas}/{totalCriancas} marcadas
             </p>
           </div>
         </div>

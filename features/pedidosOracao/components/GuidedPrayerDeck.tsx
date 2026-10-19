@@ -132,14 +132,14 @@ export function GuidedPrayerDeck({ pedidos }: Props) {
           <button
             type="button"
             onClick={handleClose}
-            className="flex items-center gap-1 text-xs text-muted-foreground min-h-11 px-1 active:opacity-70 focus:outline-none focus:ring-2 focus:ring-ring rounded"
+            className="flex items-center gap-1 text-sm md:text-xs text-muted-foreground min-h-11 px-2 -ml-2 md:px-1 md:ml-0 active:opacity-70 focus:outline-none focus:ring-2 focus:ring-ring rounded"
             aria-label="Encerrar oração guiada"
           >
             <X className="h-4 w-4" aria-hidden />
             Encerrar
           </button>
           <div className="flex-1" />
-          <span className="text-[11px] text-muted-foreground tabular-nums">
+          <span className="text-[11px] max-md:text-xs text-muted-foreground tabular-nums">
             {Math.min(index + 1, total)} de {total}
           </span>
         </header>

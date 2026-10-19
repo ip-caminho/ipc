@@ -256,7 +256,7 @@ export function BirthdayList() {
       <SectionLabel
         action={
           <Drawer open={mesDrawerOpen} onOpenChange={setMesDrawerOpen}>
-            <DrawerTrigger className="inline-flex items-center min-h-11 px-2 -mr-2 md:min-h-0 md:px-0 md:mr-0 text-[11px] font-medium text-blue-600 dark:text-blue-400 hover:underline">
+            <DrawerTrigger className="inline-flex items-center min-h-11 px-2 -mr-2 md:min-h-0 md:px-0 md:mr-0 text-[11px] max-md:text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline">
               Ver {mesAtualLabel} ({total})
             </DrawerTrigger>
             <DrawerContent>
