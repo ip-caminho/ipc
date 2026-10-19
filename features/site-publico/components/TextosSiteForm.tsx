@@ -49,7 +49,11 @@ export function TextosSiteForm({
         <Input id="heroSub" {...form.register("heroSub")} />
       </div>
       <div className="flex justify-end">
-        <Button type="submit" disabled={form.formState.isSubmitting}>
+        <Button
+          type="submit"
+          className="h-12 w-full md:h-9 md:w-auto"
+          disabled={form.formState.isSubmitting || !form.formState.isDirty}
+        >
           {form.formState.isSubmitting ? "Salvando..." : "Salvar"}
         </Button>
       </div>

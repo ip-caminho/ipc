@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { AvisosCuradoria } from "@features/site-publico/components/AvisosCuradoria";
@@ -40,12 +41,14 @@ export function AvisosPanel() {
         </Card>
       ) : (
         <>
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">
-            Culto de {formatDataBR(info.data)} ·{" "}
-            <Link href={`/gravacoes/${info.gravacaoId}/admin`} className="underline">
-              abrir gravação
-            </Link>
-          </p>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">
+              Culto de {formatDataBR(info.data)}
+            </p>
+            <Button asChild variant="outline" size="sm" className="h-11 md:h-8">
+              <Link href={`/gravacoes/${info.gravacaoId}/admin`}>Abrir gravação</Link>
+            </Button>
+          </div>
           <AvisosCuradoria gravacaoId={info.gravacaoId} avisos={info.avisos} />
         </>
       )}
