@@ -232,7 +232,7 @@ function LouvorContent() {
           ) : (
             <div className={cn(
               "space-y-2",
-              !selectedId && "grid gap-3 sm:grid-cols-2 lg:grid-cols-3 space-y-0",
+              !selectedId && "grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2 lg:grid-cols-3 space-y-0",
             )}>
               {louvores.map((l: any) => (
                 <LouvorCard

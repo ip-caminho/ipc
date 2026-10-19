@@ -90,7 +90,54 @@ export function SolicitacoesPanel() {
     <>
       <Card>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
+          <div className="divide-y md:hidden">
+            {solicitacoes.map((s) => (
+              <div key={s._id} className="space-y-3 p-4">
+                <div className="flex items-start justify-between gap-2">
+                  <span className="min-w-0 text-base font-medium">
+                    {s.dados.nomeCompleto}
+                    {s.dados.batizadoNestaIgreja && (
+                      <Badge variant="secondary" className="ml-2 text-[10px]">
+                        Batizado
+                      </Badge>
+                    )}
+                  </span>
+                  <Badge variant="outline" className="shrink-0 gap-1">
+                    {s.tipoVinculo === "FILHO" ? (
+                      <Baby className="h-3 w-3" />
+                    ) : (
+                      <Heart className="h-3 w-3" />
+                    )}
+                    {s.tipoVinculo === "FILHO" ? "Filho(a)" : "Conjuge"}
+                  </Badge>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  solicitado por {s.solicitanteNome} · nasc. {formatData(s.dados.dataNascimento)}
+                </p>
+                <div className="flex gap-3">
+                  <Button
+                    variant="outline"
+                    className="h-11 flex-1 text-destructive"
+                    disabled={processando}
+                    onClick={() => {
+                      setRejeitando(s._id);
+                      setMotivo("");
+                    }}
+                  >
+                    <X className="h-4 w-4 mr-1" /> Rejeitar
+                  </Button>
+                  <Button
+                    className="h-11 flex-1"
+                    disabled={processando}
+                    onClick={() => handleAprovar(s._id)}
+                  >
+                    <Check className="h-4 w-4 mr-1" /> Aprovar
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="hidden overflow-x-auto md:block">
             <Table>
               <TableHeader>
                 <TableRow>

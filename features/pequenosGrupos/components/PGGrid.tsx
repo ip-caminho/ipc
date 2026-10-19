@@ -22,7 +22,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui
 import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
 import { Badge } from "@/shared/components/ui/badge";
 import { Input } from "@/shared/components/ui/input";
-import { GripVertical, Users } from "lucide-react";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/shared/components/ui/drawer";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/shared/components/ui/collapsible";
+import { useIsMobile } from "@/shared/hooks/use-mobile";
+import { ChevronDown, GripVertical, Users } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@shared/lib/utils/cn";
 import { PGCard } from "./PGCard";
@@ -70,12 +79,13 @@ function DraggableNome({ membro }: { membro: SemGrupoItem }) {
 }
 
 // Chip estatico (sem permissao de arrastar / no overlay).
-function NomeChip({ membro, dragging }: { membro: SemGrupoItem; dragging?: boolean }) {
+function NomeChip({ membro, dragging, touch }: { membro: SemGrupoItem; dragging?: boolean; touch?: boolean }) {
   return (
     <div
       className={cn(
         "flex items-center gap-1.5 rounded-md border bg-background px-2 py-1.5 text-sm",
         dragging && "shadow-lg",
+        touch && "min-h-11 px-3",
       )}
     >
       {dragging && <GripVertical className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
@@ -124,6 +134,9 @@ export function PGGrid({ pgs, disponiveis, onOpen, canManage }: PGGridProps) {
   const moveMembro = useMutation(api.pequenosGrupos.mutations.moveMembro);
   const [busca, setBusca] = useState("");
   const [activeMembro, setActiveMembro] = useState<SemGrupoItem | null>(null);
+  const isMobile = useIsMobile();
+  const [semGrupoAberto, setSemGrupoAberto] = useState(false);
+  const [membroAlvo, setMembroAlvo] = useState<SemGrupoItem | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -162,10 +175,28 @@ export function PGGrid({ pgs, disponiveis, onOpen, canManage }: PGGridProps) {
     }
   }
 
+  async function handleEscolherGrupo(toPgId: Id<"pequenosGrupos">) {
+    if (!membroAlvo) return;
+    const membro = membroAlvo;
+    setMembroAlvo(null);
+    try {
+      await moveMembro({
+        membroId: membro.membroId as Id<"membros">,
+        fromPgId: undefined,
+        toPgId,
+      });
+      toast.success(`${membro.nome} adicionado`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro ao adicionar");
+    }
+  }
+
+  const mostrarNomes = !isMobile || semGrupoAberto || busca.trim().length >= 2;
+
   const grid = (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {pgs.map((pg) =>
-        canManage ? (
+        canManage && !isMobile ? (
           <DroppablePGCard key={pg._id} pg={pg} onOpen={() => onOpen(pg._id)} />
         ) : (
           <PGCard key={pg._id} pg={pg} onClick={() => onOpen(pg._id)} />
@@ -173,6 +204,32 @@ export function PGGrid({ pgs, disponiveis, onOpen, canManage }: PGGridProps) {
       )}
     </div>
   );
+
+  const listaNomes =
+    nomesFiltrados.length === 0 ? (
+      <p className="py-2 text-sm text-muted-foreground">
+        Nenhum membro encontrado
+      </p>
+    ) : (
+      <div className="flex flex-wrap gap-2">
+        {nomesFiltrados.map((m) =>
+          !canManage ? (
+            <NomeChip key={m.membroId} membro={m} />
+          ) : isMobile ? (
+            <button
+              key={m.membroId}
+              type="button"
+              className="rounded-md text-left"
+              onClick={() => setMembroAlvo(m)}
+            >
+              <NomeChip membro={m} touch />
+            </button>
+          ) : (
+            <DraggableNome key={m.membroId} membro={m} />
+          ),
+        )}
+      </div>
+    );
 
   const disponiveisCard = disponiveis.length > 0 && (
     <Card>
@@ -190,27 +247,52 @@ export function PGGrid({ pgs, disponiveis, onOpen, canManage }: PGGridProps) {
           onChange={(e) => setBusca(e.target.value)}
         />
         {canManage && (
-          <p className="text-xs text-muted-foreground">
-            Arraste um nome para cima de um grupo para adicionar.
-          </p>
+          <>
+            <p className="hidden text-xs text-muted-foreground md:block">
+              Arraste um nome para cima de um grupo para adicionar.
+            </p>
+            <p className="text-xs text-muted-foreground md:hidden">
+              Toque num nome para adicionar a um grupo.
+            </p>
+          </>
         )}
-        {nomesFiltrados.length === 0 ? (
-          <p className="py-2 text-sm text-muted-foreground">
-            Nenhum membro encontrado
-          </p>
+        {isMobile ? (
+          <Collapsible open={mostrarNomes} onOpenChange={setSemGrupoAberto} className="space-y-3">
+            <CollapsibleTrigger className="flex min-h-11 w-full items-center justify-between rounded-md border px-3 text-sm font-medium">
+              Sem grupo ({nomesFiltrados.length})
+              <ChevronDown className={cn("h-4 w-4 transition-transform", mostrarNomes && "rotate-180")} />
+            </CollapsibleTrigger>
+            <CollapsibleContent>{listaNomes}</CollapsibleContent>
+          </Collapsible>
         ) : (
-          <div className="flex flex-wrap gap-2">
-            {nomesFiltrados.map((m) =>
-              canManage ? (
-                <DraggableNome key={m.membroId} membro={m} />
-              ) : (
-                <NomeChip key={m.membroId} membro={m} />
-              ),
-            )}
-          </div>
+          listaNomes
         )}
       </CardContent>
     </Card>
+  );
+
+  const drawerGrupo = (
+    <Drawer open={!!membroAlvo} onOpenChange={(o) => !o && setMembroAlvo(null)}>
+      <DrawerContent>
+        <DrawerHeader>
+          <DrawerTitle>Adicionar a qual grupo?</DrawerTitle>
+          <DrawerDescription>{membroAlvo?.nome}</DrawerDescription>
+        </DrawerHeader>
+        <div className="max-h-[60vh] space-y-2 overflow-y-auto px-4 pb-6">
+          {pgs.map((pg) => (
+            <button
+              key={pg._id}
+              type="button"
+              className="flex min-h-11 w-full items-center justify-between rounded-md border px-3 text-left text-sm active:bg-muted/40"
+              onClick={() => handleEscolherGrupo(pg._id)}
+            >
+              <span className="min-w-0 truncate">{pg.nome}</span>
+              <Badge variant="secondary">{pg.qtdMembros}</Badge>
+            </button>
+          ))}
+        </div>
+      </DrawerContent>
+    </Drawer>
   );
 
   if (!canManage) {
@@ -218,6 +300,16 @@ export function PGGrid({ pgs, disponiveis, onOpen, canManage }: PGGridProps) {
       <>
         {grid}
         {disponiveisCard}
+      </>
+    );
+  }
+
+  if (isMobile) {
+    return (
+      <>
+        {grid}
+        {disponiveisCard}
+        {drawerGrupo}
       </>
     );
   }

@@ -24,7 +24,14 @@ import {
 } from "@/shared/components/ui/sheet";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { History, Filter, X } from "lucide-react";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/shared/components/ui/drawer";
+import { useIsMobile } from "@/shared/hooks/use-mobile";
+import { History, Filter, X, ChevronRight } from "lucide-react";
 
 const PAGE_SIZE = 100;
 
@@ -47,6 +54,7 @@ function AuditoriaContent() {
   const [limit, setLimit] = useQueryState("limit", parseAsInteger.withDefault(PAGE_SIZE));
 
   const [selectedLog, setSelectedLog] = useState<any>(null);
+  const isMobile = useIsMobile();
 
   // @ts-ignore Convex TS2589
   const tabelas = useQuery(api.audit.queries.listTabelas);
@@ -159,7 +167,39 @@ function AuditoriaContent() {
 
       {/* Tabela */}
       <div className="rounded-xl border bg-card overflow-hidden">
-        <div className="overflow-auto max-h-[calc(100vh-16rem)]">
+        <div className="md:hidden">
+          {isLoading && (
+            <p className="px-4 py-8 text-center text-sm text-muted-foreground">Carregando...</p>
+          )}
+          {!isLoading && logs.length === 0 && (
+            <p className="px-4 py-8 text-center text-sm text-muted-foreground">Nenhum registro encontrado</p>
+          )}
+          {logs.map((log: any) => (
+            <button
+              key={log._id}
+              type="button"
+              onClick={() => setSelectedLog(log)}
+              className="flex min-h-14 w-full items-center gap-2 border-b p-3 text-left last:border-0 active:bg-muted/40"
+            >
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-xs text-muted-foreground">
+                  {format(new Date(log.createdAt), "dd/MM HH:mm", { locale: ptBR })} · {log.autorNome || "—"}
+                </p>
+                <p className="truncate text-sm font-medium">
+                  {String(log.action).toUpperCase()} · {log.referenciaTabela}
+                  {log.field ? `.${log.field}` : ""}
+                </p>
+                {log.field && (
+                  <p className="line-clamp-1 text-xs text-muted-foreground">
+                    {`${formatValue(log.from)} → ${formatValue(log.to)}`}
+                  </p>
+                )}
+              </div>
+              <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+            </button>
+          ))}
+        </div>
+        <div className="hidden md:block md:overflow-auto md:max-h-[calc(100vh-16rem)]">
           <table className="w-full text-sm">
             <thead className="sticky top-0 z-20 bg-muted">
               <tr className="border-b bg-muted/50">
@@ -220,8 +260,53 @@ function AuditoriaContent() {
         )}
       </div>
 
-      {/* Drawer de detalhe */}
-      <Sheet open={!!selectedLog} onOpenChange={(open) => !open && setSelectedLog(null)}>
+      {/* Detalhe: Drawer no mobile, Sheet lateral no desktop */}
+      <Drawer open={isMobile && !!selectedLog} onOpenChange={(open) => !open && setSelectedLog(null)}>
+        <DrawerContent className="max-h-[92vh]">
+          <DrawerHeader>
+            <DrawerTitle>Detalhe do log</DrawerTitle>
+          </DrawerHeader>
+          <div className="overflow-y-auto px-4 pb-6">
+          {selectedLog && (
+            <div className="space-y-4 text-sm">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">Quando</p>
+                <p>{format(new Date(selectedLog.createdAt), "dd/MM/yyyy HH:mm:ss", { locale: ptBR })}</p>
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">Autor</p>
+                <p>{selectedLog.autorNome || "—"}</p>
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">Ação</p>
+                <p className="font-medium">{selectedLog.action}</p>
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">Referência</p>
+                <p>{selectedLog.referenciaTabela} · {selectedLog.referenciaId}</p>
+              </div>
+              {selectedLog.field && (
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">Campo alterado</p>
+                  <p className="font-medium">{selectedLog.field}</p>
+                  <div className="mt-2 grid grid-cols-1 gap-2">
+                    <div className="rounded-lg border bg-muted/30 p-3">
+                      <p className="text-xs text-muted-foreground mb-1">De</p>
+                      <pre className="text-xs whitespace-pre-wrap break-all">{formatValue(selectedLog.from)}</pre>
+                    </div>
+                    <div className="rounded-lg border bg-muted/30 p-3">
+                      <p className="text-xs text-muted-foreground mb-1">Para</p>
+                      <pre className="text-xs whitespace-pre-wrap break-all">{formatValue(selectedLog.to)}</pre>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          </div>
+        </DrawerContent>
+      </Drawer>
+      <Sheet open={!isMobile && !!selectedLog} onOpenChange={(open) => !open && setSelectedLog(null)}>
         <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
           <SheetHeader>
             <SheetTitle>Detalhe do log</SheetTitle>

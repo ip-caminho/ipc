@@ -57,7 +57,7 @@ export function EquipesTab() {
 
   return (
     <>
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 [&>*]:min-w-0">
         {funcoesEquipe.map((funcao: any) => (
           <EquipeCard
             key={funcao.slug}
@@ -245,14 +245,15 @@ function EquipeCard({
         {membrosEquipe.map((m) => (
           <div
             key={m._id}
-            className="flex items-center gap-2 py-1"
+            className="flex flex-wrap items-center gap-2 py-1 md:flex-nowrap"
           >
             <Avatar className="h-7 w-7">
               <AvatarFallback className="text-xs">
                 {m.nomeCompleto.charAt(0)?.toUpperCase() || "?"}
               </AvatarFallback>
             </Avatar>
-            <span className="text-sm flex-1 truncate">{m.nomeCompleto}</span>
+            <span className="text-sm min-w-0 flex-1 truncate">{m.nomeCompleto}</span>
+            <div className="order-last flex basis-full flex-wrap items-center gap-1.5 pl-9 md:contents">
             {isLouvor && (
               <div className="flex flex-wrap gap-0.5">
                 {INSTRUMENTOS.map((inst) => {
@@ -284,27 +285,27 @@ function EquipeCard({
                 {m.condutor ? "condutor" : "acompanha"}
               </Badge>
             )}
-            {canEdit && (
-              <>
-                <Badge
-                  variant={m.ativo ? "default" : "outline"}
-                  className="text-[10px] cursor-pointer"
-                  onClick={() => handleToggle(m._id)}
-                >
-                  {m.ativo ? "ativo" : "inativo"}
-                </Badge>
-                <button
-                  onClick={() => handleRemove(m._id)}
-                  className="text-muted-foreground hover:text-destructive shrink-0"
-                >
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              </>
-            )}
-            {!canEdit && (
+            {canEdit ? (
+              <Badge
+                variant={m.ativo ? "default" : "outline"}
+                className="text-[10px] cursor-pointer"
+                onClick={() => handleToggle(m._id)}
+              >
+                {m.ativo ? "ativo" : "inativo"}
+              </Badge>
+            ) : (
               <Badge variant={m.ativo ? "default" : "outline"} className="text-[10px]">
                 {m.ativo ? "ativo" : "inativo"}
               </Badge>
+            )}
+            </div>
+            {canEdit && (
+              <button
+                onClick={() => handleRemove(m._id)}
+                className="flex size-11 items-center justify-center text-muted-foreground hover:text-destructive shrink-0 md:size-auto"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
             )}
           </div>
         ))}

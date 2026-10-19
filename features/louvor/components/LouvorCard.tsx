@@ -38,13 +38,13 @@ export function LouvorCard({ louvor, onClick, active, compact }: LouvorCardProps
   return (
     <div
       className={cn(
-        "cursor-pointer rounded-xl border p-4 transition-colors hover:bg-muted/50 min-h-[56px]",
+        "min-w-0 cursor-pointer rounded-xl border p-4 transition-colors hover:bg-muted/50 min-h-[56px]",
         active && "ring-2 ring-primary bg-muted/50",
       )}
       onClick={onClick}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="text-base md:text-sm font-medium truncate">{louvor.titulo}</span>
+        <span className="min-w-0 flex-1 text-base md:text-sm font-medium truncate">{louvor.titulo}</span>
         {louvor.tom && (
           <span className="text-xs text-muted-foreground shrink-0">{louvor.tom}</span>
         )}
