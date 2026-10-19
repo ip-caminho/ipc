@@ -9,6 +9,7 @@ import { PermissionGate } from "@shared/components/auth/PermissionGate";
 import { ModuloGuard } from "@shared/components/auth/ModuloGuard";
 import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
 import { PageHeader } from "@shared/components/layout/PageHeader";
+import { MobileFab } from "@shared/components/layout/MobileFab";
 import { Button } from "@/shared/components/ui/button";
 import { Plus, ArrowLeftRight, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
@@ -84,6 +85,7 @@ export default function PequenosGruposPage() {
               <PermissionGate permission="pequenos_grupos:update">
                 <Button
                   variant="outline"
+                  className="hidden md:inline-flex"
                   onClick={() => setViewMode("remanejamento")}
                 >
                   <ArrowLeftRight className="h-4 w-4 mr-2" />
@@ -91,7 +93,7 @@ export default function PequenosGruposPage() {
                 </Button>
               </PermissionGate>
               <PermissionGate permission="pequenos_grupos:create">
-                <Button onClick={() => setCreateOpen(true)}>
+                <Button className="hidden md:inline-flex" onClick={() => setCreateOpen(true)}>
                   <Plus className="h-4 w-4 mr-2" />
                   Novo PG
                 </Button>
@@ -121,6 +123,10 @@ export default function PequenosGruposPage() {
           onOpen={setSelectedPgId}
           canManage={can("pequenos_grupos:update")}
         />
+      )}
+
+      {viewMode === "grid" && can("pequenos_grupos:create") && (
+        <MobileFab label="Novo PG" onClick={() => setCreateOpen(true)} />
       )}
 
       <PGForm

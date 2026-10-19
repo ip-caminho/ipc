@@ -11,12 +11,13 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Input } from "@/shared/components/ui/input";
 import { cn } from "@shared/lib/utils/cn";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/shared/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogHeader,
+  ResponsiveDialogBody,
+  ResponsiveDialogTitle,
+  ResponsiveDialogFooter,
+} from "@/shared/components/ui/responsive-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
 import { ArrowLeft, Plus, Trash2, MapPin, Clock, Users, CalendarCheck, BarChart3 } from "lucide-react";
 import { toast } from "sonner";
@@ -49,6 +50,9 @@ export function PGDetalhe({ pgId, onBack }: PGDetalheProps) {
   const removePG = useMutation(api.pequenosGrupos.mutations.remove);
   const addMembro = useMutation(api.pequenosGrupos.mutations.addMembro);
   const removeMembro = useMutation(api.pequenosGrupos.mutations.removeMembro);
+  const moveMembro = useMutation(api.pequenosGrupos.mutations.moveMembro);
+  // @ts-ignore Convex TS2589
+  const pgsAtivos = useQuery(api.pequenosGrupos.queries.list, { status: "ATIVO" });
   // @ts-ignore Convex TS2589
   const disponiveis = useQuery(api.pequenosGrupos.queries.listAllWithMembros, {});
 
@@ -56,6 +60,7 @@ export function PGDetalhe({ pgId, onBack }: PGDetalheProps) {
   const [addMembroOpen, setAddMembroOpen] = useState(false);
   const [selectedMembroId, setSelectedMembroId] = useState("");
   const [busca, setBusca] = useState("");
+  const [movingMembroId, setMovingMembroId] = useState<Id<"membros"> | null>(null);
 
   // Comungantes que ainda nao estao neste PG (um membro pode estar em varios),
   // filtrados pela busca e em ordem alfabetica.
@@ -132,6 +137,19 @@ export function PGDetalhe({ pgId, onBack }: PGDetalheProps) {
       toast.error(error instanceof Error ? error.message : "Erro ao remover");
     }
   };
+
+  const handleMoveMembro = async (toPgId: Id<"pequenosGrupos">) => {
+    if (!movingMembroId) return;
+    try {
+      await moveMembro({ membroId: movingMembroId, fromPgId: pgId, toPgId });
+      toast.success("Membro movido");
+      setMovingMembroId(null);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro ao mover");
+    }
+  };
+
+  const outrosPgs = (pgsAtivos ?? []).filter((g: { _id: Id<"pequenosGrupos"> }) => g._id !== pgId);
 
   return (
     <div className="space-y-4">
@@ -224,6 +242,7 @@ export function PGDetalhe({ pgId, onBack }: PGDetalheProps) {
                 membros={pg.membros}
                 canRemove={can("pequenos_grupos:update")}
                 onRemove={handleRemoveMembro}
+                onMove={setMovingMembroId}
               />
             </CardContent>
           </Card>
@@ -255,8 +274,43 @@ export function PGDetalhe({ pgId, onBack }: PGDetalheProps) {
         }}
       />
 
+      {/* Drawer: Mover membro para outro grupo (mobile) */}
+      <ResponsiveDialog
+        open={movingMembroId !== null}
+        onOpenChange={(open) => {
+          if (!open) setMovingMembroId(null);
+        }}
+      >
+        <ResponsiveDialogContent className="md:hidden">
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle>Mover para outro grupo</ResponsiveDialogTitle>
+          </ResponsiveDialogHeader>
+          <ResponsiveDialogBody>
+            {pgsAtivos === undefined ? (
+              <p className="py-6 text-center text-sm text-muted-foreground">Carregando...</p>
+            ) : outrosPgs.length === 0 ? (
+              <p className="py-6 text-center text-sm text-muted-foreground">Nenhum outro grupo</p>
+            ) : (
+              <ul className="space-y-0.5">
+                {outrosPgs.map((g: { _id: Id<"pequenosGrupos">; nome: string }) => (
+                  <li key={g._id}>
+                    <button
+                      type="button"
+                      onClick={() => handleMoveMembro(g._id)}
+                      className="flex min-h-11 w-full items-center rounded-md px-3 py-2.5 text-left text-sm hover:bg-muted active:bg-muted"
+                    >
+                      {g.nome}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </ResponsiveDialogBody>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
+
       {/* Dialog: Adicionar Membro */}
-      <Dialog
+      <ResponsiveDialog
         open={addMembroOpen}
         onOpenChange={(open) => {
           setAddMembroOpen(open);
@@ -266,12 +320,14 @@ export function PGDetalhe({ pgId, onBack }: PGDetalheProps) {
           }
         }}
       >
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Adicionar membro ao PG</DialogTitle>
-          </DialogHeader>
+        <ResponsiveDialogContent className="sm:max-w-sm">
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle>Adicionar membro ao PG</ResponsiveDialogTitle>
+          </ResponsiveDialogHeader>
+          <ResponsiveDialogBody className="space-y-3">
           <Input
-            autoFocus
+            type="search"
+            enterKeyHint="search"
             placeholder="Buscar membro pelo nome"
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
@@ -306,19 +362,21 @@ export function PGDetalhe({ pgId, onBack }: PGDetalheProps) {
               </ul>
             )}
           </div>
-          <DialogFooter>
+          </ResponsiveDialogBody>
+          <ResponsiveDialogFooter>
             <Button
               variant="outline"
+              className="h-11 md:h-9"
               onClick={() => setAddMembroOpen(false)}
             >
               Cancelar
             </Button>
-            <Button onClick={handleAddMembro} disabled={!selectedMembroId}>
+            <Button className="h-11 md:h-9" onClick={handleAddMembro} disabled={!selectedMembroId}>
               Adicionar
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </ResponsiveDialogFooter>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
     </div>
   );
 }

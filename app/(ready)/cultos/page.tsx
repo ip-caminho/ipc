@@ -12,6 +12,16 @@ import { format, parseISO, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { Fragment, useState } from "react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/shared/components/ui/alert-dialog";
 import { ModuloGuard } from "@shared/components/auth/ModuloGuard";
 import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
 import { PageHeader } from "@shared/components/layout/PageHeader";
@@ -489,6 +499,7 @@ export default function CultosPage() {
   const proximosCultos = sortedCultos.filter((c) => c.data >= today);
   const cultosPassados = sortedCultos.filter((c) => c.data < today).reverse();
   const [showHistorico, setShowHistorico] = useState(false);
+  const [deleteCultoId, setDeleteCultoId] = useState<Id<"cultos"> | null>(null);
 
   const CULTO_ORDER = ["ABERTURA", "CONFISSAO", "ORACAO", "PREGACAO", "AVISOS"];
   const EQUIPE_ORDER = ["LOUVOR", "SOM", "MULTIMIDIA"];
@@ -506,7 +517,6 @@ export default function CultosPage() {
   const visibleFuncoes = [...cultoFuncoes, ...equipeFuncoes];
 
   const handleDeleteCulto = async (id: Id<"cultos">) => {
-    if (!confirm("Excluir este culto e toda sua escala?")) return;
     try {
       await deleteCulto({ id });
       toast.success("Culto excluido");
@@ -565,7 +575,7 @@ export default function CultosPage() {
           membros={activeMembros}
           canEdit={canEdit}
           canDelete={can("escalas:delete")}
-          onDeleteCulto={handleDeleteCulto}
+          onDeleteCulto={setDeleteCultoId}
           getAssignments={getAssignments}
           emptyMessage="Nenhum culto futuro cadastrado"
         />
@@ -587,7 +597,7 @@ export default function CultosPage() {
                   membros={activeMembros}
                   canEdit={false}
                   canDelete={false}
-                  onDeleteCulto={handleDeleteCulto}
+                  onDeleteCulto={setDeleteCultoId}
                   getAssignments={getAssignments}
                   emptyMessage=""
                 />
@@ -596,6 +606,28 @@ export default function CultosPage() {
           </div>
         )}
       </div>
+      <AlertDialog open={!!deleteCultoId} onOpenChange={(open) => !open && setDeleteCultoId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir este culto?</AlertDialogTitle>
+            <AlertDialogDescription>
+              O culto e toda a sua escala serao excluidos. Esta acao nao pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="h-11 md:h-9">Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="h-11 md:h-9 bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (deleteCultoId) handleDeleteCulto(deleteCultoId);
+                setDeleteCultoId(null);
+              }}
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
     </HeaderLayout>
     </ModuloGuard>
