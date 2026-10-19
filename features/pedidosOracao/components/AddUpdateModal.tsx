@@ -388,7 +388,7 @@ function MobileFlow({ pedidoId, open, onOpenChange }: Props) {
         <Button
           onClick={handleNext}
           disabled={!canAdvance || submitting}
-          className="w-full h-12 text-base bg-foreground text-background hover:bg-foreground/90"
+          className="w-full h-12 md:h-12 text-base bg-foreground text-background hover:bg-foreground/90"
         >
           {submitting
             ? "Publicando..."

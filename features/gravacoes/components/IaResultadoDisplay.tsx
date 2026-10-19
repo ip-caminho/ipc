@@ -36,7 +36,7 @@ function CopyButton({ text, label }: { text: string; label?: string }) {
   };
 
   return (
-    <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={handleCopy}>
+    <Button variant="ghost" size="icon" className="h-6 md:h-6 w-6 md:w-6 shrink-0" onClick={handleCopy}>
       <Copy className="h-3 w-3" />
     </Button>
   );
@@ -71,7 +71,7 @@ export function IaResultadoDisplay({ iaResultado, iaTranscricao }: IaResultadoDi
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="resumo" className="w-full">
-          <TabsList className="w-full justify-start flex-wrap h-auto gap-1">
+          <TabsList className="w-full justify-start flex-wrap h-auto! gap-1">
             {iaResultado && <TabsTrigger value="resumo">Resumo</TabsTrigger>}
             {iaResultado?.frasesRedesSociais && <TabsTrigger value="frases">Frases</TabsTrigger>}
             {iaResultado?.descricoesInstagram && <TabsTrigger value="instagram">Instagram</TabsTrigger>}

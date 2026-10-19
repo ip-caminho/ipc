@@ -144,7 +144,7 @@ export function InformacoesSiteForm({ initial }: { initial: IgrejaInfo }) {
               type="button"
               variant="ghost"
               size="sm"
-              className="h-9 w-9 p-0 text-muted-foreground hover:text-destructive"
+              className="h-9 md:h-9 w-9 p-0 text-muted-foreground hover:text-destructive"
               onClick={() => horarios.remove(i)}
             >
               <Trash2 className="h-4 w-4" />

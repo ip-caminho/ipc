@@ -267,7 +267,7 @@ export function SubirAudioForm() {
               />
             </div>
 
-            <Button type="submit" className="h-11 w-full" disabled={busy || !file}>
+            <Button type="submit" className="h-11 md:h-11 w-full" disabled={busy || !file}>
               {step === "comprimindo" && (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />

@@ -96,7 +96,7 @@ export function EnviarComprovanteDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" className="h-9">
+        <Button size="sm" className="h-9 md:h-9">
           <UploadCloud className="mr-1 h-4 w-4" /> Enviar comprovante
         </Button>
       </DialogTrigger>

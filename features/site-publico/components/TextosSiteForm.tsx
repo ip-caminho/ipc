@@ -42,7 +42,7 @@ export function TextosSiteForm({
     <form onSubmit={form.handleSubmit(onSubmit)} className="max-w-2xl space-y-6">
       <div className="space-y-1">
         <Label htmlFor="heroTitulo">Título do hero (home)</Label>
-        <Textarea id="heroTitulo" {...form.register("heroTitulo")} className="min-h-[70px]" />
+        <Textarea id="heroTitulo" {...form.register("heroTitulo")} className="min-h-[70px] md:min-h-[70px]" />
       </div>
       <div className="space-y-1">
         <Label htmlFor="heroSub">Subtítulo do hero</Label>

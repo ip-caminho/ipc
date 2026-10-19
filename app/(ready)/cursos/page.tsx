@@ -56,7 +56,7 @@ export default function CursosPage() {
               O catalogo. Cada turma e uma oferta datada de um curso.
             </p>
             <PermissionGate permission="turmas:create">
-              <Button onClick={abrirNovo} size="sm" className="h-10 shrink-0">
+              <Button onClick={abrirNovo} size="sm" className="h-10 md:h-10 shrink-0">
                 <Plus className="h-4 w-4 mr-1" />
                 Novo curso
               </Button>
@@ -105,7 +105,7 @@ export default function CursosPage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            className="h-10"
+                            className="h-10 md:h-10"
                             onClick={() => abrirEdicao(curso)}
                           >
                             <Pencil className="h-4 w-4 mr-1" />
@@ -114,7 +114,7 @@ export default function CursosPage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            className="h-10"
+                            className="h-10 md:h-10"
                             onClick={() => alternarStatus(curso)}
                           >
                             {curso.status === "ATIVO" ? "Inativar" : "Reativar"}

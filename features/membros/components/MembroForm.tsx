@@ -65,7 +65,7 @@ function Section({ title, children, defaultOpen = true }: { title: string; child
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
       <CollapsibleTrigger asChild>
-        <Button variant="ghost" className="w-full justify-between p-0 h-auto">
+        <Button variant="ghost" className="w-full justify-between p-0 h-auto md:h-auto">
           <h3 className="text-sm font-semibold">{title}</h3>
           <ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} />
         </Button>

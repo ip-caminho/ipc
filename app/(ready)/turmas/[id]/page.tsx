@@ -340,7 +340,7 @@ export default function TurmaDetalhePage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            className="h-10 px-3"
+                            className="h-10 md:h-10 px-3"
                             asChild
                             title={`Conversar com ${i.dadosSistema.nomeCompleto} no WhatsApp`}
                           >
@@ -387,7 +387,7 @@ export default function TurmaDetalhePage() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-10 px-2 text-xs text-muted-foreground"
+                              className="h-10 md:h-10 px-2 text-xs text-muted-foreground"
                             >
                               Ver respostas ({i.respostasExtras.length})
                             </Button>
@@ -460,7 +460,7 @@ export default function TurmaDetalhePage() {
                 <Card>
                   <CardContent className="p-3">
                     <CollapsibleTrigger asChild>
-                      <Button variant="ghost" className="h-10 px-2 w-full justify-between">
+                      <Button variant="ghost" className="h-10 md:h-10 px-2 w-full justify-between">
                         <span className="text-sm font-medium">
                           Marcos no calendario (entrevistas, batismo)
                         </span>
@@ -472,7 +472,7 @@ export default function TurmaDetalhePage() {
                         <div className="flex-1 min-w-[160px]">
                           <label className="text-xs text-muted-foreground">Titulo</label>
                           <Input
-                            className="h-10"
+                            className="h-10 md:h-10"
                             value={marcoTitulo}
                             onChange={(e) => setMarcoTitulo(e.target.value)}
                             placeholder="Ex: Apresentacao dos Novos Membros e Batismo"
@@ -486,7 +486,7 @@ export default function TurmaDetalhePage() {
                             className="w-[160px]"
                           />
                         </div>
-                        <Button className="h-10" onClick={handleCriarMarco}>
+                        <Button className="h-10 md:h-10" onClick={handleCriarMarco}>
                           Adicionar
                         </Button>
                       </div>
@@ -521,13 +521,13 @@ export default function TurmaDetalhePage() {
                       <Input
                         type="number"
                         inputMode="numeric"
-                        className="w-24 h-10"
+                        className="w-24 h-10 md:h-10"
                         value={qtdAulas}
                         onChange={(e) => setQtdAulas(e.target.value)}
                         placeholder="Ex: 8"
                       />
                     </div>
-                    <Button className="h-10" onClick={handleGerarAulas}>
+                    <Button className="h-10 md:h-10" onClick={handleGerarAulas}>
                       Gerar semanais
                     </Button>
                   </div>
@@ -549,7 +549,7 @@ export default function TurmaDetalhePage() {
                     />
                     <Button
                       variant="outline"
-                      className="h-10"
+                      className="h-10 md:h-10"
                       disabled={!datasAulas.trim()}
                       onClick={handleGerarAulasComDatas}
                     >
@@ -595,7 +595,7 @@ export default function TurmaDetalhePage() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="h-10"
+                                className="h-10 md:h-10"
                                 onClick={() => handleAbrirPresenca(e._id)}
                               >
                                 {encontroAberto === e._id ? "Fechar" : "Chamada"}
@@ -646,7 +646,7 @@ export default function TurmaDetalhePage() {
                               })}
                               <Button
                                 size="sm"
-                                className="w-full mt-2 h-11"
+                                className="w-full mt-2 h-11 md:h-11"
                                 onClick={handleSalvarPresencas}
                               >
                                 <Check className="h-4 w-4 mr-1" />

@@ -317,7 +317,7 @@ export function SegmentEditor({
               type="button"
               variant="ghost"
               size="icon"
-              className="h-8 w-8 shrink-0"
+              className="h-8 md:h-8 w-8 md:w-8 shrink-0"
               onClick={togglePlay}
             >
               {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
@@ -352,7 +352,7 @@ export function SegmentEditor({
               <Volume2 className="h-3.5 w-3.5 animate-pulse" />
               Ouvindo: {previewLabel}
             </span>
-            <Button type="button" variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={stopPreview}>
+            <Button type="button" variant="ghost" size="sm" className="h-6 md:h-6 px-2 text-xs" onClick={stopPreview}>
               Parar
             </Button>
           </div>
@@ -367,7 +367,7 @@ export function SegmentEditor({
                 type="button"
                 variant="outline"
                 size="sm"
-                className="h-7 text-xs gap-1"
+                className="h-7 md:h-7 text-xs gap-1"
                 onClick={() => playPreview(hhmmssToSeconds(iSermao)!, "Sermao (inicio)")}
               >
                 <Play className="h-3 w-3" /> Ouvir trecho
@@ -454,7 +454,7 @@ export function SegmentEditor({
                 type="button"
                 variant="outline"
                 size="sm"
-                className="h-7 text-xs gap-1"
+                className="h-7 md:h-7 text-xs gap-1"
                 onClick={() => playPreview(hhmmssToSeconds(iAvisos)!, "Avisos (inicio)")}
               >
                 <Play className="h-3 w-3" /> Ouvir trecho

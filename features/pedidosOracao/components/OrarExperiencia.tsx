@@ -192,7 +192,7 @@ export function OrarExperiencia({ pedidos, onClose }: OrarExperienciaProps) {
         <Button
           variant="ghost"
           size="icon"
-          className="h-10 w-10"
+          className="h-10 md:h-10 w-10 md:w-10"
           onClick={onClose}
         >
           <X className="h-5 w-5" />

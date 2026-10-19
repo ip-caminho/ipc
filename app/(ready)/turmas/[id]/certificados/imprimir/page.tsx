@@ -131,7 +131,7 @@ export default function ImprimirCertificadosPage() {
           {certificados.length === 1 ? "certificado" : "certificados"} — confira antes de
           imprimir. Use A4 paisagem, sem margens.
         </p>
-        <Button className="h-10" onClick={() => window.print()}>
+        <Button className="h-10 md:h-10" onClick={() => window.print()}>
           <Printer className="h-4 w-4 mr-1" />
           Imprimir
         </Button>

@@ -81,7 +81,7 @@ function CampoNumero({
           type="button"
           variant="outline"
           size="icon"
-          className="h-9 w-9 shrink-0"
+          className="h-9 md:h-9 w-9 md:w-9 shrink-0"
           disabled={value <= 0}
           onClick={() => onChange(Math.max(0, value - 1))}
           aria-label={`Diminuir ${label}`}
@@ -91,7 +91,7 @@ function CampoNumero({
         <Input
           id={id}
           inputMode="numeric"
-          className="h-9 w-14 text-center"
+          className="h-9 md:h-9 w-14 text-center"
           value={String(value)}
           onChange={(e) => {
             const n = Number(e.target.value.replace(/\D/g, ""));
@@ -102,7 +102,7 @@ function CampoNumero({
           type="button"
           variant="outline"
           size="icon"
-          className="h-9 w-9 shrink-0"
+          className="h-9 md:h-9 w-9 md:w-9 shrink-0"
           disabled={value >= max}
           onClick={() => onChange(value + 1)}
           aria-label={`Aumentar ${label}`}

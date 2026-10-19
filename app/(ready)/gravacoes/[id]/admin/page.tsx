@@ -236,7 +236,7 @@ function AvisosEditor({ gravacaoId, avisos: initial }: { gravacaoId: Id<"gravaco
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                className="h-6 md:h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
                 onClick={() => remove(i)}
               >
                 <Trash2 className="h-3.5 w-3.5" />
@@ -251,7 +251,7 @@ function AvisosEditor({ gravacaoId, avisos: initial }: { gravacaoId: Id<"gravaco
               placeholder="Descricao"
               value={aviso.descricao}
               onChange={(e) => update(i, "descricao", e.target.value)}
-              className="min-h-[60px]"
+              className="min-h-[60px] md:min-h-[60px]"
             />
           </div>
         ))}

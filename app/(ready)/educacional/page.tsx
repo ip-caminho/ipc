@@ -788,7 +788,7 @@ export default function EducacionalPage() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-9 w-9 text-green-600"
+                              className="h-9 md:h-9 w-9 md:w-9 text-green-600"
                               onClick={(e) => handleShareRelatorio(e, r._id)}
                               aria-label="Compartilhar no WhatsApp"
                             >

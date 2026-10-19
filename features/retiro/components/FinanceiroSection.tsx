@@ -126,7 +126,7 @@ export function FinanceiroSection({
           </p>
           <Button
             size="sm"
-            className="h-9"
+            className="h-9 md:h-9"
             onClick={() =>
               acao(() => destinarSobra({ id: inscricaoId }), "Sobra destinada ao fundo solidário")
             }
@@ -164,7 +164,7 @@ export function FinanceiroSection({
                 <div className="flex shrink-0 items-center gap-1">
                   <Button
                     size="sm"
-                    className="h-8"
+                    className="h-8 md:h-8"
                     onClick={() => conferirComprovante(i)}
                   >
                     Registrar
@@ -172,7 +172,7 @@ export function FinanceiroSection({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 text-muted-foreground"
+                    className="h-8 md:h-8 w-8 md:w-8 text-muted-foreground"
                     aria-label="Descartar comprovante"
                     onClick={() =>
                       acao(
@@ -198,7 +198,7 @@ export function FinanceiroSection({
             <Button
               variant="outline"
               size="sm"
-              className="h-9"
+              className="h-9 md:h-9"
               onClick={() => {
                 setPendingIndex(null);
                 setRecebOpen(true);
@@ -230,7 +230,7 @@ export function FinanceiroSection({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 shrink-0 text-muted-foreground"
+                  className="h-8 md:h-8 w-8 md:w-8 shrink-0 text-muted-foreground"
                   aria-label="Remover recebimento"
                   onClick={() =>
                     acao(() => removerReceb({ id: inscricaoId, index: i }), "Recebimento removido")
@@ -249,7 +249,7 @@ export function FinanceiroSection({
         <div className="flex items-center justify-between">
           <p className="text-sm font-semibold">Descontos e fundo</p>
           {!cancelada && (
-            <Button variant="outline" size="sm" className="h-9" onClick={() => setDescontoOpen(true)}>
+            <Button variant="outline" size="sm" className="h-9 md:h-9" onClick={() => setDescontoOpen(true)}>
               <BadgePercent className="mr-1 h-3.5 w-3.5" /> Conceder desconto
             </Button>
           )}
@@ -273,7 +273,7 @@ export function FinanceiroSection({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 shrink-0 text-muted-foreground"
+                  className="h-8 md:h-8 w-8 md:w-8 shrink-0 text-muted-foreground"
                   aria-label="Remover ajuste"
                   onClick={() =>
                     acao(() => removerAjuste({ id: inscricaoId, index: i }), "Ajuste removido")
@@ -295,7 +295,7 @@ export function FinanceiroSection({
             <Button
               variant="outline"
               size="sm"
-              className="h-9"
+              className="h-9 md:h-9"
               onClick={() => {
                 setPlanoDraft(
                   planoPagamento.length > 0
@@ -498,7 +498,7 @@ export function FinanceiroSection({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-9 w-9"
+                  className="h-9 md:h-9 w-9 md:w-9"
                   aria-label="Remover parcela"
                   onClick={() => setPlanoDraft((d) => d.filter((_, j) => j !== i))}
                 >

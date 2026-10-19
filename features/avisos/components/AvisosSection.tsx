@@ -85,7 +85,7 @@ function AvisoForm({
         placeholder="Descricao (opcional)"
         value={descricao}
         onChange={(e) => setDescricao(e.target.value)}
-        className="text-sm min-h-[60px]"
+        className="text-sm min-h-[60px] md:min-h-[60px]"
       />
       <div className="flex items-center gap-3">
         <div className="space-y-1">

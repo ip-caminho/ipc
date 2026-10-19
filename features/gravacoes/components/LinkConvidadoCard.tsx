@@ -91,23 +91,23 @@ export function LinkConvidadoCard() {
               </InputGroupAddon>
             </InputGroup>
             <div className="flex flex-wrap gap-2">
-              <Button size="sm" className="h-9" onClick={enviarWa}>
+              <Button size="sm" className="h-9 md:h-9" onClick={enviarWa}>
                 <MessageCircle className="mr-1.5 h-4 w-4" />
                 WhatsApp
               </Button>
-              <Button size="sm" variant="outline" className="h-9" onClick={handleGerar} disabled={busy}>
+              <Button size="sm" variant="outline" className="h-9 md:h-9" onClick={handleGerar} disabled={busy}>
                 <RefreshCw className="mr-1.5 h-4 w-4" />
                 Gerar novo
               </Button>
               <RelatorioAcessosDialog />
-              <Button size="sm" variant="outline" className="h-9 text-destructive" onClick={handleRevogar} disabled={busy}>
+              <Button size="sm" variant="outline" className="h-9 md:h-9 text-destructive" onClick={handleRevogar} disabled={busy}>
                 <Trash2 className="mr-1.5 h-4 w-4" />
                 Desativar link
               </Button>
             </div>
           </>
         ) : (
-          <Button size="sm" className="h-9" onClick={handleGerar} disabled={busy}>
+          <Button size="sm" className="h-9 md:h-9" onClick={handleGerar} disabled={busy}>
             <Headphones className="mr-1.5 h-4 w-4" />
             Criar link de convidado
           </Button>

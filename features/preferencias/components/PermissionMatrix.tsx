@@ -159,7 +159,7 @@ function MembroPermissionPopover({
               placeholder="Buscar nome..."
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
-              className="h-8 pl-7 text-sm"
+              className="h-8 md:h-8 pl-7 text-sm"
             />
           </div>
         </div>

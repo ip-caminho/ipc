@@ -185,13 +185,13 @@ export default function LotePage() {
                               value={l.titulo}
                               onChange={(e) => atualizarLivro(l.tempId, { titulo: e.target.value })}
                               placeholder="Titulo"
-                              className="h-8 text-xs"
+                              className="h-8 md:h-8 text-xs"
                             />
                             <Input
                               value={l.autores.join(", ")}
                               onChange={(e) => atualizarLivro(l.tempId, { autores: e.target.value.split(",").map((a) => a.trim()).filter(Boolean) })}
                               placeholder="Autores (separe por virgula)"
-                              className="h-8 text-xs"
+                              className="h-8 md:h-8 text-xs"
                             />
                           </>
                         ) : (

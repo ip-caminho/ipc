@@ -78,7 +78,7 @@ function VincularMembro({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className="h-9">
+        <Button variant="outline" size="sm" className="h-9 md:h-9">
           <Link2 className="mr-1 h-3.5 w-3.5" /> Vincular
         </Button>
       </PopoverTrigger>
@@ -269,7 +269,7 @@ export function InscricaoDetalheDrawer({
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-9 text-muted-foreground"
+                            className="h-9 md:h-9 text-muted-foreground"
                             onClick={() =>
                               acao(
                                 () =>

@@ -36,7 +36,7 @@ export function VelocidadeButton({
           aria-label={`Velocidade de reprodução: ${rotulo(playbackRate)}`}
           className={cn(
             "shrink-0 px-2 tabular-nums text-muted-foreground hover:text-foreground",
-            size === "sm" ? "h-7 text-xs" : "h-11 min-w-[44px] text-sm",
+            size === "sm" ? "h-7 md:h-7 text-xs" : "h-11 md:h-11 min-w-[44px] text-sm",
             playbackRate !== 1 && "text-primary hover:text-primary",
             className,
           )}

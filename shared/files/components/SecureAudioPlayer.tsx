@@ -206,7 +206,7 @@ export function SecureAudioPlayer({
           type="button"
           variant="ghost"
           size="icon"
-          className="h-8 w-8 shrink-0"
+          className="h-8 md:h-8 w-8 md:w-8 shrink-0"
           onClick={togglePlay}
         >
           {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
@@ -232,7 +232,7 @@ export function SecureAudioPlayer({
             type="button"
             variant="ghost"
             size="icon"
-            className="h-8 w-8"
+            className="h-8 md:h-8 w-8 md:w-8"
             onClick={toggleMute}
           >
             {muted || volume === 0 ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}

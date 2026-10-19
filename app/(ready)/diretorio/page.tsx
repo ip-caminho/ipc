@@ -398,7 +398,7 @@ function DiretorioContent() {
                 }
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-9 bg-secondary border-0 h-10 text-base md:text-sm"
+                className="pl-9 bg-secondary border-0 h-10 md:h-10 text-base md:text-sm"
               />
             </div>
           </div>

@@ -202,7 +202,7 @@ export function LouvorOrdemSection({ cultoId, louvores, temCeia, canEdit, dataLa
       <Button
         variant="ghost"
         size="sm"
-        className="h-6 text-[11px] gap-1 text-muted-foreground px-1.5"
+        className="h-6 md:h-6 text-[11px] gap-1 text-muted-foreground px-1.5"
         onClick={handleOpen}
       >
         <Music className="h-3 w-3" />

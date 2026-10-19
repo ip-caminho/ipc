@@ -63,7 +63,7 @@ function BuscaEntidade({
   ) as ResultadoBusca[] | undefined;
   return (
     <div className="space-y-1">
-      <Input value={termo} onChange={(e) => setTermo(e.target.value)} placeholder={placeholder} className="h-8 text-sm" />
+      <Input value={termo} onChange={(e) => setTermo(e.target.value)} placeholder={placeholder} className="h-8 md:h-8 text-sm" />
       {resultados && resultados.length > 0 && (
         <ul className="rounded-md border divide-y max-h-40 overflow-y-auto">
           {resultados.map((r) => (
@@ -228,7 +228,7 @@ export function FamiliaDrawer({ membroId, entidadeId, nome, open, onOpenChange }
               <div className="rounded-md border p-3 space-y-2">
                 <div className="space-y-1">
                   <Label className="text-xs">Nome</Label>
-                  <Input value={fNome} onChange={(e) => setFNome(e.target.value)} className="h-8 text-sm" />
+                  <Input value={fNome} onChange={(e) => setFNome(e.target.value)} className="h-8 md:h-8 text-sm" />
                 </div>
                 <div className="flex gap-2">
                   <div className="flex-1 space-y-1">

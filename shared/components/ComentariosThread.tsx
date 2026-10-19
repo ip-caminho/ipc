@@ -125,7 +125,7 @@ export function ComentariosThread({ entidadeTipo, entidadeId, showTipo }: Coment
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-6 px-2 text-xs text-muted-foreground"
+                  className="h-6 md:h-6 px-2 text-xs text-muted-foreground"
                   onClick={() => setReplyTo(replyTo === c._id ? null : c._id)}
                 >
                   <Reply className="h-3 w-3 mr-1" />
@@ -136,7 +136,7 @@ export function ComentariosThread({ entidadeTipo, entidadeId, showTipo }: Coment
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-6 px-2 text-xs text-muted-foreground hover:text-red-600"
+                  className="h-6 md:h-6 px-2 text-xs text-muted-foreground hover:text-red-600"
                   onClick={() => handleRemove(c._id)}
                 >
                   <Trash2 className="h-3 w-3" />
@@ -146,7 +146,7 @@ export function ComentariosThread({ entidadeTipo, entidadeId, showTipo }: Coment
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-6 px-2 text-xs text-muted-foreground"
+                  className="h-6 md:h-6 px-2 text-xs text-muted-foreground"
                   onClick={() => toggleReplies(c._id)}
                 >
                   {showReplies ? <ChevronUp className="h-3 w-3 mr-1" /> : <ChevronDown className="h-3 w-3 mr-1" />}
@@ -165,7 +165,7 @@ export function ComentariosThread({ entidadeTipo, entidadeId, showTipo }: Coment
               onChange={(e) => setTexto(e.target.value)}
               placeholder="Escreva uma resposta..."
               rows={1}
-              className="text-sm min-h-[36px]"
+              className="text-sm min-h-[36px] md:min-h-[36px]"
             />
             <Button type="submit" size="sm" disabled={sending || !texto.trim()}>
               <Send className="h-3 w-3" />
@@ -206,7 +206,7 @@ export function ComentariosThread({ entidadeTipo, entidadeId, showTipo }: Coment
             onChange={(e) => setTexto(e.target.value)}
             placeholder="Escreva um comentario..."
             rows={1}
-            className="text-sm min-h-[36px] flex-1"
+            className="text-sm min-h-[36px] md:min-h-[36px] flex-1"
           />
           <Button type="submit" size="sm" disabled={sending || !texto.trim()}>
             <Send className="h-4 w-4" />

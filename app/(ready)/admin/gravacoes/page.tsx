@@ -92,10 +92,10 @@ function GravacaoRow({ g }: { g: any }) {
       </td>
       <td className="py-2 px-3 text-right whitespace-nowrap">
         <div className="flex items-center gap-1 justify-end">
-          <Button variant="outline" size="sm" className="h-7 text-xs" asChild>
+          <Button variant="outline" size="sm" className="h-7 md:h-7 text-xs" asChild>
             <Link href={`/gravacoes/${g._id}/admin`}>Gerenciar</Link>
           </Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
+          <Button variant="ghost" size="icon" className="h-7 md:h-7 w-7 md:w-7" asChild>
             <Link href={`/gravacoes/${g._id}`}>
               <ExternalLink className="h-3 w-3" />
             </Link>
@@ -286,7 +286,7 @@ export default function AdminGravacoesPage() {
               placeholder="Buscar..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-8 h-8"
+              className="pl-8 h-8 md:h-8"
             />
           </div>
           <div className="flex items-center gap-1 overflow-x-auto pb-1 scrollbar-none">
@@ -295,7 +295,7 @@ export default function AdminGravacoesPage() {
                 key={s}
                 variant={statusFilter === s ? "default" : "outline"}
                 size="sm"
-                className="h-7 text-xs shrink-0"
+                className="h-7 md:h-7 text-xs shrink-0"
                 onClick={() => setStatusFilter(s)}
               >
                 {s === "ALL" ? "Todos" : s === "PUBLICADO" ? "Pub" : "Rasc"}
@@ -309,7 +309,7 @@ export default function AdminGravacoesPage() {
                   key={t}
                   variant={tipoFilter === t ? "default" : "outline"}
                   size="sm"
-                  className="h-7 text-xs shrink-0"
+                  className="h-7 md:h-7 text-xs shrink-0"
                   onClick={() => setTipoFilter(t)}
                 >
                   {t === "ALL" ? "Todos" : cfg?.label || t}
@@ -322,7 +322,7 @@ export default function AdminGravacoesPage() {
                 key={s}
                 variant={iaFilter === s ? "default" : "outline"}
                 size="sm"
-                className="h-7 text-xs shrink-0"
+                className="h-7 md:h-7 text-xs shrink-0"
                 onClick={() => setIaFilter(s)}
               >
                 {s === "ALL" ? "IA" : s === "CONCLUIDO" ? "OK" : s === "PENDENTE" ? "Pend" : "Erro"}

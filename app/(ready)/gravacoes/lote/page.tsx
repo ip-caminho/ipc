@@ -252,14 +252,14 @@ export default function LoteGravacaoPage() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-7 w-7 shrink-0"
+                      className="h-7 md:h-7 w-7 md:w-7 shrink-0"
                       onClick={() => removeFile(f.id)}
                     >
                       <X className="h-3 w-3" />
                     </Button>
                   )}
                   {f.gravacaoId && (
-                    <Button variant="ghost" size="sm" className="text-[10px] h-7 shrink-0" asChild>
+                    <Button variant="ghost" size="sm" className="text-[10px] h-7 md:h-7 shrink-0" asChild>
                       <Link href={`/gravacoes/${f.gravacaoId}/admin`}>Ver</Link>
                     </Button>
                   )}

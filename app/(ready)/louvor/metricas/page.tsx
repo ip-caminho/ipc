@@ -43,7 +43,7 @@ export default function MetricasLouvorPage() {
             key={p.label}
             variant={meses === p.value ? "default" : "outline"}
             size="sm"
-            className="h-7 text-xs"
+            className="h-7 md:h-7 text-xs"
             onClick={() => setMeses(p.value)}
           >
             {p.label}

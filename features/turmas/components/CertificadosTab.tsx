@@ -113,13 +113,13 @@ export function CertificadosTab({ turmaId }: Props) {
                     id="maxFaltas"
                     type="number"
                     inputMode="numeric"
-                    className="w-24 h-10"
+                    className="w-24 h-10 md:h-10"
                     value={faltasEditadas === "" ? String(maxFaltas) : faltasEditadas}
                     onChange={(e) => setFaltasEditadas(e.target.value)}
                   />
                   <Button
                     variant="outline"
-                    className="h-10"
+                    className="h-10 md:h-10"
                     disabled={
                       ocupado ||
                       faltasEditadas === "" ||
@@ -145,13 +145,13 @@ export function CertificadosTab({ turmaId }: Props) {
                     id="minima"
                     type="number"
                     inputMode="numeric"
-                    className="w-24 h-10"
+                    className="w-24 h-10 md:h-10"
                     value={minimaEditada === "" ? String(minima) : minimaEditada}
                     onChange={(e) => setMinimaEditada(e.target.value)}
                   />
                   <Button
                     variant="outline"
-                    className="h-10"
+                    className="h-10 md:h-10"
                     disabled={ocupado || minimaEditada === "" || Number(minimaEditada) === minima}
                     onClick={() =>
                       comBloqueio(async () => {
@@ -171,7 +171,7 @@ export function CertificadosTab({ turmaId }: Props) {
 
             <div className="flex flex-wrap gap-2 ml-auto">
               <Button
-                className="h-10"
+                className="h-10 md:h-10"
                 disabled={ocupado || aptosSemCertificado === 0}
                 onClick={() =>
                   comBloqueio(
@@ -183,7 +183,7 @@ export function CertificadosTab({ turmaId }: Props) {
                 <Award className="h-4 w-4 mr-1" />
                 Emitir para os aptos ({aptosSemCertificado})
               </Button>
-              <Button variant="outline" className="h-10" asChild>
+              <Button variant="outline" className="h-10 md:h-10" asChild>
                 <Link href={`/turmas/${turmaId}/certificados/imprimir`} target="_blank">
                   <Printer className="h-4 w-4 mr-1" />
                   Imprimir
@@ -261,7 +261,7 @@ export function CertificadosTab({ turmaId }: Props) {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="h-10"
+                        className="h-10 md:h-10"
                         disabled={ocupado}
                         onClick={() =>
                           comBloqueio(
@@ -282,7 +282,7 @@ export function CertificadosTab({ turmaId }: Props) {
                         </Label>
                         <Input
                           id={`nome-${a.inscricaoId}`}
-                          className="h-10"
+                          className="h-10 md:h-10"
                           value={nome}
                           onChange={(e) =>
                             setNomeEditado((prev) => ({
@@ -294,7 +294,7 @@ export function CertificadosTab({ turmaId }: Props) {
                       </div>
                       <Button
                         size="sm"
-                        className="h-10"
+                        className="h-10 md:h-10"
                         disabled={ocupado || semApuracao}
                         onClick={() =>
                           comBloqueio(
@@ -325,7 +325,7 @@ export function CertificadosTab({ turmaId }: Props) {
                       <div className="flex gap-2">
                         <Button
                           size="sm"
-                          className="h-10"
+                          className="h-10 md:h-10"
                           disabled={ocupado}
                           onClick={() =>
                             comBloqueio(async () => {
@@ -342,7 +342,7 @@ export function CertificadosTab({ turmaId }: Props) {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-10"
+                          className="h-10 md:h-10"
                           onClick={() => setNotaAberta(null)}
                         >
                           Cancelar

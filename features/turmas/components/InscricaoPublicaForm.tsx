@@ -344,7 +344,7 @@ export function InscricaoPublicaForm({ token }: { token: string }) {
                           >
                             <Checkbox
                               id={`${p.id}-${opcao}`}
-                              className="size-5"
+                              className="size-5 md:size-5"
                               checked={marcada}
                               onCheckedChange={(c) =>
                                 setRespostas((prev) => ({
@@ -395,7 +395,7 @@ export function InscricaoPublicaForm({ token }: { token: string }) {
 
             <Button
               type="submit"
-              className="w-full h-12 text-base"
+              className="w-full h-12 md:h-12 text-base"
               disabled={form.formState.isSubmitting}
             >
               {form.formState.isSubmitting ? "Enviando..." : "Inscrever-se"}

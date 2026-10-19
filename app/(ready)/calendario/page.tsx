@@ -283,7 +283,7 @@ function CalendarioContent() {
               }}
             >
               {VIEWS.map((v) => (
-                <ToggleGroupItem key={v} value={v} className="px-3">
+                <ToggleGroupItem key={v} value={v} className="px-3 md:px-3">
                   {VIEW_LABEL[v]}
                 </ToggleGroupItem>
               ))}

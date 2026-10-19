@@ -117,7 +117,7 @@ function ComentarioItem({
                 onChange={(e) => setReplyText(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleReply()}
               />
-              <Button size="sm" className="h-7 px-2" onClick={handleReply} disabled={!replyText.trim()}>
+              <Button size="sm" className="h-7 md:h-7 px-2" onClick={handleReply} disabled={!replyText.trim()}>
                 <Send className="h-3 w-3" />
               </Button>
             </div>

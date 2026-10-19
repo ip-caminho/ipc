@@ -118,7 +118,7 @@ export function BibleBookFilter({ gravacoes, selected, onSelect }: BibleBookFilt
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 text-xs"
+                  className="h-8 md:h-8 text-xs"
                   onClick={() => {
                     onSelect(null);
                     setOpen(false);
@@ -194,7 +194,7 @@ export function BibleBookFilter({ gravacoes, selected, onSelect }: BibleBookFilt
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-6 px-2 text-xs"
+                  className="h-6 md:h-6 px-2 text-xs"
                   onClick={() => onSelect(null)}
                 >
                   Limpar filtro

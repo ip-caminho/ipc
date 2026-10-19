@@ -30,7 +30,7 @@ export function ImpersonationBanner() {
       <Button
         variant="outline"
         size="sm"
-        className="h-7 bg-white/80 hover:bg-white border-yellow-600 text-yellow-950 shrink-0"
+        className="h-7 md:h-7 bg-white/80 hover:bg-white border-yellow-600 text-yellow-950 shrink-0"
         onClick={stopImpersonating}
       >
         <X className="h-3.5 w-3.5 mr-1" />

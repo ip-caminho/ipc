@@ -393,7 +393,7 @@ function LinhaMembro({ membro, agrupar, readOnly }: { membro: MembroEclesiastico
                 salvarSeMudou("numeroMatricula", membro.numeroMatricula ?? "", e.target.value);
                 close();
               }}
-              className="h-8 w-24 text-xs"
+              className="h-8 md:h-8 w-24 text-xs"
             />
           )}
         </CelulaEdit>

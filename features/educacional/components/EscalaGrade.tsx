@@ -123,7 +123,7 @@ export function EscalaGrade({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-9 w-9"
+                    className="h-9 md:h-9 w-9 md:w-9"
                     onClick={() => onEditDia(dia)}
                     aria-label="Editar escala"
                   >
@@ -132,7 +132,7 @@ export function EscalaGrade({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-9 w-9 text-destructive"
+                    className="h-9 md:h-9 w-9 md:w-9 text-destructive"
                     onClick={() => onRemoveDia(dia.data)}
                     aria-label="Excluir escala do dia"
                   >
