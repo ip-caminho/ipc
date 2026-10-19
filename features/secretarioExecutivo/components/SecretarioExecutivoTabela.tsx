@@ -221,17 +221,12 @@ function CardMembro({ membro, agrupar }: { membro: MembroEclesiastico; agrupar: 
           </Badge>
         )}
       </div>
-      <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
-        <span>Status: {statusLabel}</span>
+      <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-sm text-muted-foreground">
+        {status !== "ATIVO" && <span>Status: {statusLabel}</span>}
         {cargoLabel && <span>Cargo: {cargoLabel}</span>}
-        {membro.rolCategoria === "PRINCIPAL" && (
+        {membro.rolCategoria === "PRINCIPAL" && !membro.civilmenteCapazes && (
           <span>
-            Civ. capaz:{" "}
-            {membro.civilmenteCapazes ? (
-              <span className="text-emerald-700">Sim</span>
-            ) : (
-              <span className="text-yellow-700">Menor</span>
-            )}
+            Civ. capaz: <span className="text-yellow-700">Menor</span>
           </span>
         )}
         {membro.numeroMatricula && <span>Matricula: {membro.numeroMatricula}</span>}
@@ -559,6 +554,8 @@ export function SecretarioExecutivoTabela({
     });
   }, [membros, agrupar, categoria]);
 
+  const [mobileLimit, setMobileLimit] = useState(40);
+
   const totalPorFamilia = useMemo(() => {
     const map = new Map<string, number>();
     if (agrupar) for (const l of linhas) {
@@ -572,7 +569,7 @@ export function SecretarioExecutivoTabela({
     <>
     {/* Mobile: cards */}
     <div className="space-y-3 md:hidden">
-      {linhas.map((m, i) => {
+      {linhas.slice(0, mobileLimit).map((m, i) => {
         const novaFamilia = agrupar && (i === 0 || m.familiaHeadId !== linhas[i - 1].familiaHeadId);
         return (
           <Fragment key={m._id}>
@@ -596,6 +593,16 @@ export function SecretarioExecutivoTabela({
       })}
       {linhas.length === 0 && (
         <p className="py-8 text-center text-sm text-muted-foreground">Nenhum registro.</p>
+      )}
+      {linhas.length > mobileLimit && (
+        <Button
+          type="button"
+          variant="outline"
+          className="h-11 w-full"
+          onClick={() => setMobileLimit((n) => n + 40)}
+        >
+          Mostrar mais ({linhas.length - mobileLimit})
+        </Button>
       )}
     </div>
 

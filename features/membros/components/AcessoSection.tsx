@@ -21,6 +21,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/shared/components/ui/alert-dialog";
 import { Copy, KeyRound, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 
@@ -34,7 +45,6 @@ export function AcessoSection({ membroId }: { membroId: Id<"membros"> }) {
   const [resetando, setResetando] = useState(false);
 
   async function handleResetar() {
-    if (!confirm("Resetar o acesso? A pessoa perde o login atual e podera se cadastrar de novo (criar nova senha).")) return;
     setResetando(true);
     try {
       await resetar({ membroId });
@@ -100,15 +110,31 @@ export function AcessoSection({ membroId }: { membroId: Id<"membros"> }) {
         </div>
 
         {!status.ativado && (
-          <Button onClick={handleGerar} disabled={loading} variant="outline" size="sm">
+          <Button onClick={handleGerar} disabled={loading} variant="outline" className="h-11 w-full md:h-8 md:w-auto">
             {loading ? "Gerando..." : status.temLinkPendente ? "Gerar novo link" : "Gerar link de acesso"}
           </Button>
         )}
 
         {status.ativado && (
-          <Button onClick={handleResetar} disabled={resetando} variant="outline" size="sm" className="text-destructive">
-            {resetando ? "Resetando..." : "Resetar acesso (tratar como novo)"}
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button disabled={resetando} variant="outline" className="h-11 w-full text-destructive md:h-8 md:w-auto md:px-3">
+                {resetando ? "Resetando..." : "Resetar acesso (tratar como novo)"}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Resetar o acesso?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  A pessoa perde o login atual e podera se cadastrar de novo (criar nova senha).
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel className="h-11 md:h-9">Cancelar</AlertDialogCancel>
+                <AlertDialogAction className="h-11 md:h-9" onClick={handleResetar}>Resetar</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         )}
 
         <Dialog open={open} onOpenChange={setOpen}>

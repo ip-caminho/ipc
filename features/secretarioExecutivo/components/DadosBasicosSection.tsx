@@ -8,8 +8,17 @@ import { Button } from "@/shared/components/ui/button";
 import { User, MapPin, Phone, Users, Pencil } from "lucide-react";
 import {
   STATUS_COLORS,
+  STATUS_OPTIONS,
   FORMACAO_OPTIONS,
+  ESTADO_CIVIL_OPTIONS,
 } from "@features/membros/lib/constants";
+import { format, isValid, parseISO } from "date-fns";
+
+function formatDataBR(iso?: string) {
+  if (!iso) return undefined;
+  const d = parseISO(iso);
+  return isValid(d) ? format(d, "dd/MM/yyyy") : iso;
+}
 
 type Endereco = {
   logradouro?: string;
@@ -101,6 +110,9 @@ export function DadosBasicosSection({
     : "";
   const formacaoLabel = FORMACAO_OPTIONS.find((o) => o.value === entidade.formacao)?.label;
   const status = entidade.status || "ATIVO";
+  const statusLabel = STATUS_OPTIONS.find((o) => o.value === status)?.label ?? status;
+  const estadoCivilLabel =
+    ESTADO_CIVIL_OPTIONS.find((o) => o.value === entidade.estadoCivil)?.label ?? entidade.estadoCivil;
 
   return (
     <div className="space-y-4">
@@ -126,7 +138,7 @@ export function DadosBasicosSection({
             )}
             <div className="flex items-center justify-center sm:justify-start gap-1.5 flex-wrap">
               <Badge variant="outline" className={STATUS_COLORS[status] || ""}>
-                {status}
+                {statusLabel}
               </Badge>
             </div>
           </div>
@@ -143,9 +155,9 @@ export function DadosBasicosSection({
         <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <Row label="CPF" value={entidade.cpf} />
           <Row label="RG" value={entidade.rg} />
-          <Row label="Data de nascimento" value={entidade.dataNascimento} />
+          <Row label="Data de nascimento" value={formatDataBR(entidade.dataNascimento)} />
           <Row label="Sexo" value={entidade.sexo === "M" ? "Masculino" : entidade.sexo === "F" ? "Feminino" : undefined} />
-          <Row label="Estado civil" value={entidade.estadoCivil} />
+          <Row label="Estado civil" value={estadoCivilLabel} />
           <Row label="Pai" value={entidade.pai} />
           <Row label="Mae" value={entidade.mae} />
           <Row label="Profissao" value={entidade.profissao} />
@@ -217,7 +229,7 @@ export function DadosBasicosSection({
                   <p className="text-sm">{f.nomeCompleto}</p>
                   <p className="text-[10px] text-muted-foreground">
                     Filho(a)
-                    {f.dataNascimento && ` · ${f.dataNascimento}`}
+                    {f.dataNascimento && ` · ${formatDataBR(f.dataNascimento)}`}
                   </p>
                 </div>
               </div>
@@ -229,8 +241,7 @@ export function DadosBasicosSection({
       {onEditar && (
         <Button
           variant="outline"
-          size="sm"
-          className="w-full gap-1.5 text-muted-foreground"
+          className="h-11 w-full gap-1.5 text-muted-foreground md:h-8"
           onClick={onEditar}
         >
           <Pencil className="h-3.5 w-3.5" /> Editar dados pessoais

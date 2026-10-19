@@ -11,13 +11,14 @@ import { Label } from "@/shared/components/ui/label";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Badge } from "@/shared/components/ui/badge";
 import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/shared/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogContent,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from "@/shared/components/ui/responsive-dialog";
+import { cn } from "@/shared/lib/utils/cn";
 import {
   Select,
   SelectContent,
@@ -125,17 +126,71 @@ export function CargosHistoricoSection({ membroId }: { membroId: Id<"membros"> }
         <CardTitle className="text-sm text-muted-foreground flex items-center gap-1.5">
           <Briefcase className="h-3.5 w-3.5" /> Cargos Eclesiasticos (historico)
         </CardTitle>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button size="sm" variant="outline">
+        <Button
+          size="sm"
+          variant="outline"
+          className={cn("h-11 md:h-8", cargos?.length === 0 && "hidden md:inline-flex")}
+          onClick={() => setOpen(true)}
+        >
+          <Plus className="h-3 w-3 mr-1" /> Registrar
+        </Button>
+      </CardHeader>
+      <CardContent>
+        {cargos === undefined ? (
+          <p className="text-xs text-muted-foreground">Carregando...</p>
+        ) : cargos.length === 0 ? (
+          <>
+            <p className="text-xs text-muted-foreground">Nenhum cargo registrado.</p>
+            <Button
+              size="sm"
+              variant="outline"
+              className="mt-2 h-11 w-full md:hidden"
+              onClick={() => setOpen(true)}
+            >
               <Plus className="h-3 w-3 mr-1" /> Registrar
             </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Registrar mandato</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-3 py-2">
+          </>
+        ) : (
+          <ul className="space-y-1">
+            {cargos.map((c) => (
+              <li key={c._id} className="flex items-center justify-between gap-2 p-2 rounded-md border text-sm">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary">{CARGO_OPTIONS.find((o) => o.value === c.cargo)?.label}</Badge>
+                    <Badge className={STATUS_COLOR[c.status]} variant="outline">{c.status}</Badge>
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-0.5">
+                    {c.mandatoInicio} {c.mandatoFim ? `- ${c.mandatoFim}` : "(em curso)"}
+                  </div>
+                </div>
+                {c.status === "ATIVO" && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      setEncerrarAlvo(c._id);
+                      setEncerrarData(c.mandatoFim ?? new Date().toISOString().slice(0, 10));
+                    }}
+                    aria-label="Encerrar"
+                  >
+                    <Square className="h-4 w-4" />
+                  </Button>
+                )}
+                <Button size="sm" variant="ghost" onClick={() => handleRemover(c._id)} aria-label="Remover">
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </CardContent>
+
+        <ResponsiveDialog open={open} onOpenChange={setOpen}>
+          <ResponsiveDialogContent>
+            <ResponsiveDialogHeader>
+              <ResponsiveDialogTitle>Registrar mandato</ResponsiveDialogTitle>
+            </ResponsiveDialogHeader>
+            <ResponsiveDialogBody className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <Label className="text-xs">Cargo</Label>
@@ -184,71 +239,31 @@ export function CargosHistoricoSection({ membroId }: { membroId: Id<"membros"> }
                   onChange={(e) => setForm((p) => ({ ...p, observacoes: e.target.value }))}
                 />
               </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-              <Button onClick={handleIniciar} disabled={saving}>
+            </ResponsiveDialogBody>
+            <ResponsiveDialogFooter>
+              <Button variant="outline" className="h-11 md:h-9" onClick={() => setOpen(false)}>Cancelar</Button>
+              <Button className="h-11 md:h-9" onClick={handleIniciar} disabled={saving}>
                 {saving ? "Salvando..." : "Registrar"}
               </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </CardHeader>
-      <CardContent>
-        {cargos === undefined ? (
-          <p className="text-xs text-muted-foreground">Carregando...</p>
-        ) : cargos.length === 0 ? (
-          <p className="text-xs text-muted-foreground">Nenhum cargo registrado.</p>
-        ) : (
-          <ul className="space-y-1">
-            {cargos.map((c) => (
-              <li key={c._id} className="flex items-center justify-between gap-2 p-2 rounded-md border text-sm">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary">{CARGO_OPTIONS.find((o) => o.value === c.cargo)?.label}</Badge>
-                    <Badge className={STATUS_COLOR[c.status]} variant="outline">{c.status}</Badge>
-                  </div>
-                  <div className="text-xs text-muted-foreground mt-0.5">
-                    {c.mandatoInicio} {c.mandatoFim ? `- ${c.mandatoFim}` : "(em curso)"}
-                  </div>
-                </div>
-                {c.status === "ATIVO" && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => {
-                      setEncerrarAlvo(c._id);
-                      setEncerrarData(c.mandatoFim ?? new Date().toISOString().slice(0, 10));
-                    }}
-                    aria-label="Encerrar"
-                  >
-                    <Square className="h-4 w-4" />
-                  </Button>
-                )}
-                <Button size="sm" variant="ghost" onClick={() => handleRemover(c._id)} aria-label="Remover">
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </CardContent>
+            </ResponsiveDialogFooter>
+          </ResponsiveDialogContent>
+        </ResponsiveDialog>
 
-      <Dialog open={encerrarAlvo !== null} onOpenChange={(o) => !o && setEncerrarAlvo(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Encerrar mandato</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-1 py-2">
+      <ResponsiveDialog open={encerrarAlvo !== null} onOpenChange={(o) => !o && setEncerrarAlvo(null)}>
+        <ResponsiveDialogContent>
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle>Encerrar mandato</ResponsiveDialogTitle>
+          </ResponsiveDialogHeader>
+          <ResponsiveDialogBody className="space-y-1">
             <Label className="text-xs">Data de encerramento</Label>
             <DatePickerBR value={encerrarData} onChange={(iso) => setEncerrarData(iso)} />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEncerrarAlvo(null)}>Cancelar</Button>
-            <Button onClick={confirmarEncerrar} disabled={!encerrarData}>Encerrar</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </ResponsiveDialogBody>
+          <ResponsiveDialogFooter>
+            <Button variant="outline" className="h-11 md:h-9" onClick={() => setEncerrarAlvo(null)}>Cancelar</Button>
+            <Button className="h-11 md:h-9" onClick={confirmarEncerrar} disabled={!encerrarData}>Encerrar</Button>
+          </ResponsiveDialogFooter>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
     </Card>
   );
 }
