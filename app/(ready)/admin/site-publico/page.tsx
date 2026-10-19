@@ -49,7 +49,7 @@ function SitePublicoHub() {
         </div>
 
         <Tabs value={secao} onValueChange={(v) => setSecao(v as (typeof SECAO_KEYS)[number])}>
-          <TabsList className="grid h-auto w-full grid-cols-2 gap-1 sm:inline-flex sm:w-auto">
+          <TabsList className="grid max-sm:h-auto! w-full grid-cols-2 gap-1 sm:inline-flex sm:w-auto">
             {SECOES.map((s) => (
               <TabsTrigger key={s.key} value={s.key} className="gap-1.5">
                 <s.icon className="h-4 w-4" />

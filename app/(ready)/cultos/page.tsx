@@ -204,7 +204,7 @@ function PassagemCell({
     return (
       <div className="flex items-center gap-1">
         <Input
-          className="h-7 text-xs px-1.5"
+          className="h-7 md:h-7 text-xs px-1.5"
           placeholder="Nome do pregador"
           value={customName}
           onChange={(e) => setCustomName(e.target.value)}
@@ -214,10 +214,10 @@ function PassagemCell({
           }}
           autoFocus
         />
-        <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" onClick={handleCustomSubmit}>
+        <Button size="icon" variant="ghost" className="h-7 md:h-7 w-7 md:w-7 shrink-0" onClick={handleCustomSubmit}>
           <Check className="h-3 w-3" />
         </Button>
-        <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" onClick={() => setShowCustom(false)}>
+        <Button size="icon" variant="ghost" className="h-7 md:h-7 w-7 md:w-7 shrink-0" onClick={() => setShowCustom(false)}>
           <X className="h-3 w-3" />
         </Button>
       </div>
@@ -452,7 +452,7 @@ function CultosTable({
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-7 w-7 text-muted-foreground hover:text-destructive shrink-0"
+                          className="h-7 md:h-7 w-7 md:w-7 text-muted-foreground hover:text-destructive shrink-0"
                           onClick={() => onDeleteCulto(culto._id)}
                         >
                           <Trash2 className="h-3.5 w-3.5" />

@@ -101,7 +101,7 @@ function MembrosTab() {
             placeholder="Buscar membro..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-8 h-9"
+            className="pl-8 h-9 md:h-9"
           />
         </div>
       </div>
@@ -123,7 +123,7 @@ function MembrosTab() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-[10px] h-4 px-1"
+                      className="text-[10px] h-4 md:h-4 px-1"
                       onClick={async () => {
                         await syncWithRole({ membroId: m._id as Id<"membros"> });
                         toast.success("Resetado para padrao do papel");
@@ -349,7 +349,7 @@ export default function PermissoesPage() {
         </div>
 
         <Tabs defaultValue="membros">
-          <TabsList className="w-full grid grid-cols-3 sm:inline-flex sm:w-auto">
+          <TabsList className="w-full grid grid-cols-3 max-sm:h-auto! sm:inline-flex sm:w-auto">
             <TabsTrigger value="membros" className="gap-1.5">
               <Users className="h-3.5 w-3.5" />
               Membros

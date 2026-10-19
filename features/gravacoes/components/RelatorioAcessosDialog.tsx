@@ -51,7 +51,7 @@ export function RelatorioAcessosDialog() {
 
   return (
     <>
-      <Button size="sm" variant="outline" className="h-9" onClick={() => setOpen(true)}>
+      <Button size="sm" variant="outline" className="h-9 md:h-9" onClick={() => setOpen(true)}>
         <BarChart3 className="mr-1.5 h-4 w-4" />
         Acessos
       </Button>

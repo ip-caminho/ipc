@@ -232,7 +232,7 @@ export function OfflineToggle({
               <>
                 <Button
                   variant="outline"
-                  className="h-11 text-destructive hover:text-destructive"
+                  className="h-11 md:h-11 text-destructive hover:text-destructive"
                   onClick={async () => {
                     await offline.remover(pedido.gravacaoId);
                     setAberto(false);
@@ -243,7 +243,7 @@ export function OfflineToggle({
                   Remover do aparelho
                 </Button>
                 <DrawerClose asChild>
-                  <Button variant="ghost" className="h-11">
+                  <Button variant="ghost" className="h-11 md:h-11">
                     Fechar
                   </Button>
                 </DrawerClose>
@@ -251,7 +251,7 @@ export function OfflineToggle({
             ) : (
               <>
                 <Button
-                  className="h-11"
+                  className="h-11 md:h-11"
                   disabled={baixando}
                   onClick={async () => {
                     setAberto(false);
@@ -271,7 +271,7 @@ export function OfflineToggle({
                   )}
                 </Button>
                 <DrawerClose asChild>
-                  <Button variant="ghost" className="h-11">
+                  <Button variant="ghost" className="h-11 md:h-11">
                     Agora não
                   </Button>
                 </DrawerClose>

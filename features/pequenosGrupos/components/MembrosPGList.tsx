@@ -38,7 +38,7 @@ export function MembrosPGList({ membros, canRemove, onRemove }: MembrosPGListPro
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 text-destructive"
+              className="h-7 md:h-7 w-7 md:w-7 text-destructive"
               onClick={() => onRemove(m._id)}
             >
               <Trash2 className="h-3.5 w-3.5" />

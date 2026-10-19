@@ -77,13 +77,13 @@ export function VoluntarioCard({
           </div>
           {canManage && (
             <div className="flex gap-1">
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onEdit}>
+              <Button variant="ghost" size="icon" className="h-8 md:h-8 w-8 md:w-8" onClick={onEdit}>
                 <Edit className="h-4 w-4" />
               </Button>
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-destructive"
+                className="h-8 md:h-8 w-8 md:w-8 text-destructive"
                 onClick={onDelete}
               >
                 <Trash2 className="h-4 w-4" />
@@ -123,7 +123,7 @@ export function VoluntarioCard({
               variant="link"
               size="sm"
               asChild
-              className="h-auto p-0 text-xs"
+              className="h-auto md:h-auto p-0 text-xs"
             >
               <SignedFileLink
                 url={v.certificadoCacUrl}

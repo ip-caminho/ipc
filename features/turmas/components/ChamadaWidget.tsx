@@ -157,7 +157,7 @@ export function ChamadaWidget() {
                 <CollapsibleTrigger asChild>
                   <Button
                     variant="ghost"
-                    className="w-full h-auto min-h-[56px] justify-between gap-3 px-2 py-2 text-left whitespace-normal"
+                    className="w-full h-auto md:h-auto min-h-[56px] justify-between gap-3 px-2 py-2 text-left whitespace-normal"
                   >
                     <span className="flex items-center gap-3 min-w-0 flex-1">
                       <span className="grid size-10 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">
@@ -287,7 +287,7 @@ export function ChamadaWidget() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-10 px-2 text-muted-foreground"
+                            className="h-10 md:h-10 px-2 text-muted-foreground"
                           >
                             {anotacaoAberta
                               ? "Ocultar anotacao"
@@ -306,7 +306,7 @@ export function ChamadaWidget() {
                       </Collapsible>
 
                       <Button
-                        className="w-full h-11"
+                        className="w-full h-11 md:h-11"
                         onClick={handleSalvar}
                         disabled={salvando}
                       >

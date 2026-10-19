@@ -339,7 +339,7 @@ export function WaveformCanvas({
           type="button"
           variant="ghost"
           size="icon"
-          className="h-6 w-6"
+          className="h-6 md:h-6 w-6 md:w-6"
           onClick={zoomIn}
           disabled={viewDuration <= 10}
           title="Zoom in"
@@ -350,7 +350,7 @@ export function WaveformCanvas({
           type="button"
           variant="ghost"
           size="icon"
-          className="h-6 w-6"
+          className="h-6 md:h-6 w-6 md:w-6"
           onClick={zoomOut}
           disabled={zoomLevel <= 1.05}
           title="Zoom out"
@@ -361,7 +361,7 @@ export function WaveformCanvas({
           type="button"
           variant="ghost"
           size="icon"
-          className="h-6 w-6"
+          className="h-6 md:h-6 w-6 md:w-6"
           onClick={resetZoom}
           disabled={zoomLevel <= 1.05}
           title="Ver tudo"

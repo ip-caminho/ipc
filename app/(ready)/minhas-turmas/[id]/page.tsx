@@ -149,7 +149,7 @@ export default function MinhaTurmaPage() {
                         </Badge>
                       )}
                       {i.whatsapp && (
-                        <Button variant="outline" size="sm" className="h-10 px-3" asChild>
+                        <Button variant="outline" size="sm" className="h-10 md:h-10 px-3" asChild>
                           <a
                             href={linkWhatsApp(i.whatsapp, i.nome, turma.nome)}
                             target="_blank"
@@ -169,7 +169,7 @@ export default function MinhaTurmaPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-10 px-2 text-xs text-muted-foreground"
+                          className="h-10 md:h-10 px-2 text-xs text-muted-foreground"
                         >
                           <ChevronDown className="h-4 w-4 mr-1" />
                           Ver o que respondeu ({i.respostas.length})

@@ -181,7 +181,7 @@ export function AgendaPanel() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 gap-1 px-2 text-muted-foreground"
+                  className="h-8 md:h-8 gap-1 px-2 text-muted-foreground"
                   onClick={() => editarEvento(e.evento!)}
                 >
                   <Pencil className="h-3.5 w-3.5" /> Editar

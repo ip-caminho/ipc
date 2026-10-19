@@ -76,7 +76,7 @@ export function ShareGravacaoButton({
 
   return (
     <>
-      <Button variant="outline" size="sm" className="h-9" onClick={abrir} disabled={busy}>
+      <Button variant="outline" size="sm" className="h-9 md:h-9" onClick={abrir} disabled={busy}>
         <Share2 className="mr-1.5 h-4 w-4" />
         Compartilhar
       </Button>
@@ -108,14 +108,14 @@ export function ShareGravacaoButton({
                 </InputGroupAddon>
               </InputGroup>
               <div className="flex flex-wrap gap-2">
-                <Button size="sm" className="h-9" onClick={enviarWa}>
+                <Button size="sm" className="h-9 md:h-9" onClick={enviarWa}>
                   <MessageCircle className="mr-1.5 h-4 w-4" />
                   WhatsApp
                 </Button>
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-9 text-destructive"
+                  className="h-9 md:h-9 text-destructive"
                   onClick={handleRevogar}
                   disabled={busy}
                 >

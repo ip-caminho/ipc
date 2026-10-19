@@ -220,7 +220,7 @@ export function LouvorForm({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <Textarea
                 id="conteudo"
-                className="font-mono text-sm min-h-[40vh] !field-sizing-fixed resize-none"
+                className="font-mono text-sm min-h-[40vh] md:min-h-[40vh] !field-sizing-fixed resize-none"
                 placeholder={`Cole aqui a cifra do Cifra Club ou ChordPro.\n\nExemplo Cifra Club:\n   G          C\nAmazing grace how sweet\n\nExemplo ChordPro:\n[G]Amazing grace [C]how sweet`}
                 value={conteudo}
                 onChange={(e) => {

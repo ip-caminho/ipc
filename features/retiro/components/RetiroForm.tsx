@@ -461,7 +461,7 @@ export function RetiroForm({
               type="button"
               variant="outline"
               onClick={preencherComFamilia}
-              className={`h-12 w-full border ${BORDA} ${FONT_BODY} text-[14px] ${COR_TEXTO} hover:bg-[#F4F0E8]`}
+              className={`h-12 md:h-12 w-full border ${BORDA} ${FONT_BODY} text-[14px] ${COR_TEXTO} hover:bg-[#F4F0E8]`}
             >
               <UserRound className="mr-2 h-4 w-4 text-[#2563EB]" />
               Preencher com minha família ({familia.participantes.length})
@@ -857,7 +857,7 @@ export function RetiroForm({
         <Button
           type="submit"
           disabled={status === "submitting"}
-          className={`h-12 w-full bg-[#2563EB] ${FONT_BODY} text-[15px] font-semibold text-white hover:bg-[#1D4ED8]`}
+          className={`h-12 md:h-12 w-full bg-[#2563EB] ${FONT_BODY} text-[15px] font-semibold text-white hover:bg-[#1D4ED8]`}
         >
           {status === "submitting" && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Enviar inscrição{temTotal ? ` — ${brl(resumo.total)}` : ""}
@@ -878,7 +878,7 @@ export function RetiroForm({
             <Button
               type="submit"
               disabled={status === "submitting"}
-              className={`h-12 flex-1 bg-[#2563EB] ${FONT_BODY} text-[15px] font-semibold text-white hover:bg-[#1D4ED8]`}
+              className={`h-12 md:h-12 flex-1 bg-[#2563EB] ${FONT_BODY} text-[15px] font-semibold text-white hover:bg-[#1D4ED8]`}
             >
               {status === "submitting" && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Enviar inscrição

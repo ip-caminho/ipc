@@ -310,7 +310,7 @@ export function EclesiasticoForm({
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="h-6 text-[10px] px-2"
+                      className="h-6 md:h-6 text-[10px] px-2"
                       onClick={() => handleVerificar(key, !!verificado)}
                       disabled={!valorAtual && !verificado}
                     >

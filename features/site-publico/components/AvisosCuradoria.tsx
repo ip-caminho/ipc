@@ -89,7 +89,7 @@ export function AvisosCuradoria({
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                className="h-6 md:h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
                 onClick={() => remove(i)}
               >
                 <Trash2 className="h-3.5 w-3.5" />
@@ -104,7 +104,7 @@ export function AvisosCuradoria({
               placeholder="Descrição"
               value={a.descricao}
               onChange={(e) => update(i, "descricao", e.target.value)}
-              className="min-h-[60px]"
+              className="min-h-[60px] md:min-h-[60px]"
             />
             <div className="grid gap-2 sm:grid-cols-2">
               <Input

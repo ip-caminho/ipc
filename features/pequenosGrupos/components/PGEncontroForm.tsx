@@ -143,7 +143,7 @@ export function PGEncontroForm({ open, onOpenChange, pgId, membros, editingEncon
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label>Presenca ({presentes.size}/{membros.length})</Label>
-              <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={toggleTodos}>
+              <Button variant="ghost" size="sm" className="h-6 md:h-6 text-xs" onClick={toggleTodos}>
                 {presentes.size === membros.length ? "Desmarcar todos" : "Marcar todos"}
               </Button>
             </div>

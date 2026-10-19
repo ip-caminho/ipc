@@ -57,13 +57,13 @@ export function CalendarioView({ cultos }: CalendarioViewProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={prevMonth}>
+          <Button variant="ghost" size="icon" className="h-8 md:h-8 w-8 md:w-8" onClick={prevMonth}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <h2 className="text-sm font-semibold capitalize min-w-[140px] text-center">
             {format(currentMonth, "MMMM yyyy", { locale: ptBR })}
           </h2>
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={nextMonth}>
+          <Button variant="ghost" size="icon" className="h-8 md:h-8 w-8 md:w-8" onClick={nextMonth}>
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>

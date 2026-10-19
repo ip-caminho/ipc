@@ -108,7 +108,7 @@ export function PassagemModal({
                     type="button"
                     size="icon"
                     variant="ghost"
-                    className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                    className="h-7 md:h-7 w-7 md:w-7 text-muted-foreground hover:text-destructive"
                     onClick={() => removeRow(index)}
                     aria-label={`Remover passagem ${index + 1}`}
                   >

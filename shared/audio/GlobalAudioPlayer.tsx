@@ -94,7 +94,7 @@ export function GlobalAudioPlayer({ compact = false }: { compact?: boolean } = {
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8 shrink-0 hidden md:flex"
+          className="h-8 md:h-8 w-8 md:w-8 shrink-0 hidden md:flex"
           onClick={togglePlayPause}
         >
           {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
@@ -129,7 +129,7 @@ export function GlobalAudioPlayer({ compact = false }: { compact?: boolean } = {
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7"
+              className="h-7 md:h-7 w-7 md:w-7"
               onClick={() => setVolume(volume === 0 ? 1 : 0)}
             >
               {volume === 0 ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
@@ -149,7 +149,7 @@ export function GlobalAudioPlayer({ compact = false }: { compact?: boolean } = {
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8 shrink-0 text-muted-foreground"
+          className="h-8 md:h-8 w-8 md:w-8 shrink-0 text-muted-foreground"
           onClick={handleClose}
         >
           <X className="h-4 w-4" />
@@ -189,7 +189,7 @@ export function GlobalAudioPlayer({ compact = false }: { compact?: boolean } = {
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8"
+              className="h-8 md:h-8 w-8 md:w-8"
               onClick={() => seekRelative(-10)}
             >
               <SkipBack className="h-4 w-4" />
@@ -197,7 +197,7 @@ export function GlobalAudioPlayer({ compact = false }: { compact?: boolean } = {
             <Button
               variant="default"
               size="icon"
-              className="h-10 w-10 rounded-full"
+              className="h-10 md:h-10 w-10 md:w-10 rounded-full"
               onClick={togglePlayPause}
             >
               {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
@@ -205,7 +205,7 @@ export function GlobalAudioPlayer({ compact = false }: { compact?: boolean } = {
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8"
+              className="h-8 md:h-8 w-8 md:w-8"
               onClick={() => seekRelative(30)}
             >
               <SkipForward className="h-4 w-4" />

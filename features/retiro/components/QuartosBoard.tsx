@@ -122,7 +122,7 @@ function QuartoCard({
               <Input
                 value={nome}
                 autoFocus
-                className="h-7"
+                className="h-7 md:h-7"
                 onChange={(e) => setNome(e.target.value)}
                 onBlur={() => {
                   setEditando(false);
@@ -152,7 +152,7 @@ function QuartoCard({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 text-muted-foreground"
+                className="h-7 md:h-7 w-7 md:w-7 text-muted-foreground"
                 aria-label="Remover quarto"
                 onClick={onRemoverQuarto}
               >
@@ -178,7 +178,7 @@ function QuartoCard({
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 shrink-0 text-muted-foreground"
+              className="h-8 md:h-8 w-8 md:w-8 shrink-0 text-muted-foreground"
               aria-label={`Tirar ${o.nome} do quarto`}
               onClick={() => onDesalocar(o)}
             >

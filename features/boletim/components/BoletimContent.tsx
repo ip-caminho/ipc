@@ -63,7 +63,7 @@ function FontSizeControls({ fontSize, setFontSize }: { fontSize: number; setFont
       <Button
         variant="ghost"
         size="icon"
-        className="h-10 w-10"
+        className="h-10 md:h-10 w-10 md:w-10"
         onClick={() => setFontSize((s) => Math.max(14, s - 2))}
       >
         <AArrowDown className="h-4 w-4" />
@@ -72,7 +72,7 @@ function FontSizeControls({ fontSize, setFontSize }: { fontSize: number; setFont
       <Button
         variant="ghost"
         size="icon"
-        className="h-10 w-10"
+        className="h-10 md:h-10 w-10 md:w-10"
         onClick={() => setFontSize((s) => Math.min(32, s + 2))}
       >
         <AArrowUp className="h-4 w-4" />

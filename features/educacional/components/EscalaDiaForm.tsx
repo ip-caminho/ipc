@@ -207,7 +207,7 @@ export function EscalaDiaForm({
                       type="button"
                       variant="outline"
                       size="sm"
-                      className="h-8"
+                      className="h-8 md:h-8"
                       onClick={() => addSlot(turma.value)}
                     >
                       <Plus className="h-3.5 w-3.5 mr-1" />
@@ -262,7 +262,7 @@ export function EscalaDiaForm({
                             type="button"
                             variant="ghost"
                             size="icon"
-                            className="h-10 w-10 shrink-0 text-destructive"
+                            className="h-10 md:h-10 w-10 md:w-10 shrink-0 text-destructive"
                             onClick={() => removeSlot(turma.value, index)}
                           >
                             <Trash2 className="h-4 w-4" />
