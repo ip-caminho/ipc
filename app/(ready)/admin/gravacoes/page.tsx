@@ -7,6 +7,11 @@ import { useDebounce } from "@shared/hooks/useDebounce";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
+import {
+  Drawer, DrawerContent, DrawerFooter, DrawerHeader, DrawerTitle, DrawerClose,
+} from "@/shared/components/ui/drawer";
+import { PageHeader } from "@shared/components/layout/PageHeader";
+import { MobileFab } from "@shared/components/layout/MobileFab";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { AdminGate } from "@shared/components/auth/RoleGate";
 import { IaStatusBadge } from "@features/gravacoes/components/IaStatusBadge";
@@ -14,7 +19,7 @@ import { useIsMobile } from "@shared/hooks/use-mobile";
 import {
   Search, ExternalLink, Plus, Globe, GlobeLock,
   Mic, BookOpen, Presentation, FileAudio,
-  ArrowUpDown, ArrowUp, ArrowDown, ChevronRight,
+  ArrowUpDown, ArrowUp, ArrowDown, ChevronRight, SlidersHorizontal,
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -109,28 +114,10 @@ function GravacaoRow({ g }: { g: any }) {
 // --- Mobile: Card compacto ---
 
 function GravacaoMobileCard({ g }: { g: any }) {
-  // @ts-ignore Convex TS2589
-  const publishGravacao = useMutation(api.gravacoes.mutations.publish);
-  // @ts-ignore Convex TS2589
-  const unpublishGravacao = useMutation(api.gravacoes.mutations.update);
   const pregador = g.pregadorNome || g.pregadorInfo?.nome;
   const isPublished = g.status === "PUBLICADO";
   const tipo = TIPO_CONFIG[g.tipo] || TIPO_CONFIG.OUTRO;
   const TipoIcon = tipo.icon;
-
-  const toggleStatus = async () => {
-    try {
-      if (isPublished) {
-        await unpublishGravacao({ id: g._id, data: { status: "RASCUNHO" } });
-        toast.success("Gravacao despublicada");
-      } else {
-        await publishGravacao({ id: g._id });
-        toast.success("Gravacao publicada");
-      }
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Erro ao alterar status");
-    }
-  };
 
   return (
     <Link
@@ -144,7 +131,7 @@ function GravacaoMobileCard({ g }: { g: any }) {
 
       {/* Conteudo */}
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium leading-tight line-clamp-1">{g.titulo}</p>
+        <p className="text-sm font-medium leading-tight line-clamp-2">{g.titulo}</p>
         <div className="flex items-center gap-2 mt-0.5">
           <span className="text-xs text-muted-foreground">
             {format(parseISO(g.data), "dd/MM/yyyy", { locale: ptBR })}
@@ -154,11 +141,7 @@ function GravacaoMobileCard({ g }: { g: any }) {
           )}
         </div>
         <div className="flex items-center gap-1.5 mt-1">
-          <Badge
-            variant={isPublished ? "default" : "secondary"}
-            className="text-[10px] h-5 cursor-pointer"
-            onClick={(e) => { e.preventDefault(); toggleStatus(); }}
-          >
+          <Badge variant={isPublished ? "default" : "secondary"} className="text-[10px] h-5">
             {isPublished ? "Publicado" : "Rascunho"}
           </Badge>
           <IaStatusBadge iaStatus={g.iaStatus} iaErro={g.iaErro} />
@@ -213,7 +196,9 @@ export default function AdminGravacoesPage() {
   const [sortField, setSortField] = useState<SortField>("data");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const debouncedSearch = useDebounce(search, 300);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const isMobile = useIsMobile();
+  const extraFilters = (tipoFilter !== "ALL" ? 1 : 0) + (iaFilter !== "ALL" ? 1 : 0);
 
   // @ts-ignore Convex TS2589
   const gravacoes = useQuery(api.gravacoes.queries.list, {
@@ -263,33 +248,55 @@ export default function AdminGravacoesPage() {
   return (
     <AdminGate fallback={<p className="text-muted-foreground">Acesso restrito a administradores</p>}>
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl md:text-2xl font-bold">Gravacoes</h1>
-            {filtered && (
-              <p className="text-xs text-muted-foreground">{filtered.length} item(s)</p>
-            )}
-          </div>
-          <Button size={isMobile ? "sm" : "default"} asChild>
-            <Link href="/gravacoes/nova">
-              <Plus className="h-4 w-4 mr-1" />
-              Nova
-            </Link>
-          </Button>
-        </div>
+        <PageHeader
+          title="Gravações"
+          subtitle={filtered ? `${filtered.length} item(s)` : undefined}
+          action={
+            <Button asChild className="hidden md:inline-flex">
+              <Link href="/gravacoes/nova">
+                <Plus className="h-4 w-4 mr-1" />
+                Nova
+              </Link>
+            </Button>
+          }
+        />
 
         {/* Filtros */}
         <div className="space-y-2">
           <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-2.5 top-3.5 md:top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
+              type="search"
+              enterKeyHint="search"
+              autoComplete="off"
               placeholder="Buscar..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-8 h-8 md:h-8"
+              className="pl-9 h-11 md:pl-8 md:h-8"
             />
           </div>
-          <div className="flex items-center gap-1 overflow-x-auto pb-1 scrollbar-none">
+          {/* Mobile: status em chips + Filtros (tipo, IA) em Drawer */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none md:hidden">
+            {(["ALL", "RASCUNHO", "PUBLICADO"] as const).map((s) => (
+              <Button
+                key={s}
+                variant={statusFilter === s ? "default" : "outline"}
+                className="h-10 px-4 text-sm rounded-full shrink-0"
+                onClick={() => setStatusFilter(s)}
+              >
+                {s === "ALL" ? "Status: Todos" : s === "PUBLICADO" ? "Publicado" : "Rascunho"}
+              </Button>
+            ))}
+            <Button
+              variant={extraFilters > 0 ? "default" : "outline"}
+              className="h-11 px-4 text-sm rounded-full shrink-0 gap-2"
+              onClick={() => setFiltersOpen(true)}
+            >
+              <SlidersHorizontal className="h-4 w-4" />
+              Filtros{extraFilters > 0 ? ` (${extraFilters})` : ""}
+            </Button>
+          </div>
+          <div className="hidden md:flex items-center gap-1 overflow-x-auto pb-1 scrollbar-none">
             {(["ALL", "RASCUNHO", "PUBLICADO"] as const).map((s) => (
               <Button
                 key={s}
@@ -369,6 +376,53 @@ export default function AdminGravacoesPage() {
             </table>
           </div>
         )}
+
+        <Drawer open={filtersOpen} onOpenChange={setFiltersOpen}>
+          <DrawerContent className="max-h-[92dvh]">
+            <DrawerHeader>
+              <DrawerTitle>Filtros</DrawerTitle>
+            </DrawerHeader>
+            <div className="space-y-5 overflow-y-auto px-4 pb-4">
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Tipo</p>
+                <div className="flex flex-wrap gap-2">
+                  {(["ALL", "SERMAO", "ESTUDO_BIBLICO", "PALESTRA", "OUTRO"] as const).map((t) => (
+                    <Button
+                      key={t}
+                      variant={tipoFilter === t ? "default" : "outline"}
+                      className="h-10 px-4 text-sm rounded-full"
+                      onClick={() => setTipoFilter(t)}
+                    >
+                      {t === "ALL" ? "Tipo: Todos" : TIPO_CONFIG[t]?.label || t}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Status da IA</p>
+                <div className="flex flex-wrap gap-2">
+                  {(["ALL", "CONCLUIDO", "PENDENTE", "ERRO"] as const).map((s) => (
+                    <Button
+                      key={s}
+                      variant={iaFilter === s ? "default" : "outline"}
+                      className="h-10 px-4 text-sm rounded-full"
+                      onClick={() => setIaFilter(s)}
+                    >
+                      {s === "ALL" ? "IA: Todos" : s === "CONCLUIDO" ? "Concluído" : s === "PENDENTE" ? "Pendente" : "Erro"}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <DrawerFooter className="pb-safe">
+              <DrawerClose asChild>
+                <Button className="h-11">Ver {filtered?.length ?? 0} item(s)</Button>
+              </DrawerClose>
+            </DrawerFooter>
+          </DrawerContent>
+        </Drawer>
+
+        <MobileFab label="Nova gravação" href="/gravacoes/nova" />
       </div>
     </AdminGate>
   );

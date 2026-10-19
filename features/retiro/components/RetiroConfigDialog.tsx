@@ -12,11 +12,13 @@ import { Textarea } from "@/shared/components/ui/textarea";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { DatePickerBR } from "@/shared/components/ui/date-picker-br";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/shared/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogContent,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from "@/shared/components/ui/responsive-dialog";
 import { parseReais } from "../lib/format";
 
 type ConfigForm = {
@@ -207,13 +209,13 @@ export function RetiroConfigDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>{retiroId ? "Editar retiro" : "Novo retiro"}</DialogTitle>
-        </DialogHeader>
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
+      <ResponsiveDialogContent className="sm:max-w-2xl">
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle>{retiroId ? "Editar retiro" : "Novo retiro"}</ResponsiveDialogTitle>
+        </ResponsiveDialogHeader>
 
-        <div className="space-y-5">
+        <ResponsiveDialogBody className="space-y-5">
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label htmlFor="cfg-titulo">Título</Label>
@@ -366,17 +368,17 @@ export function RetiroConfigDialog({
             <Checkbox checked={form.ativa} onCheckedChange={(c) => set("ativa", c === true)} />
             Ativo (página pública acessível)
           </label>
+        </ResponsiveDialogBody>
 
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Cancelar
-            </Button>
-            <Button onClick={salvar} disabled={salvando}>
-              {retiroId ? "Salvar" : "Criar"}
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+        <ResponsiveDialogFooter>
+          <Button variant="outline" className="h-12 md:h-9" onClick={() => onOpenChange(false)}>
+            Cancelar
+          </Button>
+          <Button className="h-12 md:h-9" onClick={salvar} disabled={salvando}>
+            {retiroId ? "Salvar" : "Criar"}
+          </Button>
+        </ResponsiveDialogFooter>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }

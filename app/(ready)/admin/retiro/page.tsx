@@ -24,12 +24,12 @@ function Conteudo() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-muted-foreground">
           Inscrição especial por grupo: preços por faixa etária, quartos e fundo solidário.
         </p>
         <Button
-          className="shrink-0 h-11 md:h-9"
+          className="w-full h-11 sm:w-auto sm:h-9"
           onClick={() => {
             setEditId(undefined);
             setConfigOpen(true);
@@ -68,8 +68,8 @@ function Conteudo() {
                       .join(" · ") || "sem estoque"}
                   </p>
                 </div>
-                <div className="flex shrink-0 gap-2">
-                  <Button asChild variant="outline" size="sm" className="h-11 md:h-8">
+                <div className="flex flex-wrap gap-2 sm:shrink-0">
+                  <Button asChild variant="outline" size="sm" className="h-11 flex-1 sm:flex-none md:h-8">
                     <Link href={`/admin/retiro/${a._id}`}>Inscrições</Link>
                   </Button>
                   <Button

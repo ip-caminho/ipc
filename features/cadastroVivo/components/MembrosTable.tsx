@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Badge } from "@/shared/components/ui/badge";
 import { Progress } from "@shared/components/ui/progress";
@@ -27,6 +28,8 @@ type MembroRow = {
   lastUpdated: number | null;
   isStale: boolean;
 };
+
+const PAGE_SIZE = 30;
 
 type Filter = "todos" | "incompletos" | "desatualizados";
 
@@ -57,6 +60,7 @@ function getInitials(nome: string) {
 export function MembrosTable({ membros }: Props) {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<Filter>("incompletos");
+  const [visible, setVisible] = useState(PAGE_SIZE);
 
   let filtered = membros;
 
@@ -75,13 +79,16 @@ export function MembrosTable({ membros }: Props) {
     <div className="space-y-3">
       <div className="flex gap-2">
         <Input
+          type="search"
+          enterKeyHint="search"
+          autoComplete="off"
           placeholder="Buscar membro..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="flex-1"
+          onChange={(e) => { setSearch(e.target.value); setVisible(PAGE_SIZE); }}
+          className="flex-1 h-11 md:h-9"
         />
-        <Select value={filter} onValueChange={(v) => setFilter(v as Filter)}>
-          <SelectTrigger className="w-[160px]">
+        <Select value={filter} onValueChange={(v) => { setFilter(v as Filter); setVisible(PAGE_SIZE); }}>
+          <SelectTrigger className="w-[150px] h-11 md:w-[160px] md:h-9">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -95,7 +102,7 @@ export function MembrosTable({ membros }: Props) {
       <p className="text-xs text-muted-foreground">{filtered.length} membros</p>
 
       <div className="space-y-2">
-        {filtered.map((m) => (
+        {filtered.slice(0, visible).map((m) => (
           <Link
             key={m.membroId}
             href={`/membros/${m.membroId}`}
@@ -112,7 +119,7 @@ export function MembrosTable({ membros }: Props) {
                 <Badge
                   variant="outline"
                   className={cn(
-                    "shrink-0 text-xs",
+                    "shrink-0 text-sm md:text-xs",
                     m.percentage === 100
                       ? "border-emerald-300 text-emerald-700 dark:text-emerald-400"
                       : m.percentage >= 50
@@ -135,7 +142,7 @@ export function MembrosTable({ membros }: Props) {
                 )}
               />
               <div className="flex items-center justify-between">
-                <p className="text-xs text-muted-foreground truncate">
+                <p className="text-sm md:text-xs text-muted-foreground truncate">
                   {m.missingCount > 0
                     ? `${m.missingCount} campo${m.missingCount > 1 ? "s" : ""} faltando`
                     : "Completo"}
@@ -147,6 +154,16 @@ export function MembrosTable({ membros }: Props) {
             </div>
           </Link>
         ))}
+
+        {filtered.length > visible && (
+          <Button
+            variant="outline"
+            className="h-11 w-full md:h-9"
+            onClick={() => setVisible((v) => v + PAGE_SIZE)}
+          >
+            Mostrar mais ({filtered.length - visible})
+          </Button>
+        )}
 
         {filtered.length === 0 && (
           <p className="text-sm text-muted-foreground text-center py-8">
