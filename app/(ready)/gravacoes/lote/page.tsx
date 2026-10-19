@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { cn } from "@shared/lib/utils/cn";
 import Link from "next/link";
+import { DetailHeader } from "@shared/components/layout/DetailHeader";
 
 type FileStatus = "pendente" | "comprimindo" | "enviando" | "criando" | "concluido" | "erro";
 
@@ -132,6 +133,9 @@ export default function LoteGravacaoPage() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-4">
+      <div className="md:hidden -mb-3">
+        <DetailHeader backHref="/gravacoes/nova" />
+      </div>
       <h1 className="text-xl font-bold">Upload em lote</h1>
 
       {/* Drop zone */}
@@ -150,7 +154,8 @@ export default function LoteGravacaoPage() {
         >
           <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
           <p className="text-sm text-muted-foreground">
-            Arraste audios aqui ou clique para selecionar
+            <span className="md:hidden">Toque para escolher os audios</span>
+            <span className="hidden md:inline">Arraste audios aqui ou clique para selecionar</span>
           </p>
           <p className="text-xs text-muted-foreground mt-1">
             MP3, M4A, WAV — a data e extraida do nome (ex: 2025 03 30 sermao.mp3)

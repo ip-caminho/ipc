@@ -81,7 +81,7 @@ export function IaProgressPanel({ gravacaoId, iaStatus, iaErro, iaTranscricao, y
         <CardContent className="pt-6 space-y-4">
           <div className="flex items-center gap-2">
             <AlertCircle className="h-4 w-4 text-destructive shrink-0" />
-            <p className="text-sm font-medium text-destructive">Erro no processamento</p>
+            <p className="text-sm font-medium text-destructive">Falha na etapa {failedLabel.toLowerCase()}</p>
           </div>
 
           <Progress value={failedPercent} className="h-2" />
@@ -110,10 +110,15 @@ export function IaProgressPanel({ gravacaoId, iaStatus, iaErro, iaTranscricao, y
           </div>
 
           {iaErro && (
-            <p className="text-xs text-destructive/80 bg-destructive/5 rounded p-2">{iaErro}</p>
+            <details className="text-xs">
+              <summary className="flex min-h-11 cursor-pointer items-center text-muted-foreground">
+                Detalhes tecnicos
+              </summary>
+              <p className="text-destructive/80 bg-destructive/5 rounded p-2 break-words">{iaErro}</p>
+            </details>
           )}
 
-          <Button size="sm" variant="outline" onClick={handleRetry} className="w-full">
+          <Button variant="outline" onClick={handleRetry} className="w-full h-11 md:h-8">
             <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
             Tentar novamente — {failedLabel.toLowerCase()}
           </Button>

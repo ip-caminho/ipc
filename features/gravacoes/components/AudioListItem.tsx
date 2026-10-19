@@ -55,7 +55,7 @@ export function AudioListItem({ audio, hideType }: { audio: AudioListItemData; h
       href={`/gravacoes/${audio._id}`}
       className="flex items-center gap-3 py-1.5 active:opacity-80 transition-opacity"
     >
-      <div className="shrink-0 h-9 w-9 rounded-full bg-muted flex items-center justify-center">
+      <div className="shrink-0 h-11 w-11 md:h-9 md:w-9 rounded-full bg-muted flex items-center justify-center">
         <Play
           className="h-4 w-4 text-muted-foreground"
           fill="currentColor"

@@ -195,6 +195,12 @@ export default function GravacaoDetailPage() {
             </div>
           )}
 
+          {gravacao.audioUrl && gravacao.iaStatus !== "CONCLUIDO" && (
+            <Button variant="outline" disabled className="h-12 w-full text-sm text-muted-foreground">
+              Áudio em preparação — volte em alguns minutos
+            </Button>
+          )}
+
           {/* 5. Reações + compartilhar */}
           <div className="flex items-center justify-between gap-3">
             <Reacoes gravacaoId={gravacao._id} />

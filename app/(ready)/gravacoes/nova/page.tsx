@@ -77,7 +77,7 @@ export default function NovaGravacaoPage() {
     <div className="max-w-lg mx-auto space-y-4">
       {/* Link lote */}
       <div className="flex justify-end">
-        <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" asChild>
+        <Button variant="ghost" size="sm" className="text-xs text-muted-foreground min-h-11 md:min-h-0" asChild>
           <Link href="/gravacoes/lote">
             <Layers className="h-3.5 w-3.5 mr-1" />
             Upload em lote
@@ -169,7 +169,7 @@ export default function NovaGravacaoPage() {
                 <ArrowLeft className="h-4 w-4 mr-1" />
                 Voltar
               </Button>
-              <Button onClick={() => setStep("upload")} disabled={!data} className="flex-1">
+              <Button onClick={() => setStep("upload")} disabled={!data} className="flex-1 h-11 md:h-9">
                 Continuar
                 <ArrowRight className="h-4 w-4 ml-1" />
               </Button>

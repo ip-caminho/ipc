@@ -16,7 +16,7 @@ export function Reacoes({ gravacaoId }: ReacoesProps) {
   const toggleReacao = useMutation(api.gravacoes.comentarios.toggleReacao);
 
   return (
-    <div className="flex items-center gap-1 flex-wrap">
+    <div className="flex items-center gap-2 md:gap-1 flex-wrap">
       {REACTION_TYPES.map((tipo) => {
         const data = reacoes?.find((r: any) => r.tipo === tipo);
         const count = data?.count ?? 0;
@@ -28,7 +28,7 @@ export function Reacoes({ gravacaoId }: ReacoesProps) {
             type="button"
             onClick={() => toggleReacao({ gravacaoId, tipo })}
             className={cn(
-              "flex items-center gap-1 px-3 py-1.5 rounded-full border text-sm transition-colors duration-150 cursor-pointer",
+              "flex items-center justify-center gap-1 min-h-11 min-w-11 md:min-h-0 md:min-w-0 px-3 py-1.5 rounded-full border text-sm transition-colors duration-150 cursor-pointer",
               mine
                 ? "border-blue-300 bg-blue-50 text-blue-800 dark:border-blue-600 dark:bg-blue-900/30 dark:text-blue-300"
                 : "border-border hover:bg-muted",
