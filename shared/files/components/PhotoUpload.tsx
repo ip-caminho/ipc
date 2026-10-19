@@ -8,12 +8,13 @@ import { Button } from "@/shared/components/ui/button";
 import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
 import { PrivateAvatarImage } from "@/shared/files/components/PrivateImage";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/shared/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogBody,
+  ResponsiveDialogFooter,
+} from "@/shared/components/ui/responsive-dialog";
 import { Slider } from "@/shared/components/ui/slider";
 import { Camera, Trash2, ZoomIn } from "lucide-react";
 
@@ -114,25 +115,29 @@ export function PhotoUpload({ folder, entityId, value, onChange, fallback }: Pho
   return (
     <>
       <div className="flex items-center gap-4">
-        <div className="relative group">
+        <button
+          type="button"
+          className="relative group shrink-0 rounded-full cursor-pointer"
+          onClick={() => inputRef.current?.click()}
+          aria-label={value ? "Trocar foto" : "Adicionar foto"}
+        >
           <Avatar className="h-20 w-20">
             {value && <PrivateAvatarImage src={value} />}
             <AvatarFallback className="text-2xl">{fallback?.charAt(0)?.toUpperCase() || "?"}</AvatarFallback>
           </Avatar>
-          <button
-            type="button"
-            className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-            onClick={() => inputRef.current?.click()}
-          >
+          <span className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
             <Camera className="h-5 w-5 text-white" />
-          </button>
-        </div>
+          </span>
+          <span className="absolute -bottom-0.5 -right-0.5 flex size-7 items-center justify-center rounded-full border bg-background shadow-sm md:hidden">
+            <Camera className="h-4 w-4 text-foreground" />
+          </span>
+        </button>
         <div className="space-y-1">
-          <Button type="button" variant="outline" size="sm" onClick={() => inputRef.current?.click()}>
+          <Button type="button" variant="outline" size="sm" className="h-11 md:h-8" onClick={() => inputRef.current?.click()}>
             {value ? "Trocar foto" : "Adicionar foto"}
           </Button>
           {value && (
-            <Button type="button" variant="ghost" size="sm" className="text-destructive" onClick={handleRemove}>
+            <Button type="button" variant="ghost" size="sm" className="h-11 md:h-8 text-destructive" onClick={handleRemove}>
               <Trash2 className="h-3 w-3 mr-1" />
               Remover
             </Button>
@@ -148,50 +153,52 @@ export function PhotoUpload({ folder, entityId, value, onChange, fallback }: Pho
         onChange={onFileSelect}
       />
 
-      <Dialog open={dialogOpen} onOpenChange={(open) => { if (!saving) setDialogOpen(open); }}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Ajustar foto</DialogTitle>
-          </DialogHeader>
+      <ResponsiveDialog open={dialogOpen} onOpenChange={(open) => { if (!saving) setDialogOpen(open); }}>
+        <ResponsiveDialogContent className="sm:max-w-md">
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle>Ajustar foto</ResponsiveDialogTitle>
+          </ResponsiveDialogHeader>
 
-          <div className="relative w-full aspect-square bg-muted rounded-md overflow-hidden">
-            {imageSrc && (
-              <Cropper
-                image={imageSrc}
-                crop={crop}
-                zoom={zoom}
-                aspect={1}
-                cropShape="round"
-                showGrid={false}
-                onCropChange={setCrop}
-                onZoomChange={setZoom}
-                onCropComplete={onCropComplete}
+          <ResponsiveDialogBody className="space-y-4">
+            <div className="relative w-full aspect-square bg-muted rounded-md overflow-hidden">
+              {imageSrc && (
+                <Cropper
+                  image={imageSrc}
+                  crop={crop}
+                  zoom={zoom}
+                  aspect={1}
+                  cropShape="round"
+                  showGrid={false}
+                  onCropChange={setCrop}
+                  onZoomChange={setZoom}
+                  onCropComplete={onCropComplete}
+                />
+              )}
+            </div>
+
+            <div className="flex items-center gap-3 px-1">
+              <ZoomIn className="h-4 w-4 text-muted-foreground shrink-0" />
+              <Slider
+                min={1}
+                max={3}
+                step={0.05}
+                value={[zoom]}
+                onValueChange={([v]) => setZoom(v)}
+                className="flex-1"
               />
-            )}
-          </div>
+            </div>
+          </ResponsiveDialogBody>
 
-          <div className="flex items-center gap-3 px-1">
-            <ZoomIn className="h-4 w-4 text-muted-foreground shrink-0" />
-            <Slider
-              min={1}
-              max={3}
-              step={0.05}
-              value={[zoom]}
-              onValueChange={([v]) => setZoom(v)}
-              className="flex-1"
-            />
-          </div>
-
-          <DialogFooter>
+          <ResponsiveDialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)} disabled={saving}>
               Cancelar
             </Button>
             <Button onClick={handleSave} disabled={saving}>
               {saving ? "Salvando..." : "Salvar"}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </ResponsiveDialogFooter>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
     </>
   );
 }

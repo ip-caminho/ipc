@@ -77,14 +77,14 @@ function AusenciaRow({
         )}
       </div>
 
-      <div className="flex shrink-0 items-center gap-1">
+      <div className="flex shrink-0 items-center gap-2">
         <span className="whitespace-nowrap text-sm text-muted-foreground">
           {dataRangeLabel(a)}
         </span>
         {a.podeRemover && (
           <Button
             variant="ghost"
-            size="icon"
+            size="icon-tap"
             className="text-muted-foreground hover:text-destructive"
             onClick={() => onRemover(a._id)}
             aria-label="Remover ausência"
@@ -134,11 +134,11 @@ function AusenciasContent() {
       <div className="space-y-4">
         <PageHeader
           title="Ausências"
-          subtitle="Avise quando não estará disponível. Fica visível para a liderança no calendário e você não será escalado no período."
+          subtitle="Avise quando não puder ser escalado."
         />
 
         {podeRegistrar && (
-          <Button onClick={() => setCreateOpen(true)} className="w-full sm:w-auto">
+          <Button onClick={() => setCreateOpen(true)} className="h-12 w-full sm:w-auto md:h-9">
             <Plus className="mr-1 h-4 w-4" /> Registrar ausência
           </Button>
         )}

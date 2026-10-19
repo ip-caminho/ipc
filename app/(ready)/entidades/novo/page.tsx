@@ -4,11 +4,14 @@ import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
+import { Card, CardContent } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Checkbox } from "@/shared/components/ui/checkbox";
+import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
+import { DetailHeader } from "@shared/components/layout/DetailHeader";
+import { StickyActionBar } from "@shared/components/layout/StickyActionBar";
 import { toast } from "sonner";
 import { PAPEL_OPTIONS } from "@features/membros/lib/constants";
 
@@ -26,9 +29,14 @@ export default function NovaEntidadePage() {
   const router = useRouter();
   const [papeis, setPapeis] = useState<PapelEntidade[]>([]);
   const [loading, setLoading] = useState(false);
+  const [papeisError, setPapeisError] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (papeis.length === 0) {
+      setPapeisError(true);
+      return;
+    }
     setLoading(true);
     const formData = new FormData(e.currentTarget);
 
@@ -55,24 +63,24 @@ export default function NovaEntidadePage() {
   };
 
   const togglePapel = (papel: PapelEntidade) => {
+    setPapeisError(false);
     setPapeis((prev) =>
       prev.includes(papel) ? prev.filter((p) => p !== papel) : [...prev, papel]
     );
   };
 
   return (
-    <div className="max-w-2xl">
+    <HeaderLayout>
+    <DetailHeader title="Novo fornecedor" backHref="/entidades" />
+    <div className="max-w-2xl pb-28 md:pb-0">
       <form onSubmit={handleSubmit} className="space-y-6">
         <Card>
-          <CardHeader>
-            <CardTitle>Novo Fornecedor ou Parceiro</CardTitle>
-          </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label>Papeis</Label>
               <div className="flex flex-wrap gap-3">
                 {PAPEIS_PJ.map((p) => (
-                  <label key={p.value} className="flex items-center gap-2 text-sm">
+                  <label key={p.value} className="flex min-h-11 flex-1 items-center gap-3 rounded-md border px-3 text-sm md:min-h-0 md:flex-none md:gap-2 md:rounded-none md:border-0 md:px-0">
                     <Checkbox
                       checked={papeis.includes(p.value)}
                       onCheckedChange={() => togglePapel(p.value)}
@@ -81,6 +89,9 @@ export default function NovaEntidadePage() {
                   </label>
                 ))}
               </div>
+              {papeisError && (
+                <p className="text-xs text-destructive">Marque ao menos um papel</p>
+              )}
             </div>
 
             <div className="space-y-1">
@@ -93,7 +104,7 @@ export default function NovaEntidadePage() {
             </div>
             <div className="space-y-1">
               <Label htmlFor="cnpj">CNPJ</Label>
-              <Input id="cnpj" name="cnpj" placeholder="00.000.000/0000-00" />
+              <Input id="cnpj" name="cnpj" placeholder="00.000.000/0000-00" inputMode="numeric" autoComplete="off" />
             </div>
             <div className="space-y-1">
               <Label htmlFor="responsavelNome">Responsavel</Label>
@@ -103,26 +114,27 @@ export default function NovaEntidadePage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1">
                 <Label htmlFor="whatsapp">WhatsApp</Label>
-                <Input id="whatsapp" name="whatsapp" type="tel" />
+                <Input id="whatsapp" name="whatsapp" type="tel" autoComplete="tel" />
               </div>
               <div className="space-y-1">
                 <Label htmlFor="telefone">Telefone</Label>
-                <Input id="telefone" name="telefone" type="tel" />
+                <Input id="telefone" name="telefone" type="tel" autoComplete="tel" />
               </div>
               <div className="space-y-1">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" name="email" type="email" />
+                <Input id="email" name="email" type="email" autoComplete="email" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <div className="flex justify-end">
-          <Button type="submit" disabled={loading || papeis.length === 0}>
+        <StickyActionBar>
+          <Button type="submit" disabled={loading}>
             {loading ? "Salvando..." : "Criar"}
           </Button>
-        </div>
+        </StickyActionBar>
       </form>
     </div>
+    </HeaderLayout>
   );
 }
