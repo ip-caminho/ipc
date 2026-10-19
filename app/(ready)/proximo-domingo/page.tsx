@@ -104,12 +104,12 @@ export default function ProximoDomingoPage() {
       <div className="space-y-6 max-w-3xl">
         <PageHeader title="Próximo domingo" />
         {/* Header com seletor de data */}
-        <div className="flex items-center justify-end">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between w-full md:justify-end">
+          <div className="flex items-center gap-2 w-full md:w-auto">
             <Button
               variant="ghost"
-              size="icon"
-              className="h-8 md:h-8 w-8 md:w-8"
+              size="icon-tap"
+              className="md:size-8 md:min-h-8 md:min-w-8"
               disabled={!domingo.navegacao.anterior}
               onClick={() => setDataSelecionada(domingo.navegacao.anterior!)}
             >
@@ -119,7 +119,7 @@ export default function ProximoDomingoPage() {
               value={domingo.data}
               onValueChange={(v) => setDataSelecionada(v)}
             >
-              <SelectTrigger className="w-[200px] h-8 text-sm">
+              <SelectTrigger className="flex-1 md:flex-none md:w-[200px] h-11 md:h-8 text-base md:text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -132,8 +132,8 @@ export default function ProximoDomingoPage() {
             </Select>
             <Button
               variant="ghost"
-              size="icon"
-              className="h-8 md:h-8 w-8 md:w-8"
+              size="icon-tap"
+              className="md:size-8 md:min-h-8 md:min-w-8"
               disabled={!domingo.navegacao.proximo}
               onClick={() => setDataSelecionada(domingo.navegacao.proximo!)}
             >
@@ -243,6 +243,14 @@ export default function ProximoDomingoPage() {
                 if (e) fallback.push(renderEscalaCard(funcao, label, e));
               }
               items.unshift(...fallback);
+            }
+
+            if (items.length === 0) {
+              return (
+                <p className="text-sm text-muted-foreground py-6 text-center">
+                  A liturgia deste domingo ainda não foi publicada.
+                </p>
+              );
             }
 
             return <div className="space-y-3">{items}</div>;

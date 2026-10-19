@@ -124,7 +124,7 @@ function LouvorContent() {
       <div className="flex gap-6 md:h-[calc(100vh-6rem)]">
         {/* Coluna esquerda: lista */}
         <div className={cn(
-          "flex flex-col gap-4 overflow-y-auto shrink-0 w-full",
+          "flex flex-col gap-4 md:overflow-y-auto shrink-0 w-full",
           selectedId && !isMobile && "w-80",
           selectedId && !isMobile && "!w-80",
           !selectedId && "md:flex-1",
@@ -140,7 +140,8 @@ function LouvorContent() {
             </PermissionGate>
           </div>
 
-          {/* Search */}
+          {/* Busca + filtros: fixos no topo ao rolar (mobile) */}
+          <div className="sticky top-0 z-10 -mx-4 flex flex-col gap-4 bg-background px-4 py-2 md:static md:mx-0 md:px-0 md:py-0">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input
@@ -161,7 +162,7 @@ function LouvorContent() {
                     type="button"
                     onClick={() => setTomFilter(null)}
                     className={cn(
-                      "px-3 py-1.5 text-xs rounded-lg transition-colors min-h-[32px]",
+                      "px-3 py-1.5 text-xs rounded-lg transition-colors min-h-10 min-w-11 md:min-h-[32px] md:min-w-0",
                       !tomFilter
                         ? "bg-background text-foreground font-medium shadow-sm"
                         : "text-muted-foreground hover:text-foreground",
@@ -175,7 +176,7 @@ function LouvorContent() {
                       type="button"
                       onClick={() => setTomFilter(tomFilter === tom ? null : tom)}
                       className={cn(
-                        "px-3 py-1.5 text-xs rounded-lg transition-colors min-h-[32px]",
+                        "px-3 py-1.5 text-xs rounded-lg transition-colors min-h-10 min-w-11 md:min-h-[32px] md:min-w-0",
                         tomFilter === tom
                           ? "bg-background text-foreground font-medium shadow-sm"
                           : "text-muted-foreground hover:text-foreground",
@@ -211,6 +212,7 @@ function LouvorContent() {
               )}
             </>
           )}
+          </div>
 
           {/* List */}
           {louvores === undefined ? (

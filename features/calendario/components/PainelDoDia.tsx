@@ -81,7 +81,7 @@ export function PainelDoDia({ iso, eventos, onEventClick, onNovo, podeCriar = tr
       )}
 
       {podeCriar && onNovo && (
-        <Button variant="outline" size="sm" className="mt-2 w-full" onClick={() => onNovo(iso)}>
+        <Button variant="outline" size="sm" className="mt-2 w-full h-11 md:h-8" onClick={() => onNovo(iso)}>
           <Plus className="mr-1 h-4 w-4" /> Novo evento neste dia
         </Button>
       )}

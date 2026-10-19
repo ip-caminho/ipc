@@ -24,6 +24,7 @@ import { SemPermissaoFallback } from "@shared/components/auth/SemPermissaoFallba
 import { ModuloGuard } from "@shared/components/auth/ModuloGuard";
 import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
 import { PageHeader } from "@shared/components/layout/PageHeader";
+import { MobileFab } from "@shared/components/layout/MobileFab";
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import {
@@ -34,9 +35,16 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/shared/components/ui/toggle-group";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/shared/components/ui/drawer";
 import { Switch } from "@/shared/components/ui/switch";
 import { Label } from "@/shared/components/ui/label";
-import { Plus, ChevronLeft, ChevronRight, Mic } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight, Mic, SlidersHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import { EventoForm } from "@features/calendario/components/EventoForm";
 import { CalendarioMes } from "@features/calendario/components/CalendarioMes";
@@ -71,6 +79,7 @@ function CalendarioContent() {
   const [diaSel, setDiaSel] = useState<string | null>(null);
   const [filtroMinisterio, setFiltroMinisterio] = useState<string>("");
   const [verPregadores, setVerPregadores] = useState(false);
+  const [filtrosOpen, setFiltrosOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [createData, setCreateData] = useState<string>("");
   const [editEvento, setEditEvento] = useState<CalendarioEvento | null>(null);
@@ -251,6 +260,34 @@ function CalendarioContent() {
     }
   };
 
+  const filtroMinisterioSelect = (
+    <Select
+      value={filtroMinisterio || "__all__"}
+      onValueChange={(val) => setFiltroMinisterio(val === "__all__" ? "" : val)}
+    >
+      <SelectTrigger className="w-full md:w-[200px]">
+        <SelectValue placeholder="Todos os ministerios" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="__all__">Todos os ministérios</SelectItem>
+        {ministerios?.map((m: any) => (
+          <SelectItem key={m._id} value={m._id}>
+            {m.nome}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+
+  const pregadoresSwitch = (
+    <Label className="flex min-h-11 cursor-pointer items-center gap-2 text-sm font-normal md:min-h-0">
+      <Switch checked={verPregadores} onCheckedChange={setVerPregadores} />
+      <span className="flex items-center gap-1">
+        <Mic className="h-3.5 w-3.5" /> Pregadores
+      </span>
+    </Label>
+  );
+
   return (
     <ModuloGuard modulo="calendario">
       <HeaderLayout>
@@ -259,17 +296,34 @@ function CalendarioContent() {
 
           {/* Barra: navegação + período */}
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-1">
-              <Button variant="outline" size="icon" onClick={() => navegar(-1)}>
+            <div className="flex w-full items-center justify-between gap-1 md:w-auto md:justify-start">
+              <Button
+                variant="outline"
+                size="icon"
+                aria-label="Anterior"
+                onClick={() => navegar(-1)}
+              >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              <Button variant="outline" size="icon" onClick={() => navegar(1)}>
+              <span className="text-center text-lg font-semibold tracking-tight md:order-last md:ml-2">
+                {periodoLabel}
+              </span>
+              <Button
+                variant="outline"
+                size="icon"
+                aria-label="Próximo"
+                onClick={() => navegar(1)}
+              >
                 <ChevronRight className="h-4 w-4" />
               </Button>
-              <Button variant="outline" size="sm" onClick={() => setRefDate(new Date())}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="hidden md:inline-flex md:order-3"
+                onClick={() => setRefDate(new Date())}
+              >
                 Hoje
               </Button>
-              <span className="ml-2 text-lg font-semibold tracking-tight">{periodoLabel}</span>
             </div>
 
             {/* Seletor de visão */}
@@ -281,6 +335,7 @@ function CalendarioContent() {
               onValueChange={(v) => {
                 if (v) setView(v as View);
               }}
+              className="grid w-full grid-cols-4 md:flex md:w-auto"
             >
               {VIEWS.map((v) => (
                 <ToggleGroupItem key={v} value={v} className="px-3 md:px-3">
@@ -290,32 +345,43 @@ function CalendarioContent() {
             </ToggleGroup>
           </div>
 
-          {/* Barra: filtro + novo */}
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex flex-wrap items-center gap-3">
-              <Select
-                value={filtroMinisterio || "__all__"}
-                onValueChange={(val) => setFiltroMinisterio(val === "__all__" ? "" : val)}
-              >
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder="Todos os ministerios" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__all__">Todos os ministérios</SelectItem>
-                  {ministerios?.map((m: any) => (
-                    <SelectItem key={m._id} value={m._id}>
-                      {m.nome}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          {/* Mobile: Hoje + Filtros em Drawer */}
+          <div className="flex gap-2 md:hidden">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1"
+              onClick={() => setRefDate(new Date())}
+            >
+              Hoje
+            </Button>
+            <Drawer open={filtrosOpen} onOpenChange={setFiltrosOpen}>
+              <DrawerTrigger asChild>
+                <Button variant="outline" size="sm" className="flex-1">
+                  <SlidersHorizontal className="mr-1 h-4 w-4" />
+                  Filtros
+                  {(filtroMinisterio || verPregadores) && (
+                    <span className="ml-1 size-2 rounded-full bg-primary" aria-hidden />
+                  )}
+                </Button>
+              </DrawerTrigger>
+              <DrawerContent>
+                <DrawerHeader>
+                  <DrawerTitle>Filtros</DrawerTitle>
+                </DrawerHeader>
+                <div className="space-y-4 px-4 pb-6">
+                  {filtroMinisterioSelect}
+                  {pregadoresSwitch}
+                </div>
+              </DrawerContent>
+            </Drawer>
+          </div>
 
-              <Label className="flex cursor-pointer items-center gap-2 text-sm font-normal">
-                <Switch checked={verPregadores} onCheckedChange={setVerPregadores} />
-                <span className="flex items-center gap-1">
-                  <Mic className="h-3.5 w-3.5" /> Pregadores
-                </span>
-              </Label>
+          {/* Desktop: filtro + novo */}
+          <div className="hidden flex-wrap items-center justify-between gap-2 md:flex">
+            <div className="flex flex-wrap items-center gap-3">
+              {filtroMinisterioSelect}
+              {pregadoresSwitch}
             </div>
 
             <PermissionGate permission="calendario:create">
@@ -379,6 +445,10 @@ function CalendarioContent() {
               pregadores={pregadoresProp}
             />
           )}
+
+          <PermissionGate permission="calendario:create">
+            <MobileFab label="Novo evento" onClick={() => abrirNovo()} />
+          </PermissionGate>
 
           {/* Dialog: criar evento */}
           <EventoForm
