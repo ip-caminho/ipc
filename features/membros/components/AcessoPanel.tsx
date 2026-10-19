@@ -26,12 +26,23 @@ import {
   TableRow,
 } from "@/shared/components/ui/table";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/shared/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from "@/shared/components/ui/responsive-dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/shared/components/ui/alert-dialog";
 import { Copy, MessageCircle, History } from "lucide-react";
 import { toast } from "sonner";
 import { AtividadeMembroDrawer } from "./AtividadeMembroDrawer";
@@ -103,6 +114,7 @@ export function AcessoPanel() {
 
   const [link, setLink] = useState<{ url: string; row: Row } | null>(null);
   const [lote, setLote] = useState<string | null>(null);
+  const [confirmarLote, setConfirmarLote] = useState(false);
   const [loteLoading, setLoteLoading] = useState(false);
   const [atividade, setAtividade] = useState<{ id: Id<"membros">; nome: string } | null>(null);
   const [filtro, setFiltro] = useState<"todos" | "ativados" | "pendentes" | "sem">("todos");
@@ -178,7 +190,41 @@ export function AcessoPanel() {
       {/* Link publico de convidado (so admin) */}
       <LinkConvidadoCard />
 
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+      <div className="md:hidden space-y-2">
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+          <Button
+            variant={filtro === "todos" ? "default" : "outline"}
+            className="h-10 shrink-0 rounded-full px-4 text-sm"
+            onClick={() => setFiltro("todos")}
+        >
+            Todos · {data.resumo.total}
+          </Button>
+            <Button
+            variant={filtro === "ativados" ? "default" : "outline"}
+            className="h-10 shrink-0 rounded-full px-4 text-sm"
+            onClick={() => alternarFiltro("ativados")}
+        >
+            Com acesso · {data.resumo.ativados}
+          </Button>
+            <Button
+            variant={filtro === "pendentes" ? "default" : "outline"}
+            className="h-10 shrink-0 rounded-full px-4 text-sm"
+            onClick={() => alternarFiltro("pendentes")}
+        >
+            Link pendente · {data.resumo.pendentes}
+          </Button>
+            <Button
+            variant={filtro === "sem" ? "default" : "outline"}
+            className="h-10 shrink-0 rounded-full px-4 text-sm"
+            onClick={() => alternarFiltro("sem")}
+        >
+            Sem acesso · {data.resumo.semAcesso}
+          </Button>
+        </div>
+        <p className="text-sm text-muted-foreground">Adesão: {data.resumo.adesao}%</p>
+      </div>
+
+      <div className="hidden grid-cols-5 gap-2 md:grid">
         <ResumoCard label="Membros ativos" valor={data.resumo.total} ativo={filtro === "todos"} onClick={() => setFiltro("todos")} />
         <ResumoCard label="Com acesso" valor={data.resumo.ativados} ativo={filtro === "ativados"} onClick={() => alternarFiltro("ativados")} />
         <ResumoCard label="Link pendente" valor={data.resumo.pendentes} ativo={filtro === "pendentes"} onClick={() => alternarFiltro("pendentes")} />
@@ -186,12 +232,13 @@ export function AcessoPanel() {
         <ResumoCard label="Adesao" valor={`${data.resumo.adesao}%`} />
       </div>
 
-      <div className="flex justify-end">
+      <div className="flex md:justify-end">
         <Button
           variant="outline"
           size="sm"
+          className="w-full h-11 md:w-auto md:h-8"
           disabled={loteLoading || semAcesso.length === 0}
-          onClick={() => gerarLote(semAcesso)}
+          onClick={() => setConfirmarLote(true)}
         >
           {loteLoading ? "Gerando..." : `Gerar links dos sem acesso (${semAcesso.length})`}
         </Button>
@@ -288,14 +335,14 @@ export function AcessoPanel() {
       </div>
 
       {/* Dialog: link individual */}
-      <Dialog open={!!link} onOpenChange={(o) => !o && setLink(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Link de acesso</DialogTitle>
-            <DialogDescription>Valido por 7 dias. Envie ao membro criar a senha.</DialogDescription>
-          </DialogHeader>
+      <ResponsiveDialog open={!!link} onOpenChange={(o) => !o && setLink(null)}>
+        <ResponsiveDialogContent>
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle>Link de acesso</ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>Valido por 7 dias. Envie ao membro criar a senha.</ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
           {link && (
-            <>
+            <ResponsiveDialogBody className="space-y-4">
               <InputGroup>
                 <InputGroupInput readOnly value={link.url} className="text-xs" />
                 <InputGroupAddon align="inline-end">
@@ -312,41 +359,58 @@ export function AcessoPanel() {
                   </InputGroupButton>
                 </InputGroupAddon>
               </InputGroup>
-              <Button className="w-full" onClick={() => enviarWa(link.row, link.url)}>
+              <Button className="w-full h-12 md:h-9" onClick={() => enviarWa(link.row, link.url)}>
                 <MessageCircle className="h-4 w-4 mr-2" />
                 Enviar pelo WhatsApp
               </Button>
-            </>
+            </ResponsiveDialogBody>
           )}
-        </DialogContent>
-      </Dialog>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
 
       {/* Dialog: lote */}
-      <Dialog open={!!lote} onOpenChange={(o) => !o && setLote(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Links gerados</DialogTitle>
-            <DialogDescription>
+      <ResponsiveDialog open={!!lote} onOpenChange={(o) => !o && setLote(null)}>
+        <ResponsiveDialogContent>
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle>Links gerados</ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>
               Copie as mensagens e envie pelos seus canais. Cada link vale 7 dias.
-            </DialogDescription>
-          </DialogHeader>
-          <Textarea
-            readOnly
-            value={lote ?? ""}
-            className="h-64 text-xs font-mono"
-          />
-          <Button
-            className="w-full"
-            onClick={() => {
-              navigator.clipboard.writeText(lote ?? "");
-              toast.success("Mensagens copiadas");
-            }}
-          >
-            <Copy className="h-4 w-4 mr-2" />
-            Copiar tudo
-          </Button>
-        </DialogContent>
-      </Dialog>
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
+          <ResponsiveDialogBody className="space-y-4">
+            <Textarea
+              readOnly
+              value={lote ?? ""}
+              className="h-64 text-xs font-mono"
+            />
+            <Button
+              className="w-full h-12 md:h-9"
+              onClick={() => {
+                navigator.clipboard.writeText(lote ?? "");
+                toast.success("Mensagens copiadas");
+              }}
+            >
+              <Copy className="h-4 w-4 mr-2" />
+              Copiar tudo
+            </Button>
+          </ResponsiveDialogBody>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
+
+      <AlertDialog open={confirmarLote} onOpenChange={setConfirmarLote}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Gerar links dos sem acesso?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Serão gerados {semAcesso.length} links, um por membro. Não dá para desfazer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => gerarLote(semAcesso)}>Gerar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AtividadeMembroDrawer
         membroId={atividade?.id ?? null}

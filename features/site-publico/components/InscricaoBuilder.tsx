@@ -21,13 +21,14 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/shared/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from "@/shared/components/ui/responsive-dialog";
 import { Trash2, Plus } from "lucide-react";
 
 type CampoSistema =
@@ -224,17 +225,17 @@ export function InscricaoBuilder({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>{editando ? "Editar inscrição" : "Nova inscrição"}</DialogTitle>
-          <DialogDescription>
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
+      <ResponsiveDialogContent className="sm:max-w-2xl">
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle>{editando ? "Editar inscrição" : "Nova inscrição"}</ResponsiveDialogTitle>
+          <ResponsiveDialogDescription>
             Monte o formulário público. Membros logados têm os campos de sistema preenchidos
             automaticamente — não recrie esses dados como campo custom.
-          </DialogDescription>
-        </DialogHeader>
+          </ResponsiveDialogDescription>
+        </ResponsiveDialogHeader>
 
-        <div className="space-y-5">
+        <ResponsiveDialogBody className="space-y-5">
           <div className="space-y-1">
             <Label htmlFor="b-titulo">Título *</Label>
             <Input id="b-titulo" value={titulo} onChange={(e) => setTitulo(e.target.value)} />
@@ -286,6 +287,7 @@ export function InscricaoBuilder({
               <Input
                 id="b-vagas"
                 type="number"
+                inputMode="numeric"
                 min={0}
                 placeholder="Ilimitado"
                 value={vagas}
@@ -391,17 +393,17 @@ export function InscricaoBuilder({
               </div>
             ))}
           </div>
-        </div>
+        </ResponsiveDialogBody>
 
-        <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+        <ResponsiveDialogFooter>
+          <Button type="button" variant="outline" className="h-12 md:h-9" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
-          <Button type="button" onClick={handleSubmit} disabled={loading}>
+          <Button type="button" className="h-12 md:h-9" onClick={handleSubmit} disabled={loading}>
             {loading ? "Salvando..." : editando ? "Salvar" : "Criar"}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </ResponsiveDialogFooter>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }

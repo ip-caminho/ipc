@@ -26,12 +26,15 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
   Drawer,
+  DrawerClose,
   DrawerContent,
+  DrawerFooter,
   DrawerHeader,
   DrawerTitle,
 } from "@/shared/components/ui/drawer";
+import { PageHeader } from "@shared/components/layout/PageHeader";
 import { useIsMobile } from "@/shared/hooks/use-mobile";
-import { History, Filter, X, ChevronRight } from "lucide-react";
+import { Filter, X, ChevronRight } from "lucide-react";
 
 const PAGE_SIZE = 100;
 
@@ -54,6 +57,7 @@ function AuditoriaContent() {
   const [limit, setLimit] = useQueryState("limit", parseAsInteger.withDefault(PAGE_SIZE));
 
   const [selectedLog, setSelectedLog] = useState<any>(null);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const isMobile = useIsMobile();
 
   // @ts-ignore Convex TS2589
@@ -94,22 +98,77 @@ function AuditoriaContent() {
     setLimit(PAGE_SIZE);
   };
 
+  const nFiltros = [tabela, dataInicio, dataFim, actionFilter].filter(Boolean).length;
+
+  const renderCampos = (prefix: string) => (
+        <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4">
+          <div className="space-y-1">
+            <Label htmlFor={`${prefix}tabela`} className="text-xs">Tabela</Label>
+            <Select value={tabela || "__all"} onValueChange={(v) => setTabela(v === "__all" ? "" : v)}>
+              <SelectTrigger className="h-11 md:h-9" id={`${prefix}tabela`}>
+                <SelectValue placeholder="Todas" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__all">Todas</SelectItem>
+                {tabelas?.map((t: string) => (
+                  <SelectItem key={t} value={t}>{t}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor={`${prefix}acao`} className="text-xs">Ação</Label>
+            <Input
+              id={`${prefix}acao`}
+              className="h-11 md:h-9"
+              placeholder="Ex: create, update, delete"
+              value={actionFilter}
+              onChange={(e) => setActionFilter(e.target.value)}
+            />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor={`${prefix}de`} className="text-xs">De</Label>
+            <DatePickerBR
+              id={`${prefix}de`}
+              className="h-11 md:h-9"
+              value={dataInicio}
+              onChange={(iso) => setDataInicio(iso)}
+            />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor={`${prefix}ate`} className="text-xs">Até</Label>
+            <DatePickerBR
+              id={`${prefix}ate`}
+              className="h-11 md:h-9"
+              value={dataFim}
+              onChange={(iso) => setDataFim(iso)}
+            />
+          </div>
+        </div>
+  );
+
   return (
     <div className="max-w-6xl mx-auto w-full space-y-6">
-      <header className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-medium flex items-center gap-2">
-            <History className="h-6 w-6" />
-            Auditoria
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Logs de alterações no sistema
-          </p>
-        </div>
-      </header>
+      <PageHeader title="Auditoria" subtitle="Logs de alterações no sistema" />
 
-      {/* Filtros */}
-      <div className="rounded-xl border bg-card p-4 space-y-4">
+      {/* Filtros: mobile = botao + chips ativos (campos no Drawer) */}
+      <div className="space-y-2 md:hidden">
+        <Button variant="outline" className="h-11 w-full" onClick={() => setFiltersOpen(true)}>
+          <Filter className="mr-2 h-4 w-4" />
+          Filtros{nFiltros > 0 ? ` (${nFiltros})` : ""}
+        </Button>
+        {temFiltros && (
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+          {tabela && <Button variant="secondary" className="h-10 shrink-0 rounded-full px-4 text-sm" onClick={() => setTabela("")}>Tabela: {tabela} <X className="ml-1 h-4 w-4" /></Button>}
+          {actionFilter && <Button variant="secondary" className="h-10 shrink-0 rounded-full px-4 text-sm" onClick={() => setActionFilter("")}>Ação: {actionFilter} <X className="ml-1 h-4 w-4" /></Button>}
+          {dataInicio && <Button variant="secondary" className="h-10 shrink-0 rounded-full px-4 text-sm" onClick={() => setDataInicio("")}>De: {dataInicio} <X className="ml-1 h-4 w-4" /></Button>}
+          {dataFim && <Button variant="secondary" className="h-10 shrink-0 rounded-full px-4 text-sm" onClick={() => setDataFim("")}>Até: {dataFim} <X className="ml-1 h-4 w-4" /></Button>}
+          </div>
+        )}
+      </div>
+
+      {/* Filtros: desktop */}
+      <div className="hidden space-y-4 rounded-xl border bg-card p-4 md:block">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-sm font-medium">
             <Filter className="h-4 w-4" />
@@ -122,48 +181,27 @@ function AuditoriaContent() {
             </Button>
           )}
         </div>
-        <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4">
-          <div className="space-y-1">
-            <Label htmlFor="tabela" className="text-xs">Tabela</Label>
-            <Select value={tabela || "__all"} onValueChange={(v) => setTabela(v === "__all" ? "" : v)}>
-              <SelectTrigger id="tabela">
-                <SelectValue placeholder="Todas" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__all">Todas</SelectItem>
-                {tabelas?.map((t: string) => (
-                  <SelectItem key={t} value={t}>{t}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="acao" className="text-xs">Ação</Label>
-            <Input
-              id="acao"
-              placeholder="Ex: create, update, delete"
-              value={actionFilter}
-              onChange={(e) => setActionFilter(e.target.value)}
-            />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="de" className="text-xs">De</Label>
-            <DatePickerBR
-              id="de"
-              value={dataInicio}
-              onChange={(iso) => setDataInicio(iso)}
-            />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="ate" className="text-xs">Até</Label>
-            <DatePickerBR
-              id="ate"
-              value={dataFim}
-              onChange={(iso) => setDataFim(iso)}
-            />
-          </div>
-        </div>
+        {renderCampos("d-")}
       </div>
+
+      <Drawer open={filtersOpen} onOpenChange={setFiltersOpen}>
+        <DrawerContent className="max-h-[92dvh]">
+          <DrawerHeader>
+            <DrawerTitle>Filtros</DrawerTitle>
+          </DrawerHeader>
+          <div className="overflow-y-auto px-4 pb-4">{renderCampos("m-")}</div>
+          <DrawerFooter className="pb-safe">
+            <DrawerClose asChild>
+              <Button className="h-11">Ver resultados</Button>
+            </DrawerClose>
+            {temFiltros && (
+              <Button variant="outline" className="h-11" onClick={clearFilters}>
+                Limpar filtros
+              </Button>
+            )}
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
 
       {/* Tabela */}
       <div className="rounded-xl border bg-card overflow-hidden">
@@ -252,6 +290,7 @@ function AuditoriaContent() {
             <Button
               variant="outline"
               size="sm"
+              className="w-full h-11 md:w-auto md:h-8"
               onClick={() => setLimit(limit + PAGE_SIZE)}
             >
               Carregar mais

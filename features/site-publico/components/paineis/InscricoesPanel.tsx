@@ -63,11 +63,11 @@ export function InscricoesPanel() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-muted-foreground">
           Formulários de inscrição (retiros, cursos, eventos) que aparecem em /inscricoes.
         </p>
-        <Button onClick={novaInscricao} className="shrink-0">
+        <Button onClick={novaInscricao} className="w-full h-11 sm:w-auto sm:h-9">
           <Plus className="mr-1 h-4 w-4" /> Nova inscrição
         </Button>
       </div>
@@ -97,17 +97,17 @@ export function InscricoesPanel() {
                     {i.vagas != null ? `${i.vagasOcupadas}/${i.vagas} vagas` : `${i.vagasOcupadas} inscritos`}
                   </p>
                 </div>
-                <div className="flex shrink-0 gap-2">
-                  <Button asChild variant="outline" size="sm">
+                <div className="flex flex-wrap gap-2 sm:shrink-0">
+                  <Button asChild variant="outline" size="sm" className="h-11 md:h-8">
                     <Link href={`/admin/inscricoes/${i._id}/respostas`}>
                       <Users className="mr-1 h-3.5 w-3.5" /> Respostas
                     </Link>
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => editar(i._id)}>
+                  <Button variant="outline" size="sm" className="h-11 md:h-8" onClick={() => editar(i._id)}>
                     Editar
                   </Button>
                   {i.ativa && (
-                    <Button variant="ghost" size="sm" onClick={() => setEncerrarId(i._id)}>
+                    <Button variant="outline" size="sm" className="ml-auto h-11 text-destructive md:ml-0 md:h-8 md:border-transparent md:bg-transparent md:shadow-none md:hover:bg-accent" onClick={() => setEncerrarId(i._id)}>
                       Encerrar
                     </Button>
                   )}
