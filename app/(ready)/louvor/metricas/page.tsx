@@ -4,11 +4,11 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
-import { Button } from "@/shared/components/ui/button";
+import { ToggleGroup, ToggleGroupItem } from "@/shared/components/ui/toggle-group";
+import { DetailHeader } from "@shared/components/layout/DetailHeader";
 import { Badge } from "@/shared/components/ui/badge";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { BarChart3, Clock, Music } from "lucide-react";
-import Link from "next/link";
 
 const PERIODOS = [
   { value: 3, label: "3 meses" },
@@ -29,27 +29,28 @@ export default function MetricasLouvorPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold">Metricas do Louvor</h1>
-        <Button variant="outline" size="sm" asChild>
-          <Link href="/louvor">Repertorio</Link>
-        </Button>
-      </div>
+      <DetailHeader backHref="/louvor" title="Métricas do Louvor" />
 
       {/* Filtro de periodo */}
-      <div className="flex items-center gap-1">
+      <ToggleGroup
+        type="single"
+        variant="outline"
+        value={String(meses ?? "todos")}
+        onValueChange={(v) => {
+          if (v) setMeses(v === "todos" ? undefined : Number(v));
+        }}
+        className="w-full md:w-auto"
+      >
         {PERIODOS.map((p) => (
-          <Button
+          <ToggleGroupItem
             key={p.label}
-            variant={meses === p.value ? "default" : "outline"}
-            size="sm"
-            className="h-7 md:h-7 text-xs"
-            onClick={() => setMeses(p.value)}
+            value={String(p.value ?? "todos")}
+            className="h-10 md:h-8 flex-1 md:flex-none px-3 text-sm"
           >
             {p.label}
-          </Button>
+          </ToggleGroupItem>
         ))}
-      </div>
+      </ToggleGroup>
 
       <div className="grid grid-cols-[minmax(0,1fr)] gap-6 md:grid-cols-2">
         {/* Mais tocadas */}
