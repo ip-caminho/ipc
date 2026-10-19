@@ -4,16 +4,17 @@ import { AdminGate } from "@shared/components/auth/RoleGate";
 import { EquipesTab } from "@features/escalas/components/EquipesTab";
 import { GerarEscalasTab } from "@features/escalas/components/GerarEscalasTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
+import { PageHeader } from "@shared/components/layout/PageHeader";
 import { Users, CalendarCheck } from "lucide-react";
 
 export default function AdminEscalasPage() {
   return (
     <AdminGate fallback={<p className="text-muted-foreground">Acesso restrito</p>}>
       <div className="space-y-4">
-        <h1 className="text-xl font-bold">Equipes e Escalas</h1>
+        <PageHeader title="Equipes e Escalas" />
 
         <Tabs defaultValue="equipes">
-          <TabsList>
+          <TabsList className="w-full md:w-fit">
             <TabsTrigger value="equipes" className="gap-1.5">
               <Users className="h-3.5 w-3.5" />
               Equipes

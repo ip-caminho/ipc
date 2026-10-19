@@ -27,8 +27,27 @@ import { PermissionMatrix } from "@features/preferencias/components/PermissionMa
 import { useAuth } from "@shared/providers/PermissionsProvider";
 import { toast } from "sonner";
 import { Input } from "@/shared/components/ui/input";
-import { Copy, Link as LinkIcon, Users, Settings, UserPlus, Search, Eye, MonitorSmartphone } from "lucide-react";
+import { Copy, Link as LinkIcon, Users, Settings, UserPlus, Search, Eye, MonitorSmartphone, ChevronRight } from "lucide-react";
 import { Switch } from "@/shared/components/ui/switch";
+import { RadioGroup, RadioGroupItem } from "@/shared/components/ui/radio-group";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/shared/components/ui/drawer";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/shared/components/ui/alert-dialog";
+import { PageHeader } from "@shared/components/layout/PageHeader";
 import type { Id } from "@/convex/_generated/dataModel";
 import type { Role } from "@/types/auth";
 
@@ -62,6 +81,9 @@ function MembrosTab() {
   const setPermission = useMutation(api.preferencias.rbac.setMembroPermission);
   const syncWithRole = useMutation(api.preferencias.rbac.syncMembroWithRole);
   const [search, setSearch] = useState("");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [adminConfirm, setAdminConfirm] = useState<{ id: string; name: string } | null>(null);
+  const [resetConfirm, setResetConfirm] = useState<{ id: string; name: string } | null>(null);
 
   const filtered = useMemo(() => {
     if (!membros) return undefined;
@@ -84,6 +106,24 @@ function MembrosTab() {
     }
   };
 
+  // Atribuir admin pede confirmacao (eleva privilegio na hora)
+  const requestRoleChange = (m: { _id: string; name: string }, role: string) => {
+    if (role === "admin") {
+      setAdminConfirm({ id: m._id, name: m.name });
+      return;
+    }
+    handleRoleChange(m._id, role);
+  };
+
+  const handleReset = async (membroId: string) => {
+    try {
+      await syncWithRole({ membroId: membroId as Id<"membros"> });
+      toast.success("Resetado para padrao do papel");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro");
+    }
+  };
+
   const handleTogglePermission = async (membroId: string, permission: string, grant: boolean) => {
     try {
       await setPermission({ membroId: membroId as Id<"membros">, permission, hasPermission: grant });
@@ -92,16 +132,21 @@ function MembrosTab() {
     }
   };
 
+  const selected = selectedId ? membros.find((m: any) => m._id === selectedId) : undefined;
+
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
         <div className="relative flex-1">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-2.5 top-3.5 md:top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
+            type="search"
+            enterKeyHint="search"
+            autoComplete="off"
             placeholder="Buscar membro..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-8 h-9 md:h-9"
+            className="pl-8 h-11 md:h-9"
           />
         </div>
       </div>
@@ -113,7 +158,23 @@ function MembrosTab() {
         {(filtered || []).map((m: any) => {
           const isAdmin = m.role === "admin";
           return (
-            <div key={m._id} className="flex items-center gap-3 p-3">
+            <div key={m._id}>
+            {/* Mobile: leitura; toque abre o Drawer de edicao */}
+            <button
+              type="button"
+              onClick={() => setSelectedId(m._id)}
+              className="flex w-full min-h-14 items-center gap-3 p-3 text-left active:bg-muted/50 md:hidden"
+            >
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{m.name}</p>
+                {m.hasCustomPermissions && (
+                  <Badge variant="outline" className="mt-0.5 text-xs">personalizado</Badge>
+                )}
+              </div>
+              <Badge className={ROLE_COLORS[m.role]}>{ROLE_LABELS[m.role] ?? m.role}</Badge>
+              <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+            </button>
+            <div className="hidden md:flex items-center gap-3 p-3">
               {/* Nome */}
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">{m.name}</p>
@@ -124,10 +185,7 @@ function MembrosTab() {
                       variant="ghost"
                       size="sm"
                       className="text-[10px] h-4 md:h-4 px-1"
-                      onClick={async () => {
-                        await syncWithRole({ membroId: m._id as Id<"membros"> });
-                        toast.success("Resetado para padrao do papel");
-                      }}
+                      onClick={() => handleReset(m._id)}
                     >
                       resetar
                     </Button>
@@ -141,7 +199,7 @@ function MembrosTab() {
               ) : (
                 <Select
                   value={m.role}
-                  onValueChange={(v) => handleRoleChange(m._id, v)}
+                  onValueChange={(v) => requestRoleChange(m, v)}
                 >
                   <SelectTrigger className="w-[120px] h-7 text-xs">
                     <SelectValue />
@@ -158,7 +216,7 @@ function MembrosTab() {
 
               {/* Voluntário badges com popover */}
               {!isAdmin && volunteerSets && (
-                <div className="hidden md:flex flex-wrap gap-0.5">
+                <div className="flex flex-wrap gap-0.5">
                   {volunteerSets.map((vs: any) => {
                     const permsInSet = vs.permissions as string[];
                     const activeCount = permsInSet.filter((p: string) => m.permissions.includes(p)).length;
@@ -208,10 +266,134 @@ function MembrosTab() {
                 </div>
               )}
             </div>
+            </div>
           );
         })}
       </div>
       )}
+
+      <Drawer open={!!selected} onOpenChange={(o) => !o && setSelectedId(null)}>
+        <DrawerContent className="max-h-[92dvh]">
+          {selected && (
+            <>
+              <DrawerHeader className="text-left">
+                <DrawerTitle>Permissões de {selected.name}</DrawerTitle>
+                <DrawerDescription>Papel e conjuntos de voluntário</DrawerDescription>
+              </DrawerHeader>
+              <div className="flex-1 space-y-5 overflow-y-auto px-4 pb-safe">
+                {selected.role === "admin" ? (
+                  <p className="text-sm text-muted-foreground">
+                    Admin tem todas as permissões. Para alterar, use a versão desktop.
+                  </p>
+                ) : (
+                  <>
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium">Papel</p>
+                      <RadioGroup
+                        value={selected.role}
+                        onValueChange={(v) => requestRoleChange(selected, v)}
+                        className="gap-0 rounded-md border divide-y"
+                      >
+                        {AVAILABLE_ROLES.map((r) => (
+                          <label
+                            key={r}
+                            htmlFor={`role-${r}`}
+                            className="flex min-h-11 cursor-pointer items-center gap-3 px-3 text-sm"
+                          >
+                            <RadioGroupItem id={`role-${r}`} value={r} />
+                            {ROLE_LABELS[r]}
+                          </label>
+                        ))}
+                      </RadioGroup>
+                    </div>
+
+                    {volunteerSets && volunteerSets.length > 0 && (
+                      <div className="space-y-3">
+                        <p className="text-sm font-medium">Voluntário</p>
+                        {volunteerSets.map((vs: any) => (
+                          <div key={vs.key} className="rounded-md border">
+                            <p className="border-b px-3 py-2 text-xs font-medium text-muted-foreground">
+                              {vs.label}
+                            </p>
+                            <div className="divide-y">
+                              {(vs.permissions as string[]).map((perm) => (
+                                <label
+                                  key={perm}
+                                  className="flex min-h-11 cursor-pointer items-center justify-between gap-3 px-3 text-sm"
+                                >
+                                  <span className="min-w-0 break-words">{perm}</span>
+                                  <Switch
+                                    checked={selected.permissions.includes(perm)}
+                                    onCheckedChange={(v) => handleTogglePermission(selected._id, perm, !!v)}
+                                  />
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {selected.hasCustomPermissions && (
+                      <Button
+                        variant="outline"
+                        className="h-11 w-full"
+                        onClick={() => setResetConfirm({ id: selected._id, name: selected.name })}
+                      >
+                        Voltar ao padrão do papel
+                      </Button>
+                    )}
+                  </>
+                )}
+              </div>
+            </>
+          )}
+        </DrawerContent>
+      </Drawer>
+
+      <AlertDialog open={!!adminConfirm} onOpenChange={(o) => !o && setAdminConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Tornar {adminConfirm?.name} admin?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Admin tem acesso total ao sistema, incluindo permissões e módulos.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (adminConfirm) handleRoleChange(adminConfirm.id, "admin");
+                setAdminConfirm(null);
+              }}
+            >
+              Tornar admin
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!resetConfirm} onOpenChange={(o) => !o && setResetConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Voltar ao padrão do papel?</AlertDialogTitle>
+            <AlertDialogDescription>
+              As permissões personalizadas de {resetConfirm?.name} serão descartadas.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (resetConfirm) handleReset(resetConfirm.id);
+                setResetConfirm(null);
+              }}
+            >
+              Voltar ao padrão
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -322,7 +504,7 @@ function SimularSelect() {
   const { impersonate } = useAuth();
   return (
     <Select onValueChange={(v) => impersonate(v as Role)}>
-      <SelectTrigger className="w-[180px] h-8 text-xs">
+      <SelectTrigger className="w-full h-11 md:w-[180px]! md:h-8 text-sm md:text-xs">
         <div className="flex items-center gap-1.5">
           <Eye className="h-3.5 w-3.5" />
           <SelectValue placeholder="Simular como..." />
@@ -343,27 +525,24 @@ export default function PermissoesPage() {
   return (
     <AdminGate fallback={<p className="text-muted-foreground">Acesso restrito a administradores</p>}>
       <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <h1 className="text-xl font-bold">Permissoes</h1>
-          <SimularSelect />
-        </div>
+        <PageHeader title="Permissões" action={<SimularSelect />} />
 
         <Tabs defaultValue="membros">
-          <TabsList className="w-full grid grid-cols-3 max-sm:h-auto! sm:inline-flex sm:w-auto">
+          <TabsList className="w-full grid grid-cols-4 sm:inline-flex sm:w-auto">
             <TabsTrigger value="membros" className="gap-1.5">
-              <Users className="h-3.5 w-3.5" />
+              <Users className="hidden h-3.5 w-3.5 sm:block" />
               Membros
             </TabsTrigger>
             <TabsTrigger value="papeis" className="gap-1.5">
-              <Settings className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Configurar </span>Papeis
+              <Settings className="hidden h-3.5 w-3.5 sm:block" />
+              <span className="hidden sm:inline">Configurar </span>Papéis
             </TabsTrigger>
             <TabsTrigger value="convites" className="gap-1.5">
-              <UserPlus className="h-3.5 w-3.5" />
+              <UserPlus className="hidden h-3.5 w-3.5 sm:block" />
               Convites
             </TabsTrigger>
             <TabsTrigger value="modo" className="gap-1.5">
-              <MonitorSmartphone className="h-3.5 w-3.5" />
+              <MonitorSmartphone className="hidden h-3.5 w-3.5 sm:block" />
               Modo
             </TabsTrigger>
           </TabsList>

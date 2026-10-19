@@ -3,18 +3,40 @@
 import { useState } from "react";
 import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
+import { Card, CardContent, CardDescription, CardTitle } from "@/shared/components/ui/card";
 import { Switch } from "@/shared/components/ui/switch";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { AdminGate } from "@shared/components/auth/RoleGate";
 import { toast } from "sonner";
-import { LayoutGrid, Bell, Send } from "lucide-react";
+import { Bell, Send } from "lucide-react";
+import { PageHeader } from "@shared/components/layout/PageHeader";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/shared/components/ui/alert-dialog";
 
 export default function ModulosPage() {
   const modulos = useQuery(api.modulos.queries.listModulos);
   const toggle = useMutation(api.modulos.mutations.toggleModulo);
+
+  const [deactivating, setDeactivating] = useState<{ slug: string; label: string } | null>(null);
+
+  // Desativar afeta menu de todos: pede confirmacao; ativar e direto
+  const requestToggle = (slug: string, label: string, ativo: boolean) => {
+    if (ativo) {
+      setDeactivating({ slug, label });
+      return;
+    }
+    handleToggle(slug, label, ativo);
+  };
 
   const handleToggle = async (slug: string, label: string, ativo: boolean) => {
     try {
@@ -51,15 +73,7 @@ export default function ModulosPage() {
   return (
     <AdminGate fallback={<p className="text-muted-foreground">Acesso restrito a administradores.</p>}>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <LayoutGrid className="h-6 w-6" />
-            Módulos
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Ative ou desative funcionalidades do sistema
-          </p>
-        </div>
+        <PageHeader title="Módulos" subtitle="Ative ou desative funcionalidades do sistema" />
 
         {!modulos ? (
           <p className="text-muted-foreground">Carregando...</p>
@@ -75,16 +89,16 @@ export default function ModulosPage() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {modulos.map((modulo) => (
               <Card key={modulo._id} className={!modulo.ativo ? "opacity-60" : ""}>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <div>
+                <label className="flex min-h-14 cursor-pointer items-center justify-between gap-4 px-6 py-2">
+                  <div className="min-w-0">
                     <CardTitle className="text-base">{modulo.label}</CardTitle>
                     <CardDescription className="mt-1">{modulo.descricao}</CardDescription>
                   </div>
                   <Switch
                     checked={modulo.ativo}
-                    onCheckedChange={() => handleToggle(modulo.slug, modulo.label, modulo.ativo)}
+                    onCheckedChange={() => requestToggle(modulo.slug, modulo.label, modulo.ativo)}
                   />
-                </CardHeader>
+                </label>
               </Card>
             ))}
           </div>
@@ -122,6 +136,28 @@ export default function ModulosPage() {
             </CardContent>
           </Card>
         </div>
+
+        <AlertDialog open={!!deactivating} onOpenChange={(o) => !o && setDeactivating(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Desativar {deactivating?.label} para todos?</AlertDialogTitle>
+              <AlertDialogDescription>
+                O módulo some do menu de todos os usuários até ser ativado de novo.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  if (deactivating) handleToggle(deactivating.slug, deactivating.label, true);
+                  setDeactivating(null);
+                }}
+              >
+                Desativar
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AdminGate>
   );
