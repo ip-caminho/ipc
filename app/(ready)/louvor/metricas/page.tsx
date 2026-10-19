@@ -51,7 +51,7 @@ export default function MetricasLouvorPage() {
         ))}
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 md:grid-cols-2">
         {/* Mais tocadas */}
         <Card>
           <CardHeader className="pb-3">
@@ -75,8 +75,8 @@ export default function MetricasLouvorPage() {
                   <div key={item.louvorId} className="flex items-center gap-2">
                     <span className="text-xs text-muted-foreground w-5 text-right shrink-0">{i + 1}</span>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm truncate">{item.titulo}</span>
+                      <div className="flex min-w-0 items-center gap-2">
+                        <span className="min-w-0 truncate text-sm">{item.titulo}</span>
                         {item.tom && (
                           <Badge variant="outline" className="text-[10px] h-4 shrink-0">{item.tom}</Badge>
                         )}
@@ -120,12 +120,12 @@ export default function MetricasLouvorPage() {
             ) : (
               <div className="space-y-2">
                 {naoTocados.slice(0, 20).map((item) => (
-                  <div key={item.louvorId} className="flex items-center gap-2 py-1">
+                  <div key={item.louvorId} className="flex min-w-0 items-center gap-2 py-1">
                     <Music className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                     <div className="flex-1 min-w-0">
                       <span className="text-sm truncate block">{item.titulo}</span>
                       {item.artista && (
-                        <span className="text-xs text-muted-foreground">{item.artista}</span>
+                        <span className="block truncate text-xs text-muted-foreground">{item.artista}</span>
                       )}
                     </div>
                     <span className="text-[10px] text-muted-foreground shrink-0">

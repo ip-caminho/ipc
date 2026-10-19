@@ -54,6 +54,17 @@ function formatarData(ms: number | null): string {
   return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
 }
 
+function statusBadge(row: Row) {
+  if (row.ativado) {
+    return row.onboardingCompleto ? <Badge>Ativo</Badge> : <Badge variant="outline">Dados pendentes</Badge>;
+  }
+  return row.temLinkPendente ? (
+    <Badge variant="secondary">Link pendente</Badge>
+  ) : (
+    <Badge variant="secondary">Sem acesso</Badge>
+  );
+}
+
 function mensagemWa(nome: string, link: string): string {
   return `Ola, ${nome.split(" ")[0]}! Seu acesso ao sistema da igreja esta pronto. Crie sua senha neste link (valido por 7 dias): ${link}`;
 }
@@ -186,8 +197,42 @@ export function AcessoPanel() {
         </Button>
       </div>
 
-      <div className="rounded-md border">
-        <Table containerClassName="max-h-[calc(100vh-16rem)] overflow-y-auto">
+      <div className="space-y-2 md:hidden">
+        {linhas.map((row) => (
+          <div key={row.membroId} className="space-y-3 rounded-xl border p-4">
+            <div className="flex items-center justify-between gap-2">
+              <span className="min-w-0 truncate text-base font-medium">{row.nome}</span>
+              {statusBadge(row)}
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Ultimo acesso {formatarData(row.ultimoAcessoEm)}
+            </p>
+            <div className="flex gap-2">
+              {!row.ativado && (
+                <Button variant="outline" className="h-11 flex-1" onClick={() => gerar(row)}>
+                  {row.temLinkPendente ? "Novo link" : "Gerar link"}
+                </Button>
+              )}
+              {row.ativado && (
+                <Button variant="outline" className="h-11 flex-1 text-destructive" onClick={() => resetar(row)}>
+                  Resetar
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                size="icon-tap"
+                aria-label="Ver atividade"
+                onClick={() => setAtividade({ id: row.membroId, nome: row.nome })}
+              >
+                <History className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="hidden rounded-md border md:block">
+        <Table containerClassName="md:max-h-[calc(100vh-16rem)] md:overflow-y-auto">
           <TableHeader className="sticky top-0 z-20 bg-background">
             <TableRow>
               <TableHead>Nome</TableHead>
@@ -202,17 +247,7 @@ export function AcessoPanel() {
               <TableRow key={row.membroId}>
                 <TableCell className="font-medium">{row.nome}</TableCell>
                 <TableCell>
-                  {row.ativado ? (
-                    row.onboardingCompleto ? (
-                      <Badge>Ativo</Badge>
-                    ) : (
-                      <Badge variant="outline">Dados pendentes</Badge>
-                    )
-                  ) : row.temLinkPendente ? (
-                    <Badge variant="secondary">Link pendente</Badge>
-                  ) : (
-                    <Badge variant="secondary">Sem acesso</Badge>
-                  )}
+                  {statusBadge(row)}
                 </TableCell>
                 <TableCell className="hidden sm:table-cell text-sm text-muted-foreground">
                   {row.metodoAtivacao === "link"
