@@ -6,6 +6,17 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { toast } from "sonner";
 import { Card, CardHeader, CardTitle, CardContent } from "@/shared/components/ui/card";
+import { StickyActionBar } from "@/shared/components/layout/StickyActionBar";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/shared/components/ui/alert-dialog";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Textarea } from "@/shared/components/ui/textarea";
@@ -37,6 +48,8 @@ export function AvisosCuradoria({
   const corrigir = useMutation(api.gravacoes.mutations.corrigirAvisosCulto);
   const [avisos, setAvisos] = useState<AvisoCulto[]>(initial);
   const [saving, setSaving] = useState(false);
+  const [removing, setRemoving] = useState<number | null>(null);
+  const dirty = JSON.stringify(avisos) !== JSON.stringify(initial);
 
   const update = (i: number, field: keyof AvisoCulto, value: string) =>
     setAvisos((prev) => prev.map((a, idx) => (idx === i ? { ...a, [field]: value } : a)));
@@ -58,22 +71,11 @@ export function AvisosCuradoria({
   };
 
   return (
-    <Card>
+    <Card className="max-md:mb-28">
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Megaphone className="h-4 w-4" /> Avisos ({avisos.length})
-          </CardTitle>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={add}>
-              <Plus className="mr-1 h-3.5 w-3.5" /> Adicionar
-            </Button>
-            <Button size="sm" onClick={save} disabled={saving}>
-              <Save className="mr-1 h-3.5 w-3.5" />
-              {saving ? "Salvando..." : "Salvar"}
-            </Button>
-          </div>
-        </div>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Megaphone className="h-4 w-4" /> Avisos ({avisos.length})
+        </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {avisos.length === 0 && (
@@ -88,39 +90,86 @@ export function AvisosCuradoria({
               </Label>
               <Button
                 variant="ghost"
-                size="sm"
-                className="h-6 md:h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
-                onClick={() => remove(i)}
+                size="icon-tap"
+                className="text-muted-foreground hover:text-destructive"
+                aria-label={`Remover aviso ${i + 1}`}
+                onClick={() => setRemoving(i)}
               >
-                <Trash2 className="h-3.5 w-3.5" />
+                <Trash2 className="h-4 w-4" />
               </Button>
             </div>
-            <Input
-              placeholder="Título"
-              value={a.titulo}
-              onChange={(e) => update(i, "titulo", e.target.value)}
-            />
-            <Textarea
-              placeholder="Descrição"
-              value={a.descricao}
-              onChange={(e) => update(i, "descricao", e.target.value)}
-              className="min-h-[60px] md:min-h-[60px]"
-            />
+            <div className="space-y-1">
+              <Label htmlFor={`aviso-${i}-titulo`} className="text-xs">Título</Label>
+              <Input
+                id={`aviso-${i}-titulo`}
+                placeholder="Título"
+                value={a.titulo}
+                onChange={(e) => update(i, "titulo", e.target.value)}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor={`aviso-${i}-descricao`} className="text-xs">Descrição</Label>
+              <Textarea
+                id={`aviso-${i}-descricao`}
+                placeholder="Descrição"
+                value={a.descricao}
+                onChange={(e) => update(i, "descricao", e.target.value)}
+                className="min-h-[60px] md:min-h-[60px]"
+              />
+            </div>
             <div className="grid gap-2 sm:grid-cols-2">
-              <Input
-                placeholder="Quando (ex.: Sábado, 16 de maio)"
-                value={a.quando ?? ""}
-                onChange={(e) => update(i, "quando", e.target.value)}
-              />
-              <Input
-                placeholder="Onde"
-                value={a.onde ?? ""}
-                onChange={(e) => update(i, "onde", e.target.value)}
-              />
+              <div className="space-y-1">
+                <Label htmlFor={`aviso-${i}-quando`} className="text-xs">Quando</Label>
+                <Input
+                  id={`aviso-${i}-quando`}
+                  placeholder="Quando (ex.: Sábado, 16 de maio)"
+                  value={a.quando ?? ""}
+                  onChange={(e) => update(i, "quando", e.target.value)}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor={`aviso-${i}-onde`} className="text-xs">Onde</Label>
+                <Input
+                  id={`aviso-${i}-onde`}
+                  placeholder="Onde"
+                  value={a.onde ?? ""}
+                  onChange={(e) => update(i, "onde", e.target.value)}
+                />
+              </div>
             </div>
           </div>
         ))}
       </CardContent>
+      <StickyActionBar>
+        <Button variant="outline" onClick={add}>
+          <Plus className="mr-1 h-4 w-4" /> Adicionar
+        </Button>
+        <Button onClick={save} disabled={saving || !dirty}>
+          <Save className="mr-1 h-4 w-4" />
+          {saving ? "Salvando..." : "Salvar"}
+        </Button>
+      </StickyActionBar>
+      <AlertDialog open={removing !== null} onOpenChange={(o) => !o && setRemoving(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover aviso {removing !== null ? removing + 1 : ""}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              O aviso some da lista e só deixa de aparecer no site depois de salvar.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (removing !== null) remove(removing);
+                setRemoving(null);
+              }}
+            >
+              Remover
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }

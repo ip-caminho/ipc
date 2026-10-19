@@ -136,15 +136,14 @@ export function AgendaPanel() {
   return (
     <div className="max-w-2xl space-y-4">
       <p className="text-sm text-muted-foreground">
-        A agenda pública combina os cultos publicados (geridos em{" "}
-        <Link href="/cultos" className="underline">
-          Cultos
-        </Link>
-        ) e os eventos do calendário. O culto de domingo às 10h aparece automaticamente no
+        A agenda pública combina os cultos publicados (geridos em Cultos) e os eventos do calendário. O culto de domingo às 10h aparece automaticamente no
         site.
       </p>
+      <Button asChild variant="link" className="h-11 px-0 md:h-auto">
+        <Link href="/cultos">Abrir Cultos</Link>
+      </Button>
       <div className="flex justify-end">
-        <Button onClick={novoEvento}>
+        <Button onClick={novoEvento} className="h-11 w-full sm:h-9 sm:w-auto">
           <Plus className="mr-1 h-4 w-4" /> Novo evento
         </Button>
       </div>
@@ -161,38 +160,56 @@ export function AgendaPanel() {
         </Card>
       ) : (
         <div className="divide-y rounded-md border">
-          {agenda.map((e) => (
-            <div key={e.id} className="flex items-center gap-3 p-3">
-              <div className="w-16 shrink-0 text-sm text-muted-foreground">
-                {formatDataBR(e.data)}
-                {e.horario ? ` · ${e.horario}` : ""}
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium">{e.titulo}</p>
-                {e.subtitulo && <p className="text-xs text-muted-foreground">{e.subtitulo}</p>}
-              </div>
-              <Badge variant="secondary">{TIPO_LABEL[e.tipo] ?? e.tipo}</Badge>
-              {e.editavel && e.statusSite && e.statusSite !== "visivel" && (
-                <Badge variant="outline" className="text-muted-foreground">
-                  {STATUS_SITE_LABEL[e.statusSite]}
-                </Badge>
-              )}
-              {e.editavel && e.evento ? (
+          {agenda.map((e) => {
+            const badges = (
+              <>
+                <Badge variant="secondary">{TIPO_LABEL[e.tipo] ?? e.tipo}</Badge>
+                {e.editavel && e.statusSite && e.statusSite !== "visivel" && (
+                  <Badge variant="outline" className="text-muted-foreground">
+                    {STATUS_SITE_LABEL[e.statusSite]}
+                  </Badge>
+                )}
+              </>
+            );
+            const info = (
+              <>
+                <div className="w-16 shrink-0 text-sm text-muted-foreground">
+                  {formatDataBR(e.data)}
+                  {e.horario ? ` · ${e.horario}` : ""}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium">{e.titulo}</p>
+                  {e.subtitulo && <p className="text-xs text-muted-foreground">{e.subtitulo}</p>}
+                  <div className="mt-1 flex flex-wrap gap-1 md:hidden">{badges}</div>
+                </div>
+                <div className="hidden items-center gap-3 md:flex">{badges}</div>
+              </>
+            );
+            return e.editavel && e.evento ? (
+              <div key={e.id} className="flex items-center">
+                <button
+                  type="button"
+                  className="flex min-h-14 flex-1 items-center gap-3 p-3 text-left active:bg-muted/50 md:min-h-0 md:cursor-default md:active:bg-transparent"
+                  onClick={() => editarEvento(e.evento!)}
+                >
+                  {info}
+                </button>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 md:h-8 gap-1 px-2 text-muted-foreground"
+                  className="mr-3 hidden h-8 md:inline-flex md:h-8 gap-1 px-2 text-muted-foreground"
                   onClick={() => editarEvento(e.evento!)}
                 >
                   <Pencil className="h-3.5 w-3.5" /> Editar
                 </Button>
-              ) : (
-                <Link href="/cultos" className="text-xs text-muted-foreground underline">
-                  gerir em Cultos
-                </Link>
-              )}
-            </div>
-          ))}
+              </div>
+            ) : (
+              <div key={e.id} className="flex min-h-14 items-center gap-3 p-3 md:min-h-0">
+                {info}
+                <span className="shrink-0 text-xs text-muted-foreground">gerir em Cultos</span>
+              </div>
+            );
+          })}
         </div>
       )}
       <EventoForm

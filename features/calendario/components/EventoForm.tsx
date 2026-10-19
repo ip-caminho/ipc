@@ -21,12 +21,13 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/shared/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogContent,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from "@/shared/components/ui/responsive-dialog";
 
 interface EventoFormProps {
   open: boolean;
@@ -101,12 +102,16 @@ export function EventoForm({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85dvh] max-w-md overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{isEditing ? "Editar" : "Novo"} evento</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6 pt-1">
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
+      <ResponsiveDialogContent className="sm:max-w-md">
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle>{isEditing ? "Editar" : "Novo"} evento</ResponsiveDialogTitle>
+        </ResponsiveDialogHeader>
+        <form
+          onSubmit={form.handleSubmit(handleSubmit)}
+          className="flex min-h-0 flex-1 flex-col"
+        >
+          <ResponsiveDialogBody className="space-y-6">
           {/* ===== Dados do evento (uso interno / calendário) ===== */}
           <div className="space-y-4">
             <SecaoTitulo>Dados do evento</SecaoTitulo>
@@ -241,12 +246,14 @@ export function EventoForm({
             )}
           </div>
 
-          <DialogFooter className="gap-2 sm:justify-between">
+          </ResponsiveDialogBody>
+
+          <ResponsiveDialogFooter className="gap-2 sm:justify-between">
             {isEditing && onDelete ? (
               <Button
                 type="button"
                 variant="ghost"
-                className="text-destructive hover:text-destructive"
+                className="text-destructive hover:text-destructive max-sm:h-11"
                 onClick={handleDelete}
                 disabled={deleting || loading}
               >
@@ -256,7 +263,7 @@ export function EventoForm({
             ) : (
               <span />
             )}
-            <div className="flex gap-2">
+            <div className="flex gap-2 max-sm:[&>*]:h-11 max-sm:[&>*]:flex-1">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancelar
               </Button>
@@ -264,9 +271,9 @@ export function EventoForm({
                 {loading ? "Salvando..." : isEditing ? "Salvar" : "Criar"}
               </Button>
             </div>
-          </DialogFooter>
+          </ResponsiveDialogFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }

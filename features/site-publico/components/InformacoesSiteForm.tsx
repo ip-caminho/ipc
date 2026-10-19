@@ -9,11 +9,21 @@ import { toast } from "sonner";
 import { Label } from "@/shared/components/ui/label";
 import { Input } from "@/shared/components/ui/input";
 import { Textarea } from "@/shared/components/ui/textarea";
+import { StickyActionBar } from "@/shared/components/layout/StickyActionBar";
 import { Button } from "@/shared/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/components/ui/select";
 import { Plus, Trash2 } from "lucide-react";
 import { igrejaInfoSchema, type IgrejaInfoFormValues } from "../lib/validations";
 import { revalidarSite } from "../lib/revalidate";
 import type { IgrejaInfo } from "../lib/nav";
+
+const DIAS: string[] = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
 
 function Field({ label, id, children }: { label: string; id: string; children: ReactNode }) {
   return (
@@ -74,12 +84,12 @@ export function InformacoesSiteForm({ initial }: { initial: IgrejaInfo }) {
   };
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="max-w-2xl space-y-8">
+    <form onSubmit={form.handleSubmit(onSubmit)} className="max-w-2xl space-y-8 pb-28 md:pb-0">
       {/* Identidade */}
       <section className="space-y-3">
         <SecaoTitulo>Identidade</SecaoTitulo>
         <Field label="Nome" id="nome">
-          <Input id="nome" {...form.register("nome")} />
+          <Input id="nome" autoComplete="organization" {...form.register("nome")} />
         </Field>
         <Field label="Descrição curta" id="descricao">
           <Textarea id="descricao" {...form.register("descricao")} />
@@ -93,17 +103,17 @@ export function InformacoesSiteForm({ initial }: { initial: IgrejaInfo }) {
           <Input id="endereco" {...form.register("endereco")} />
         </Field>
         <Field label="Google Maps (URL de embed)" id="googleMapsEmbed">
-          <Input id="googleMapsEmbed" {...form.register("googleMapsEmbed")} />
+          <Input id="googleMapsEmbed" type="url" inputMode="url" {...form.register("googleMapsEmbed")} />
         </Field>
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label="E-mail" id="email">
-            <Input id="email" type="email" {...form.register("email")} />
+            <Input id="email" type="email" autoComplete="email" {...form.register("email")} />
           </Field>
           <Field label="WhatsApp" id="whatsapp">
-            <Input id="whatsapp" {...form.register("whatsapp")} />
+            <Input id="whatsapp" type="tel" inputMode="tel" autoComplete="tel" {...form.register("whatsapp")} />
           </Field>
           <Field label="Telefone" id="telefone">
-            <Input id="telefone" {...form.register("telefone")} />
+            <Input id="telefone" type="tel" inputMode="tel" autoComplete="tel" {...form.register("telefone")} />
           </Field>
         </div>
       </section>
@@ -127,24 +137,42 @@ export function InformacoesSiteForm({ initial }: { initial: IgrejaInfo }) {
           </p>
         )}
         {horarios.fields.map((f, i) => (
-          <div key={f.id} className="grid grid-cols-[1fr_1fr_1fr_auto] items-end gap-2">
+          <div key={f.id} className="grid grid-cols-2 items-end gap-2 sm:grid-cols-[1fr_1fr_1fr_auto]">
             <div className="space-y-1">
               <Label className="text-xs">Dia</Label>
-              <Input {...form.register(`horarios.${i}.dia`)} />
+              <Select
+                value={form.watch(`horarios.${i}.dia`) || ""}
+                onValueChange={(v) => form.setValue(`horarios.${i}.dia`, v, { shouldDirty: true })}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Dia" />
+                </SelectTrigger>
+                <SelectContent>
+                  {[...(f.dia && !DIAS.includes(f.dia) ? [f.dia] : []), ...DIAS].map((d) => (
+                    <SelectItem key={d} value={d}>
+                      {d}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-1">
               <Label className="text-xs">Horário</Label>
-              <Input {...form.register(`horarios.${i}.horario`)} />
+              <Input
+                type={/^(\d{2}:\d{2})?$/.test(f.horario ?? "") ? "time" : "text"}
+                {...form.register(`horarios.${i}.horario`)}
+              />
             </div>
-            <div className="space-y-1">
+            <div className="col-span-2 space-y-1 sm:col-span-1">
               <Label className="text-xs">Tipo</Label>
               <Input {...form.register(`horarios.${i}.tipo`)} />
             </div>
             <Button
               type="button"
               variant="ghost"
-              size="sm"
-              className="h-9 md:h-9 w-9 p-0 text-muted-foreground hover:text-destructive"
+              size="icon-tap"
+              className="col-start-2 row-start-3 justify-self-end text-muted-foreground hover:text-destructive sm:col-start-auto sm:row-start-auto"
+              aria-label="Remover horário"
               onClick={() => horarios.remove(i)}
             >
               <Trash2 className="h-4 w-4" />
@@ -172,11 +200,11 @@ export function InformacoesSiteForm({ initial }: { initial: IgrejaInfo }) {
         </div>
       </section>
 
-      <div className="flex justify-end">
-        <Button type="submit" disabled={form.formState.isSubmitting}>
+      <StickyActionBar>
+        <Button type="submit" disabled={form.formState.isSubmitting || !form.formState.isDirty}>
           {form.formState.isSubmitting ? "Salvando..." : "Salvar"}
         </Button>
-      </div>
+      </StickyActionBar>
     </form>
   );
 }

@@ -4,6 +4,7 @@ import { useQueryState, parseAsStringLiteral } from "nuqs";
 import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
 import { PageHeader } from "@shared/components/layout/PageHeader";
 import { PermissionGate } from "@shared/components/auth/PermissionGate";
+import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/shared/components/ui/tabs";
 import { Building2, CalendarDays, Megaphone, Type, ExternalLink } from "lucide-react";
@@ -31,34 +32,36 @@ function SitePublicoHub() {
 
   return (
     <HeaderLayout>
-      <PageHeader title="Site público" />
+      <PageHeader
+        title="Site público"
+        subtitle="Tudo que aparece no site da igreja é mantido aqui. Ao salvar, o site reflete a mudança em segundos."
+        action={
+          <Button asChild variant="outline" className="h-11 md:h-8">
+            <a href="/?site=1" target="_blank" rel="noopener noreferrer">
+              <ExternalLink className="h-4 w-4" /> Ver o site
+            </a>
+          </Button>
+        }
+      />
       <div className="space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-sm text-muted-foreground">
-            Tudo que aparece no site da igreja é mantido aqui. Ao salvar, o site reflete
-            a mudança em segundos.
-          </p>
-          <a
-            href="/?site=1"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex shrink-0 items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-          >
-            <ExternalLink className="h-4 w-4" /> Ver o site
-          </a>
-        </div>
-
         <Tabs value={secao} onValueChange={(v) => setSecao(v as (typeof SECAO_KEYS)[number])}>
           <TabsList className="grid max-sm:h-auto! w-full grid-cols-2 gap-1 sm:inline-flex sm:w-auto">
             {SECOES.map((s) => (
-              <TabsTrigger key={s.key} value={s.key} className="gap-1.5">
+              <TabsTrigger key={s.key} value={s.key} className="min-h-11 gap-1.5 md:min-h-0">
                 <s.icon className="h-4 w-4" />
                 {s.label}
               </TabsTrigger>
             ))}
           </TabsList>
           {SECOES.map(({ key, Panel }) => (
-            <TabsContent key={key} value={key} className="mt-4">
+            <TabsContent
+              key={key}
+              value={key}
+              // Paineis com formulario ficam montados (so escondidos) para nao perder edicao ao trocar de aba.
+              // Agenda nao tem rascunho (edita em dialog), entao desmonta normalmente.
+              forceMount={key === "agenda" ? undefined : true}
+              className="mt-4 data-[state=inactive]:hidden"
+            >
               <Panel />
             </TabsContent>
           ))}
