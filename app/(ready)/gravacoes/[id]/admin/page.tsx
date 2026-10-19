@@ -45,6 +45,8 @@ import { ArrowLeft, Save, Plus, Trash2, Megaphone, Globe, GlobeLock, Play, Pause
 import type { Id } from "@/convex/_generated/dataModel";
 import Link from "next/link";
 import { useIsMobile } from "@shared/hooks/use-mobile";
+import { DetailHeader } from "@shared/components/layout/DetailHeader";
+import { StickyActionBar } from "@shared/components/layout/StickyActionBar";
 
 function DadosEditor({ gravacao }: { gravacao: any }) {
   // @ts-ignore Convex TS2589
@@ -60,6 +62,8 @@ function DadosEditor({ gravacao }: { gravacao: any }) {
     tags: (gravacao.tags || []).join(", "),
   });
   const [saving, setSaving] = useState(false);
+  const [baseline, setBaseline] = useState(form);
+  const dirty = JSON.stringify(form) !== JSON.stringify(baseline);
 
   const set = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -85,6 +89,7 @@ function DadosEditor({ gravacao }: { gravacao: any }) {
           tags: tags.length > 0 ? tags : undefined,
         },
       });
+      setBaseline(form);
       toast.success("Dados salvos");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao salvar");
@@ -98,13 +103,23 @@ function DadosEditor({ gravacao }: { gravacao: any }) {
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base">Dados da gravacao</CardTitle>
-          <Button size="sm" onClick={save} disabled={saving}>
+          <Button size="sm" onClick={save} disabled={saving} className="hidden md:inline-flex">
             <Save className="h-3.5 w-3.5 mr-1" />
             {saving ? "Salvando..." : "Salvar"}
           </Button>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
+        {dirty && (
+          <div className="md:hidden">
+            <StickyActionBar>
+              <Button onClick={save} disabled={saving}>
+                <Save className="h-4 w-4 mr-1" />
+                {saving ? "Salvando..." : "Salvar"}
+              </Button>
+            </StickyActionBar>
+          </div>
+        )}
         <div className="space-y-1">
           <Label>Titulo</Label>
           <Input value={form.titulo} onChange={(e) => set("titulo", e.target.value)} />
@@ -145,6 +160,7 @@ function DadosEditor({ gravacao }: { gravacao: any }) {
             value={form.descricao}
             onChange={(e) => set("descricao", e.target.value)}
             rows={2}
+            className="max-h-[40vh] overflow-y-auto md:max-h-none"
           />
         </div>
 
@@ -154,6 +170,7 @@ function DadosEditor({ gravacao }: { gravacao: any }) {
             value={form.resumo}
             onChange={(e) => set("resumo", e.target.value)}
             rows={4}
+            className="max-h-[40vh] overflow-y-auto md:max-h-none"
           />
         </div>
 
@@ -176,6 +193,8 @@ function AvisosEditor({ gravacaoId, avisos: initial }: { gravacaoId: Id<"gravaco
   const updateGravacao = useMutation(api.gravacoes.mutations.update);
   const [avisos, setAvisos] = useState<Aviso[]>(initial);
   const [saving, setSaving] = useState(false);
+  const [baseline, setBaseline] = useState(initial);
+  const dirty = JSON.stringify(avisos) !== JSON.stringify(baseline);
 
   const update = (index: number, field: keyof Aviso, value: string) => {
     setAvisos((prev) => prev.map((a, i) => (i === index ? { ...a, [field]: value } : a)));
@@ -197,6 +216,7 @@ function AvisosEditor({ gravacaoId, avisos: initial }: { gravacaoId: Id<"gravaco
         id: gravacaoId,
         data: { iaAvisos: clean },
       });
+      setBaseline(avisos);
       toast.success("Avisos salvos");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao salvar");
@@ -214,11 +234,11 @@ function AvisosEditor({ gravacaoId, avisos: initial }: { gravacaoId: Id<"gravaco
             Avisos ({avisos.length})
           </CardTitle>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={add}>
+            <Button variant="outline" size="sm" onClick={add} className="h-11 md:h-8">
               <Plus className="h-3.5 w-3.5 mr-1" />
               Adicionar
             </Button>
-            <Button size="sm" onClick={save} disabled={saving}>
+            <Button size="sm" onClick={save} disabled={saving} className="hidden md:inline-flex">
               <Save className="h-3.5 w-3.5 mr-1" />
               {saving ? "Salvando..." : "Salvar"}
             </Button>
@@ -226,6 +246,16 @@ function AvisosEditor({ gravacaoId, avisos: initial }: { gravacaoId: Id<"gravaco
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
+        {dirty && (
+          <div className="md:hidden">
+            <StickyActionBar>
+              <Button onClick={save} disabled={saving}>
+                <Save className="h-4 w-4 mr-1" />
+                {saving ? "Salvando..." : "Salvar"}
+              </Button>
+            </StickyActionBar>
+          </div>
+        )}
         {avisos.length === 0 && (
           <p className="text-sm text-muted-foreground">Nenhum aviso. Clique em Adicionar para criar.</p>
         )}
@@ -235,8 +265,8 @@ function AvisosEditor({ gravacaoId, avisos: initial }: { gravacaoId: Id<"gravaco
               <Label className="text-xs text-muted-foreground">Aviso {i + 1}</Label>
               <Button
                 variant="ghost"
-                size="sm"
-                className="h-6 md:h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                size="icon-tap"
+                className="text-muted-foreground hover:text-destructive"
                 onClick={() => remove(i)}
               >
                 <Trash2 className="h-3.5 w-3.5" />
@@ -317,11 +347,11 @@ function AudioTab({ gravacao }: { gravacao: any }) {
       </CardHeader>
       <CardContent>
         <div className="flex flex-wrap items-center gap-2">
-          <Button variant="outline" size="sm" onClick={handlePlay}>
+          <Button variant="outline" size="sm" onClick={handlePlay} className="h-11 md:h-8">
             {isFullPlaying ? <Pause className="h-4 w-4 mr-1.5" /> : <Play className="h-4 w-4 mr-1.5" />}
             {isFullPlaying ? "Pausar" : "Ouvir audio completo"}
           </Button>
-          <Button variant="outline" size="sm" onClick={handleDownload} disabled={baixando}>
+          <Button variant="outline" size="sm" onClick={handleDownload} disabled={baixando} className="h-11 md:h-8">
             <Download className="h-4 w-4 mr-1.5" />
             {baixando ? "Baixando..." : "Baixar audio"}
           </Button>
@@ -386,7 +416,52 @@ export default function GravacaoAdminPage() {
   };
 
   return (
-    <div className="max-w-4xl space-y-4">
+    <div className="max-w-4xl space-y-4 pb-28 md:pb-0">
+      {isMobile ? (
+        <div className="space-y-2">
+          <DetailHeader backHref={`/gravacoes/${id}`} />
+          <h1 className="text-lg font-bold line-clamp-2">{gravacao.titulo}</h1>
+          <div className="flex flex-wrap items-center gap-2">
+            <IaStatusBadge iaStatus={gravacao.iaStatus} iaErro={gravacao.iaErro} />
+            <div className="ml-auto flex items-center gap-1.5">
+              <PermissionGate permission="gravacoes:process_ai">
+                <IaProcessarButton
+                  gravacaoId={gravacao._id}
+                  iaStatus={gravacao.iaStatus}
+                  hasAudio={!!gravacao.audioUrl}
+                />
+              </PermissionGate>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon-tap">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {can("gravacoes:update") && (
+                    <DropdownMenuItem onClick={gravacao.status === "RASCUNHO" ? handlePublish : handleUnpublish}>
+                      {gravacao.status === "RASCUNHO" ? (
+                        <><Globe className="h-4 w-4" />Publicar</>
+                      ) : (
+                        <><GlobeLock className="h-4 w-4" />Despublicar</>
+                      )}
+                    </DropdownMenuItem>
+                  )}
+                  {can("gravacoes:delete") && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem variant="destructive" onClick={() => setDeleteOpen(true)}>
+                        <Trash2 className="h-4 w-4" />
+                        Excluir
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+        </div>
+      ) : (
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-3 min-w-0">
           <Button variant="ghost" size="icon" className="shrink-0" asChild>
@@ -403,44 +478,6 @@ export default function GravacaoAdminPage() {
           </div>
         </div>
 
-        {isMobile ? (
-          <div className="flex items-center gap-1.5 shrink-0">
-            <PermissionGate permission="gravacoes:process_ai">
-              <IaProcessarButton
-                gravacaoId={gravacao._id}
-                iaStatus={gravacao.iaStatus}
-                hasAudio={!!gravacao.audioUrl}
-              />
-            </PermissionGate>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {can("gravacoes:update") && (
-                  <DropdownMenuItem onClick={gravacao.status === "RASCUNHO" ? handlePublish : handleUnpublish}>
-                    {gravacao.status === "RASCUNHO" ? (
-                      <><Globe className="h-4 w-4" />Publicar</>
-                    ) : (
-                      <><GlobeLock className="h-4 w-4" />Despublicar</>
-                    )}
-                  </DropdownMenuItem>
-                )}
-                {can("gravacoes:delete") && (
-                  <>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem variant="destructive" onClick={() => setDeleteOpen(true)}>
-                      <Trash2 className="h-4 w-4" />
-                      Excluir
-                    </DropdownMenuItem>
-                  </>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        ) : (
           <div className="flex items-center gap-2">
             <PermissionGate permission="gravacoes:process_ai">
               <IaProcessarButton
@@ -469,8 +506,8 @@ export default function GravacaoAdminPage() {
               </Button>
             </PermissionGate>
           </div>
-        )}
       </div>
+      )}
 
       <IaProgressPanel
         gravacaoId={gravacao._id}
@@ -483,12 +520,12 @@ export default function GravacaoAdminPage() {
 
       <Tabs defaultValue="dados">
         <TabsList className="w-full justify-start overflow-x-auto scrollbar-none">
-          <TabsTrigger value="dados" className="shrink-0">Dados</TabsTrigger>
-          <TabsTrigger value="avisos" className="shrink-0">Avisos</TabsTrigger>
-          <TabsTrigger value="resultado" className="shrink-0">Resultado IA</TabsTrigger>
-          <TabsTrigger value="segmentos" className="shrink-0">Trechos</TabsTrigger>
+          <TabsTrigger value="dados" className="shrink-0 px-3">Dados</TabsTrigger>
+          <TabsTrigger value="avisos" className="shrink-0 px-3">Avisos</TabsTrigger>
+          <TabsTrigger value="resultado" className="shrink-0 px-3">Resultado IA</TabsTrigger>
+          <TabsTrigger value="segmentos" className="shrink-0 px-3">Trechos</TabsTrigger>
           {gravacao.audioUrl && (
-            <TabsTrigger value="audio" className="shrink-0">Audio</TabsTrigger>
+            <TabsTrigger value="audio" className="shrink-0 px-3">Audio</TabsTrigger>
           )}
         </TabsList>
 

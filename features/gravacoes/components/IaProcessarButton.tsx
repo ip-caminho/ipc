@@ -44,7 +44,7 @@ export function IaProcessarButton({ gravacaoId, iaStatus, hasAudio }: IaProcessa
 
   if (isProcessing) {
     return (
-      <Button size="sm" disabled>
+      <Button size="sm" disabled className="h-11 md:h-8">
         <Spinner className="mr-1" />
         Processando...
       </Button>
@@ -54,7 +54,7 @@ export function IaProcessarButton({ gravacaoId, iaStatus, hasAudio }: IaProcessa
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button size="sm" variant={isRetry ? "outline" : "default"}>
+        <Button size="sm" variant={isRetry ? "outline" : "default"} className="h-11 md:h-8">
           {isRetry ? (
             <>
               <RotateCcw className="h-4 w-4 mr-1" />

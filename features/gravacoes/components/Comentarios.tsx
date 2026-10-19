@@ -192,6 +192,7 @@ export function ComentarioInput({ gravacaoId, onCreated }: { gravacaoId: Id<"gra
       <input
         className="flex-1 text-base md:text-sm rounded-xl border border-border bg-background px-4 py-3 placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
         placeholder="Escreva um comentario..."
+        enterKeyHint="send"
         value={newComment}
         onChange={(e) => setNewComment(e.target.value)}
         onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
@@ -200,9 +201,9 @@ export function ComentarioInput({ gravacaoId, onCreated }: { gravacaoId: Id<"gra
         type="button"
         onClick={handleSubmit}
         disabled={!newComment.trim()}
-        className="text-muted-foreground hover:text-foreground transition-colors duration-150 disabled:opacity-30 p-2"
+        className="text-muted-foreground hover:text-foreground transition-colors duration-150 disabled:opacity-30 flex items-center justify-center min-h-11 min-w-11 rounded-xl"
       >
-        <Send className="h-4 w-4" />
+        <Send className="h-5 w-5" />
       </button>
     </div>
   );
