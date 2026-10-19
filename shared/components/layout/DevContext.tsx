@@ -51,6 +51,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "ProfileCompletenessCard: mostra % completude do perfil + campos faltantes. Desaparece se 100% e atualizado <6m",
       "TodaySection: card Avisos abre Drawer com AvisosWidget",
       "BirthdayList: scroll horizontal, avatares com tempo relativo. Colegas do meu PG (meusColegasDePg) vem primeiro, ganham dot ambar; anel ambar + label ambar quando aniversario nos proximos 7 dias. Detalhe mostra 'Do seu PG · [nome]'",
+      "Mobile: ProfileNudgeDialog removido (popup ao abrir o app); a completude do perfil fica so no ProfileCompletenessCard",
     ],
   },
   "/admin/acesso": {
@@ -75,10 +76,11 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "appConfig.mutations.gerarTokenConvidado",
       "appConfig.mutations.revogarTokenConvidado",
     ],
-    componentes: ["AcessoPanel", "AtividadeMembroDrawer", "LinkConvidadoCard", "RelatorioAcessosDialog", "PermissionGate"],
+    componentes: ["AcessoPanel", "AtividadeMembroDrawer", "LinkConvidadoCard", "RelatorioAcessosDialog", "PermissionGate", "ResponsiveDialog", "AlertDialog (confirmar resetar)"],
     notas: [
       "Permissao: acesso:manage (admin/pastor/secretaria), tambem exigida no BACKEND (convex/membros/acesso.ts). ModuloGuard modulo=membros. Pagina dedicada de acesso ao sistema (era a aba Acesso de /membros, agora removida)",
       "AcessoPanel: resumo (com acesso/pendente/sem/adesao) + gerar links de ativacao (individual e lote) + resetar + atividade + LinkConvidadoCard (so admin: /convidado/<codigo>)",
+      "Mobile: dialogs viram bottom sheet (ResponsiveDialog); resetar acesso pede confirmacao via AlertDialog",
     ],
   },
   "/membros/novo": {
@@ -88,10 +90,12 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "app/(ready)/membros/novo/page.tsx",
       "features/membros/components/MembroForm.tsx",
       "features/membros/lib/validations.ts",
+      "shared/components/layout/StickyActionBar.tsx",
+      "shared/components/layout/DetailHeader.tsx",
     ],
     mutations: ["membros.mutations.create"],
-    componentes: ["MembroForm", "PermissionGate"],
-    notas: ["Permissao: membros:create + ModuloGuard modulo=membros. MembroForm completo (pessoal + eclesiastico); dados pessoais via mapFormToEntidadeData (features/membros/lib/mappers.ts)"],
+    componentes: ["MembroForm", "PermissionGate", "DetailHeader", "StickyActionBar (Salvar fixo no mobile)"],
+    notas: ["Permissao: membros:create + ModuloGuard modulo=membros. MembroForm completo (pessoal + eclesiastico); dados pessoais via mapFormToEntidadeData (features/membros/lib/mappers.ts)", "Mobile: MembroForm com hideTitle + StickyActionBar com o botao de salvar (pb-28 libera o fim da pagina)"],
   },
   "/membros": {
     nome: "Rol de Membros",
@@ -102,6 +106,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "features/secretarioExecutivo/components/HistoricoEclesiasticoDrawer.tsx",
       "features/secretarioExecutivo/components/FamiliaDrawer.tsx",
       "features/secretarioExecutivo/components/RolExportView.tsx",
+      "shared/components/layout/MobileFab.tsx",
     ],
     queries: ["membros.eclesiastico.listParaSecretario (assinatura unica; busca e resumo derivam no cliente)", "membros.eclesiastico.getHistorico"],
     mutations: [
@@ -113,7 +118,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "membros.eclesiastico.vincularFilhoExistenteAdmin",
       "membros.eclesiastico.removerFilhoAdmin",
     ],
-    componentes: ["SecretarioExecutivoTabela", "HistoricoEclesiasticoDrawer", "FamiliaDrawer", "CargosDrawer", "RolExportView", "PermissionGate"],
+    componentes: ["SecretarioExecutivoTabela", "HistoricoEclesiasticoDrawer", "FamiliaDrawer", "CargosDrawer", "RolExportView", "PermissionGate", "MobileFab (Novo membro)", "Popover (legenda do Rol)"],
     notas: [
       "Permissao: rol:read (ver pagina/tabela), rol:update (editar — sem ela a tabela fica somente-leitura)",
       "Roles: admin, pastor, secretaria, secretario_executivo",
@@ -125,6 +130,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "Coluna Nome + header fixos (sticky). Botao 'Agrupar por familia': cabecalho por familia, chefe(homem)->conjuge->filhos(mais velho primeiro)",
       "listParaSecretario inclui filhos DEPENDENTES (entidade sem membro, via responsaveis); botao 'Tornar membro' (tornarMembro) cria o registro e habilita edicao",
       "Historico (FIELD_CHANGE) com reverter; drill-down no detalhe para admissao/demissao/atos/cargos",
+      "Mobile: lista de cards so leitura (toque abre /membros/[id], edicao la); KPIs dentro do 'Filtros', legenda do Rol em Popover, busca no topo; 'Novo membro' vira MobileFab; tabela inline so no desktop",
     ],
   },
   "/membros/[id]": {
@@ -141,10 +147,12 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "features/membros/components/FamiliaArvoreSection.tsx",
       "features/membros/components/ArvoreFamiliar.tsx",
       "features/secretarioExecutivo/components/FamiliaDrawer.tsx",
+      "shared/components/layout/DetailHeader.tsx",
+      "shared/components/layout/StickyActionBar.tsx",
     ],
     queries: ["membros.queries.getById", "membros.eclesiastico.getFamily", "membros.familia.redeFamiliar", "membros.familia.buscarEntidadesFamilia", "membros.acesso.getStatusAcesso"],
     mutations: ["membros.mutations.update", "membros.eclesiastico.updateEclesiastico", "membros.eclesiastico.marcarCampoVerificado", "membros.eclesiastico.vincularConjugeAdmin", "membros.eclesiastico.desvincularConjugeAdmin", "membros.eclesiastico.adicionarFilhoAdmin", "membros.eclesiastico.vincularFilhoExistenteAdmin", "membros.eclesiastico.removerFilhoAdmin", "membros.eclesiastico.vincularParenteAdmin", "membros.acesso.gerarLink", "membros.acesso.resetarAcesso"],
-    componentes: ["DadosBasicosSection", "EclesiasticoForm", "MembroForm", "AcessoSection", "AtosPastoraisSection", "CargosHistoricoSection", "FamiliaArvoreSection", "ArvoreFamiliar", "FamiliaDrawer", "PermissionGate"],
+    componentes: ["DadosBasicosSection", "EclesiasticoForm", "MembroForm", "AcessoSection", "AtosPastoraisSection", "CargosHistoricoSection", "FamiliaArvoreSection", "ArvoreFamiliar", "FamiliaDrawer", "PermissionGate", "DetailHeader (sticky, com nome)", "StickyActionBar (EclesiasticoForm/MembroForm)", "ResponsiveDialog (Atos pastorais, Cargos)", "AlertDialog (AcessoSection)"],
     notas: [
       "Detalhe UNICO do membro (fold de /membros/[id]). Gate externo: rol:read + ModuloGuard modulo=membros",
       "Arvore familiar (FamiliaArvoreSection -> ArvoreFamiliar, D3): rede derivada de membros.conjugeId + tabela responsaveis via redeFamiliar (BFS). So aparece com rede > 1 pessoa",
@@ -152,6 +160,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "Dados pessoais: DadosBasicosSection (somente leitura) + botao 'Editar dados pessoais' (membros:update) abre Drawer com MembroForm personalOnly (so entidadeData via mapFormToEntidadeData de features/membros/lib/mappers.ts; eclesiastico fica no EclesiasticoForm; vinculoIgreja/cbcm em secao propria do personalOnly)",
       "Eclesiastico (rol:update): EclesiasticoForm (auto-save) + AtosPastoraisSection + CargosHistoricoSection",
       "Acesso per-membro (acesso:manage): AcessoSection = status + gerar magic link + resetar + wa.me",
+      "Mobile: header sticky com nome + voltar; dialogs de atos/cargos como bottom sheet; salvar do form em StickyActionBar",
     ],
   },
   "/entidades": {
@@ -175,11 +184,13 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     nome: "Novo Fornecedor ou Parceiro",
     pagina: "app/(ready)/entidades/novo/page.tsx",
     doc: "docs/modules/entidades.md",
-    arquivos: ["app/(ready)/entidades/novo/page.tsx"],
+    arquivos: ["app/(ready)/entidades/novo/page.tsx", "shared/components/layout/StickyActionBar.tsx", "shared/components/layout/DetailHeader.tsx"],
     mutations: ["entidades.mutations.create"],
+    componentes: ["DetailHeader", "StickyActionBar"],
     notas: [
       "Permissao: entidades:create",
       "Cria sempre PJ (tipoEntidade fixo). Papeis: FORNECEDOR, IGREJA_PARCEIRA",
+      "Mobile: DetailHeader + StickyActionBar com o botao de criar",
     ],
   },
   "/diretorio": {
@@ -301,6 +312,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "Edicao inline com permissao gravacoes:update ou gravacoes:process_ai",
       "Audio via player global persistente (botao Ouvir sermao / Audio completo)",
       "Botao Compartilhar (ShareGravacaoButton): so com gravacoes:share e gravacao PUBLICADO; gera link publico /g/<codigo> (revogavel)",
+      "Mobile: com audio e IA ainda nao CONCLUIDO mostra botao desabilitado 'Audio em preparacao'",
     ],
   },
   "/g/[token]": {
@@ -330,6 +342,8 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "features/gravacoes/components/SegmentEditor.tsx",
       "features/gravacoes/components/IaProcessarButton.tsx",
       "features/gravacoes/components/IaProgressPanel.tsx",
+      "shared/components/layout/DetailHeader.tsx",
+      "shared/components/layout/StickyActionBar.tsx",
     ],
     queries: ["gravacoes.queries.getById"],
     mutations: ["gravacoes.mutations.update"],
@@ -338,6 +352,9 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "IaResultadoDisplay",
       "SegmentEditor",
       "useAudioPlayer (player global)",
+      "DetailHeader (mobile)",
+      "StickyActionBar (Salvar so quando ha alteracao)",
+      "DropdownMenu (acoes no mobile)",
     ],
     notas: [
       "Permissao: gravacoes:update ou gravacoes:process_ai",
@@ -345,6 +362,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "AvisosEditor: editar titulo/descricao de cada aviso",
       "SegmentEditor: ajustar inicioSermao/fimSermao/inicioAvisos/fimAvisos",
       "Audio completo via player global (botao play)",
+      "Mobile: header compacto (titulo + status IA + menu de acoes); Salvar (dados e avisos) em StickyActionBar so quando ha alteracao (dirty)",
     ],
   },
   "/admin/permissoes": {
@@ -356,13 +374,15 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "features/preferencias/components/PermissionMatrix.tsx",
       "convex/preferencias/rbac.ts",
       "types/auth.ts",
+      "shared/components/layout/PageHeader.tsx",
     ],
     mutations: ["membros.convites.generateInvite"],
-    componentes: ["PermissionMatrix", "AdminGate"],
+    componentes: ["PermissionMatrix", "AdminGate", "PageHeader", "Drawer (edicao do membro, mobile)", "AlertDialog (atribuir admin / resetar)", "RadioGroup (papel)"],
     notas: [
       "Somente admin",
       "Tabs: Roles e Permissoes, Convites",
       "Gera links de convite com role (membro/secretaria)",
+      "Mobile: lista so leitura; toque no membro abre Drawer com papel e permissoes (edicao por item). Atribuir admin pede confirmacao (AlertDialog); resetar ao padrao do papel disponivel",
     ],
   },
   "/admin/cadastro-vivo": {
@@ -393,13 +413,15 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "features/escalas/components/DisponibilidadeTab.tsx",
       "features/escalas/components/MinhasEquipesTab.tsx",
       "features/escalas/components/GerarEscalasTab.tsx",
+      "features/escalas/components/GerarEscalaDialog.tsx",
     ],
     mutations: ["escalas.mutations.garantirCultosFuturos", "escalas.funcoes.create"],
-    componentes: ["EquipesTab", "DisponibilidadeTab", "MinhasEquipesTab", "GerarEscalasTab", "NovaEquipeDialog", "ModuloGuard"],
+    componentes: ["EquipesTab", "DisponibilidadeTab", "MinhasEquipesTab", "GerarEscalasTab", "NovaEquipeDialog", "ModuloGuard", "GerarEscalaDialog (ResponsiveDialog)", "Drawer (edicao de equipe, mobile)", "AlertDialog (confirmacoes)"],
     notas: [
       "Tabs: Minha Escala, Disponibilidade, Gerar Escalas (escalas:create), Equipes (escalas:update)",
       "Garante cultos futuros (3 meses) ao abrir a pagina",
       "Aba Equipes: card '+Nova equipe' com dialog para criar (admin/escalas:update)",
+      "Mobile: aba Equipes em lista de leitura; toque abre Drawer de edicao; excluir/Ceia com AlertDialog; GerarEscalaDialog vira bottom sheet",
     ],
   },
   "/ausencias": {
@@ -442,12 +464,13 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "escalas.mutations.createCulto",
       "escalas.mutations.deleteCulto",
     ],
-    componentes: ["MembroCombobox", "ModuloGuard", "BiblePassageInput"],
+    componentes: ["MembroCombobox", "ModuloGuard", "BiblePassageInput", "AlertDialog (excluir culto)"],
     notas: [
       "Permissao: escalas:read, escalas:update, escalas:create, escalas:delete",
       "Escala unificada com liturgia (membro + passagem biblica ou membro simples)",
       "Preview de passagens biblicas inline (NAA) via BiblePassageInput",
       "Desktop (CultosTable): container overflow-auto max-h-[calc(100vh-10rem)] com thead sticky top-0; coluna Data sticky left-0",
+      "Mobile: excluir culto via AlertDialog (substituiu confirm() nativo)",
     ],
   },
   "/avisos": {
@@ -456,14 +479,16 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     arquivos: [
       "app/(ready)/avisos/page.tsx",
       "features/avisos/components/AvisosSection.tsx",
+      "shared/components/layout/MobileFab.tsx",
     ],
     queries: ["avisos.queries.list"],
     mutations: ["avisos.mutations.create", "avisos.mutations.update", "avisos.mutations.remove"],
-    componentes: ["AvisosSection", "ModuloGuard"],
+    componentes: ["AvisosSection", "ModuloGuard", "MobileFab (Novo aviso)"],
     notas: [
       "Permissao: avisos:create (lancar) e avisos:manage (editar/excluir). Desacoplado de escalas: obreiro lanca avisos; pastor/secretaria gerenciam",
       "Avisos ativos e expirados",
       "Criacao e edicao inline",
+      "Mobile: 'Novo aviso' vira MobileFab (avisos:create)",
     ],
   },
   "/proximo-domingo": {
@@ -481,6 +506,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "Seletor de domingo no topo com navegacao",
       "Liturgia com texto biblico completo (NAA)",
       "Louvor, equipe, avisos e indisponibilidades",
+      "Mobile: seletor de domingo em largura total; liturgia vazia mostra 'ainda nao foi publicada'",
     ],
   },
   "/boletim": {
@@ -507,16 +533,18 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "features/pequenosGrupos/components/PGForm.tsx",
       "features/pequenosGrupos/components/PGDetalhe.tsx",
       "features/pequenosGrupos/components/PGRemanejamento.tsx",
+      "shared/components/layout/MobileFab.tsx",
     ],
     queries: ["pequenosGrupos.queries.list", "pequenosGrupos.queries.listAllWithMembros"],
     mutations: ["pequenosGrupos.mutations.create", "pequenosGrupos.mutations.moveMembro"],
-    componentes: ["PGGrid", "PGCard", "PGForm", "PGDetalhe", "PGRemanejamento", "PermissionGate", "ModuloGuard"],
+    componentes: ["PGGrid", "PGCard", "PGForm", "PGDetalhe", "PGRemanejamento", "PermissionGate", "ModuloGuard", "MobileFab (Novo PG)", "Drawer ('Adicionar a qual grupo?')", "ResponsiveDialog (PGDetalhe: mover membro)"],
     notas: [
       "Permissao: pequenos_grupos:read, pequenos_grupos:create, pequenos_grupos:update",
       "2 views: grid de PGs e remanejamento de membros entre grupos",
       "Um membro pode estar em varios PGs. Pool 'disponiveis' = comungantes (getTipoRol via listAllWithMembros.comungantes)",
       "PGGrid (view grid): busca nos comungantes (ordem alfabetica) + drag-and-drop de um nome para cima de um card de PG (moveMembro). DnD so com pequenos_grupos:update",
       "PGDetalhe: dialog Adicionar membro usa busca + lista alfabetica (comungantes ainda nao neste PG)",
+      "Mobile: sem drag-and-drop; toque no membro abre Drawer para escolher o PG (moveMembro); em PGDetalhe 'Mover para outro grupo' em bottom sheet; 'Novo PG' vira MobileFab (so no grid)",
     ],
   },
   "/pedidos-oracao": {
@@ -540,6 +568,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "features/pedidosOracao/components/GuidedPrayerComplete.tsx",
       "features/pedidosOracao/components/PedidoOracaoDetalhe.tsx (legado, nao importado)",
       "features/pedidosOracao/components/OrarExperiencia.tsx (legado, nao importado)",
+      "shared/components/layout/MobileFab.tsx",
     ],
     queries: [
       "pedidosOracao.queries.listMuralRequests (visibilidade granular)",
@@ -555,6 +584,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     ],
     componentes: [
       "MuralView, MyRequestsView, PrayerRequestCard, PrayerAvatarStack, PrayerActionButton, NewRequestModal",
+      "MobileFab (Compartilhar um pedido)",
     ],
     notas: [
       "Aba Mural = feed com visibilidade por scope (private/pg/leaders/church)",
@@ -562,6 +592,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "Iniciar oracao guiada = rota /pedidos-oracao/guiada com Motion: drag horizontal, stack visual, progress bar segmentada, tela final de testemunho",
       "Detalhe do pedido = rota dedicada /pedidos-oracao/[id] com UpdateTimeline; autor pode adicionar atualizacao (ATUALIZACAO/REFORCO/TESTEMUNHO — TESTEMUNHO marca como RESPONDIDO) ou arquivar",
       "Schema tem compat com compartilhadoIgreja (true=church, false=private)",
+      "Mobile: botao flutuante agora e o MobileFab compartilhado (antes botao fixo inline)",
     ],
   },
   "/pastoreio": {
@@ -714,6 +745,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "ProximosAniversarios", "OvelhinhasManager",
       "VoluntariosTab", "VoluntarioCard", "VoluntarioForm",
       "PermissionGate", "ModuloGuard",
+      "AlertDialog (excluir crianca)",
     ],
     notas: [
       "Permissoes (granulares por persona): criancas:read/manage/medical, educacional:read (guarda-chuva de leitura), escala_edu:manage, relatorio_edu:write (relatorio+presenca), relatorio_edu:delete, voluntarios_edu:read/manage. educacional:write DEPRECADO (migrado). Conjuntos: 'Coordenador Educacional' (tudo) e 'Professor Educacional' (criancas:read + educacional:read + relatorio_edu:write). AUTOMATICO: voluntario (eduVoluntarios) com papelEdu PROFESSOR/AUXILIAR HERDA o conjunto Professor via permissao derivada (_shared/eduVoluntarioPerms.ts, uniao no read em getUserPermissionContext + requirePermission + getAuthContext) — adicionar/remover voluntario reflete na hora, sem gravar em membro.permissions[]. APOIO nao herda",
@@ -731,6 +763,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "Transicao de turma derivada da idade (lib/idade.ts) — card/detalhe mostram 'muda p/ X'; nao move automatico",
       "Uso de imagem PENDENTE = 'Nao assinado' (rotulo)",
       "Ovelhinha (mentor da crianca): aptos em tabela eduOvelhinhas, geridos no OvelhinhasManager; select no CriancaForm",
+      "Mobile: abas reduzidas (Resumo, Turmas, Escala; Aniversarios/Voluntarios/Agenda so no desktop); excluir crianca via AlertDialog",
     ],
   },
   "/calendario": {
@@ -747,10 +780,11 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "features/calendario/components/CalendarioAno.tsx",
       "features/calendario/lib/feriados.ts",
       "features/calendario/lib/types.ts",
+      "shared/components/layout/MobileFab.tsx",
     ],
     queries: ["calendario.queries.list", "ministerios.queries.list"],
     mutations: ["calendario.mutations.create", "calendario.mutations.update", "calendario.mutations.remove"],
-    componentes: ["CalendarioMes/Semana/Lista/Ano", "EventoForm", "PermissionGate", "ModuloGuard"],
+    componentes: ["CalendarioMes/Semana/Lista/Ano", "EventoForm", "PermissionGate", "ModuloGuard", "MobileFab (Novo evento)", "Drawer (Hoje + Filtros, mobile)", "ResponsiveDialog (EventoForm)"],
     notas: [
       "Permissao: calendario:read/create/update/delete",
       "4 visoes: Mes (grade 7 col c/ dias da semana), Semana, Lista, Ano (12 mini-meses). Estado na URL via nuqs (?view=)",
@@ -762,6 +796,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "EventoForm separa 'Dados do evento' de 'Publicar no site' (toggle publicadoNoSite OPT-IN, default OFF)",
       "Janela de exibicao no site (exibirNoSiteDe/exibirNoSiteAte): controla quando o evento aparece/some na agenda publica",
       "Datas em dd/mm/yyyy (DatePickerBR); botao Excluir dentro do form de edicao",
+      "Mobile: 'Hoje' e filtros (ministerio, pregadores) em Drawer; novo evento via MobileFab; EventoForm como bottom sheet",
     ],
   },
   "/louvor": {
@@ -784,6 +819,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "Filtros: busca texto, tag, tom",
       "Criacao via dialog com preview da cifra em tempo real",
       "Import via copy-paste do Cifra Club (converte para ChordPro)",
+      "Mobile: busca + filtros sticky no topo ao rolar; chips com alvo de toque maior",
     ],
   },
   "/louvor/[id]": {
@@ -817,13 +853,16 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     arquivos: [
       "app/(ready)/admin/gravacoes/page.tsx",
       "features/gravacoes/components/IaStatusBadge.tsx",
+      "shared/components/layout/PageHeader.tsx",
+      "shared/components/layout/MobileFab.tsx",
     ],
     queries: ["gravacoes.queries.list"],
-    componentes: ["GravacaoAdminCard (inline)", "AdminGate", "IaStatusBadge"],
+    componentes: ["GravacaoAdminCard (inline)", "AdminGate", "IaStatusBadge", "PageHeader", "MobileFab (Nova gravacao)", "Drawer (filtros tipo/IA, mobile)"],
     notas: [
       "Somente admin",
       "Lista todas as gravacoes com filtros de status e status IA",
       "Link Gerenciar → /gravacoes/[id]/admin",
+      "Mobile: filtros extras em Drawer, 'Nova' vira MobileFab; badge de status no card e so informativo (publicar/despublicar fica em /gravacoes/[id])",
     ],
   },
   "/convidado/[codigo]": {
@@ -854,14 +893,16 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "app/(ready)/admin/modulos/page.tsx",
       "convex/modulos/queries.ts",
       "convex/modulos/mutations.ts",
+      "shared/components/layout/PageHeader.tsx",
     ],
     queries: ["modulos.queries.listModulos"],
     mutations: ["modulos.mutations.toggleModulo"],
-    componentes: ["AdminGate"],
+    componentes: ["AdminGate", "PageHeader", "AlertDialog (confirmar desativar)"],
     notas: [
       "Somente admin",
       "Toggle on/off de modulos do sistema",
       "Seed: npx convex run modulos/mutations:seedModulos",
+      "Mobile: linha inteira e o toggle; desativar modulo pede confirmacao (afeta o menu de todos), ativar e direto",
     ],
   },
   "/meu-perfil": {
@@ -889,6 +930,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     notas: [
       "Self-service: membro edita seus proprios dados (edicao autocontida por secao)",
       "Familia: vincula cadastrado ou solicita cadastro a secretaria (fila em /admin/solicitacoes-familia)",
+      "Mobile: botao 'Meus dados estao corretos' em largura total no fim da secao",
     ],
   },
   "/multimidia": {
@@ -1164,15 +1206,17 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     arquivos: [
       "app/(ready)/admin/auditoria/page.tsx",
       "convex/audit/queries.ts",
+      "shared/components/layout/PageHeader.tsx",
     ],
     queries: ["audit.queries.listFiltered", "audit.queries.listTabelas"],
-    componentes: ["PermissionGate (audit:read)", "Sheet de detalhe"],
+    componentes: ["PermissionGate (audit:read)", "Sheet de detalhe", "PageHeader", "Drawer (filtros, mobile)"],
     notas: [
       "Permissao: audit:read (admin, secretaria, pastor)",
       "Filtros via nuqs URL state: tabela, acao, de, ate",
       "Paginacao por 'Carregar mais' (limit incremental)",
       "Click na linha abre Sheet com payload completo de from/to",
       "CPF/RG ja mascarados pelo auditHelpers do _shared",
+      "Mobile: botao 'Filtros (n)' + chips removiveis, campos no Drawer; logs em lista de linhas tocaveis que abrem o detalhe",
     ],
   },
   // ===== Site Publico (rotas sem auth) =====
@@ -1287,8 +1331,8 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     ],
     queries: ["retiro.queries.listar", "retiro.queries.getById"],
     mutations: ["retiro.mutations.criar", "retiro.mutations.atualizar"],
-    componentes: ["RetiroConfigDialog (preco por tipo de quarto + refeicoes dos extras + faixas de idade + estoque)"],
-    notas: ["Permissao: retiro:manage. Valores em centavos no backend, R$ na UI"],
+    componentes: ["RetiroConfigDialog (preco por tipo de quarto + refeicoes dos extras + faixas de idade + estoque)", "ResponsiveDialog (RetiroConfigDialog vira bottom sheet no mobile)"],
+    notas: ["Permissao: retiro:manage. Valores em centavos no backend, R$ na UI", "Mobile: RetiroConfigDialog em ResponsiveDialog (header/rodape fixos, corpo rola)"],
   },
   "/admin/retiro/[id]": {
     nome: "Secretaria - Inscricoes do retiro",
@@ -1451,18 +1495,24 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "features/site-publico/components/paineis/AgendaPanel.tsx",
       "features/site-publico/components/paineis/AvisosPanel.tsx",
       "features/site-publico/components/paineis/TextosPanel.tsx",
+      "shared/components/layout/StickyActionBar.tsx",
+      "features/site-publico/components/InformacoesSiteForm.tsx",
+      "features/site-publico/components/AvisosCuradoria.tsx",
     ],
     queries: [],
     mutations: [],
     componentes: [
       "Tabs (abas): Informacoes, Agenda, Avisos, Textos + 'Ver o site'",
       "Cada aba = um Panel self-fetching (Radix desmonta aba inativa = query so quando aberta)",
+      "PageHeader (action 'Ver o site')",
+      "StickyActionBar (Informacoes/Avisos)",
     ],
     notas: [
       "Permissao: site_publico:manage (admin/pastor/sec.exec por padrao; liga por membro na pagina de permissoes)",
       "Pagina unica com abas; aba ativa na URL via nuqs (?secao=). Sem navegar entre paginas",
       "As sub-rotas /informacoes|/agenda|/avisos|/textos REDIRECIONAM p/ ?secao=",
       "Inscricoes saiu do hub e virou item de Secretaria (/admin/inscricoes)",
+      "Mobile: paineis com formulario ficam montados (forceMount, so escondidos) p/ nao perder edicao ao trocar de aba; Agenda desmonta; salvar em StickyActionBar; InscricaoBuilder/RetiroConfig em ResponsiveDialog",
     ],
   },
   "/admin/site-publico/informacoes": {
@@ -1566,6 +1616,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "Fila de solicitacoes de familiar (filho/conjuge) vindas do self-service (/meu-perfil)",
       "Aprovar = criar entidade + vinculo (criarFilhoParaResponsavel/criarConjugeParaMembro). Permissao: membros:create. Auditado",
       "Substitui a criacao direta (adicionarFilho removido)",
+      "Mobile: SolicitacoesPanel em lista de cards (md:hidden) + tabela so no desktop",
     ],
   },
   "/admin/inscricoes": {
