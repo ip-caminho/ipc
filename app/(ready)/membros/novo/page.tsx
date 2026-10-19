@@ -51,8 +51,8 @@ export default function NovoMembroPage() {
     >
       <HeaderLayout>
         <DetailHeader title="Novo membro" backHref="/membros" />
-        <div className="max-w-4xl">
-          <MembroForm onSubmit={handleSubmit} />
+        <div className="max-w-4xl pb-28 md:pb-0">
+          <MembroForm onSubmit={handleSubmit} hideTitle />
         </div>
       </HeaderLayout>
     </PermissionGate>

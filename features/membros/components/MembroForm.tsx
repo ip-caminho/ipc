@@ -20,20 +20,21 @@ import {
 } from "../lib/constants";
 import { useState, useRef } from "react";
 import { PhotoUpload } from "@/shared/files/components/PhotoUpload";
+import { StickyActionBar } from "@shared/components/layout/StickyActionBar";
 import { FileUpload } from "@/shared/files/components/FileUpload";
 
 // Helpers FORA do componente: identidade estavel entre renders evita que o
 // React remonte a subarvore (perda de foco no input e colapso das secoes)
 // a cada re-render disparado por form.watch/setValue.
 
-function Field({ form, name, label, type = "text", placeholder = "" }: { form: UseFormReturn<MembroFormValues>; name: keyof MembroFormValues; label: string; type?: string; placeholder?: string }) {
+function Field({ form, name, label, type = "text", placeholder = "", inputMode, autoComplete }: { form: UseFormReturn<MembroFormValues>; name: keyof MembroFormValues; label: string; type?: string; placeholder?: string; inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"]; autoComplete?: string }) {
   return (
     <div className="space-y-1">
       <Label htmlFor={name}>{label}</Label>
       {type === "date" ? (
         <DateFieldBR control={form.control} name={name} id={name} placeholder={placeholder} />
       ) : (
-        <Input id={name} type={type} placeholder={placeholder} {...form.register(name)} />
+        <Input id={name} type={type} placeholder={placeholder} inputMode={inputMode} autoComplete={autoComplete} {...form.register(name)} />
       )}
       {form.formState.errors[name] && (
         <p className="text-xs text-destructive">{form.formState.errors[name]?.message}</p>
@@ -65,8 +66,8 @@ function Section({ title, children, defaultOpen = true }: { title: string; child
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
       <CollapsibleTrigger asChild>
-        <Button variant="ghost" className="w-full justify-between p-0 h-auto md:h-auto">
-          <h3 className="text-sm font-semibold">{title}</h3>
+        <Button variant="ghost" className="w-[calc(100%+1rem)] justify-between min-h-11 px-2 -mx-2 md:h-auto md:min-h-0 md:p-0 md:mx-0 md:w-full">
+          <h3 className="text-base md:text-sm font-semibold">{title}</h3>
           <ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} />
         </Button>
       </CollapsibleTrigger>
@@ -86,9 +87,11 @@ interface MembroFormProps {
   entityId?: string;
   /** Oculta as secoes eclesiasticas (editadas separadamente pelo EclesiasticoForm no Rol). */
   personalOnly?: boolean;
+  /** Oculta o titulo do Card quando a pagina ja exibe o proprio (DetailHeader). */
+  hideTitle?: boolean;
 }
 
-export function MembroForm({ defaultValues, onSubmit, isEditing, entityId, personalOnly }: MembroFormProps) {
+export function MembroForm({ defaultValues, onSubmit, isEditing, entityId, personalOnly, hideTitle }: MembroFormProps) {
   const [loading, setLoading] = useState(false);
   const tempIdRef = useRef(crypto.randomUUID());
   const uploadEntityId = entityId || tempIdRef.current;
@@ -127,9 +130,11 @@ export function MembroForm({ defaultValues, onSubmit, isEditing, entityId, perso
   return (
     <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
       <Card>
-        <CardHeader>
-          <CardTitle>{isEditing ? "Editar Membro" : "Novo Membro"}</CardTitle>
-        </CardHeader>
+        {!hideTitle && (
+          <CardHeader>
+            <CardTitle>{isEditing ? "Editar Membro" : "Novo Membro"}</CardTitle>
+          </CardHeader>
+        )}
         <CardContent className="space-y-6">
           <Section title="Dados Pessoais">
             <div className="sm:col-span-2 lg:col-span-3">
@@ -142,10 +147,21 @@ export function MembroForm({ defaultValues, onSubmit, isEditing, entityId, perso
               />
             </div>
             <div className="sm:col-span-2">
-              <Field form={form} name="nomeCompleto" label="Nome Completo *" />
+              <Field form={form} name="nomeCompleto" label="Nome Completo *" autoComplete="name" />
             </div>
             <Field form={form} name="apelido" label="Apelido" placeholder="Como e conhecido" />
-            <Field form={form} name="cpf" label="CPF" placeholder="000.000.000-00" />
+            <Field form={form} name="dataNascimento" label="Data de Nascimento" type="date" />
+            <SelectField form={form} name="sexo" label="Sexo" options={SEXO_OPTIONS} />
+          </Section>
+
+          <Section title="Contato">
+            <Field form={form} name="whatsapp" label="WhatsApp" placeholder="11999991111" type="tel" autoComplete="tel" />
+            <Field form={form} name="telefone" label="Telefone" type="tel" autoComplete="tel" />
+            <Field form={form} name="email" label="Email" type="email" autoComplete="email" />
+          </Section>
+
+          <Section title="Mais dados pessoais" defaultOpen={!!isEditing}>
+            <Field form={form} name="cpf" label="CPF" placeholder="000.000.000-00" inputMode="numeric" />
             <div className="space-y-1">
               <Label>Documento</Label>
               <div className="flex gap-2">
@@ -162,20 +178,12 @@ export function MembroForm({ defaultValues, onSubmit, isEditing, entityId, perso
                 <Input placeholder="Numero do documento" {...form.register("rg")} />
               </div>
             </div>
-            <Field form={form} name="dataNascimento" label="Data de Nascimento" type="date" />
-            <SelectField form={form} name="sexo" label="Sexo" options={SEXO_OPTIONS} />
             <SelectField form={form} name="estadoCivil" label="Estado Civil" options={ESTADO_CIVIL_OPTIONS} />
             <Field form={form} name="nacionalidade" label="Nacionalidade" />
             <Field form={form} name="pai" label="Nome do Pai" />
             <Field form={form} name="mae" label="Nome da Mae" />
             <Field form={form} name="profissao" label="Profissao" />
             <SelectField form={form} name="formacao" label="Formacao" options={FORMACAO_OPTIONS} />
-          </Section>
-
-          <Section title="Contato">
-            <Field form={form} name="whatsapp" label="WhatsApp" placeholder="11999991111" />
-            <Field form={form} name="telefone" label="Telefone" />
-            <Field form={form} name="email" label="Email" type="email" />
           </Section>
 
           <Section title="Endereço" defaultOpen={false}>
@@ -185,7 +193,7 @@ export function MembroForm({ defaultValues, onSubmit, isEditing, entityId, perso
             <Field form={form} name="bairro" label="Bairro" />
             <Field form={form} name="cidade" label="Cidade" />
             <Field form={form} name="estado" label="Estado" />
-            <Field form={form} name="cep" label="CEP" placeholder="00000-000" />
+            <Field form={form} name="cep" label="CEP" placeholder="00000-000" inputMode="numeric" />
           </Section>
 
           {personalOnly && (
@@ -203,8 +211,8 @@ export function MembroForm({ defaultValues, onSubmit, isEditing, entityId, perso
           <Section title="Dados Eclesiasticos" defaultOpen={false}>
             <SelectField form={form} name="vinculoIgreja" label="Vinculo com a Igreja" options={VINCULO_IGREJA_OPTIONS} />
             <SelectField form={form} name="role" label="Perfil no Sistema" options={ROLE_OPTIONS} />
-            <Field form={form} name="rol" label="Numero do Rol" />
-            <Field form={form} name="numeroMatricula" label="Numero de Matricula (IPB)" />
+            <Field form={form} name="rol" label="Numero do Rol" inputMode="numeric" />
+            <Field form={form} name="numeroMatricula" label="Numero de Matricula (IPB)" inputMode="numeric" />
             <Field form={form} name="dataMembresia" label="Data da Membresia" type="date" />
             <SelectField form={form} name="formaAdmissao" label="Forma de Admissao" options={FORMA_ADMISSAO_OPTIONS} />
             <SelectField form={form} name="cargoEclesiastico" label="Cargo Eclesiastico" options={CARGO_ECLESIASTICO_OPTIONS} />
@@ -289,11 +297,19 @@ export function MembroForm({ defaultValues, onSubmit, isEditing, entityId, perso
         </CardContent>
       </Card>
 
-      <div className="flex gap-2 justify-end">
-        <Button type="submit" disabled={loading}>
-          {loading ? "Salvando..." : isEditing ? "Salvar Alteracoes" : "Criar Membro"}
-        </Button>
-      </div>
+      {isEditing ? (
+        <div className="flex gap-2 justify-end">
+          <Button type="submit" disabled={loading}>
+            {loading ? "Salvando..." : "Salvar Alteracoes"}
+          </Button>
+        </div>
+      ) : (
+        <StickyActionBar>
+          <Button type="submit" disabled={loading}>
+            {loading ? "Salvando..." : "Criar Membro"}
+          </Button>
+        </StickyActionBar>
+      )}
     </form>
   );
 }
