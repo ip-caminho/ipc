@@ -12,8 +12,10 @@ export default function BoletimPage() {
     <PermissionGate permission="escalas:read" fallback={<SemPermissaoFallback />}>
       <ModuloGuard modulo="boletim">
         <HeaderLayout>
-          <PageHeader title="Boletim" />
-          <BoletimContent />
+          <div className="space-y-4">
+            <PageHeader title="Boletim" />
+            <BoletimContent />
+          </div>
         </HeaderLayout>
       </ModuloGuard>
     </PermissionGate>

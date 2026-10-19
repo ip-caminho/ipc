@@ -12,13 +12,7 @@ import {
   FORMACAO_OPTIONS,
   ESTADO_CIVIL_OPTIONS,
 } from "@features/membros/lib/constants";
-import { format, isValid, parseISO } from "date-fns";
-
-function formatDataBR(iso?: string) {
-  if (!iso) return undefined;
-  const d = parseISO(iso);
-  return isValid(d) ? format(d, "dd/MM/yyyy") : iso;
-}
+import { formatDataBR } from "@shared/lib/utils/date";
 
 type Endereco = {
   logradouro?: string;

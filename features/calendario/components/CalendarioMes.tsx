@@ -149,7 +149,7 @@ export function CalendarioMes({
                         </div>
                       ))}
                       {doDia.length > 4 && (
-                        <p className="text-[10px] text-muted-foreground">+{doDia.length - 4}</p>
+                        <p className="text-[10px] max-md:text-xs text-muted-foreground">+{doDia.length - 4}</p>
                       )}
                     </div>
                   </>
@@ -163,7 +163,7 @@ export function CalendarioMes({
                 )}
 
                 {ausencias?.[iso]?.length ? (
-                  <div className="mt-0.5 flex items-center gap-1 text-[10px] text-amber-600 dark:text-amber-400">
+                  <div className="mt-0.5 flex items-center gap-1 text-[10px] max-md:text-xs text-amber-600 dark:text-amber-400">
                     <CalendarOff className="h-3 w-3 shrink-0" />
                     <span className="truncate">
                       {ausencias[iso].length === 1

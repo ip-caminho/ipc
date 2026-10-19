@@ -4,6 +4,8 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
 import { PageHeader } from "@shared/components/layout/PageHeader";
+import Link from "next/link";
+import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { EnviarComprovanteDialog } from "@features/retiro/components/EnviarComprovanteDialog";
@@ -62,9 +64,12 @@ export default function MinhasInscricoesPage() {
                 <Skeleton className="h-16 w-full" />
               </div>
             ) : vazio ? (
-              <p className="rounded-lg border bg-muted/40 p-6 text-center text-sm text-muted-foreground">
-                Você ainda não tem inscrições.
-              </p>
+              <div className="space-y-3 rounded-lg border bg-muted/40 p-6 text-center">
+                <p className="text-sm text-muted-foreground">Você ainda não tem inscrições.</p>
+                <Button asChild variant="outline" className="h-11 md:h-9">
+                  <Link href="/calendario">Ver eventos abertos</Link>
+                </Button>
+              </div>
             ) : (
               <>
                 {retiros && retiros.length > 0 && (

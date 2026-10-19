@@ -16,6 +16,7 @@ import {
 import { ArrowDown, ArrowUp, BookOpen, ChevronDown, ChevronLeft, ChevronRight, X, UserPlus, Check, Music } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { formatDataExtenso } from "@shared/lib/utils/date";
 import { toast } from "sonner";
 import { MembroCombobox } from "./MembroCombobox";
 import { LouvorOrdemSection } from "./LouvorOrdemSection";
@@ -466,8 +467,7 @@ export function CultosMobileView({
 
   const culto = cultos[selectedIndex];
   const parsedDate = parseISO(culto.data);
-  const dataExtenso = format(parsedDate, "EEEE, d 'de' MMMM", { locale: ptBR });
-  const dataFormatada = dataExtenso.charAt(0).toUpperCase() + dataExtenso.slice(1);
+  const dataFormatada = formatDataExtenso(parsedDate);
   const isProximo = selectedIndex === 0;
 
   return (

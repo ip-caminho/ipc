@@ -80,7 +80,8 @@ export function SolicitacoesPanel() {
     return (
       <Card>
         <CardContent className="p-6 text-sm text-muted-foreground">
-          Nenhuma solicitacao pendente.
+          <p>Nenhuma solicitação pendente.</p>
+          <p className="mt-1 text-xs">Aqui aparecem os pedidos de alteração de família enviados pelos membros no autoatendimento.</p>
         </CardContent>
       </Card>
     );
@@ -97,7 +98,7 @@ export function SolicitacoesPanel() {
                   <span className="min-w-0 text-base font-medium">
                     {s.dados.nomeCompleto}
                     {s.dados.batizadoNestaIgreja && (
-                      <Badge variant="secondary" className="ml-2 text-[10px]">
+                      <Badge variant="secondary" className="ml-2 text-[10px] max-md:text-xs">
                         Batizado
                       </Badge>
                     )}
@@ -155,7 +156,7 @@ export function SolicitacoesPanel() {
                     <TableCell className="text-sm font-medium">
                       {s.dados.nomeCompleto}
                       {s.dados.batizadoNestaIgreja && (
-                        <Badge variant="secondary" className="ml-2 text-[10px]">
+                        <Badge variant="secondary" className="ml-2 text-[10px] max-md:text-xs">
                           Batizado
                         </Badge>
                       )}
