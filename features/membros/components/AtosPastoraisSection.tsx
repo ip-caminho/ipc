@@ -12,13 +12,14 @@ import { Label } from "@/shared/components/ui/label";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Badge } from "@/shared/components/ui/badge";
 import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/shared/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogContent,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from "@/shared/components/ui/responsive-dialog";
+import { cn } from "@/shared/lib/utils/cn";
 import {
   Select,
   SelectContent,
@@ -118,17 +119,68 @@ export function AtosPastoraisSection({ membroId }: { membroId: Id<"membros"> }) 
         <CardTitle className="text-sm text-muted-foreground flex items-center gap-1.5">
           <BookOpen className="h-3.5 w-3.5" /> Atos Pastorais
         </CardTitle>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button size="sm" variant="outline">
+        <Button
+          size="sm"
+          variant="outline"
+          className={cn("h-11 md:h-8", atos?.length === 0 && "hidden md:inline-flex")}
+          onClick={() => setOpen(true)}
+        >
+          <Plus className="h-3 w-3 mr-1" /> Registrar
+        </Button>
+      </CardHeader>
+      <CardContent>
+        {atos === undefined ? (
+          <p className="text-xs text-muted-foreground">Carregando...</p>
+        ) : atos.length === 0 ? (
+          <>
+            <p className="text-xs text-muted-foreground">Nenhum ato pastoral registrado.</p>
+            <Button
+              size="sm"
+              variant="outline"
+              className="mt-2 h-11 w-full md:hidden"
+              onClick={() => setOpen(true)}
+            >
               <Plus className="h-3 w-3 mr-1" /> Registrar
             </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle>Registrar ato pastoral</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-3 py-2">
+          </>
+        ) : (
+          <ul className="space-y-1">
+            {atos.map((a) => (
+              <li
+                key={a._id}
+                className="flex items-center justify-between gap-2 p-2 rounded-md border text-sm"
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary">
+                      {TIPO_OPTIONS.find((o) => o.value === a.tipo)?.label ?? a.tipo}
+                    </Badge>
+                    <span className="font-medium">{a.data}</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-0.5 truncate">
+                    {[a.local, a.oficiante, a.livroFolha].filter(Boolean).join(" · ")}
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => handleRemover(a._id)}
+                  aria-label="Remover"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </CardContent>
+
+        <ResponsiveDialog open={open} onOpenChange={setOpen}>
+          <ResponsiveDialogContent>
+            <ResponsiveDialogHeader>
+              <ResponsiveDialogTitle>Registrar ato pastoral</ResponsiveDialogTitle>
+            </ResponsiveDialogHeader>
+            <ResponsiveDialogBody className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <Label className="text-xs">Tipo</Label>
@@ -194,52 +246,15 @@ export function AtosPastoraisSection({ membroId }: { membroId: Id<"membros"> }) 
                   onChange={(e) => setForm((p) => ({ ...p, observacoes: e.target.value }))}
                 />
               </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-              <Button onClick={handleSubmit} disabled={saving}>
+            </ResponsiveDialogBody>
+            <ResponsiveDialogFooter>
+              <Button variant="outline" className="h-11 md:h-9" onClick={() => setOpen(false)}>Cancelar</Button>
+              <Button className="h-11 md:h-9" onClick={handleSubmit} disabled={saving}>
                 {saving ? "Salvando..." : "Registrar"}
               </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </CardHeader>
-      <CardContent>
-        {atos === undefined ? (
-          <p className="text-xs text-muted-foreground">Carregando...</p>
-        ) : atos.length === 0 ? (
-          <p className="text-xs text-muted-foreground">Nenhum ato pastoral registrado.</p>
-        ) : (
-          <ul className="space-y-1">
-            {atos.map((a) => (
-              <li
-                key={a._id}
-                className="flex items-center justify-between gap-2 p-2 rounded-md border text-sm"
-              >
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary">
-                      {TIPO_OPTIONS.find((o) => o.value === a.tipo)?.label ?? a.tipo}
-                    </Badge>
-                    <span className="font-medium">{a.data}</span>
-                  </div>
-                  <div className="text-xs text-muted-foreground mt-0.5 truncate">
-                    {[a.local, a.oficiante, a.livroFolha].filter(Boolean).join(" · ")}
-                  </div>
-                </div>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => handleRemover(a._id)}
-                  aria-label="Remover"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </CardContent>
+            </ResponsiveDialogFooter>
+          </ResponsiveDialogContent>
+        </ResponsiveDialog>
     </Card>
   );
 }

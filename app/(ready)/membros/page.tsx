@@ -6,7 +6,7 @@ import { Input } from "@/shared/components/ui/input";
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import Link from "next/link";
-import { Search, Users, Printer, ChevronRight, Plus } from "lucide-react";
+import { Search, Users, Printer, ChevronRight, Plus, Info } from "lucide-react";
 import {
   Collapsible,
   CollapsibleContent,
@@ -15,6 +15,8 @@ import {
 import { useMemo, useState } from "react";
 import { useDebounce } from "@shared/hooks/useDebounce";
 import { calcularResumoSecretario } from "@convex/membros/resumoSecretarioHelpers";
+import { Popover, PopoverContent, PopoverTrigger } from "@/shared/components/ui/popover";
+import { MobileFab } from "@shared/components/layout/MobileFab";
 import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
 import { PageHeader } from "@shared/components/layout/PageHeader";
 import { AnyPermissionGate, PermissionGate } from "@shared/components/auth/PermissionGate";
@@ -72,6 +74,17 @@ function filtrarPorCategoria(
   if (categoria) return membros.filter((m) => m.ehMembro !== false && m.rolCategoria === categoria);
   return membros.filter((m) => m.ehMembro !== false);
 }
+
+const legendaRol = (
+  <>
+    <strong>Rol:</strong>{" "}
+    <span className="text-emerald-700">Principal</span> = comungantes (profissao de fe;
+    subcategoria civilmente capazes) · <span className="text-sky-700">Separado</span> =
+    nao comungantes (batismo infantil) · <span className="text-yellow-700">Ausente</span> =
+    paradeiro ignorado · <span className="text-foreground">Arquivo</span> = transferidos,
+    excluidos e falecidos. Edicao salva ao sair do campo; o Rol e derivado de cargo + status.
+  </>
+);
 
 function CardNum({
   label,
@@ -140,6 +153,15 @@ export default function SecretarioExecutivoPage() {
     setCategoria((c) => (c === cat ? null : cat));
   }
 
+  const kpis = resumo ? (
+    <>
+      <CardNum label="Comungantes" valor={resumo.comungantes} cor="text-emerald-700" dica="Membros comungantes (fizeram profissao de fe) — Rol Principal." ativo={categoria === "PRINCIPAL"} onClick={() => toggle("PRINCIPAL")} />
+      <CardNum label="Nao-comungantes" valor={resumo.naoComungantes} cor="text-sky-700" dica="Batizados na infancia, sem profissao de fe — Rol Separado." ativo={categoria === "SEPARADO"} onClick={() => toggle("SEPARADO")} />
+      <CardNum label="Total no rol" valor={resumo.totalRol} dica="Comungantes + nao-comungantes. Clique para ver todos (limpa filtros)." ativo={categoria === null && !agrupar} onClick={() => { setCategoria(null); setAgrupar(false); }} />
+      <CardNum label="Pendencias" valor={resumo.pendencias} cor={resumo.pendencias > 0 ? "text-rose-700" : undefined} dica="Membros com cadastro eclesiastico incompleto (cargo, matricula ou data)." ativo={categoria === "PENDENCIA"} onClick={() => toggle("PENDENCIA")} />
+    </>
+  ) : null;
+
   return (
     <ModuloGuard modulo="membros">
     <AnyPermissionGate permissions={["rol:read", "rol:update"]}>
@@ -147,17 +169,18 @@ export default function SecretarioExecutivoPage() {
         <div className="space-y-4">
           <div className="flex items-start justify-between gap-2">
             <PageHeader title="Rol de Membros" subtitle="Rol, familia e dados eclesiasticos" />
+            {/* no mobile o Novo membro e o MobileFab */}
             <PermissionGate permission="membros:create">
-              {/* h-11 no mobile = tap target >=44px (regra mobile-ux) */}
-              <Button asChild size="sm" className="mt-4 shrink-0 h-11 md:h-8">
+              <Button asChild size="sm" className="mt-4 shrink-0 hidden md:inline-flex md:h-8">
                 <Link href="/membros/novo">
                   <Plus className="h-4 w-4 mr-1.5" />
-                  <span className="hidden sm:inline">Novo membro</span>
+                  Novo membro
                 </Link>
               </Button>
             </PermissionGate>
           </div>
 
+          <div className="flex flex-col gap-4">
           {/* Dashboard — essenciais sempre visiveis; demais no colapsavel */}
           {resumo === undefined ? (
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -166,11 +189,8 @@ export default function SecretarioExecutivoPage() {
           ) : (
             <TooltipProvider delayDuration={200}>
               <div className="space-y-2">
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                  <CardNum label="Comungantes" valor={resumo.comungantes} cor="text-emerald-700" dica="Membros comungantes (fizeram profissao de fe) — Rol Principal." ativo={categoria === "PRINCIPAL"} onClick={() => toggle("PRINCIPAL")} />
-                  <CardNum label="Nao-comungantes" valor={resumo.naoComungantes} cor="text-sky-700" dica="Batizados na infancia, sem profissao de fe — Rol Separado." ativo={categoria === "SEPARADO"} onClick={() => toggle("SEPARADO")} />
-                  <CardNum label="Total no rol" valor={resumo.totalRol} dica="Comungantes + nao-comungantes. Clique para ver todos (limpa filtros)." ativo={categoria === null && !agrupar} onClick={() => { setCategoria(null); setAgrupar(false); }} />
-                  <CardNum label="Pendencias" valor={resumo.pendencias} cor={resumo.pendencias > 0 ? "text-rose-700" : undefined} dica="Membros com cadastro eclesiastico incompleto (cargo, matricula ou data)." ativo={categoria === "PENDENCIA"} onClick={() => toggle("PENDENCIA")} />
+                <div className="hidden grid-cols-2 gap-2 sm:grid-cols-4 md:grid">
+                  {kpis}
                 </div>
 
                 {/* Alertas de mandato ficam fora do colapsavel (alerta enterrado nao alerta) */}
@@ -187,12 +207,13 @@ export default function SecretarioExecutivoPage() {
 
                 <Collapsible open={maisOpen} onOpenChange={setMaisOpen}>
                   <CollapsibleTrigger asChild>
-                    <Button type="button" variant="ghost" size="sm" className="-ml-2 text-muted-foreground">
+                    <Button type="button" variant="ghost" size="sm" className="-ml-2 h-11 text-muted-foreground md:h-8">
                       <ChevronRight className={cn("h-4 w-4 mr-1 transition-transform", maisOpen && "rotate-90")} />
                       {maisOpen ? "Menos filtros" : "Mais filtros"}
                     </Button>
                   </CollapsibleTrigger>
                   <CollapsibleContent>
+                    <div className="grid grid-cols-2 gap-2 pt-1 md:hidden">{kpis}</div>
                     <div className="flex flex-wrap items-center gap-2 pt-1">
                       <CardNum label="Civilmente capazes" valor={resumo.civilmenteCapazes} cor="text-emerald-700" dica="Comungantes com 18+ anos — aptos a votar na assembleia." ativo={categoria === "CIVILMENTE_CAPAZ"} onClick={() => toggle("CIVILMENTE_CAPAZ")} />
                       <CardNum label="Ausentes" valor={resumo.ausentes} cor="text-yellow-700" dica="Status Ausente (paradeiro ignorado)." ativo={categoria === "AUSENTE"} onClick={() => toggle("AUSENTE")} />
@@ -210,26 +231,24 @@ export default function SecretarioExecutivoPage() {
             </TooltipProvider>
           )}
 
-          <div className="rounded-md border bg-muted/30 p-3 text-xs text-muted-foreground">
-            <strong>Rol:</strong>{" "}
-            <span className="text-emerald-700">Principal</span> = comungantes (profissao de fe;
-            subcategoria civilmente capazes) · <span className="text-sky-700">Separado</span> =
-            nao comungantes (batismo infantil) · <span className="text-yellow-700">Ausente</span> =
-            paradeiro ignorado · <span className="text-foreground">Arquivo</span> = transferidos,
-            excluidos e falecidos. Edicao salva ao sair do campo; o Rol e derivado de cargo + status.
+          <div className="hidden rounded-md border bg-muted/30 p-3 text-xs text-muted-foreground md:block">
+            {legendaRol}
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="order-first flex flex-wrap items-center gap-2 md:order-none">
             <div className="relative max-w-sm flex-1 min-w-[200px]">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-2.5 top-3.5 md:top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
+                type="search"
+                enterKeyHint="search"
+                autoComplete="off"
                 placeholder="Buscar por nome ou telefone..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-8"
+                className="pl-8 h-11 md:h-9"
               />
             </div>
-            <Button type="button" variant={agrupar ? "default" : "outline"} size="sm" onClick={() => setAgrupar((v) => !v)}>
+            <Button type="button" variant={agrupar ? "default" : "outline"} size="sm" className="h-11 md:h-8" onClick={() => setAgrupar((v) => !v)}>
               <Users className="h-4 w-4 mr-1.5" />
               {agrupar ? "Agrupado por familia" : "Agrupar por familia"}
             </Button>
@@ -237,14 +256,25 @@ export default function SecretarioExecutivoPage() {
               type="button"
               variant="outline"
               size="sm"
+              className="hidden md:inline-flex"
               disabled={!membros || membros.length === 0}
               onClick={() => window.print()}
             >
               <Printer className="h-4 w-4 mr-1.5" />
               Imprimir lista
             </Button>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button type="button" variant="ghost" size="icon" className="size-11 md:hidden" aria-label="Legenda do Rol">
+                  <Info className="h-5 w-5" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="text-xs text-muted-foreground">
+                {legendaRol}
+              </PopoverContent>
+            </Popover>
             {categoria && (
-              <Button type="button" variant="ghost" size="sm" onClick={() => setCategoria(null)}>
+              <Button type="button" variant="ghost" size="sm" className="h-11 md:h-8" onClick={() => setCategoria(null)}>
                 Limpar filtro
               </Button>
             )}
@@ -261,7 +291,12 @@ export default function SecretarioExecutivoPage() {
               categoria={categoria}
             />
           )}
+          </div>
         </div>
+
+        <PermissionGate permission="membros:create">
+          <MobileFab label="Novo membro" href="/membros/novo" />
+        </PermissionGate>
 
         {membros && (
           <RolExportView

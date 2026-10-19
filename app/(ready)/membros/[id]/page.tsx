@@ -117,7 +117,9 @@ export default function SecretarioExecutivoDetalhePage() {
     <ModuloGuard modulo="membros">
     <PermissionGate permission="rol:read">
       <HeaderLayout>
-        <DetailHeader backHref="/membros" />
+        <div className="sticky top-0 z-20 bg-background/95 backdrop-blur">
+          <DetailHeader title={entidade.apelido || entidade.nomeCompleto} backHref="/membros" />
+        </div>
         <div className="max-w-4xl space-y-6 pb-24">
           <DadosBasicosSection
             entidade={{

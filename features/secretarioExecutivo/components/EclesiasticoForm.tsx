@@ -18,8 +18,10 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import { DatePickerField } from "@shared/components/DatePickerField";
+import { StickyActionBar } from "@shared/components/layout/StickyActionBar";
 import { FileUpload } from "@/shared/files/components/FileUpload";
 import { Church, BookMarked, LogOut, Save, CheckCircle2 } from "lucide-react";
+import { cn } from "@shared/lib/utils/cn";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -188,7 +190,7 @@ export function EclesiasticoForm({
   const isDemitido = !!form.formaDemissao;
 
   return (
-    <div className="space-y-4">
+    <div className={cn("space-y-4", hasChanges && "pb-28 md:pb-0")}>
       {/* Membresia */}
       <Card>
         <CardHeader className="pb-3">
@@ -221,6 +223,7 @@ export function EclesiasticoForm({
             <Label className="text-xs">Numero do rol</Label>
             <Input
               value={form.rol}
+              inputMode="numeric"
               onChange={(e) => setForm((p) => ({ ...p, rol: e.target.value }))}
               placeholder="Ex: 0123"
             />
@@ -249,6 +252,7 @@ export function EclesiasticoForm({
             <Label className="text-xs">Numero de matricula</Label>
             <Input
               value={form.numeroMatricula}
+              inputMode="numeric"
               onChange={(e) =>
                 setForm((p) => ({ ...p, numeroMatricula: e.target.value }))
               }
@@ -291,7 +295,7 @@ export function EclesiasticoForm({
                     placeholder="dd/mm/aaaa"
                     maxDate={new Date()}
                   />
-                  <div className="flex items-center justify-between gap-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
                     {verificado ? (
                       <p className="text-[10px] text-muted-foreground">
                         Em{" "}
@@ -310,11 +314,11 @@ export function EclesiasticoForm({
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="h-6 md:h-6 text-[10px] px-2"
+                      className="ml-auto h-11 text-xs px-3 md:h-6 md:text-[10px] md:px-2"
                       onClick={() => handleVerificar(key, !!verificado)}
                       disabled={!valorAtual && !verificado}
                     >
-                      <CheckCircle2 className="h-3 w-3 mr-1" />
+                      <CheckCircle2 className="h-4 w-4 mr-1 md:h-3 md:w-3" />
                       {verificado ? "Remover selo" : "Confirmar pelo livro"}
                     </Button>
                   </div>
@@ -511,17 +515,21 @@ export function EclesiasticoForm({
       </Card>
 
       {/* Acoes */}
-      <div className="sticky bottom-0 bg-background/95 backdrop-blur py-3 border-t -mx-4 px-4 sm:mx-0 sm:px-0 sm:border-t-0 sm:bg-transparent sm:backdrop-blur-0">
-        <Button
-          onClick={handleSave}
-          disabled={saving || !hasChanges}
-          className="w-full sm:w-auto"
-        >
+      {hasChanges && (
+        <StickyActionBar className="md:hidden">
+          <Button onClick={handleSave} disabled={saving}>
+            <Save className="h-4 w-4 mr-1" />
+            {saving ? "Salvando..." : "Salvar alteracoes eclesiasticas"}
+          </Button>
+        </StickyActionBar>
+      )}
+      <div className="hidden md:block sticky bottom-0 py-3">
+        <Button onClick={handleSave} disabled={saving || !hasChanges}>
           <Save className="h-4 w-4 mr-1" />
           {saving ? "Salvando..." : "Salvar alteracoes eclesiasticas"}
         </Button>
         {hasChanges && (
-          <p className="text-[11px] text-muted-foreground mt-1 sm:inline-block sm:ml-3">
+          <p className="text-[11px] text-muted-foreground inline-block ml-3">
             Alteracoes pendentes
           </p>
         )}
