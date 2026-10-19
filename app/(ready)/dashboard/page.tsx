@@ -22,7 +22,6 @@ import { BoletimCard } from "@features/dashboard/components/BoletimCard";
 import { UltimoSermaoCard } from "@features/dashboard/components/UltimoSermaoCard";
 import { ComentariosRecentesCard } from "@features/dashboard/components/ComentariosRecentesCard";
 import { ProfileCompletenessCard } from "@features/dashboard/components/ProfileCompletenessCard";
-import { ProfileNudgeDialog } from "@features/dashboard/components/ProfileNudgeDialog";
 import { MinhasInscricoesCard } from "@features/retiro/components/MinhasInscricoesCard";
 import { ChamadaWidget } from "@features/turmas/components/ChamadaWidget";
 import { MinhasTurmasCard } from "@features/turmas/components/MinhasTurmasCard";
@@ -163,7 +162,6 @@ export default function DashboardPage() {
 
         <MinhasInscricoesCard />
       </div>
-      <ProfileNudgeDialog />
     </HeaderLayout>
   );
 }

@@ -77,11 +77,11 @@ export function LgpdConsentDialog() {
             atividades eclesiasticas e comunicacao pastoral, conforme Arts 5o II e 11 da
             LGPD (que reconhece dados de conviccao religiosa como sensiveis).
           </p>
-          <label className="flex items-start gap-2 cursor-pointer p-2 rounded-md border hover:bg-muted/50">
+          <label className="flex items-start gap-2 cursor-pointer p-3 rounded-md border hover:bg-muted/50">
             <Checkbox
               checked={aceiteBasico}
               onCheckedChange={(v) => setAceiteBasico(!!v)}
-              className="mt-0.5"
+              className="mt-0.5 size-5"
             />
             <div>
               <p className="font-medium">Cadastro basico (obrigatorio)</p>
@@ -92,11 +92,11 @@ export function LgpdConsentDialog() {
               </p>
             </div>
           </label>
-          <label className="flex items-start gap-2 cursor-pointer p-2 rounded-md border hover:bg-muted/50">
+          <label className="flex items-start gap-2 cursor-pointer p-3 rounded-md border hover:bg-muted/50">
             <Checkbox
               checked={aceiteMensageria}
               onCheckedChange={(v) => setAceiteMensageria(!!v)}
-              className="mt-0.5"
+              className="mt-0.5 size-5"
             />
             <div>
               <p className="font-medium">Comunicacao via WhatsApp (opcional)</p>
@@ -112,7 +112,7 @@ export function LgpdConsentDialog() {
           </p>
         </ResponsiveDialogBody>
         <ResponsiveDialogFooter>
-          <Button onClick={handleAceitar} disabled={salvando || !aceiteBasico}>
+          <Button className="h-11 w-full md:h-9" onClick={handleAceitar} disabled={salvando || !aceiteBasico}>
             {salvando ? "Salvando..." : "Aceitar e continuar"}
           </Button>
         </ResponsiveDialogFooter>

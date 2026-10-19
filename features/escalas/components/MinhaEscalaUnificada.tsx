@@ -172,11 +172,13 @@ export function MinhaEscalaUnificada() {
                   const parsed = parseISO(dia.data);
                   const isProximo = dia === dados[0];
 
+                  const Row = dia.escalado ? "div" : "label";
                   return (
-                    <div
+                    <Row
                       key={dia.data}
                       className={cn(
-                        "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors min-h-[44px]",
+                        "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors min-h-12 md:min-h-[44px]",
+                        !dia.escalado && "cursor-pointer",
                         dia.escalado && "bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800",
                         dia.indisponivel && !dia.escalado && "bg-destructive/5 border border-destructive/20",
                         !dia.escalado && !dia.indisponivel && isProximo && "bg-muted border border-border",
@@ -188,7 +190,7 @@ export function MinhaEscalaUnificada() {
                         <span className="text-base font-semibold leading-none block">
                           {format(parsed, "dd")}
                         </span>
-                        <span className="text-[10px] text-muted-foreground capitalize">
+                        <span className="text-[10px] max-md:text-xs text-muted-foreground capitalize">
                           {format(parsed, "EEE", { locale: ptBR })}
                         </span>
                       </div>
@@ -213,25 +215,30 @@ export function MinhaEscalaUnificada() {
                           ) : null}
                         </div>
                         {dia.colegasLouvor && dia.colegasLouvor.length > 0 && (
-                          <p className="text-[10px] text-muted-foreground mt-0.5">
+                          <p className="text-[10px] max-md:text-xs text-muted-foreground mt-0.5">
                             com {dia.colegasLouvor.join(", ")}
                           </p>
                         )}
                       </div>
 
                       {/* Toggle / Lock */}
-                      <div className="shrink-0">
+                      <div className="shrink-0 flex items-center gap-2 md:block">
                         {dia.escalado ? (
                           <Lock className="h-3.5 w-3.5 text-blue-400" />
                         ) : (
-                          <Switch
-                            size="sm"
-                            checked={!dia.indisponivel}
-                            onCheckedChange={() => handleToggle(dia.data, dia.escalado, dia.indisponivel)}
-                          />
+                          <>
+                            {!dia.indisponivel && (
+                              <span className="text-xs text-muted-foreground md:hidden">Disponível</span>
+                            )}
+                            <Switch
+                              size="sm"
+                              checked={!dia.indisponivel}
+                              onCheckedChange={() => handleToggle(dia.data, dia.escalado, dia.indisponivel)}
+                            />
+                          </>
                         )}
                       </div>
-                    </div>
+                    </Row>
                   );
                 })}
               </div>
