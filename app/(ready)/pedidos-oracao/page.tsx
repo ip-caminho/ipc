@@ -14,6 +14,7 @@ import { MyRequestsView } from "@features/pedidosOracao/components/MyRequestsVie
 import { NewRequestModal } from "@features/pedidosOracao/components/NewRequestModal";
 import { cn } from "@shared/lib/utils/cn";
 import { haptic } from "@shared/lib/haptic";
+import { MobileFab } from "@shared/components/layout/MobileFab";
 
 type Tab = "mural" | "meus";
 
@@ -121,18 +122,7 @@ export default function PedidosOracaoPage() {
       </HeaderLayout>
 
       {/* FAB mobile: compartilhar pedido */}
-      <button
-        type="button"
-        onClick={() => {
-          haptic(20);
-          setCreateOpen(true);
-        }}
-        aria-label="Compartilhar um pedido"
-        className="md:hidden fixed right-4 z-[55] h-14 w-14 rounded-full bg-foreground text-background flex items-center justify-center shadow-lg active:opacity-90"
-        style={{ bottom: "calc(env(safe-area-inset-bottom) + 5rem)" }}
-      >
-        <Plus className="h-6 w-6" aria-hidden />
-      </button>
+      <MobileFab label="Compartilhar um pedido" onClick={() => setCreateOpen(true)} />
 
       <NewRequestModal
         open={createOpen}

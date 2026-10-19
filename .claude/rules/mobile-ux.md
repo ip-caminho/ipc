@@ -95,3 +95,12 @@ pessoal foi descontinuado):
 - [ ] Tap targets ≥ 44px
 - [ ] Tabela editável vira card de leitura no mobile
 - [ ] Se possível, revisar no preview da branch antes do main
+
+## Checklist de convenções compartilhadas (shell F2)
+- [ ] Grid de cards no mobile: `grid-cols-[minmax(0,1fr)]`; item flex com `truncate` leva `min-w-0`
+- [ ] Formulário de página: botão Salvar/Enviar em `StickyActionBar` (reservar `pb-28` no conteúdo)
+- [ ] Ação primária de lista: `PageHeader action` (w-full no mobile) e/ou `MobileFab`
+- [ ] Dialog só via `ResponsiveDialog` fora de `shared/`
+- [ ] Campos: `type="tel"` + `autoComplete="tel"` (telefone), `inputMode="numeric"` (CPF/CEP/nº), `type="search"` (busca)
+- [ ] Texto ≥ `text-xs` (12px); `text-[11px]` só em rótulo da tab bar e grade do calendário
+- [ ] Página fora das abas (Mais): `PageHeader backHref`

@@ -90,11 +90,11 @@ export function GlobalAudioPlayer({ compact = false }: { compact?: boolean } = {
           )}
         </button>
 
-        {/* Play/Pause — desktop only in compact bar */}
+        {/* Play/Pause */}
         <Button
           variant="ghost"
-          size="icon"
-          className="h-8 md:h-8 w-8 md:w-8 shrink-0 hidden md:flex"
+          size="icon-tap"
+          className="shrink-0"
           onClick={togglePlayPause}
         >
           {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
@@ -148,8 +148,8 @@ export function GlobalAudioPlayer({ compact = false }: { compact?: boolean } = {
         {/* Close */}
         <Button
           variant="ghost"
-          size="icon"
-          className="h-8 md:h-8 w-8 md:w-8 shrink-0 text-muted-foreground"
+          size="icon-tap"
+          className="shrink-0 text-muted-foreground"
           onClick={handleClose}
         >
           <X className="h-4 w-4" />
@@ -159,7 +159,7 @@ export function GlobalAudioPlayer({ compact = false }: { compact?: boolean } = {
       {/* Mobile expanded panel */}
       <div
         className={`md:hidden overflow-hidden transition-all duration-200 ease-out ${
-          expanded ? "max-h-40 opacity-100" : "max-h-0 opacity-0"
+          expanded ? "max-h-56 opacity-100" : "max-h-0 opacity-0"
         }`}
       >
         <div className="px-4 pb-3 space-y-3">
@@ -178,7 +178,7 @@ export function GlobalAudioPlayer({ compact = false }: { compact?: boolean } = {
               onValueChange={([v]) => seek(v)}
               className="cursor-pointer"
             />
-            <div className="flex justify-between text-[10px] text-muted-foreground tabular-nums">
+            <div className="flex justify-between text-xs text-muted-foreground tabular-nums">
               <span>{formatTime(relativeTime)}</span>
               <span>{formatTime(segmentDuration)}</span>
             </div>
@@ -188,8 +188,7 @@ export function GlobalAudioPlayer({ compact = false }: { compact?: boolean } = {
           <div className="relative flex items-center justify-center gap-6">
             <Button
               variant="ghost"
-              size="icon"
-              className="h-8 md:h-8 w-8 md:w-8"
+              size="icon-tap"
               onClick={() => seekRelative(-10)}
             >
               <SkipBack className="h-4 w-4" />
@@ -204,8 +203,7 @@ export function GlobalAudioPlayer({ compact = false }: { compact?: boolean } = {
             </Button>
             <Button
               variant="ghost"
-              size="icon"
-              className="h-8 md:h-8 w-8 md:w-8"
+              size="icon-tap"
               onClick={() => seekRelative(30)}
             >
               <SkipForward className="h-4 w-4" />

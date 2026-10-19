@@ -9,6 +9,9 @@ import { useAuth } from "@shared/providers/PermissionsProvider";
 import {
   MOBILE_PRIMARY_TABS,
   MORE_TAB,
+  MOBILE_MORE_ITEMS,
+  MORE_EXTRA_PATHS,
+  GESTAO_SECTIONS,
   type NavItem,
 } from "@shared/constants/navigation";
 import { haptic } from "@shared/lib/haptic";
@@ -63,6 +66,16 @@ function useAncoraNoVisualViewport(ref: React.RefObject<HTMLElement | null>, mon
   return tecladoAberto;
 }
 
+const matchesPath = (pathname: string, href: string) =>
+  pathname === href || pathname.startsWith(href + "/");
+
+// Rotas que vivem atras do "Mais": acende a aba quando o usuario esta numa delas.
+const MORE_PATHS = [
+  ...GESTAO_SECTIONS.flatMap((section) => section.items.map((item) => item.href)),
+  ...MOBILE_MORE_ITEMS.map((item) => item.href),
+  ...MORE_EXTRA_PATHS,
+];
+
 export function FloatingBottomBar() {
   const pathname = usePathname();
   const { can, hasAnyRole, isLoading } = useAuth();
@@ -96,7 +109,9 @@ export function FloatingBottomBar() {
   }, [modulosAtivos, can, hasAnyRole]);
 
   const isActive = (href: string) => {
-    if (href === MORE_TAB.href) return moreOpen;
+    if (href === MORE_TAB.href) {
+      return moreOpen || MORE_PATHS.some((path) => matchesPath(pathname, path));
+    }
     if (href === "/dashboard") return pathname === "/dashboard";
     return pathname === href || pathname.startsWith(href + "/");
   };
@@ -144,11 +159,12 @@ export function FloatingBottomBar() {
                     }}
                     aria-label={tab.label}
                     className={cn(
-                      "flex flex-1 flex-col items-center justify-center py-2 min-h-[56px] rounded-2xl transition-colors",
-                      moreOpen ? "text-primary" : "text-muted-foreground",
+                      "flex flex-1 flex-col items-center justify-center gap-0.5 py-2 min-h-[56px] rounded-2xl transition-colors",
+                      active ? "text-primary" : "text-muted-foreground",
                     )}
                   >
-                    <Icon className="h-6 w-6" strokeWidth={moreOpen ? 2.25 : 1.75} />
+                    <Icon className="h-6 w-6" strokeWidth={active ? 2.25 : 1.75} />
+                    <span className="text-[11px] leading-none">{tab.label}</span>
                   </button>
                 );
               }
@@ -165,7 +181,7 @@ export function FloatingBottomBar() {
                   }}
                   aria-label={tab.label}
                   className={cn(
-                    "flex flex-1 flex-col items-center justify-center gap-1 py-2 min-h-[56px] rounded-2xl transition-colors",
+                    "flex flex-1 flex-col items-center justify-center gap-0.5 py-2 min-h-[56px] rounded-2xl transition-colors",
                     active
                       ? "text-primary"
                       : loading
@@ -178,9 +194,7 @@ export function FloatingBottomBar() {
                     className={cn("h-6 w-6", loading && "animate-pulse")}
                     strokeWidth={active ? 2.25 : 1.75}
                   />
-                  {active && (
-                    <span className="h-1 w-1 rounded-full bg-primary" />
-                  )}
+                  <span className="text-[11px] leading-none">{tab.label}</span>
                 </Link>
               );
             })}
