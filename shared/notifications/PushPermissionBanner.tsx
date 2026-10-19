@@ -35,11 +35,11 @@ export function PushPermissionBanner() {
       <button
         onClick={subscribe}
         disabled={status === "loading"}
-        className="text-xs font-medium px-3 py-1.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 min-h-[36px] shrink-0"
+        className="text-xs font-medium px-4 py-1.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 min-h-11 shrink-0"
       >
         {status === "loading" ? "..." : "Ativar"}
       </button>
-      <button onClick={handleDismiss} className="text-blue-400 hover:text-blue-600 shrink-0">
+      <button onClick={handleDismiss} aria-label="Dispensar" className="flex items-center justify-center min-h-11 min-w-11 -mr-2 text-blue-400 hover:text-blue-600 shrink-0">
         <X className="h-4 w-4" />
       </button>
     </div>

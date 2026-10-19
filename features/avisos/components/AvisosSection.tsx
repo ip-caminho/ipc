@@ -297,7 +297,7 @@ export function AvisosSection({ showForm, setShowForm }: { showForm: boolean; se
 
       {expirados.length > 0 && (
         <details className="text-xs">
-          <summary className="text-muted-foreground cursor-pointer hover:text-foreground">
+          <summary className="py-3 text-sm md:py-0 md:text-xs text-muted-foreground cursor-pointer hover:text-foreground">
             {expirados.length} aviso{expirados.length > 1 ? "s" : ""} expirado{expirados.length > 1 ? "s" : ""}
           </summary>
           <div className="space-y-2 mt-2 opacity-50">

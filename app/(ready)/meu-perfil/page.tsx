@@ -66,7 +66,7 @@ function SectionEditFooter({ onClick }: { onClick: () => void }) {
     <Button
       variant="outline"
       size="sm"
-      className="w-full gap-1.5 text-muted-foreground mt-1"
+      className="w-full h-11 md:h-8 gap-1.5 text-muted-foreground mt-1"
       onClick={onClick}
     >
       <Pencil className="h-3.5 w-3.5" /> Editar
@@ -442,9 +442,17 @@ export default function MeuPerfilPage() {
                   ? `Seu cadastro foi atualizado ha ${tempoDesde(perfilAtualizadoEm)}.`
                   : "Seu cadastro nunca foi confirmado."}
               </p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground md:mb-0">
                 Confirme ou edite seus dados abaixo. Se estiver tudo certo, basta clicar em &quot;Confirmar dados&quot;.
               </p>
+              <Button
+                onClick={handleConfirm}
+                disabled={confirming || saving}
+                className="w-full h-11 mt-2 md:hidden"
+              >
+                <CheckCircle2 className="h-4 w-4 mr-1" />
+                {confirming ? "Confirmando..." : "Meus dados estao corretos"}
+              </Button>
             </div>
           </CardContent>
         </Card>

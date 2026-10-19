@@ -256,7 +256,7 @@ export function BirthdayList() {
       <SectionLabel
         action={
           <Drawer open={mesDrawerOpen} onOpenChange={setMesDrawerOpen}>
-            <DrawerTrigger className="text-[11px] font-medium text-blue-600 dark:text-blue-400 hover:underline">
+            <DrawerTrigger className="inline-flex items-center min-h-11 px-2 -mr-2 md:min-h-0 md:px-0 md:mr-0 text-[11px] font-medium text-blue-600 dark:text-blue-400 hover:underline">
               Ver {mesAtualLabel} ({total})
             </DrawerTrigger>
             <DrawerContent>
@@ -292,19 +292,19 @@ export function BirthdayList() {
                 type="button"
                 onClick={() => setSelectedId(p.id)}
                 aria-label={`Ver ${p.nome}`}
-                className="flex flex-col items-center gap-1 w-[58px] active:opacity-80 transition-opacity"
+                className="flex flex-col items-center gap-1 w-[72px] md:w-[58px] active:opacity-80 transition-opacity"
               >
                 <BirthdayAvatar
                   p={p}
                   neutral={p.jaPassou}
                   highlight={isToday}
                 />
-                <span className="text-[10px] font-medium leading-tight text-center line-clamp-1 max-w-full">
+                <span className="text-[10px] max-md:text-xs font-medium leading-tight text-center line-clamp-1 max-w-full">
                   {p.primeiroNome}
                 </span>
                 <span
                   className={cn(
-                    "text-[10px] leading-none",
+                    "text-[10px] max-md:text-xs leading-none",
                     isPgDestaque(p)
                       ? "text-amber-600 dark:text-amber-400 font-semibold"
                       : isToday
@@ -318,7 +318,7 @@ export function BirthdayList() {
             </li>
           );
         })}
-        <li className="flex flex-col items-center gap-1 shrink-0 w-[58px]">
+        <li className="flex flex-col items-center gap-1 shrink-0 w-[72px] md:w-[58px]">
           <button
             type="button"
             onClick={() => setMesDrawerOpen(true)}
@@ -327,7 +327,7 @@ export function BirthdayList() {
           >
             +{total}
           </button>
-          <span className="text-[10px] font-medium leading-tight text-muted-foreground">
+          <span className="text-[10px] max-md:text-xs font-medium leading-tight text-muted-foreground">
             ver mais
           </span>
         </li>

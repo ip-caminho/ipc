@@ -308,7 +308,7 @@ export function FamiliaSection() {
                 </p>
                 <ResponsiveDialog open={openConjuge} onOpenChange={setOpenConjuge}>
                   <ResponsiveDialogTrigger asChild>
-                    <Button size="sm" variant="outline">
+                    <Button size="sm" variant="outline" className="h-11 md:h-8">
                       <Plus className="h-3 w-3 mr-1" /> Solicitar conjuge
                     </Button>
                   </ResponsiveDialogTrigger>
@@ -466,7 +466,7 @@ export function FamiliaSection() {
             </p>
             <ResponsiveDialog open={openFilho} onOpenChange={setOpenFilho}>
               <ResponsiveDialogTrigger asChild>
-                <Button size="sm" variant="outline">
+                <Button size="sm" variant="outline" className="h-11 md:h-8">
                   <Plus className="h-3 w-3 mr-1" /> Solicitar filho
                 </Button>
               </ResponsiveDialogTrigger>
