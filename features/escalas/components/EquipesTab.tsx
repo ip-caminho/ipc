@@ -20,7 +20,25 @@ import {
 } from "@/shared/components/ui/dialog";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
-import { X, UserPlus, Mic, Plus } from "lucide-react";
+import { X, UserPlus, Mic, Plus, ChevronRight } from "lucide-react";
+import { Switch } from "@/shared/components/ui/switch";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/shared/components/ui/drawer";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/shared/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { useState } from "react";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -178,6 +196,9 @@ function EquipeCard({
   // @ts-ignore Convex TS2589
   const updateInstrumentos = useMutation(api.escalas.equipes.updateInstrumentos);
   const [adding, setAdding] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [removing, setRemoving] = useState<{ id: string; nome: string } | null>(null);
+  const editing = editingId ? membrosEquipe.find((m) => m._id === editingId) : undefined;
 
   const equipeIds = new Set(membrosEquipe.map((m) => m.membroId));
   const available = todosMembros.filter((m: any) => !equipeIds.has(m._id));
@@ -243,9 +264,48 @@ function EquipeCard({
           <p className="text-sm text-muted-foreground">Nenhum membro na equipe</p>
         )}
         {membrosEquipe.map((m) => (
+          <div key={m._id}>
+          {/* Mobile: leitura; toque abre o Drawer de edicao */}
+          {(() => {
+            const rowContent = (
+              <>
+                <Avatar className="h-7 w-7">
+                  <AvatarFallback className="text-xs">
+                    {m.nomeCompleto.charAt(0)?.toUpperCase() || "?"}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm">{m.nomeCompleto}</p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {[
+                      m.ativo ? "ativo" : "inativo",
+                      isLouvor && (m.condutor ? "condutor" : "acompanha"),
+                      isLouvor &&
+                        INSTRUMENTOS.filter((i) => (m.instrumentos || []).includes(i.value))
+                          .map((i) => i.label)
+                          .join(", "),
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </p>
+                </div>
+              </>
+            );
+            return canEdit ? (
+              <button
+                type="button"
+                onClick={() => setEditingId(m._id)}
+                className="flex w-full min-h-14 items-center gap-3 text-left active:bg-muted/50 md:hidden"
+              >
+                {rowContent}
+                <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+              </button>
+            ) : (
+              <div className="flex min-h-14 items-center gap-3 md:hidden">{rowContent}</div>
+            );
+          })()}
           <div
-            key={m._id}
-            className="flex flex-wrap items-center gap-2 py-1 md:flex-nowrap"
+            className="hidden items-center gap-2 py-1 md:flex"
           >
             <Avatar className="h-7 w-7">
               <AvatarFallback className="text-xs">
@@ -253,7 +313,7 @@ function EquipeCard({
               </AvatarFallback>
             </Avatar>
             <span className="text-sm min-w-0 flex-1 truncate">{m.nomeCompleto}</span>
-            <div className="order-last flex basis-full flex-wrap items-center gap-1.5 pl-9 md:contents">
+            <div className="md:contents">
             {isLouvor && (
               <div className="flex flex-wrap gap-0.5">
                 {INSTRUMENTOS.map((inst) => {
@@ -301,12 +361,14 @@ function EquipeCard({
             </div>
             {canEdit && (
               <button
-                onClick={() => handleRemove(m._id)}
-                className="flex size-11 items-center justify-center text-muted-foreground hover:text-destructive shrink-0 md:size-auto"
+                onClick={() => setRemoving({ id: m._id, nome: m.nomeCompleto })}
+                aria-label="Remover da equipe"
+                className="flex items-center justify-center text-muted-foreground hover:text-destructive shrink-0"
               >
                 <X className="h-3.5 w-3.5" />
               </button>
             )}
+          </div>
           </div>
         ))}
 
@@ -331,7 +393,7 @@ function EquipeCard({
             <Button
               variant="outline"
               size="sm"
-              className="w-full text-xs"
+              className="w-full h-11 md:h-8 text-sm md:text-xs"
               onClick={() => setAdding(true)}
             >
               <UserPlus className="h-3.5 w-3.5 mr-1" />
@@ -340,6 +402,89 @@ function EquipeCard({
           )
         )}
       </CardContent>
+
+      <Drawer open={!!editing} onOpenChange={(o) => !o && setEditingId(null)}>
+        <DrawerContent className="max-h-[92dvh]">
+          {editing && (
+            <>
+              <DrawerHeader className="text-left">
+                <DrawerTitle>{editing.nomeCompleto}</DrawerTitle>
+                <DrawerDescription>{label}</DrawerDescription>
+              </DrawerHeader>
+              <div className="flex-1 space-y-4 overflow-y-auto px-4 pb-safe">
+                <div className="rounded-md border divide-y">
+                  <label className="flex min-h-11 cursor-pointer items-center justify-between gap-3 px-3 text-sm">
+                    Ativo na equipe
+                    <Switch checked={editing.ativo} onCheckedChange={() => handleToggle(editing._id)} />
+                  </label>
+                  {isLouvor && (
+                    <label className="flex min-h-11 cursor-pointer items-center justify-between gap-3 px-3 text-sm">
+                      Condutor
+                      <Switch
+                        checked={!!editing.condutor}
+                        onCheckedChange={() => handleToggleCondutor(editing._id)}
+                      />
+                    </label>
+                  )}
+                </div>
+                {isLouvor && (
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Instrumentos</p>
+                    <div className="rounded-md border divide-y">
+                      {INSTRUMENTOS.map((inst) => (
+                        <label
+                          key={inst.value}
+                          className="flex min-h-11 cursor-pointer items-center justify-between gap-3 px-3 text-sm"
+                        >
+                          {inst.label}
+                          <Switch
+                            checked={(editing.instrumentos || []).includes(inst.value)}
+                            onCheckedChange={() =>
+                              handleToggleInstrumento(editing._id, inst.value, editing.instrumentos || [])
+                            }
+                          />
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <Button
+                  variant="outline"
+                  className="h-11 w-full text-destructive"
+                  onClick={() => setRemoving({ id: editing._id, nome: editing.nomeCompleto })}
+                >
+                  Remover da equipe
+                </Button>
+              </div>
+            </>
+          )}
+        </DrawerContent>
+      </Drawer>
+
+      <AlertDialog open={!!removing} onOpenChange={(o) => !o && setRemoving(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover {removing?.nome} da equipe?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Ele deixa de aparecer nas escalas de {label}.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (removing) {
+                  handleRemove(removing.id);
+                  if (removing.id === editingId) setEditingId(null);
+                }
+                setRemoving(null);
+              }}
+            >
+              Remover
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }

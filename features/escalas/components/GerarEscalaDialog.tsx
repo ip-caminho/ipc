@@ -5,14 +5,14 @@ import { api } from "@/convex/_generated/api";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/shared/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogTrigger,
+} from "@/shared/components/ui/responsive-dialog";
 import {
   Select,
   SelectContent,
@@ -71,25 +71,27 @@ export function GerarEscalaDialog({ funcao, label, qtd }: GerarEscalaDialogProps
   const [open, setOpen] = useState(false);
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="w-full text-xs">
+    <ResponsiveDialog open={open} onOpenChange={setOpen}>
+      <ResponsiveDialogTrigger asChild>
+        <Button variant="outline" size="sm" className="w-full h-11 md:h-8 text-sm md:text-xs">
           <Wand2 className="h-3.5 w-3.5 mr-1.5" />
           Gerar Escala
         </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Gerar Escala — {label}</DialogTitle>
-          <DialogDescription>
+      </ResponsiveDialogTrigger>
+      <ResponsiveDialogContent>
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle>Gerar Escala — {label}</ResponsiveDialogTitle>
+          <ResponsiveDialogDescription>
             {qtd} membro{qtd > 1 ? "s" : ""} por culto. Selecione o período e confirme.
-          </DialogDescription>
-        </DialogHeader>
-        {open && (
-          <GerarContent funcao={funcao} qtd={qtd} onClose={() => setOpen(false)} />
-        )}
-      </DialogContent>
-    </Dialog>
+          </ResponsiveDialogDescription>
+        </ResponsiveDialogHeader>
+        <ResponsiveDialogBody>
+          {open && (
+            <GerarContent funcao={funcao} qtd={qtd} onClose={() => setOpen(false)} />
+          )}
+        </ResponsiveDialogBody>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }
 
@@ -264,14 +266,15 @@ function GerarContent({
         </div>
       )}
 
-      <DialogFooter>
+      <div className="md:flex md:justify-end">
         {resultado ? (
-          <Button size="sm" onClick={onClose}>
+          <Button size="sm" className="h-11 w-full md:h-8 md:w-auto" onClick={onClose}>
             Fechar
           </Button>
         ) : (
           <Button
             size="sm"
+            className="h-11 w-full md:h-8 md:w-auto"
             onClick={handleGerar}
             disabled={salvando || cultosNoPeriodo.length === 0 || membrosEquipe.length === 0}
           >
@@ -283,7 +286,7 @@ function GerarContent({
             )}
           </Button>
         )}
-      </DialogFooter>
+      </div>
     </div>
   );
 }

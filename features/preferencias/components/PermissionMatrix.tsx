@@ -156,6 +156,9 @@ function MembroPermissionPopover({
           <div className="relative">
             <Search className="absolute left-2 top-2 h-4 w-4 text-muted-foreground" />
             <Input
+              type="search"
+              enterKeyHint="search"
+              autoComplete="off"
               placeholder="Buscar nome..."
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
@@ -388,41 +391,40 @@ export function PermissionMatrix() {
                       }).length;
 
                       return (
-                        <div
-                          key={`mobile-${perm.key}`}
-                          className="flex items-start gap-3 p-3"
-                        >
-                          <div className={cn("pt-0.5", pending && "opacity-50")}>
-                            <Checkbox
-                              checked={isChecked}
-                              onCheckedChange={() =>
-                                handleRoleToggle(mobileRole, perm.key)
-                              }
-                              disabled={pending}
-                            />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium leading-tight">
-                              {perm.label}
-                            </p>
-                            {perm.description && (
-                              <p className="text-xs text-muted-foreground mt-1 leading-snug">
-                                {perm.description}
+                        <div key={`mobile-${perm.key}`}>
+                          <label className="flex min-h-12 cursor-pointer items-center gap-3 p-3">
+                            <div className={cn(pending && "opacity-50")}>
+                              <Checkbox
+                                checked={isChecked}
+                                onCheckedChange={() =>
+                                  handleRoleToggle(mobileRole, perm.key)
+                                }
+                                disabled={pending}
+                              />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium leading-tight">
+                                {perm.label}
                               </p>
-                            )}
-                            {customCount > 0 && (
-                              <div className="mt-2">
-                                <MembroPermissionPopover
-                                  permission={perm.key}
-                                  membros={membrosWithPermissions}
-                                  rolePermsMap={rolePermsMap}
-                                  onToggle={handleMembroToggle}
-                                  getCheckboxState={getMembroCheckboxState}
-                                  isPending={isMembroCheckboxPending}
-                                />
-                              </div>
-                            )}
-                          </div>
+                              {perm.description && (
+                                <p className="text-xs text-muted-foreground mt-1 leading-snug">
+                                  {perm.description}
+                                </p>
+                              )}
+                            </div>
+                          </label>
+                          {customCount > 0 && (
+                            <div className="px-3 pb-3 pl-10">
+                              <MembroPermissionPopover
+                                permission={perm.key}
+                                membros={membrosWithPermissions}
+                                rolePermsMap={rolePermsMap}
+                                onToggle={handleMembroToggle}
+                                getCheckboxState={getMembroCheckboxState}
+                                isPending={isMembroCheckboxPending}
+                              />
+                            </div>
+                          )}
                         </div>
                       );
                     })}
