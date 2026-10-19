@@ -64,15 +64,28 @@ export const PRIMARY_TABS: NavItem[] = [
   { label: "Orar", href: "/pedidos-oracao", icon: HandHeart, modulo: "pedidos-oracao" },
 ];
 
-// Tabs candidatas da bottom bar mobile (filtradas por RBAC/modulo; "Membros"
+// Tabs candidatas da bottom bar mobile (4 + "Mais") (filtradas por RBAC/modulo; "Membros"
 // aponta pro Rol consolidado e so aparece para quem tem rol:read).
 export const MOBILE_PRIMARY_TABS: NavItem[] = [
   { label: "Início", href: "/dashboard", icon: Home },
   { label: "Gravações", href: "/comunidade", icon: Ear, modulo: "gravacoes" },
-  { label: "Louvor", href: "/louvor", icon: Music, permission: "louvor:read", modulo: "louvor" },
-  { label: "Diretório", href: "/diretorio", icon: BookOpen, permission: "diretorio:read", modulo: "diretorio" },
-  { label: "Calendário", href: "/calendario", icon: CalendarDays, permission: "calendario:read", modulo: "calendario" },
   { label: "Orar", href: "/pedidos-oracao", icon: HandHeart, modulo: "pedidos-oracao" },
+  { label: "Calendário", href: "/calendario", icon: CalendarDays, permission: "calendario:read", modulo: "calendario" },
+];
+
+// Itens do desktop que nao cabem na bottom bar (4 abas + Mais): ficam no MoreSheet.
+export const MOBILE_MORE_ITEMS: NavItem[] = PRIMARY_TABS.filter((item) =>
+  ["/louvor", "/diretorio"].includes(item.href),
+);
+
+// Rotas fora das abas e das GESTAO_SECTIONS acessiveis pelo rodape do MoreSheet.
+export const MORE_EXTRA_PATHS = [
+  "/meu-perfil",
+  "/minhas-inscricoes",
+  "/escalas",
+  "/boletim",
+  "/proximo-domingo",
+  "/avisos",
 ];
 
 export const MORE_TAB: NavItem = {

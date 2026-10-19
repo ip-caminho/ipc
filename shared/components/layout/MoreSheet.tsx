@@ -12,10 +12,21 @@ import {
 import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
 import { PrivateAvatarImage } from "@/shared/files/components/PrivateImage";
 import { Separator } from "@/shared/components/ui/separator";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/shared/components/ui/alert-dialog";
 import { LogOut, User, Moon, Sun, Globe, ClipboardList } from "lucide-react";
 import { useAuth } from "@shared/providers/PermissionsProvider";
 import {
   GESTAO_SECTIONS,
+  MOBILE_MORE_ITEMS,
 } from "@shared/constants/navigation";
 import { useNavItemVisible } from "@shared/hooks/useNavItemVisible";
 import { cn } from "@shared/lib/utils/cn";
@@ -43,7 +54,9 @@ export function MoreSheet({ open, onOpenChange }: Props) {
   const { theme, setTheme } = useTheme();
   const { signOut } = useAuthActions();
   // Mesma lista do sidebar desktop, filtrada por RBAC. Sem "modo gestao".
-  const sections = GESTAO_SECTIONS;
+  // Louvor e Diretorio saem da bottom bar (4 abas) e entram aqui.
+  const sections = [{ titulo: "Comunidade", items: MOBILE_MORE_ITEMS }, ...GESTAO_SECTIONS];
+  const [confirmSair, setConfirmSair] = useState(false);
 
   const isVisible = useNavItemVisible();
 
@@ -61,6 +74,7 @@ export function MoreSheet({ open, onOpenChange }: Props) {
     .toUpperCase() || "?";
 
   return (
+    <>
     <Sheet open={open} onOpenChange={onOpenChange}>
       {/* z-[60] fica acima da FloatingBottomBar (z-40) — sem isso o rodape do
           sheet (Modo escuro/Sair) ficava escondido atras da barra flutuante */}
@@ -171,8 +185,13 @@ export function MoreSheet({ open, onOpenChange }: Props) {
             <span className="text-sm">{theme === "dark" ? "Modo claro" : "Modo escuro"}</span>
           </button>
 
+          <Separator className="my-2" />
+
           <button
-            onClick={() => signOut()}
+            onClick={() => {
+              onOpenChange(false);
+              setConfirmSair(true);
+            }}
             className="flex items-center gap-3 rounded-xl px-3 py-2.5 w-full text-left text-red-600 dark:text-red-400 active:bg-muted"
           >
             <LogOut className="h-5 w-5" strokeWidth={1.75} />
@@ -181,5 +200,22 @@ export function MoreSheet({ open, onOpenChange }: Props) {
         </div>
       </SheetContent>
     </Sheet>
+
+      {/* Fora do Sheet (z-60): o sheet fecha ao pedir confirmacao e o dialog (z-50) fica acima da barra */}
+      <AlertDialog open={confirmSair} onOpenChange={setConfirmSair}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Sair da conta?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Você precisará entrar novamente com telefone e senha.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => signOut()}>Sair</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
