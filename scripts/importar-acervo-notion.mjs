@@ -2,10 +2,11 @@
 // Importa o acervo da biblioteca que vivia no Notion (issue #297).
 //
 //   node scripts/importar-acervo-notion.mjs preparar
-//     Le a base publica do Notion (+ Google Books se GOOGLE_BOOKS_API_KEY) e
+//     Le a base publica do Notion e busca editora/ISBN/capa: Google Books se
+//     houver GOOGLE_BOOKS_API_KEY (a cota anonima e zero), senao Open Library. Grava
 //     grava em .local-data/biblioteca/ (gitignored — tem nomes de pessoas):
 //       acervo.json          payload da importacao
-//       acervo-revisao.csv   planilha para revisar (coluna "usar_google" S/N)
+//       acervo-revisao.csv   planilha para revisar (coluna "usar_sugestao" S/N)
 //
 //   node scripts/importar-acervo-notion.mjs importar [--dry-run] [--prod]
 //     Envia em lotes para biblioteca/importacao:importarAcervo. Idempotente.
@@ -90,17 +91,27 @@ async function lerNotion() {
   });
 }
 
-// ---------- Google Books (opcional) ----------
+// ---------- Enriquecimento (Google Books ou Open Library) ----------
 
 const norm = (s) =>
   (s ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 
+const STOP = new Set("a o as os e de da do das dos em no na um uma para por com the of and".split(" "));
+const palavras = (s) => new Set(norm(s).split(" ").filter((t) => t && !STOP.has(t)));
+
+/** Dice entre as palavras significativas (ignora artigos/preposicoes). */
 function similaridade(a, b) {
-  const ta = new Set(norm(a).split(" ").filter(Boolean));
-  const tb = new Set(norm(b).split(" ").filter(Boolean));
+  const ta = palavras(a);
+  const tb = palavras(b);
   if (!ta.size || !tb.size) return 0;
   const comum = [...ta].filter((t) => tb.has(t)).length;
-  return comum / Math.max(ta.size, tb.size);
+  return (2 * comum) / (ta.size + tb.size);
+}
+
+/** 1 se o sobrenome do autor do Notion aparece nos autores sugeridos. */
+function autorConfere(autor, autores) {
+  const sobrenome = norm(autor).split(" ").pop();
+  return sobrenome && palavras(autores.join(" ")).has(sobrenome) ? 1 : 0;
 }
 
 async function buscarGoogle(titulo, autor, key) {
@@ -115,13 +126,13 @@ async function buscarGoogle(titulo, autor, key) {
     for (const it of itens) {
       const v = it.volumeInfo;
       const score =
-        similaridade(titulo, v.title) * 0.7 +
-        (autor ? similaridade(autor, (v.authors ?? []).join(" ")) * 0.3 : 0.3);
+        similaridade(titulo, v.title) * 0.7 + (autor ? autorConfere(autor, v.authors ?? []) * 0.3 : 0.3);
       if (!melhor || score > melhor.score) melhor = { score, v };
     }
     if (!melhor) return undefined;
     const v = melhor.v;
     return {
+      fonte: "google",
       score: Math.round(melhor.score * 100),
       titulo: v.title,
       autores: v.authors ?? [],
@@ -135,6 +146,53 @@ async function buscarGoogle(titulo, autor, key) {
     };
   }
   return undefined;
+}
+
+// Open Library: sem chave, mas pede ~1 req/s e User-Agent identificado.
+// `lang=pt` faz o sub-documento `editions` trazer a edicao em portugues da
+// obra (a obra em si costuma vir com o titulo original, ex: "Mere Christianity").
+const OL_UA = "ipc-biblioteca/1.0 (importacao do acervo da igreja)";
+const OL_CAMPOS = [
+  "key", "editions.key", "title", "author_name", "editions", "editions.title", "editions.isbn", "editions.language",
+  "editions.publisher", "editions.publish_date", "editions.cover_i", "editions.number_of_pages_median",
+].join(",");
+
+async function olBuscar(q) {
+  const url = `https://openlibrary.org/search.json?q=${encodeURIComponent(q)}&lang=pt&limit=5&fields=${OL_CAMPOS}`;
+  await new Promise((r) => setTimeout(r, 1100));
+  const res = await fetch(url, { headers: { "User-Agent": OL_UA } });
+  if (!res.ok) throw new Error(`Open Library ${res.status}`);
+  return (await res.json()).docs ?? [];
+}
+
+async function buscarOpenLibrary(titulo, autor) {
+  // A busca e AND de todas as palavras: autor escrito diferente ("C.S.Lewis")
+  // zera o resultado. Tenta titulo + sobrenome e, sem nada, so o titulo.
+  const sobrenome = norm(autor).split(" ").pop() ?? "";
+  let docs = await olBuscar(`${norm(titulo)} ${sobrenome}`.trim());
+  if (!docs.length && sobrenome) docs = await olBuscar(norm(titulo));
+  let melhor;
+  for (const obra of docs) {
+    const ed = obra.editions?.docs?.[0];
+    if (!ed) continue;
+    const score =
+      similaridade(titulo, ed.title) * 0.7 + (autor ? autorConfere(autor, obra.author_name ?? []) * 0.3 : 0.3);
+    if (!melhor || score > melhor.score) melhor = { score, obra, ed };
+  }
+  if (!melhor) return undefined;
+  const { obra, ed } = melhor;
+  const isbns = ed.isbn ?? [];
+  return {
+    fonte: "openlibrary",
+    score: Math.round(melhor.score * 100),
+    titulo: ed.title,
+    autores: obra.author_name ?? [],
+    editora: ed.publisher?.[0],
+    ano: parseInt((ed.publish_date?.[0] ?? "").match(/\d{4}/)?.[0] ?? "", 10) || undefined,
+    isbn: isbns.find((i) => i.length === 13) ?? isbns[0],
+    paginas: ed.number_of_pages_median,
+    capa: ed.cover_i ? `https://covers.openlibrary.org/b/id/${ed.cover_i}-L.jpg` : undefined,
+  };
 }
 
 // ---------- preparar ----------
@@ -171,19 +229,22 @@ async function preparar() {
   }
 
   const key = process.env.GOOGLE_BOOKS_API_KEY;
-  if (!key) console.warn("GOOGLE_BOOKS_API_KEY ausente: pulando enriquecimento pelo Google Books.");
+  if (!key) console.warn("GOOGLE_BOOKS_API_KEY ausente: usando Open Library (~1 livro/s).");
 
   const livros = [];
   let i = 0;
   for (const exemplares of obras.values()) {
     const base = exemplares[0];
-    const google = key ? await buscarGoogle(base.titulo, base.autores[0], key).catch((e) => ({ erro: e.message })) : undefined;
-    if (key && ++i % 25 === 0) console.log(`  google: ${i}/${obras.size}`);
+    const buscar = key
+      ? () => buscarGoogle(base.titulo, base.autores[0], key)
+      : () => buscarOpenLibrary(base.titulo, base.autores[0]);
+    const sugestao = await buscar().catch((e) => ({ erro: e.message }));
+    if (++i % 25 === 0) console.log(`  busca: ${i}/${obras.size}`);
     livros.push({
       titulo: base.titulo,
       autores: base.autores,
       capaNotion: exemplares.find((e) => e.capa)?.capa,
-      google,
+      sugestao,
       exemplares: exemplares.map((e) => ({
         codigo: e.codigo,
         numeroNotion: e.numero,
@@ -199,14 +260,14 @@ async function preparar() {
 
   const cab = [
     "codigos", "numero_notion", "titulo", "autores", "proprietarios", "em_posse_de", "capa_notion",
-    "google_score", "google_titulo", "google_autores", "editora", "ano", "isbn", "paginas", "capa_google", "usar_google",
+    "fonte", "score", "sugestao_titulo", "sugestao_autores", "editora", "ano", "isbn", "paginas", "capa_sugerida", "usar_sugestao",
   ];
   const esc = (v) => {
     const s = v === undefined || v === null ? "" : String(v);
     return /[;"\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   };
   const linhasCsv = livros.map((l) => {
-    const g = l.google && !l.google.erro ? l.google : undefined;
+    const g = l.sugestao && !l.sugestao.erro ? l.sugestao : undefined;
     return [
       l.exemplares.map((e) => e.codigo).join(" "),
       l.exemplares.map((e) => e.numeroNotion ?? "-").join(" "),
@@ -214,7 +275,7 @@ async function preparar() {
       l.exemplares.map((e) => e.proprietarioNome ?? DONO_IGREJA).join(", "),
       l.exemplares.filter((e) => e.emPosse).map((e) => `${e.emPosse.nome} (${e.emPosse.dataEmprestimo})`).join(", "),
       l.capaNotion ? "sim" : "",
-      g?.score, g?.titulo, g?.autores.join(", "), g?.editora, g?.ano, g?.isbn, g?.paginas, g?.capa,
+      g?.fonte, g?.score, g?.titulo, g?.autores.join(", "), g?.editora, g?.ano, g?.isbn, g?.paginas, g?.capa,
       g ? (g.score >= 80 ? "S" : "N") : "",
     ].map(esc).join(";");
   });
@@ -231,14 +292,14 @@ async function preparar() {
 
 // ---------- importar ----------
 
-function lerCsvUsarGoogle() {
-  // Devolve codigos -> usar_google ("S"/"N") a partir da planilha revisada.
+function lerCsvUsarSugestao() {
+  // Devolve codigos -> usar_sugestao ("S"/"N") a partir da planilha revisada.
   if (!existsSync(CSV_PATH)) return new Map();
   const [cab, ...linhas] = readFileSync(CSV_PATH, "utf8").replace(/^﻿/, "").split("\n");
   const sep = cab.includes(";") ? ";" : ",";
   const cols = cab.split(sep);
   const iCod = cols.indexOf("codigos");
-  const iUsar = cols.indexOf("usar_google");
+  const iUsar = cols.indexOf("usar_sugestao");
   const mapa = new Map();
   for (const linha of linhas) {
     // Parser minimo: a planilha so tem aspas em campos de texto, e as duas
@@ -250,8 +311,8 @@ function lerCsvUsarGoogle() {
   return mapa;
 }
 
-function montarPayload(l, usarGoogle) {
-  const g = usarGoogle && l.google && !l.google.erro ? l.google : undefined;
+function montarPayload(l, usarSugestao) {
+  const g = usarSugestao && l.sugestao && !l.sugestao.erro ? l.sugestao : undefined;
   const limpo = (o) => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined && v !== null && v !== ""));
   return limpo({
     titulo: l.titulo,
@@ -270,7 +331,7 @@ function montarPayload(l, usarGoogle) {
 function importar({ dryRun, prod }) {
   if (!existsSync(JSON_PATH)) throw new Error(`Rode "preparar" antes (${JSON_PATH} nao existe)`);
   const { livros } = JSON.parse(readFileSync(JSON_PATH, "utf8"));
-  const usar = lerCsvUsarGoogle();
+  const usar = lerCsvUsarSugestao();
   const payloads = livros.map((l) => montarPayload(l, usar.get(l.exemplares.map((e) => e.codigo).join(" ")) === "S"));
 
   // Lotes pequenos: o JSON vai como argumento de linha de comando.
