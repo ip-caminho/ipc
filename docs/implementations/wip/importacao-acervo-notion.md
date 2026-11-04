@@ -23,11 +23,11 @@ Levar o acervo da biblioteca (base publica do Notion, ~345 livros) para o modulo
 - Mesmo titulo + mesmo autor = um livro com varios exemplares.
 - "Em posse de" + data vira emprestimo ATIVO (prazo 14 dias) quando o nome casa com exatamente um membro; senao fica em `observacoes` do exemplar.
 - Capas existentes (29) sao baixadas e reenviadas ao B2 (`biblioteca-capas/`).
-- Enriquecimento Google Books (editora/ISBN/sinopse/capa) so depois de revisao manual da planilha. Exige `GOOGLE_BOOKS_API_KEY` (cota anonima da API e zero).
+- Enriquecimento (editora/ISBN/capa) so depois de revisao manual da planilha (coluna `usar_sugestao`). Fonte: Google Books com `GOOGLE_BOOKS_API_KEY` (cota anonima da API e zero); sem chave, Open Library (`lang=pt`, edicao em portugues).
 
 ## Fluxo
 ```bash
-node scripts/importar-acervo-notion.mjs preparar          # Notion (+ Google Books) -> .local-data/biblioteca/
+node scripts/importar-acervo-notion.mjs preparar          # Notion (+ Google Books/Open Library) -> .local-data/biblioteca/
 # revisar .local-data/biblioteca/acervo-revisao.csv
 node scripts/importar-acervo-notion.mjs importar --dry-run --prod
 node scripts/importar-acervo-notion.mjs importar --prod
