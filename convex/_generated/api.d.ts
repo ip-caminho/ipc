@@ -10,6 +10,7 @@
 
 import type * as __tests___helpers from "../__tests__/helpers.js";
 import type * as _shared_auditHelpers from "../_shared/auditHelpers.js";
+import type * as _shared_cpf from "../_shared/cpf.js";
 import type * as _shared_datetime from "../_shared/datetime.js";
 import type * as _shared_eduVoluntarioPerms from "../_shared/eduVoluntarioPerms.js";
 import type * as _shared_llm_anthropic from "../_shared/llm/anthropic.js";
@@ -32,6 +33,7 @@ import type * as auth from "../auth.js";
 import type * as auth_auth from "../auth/auth.js";
 import type * as avisos_mutations from "../avisos/mutations.js";
 import type * as avisos_queries from "../avisos/queries.js";
+import type * as biblioteca_importacao from "../biblioteca/importacao.js";
 import type * as biblioteca_mutations from "../biblioteca/mutations.js";
 import type * as biblioteca_ocrAction from "../biblioteca/ocrAction.js";
 import type * as biblioteca_queries from "../biblioteca/queries.js";
@@ -182,6 +184,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   "__tests__/helpers": typeof __tests___helpers;
   "_shared/auditHelpers": typeof _shared_auditHelpers;
+  "_shared/cpf": typeof _shared_cpf;
   "_shared/datetime": typeof _shared_datetime;
   "_shared/eduVoluntarioPerms": typeof _shared_eduVoluntarioPerms;
   "_shared/llm/anthropic": typeof _shared_llm_anthropic;
@@ -204,6 +207,7 @@ declare const fullApi: ApiFromModules<{
   "auth/auth": typeof auth_auth;
   "avisos/mutations": typeof avisos_mutations;
   "avisos/queries": typeof avisos_queries;
+  "biblioteca/importacao": typeof biblioteca_importacao;
   "biblioteca/mutations": typeof biblioteca_mutations;
   "biblioteca/ocrAction": typeof biblioteca_ocrAction;
   "biblioteca/queries": typeof biblioteca_queries;
