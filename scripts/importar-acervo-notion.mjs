@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Importa o acervo da biblioteca que vivia no Notion (issue #297).
 //
-//   node scripts/importar-acervo-notion.mjs preparar
+//   node --env-file=.env.local scripts/importar-acervo-notion.mjs preparar
 //     Le a base publica do Notion e busca editora/ISBN/capa: Google Books se
 //     houver GOOGLE_BOOKS_API_KEY (a cota anonima e zero), senao Open Library. Grava
 //     grava em .local-data/biblioteca/ (gitignored — tem nomes de pessoas):
@@ -108,44 +108,81 @@ function similaridade(a, b) {
   return (2 * comum) / (ta.size + tb.size);
 }
 
+/**
+ * Titulo do Notion vs titulo sugerido, considerando o subtitulo: no Notion o
+ * titulo costuma vir resumido ("Introdução e comentário Levitico" vs
+ * "Levítico" + "introdução e comentário"). Conter todas as palavras do Notion
+ * (com 2+ palavras) conta quase como igual.
+ */
+function similaridadeTitulo(titulo, sugerido, subtitulo) {
+  const completo = [sugerido, subtitulo].filter(Boolean).join(" ");
+  const tn = palavras(titulo);
+  const tc = palavras(completo);
+  const contido = tn.size >= 2 && [...tn].every((t) => tc.has(t)) ? 0.95 : 0;
+  return Math.max(similaridade(titulo, sugerido), similaridade(titulo, completo), contido);
+}
+
 /** 1 se o sobrenome do autor do Notion aparece nos autores sugeridos. */
 function autorConfere(autor, autores) {
   const sobrenome = norm(autor).split(" ").pop();
   return sobrenome && palavras(autores.join(" ")).has(sobrenome) ? 1 : 0;
 }
 
-async function buscarGoogle(titulo, autor, key) {
-  const q = `intitle:${titulo}${autor ? `+inauthor:${autor}` : ""}`;
-  const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=5&key=${key}`;
-  for (let tentativa = 0; tentativa < 3; tentativa++) {
+async function googleBuscar(q, key, pt) {
+  const url =
+    `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=10` +
+    `${pt ? "&langRestrict=pt" : ""}&key=${key}`;
+  for (let tentativa = 0; tentativa < 4; tentativa++) {
+    await new Promise((r) => setTimeout(r, 400));
     const res = await fetch(url);
-    if (res.status === 429) { await new Promise((r) => setTimeout(r, 3000)); continue; }
+    if (res.status === 429 || res.status >= 500) {
+      await new Promise((r) => setTimeout(r, 5000 * (tentativa + 1)));
+      continue;
+    }
     if (!res.ok) throw new Error(`Google Books ${res.status}`);
-    const itens = (await res.json()).items ?? [];
+    return (await res.json()).items ?? [];
+  }
+  throw new Error("Google Books: muitas tentativas");
+}
+
+async function buscarGoogle(titulo, autor, key) {
+  // Texto livre (titulo + sobrenome) tolera autor escrito diferente
+  // ("C.S.Lewis"); primeiro so edicoes em portugues, depois qualquer lingua.
+  const sobrenome = norm(autor).split(" ").pop() ?? "";
+  const q = `${norm(titulo)} ${sobrenome}`.trim();
+  const pontuar = (itens) => {
     let melhor;
     for (const it of itens) {
       const v = it.volumeInfo;
       const score =
-        similaridade(titulo, v.title) * 0.7 + (autor ? autorConfere(autor, v.authors ?? []) * 0.3 : 0.3);
-      if (!melhor || score > melhor.score) melhor = { score, v };
+        similaridadeTitulo(titulo, v.title, v.subtitle) * 0.7 +
+        (autor ? autorConfere(autor, v.authors ?? []) * 0.3 : 0.3);
+      // Empate: fica a edicao que tem capa e ISBN.
+      const extra = (v.imageLinks ? 0.001 : 0) + (v.industryIdentifiers ? 0.001 : 0);
+      if (!melhor || score + extra > melhor.score + melhor.extra) melhor = { score, extra, v };
     }
-    if (!melhor) return undefined;
-    const v = melhor.v;
-    return {
-      fonte: "google",
-      score: Math.round(melhor.score * 100),
-      titulo: v.title,
-      autores: v.authors ?? [],
-      editora: v.publisher,
-      ano: v.publishedDate ? parseInt(v.publishedDate.slice(0, 4), 10) || undefined : undefined,
-      isbn: v.industryIdentifiers?.find((i) => i.type === "ISBN_13")?.identifier
-        ?? v.industryIdentifiers?.find((i) => i.type === "ISBN_10")?.identifier,
-      paginas: v.pageCount,
-      descricao: v.description?.slice(0, 2000),
-      capa: v.imageLinks?.thumbnail?.replace("http://", "https://").replace("&edge=curl", ""),
-    };
+    return melhor;
+  };
+  let melhor = pontuar(await googleBuscar(q, key, true));
+  if (!melhor || melhor.score < 0.8) {
+    const outro = pontuar(await googleBuscar(q, key, false));
+    if (outro && (!melhor || outro.score > melhor.score)) melhor = outro;
   }
-  return undefined;
+  if (!melhor) return undefined;
+  const v = melhor.v;
+  return {
+    fonte: "google",
+    score: Math.round(melhor.score * 100),
+    titulo: [v.title, v.subtitle].filter(Boolean).join(": "),
+    autores: v.authors ?? [],
+    editora: v.publisher,
+    ano: v.publishedDate ? parseInt(v.publishedDate.slice(0, 4), 10) || undefined : undefined,
+    isbn: v.industryIdentifiers?.find((i) => i.type === "ISBN_13")?.identifier
+      ?? v.industryIdentifiers?.find((i) => i.type === "ISBN_10")?.identifier,
+    paginas: v.pageCount,
+    descricao: v.description?.slice(0, 2000),
+    capa: v.imageLinks?.thumbnail?.replace("http://", "https://").replace("&edge=curl", ""),
+  };
 }
 
 // Open Library: sem chave, mas pede ~1 req/s e User-Agent identificado.
