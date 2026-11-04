@@ -1198,6 +1198,10 @@ export default defineSchema({
     dataAquisicao: v.string(), // YYYY-MM-DD
     doadorId: v.optional(v.id("entidades")),
     doadorNome: v.optional(v.string()),
+    // Dono do exemplar quando o livro e de um membro (emprestado ao acervo).
+    // Ausente = acervo da igreja.
+    proprietarioNome: v.optional(v.string()),
+    proprietarioMembroId: v.optional(v.id("membros")),
     observacoes: v.optional(v.string()),
   })
     .index("by_livro", ["livroId"])
