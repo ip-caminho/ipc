@@ -128,8 +128,14 @@ export default function LivroDetalhePage() {
                       <div>
                         <span className="font-mono text-sm font-medium">{ex.codigo}</span>
                         <span className="text-xs text-muted-foreground ml-2">{ex.condicao}</span>
+                        <p className="text-xs text-muted-foreground">
+                          {ex.proprietarioNome ? `Proprietário: ${ex.proprietarioNome}` : "Acervo da igreja"}
+                        </p>
                         {ex.doadorNome && (
                           <p className="text-xs text-muted-foreground">Doador: {ex.doadorNome}</p>
+                        )}
+                        {ex.observacoes && (
+                          <p className="text-xs text-muted-foreground">{ex.observacoes}</p>
                         )}
                       </div>
                       <div className="flex items-center gap-2">

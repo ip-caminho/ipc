@@ -963,7 +963,12 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     arquivos: ["app/(ready)/biblioteca/[id]/page.tsx"],
     queries: ["biblioteca.queries.getById", "biblioteca.queries.listEmprestimos"],
     mutations: ["biblioteca.mutations.devolver", "biblioteca.mutations.addExemplar"],
-    notas: ["Exemplares com status", "Emprestimos ativos com botao devolver"],
+    notas: [
+      "Exemplares com status",
+      "Emprestimos ativos com botao devolver",
+      "Exemplar mostra proprietarioNome (livro de membro) ou 'Acervo da igreja'",
+      "Acervo do Notion importado via biblioteca/importacao:importarAcervo (CLI)",
+    ],
   },
   "/turmas": {
     nome: "Turmas",
