@@ -4,6 +4,7 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 import { createActionAuditLog, createFieldAuditLogs } from "../_shared/auditHelpers";
 import { requirePermission, checkPermission } from "../_shared/requirePermission";
 import { apagarArquivosSumidos } from "../files/orfaos";
+import { sincronizarCategorias } from "./categorias";
 
 async function requireAuth(ctx: any) {
   const userId = await getAuthUserId(ctx);
@@ -87,6 +88,7 @@ export const create = mutation({
       paginas: args.paginas,
       criadoEm: Date.now(),
     });
+    await sincronizarCategorias(ctx, livroId, args.categorias);
 
     // Criar primeiro exemplar se condicao fornecida
     if (args.condicao) {
@@ -131,6 +133,7 @@ export const update = mutation({
     }
     if (Object.keys(patch).length > 0) {
       await ctx.db.patch(id, patch);
+      if (updates.categorias) await sincronizarCategorias(ctx, id, updates.categorias);
       const newRecord = await ctx.db.get(id);
       await createFieldAuditLogs(ctx, oldRecord, newRecord, "livros");
       await apagarArquivosSumidos(ctx, "livros", oldRecord, newRecord);
@@ -173,6 +176,7 @@ export const createBatch = mutation({
         paginas: l.paginas,
         criadoEm: Date.now(),
       });
+      await sincronizarCategorias(ctx, livroId, l.categorias);
 
       const codigo = await gerarCodigo(ctx);
       const exemplarId = await ctx.db.insert("exemplares", {

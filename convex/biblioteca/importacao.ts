@@ -4,6 +4,7 @@ import { v } from "convex/values";
 import type { Id } from "../_generated/dataModel";
 import { createActionAuditLog } from "../_shared/auditHelpers";
 import { generateObjectKey, putObject } from "../files/helpers";
+import { sincronizarCategorias } from "./categorias";
 
 // Importacao do acervo que vivia no Notion. Rodar via CLI em lotes pequenos
 // (scripts/importar-acervo-notion.mjs) — os nomes de pessoas vem nos args,
@@ -180,6 +181,7 @@ export const importarLote = internalMutation({
           paginas: l.paginas,
           criadoEm: Date.now(),
         });
+        await sincronizarCategorias(ctx, livroId, l.categorias);
         await createActionAuditLog(ctx, "IMPORT", "livros", livroId as string);
         livrosCriados++;
       }
@@ -377,6 +379,7 @@ export const removerLivroDeTeste = internalMutation({
       .collect();
 
     for (const doc of [...eventos, ...emprestimos, ...exemplares]) await ctx.db.delete(doc._id);
+    await sincronizarCategorias(ctx, livroId, []);
     await ctx.db.delete(livroId);
     await createActionAuditLog(ctx, "DELETE", "livros", livroId as string, {
       field: "motivo",
