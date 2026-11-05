@@ -27,6 +27,7 @@ type LivroVivo = {
   edge: THREE.MeshStandardMaterial;
   cover: THREE.MeshStandardMaterial;
   spine: THREE.MeshStandardMaterial;
+  sombra: THREE.Mesh;
   tp: THREE.Vector3;
   tq: THREE.Quaternion;
   ts: number;
@@ -58,6 +59,9 @@ const ENTRE_FILEIRAS = 1.72;
 const TITULO_L = 2.4;
 const TITULO_A = 0.3;
 const PROPORCAO_PADRAO = 0.69;
+// Parte da textura da sombra ocupada pelo livro; o resto é o esfumado em volta.
+const MIOLO_SOMBRA = 80 / 128;
+const ALTURA_SOMBRA = 0.14;
 
 const suave = (x: number) => x * x * (3 - 2 * x);
 const hash = (s: string) => {
@@ -187,6 +191,29 @@ export async function criarFileira(host: HTMLElement, opcoes: Opcoes): Promise<C
   })();
   const matPaginas = new THREE.MeshStandardMaterial({ map: texturaPaginas, roughness: 0.95 });
 
+  const texturaSombra = (() => {
+    const c = novoCanvas(128, 128);
+    const g = c.getContext("2d")!;
+    g.shadowColor = "#0f1b33";
+    g.shadowBlur = 22;
+    // O retângulo fica fora do canvas: só a sombra dele aparece.
+    g.shadowOffsetX = 256;
+    g.fillRect(24 - 256, 24, 80, 80);
+    return comoTextura(new THREE.CanvasTexture(c));
+  })();
+  const geoSombra = new THREE.PlaneGeometry(1, 1);
+  // Mistura própria e sem profundidade: desenha antes dos livros, atrás de todos eles.
+  const matSombra = new THREE.MeshBasicMaterial({
+    map: texturaSombra,
+    opacity: 0.6,
+    transparent: false,
+    blending: THREE.CustomBlending,
+    blendSrc: THREE.SrcAlphaFactor,
+    blendDst: THREE.OneMinusSrcAlphaFactor,
+    depthTest: false,
+    depthWrite: false,
+  });
+
   const medidas: Medida[] = livros.map((l) => {
     const hs = hash(l.titulo);
     const h = 0.98 + ((hs % 13) - 6) / 90;
@@ -266,6 +293,18 @@ export async function criarFileira(host: HTMLElement, opcoes: Opcoes): Promise<C
     });
   }
 
+  /** Sombra de contato na base do livro, como ele está na tela; a capa de frente pousa mais longe. */
+  function ajustarSombra(it: LivroVivo) {
+    const D = medidas[it.i];
+    const s = it.g.scale.x;
+    const th = 2 * Math.atan2(it.g.quaternion.y, it.g.quaternion.w);
+    const frente = Math.abs(Math.cos(th));
+    const largura = s * (D.w * frente + D.d * Math.abs(Math.sin(th)));
+    it.sombra.scale.set(largura / MIOLO_SOMBRA, (ALTURA_SOMBRA * s) / MIOLO_SOMBRA, 1);
+    it.sombra.position.set(it.g.position.x, it.g.position.y - s * (D.h / 2 + 0.012 + 0.03 * frente), 0);
+    it.sombra.visible = it.g.visible;
+  }
+
   function aplicarLombada(it: LivroVivo, base: string) {
     if (it.gone) return;
     it.spine.map?.dispose();
@@ -295,6 +334,7 @@ export async function criarFileira(host: HTMLElement, opcoes: Opcoes): Promise<C
       edge: new THREE.MeshStandardMaterial({ color: base, roughness: 0.7 }),
       cover: new THREE.MeshStandardMaterial({ color: base, roughness: 0.62 }),
       spine: new THREE.MeshStandardMaterial({ color: base, roughness: 0.66 }),
+      sombra: new THREE.Mesh(geoSombra, matSombra),
       tp: new THREE.Vector3(),
       tq: new THREE.Quaternion(),
       ts: 0,
@@ -303,7 +343,8 @@ export async function criarFileira(host: HTMLElement, opcoes: Opcoes): Promise<C
     };
     montarMalhas(it);
     it.g.scale.setScalar(0.001);
-    scene.add(it.g);
+    it.sombra.renderOrder = -1;
+    scene.add(it.g, it.sombra);
     vivos.set(i, it);
     if (!src) {
       capaGerada(it, base);
@@ -325,6 +366,7 @@ export async function criarFileira(host: HTMLElement, opcoes: Opcoes): Promise<C
       // O formato real da capa só se sabe agora.
       D.w = larguraLivro(D.h, img.naturalWidth / img.naturalHeight);
       montarMalhas(it);
+      ajustarSombra(it);
       calcular();
     };
     img.src = src;
@@ -333,7 +375,7 @@ export async function criarFileira(host: HTMLElement, opcoes: Opcoes): Promise<C
 
   function remover(it: LivroVivo) {
     it.gone = true;
-    scene.remove(it.g);
+    scene.remove(it.g, it.sombra);
     it.geos.forEach((g) => g.dispose());
     [it.cover, it.spine].forEach((m) => {
       m.map?.dispose();
@@ -615,6 +657,7 @@ export async function criarFileira(host: HTMLElement, opcoes: Opcoes): Promise<C
       it.g.quaternion.slerp(it.tq, seguir);
       it.g.scale.setScalar(it.g.scale.x + (it.ts - it.g.scale.x) * seguir);
       it.g.visible = it.g.scale.x > 0.015;
+      ajustarSombra(it);
       mover = true;
     });
     if (camera.position.distanceToSquared(camAlvo) > 1e-6) {
@@ -652,6 +695,9 @@ export async function criarFileira(host: HTMLElement, opcoes: Opcoes): Promise<C
       });
       texturaPaginas.dispose();
       matPaginas.dispose();
+      texturaSombra.dispose();
+      geoSombra.dispose();
+      matSombra.dispose();
       renderer.dispose();
       canvas.remove();
     },
