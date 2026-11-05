@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { connection } from "next/server";
 import type { LivroCatalogo } from "@convex/public/acervo";
 import { AcervoPublico } from "@features/biblioteca/components/acervo/AcervoPublico";
+import { montarFileiras, sortearAbertura } from "@features/biblioteca/lib/acervo";
 import { getCatalogoAcervo } from "@features/biblioteca/lib/acervoData";
 
 export const metadata: Metadata = {
@@ -23,7 +24,8 @@ export default async function AcervoPage() {
   }
   return (
     <Suspense>
-      <AcervoPublico livros={livros} />
+      {/* Sorteado no servidor para o HTML e o navegador abrirem no mesmo livro. */}
+      <AcervoPublico livros={livros} abertura={sortearAbertura(livros, montarFileiras(livros))} />
     </Suspense>
   );
 }

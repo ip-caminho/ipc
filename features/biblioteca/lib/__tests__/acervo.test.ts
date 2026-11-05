@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import type { LivroCatalogo } from "@convex/public/acervo";
-import { buscarLivros, capaParaTextura, capaPermitida, montarFileiras, posicaoInicial } from "../acervo";
+import { buscarLivros, capaParaTextura, capaPermitida, montarFileiras, posicaoInicial, sortearAbertura } from "../acervo";
 
 const CAPA = "https://cdn.yhc.com.br/biblioteca-capas/BIB-0001.jpg";
 
@@ -42,6 +42,32 @@ describe("posicaoInicial", () => {
   it("sem capa nenhuma, fica na terceira posição ou na última que existir", () => {
     expect(posicaoInicial([livro("A", "T"), livro("B", "T"), livro("C", "T")], [0, 1, 2])).toBe(2);
     expect(posicaoInicial([livro("A", "T")], [0])).toBe(0);
+  });
+});
+
+describe("sortearAbertura", () => {
+  const comCapa = { capaUrl: CAPA };
+
+  it("sorteia na primeira fileira, entre os livros com capa e fora das pontas", () => {
+    const livros = [
+      livro("Ponta", "T", comCapa),
+      livro("Sem capa", "T"),
+      livro("B", "T", comCapa),
+      livro("C", "T", comCapa),
+      livro("Outra ponta", "T", comCapa),
+    ];
+    const fileiras = [{ nome: "T", indices: [0, 1, 2, 3, 4] }];
+    expect(sortearAbertura(livros, fileiras, () => 0)).toBe(2);
+    expect(sortearAbertura(livros, fileiras, () => 0.99)).toBe(3);
+  });
+
+  it("sem candidato, usa a posição inicial da fileira", () => {
+    const livros = [livro("A", "T"), livro("B", "T"), livro("C", "T")];
+    expect(sortearAbertura(livros, [{ nome: "T", indices: [0, 1, 2] }], () => 0)).toBe(2);
+  });
+
+  it("sem fileira, devolve zero", () => {
+    expect(sortearAbertura([], [])).toBe(0);
   });
 });
 

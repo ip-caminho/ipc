@@ -45,6 +45,22 @@ export function posicaoInicial(livros: LivroCatalogo[], indices: number[]): numb
   return inicio;
 }
 
+/**
+ * Livro de abertura: sorteado na primeira fileira, entre os que têm capa e vizinhos
+ * dos dois lados. Sem candidato, usa a posição inicial da fileira.
+ */
+export function sortearAbertura(
+  livros: LivroCatalogo[],
+  fileiras: Fileira[],
+  sorteio: () => number = Math.random,
+): number {
+  const indices = fileiras[0]?.indices;
+  if (!indices) return 0;
+  const candidatos = indices.slice(1, -1).filter((i) => capaPermitida(livros[i].capaUrl));
+  if (!candidatos.length) return indices[posicaoInicial(livros, indices)];
+  return candidatos[Math.floor(sorteio() * candidatos.length)];
+}
+
 const semAcento = (s: string) =>
   s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 
