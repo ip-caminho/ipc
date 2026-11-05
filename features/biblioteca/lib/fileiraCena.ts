@@ -36,7 +36,7 @@ type LivroVivo = {
 
 type FileiraViva = Fileira & { pos: number; label: THREE.Mesh };
 
-const FUNDO = 0x05070d;
+const FUNDO = 0xf5f7fb;
 const PALETA = [
   ["#1f3f7a", "#10244a"],
   ["#27606b", "#123840"],
@@ -198,11 +198,11 @@ export async function criarFileira(host: HTMLElement, opcoes: Opcoes): Promise<C
     const c = novoCanvas(1024, 128);
     const g = c.getContext("2d")!;
     g.textBaseline = "middle";
-    g.fillStyle = "#edf2fb";
+    g.fillStyle = "#0f1b33";
     g.font = `600 50px ${serif}`;
     g.fillText(f.nome, 0, 66);
     const w = g.measureText(f.nome).width;
-    g.fillStyle = "#a3b2cc";
+    g.fillStyle = "#55647a";
     g.font = `500 32px ${sans}`;
     g.fillText(String(f.indices.length), w + 18, 68);
     const label = new THREE.Mesh(

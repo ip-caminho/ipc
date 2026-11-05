@@ -958,7 +958,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "features/biblioteca/lib/acervoData.ts",
     ],
     queries: ["public.acervo.catalogo", "biblioteca.queries.getPublicByCodigo"],
-    componentes: ["AcervoPublico", "LivroDetalhes", "Disponibilidade", "ResponsiveDialog"],
+    componentes: ["AcervoPublico", "LivroDetalhes", "Disponibilidade", "ResponsiveDialog", "Logo"],
     notas: [
       "Sem login, so leitura; nao mostra dono do exemplar nem quem esta com o livro",
       "Catalogo em unstable_cache de 1h; getPublicByCodigo so com a ficha aberta",

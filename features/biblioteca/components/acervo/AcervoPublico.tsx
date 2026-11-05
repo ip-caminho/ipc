@@ -8,6 +8,7 @@ import { ArrowLeft, BookOpen, ChevronUp, Search } from "lucide-react";
 import type { LivroCatalogo } from "@convex/public/acervo";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
+import { Logo } from "@shared/components/layout/Logo";
 import { buscarLivros, capaPermitida, montarFileiras } from "@features/biblioteca/lib/acervo";
 import type { CenaFileira } from "@features/biblioteca/lib/fileiraCena";
 import { Disponibilidade } from "./Disponibilidade";
@@ -84,7 +85,7 @@ export function AcervoPublico({ livros, abertura }: { livros: LivroCatalogo[]; a
 
   if (!livros.length) {
     return (
-      <main className="dark flex h-dvh flex-col items-center justify-center gap-3 bg-[#05070d] p-6 text-center text-foreground">
+      <main className="light flex h-dvh flex-col items-center justify-center gap-3 bg-[#f5f7fb] p-6 text-center text-foreground">
         <p className="text-sm text-muted-foreground">O acervo não está disponível agora. Tente de novo em instantes.</p>
         <Button variant="outline" asChild className="h-11">
           <Link href="/">Voltar ao site</Link>
@@ -94,7 +95,7 @@ export function AcervoPublico({ livros, abertura }: { livros: LivroCatalogo[]; a
   }
 
   return (
-    <main className="dark flex h-dvh flex-col overflow-hidden bg-[#05070d] text-foreground">
+    <main className="light flex h-dvh flex-col overflow-hidden bg-[#f5f7fb] text-foreground">
       <header className="grid gap-2 px-4 pt-2 pb-2">
         <div className="flex items-center gap-1">
           <Button variant="ghost" size="icon" asChild className="-ml-2 h-11 w-11 shrink-0">
@@ -102,6 +103,7 @@ export function AcervoPublico({ livros, abertura }: { livros: LivroCatalogo[]; a
               <ArrowLeft className="h-5 w-5" />
             </Link>
           </Button>
+          <Logo className="mr-2 h-8 shrink-0 dark:invert-0" />
           <h1 className="font-[family-name:var(--font-display)] text-2xl leading-none font-semibold">Biblioteca</h1>
           <span className="ml-auto text-xs text-muted-foreground tabular-nums">{livros.length} livros</span>
         </div>
@@ -134,7 +136,7 @@ export function AcervoPublico({ livros, abertura }: { livros: LivroCatalogo[]; a
 
       <div ref={palco} className="relative min-h-0 flex-1 overflow-hidden">
         {mostrarLista && (
-          <div className="absolute inset-0 z-10 overflow-y-auto bg-[#05070d] px-4 pb-4">
+          <div className="absolute inset-0 z-10 overflow-y-auto bg-[#f5f7fb] px-4 pb-4">
             {sem3d && !achados && (
               <p className="py-2 text-xs text-muted-foreground">
                 Este aparelho não abriu o 3D. A lista mostra os mesmos livros.

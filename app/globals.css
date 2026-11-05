@@ -4,7 +4,8 @@
 
 @custom-variant dark (&:is(.dark *));
 
-:root {
+/* .light mantém um trecho claro mesmo para quem escolheu o tema escuro */
+:root, .light {
   /* Paleta de marca (eco da landing): marinho + laranja + papel creme */
   --background: oklch(1.0000 0 0);
   --foreground: oklch(0.1371 0.0360 258.5258);

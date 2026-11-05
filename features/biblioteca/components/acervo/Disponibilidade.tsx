@@ -6,7 +6,7 @@ type Props = { disponiveis: number; total: number; className?: string };
 export function Disponibilidade({ disponiveis, total, className }: Props) {
   const livre = disponiveis > 0;
   return (
-    <span className={cn("inline-flex items-center gap-1.5 text-xs font-semibold", livre ? "text-emerald-300" : "text-slate-300", className)}>
+    <span className={cn("inline-flex items-center gap-1.5 text-xs font-semibold", livre ? "text-emerald-700" : "text-slate-600", className)}>
       <span
         aria-hidden
         className={cn("h-2 w-2 rounded-full", livre ? "bg-current" : "border-2 border-current")}
