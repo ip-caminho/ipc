@@ -28,7 +28,9 @@ Levar o acervo da biblioteca (base publica do Notion, ~345 livros) para o modulo
 ## Fluxo
 ```bash
 node scripts/importar-acervo-notion.mjs preparar          # Notion (+ Google Books/Open Library) -> .local-data/biblioteca/
-# revisar .local-data/biblioteca/acervo-revisao.csv
+# revisar .local-data/biblioteca/acervo-revisao.csv (coluna usar_sugestao)
+# .local-data/biblioteca/ajustes.json: exemplares a juntar na mesma obra e correcoes de titulo/autor/idioma
+node scripts/importar-acervo-notion.mjs conferir          # grava payload.json, nao toca no Convex
 node scripts/importar-acervo-notion.mjs importar --dry-run --prod
 node scripts/importar-acervo-notion.mjs importar --prod
 ```
