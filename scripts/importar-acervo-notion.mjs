@@ -8,6 +8,9 @@
 //       acervo.json          payload da importacao
 //       acervo-revisao.csv   planilha para revisar (coluna "usar_sugestao" S/N)
 //
+//   node scripts/importar-acervo-notion.mjs conferir
+//     Aplica a planilha e ajustes.json e grava payload.json, sem tocar no Convex.
+//
 //   node scripts/importar-acervo-notion.mjs importar [--dry-run] [--prod]
 //     Envia em lotes para biblioteca/importacao:importarAcervo. Idempotente.
 
@@ -21,6 +24,8 @@ const VIEW_ID = "2211ce81-95f3-80e7-b40e-000c510c422a";
 const DIR = join(process.cwd(), ".local-data", "biblioteca");
 const JSON_PATH = join(DIR, "acervo.json");
 const CSV_PATH = join(DIR, "acervo-revisao.csv");
+const AJUSTES_PATH = join(DIR, "ajustes.json");
+const PAYLOAD_PATH = join(DIR, "payload.json");
 const DONO_IGREJA = "IPC";
 
 // ---------- Notion ----------
@@ -348,28 +353,51 @@ function lerCsvUsarSugestao() {
   return mapa;
 }
 
-function montarPayload(l, usarSugestao) {
+function montarPayload(l, usarSugestao, ajustes) {
   const g = usarSugestao && l.sugestao && !l.sugestao.erro ? l.sugestao : undefined;
   const limpo = (o) => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined && v !== null && v !== ""));
+  const cod = l.exemplares[0].codigo;
   return limpo({
-    titulo: l.titulo,
-    autores: l.autores.length ? l.autores : g?.autores ?? [],
+    titulo: ajustes.titulos?.[cod] ?? l.titulo.trim(),
+    autores: ajustes.autores?.[cod] ?? (l.autores.length ? l.autores : g?.autores ?? []),
     editora: g?.editora,
     isbn: g?.isbn,
     ano: g?.ano,
-    paginas: g?.paginas,
+    paginas: g?.paginas || undefined,
     descricao: g?.descricao,
+    idioma: ajustes.idiomas?.[cod],
     categorias: [],
     capaUrlOrigem: l.capaNotion ?? g?.capa,
-    exemplares: l.exemplares.map((e) => limpo({ ...e, emPosse: e.emPosse })),
+    exemplares: l.exemplares.map((e) => limpo({ ...e })),
   });
 }
 
-function importar({ dryRun, prod }) {
+/**
+ * Aplica ajustes.json (opcional): `fundir` junta obras que o agrupamento nao
+ * percebeu por erro de digitacao ([codigo principal, codigo a anexar]);
+ * `titulos`, `autores` e `idiomas` corrigem pelo 1o codigo da obra.
+ */
+function montarLotes() {
   if (!existsSync(JSON_PATH)) throw new Error(`Rode "preparar" antes (${JSON_PATH} nao existe)`);
   const { livros } = JSON.parse(readFileSync(JSON_PATH, "utf8"));
+  const ajustes = existsSync(AJUSTES_PATH) ? JSON.parse(readFileSync(AJUSTES_PATH, "utf8")) : {};
   const usar = lerCsvUsarSugestao();
-  const payloads = livros.map((l) => montarPayload(l, usar.get(l.exemplares.map((e) => e.codigo).join(" ")) === "S"));
+  // A decisao S/N e por linha da planilha: ler antes de fundir, que muda a chave.
+  const entradas = livros.map((l) => ({ l, usar: usar.get(l.exemplares.map((e) => e.codigo).join(" ")) === "S" }));
+  const achar = (codigo) => {
+    const i = entradas.findIndex((e) => e.l.exemplares.some((x) => x.codigo === codigo));
+    if (i < 0) throw new Error(`ajustes: codigo ${codigo} nao existe`);
+    return i;
+  };
+  for (const [principal, outro] of ajustes.fundir ?? []) {
+    const a = entradas[achar(principal)];
+    const iOutro = achar(outro);
+    const b = entradas[iOutro];
+    a.l.exemplares.push(...b.l.exemplares);
+    a.l.capaNotion ??= b.l.capaNotion;
+    entradas.splice(iOutro, 1);
+  }
+  const payloads = entradas.map((e) => montarPayload(e.l, e.usar, ajustes));
 
   // Lotes pequenos: o JSON vai como argumento de linha de comando.
   const lotes = [];
@@ -382,6 +410,21 @@ function importar({ dryRun, prod }) {
     atual.push(p);
   }
   if (atual.length) lotes.push(atual);
+  return { payloads, lotes };
+}
+
+/** Grava o payload final sem falar com o Convex, para conferir antes de importar. */
+function conferir() {
+  const { payloads, lotes } = montarLotes();
+  writeFileSync(PAYLOAD_PATH, JSON.stringify(payloads, null, 1));
+  const campo = (c) => payloads.filter((p) => p[c]).length;
+  console.log(`Livros: ${payloads.length} | exemplares: ${payloads.reduce((n, p) => n + p.exemplares.length, 0)} | lotes: ${lotes.length}`);
+  console.log(`isbn ${campo("isbn")} | editora ${campo("editora")} | capa ${campo("capaUrlOrigem")} | sinopse ${campo("descricao")}`);
+  console.log(`Gravado: ${PAYLOAD_PATH}`);
+}
+
+function importar({ dryRun, prod }) {
+  const { lotes } = montarLotes();
 
   const total = { livrosCriados: 0, exemplaresCriados: 0, emprestimosCriados: 0, pulados: 0, errosCapa: [], membros: {} };
   lotes.forEach((lote, i) => {
@@ -405,8 +448,9 @@ function importar({ dryRun, prod }) {
 
 const [cmd, ...flags] = process.argv.slice(2);
 if (cmd === "preparar") await preparar();
+else if (cmd === "conferir") conferir();
 else if (cmd === "importar") importar({ dryRun: flags.includes("--dry-run"), prod: flags.includes("--prod") });
 else {
-  console.error("uso: node scripts/importar-acervo-notion.mjs preparar | importar [--dry-run] [--prod]");
+  console.error("uso: node scripts/importar-acervo-notion.mjs preparar | conferir | importar [--dry-run] [--prod]");
   process.exit(1);
 }
