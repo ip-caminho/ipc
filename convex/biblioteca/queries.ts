@@ -1,5 +1,7 @@
 import { query } from "../_generated/server";
 import { v } from "convex/values";
+import { paginationOptsValidator, type PaginationResult } from "convex/server";
+import type { Doc } from "../_generated/dataModel";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { requirePermission } from "../_shared/requirePermission";
 
@@ -9,42 +11,59 @@ export const list = query({
   args: {
     busca: v.optional(v.string()),
     categoria: v.optional(v.string()),
-    status: v.optional(v.string()), // DISPONIVEL, EMPRESTADO, etc (filtra por exemplares)
+    paginationOpts: paginationOptsValidator,
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx, { busca, categoria, paginationOpts }) => {
     await requirePermission(ctx, "biblioteca:read");
 
-    let livros;
-    if (args.busca && args.busca.trim().length >= 2) {
-      livros = await ctx.db
+    const termo = busca?.trim() ?? "";
+    let livros: Doc<"livros">[];
+    let pagina: Omit<PaginationResult<unknown>, "page">;
+
+    if (termo.length >= 2) {
+      const r = await ctx.db
         .query("livros")
-        .withSearchIndex("search_livros", (q) => q.search("titulo", args.busca!))
-        .collect();
+        .withSearchIndex("search_livros", (q) => q.search("titulo", termo))
+        .paginate(paginationOpts);
+      // O indice de busca nao filtra por categoria. Filtro so a pagina ja lida:
+      // ela pode vir curta, e o "carregar mais" segue pelo cursor.
+      livros = categoria ? r.page.filter((l) => l.categorias.includes(categoria)) : r.page;
+      pagina = r;
+    } else if (categoria) {
+      const r = await ctx.db
+        .query("livroCategorias")
+        .withIndex("by_categoria", (q) => q.eq("categoria", categoria))
+        .paginate(paginationOpts);
+      const docs = await Promise.all(r.page.map((c) => ctx.db.get(c.livroId)));
+      livros = docs.filter((l): l is Doc<"livros"> => l !== null);
+      pagina = r;
     } else {
-      livros = await ctx.db.query("livros").collect();
+      const r = await ctx.db.query("livros").paginate(paginationOpts);
+      livros = r.page;
+      pagina = r;
     }
 
-    if (args.categoria) {
-      livros = livros.filter((l) => l.categorias.includes(args.categoria!));
-    }
-
-    return Promise.all(
+    const page = await Promise.all(
       livros.map(async (l) => {
         const exemplares = await ctx.db
           .query("exemplares")
           .withIndex("by_livro", (q) => q.eq("livroId", l._id))
           .collect();
-
-        const disponiveis = exemplares.filter((e) => e.status === "DISPONIVEL").length;
-        const total = exemplares.length;
-
+        // So o que o card mostra: a sinopse fica no detalhe.
         return {
-          ...l,
-          totalExemplares: total,
-          disponiveis,
+          _id: l._id,
+          titulo: l.titulo,
+          autores: l.autores,
+          capaUrl: l.capaUrl,
+          categorias: l.categorias,
+          totalExemplares: exemplares.length,
+          disponiveis: exemplares.filter((e) => e.status === "DISPONIVEL").length,
         };
       })
     );
+
+    // splitCursor e pageStatus seguem junto: usePaginatedQuery divide paginas grandes com eles.
+    return { ...pagina, page };
   },
 });
 
@@ -159,12 +178,32 @@ export const listCategorias = query({
   args: {},
   handler: async (ctx) => {
     await requirePermission(ctx, "biblioteca:read");
-    const livros = await ctx.db.query("livros").collect();
-    const cats = new Set<string>();
-    for (const l of livros) {
-      for (const c of l.categorias) cats.add(c);
+    // Salta de categoria em categoria pelo indice: 1 leitura por categoria em uso.
+    const categorias: string[] = [];
+    let atual = await ctx.db.query("livroCategorias").withIndex("by_categoria").first();
+    while (atual) {
+      const categoria: string = atual.categoria;
+      categorias.push(categoria);
+      atual = await ctx.db
+        .query("livroCategorias")
+        .withIndex("by_categoria", (q) => q.gt("categoria", categoria))
+        .first();
     }
-    return Array.from(cats).sort();
+    return categorias;
+  },
+});
+
+/** Numero do botao da lista; o detalhe de cada atraso fica em listAtrasados. */
+export const contarAtrasados = query({
+  args: {},
+  handler: async (ctx) => {
+    await requirePermission(ctx, "biblioteca:read");
+    const ativos = await ctx.db
+      .query("emprestimos")
+      .withIndex("by_status", (q) => q.eq("status", "ATIVO"))
+      .collect();
+    const hoje = new Date().toISOString().split("T")[0];
+    return ativos.filter((e) => e.dataPrevistaDevolucao < hoje).length;
   },
 });
 

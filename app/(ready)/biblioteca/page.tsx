@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "convex/react";
+import { usePaginatedQuery, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useAuth } from "@shared/providers/PermissionsProvider";
 import { Button } from "@/shared/components/ui/button";
@@ -23,18 +23,25 @@ import { parseAsString, useQueryState } from "nuqs";
 import Link from "next/link";
 import { useDebounce } from "@shared/hooks/useDebounce";
 
+const LIVROS_POR_PAGINA = 24;
+
 function BibliotecaContent() {
   const { can } = useAuth();
   const [busca, setBusca] = useQueryState("q", parseAsString.withDefault(""));
   const [categoria, setCategoria] = useQueryState("cat", parseAsString.withDefault(""));
   const debouncedBusca = useDebounce(busca, 300);
 
-  const livros = useQuery(api.biblioteca.queries.list, {
-    busca: debouncedBusca || undefined,
-    categoria: categoria || undefined,
-  });
+  const { results: livros, status, loadMore } = usePaginatedQuery(
+    api.biblioteca.queries.list,
+    {
+      busca: debouncedBusca || undefined,
+      categoria: categoria || undefined,
+    },
+    { initialNumItems: LIVROS_POR_PAGINA }
+  );
   const categorias = useQuery(api.biblioteca.queries.listCategorias);
-  const atrasados = useQuery(api.biblioteca.queries.listAtrasados);
+  const podeEmprestar = can("biblioteca:emprestar");
+  const atrasados = useQuery(api.biblioteca.queries.contarAtrasados, podeEmprestar ? {} : "skip");
   const meusEmprestimos = useQuery(api.biblioteca.queries.meusEmprestimos);
 
   return (
@@ -52,11 +59,11 @@ function BibliotecaContent() {
                 </Button>
               </Link>
             )}
-            {can("biblioteca:emprestar") && atrasados && atrasados.length > 0 && (
+            {podeEmprestar && !!atrasados && (
               <Link href="/biblioteca/atrasados">
                 <Button variant="outline" size="sm" className="border-red-300 text-red-600 hover:text-red-700">
                   <AlertCircle className="h-4 w-4 mr-1" />
-                  {atrasados.length} atrasado{atrasados.length !== 1 ? "s" : ""}
+                  {atrasados} atrasado{atrasados !== 1 ? "s" : ""}
                 </Button>
               </Link>
             )}
@@ -99,15 +106,28 @@ function BibliotecaContent() {
           </Select>
         </div>
 
-        {!livros ? (
+        {status === "LoadingFirstPage" ? (
           <p className="text-sm text-muted-foreground">Carregando...</p>
-        ) : livros.length === 0 ? (
+        ) : livros.length === 0 && status === "Exhausted" ? (
           <p className="text-sm text-muted-foreground text-center py-12">Nenhum livro encontrado</p>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2">
-            {livros.map((l: any) => (
+            {livros.map((l) => (
               <LivroCard key={l._id} livro={l} />
             ))}
+          </div>
+        )}
+
+        {(status === "CanLoadMore" || status === "LoadingMore") && (
+          <div className="flex justify-center">
+            <Button
+              variant="outline"
+              className="h-11 w-full sm:w-auto"
+              disabled={status === "LoadingMore"}
+              onClick={() => loadMore(LIVROS_POR_PAGINA)}
+            >
+              {status === "LoadingMore" ? "Carregando..." : "Carregar mais"}
+            </Button>
           </div>
         )}
       </div>
