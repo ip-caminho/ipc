@@ -368,14 +368,20 @@ function montarPayload(l, usarSugestao, ajustes) {
     idioma: ajustes.idiomas?.[cod],
     categorias: [],
     capaUrlOrigem: l.capaNotion ?? g?.capa,
-    exemplares: l.exemplares.map((e) => limpo({ ...e })),
+    exemplares: l.exemplares.map((e) =>
+      limpo({
+        ...e,
+        emPosse: e.emPosse && { ...e.emPosse, nome: ajustes.nomes?.[e.emPosse.nome] ?? e.emPosse.nome },
+      })
+    ),
   });
 }
 
 /**
  * Aplica ajustes.json (opcional): `fundir` junta obras que o agrupamento nao
  * percebeu por erro de digitacao ([codigo principal, codigo a anexar]);
- * `titulos`, `autores` e `idiomas` corrigem pelo 1o codigo da obra.
+ * `titulos`, `autores` e `idiomas` corrigem pelo 1o codigo da obra; `nomes`
+ * troca o nome de quem esta com o livro pelo nome completo do cadastro.
  */
 function montarLotes() {
   if (!existsSync(JSON_PATH)) throw new Error(`Rode "preparar" antes (${JSON_PATH} nao existe)`);
