@@ -8,7 +8,7 @@ import { ArrowLeft, BookOpen, ChevronUp, Search } from "lucide-react";
 import type { LivroCatalogo } from "@convex/public/acervo";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
-import { buscarLivros, capaPermitida, montarFileiras, posicaoInicial } from "@features/biblioteca/lib/acervo";
+import { buscarLivros, capaPermitida, montarFileiras } from "@features/biblioteca/lib/acervo";
 import type { CenaFileira } from "@features/biblioteca/lib/fileiraCena";
 import { Disponibilidade } from "./Disponibilidade";
 import { LivroDetalhes } from "./LivroDetalhes";
@@ -39,14 +39,12 @@ function LinhaLivro({ livro, onClick }: { livro: LivroCatalogo; onClick: () => v
   );
 }
 
-export function AcervoPublico({ livros }: { livros: LivroCatalogo[] }) {
+export function AcervoPublico({ livros, abertura }: { livros: LivroCatalogo[]; abertura: number }) {
   const fileiras = useMemo(() => montarFileiras(livros), [livros]);
   const [termo, setTermo] = useQueryState("q", parseAsString.withDefault(""));
   const [listaAberta, setListaAberta] = useState(false);
   const [sem3d, setSem3d] = useState(false);
-  const [atual, setAtual] = useState(() =>
-    fileiras.length ? fileiras[0].indices[posicaoInicial(livros, fileiras[0].indices)] : 0,
-  );
+  const [atual, setAtual] = useState(abertura);
   const [expandido, setExpandido] = useState<number | null>(null);
   const palco = useRef<HTMLDivElement>(null);
   const cena = useRef<CenaFileira | null>(null);
@@ -58,7 +56,7 @@ export function AcervoPublico({ livros }: { livros: LivroCatalogo[] }) {
     // Three.js carrega só aqui, depois da busca e da lista já estarem na tela.
     import("@features/biblioteca/lib/fileiraCena")
       .then(({ criarFileira }) =>
-        criarFileira(host, { livros, fileiras, aoMudar: setAtual, aoExpandir: setExpandido }),
+        criarFileira(host, { livros, fileiras, abertura, aoMudar: setAtual, aoExpandir: setExpandido }),
       )
       .then((c) => {
         if (cancelado) c.destruir();
@@ -70,7 +68,7 @@ export function AcervoPublico({ livros }: { livros: LivroCatalogo[] }) {
       cena.current?.destruir();
       cena.current = null;
     };
-  }, [livros, fileiras]);
+  }, [livros, fileiras, abertura]);
 
   const achados = useMemo(() => (termo.trim() ? buscarLivros(livros, termo) : null), [livros, termo]);
   const mostrarLista = achados !== null || listaAberta || sem3d;

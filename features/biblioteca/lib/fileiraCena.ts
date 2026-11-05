@@ -13,6 +13,7 @@ export type CenaFileira = {
 type Opcoes = {
   livros: LivroCatalogo[];
   fileiras: Fileira[];
+  abertura: number;
   aoMudar: (indice: number) => void;
   aoExpandir: (indice: number) => void;
 };
@@ -87,7 +88,7 @@ function quebrarLinhas(ctx: CanvasRenderingContext2D, texto: string, max: number
 }
 
 export async function criarFileira(host: HTMLElement, opcoes: Opcoes): Promise<CenaFileira> {
-  const { livros, fileiras: entrada, aoMudar, aoExpandir } = opcoes;
+  const { livros, fileiras: entrada, abertura, aoMudar, aoExpandir } = opcoes;
   const estilo = getComputedStyle(host);
   const serif = `${estilo.getPropertyValue("--font-display") || "Spectral"}, Georgia, serif`;
   const sans = `${estilo.getPropertyValue("--font-inter") || "Inter"}, system-ui, sans-serif`;
@@ -210,7 +211,8 @@ export async function criarFileira(host: HTMLElement, opcoes: Opcoes): Promise<C
     );
     label.visible = false;
     scene.add(label);
-    return { ...f, pos: posicaoInicial(livros, f.indices), label };
+    const naAbertura = f.indices.indexOf(abertura);
+    return { ...f, pos: naAbertura >= 0 ? naAbertura : posicaoInicial(livros, f.indices), label };
   });
   const fileiraDe = new Map<number, number>();
   fileiras.forEach((f, r) => f.indices.forEach((i) => fileiraDe.set(i, r)));
