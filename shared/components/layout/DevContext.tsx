@@ -946,6 +946,26 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "Liturgia, arquivos, avisos, checklist, anotacoes",
     ],
   },
+  "/acervo": {
+    nome: "Acervo da biblioteca (publico)",
+    pagina: "app/(public)/acervo/page.tsx",
+    arquivos: [
+      "app/(public)/acervo/page.tsx",
+      "features/biblioteca/components/acervo/AcervoPublico.tsx",
+      "features/biblioteca/components/acervo/LivroDetalhes.tsx",
+      "features/biblioteca/lib/fileiraCena.ts",
+      "features/biblioteca/lib/acervo.ts",
+      "features/biblioteca/lib/acervoData.ts",
+    ],
+    queries: ["public.acervo.catalogo", "biblioteca.queries.getPublicByCodigo"],
+    componentes: ["AcervoPublico", "LivroDetalhes", "Disponibilidade", "ResponsiveDialog"],
+    notas: [
+      "Sem login, so leitura; nao mostra dono do exemplar nem quem esta com o livro",
+      "Catalogo em unstable_cache de 1h; getPublicByCodigo so com a ficha aberta",
+      "Three.js carregado sob demanda; sem WebGL cai na lista",
+      "Capas passam por /_next/image: o CDN nao libera CORS para textura",
+    ],
+  },
   "/biblioteca": {
     nome: "Biblioteca",
     pagina: "app/(ready)/biblioteca/page.tsx",
