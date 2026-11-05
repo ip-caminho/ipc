@@ -953,9 +953,19 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "app/(ready)/biblioteca/page.tsx",
       "features/biblioteca/components/LivroCard.tsx",
     ],
-    queries: ["biblioteca.queries.list", "biblioteca.queries.listCategorias"],
+    queries: [
+      "biblioteca.queries.list",
+      "biblioteca.queries.listCategorias",
+      "biblioteca.queries.contarAtrasados",
+      "biblioteca.queries.meusEmprestimos",
+    ],
     componentes: ["LivroCard", "PermissionGate", "ModuloGuard"],
-    notas: ["Permissao: biblioteca:read/create", "Busca com debounce, filtro por categoria"],
+    notas: [
+      "Permissao: biblioteca:read/create",
+      "Busca com debounce, filtro por categoria",
+      "Lista paginada (usePaginatedQuery, 24 por vez, botao Carregar mais)",
+      "Categorias e filtro por categoria via tabela livroCategorias",
+    ],
   },
   "/biblioteca/[id]": {
     nome: "Detalhe do Livro",
