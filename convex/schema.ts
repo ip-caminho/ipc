@@ -1180,6 +1180,15 @@ export default defineSchema({
       searchField: "titulo",
     }),
 
+  // Categoria por livro: `livros.categorias` e array e nao entra em indice. Toda
+  // escrita de categorias passa por sincronizarCategorias.
+  livroCategorias: defineTable({
+    categoria: v.string(),
+    livroId: v.id("livros"),
+  })
+    .index("by_categoria", ["categoria"])
+    .index("by_livro", ["livroId"]),
+
   exemplares: defineTable({
     livroId: v.id("livros"),
     codigo: v.string(), // BIB-0001

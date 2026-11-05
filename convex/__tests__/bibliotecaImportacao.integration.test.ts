@@ -30,6 +30,7 @@ describe("biblioteca.importacao.importarLote", () => {
     const dono = await seedMembro(t, "Fulano de Tal");
     const leitor = await seedMembro(t, "Ciclano Souza");
 
+    // @ts-ignore Convex TS2589
     const r = await t.mutation(internal.biblioteca.importacao.importarLote, {
       livros: [
         {
@@ -211,8 +212,17 @@ describe("biblioteca.importacao.removerLivroDeTeste", () => {
   it("remove o livro e tudo que aponta para ele, sem tocar em outros livros", async () => {
     const t = convexTest(schema, modules);
     const livroId = await seedLivroComHistorico(t, "DEVOLVIDO");
+    await t.run(async (ctx) => {
+      await ctx.db.insert("livroCategorias", { categoria: "Teste", livroId });
+    });
     await t.mutation(internal.biblioteca.importacao.importarLote, {
-      livros: [{ ...livroBase, exemplares: [{ codigo: "BIB-0002", dataAquisicao: "2025-07-01" }] }],
+      livros: [
+        {
+          ...livroBase,
+          categorias: ["Apologetica"],
+          exemplares: [{ codigo: "BIB-0002", dataAquisicao: "2025-07-01" }],
+        },
+      ],
     });
 
     const r = await t.mutation(internal.biblioteca.importacao.removerLivroDeTeste, {
@@ -226,7 +236,9 @@ describe("biblioteca.importacao.removerLivroDeTeste", () => {
       exemplares: await ctx.db.query("exemplares").collect(),
       emprestimos: await ctx.db.query("emprestimos").collect(),
       eventos: await ctx.db.query("livroEventos").collect(),
+      categorias: await ctx.db.query("livroCategorias").collect(),
     }));
+    expect(dados.categorias.map((c) => c.categoria)).toEqual(["Apologetica"]);
     expect(dados.livros.map((l) => l.titulo)).toEqual([livroBase.titulo]);
     expect(dados.exemplares.map((e) => e.codigo)).toEqual(["BIB-0002"]);
     expect(dados.emprestimos).toHaveLength(0);
