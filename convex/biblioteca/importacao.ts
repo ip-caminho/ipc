@@ -346,3 +346,46 @@ export const importarAcervo = internalAction({
     return { dryRun: false, ...resumo, ...resultado, errosCapa };
   },
 });
+
+/**
+ * Remove um livro de teste e tudo que aponta para ele. Rodar via CLI. O titulo
+ * esperado protege contra id trocado, e emprestimo ativo barra a remocao: livro
+ * com alguem de verdade nao e cadastro de teste. Os auditLogs ficam como registro.
+ */
+export const removerLivroDeTeste = internalMutation({
+  args: { livroId: v.id("livros"), tituloEsperado: v.string() },
+  handler: async (ctx, { livroId, tituloEsperado }) => {
+    const livro = await ctx.db.get(livroId);
+    if (!livro) throw new Error("Livro nao encontrado");
+    if (livro.titulo !== tituloEsperado) {
+      throw new Error(`Titulo nao confere: "${livro.titulo}"`);
+    }
+    const emprestimos = await ctx.db
+      .query("emprestimos")
+      .withIndex("by_livro", (q) => q.eq("livroId", livroId))
+      .collect();
+    if (emprestimos.some((e) => e.status === "ATIVO")) {
+      throw new Error("Livro tem emprestimo ativo");
+    }
+    const exemplares = await ctx.db
+      .query("exemplares")
+      .withIndex("by_livro", (q) => q.eq("livroId", livroId))
+      .collect();
+    const eventos = await ctx.db
+      .query("livroEventos")
+      .withIndex("by_livro", (q) => q.eq("livroId", livroId))
+      .collect();
+
+    for (const doc of [...eventos, ...emprestimos, ...exemplares]) await ctx.db.delete(doc._id);
+    await ctx.db.delete(livroId);
+    await createActionAuditLog(ctx, "DELETE", "livros", livroId as string, {
+      field: "motivo",
+      to: `Cadastro de teste: ${livro.titulo}`,
+    });
+    return {
+      codigos: exemplares.map((e) => e.codigo),
+      emprestimos: emprestimos.length,
+      eventos: eventos.length,
+    };
+  },
+});
