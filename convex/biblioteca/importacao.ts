@@ -354,6 +354,32 @@ export const importarAcervo = internalAction({
  * esperado protege contra id trocado, e emprestimo ativo barra a remocao: livro
  * com alguem de verdade nao e cadastro de teste. Os auditLogs ficam como registro.
  */
+// Grava a classificacao do acervo em lotes, via CLI. Sobrescreve as categorias do livro.
+export const aplicarCategorias = internalMutation({
+  args: {
+    itens: v.array(v.object({ livroId: v.id("livros"), categoria: v.string() })),
+  },
+  handler: async (ctx, { itens }) => {
+    let aplicados = 0;
+    const ausentes: string[] = [];
+    for (const { livroId, categoria } of itens) {
+      const livro = await ctx.db.get(livroId);
+      if (!livro) {
+        ausentes.push(livroId);
+        continue;
+      }
+      await ctx.db.patch(livroId, { categorias: [categoria] });
+      await sincronizarCategorias(ctx, livroId, [categoria]);
+      await createActionAuditLog(ctx, "UPDATE", "livros", livroId as string, {
+        field: "categorias",
+        to: categoria,
+      });
+      aplicados += 1;
+    }
+    return { aplicados, ausentes };
+  },
+});
+
 export const removerLivroDeTeste = internalMutation({
   args: { livroId: v.id("livros"), tituloEsperado: v.string() },
   handler: async (ctx, { livroId, tituloEsperado }) => {
