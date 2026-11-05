@@ -171,3 +171,84 @@ describe("biblioteca.importacao.importarAcervo", () => {
     expect(ex?.observacoes).toContain("Beltrano");
   });
 });
+
+describe("biblioteca.importacao.removerLivroDeTeste", () => {
+  async function seedLivroComHistorico(t: T, status: "ATIVO" | "DEVOLVIDO") {
+    const membroId = await seedMembro(t, "Fulano de Tal");
+    return await t.run(async (ctx) => {
+      const livroId = await ctx.db.insert("livros", {
+        titulo: "Livro de teste",
+        autores: [],
+        categorias: [],
+        criadoEm: 1,
+      });
+      const exemplarId = await ctx.db.insert("exemplares", {
+        livroId,
+        codigo: "BIB-0001",
+        condicao: "BOM",
+        status: "DISPONIVEL",
+        dataAquisicao: "2026-04-10",
+      });
+      await ctx.db.insert("emprestimos", {
+        exemplarId,
+        livroId,
+        membroId,
+        dataEmprestimo: "2026-04-10",
+        dataPrevistaDevolucao: "2026-04-24",
+        status,
+      });
+      await ctx.db.insert("livroEventos", {
+        exemplarId,
+        livroId,
+        tipo: "CADASTRO",
+        data: "2026-04-10",
+        descricao: "Cadastro",
+      });
+      return livroId;
+    });
+  }
+
+  it("remove o livro e tudo que aponta para ele, sem tocar em outros livros", async () => {
+    const t = convexTest(schema, modules);
+    const livroId = await seedLivroComHistorico(t, "DEVOLVIDO");
+    await t.mutation(internal.biblioteca.importacao.importarLote, {
+      livros: [{ ...livroBase, exemplares: [{ codigo: "BIB-0002", dataAquisicao: "2025-07-01" }] }],
+    });
+
+    const r = await t.mutation(internal.biblioteca.importacao.removerLivroDeTeste, {
+      livroId,
+      tituloEsperado: "Livro de teste",
+    });
+    expect(r).toEqual({ codigos: ["BIB-0001"], emprestimos: 1, eventos: 1 });
+
+    const dados = await t.run(async (ctx) => ({
+      livros: await ctx.db.query("livros").collect(),
+      exemplares: await ctx.db.query("exemplares").collect(),
+      emprestimos: await ctx.db.query("emprestimos").collect(),
+      eventos: await ctx.db.query("livroEventos").collect(),
+    }));
+    expect(dados.livros.map((l) => l.titulo)).toEqual([livroBase.titulo]);
+    expect(dados.exemplares.map((e) => e.codigo)).toEqual(["BIB-0002"]);
+    expect(dados.emprestimos).toHaveLength(0);
+    expect(dados.eventos).toHaveLength(1);
+  });
+
+  it("recusa titulo diferente e livro com emprestimo ativo", async () => {
+    const t = convexTest(schema, modules);
+    const ativo = await seedLivroComHistorico(t, "ATIVO");
+    await expect(
+      t.mutation(internal.biblioteca.importacao.removerLivroDeTeste, {
+        livroId: ativo,
+        tituloEsperado: "Outro titulo",
+      })
+    ).rejects.toThrow(/Titulo nao confere/);
+    await expect(
+      t.mutation(internal.biblioteca.importacao.removerLivroDeTeste, {
+        livroId: ativo,
+        tituloEsperado: "Livro de teste",
+      })
+    ).rejects.toThrow(/emprestimo ativo/);
+    const livro = await t.run(async (ctx) => await ctx.db.get(ativo));
+    expect(livro).not.toBeNull();
+  });
+});
