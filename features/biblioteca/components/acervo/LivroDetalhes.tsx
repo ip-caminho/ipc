@@ -34,7 +34,7 @@ export function LivroDetalhes({ livro, onClose }: Props) {
 
   return (
     <ResponsiveDialog open={!!livro} onOpenChange={(aberto) => !aberto && onClose()}>
-      <ResponsiveDialogContent className="dark bg-background text-foreground">
+      <ResponsiveDialogContent className="light bg-background text-foreground">
         {livro && (
           <>
             <ResponsiveDialogHeader className="text-left">
