@@ -16,3 +16,20 @@ export const livroFormSchema = z.object({
 });
 
 export type LivroFormValues = z.infer<typeof livroFormSchema>;
+
+export const livroEdicaoSchema = livroFormSchema.pick({
+  titulo: true,
+  autores: true,
+  editora: true,
+  ano: true,
+  categorias: true,
+  descricao: true,
+  capaUrl: true,
+});
+
+export type LivroEdicaoValues = z.infer<typeof livroEdicaoSchema>;
+
+export const pessoaSemCadastroSchema = z.object({
+  nome: z.string().trim().min(2),
+  whatsapp: z.string().regex(/^\d{10,11}$/),
+});

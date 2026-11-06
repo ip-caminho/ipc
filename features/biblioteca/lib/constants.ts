@@ -18,6 +18,3 @@ export const STATUS_EXEMPLAR = [
   { value: "PERDIDO", label: "Perdido", color: "bg-red-100 text-red-800" },
   { value: "DANIFICADO", label: "Danificado", color: "bg-yellow-100 text-yellow-800" },
 ] as const;
-
-export const LIMITE_EMPRESTIMOS = 3;
-export const PERIODO_PADRAO_DIAS = 14;

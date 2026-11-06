@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useAuth } from "@shared/providers/PermissionsProvider";
@@ -9,14 +9,24 @@ import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Badge } from "@/shared/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
-import { BookOpen, Plus, Tag } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/shared/components/ui/alert-dialog";
+import { BookOpen, Pencil, Plus, Tag } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { STATUS_EXEMPLAR } from "@features/biblioteca/lib/constants";
 import { ModuloGuard } from "@/shared/components/auth/ModuloGuard";
 import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
 import { DetailHeader } from "@shared/components/layout/DetailHeader";
-import { EmprestimoForm } from "@features/biblioteca/components/EmprestimoForm";
+import { LivroEditDialog } from "@features/biblioteca/components/LivroEditDialog";
 import { ExemplarTimeline } from "@features/biblioteca/components/ExemplarTimeline";
 import type { Id } from "@/convex/_generated/dataModel";
 
@@ -28,14 +38,16 @@ function formatDateBR(d?: string) {
 
 export default function LivroDetalhePage() {
   const { id } = useParams<{ id: string }>();
-  const router = useRouter();
   const { can } = useAuth();
   const livro = useQuery(api.biblioteca.queries.getById, { id: id as Id<"livros"> });
   const emprestimos = useQuery(api.biblioteca.queries.listEmprestimos, { livroId: id as Id<"livros"> });
   const devolverMut = useMutation(api.biblioteca.mutations.devolver);
   const addExemplarMut = useMutation(api.biblioteca.mutations.addExemplar);
+  const retirarMut = useMutation(api.biblioteca.mutations.retirarDaEstante);
+  const voltarMut = useMutation(api.biblioteca.mutations.voltarParaEstante);
 
-  const [emprestimoOpen, setEmprestimoOpen] = useState(false);
+  const [editando, setEditando] = useState(false);
+  const [retirando, setRetirando] = useState<{ _id: Id<"exemplares">; codigo: string; status: string } | null>(null);
   const [timelineExemplarId, setTimelineExemplarId] = useState<string | null>(null);
 
   if (livro === undefined) return <div className="p-6">Carregando...</div>;
@@ -43,6 +55,17 @@ export default function LivroDetalhePage() {
 
   const ativos = emprestimos?.filter((e: any) => e.status === "ATIVO") || [];
   const historicoEmprestimos = emprestimos?.filter((e: any) => e.status === "DEVOLVIDO") || [];
+
+  async function retirarDaEstante() {
+    if (!retirando) return;
+    try {
+      await retirarMut({ exemplarId: retirando._id });
+      toast.success("Saiu da estante");
+    } catch (err: unknown) {
+      toast.error((err as Error).message || "Erro ao registrar");
+    }
+    setRetirando(null);
+  }
 
   return (
     <ModuloGuard modulo="biblioteca">
@@ -80,14 +103,21 @@ export default function LivroDetalhePage() {
             {/* Acoes */}
             <div className="flex gap-2 mt-4 flex-wrap">
               {can("biblioteca:emprestar") && livro.disponiveis > 0 && (
-                <Button size="sm" onClick={() => setEmprestimoOpen(true)}>
-                  Emprestar
+                <Button asChild size="sm" className="h-11 md:h-8">
+                  <Link href={`/biblioteca/emprestar?livro=${id}`}>Emprestar</Link>
+                </Button>
+              )}
+              {can("biblioteca:update") && (
+                <Button variant="outline" size="sm" className="h-11 md:h-8" onClick={() => setEditando(true)}>
+                  <Pencil className="h-3.5 w-3.5 mr-1" />
+                  Editar
                 </Button>
               )}
               {can("biblioteca:create") && (
                 <Button
                   variant="outline"
                   size="sm"
+                  className="h-11 md:h-8"
                   onClick={async () => {
                     await addExemplarMut({ livroId: id as Id<"livros">, condicao: "BOM" });
                     toast.success("Exemplar adicionado");
@@ -98,7 +128,7 @@ export default function LivroDetalhePage() {
                 </Button>
               )}
               <Link href={`/biblioteca/${id}/etiqueta`}>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" className="h-11 md:h-8">
                   <Tag className="h-3.5 w-3.5 mr-1" />
                   Etiquetas
                 </Button>
@@ -145,12 +175,40 @@ export default function LivroDetalhePage() {
                         <Button
                           variant="ghost"
                           size="sm"
+                          className="h-11 md:h-8"
                           onClick={() => setTimelineExemplarId(timelineExemplarId === ex._id ? null : ex._id)}
                         >
                           {timelineExemplarId === ex._id ? "Fechar" : "Timeline"}
                         </Button>
                       </div>
                     </div>
+
+                    {can("biblioteca:emprestar") && (
+                      <div className="mt-2 flex justify-end">
+                        {ex.status === "PERDIDO" ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-11 md:h-8"
+                            onClick={async () => {
+                              await voltarMut({ exemplarId: ex._id });
+                              toast.success("Voltou para a estante");
+                            }}
+                          >
+                            Voltou para a estante
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-11 text-destructive md:h-8"
+                            onClick={() => setRetirando(ex)}
+                          >
+                            Não está mais na estante
+                          </Button>
+                        )}
+                      </div>
+                    )}
 
                     {timelineExemplarId === ex._id && (
                       <div className="border-t mt-3 pt-3">
@@ -184,6 +242,7 @@ export default function LivroDetalhePage() {
                       <Button
                         variant="outline"
                         size="sm"
+                        className="h-11 md:h-8"
                         onClick={async () => {
                           await devolverMut({ emprestimoId: e._id });
                           toast.success("Devolvido");
@@ -219,11 +278,24 @@ export default function LivroDetalhePage() {
           </TabsContent>
         </Tabs>
 
-        <EmprestimoForm
-          open={emprestimoOpen}
-          onOpenChange={setEmprestimoOpen}
-          exemplares={livro.exemplares}
-        />
+        {editando && <LivroEditDialog livro={livro} onClose={() => setEditando(false)} />}
+
+        <AlertDialog open={retirando !== null} onOpenChange={(aberto) => !aberto && setRetirando(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{retirando?.codigo} não está mais na estante?</AlertDialogTitle>
+              <AlertDialogDescription>
+                {retirando?.status === "EMPRESTADO"
+                  ? "O empréstimo será encerrado e o exemplar sai da consulta pública. Dá para desfazer depois."
+                  : "O exemplar sai da consulta pública. Dá para desfazer depois."}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={retirarDaEstante}>Confirmar</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
       </HeaderLayout>
     </ModuloGuard>

@@ -3,7 +3,7 @@ import { describe, it, expect } from "vitest";
 import { api } from "../_generated/api";
 import schema from "../schema";
 import { modules } from "../test.setup";
-import { seedUserComMembro, seedUser, as } from "./helpers";
+import { seedUser, as } from "./helpers";
 
 type T = ReturnType<typeof convexTest>;
 
@@ -123,22 +123,5 @@ describe("categorias da biblioteca", () => {
     });
     const u = await leitor(t);
     expect(await u.query(api.biblioteca.queries.listCategorias, {})).toEqual(["Devocional"]);
-  });
-});
-
-describe("biblioteca.queries.contarAtrasados", () => {
-  it("conta so emprestimo ativo com prazo vencido", async () => {
-    const t = convexTest(schema, modules);
-    const { membroId } = await seedUserComMembro(t, { role: "membro" });
-    const livroId = await criarLivro(t, "Livro A");
-    await t.run(async (ctx) => {
-      const exemplarId = (await ctx.db.query("exemplares").first())!._id;
-      const base = { exemplarId, livroId, membroId, dataEmprestimo: "2020-01-01" };
-      await ctx.db.insert("emprestimos", { ...base, dataPrevistaDevolucao: "2020-01-15", status: "ATIVO" });
-      await ctx.db.insert("emprestimos", { ...base, dataPrevistaDevolucao: "2999-01-15", status: "ATIVO" });
-      await ctx.db.insert("emprestimos", { ...base, dataPrevistaDevolucao: "2020-01-15", status: "DEVOLVIDO" });
-    });
-    const u = await leitor(t);
-    expect(await u.query(api.biblioteca.queries.contarAtrasados, {})).toBe(1);
   });
 });
