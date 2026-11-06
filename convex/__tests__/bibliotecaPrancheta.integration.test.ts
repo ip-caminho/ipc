@@ -81,7 +81,7 @@ describe("biblioteca.mutations.emprestar", () => {
     await expect(v.mutation(emprestar, { exemplarId })).rejects.toThrow("para quem");
     await expect(
       v.mutation(emprestar, { exemplarId, membroId, pessoaNome: "Jorge" })
-    ).rejects.toThrow("nao os dois");
+    ).rejects.toThrow("não os dois");
   });
 
   it("mantem o limite de 3 para membro, mas nao para nome digitado", async () => {

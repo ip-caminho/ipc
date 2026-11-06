@@ -15,6 +15,7 @@ import {
 import { Plus, Search, BookMarked } from "lucide-react";
 import { LivroCard } from "@features/biblioteca/components/LivroCard";
 import { Prancheta } from "@features/biblioteca/components/Prancheta";
+import { pilula } from "@features/biblioteca/lib/estilos";
 import { PermissionGate } from "@/shared/components/auth/PermissionGate";
 import { SemPermissaoFallback } from "@/shared/components/auth/SemPermissaoFallback";
 import { ModuloGuard } from "@/shared/components/auth/ModuloGuard";
@@ -70,7 +71,7 @@ function ListaDeLivros({ voltarParaPrancheta }: { voltarParaPrancheta: boolean }
           <div className="flex items-center gap-2">
             {meusEmprestimos && meusEmprestimos.length > 0 && (
               <Link href="/biblioteca/meus-emprestimos">
-                <Button variant="outline" size="sm" className="h-11 md:h-8">
+                <Button variant="secondary" size="sm" className={`h-11 px-4 md:h-9 ${pilula}`}>
                   <BookMarked className="h-4 w-4 mr-1" />
                   Meus empréstimos ({meusEmprestimos.length})
                 </Button>
@@ -78,12 +79,12 @@ function ListaDeLivros({ voltarParaPrancheta }: { voltarParaPrancheta: boolean }
             )}
             <PermissionGate permission="biblioteca:create">
               <Link href="/biblioteca/lote">
-                <Button variant="outline" size="sm" className="h-11 md:h-8">
+                <Button variant="secondary" size="sm" className={`h-11 px-4 md:h-9 ${pilula}`}>
                   Lote
                 </Button>
               </Link>
               <Link href="/biblioteca/novo">
-                <Button size="sm" className="h-11 md:h-8">
+                <Button size="sm" className={`h-11 px-4 md:h-9 ${pilula}`}>
                   <Plus className="h-4 w-4 mr-1" />
                   Novo Livro
                 </Button>
@@ -96,14 +97,15 @@ function ListaDeLivros({ voltarParaPrancheta }: { voltarParaPrancheta: boolean }
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar por titulo..."
+              type="search"
+              placeholder="Buscar título"
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
-              className="pl-9"
+              className="h-11 rounded-full pl-9 md:h-9"
             />
           </div>
           <Select value={categoria || "__all__"} onValueChange={(v) => setCategoria(v === "__all__" ? "" : v)}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="h-11 w-[130px] rounded-full md:h-9 md:w-[180px]">
               <SelectValue placeholder="Categoria" />
             </SelectTrigger>
             <SelectContent>
@@ -131,7 +133,7 @@ function ListaDeLivros({ voltarParaPrancheta }: { voltarParaPrancheta: boolean }
           <div className="flex justify-center">
             <Button
               variant="outline"
-              className="h-11 w-full sm:w-auto"
+              className={`h-11 w-full px-6 sm:w-auto ${pilula}`}
               disabled={status === "LoadingMore"}
               onClick={() => loadMore(LIVROS_POR_PAGINA)}
             >

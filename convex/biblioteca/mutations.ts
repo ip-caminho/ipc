@@ -249,7 +249,7 @@ export const emprestar = mutation({
     let whatsapp: string | undefined;
 
     if (membroId) {
-      if (nomeDigitado || pessoaWhatsapp) throw new Error("Informe membro ou nome, nao os dois");
+      if (nomeDigitado || pessoaWhatsapp) throw new Error("Informe membro ou nome, não os dois");
 
       // Verificar limite
       const ativos = await ctx.db
@@ -265,9 +265,9 @@ export const emprestar = mutation({
       const entidade = membroDest ? await ctx.db.get(membroDest.entidadeId) : null;
       nome = entidade?.nomeCompleto || "membro";
     } else {
-      if (!nomeDigitado) throw new Error("Informe para quem e o livro");
+      if (!nomeDigitado) throw new Error("Informe para quem é o livro");
       if (!pessoaWhatsapp || !isValidBrazilianMobile(pessoaWhatsapp)) {
-        throw new Error("WhatsApp invalido");
+        throw new Error("WhatsApp inválido");
       }
       nome = nomeDigitado;
       whatsapp = normalizeToE164(pessoaWhatsapp);
@@ -322,14 +322,14 @@ export const retirarDaEstante = mutation({
         status: "DEVOLVIDO",
         dataDevolucao: getSaoPauloDateString(),
         pessoaWhatsapp: undefined,
-        observacoes: "Livro nao voltou para a estante",
+        observacoes: "Livro não voltou para a estante",
       });
     }
 
     await ctx.db.patch(exemplarId, { status: "PERDIDO" });
     await registrarEvento(
       ctx, exemplarId, exemplar.livroId,
-      "PERDA", "Nao esta mais na estante",
+      "PERDA", "Não está mais na estante",
       ativo?.membroId, membro._id
     );
     await createFieldAuditLogs(ctx, exemplar, await ctx.db.get(exemplarId), "exemplares");

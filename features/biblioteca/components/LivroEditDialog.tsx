@@ -21,6 +21,7 @@ import {
 import { Textarea } from "@/shared/components/ui/textarea";
 import { FileUpload } from "@/shared/files/components/FileUpload";
 import { CATEGORIAS_PADRAO } from "@features/biblioteca/lib/constants";
+import { pilula } from "@features/biblioteca/lib/estilos";
 import { livroEdicaoSchema, type LivroEdicaoValues } from "@features/biblioteca/lib/validations";
 
 type Props = {
@@ -84,25 +85,25 @@ export function LivroEditDialog({ onClose, livro }: Props) {
           <ResponsiveDialogBody className="space-y-4">
             <div className="space-y-1">
               <Label htmlFor="titulo">Título</Label>
-              <Input id="titulo" className="h-11" {...form.register("titulo")} />
+              <Input id="titulo" className="h-11 rounded-2xl" {...form.register("titulo")} />
               {erros.titulo && <p className="text-sm text-destructive">{erros.titulo.message}</p>}
             </div>
             <div className="space-y-1">
               <Label htmlFor="autores">Autores (separados por vírgula)</Label>
-              <Input id="autores" className="h-11" {...form.register("autores")} />
+              <Input id="autores" className="h-11 rounded-2xl" {...form.register("autores")} />
               {erros.autores && <p className="text-sm text-destructive">{erros.autores.message}</p>}
             </div>
             <div className="grid grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-3">
               <div className="space-y-1">
                 <Label htmlFor="editora">Editora</Label>
-                <Input id="editora" className="h-11" {...form.register("editora")} />
+                <Input id="editora" className="h-11 rounded-2xl" {...form.register("editora")} />
               </div>
               <div className="space-y-1">
                 <Label htmlFor="ano">Ano</Label>
                 <Input
                   id="ano"
                   inputMode="numeric"
-                  className="h-11"
+                  className="h-11 rounded-2xl"
                   {...form.register("ano", {
                     setValueAs: (v) => (v === "" || v == null ? undefined : Number(v)),
                   })}
@@ -130,7 +131,7 @@ export function LivroEditDialog({ onClose, livro }: Props) {
             </div>
             <div className="space-y-1">
               <Label htmlFor="descricao">Sinopse</Label>
-              <Textarea id="descricao" rows={3} {...form.register("descricao")} />
+              <Textarea id="descricao" rows={3} className="rounded-2xl" {...form.register("descricao")} />
             </div>
             <div className="space-y-1">
               <Label>Capa</Label>
@@ -146,10 +147,10 @@ export function LivroEditDialog({ onClose, livro }: Props) {
             </div>
           </ResponsiveDialogBody>
           <ResponsiveDialogFooter>
-            <Button type="button" variant="outline" className="h-11" onClick={onClose}>
+            <Button type="button" variant="ghost" className={`h-11 active:bg-muted ${pilula}`} onClick={onClose}>
               Cancelar
             </Button>
-            <Button type="submit" className="h-11" disabled={form.formState.isSubmitting}>
+            <Button type="submit" className={`h-11 ${pilula}`} disabled={form.formState.isSubmitting}>
               Salvar
             </Button>
           </ResponsiveDialogFooter>

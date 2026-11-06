@@ -1,9 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Card, CardContent } from "@/shared/components/ui/card";
-import { Badge } from "@/shared/components/ui/badge";
-import { BookOpen } from "lucide-react";
+import { CapaLivro } from "@features/biblioteca/components/CapaLivro";
 
 interface LivroCardProps {
   livro: {
@@ -18,33 +16,20 @@ interface LivroCardProps {
 }
 
 export function LivroCard({ livro }: LivroCardProps) {
+  const naEstante = livro.disponiveis > 0;
   return (
-    <Link href={`/biblioteca/${livro._id}`}>
-      <Card className="hover:bg-accent/50 transition-colors">
-        <CardContent className="p-4 flex gap-3">
-          {livro.capaUrl ? (
-            <img src={livro.capaUrl} alt={livro.titulo} className="w-12 h-16 object-cover rounded" />
-          ) : (
-            <div className="w-12 h-16 bg-muted rounded flex items-center justify-center">
-              <BookOpen className="h-5 w-5 text-muted-foreground" />
-            </div>
-          )}
-          <div className="flex-1 min-w-0 space-y-1">
-            <h3 className="font-medium text-sm leading-tight line-clamp-2">{livro.titulo}</h3>
-            <p className="text-xs text-muted-foreground truncate">{livro.autores.join(", ")}</p>
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className={
-                livro.disponiveis > 0 ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
-              }>
-                {livro.disponiveis}/{livro.totalExemplares} disponíveis
-              </Badge>
-              {livro.categorias.slice(0, 2).map((c) => (
-                <Badge key={c} variant="secondary" className="text-[10px]">{c}</Badge>
-              ))}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+    <Link
+      href={`/biblioteca/${livro._id}`}
+      className="flex gap-4 rounded-lg p-2 transition-colors hover:bg-accent/50 active:bg-accent/50"
+    >
+      <CapaLivro titulo={livro.titulo} capaUrl={livro.capaUrl} className="h-24 w-16" />
+      <div className="min-w-0 flex-1">
+        <h3 className="font-display line-clamp-2 text-base leading-snug">{livro.titulo}</h3>
+        <p className="mt-0.5 truncate text-sm text-muted-foreground">{livro.autores.join(", ")}</p>
+        <p className={naEstante ? "mt-1 text-sm text-emerald-700 dark:text-emerald-400" : "mt-1 text-sm text-muted-foreground"}>
+          {naEstante ? "Na estante" : "Fora da estante"}
+        </p>
+      </div>
     </Link>
   );
 }
