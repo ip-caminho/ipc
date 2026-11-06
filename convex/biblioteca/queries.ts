@@ -1,9 +1,10 @@
 import { query } from "../_generated/server";
 import { v } from "convex/values";
 import { paginationOptsValidator, type PaginationResult } from "convex/server";
-import type { Doc } from "../_generated/dataModel";
+import type { Doc, Id } from "../_generated/dataModel";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { requirePermission } from "../_shared/requirePermission";
+import { getSaoPauloDateString } from "../_shared/datetime";
 
 import { resolveMembroNome } from "../_shared/membroResolver";
 
@@ -122,12 +123,12 @@ export const listEmprestimos = query({
     }
 
     return Promise.all(
-      emprestimos.map(async (e) => {
+      emprestimos.map(async ({ pessoaWhatsapp: _telefone, ...e }) => {
         const livro = await ctx.db.get(e.livroId);
-        const membroNome = await resolveMembroNome(ctx, e.membroId);
+        const membroNome = e.pessoaNome ?? (await resolveMembroNome(ctx, e.membroId));
         const exemplar = await ctx.db.get(e.exemplarId);
 
-        const hoje = new Date().toISOString().split("T")[0];
+        const hoje = getSaoPauloDateString();
         const atrasado = e.status === "ATIVO" && e.dataPrevistaDevolucao < hoje;
 
         return {
@@ -142,35 +143,147 @@ export const listEmprestimos = query({
   },
 });
 
-export const listAtrasados = query({
+/** A prancheta: o que esta fora da estante, do emprestimo mais antigo ao mais novo. */
+export const listAtivos = query({
   args: {},
   handler: async (ctx) => {
-    await requirePermission(ctx, "biblioteca:read");
+    await requirePermission(ctx, "biblioteca:emprestar");
 
-    const emprestimos = await ctx.db
+    const ativos = await ctx.db
       .query("emprestimos")
       .withIndex("by_status", (q) => q.eq("status", "ATIVO"))
       .collect();
 
-    const hoje = new Date().toISOString().split("T")[0];
-    const atrasados = emprestimos.filter((e) => e.dataPrevistaDevolucao < hoje);
-
-    return Promise.all(
-      atrasados.map(async (e) => {
+    const linhas = await Promise.all(
+      ativos.map(async (e) => {
         const livro = await ctx.db.get(e.livroId);
-        const membro = await ctx.db.get(e.membroId);
+        const membro = e.membroId ? await ctx.db.get(e.membroId) : null;
         const entidade = membro ? await ctx.db.get(membro.entidadeId) : null;
         return {
-          ...e,
-          livroTitulo: livro?.titulo || "",
-          membroNome: entidade?.nomeCompleto || "",
-          membroWhatsapp: entidade?.whatsapp,
-          diasAtraso: Math.floor(
-            (new Date(hoje).getTime() - new Date(e.dataPrevistaDevolucao).getTime()) / 86400000
-          ),
+          _id: e._id,
+          livroId: e.livroId,
+          livroTitulo: livro?.titulo ?? "",
+          pessoa: e.pessoaNome ?? entidade?.nomeCompleto ?? "",
+          whatsapp: e.pessoaWhatsapp ?? entidade?.whatsapp,
+          dataEmprestimo: e.dataEmprestimo,
+          dataPrevistaDevolucao: e.dataPrevistaDevolucao,
         };
       })
     );
+    return linhas.sort((a, b) => a.dataEmprestimo.localeCompare(b.dataEmprestimo));
+  },
+});
+
+const LIVROS_NA_BUSCA = 6;
+const PESSOAS_NA_BUSCA = 5;
+
+// A busca do Convex nao ignora acento nem acha no meio do texto. Quando ela nao
+// acha nada, confere o texto inteiro: raro e so no formulario de emprestimo.
+const TETO_LIVROS_CONFERIDOS = 2000;
+const TETO_PESSOAS_CONFERIDAS = 2000;
+const MINIMO_PARA_CONFERIR = 3;
+
+function semAcento(texto: string): string {
+  return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
+
+function exemplarNaEstante(exemplares: Doc<"exemplares">[], preferido?: Id<"exemplares">) {
+  const naEstante = exemplares.filter((e) => e.status === "DISPONIVEL");
+  return naEstante.find((e) => e._id === preferido) ?? naEstante[0] ?? null;
+}
+
+/** Formulario de emprestimo: por codigo da etiqueta, titulo ou livro ja escolhido. */
+export const buscarLivrosParaEmprestar = query({
+  args: { termo: v.optional(v.string()), livroId: v.optional(v.id("livros")) },
+  handler: async (ctx, { termo, livroId }) => {
+    await requirePermission(ctx, "biblioteca:emprestar");
+
+    const texto = termo?.trim() ?? "";
+    const numeroEtiqueta = texto.match(/^(?:bib[-\s]?)?(\d{1,4})$/i)?.[1];
+    let livros: Doc<"livros">[] = [];
+    let exemplarDaEtiqueta: Doc<"exemplares"> | null = null;
+
+    if (livroId) {
+      const livro = await ctx.db.get(livroId);
+      if (livro) livros = [livro];
+    } else if (numeroEtiqueta) {
+      exemplarDaEtiqueta = await ctx.db
+        .query("exemplares")
+        .withIndex("by_codigo", (q) => q.eq("codigo", `BIB-${numeroEtiqueta.padStart(4, "0")}`))
+        .first();
+      const livro = exemplarDaEtiqueta ? await ctx.db.get(exemplarDaEtiqueta.livroId) : null;
+      if (livro) livros = [livro];
+    }
+    if (livros.length === 0 && !livroId && texto.length >= 2) {
+      livros = await ctx.db
+        .query("livros")
+        .withSearchIndex("search_livros", (q) => q.search("titulo", texto))
+        .take(LIVROS_NA_BUSCA);
+
+      if (livros.length === 0 && texto.length >= MINIMO_PARA_CONFERIR) {
+        const procurado = semAcento(texto);
+        const todos = await ctx.db.query("livros").take(TETO_LIVROS_CONFERIDOS);
+        livros = todos
+          .filter((l) => semAcento(`${l.titulo} ${l.autores.join(" ")}`).includes(procurado))
+          .slice(0, LIVROS_NA_BUSCA);
+      }
+    }
+
+    return Promise.all(
+      livros.map(async (l) => {
+        const exemplares = await ctx.db
+          .query("exemplares")
+          .withIndex("by_livro", (q) => q.eq("livroId", l._id))
+          .collect();
+        const exemplar = exemplarNaEstante(exemplares, exemplarDaEtiqueta?._id);
+        return {
+          livroId: l._id,
+          titulo: l.titulo,
+          autores: l.autores,
+          exemplarId: exemplar?._id ?? null,
+          codigo: exemplar?.codigo ?? null,
+        };
+      })
+    );
+  },
+});
+
+/** Membros ativos pelo nome, sem carregar a lista inteira no celular. */
+export const buscarPessoas = query({
+  args: { termo: v.string() },
+  handler: async (ctx, { termo }) => {
+    await requirePermission(ctx, "biblioteca:emprestar");
+
+    const texto = termo.trim();
+    if (texto.length < 2) return [];
+
+    const achadas = await ctx.db
+      .query("entidades")
+      .withSearchIndex("search_entidades", (q) =>
+        q.search("nomeCompleto", texto).eq("status", "ATIVO")
+      )
+      .take(PESSOAS_NA_BUSCA * 2);
+
+    let entidades = achadas;
+    if (achadas.length === 0 && texto.length >= MINIMO_PARA_CONFERIR) {
+      const procurado = semAcento(texto);
+      const ativas = await ctx.db
+        .query("entidades")
+        .withIndex("by_status", (q) => q.eq("status", "ATIVO"))
+        .take(TETO_PESSOAS_CONFERIDAS);
+      entidades = ativas.filter((e) => semAcento(e.nomeCompleto ?? "").includes(procurado));
+    }
+
+    const pessoas: { membroId: Id<"membros">; nome: string }[] = [];
+    for (const entidade of entidades) {
+      const membro = await ctx.db
+        .query("membros")
+        .withIndex("by_entidade", (q) => q.eq("entidadeId", entidade._id))
+        .first();
+      if (membro) pessoas.push({ membroId: membro._id, nome: entidade.nomeCompleto ?? "" });
+      if (pessoas.length === PESSOAS_NA_BUSCA) break;
+    }
+    return pessoas;
   },
 });
 
@@ -190,20 +303,6 @@ export const listCategorias = query({
         .first();
     }
     return categorias;
-  },
-});
-
-/** Numero do botao da lista; o detalhe de cada atraso fica em listAtrasados. */
-export const contarAtrasados = query({
-  args: {},
-  handler: async (ctx) => {
-    await requirePermission(ctx, "biblioteca:read");
-    const ativos = await ctx.db
-      .query("emprestimos")
-      .withIndex("by_status", (q) => q.eq("status", "ATIVO"))
-      .collect();
-    const hoje = new Date().toISOString().split("T")[0];
-    return ativos.filter((e) => e.dataPrevistaDevolucao < hoje).length;
   },
 });
 
@@ -271,7 +370,7 @@ export const meusEmprestimos = query({
       .collect();
 
     const ativos = emprestimos.filter((e) => e.status === "ATIVO");
-    const hoje = new Date().toISOString().split("T")[0];
+    const hoje = getSaoPauloDateString();
 
     return Promise.all(
       ativos.map(async (e) => {

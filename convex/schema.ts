@@ -1220,7 +1220,10 @@ export default defineSchema({
   emprestimos: defineTable({
     exemplarId: v.id("exemplares"),
     livroId: v.id("livros"), // denormalizado
-    membroId: v.id("membros"),
+    // Membro OU pessoa sem cadastro (nome e WhatsApp digitados).
+    membroId: v.optional(v.id("membros")),
+    pessoaNome: v.optional(v.string()),
+    pessoaWhatsapp: v.optional(v.string()), // E.164; apagado na devolucao
     dataEmprestimo: v.string(), // YYYY-MM-DD
     dataPrevistaDevolucao: v.string(), // YYYY-MM-DD
     dataDevolucao: v.optional(v.string()),

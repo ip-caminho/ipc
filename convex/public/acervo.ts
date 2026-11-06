@@ -32,6 +32,8 @@ export const catalogo = query({
 
     const porLivro = new Map<string, { codigo: string; total: number; disponiveis: number }>();
     for (const e of exemplares) {
+      // Perdido ou estragado nao esta mais na estante.
+      if (e.status === "PERDIDO" || e.status === "DANIFICADO") continue;
       const atual = porLivro.get(e.livroId) ?? { codigo: e.codigo, total: 0, disponiveis: 0 };
       atual.total += 1;
       if (e.status === "DISPONIVEL") atual.disponiveis += 1;

@@ -37,6 +37,7 @@ import type * as biblioteca_categorias from "../biblioteca/categorias.js";
 import type * as biblioteca_importacao from "../biblioteca/importacao.js";
 import type * as biblioteca_mutations from "../biblioteca/mutations.js";
 import type * as biblioteca_ocrAction from "../biblioteca/ocrAction.js";
+import type * as biblioteca_prazo from "../biblioteca/prazo.js";
 import type * as biblioteca_queries from "../biblioteca/queries.js";
 import type * as boletim_queries from "../boletim/queries.js";
 import type * as calendario_mutations from "../calendario/mutations.js";
@@ -213,6 +214,7 @@ declare const fullApi: ApiFromModules<{
   "biblioteca/importacao": typeof biblioteca_importacao;
   "biblioteca/mutations": typeof biblioteca_mutations;
   "biblioteca/ocrAction": typeof biblioteca_ocrAction;
+  "biblioteca/prazo": typeof biblioteca_prazo;
   "biblioteca/queries": typeof biblioteca_queries;
   "boletim/queries": typeof boletim_queries;
   "calendario/mutations": typeof calendario_mutations;

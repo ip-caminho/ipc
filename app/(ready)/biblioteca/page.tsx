@@ -12,8 +12,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
-import { Plus, Search, AlertCircle, BookMarked } from "lucide-react";
+import { Plus, Search, BookMarked } from "lucide-react";
 import { LivroCard } from "@features/biblioteca/components/LivroCard";
+import { Prancheta } from "@features/biblioteca/components/Prancheta";
 import { PermissionGate } from "@/shared/components/auth/PermissionGate";
 import { SemPermissaoFallback } from "@/shared/components/auth/SemPermissaoFallback";
 import { ModuloGuard } from "@/shared/components/auth/ModuloGuard";
@@ -25,8 +26,24 @@ import { useDebounce } from "@shared/hooks/useDebounce";
 
 const LIVROS_POR_PAGINA = 24;
 
+// Quem cuida da estante abre na prancheta; a lista de livros fica em ?ver=livros.
 function BibliotecaContent() {
   const { can } = useAuth();
+  const [ver] = useQueryState("ver", parseAsString);
+  const podeEmprestar = can("biblioteca:emprestar");
+
+  return (
+    <ModuloGuard modulo="biblioteca">
+      {podeEmprestar && ver !== "livros" ? (
+        <Prancheta />
+      ) : (
+        <ListaDeLivros voltarParaPrancheta={podeEmprestar} />
+      )}
+    </ModuloGuard>
+  );
+}
+
+function ListaDeLivros({ voltarParaPrancheta }: { voltarParaPrancheta: boolean }) {
   const [busca, setBusca] = useQueryState("q", parseAsString.withDefault(""));
   const [categoria, setCategoria] = useQueryState("cat", parseAsString.withDefault(""));
   const debouncedBusca = useDebounce(busca, 300);
@@ -40,41 +57,33 @@ function BibliotecaContent() {
     { initialNumItems: LIVROS_POR_PAGINA }
   );
   const categorias = useQuery(api.biblioteca.queries.listCategorias);
-  const podeEmprestar = can("biblioteca:emprestar");
-  const atrasados = useQuery(api.biblioteca.queries.contarAtrasados, podeEmprestar ? {} : "skip");
   const meusEmprestimos = useQuery(api.biblioteca.queries.meusEmprestimos);
 
   return (
-    <ModuloGuard modulo="biblioteca">
-      <HeaderLayout>
+    <HeaderLayout>
       <div className="container max-w-4xl py-6 space-y-4">
-        <PageHeader title="Biblioteca" />
+        <PageHeader
+          title={voltarParaPrancheta ? "Todos os livros" : "Biblioteca"}
+          backHref={voltarParaPrancheta ? "/biblioteca" : undefined}
+        />
         <div className="flex items-center justify-end flex-wrap gap-2">
           <div className="flex items-center gap-2">
             {meusEmprestimos && meusEmprestimos.length > 0 && (
               <Link href="/biblioteca/meus-emprestimos">
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" className="h-11 md:h-8">
                   <BookMarked className="h-4 w-4 mr-1" />
                   Meus empréstimos ({meusEmprestimos.length})
                 </Button>
               </Link>
             )}
-            {podeEmprestar && !!atrasados && (
-              <Link href="/biblioteca/atrasados">
-                <Button variant="outline" size="sm" className="border-red-300 text-red-600 hover:text-red-700">
-                  <AlertCircle className="h-4 w-4 mr-1" />
-                  {atrasados} atrasado{atrasados !== 1 ? "s" : ""}
-                </Button>
-              </Link>
-            )}
             <PermissionGate permission="biblioteca:create">
               <Link href="/biblioteca/lote">
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" className="h-11 md:h-8">
                   Lote
                 </Button>
               </Link>
               <Link href="/biblioteca/novo">
-                <Button size="sm">
+                <Button size="sm" className="h-11 md:h-8">
                   <Plus className="h-4 w-4 mr-1" />
                   Novo Livro
                 </Button>
@@ -111,7 +120,7 @@ function BibliotecaContent() {
         ) : livros.length === 0 && status === "Exhausted" ? (
           <p className="text-sm text-muted-foreground text-center py-12">Nenhum livro encontrado</p>
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2">
             {livros.map((l) => (
               <LivroCard key={l._id} livro={l} />
             ))}
@@ -131,8 +140,7 @@ function BibliotecaContent() {
           </div>
         )}
       </div>
-      </HeaderLayout>
-    </ModuloGuard>
+    </HeaderLayout>
   );
 }
 

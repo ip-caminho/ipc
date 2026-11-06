@@ -4,7 +4,10 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 import { createActionAuditLog, createFieldAuditLogs } from "../_shared/auditHelpers";
 import { requirePermission, checkPermission } from "../_shared/requirePermission";
 import { apagarArquivosSumidos } from "../files/orfaos";
+import { getSaoPauloDateString } from "../_shared/datetime";
+import { isValidBrazilianMobile, normalizeToE164 } from "../_shared/phoneUtils";
 import { sincronizarCategorias } from "./categorias";
+import { dataPrevistaDevolucao } from "./prazo";
 
 async function requireAuth(ctx: any) {
   const userId = await getAuthUserId(ctx);
@@ -45,7 +48,7 @@ async function registrarEvento(
     exemplarId,
     livroId,
     tipo,
-    data: new Date().toISOString().split("T")[0],
+    data: getSaoPauloDateString(),
     descricao,
     membroId,
     registradoPor,
@@ -98,7 +101,7 @@ export const create = mutation({
         codigo,
         condicao: args.condicao,
         status: "DISPONIVEL",
-        dataAquisicao: new Date().toISOString().split("T")[0],
+        dataAquisicao: getSaoPauloDateString(),
         doadorNome: args.doadorNome?.trim(),
       });
       await registrarEvento(ctx, exemplarId, livroId, "CADASTRO", `Exemplar ${codigo} cadastrado`, undefined, membro._id);
@@ -184,7 +187,7 @@ export const createBatch = mutation({
         codigo,
         condicao: l.condicao,
         status: "DISPONIVEL",
-        dataAquisicao: new Date().toISOString().split("T")[0],
+        dataAquisicao: getSaoPauloDateString(),
         doadorNome: doadorNome?.trim(),
       });
       await registrarEvento(ctx, exemplarId, livroId, "CADASTRO", `Exemplar ${codigo} cadastrado`, undefined, membro._id);
@@ -213,7 +216,7 @@ export const addExemplar = mutation({
       codigo,
       condicao,
       status: "DISPONIVEL",
-      dataAquisicao: new Date().toISOString().split("T")[0],
+      dataAquisicao: getSaoPauloDateString(),
       doadorNome: doadorNome?.trim(),
     });
     await registrarEvento(ctx, exemplarId, livroId, "CADASTRO", `Exemplar ${codigo} cadastrado`, undefined, membro._id);
@@ -225,53 +228,66 @@ export const addExemplar = mutation({
 // ===== Emprestimos =====
 
 const LIMITE_EMPRESTIMOS = 3;
-const PERIODO_PADRAO_DIAS = 14;
 
 export const emprestar = mutation({
   args: {
     exemplarId: v.id("exemplares"),
-    membroId: v.id("membros"),
-    diasEmprestimo: v.optional(v.number()),
+    // Membro OU pessoa sem cadastro (nome e WhatsApp).
+    membroId: v.optional(v.id("membros")),
+    pessoaNome: v.optional(v.string()),
+    pessoaWhatsapp: v.optional(v.string()),
   },
-  handler: async (ctx, { exemplarId, membroId, diasEmprestimo }) => {
+  handler: async (ctx, { exemplarId, membroId, pessoaNome, pessoaWhatsapp }) => {
     const { membro: registrador } = await requirePermission(ctx, "biblioteca:emprestar");
 
     const exemplar = await ctx.db.get(exemplarId);
     if (!exemplar) throw new Error("Exemplar nao encontrado");
     if (exemplar.status !== "DISPONIVEL") throw new Error("Exemplar nao esta disponivel");
 
-    // Verificar limite
-    const ativos = await ctx.db
-      .query("emprestimos")
-      .withIndex("by_membro", (q) => q.eq("membroId", membroId))
-      .collect();
-    const emprestimosAtivos = ativos.filter((e) => e.status === "ATIVO");
-    if (emprestimosAtivos.length >= LIMITE_EMPRESTIMOS) {
-      throw new Error(`Limite de ${LIMITE_EMPRESTIMOS} emprestimos simultaneos`);
+    const nomeDigitado = pessoaNome?.trim();
+    let nome: string;
+    let whatsapp: string | undefined;
+
+    if (membroId) {
+      if (nomeDigitado || pessoaWhatsapp) throw new Error("Informe membro ou nome, nao os dois");
+
+      // Verificar limite
+      const ativos = await ctx.db
+        .query("emprestimos")
+        .withIndex("by_membro", (q) => q.eq("membroId", membroId))
+        .collect();
+      const emprestimosAtivos = ativos.filter((e) => e.status === "ATIVO");
+      if (emprestimosAtivos.length >= LIMITE_EMPRESTIMOS) {
+        throw new Error(`Limite de ${LIMITE_EMPRESTIMOS} emprestimos simultaneos`);
+      }
+
+      const membroDest = await ctx.db.get(membroId);
+      const entidade = membroDest ? await ctx.db.get(membroDest.entidadeId) : null;
+      nome = entidade?.nomeCompleto || "membro";
+    } else {
+      if (!nomeDigitado) throw new Error("Informe para quem e o livro");
+      if (!pessoaWhatsapp || !isValidBrazilianMobile(pessoaWhatsapp)) {
+        throw new Error("WhatsApp invalido");
+      }
+      nome = nomeDigitado;
+      whatsapp = normalizeToE164(pessoaWhatsapp);
     }
 
-    const hoje = new Date().toISOString().split("T")[0];
-    const dias = diasEmprestimo ?? PERIODO_PADRAO_DIAS;
-    const devolucao = new Date();
-    devolucao.setDate(devolucao.getDate() + dias);
-    const dataDevolucao = devolucao.toISOString().split("T")[0];
+    const hoje = getSaoPauloDateString();
 
     const empId = await ctx.db.insert("emprestimos", {
       exemplarId,
       livroId: exemplar.livroId,
       membroId,
+      pessoaNome: membroId ? undefined : nome,
+      pessoaWhatsapp: whatsapp,
       dataEmprestimo: hoje,
-      dataPrevistaDevolucao: dataDevolucao,
+      dataPrevistaDevolucao: dataPrevistaDevolucao(hoje),
       status: "ATIVO",
       registradoPor: registrador._id,
     });
 
     await ctx.db.patch(exemplarId, { status: "EMPRESTADO" });
-
-    // Resolver nome do membro
-    const membroDest = await ctx.db.get(membroId);
-    const entidade = membroDest ? await ctx.db.get(membroDest.entidadeId) : null;
-    const nome = entidade?.nomeCompleto || "membro";
 
     await registrarEvento(
       ctx, exemplarId, exemplar.livroId,
@@ -281,6 +297,61 @@ export const emprestar = mutation({
 
     await createActionAuditLog(ctx, "CREATE", "emprestimos", empId as string);
     return empId;
+  },
+});
+
+// ===== Estante =====
+
+// Livro perdido ou estragado: sai da consulta publica e encerra o emprestimo aberto.
+export const retirarDaEstante = mutation({
+  args: { exemplarId: v.id("exemplares") },
+  handler: async (ctx, { exemplarId }) => {
+    const { membro } = await requirePermission(ctx, "biblioteca:emprestar");
+
+    const exemplar = await ctx.db.get(exemplarId);
+    if (!exemplar) throw new Error("Exemplar nao encontrado");
+    if (exemplar.status === "PERDIDO") return;
+
+    const emprestimos = await ctx.db
+      .query("emprestimos")
+      .withIndex("by_exemplar", (q) => q.eq("exemplarId", exemplarId))
+      .collect();
+    const ativo = emprestimos.find((e) => e.status === "ATIVO");
+    if (ativo) {
+      await ctx.db.patch(ativo._id, {
+        status: "DEVOLVIDO",
+        dataDevolucao: getSaoPauloDateString(),
+        pessoaWhatsapp: undefined,
+        observacoes: "Livro nao voltou para a estante",
+      });
+    }
+
+    await ctx.db.patch(exemplarId, { status: "PERDIDO" });
+    await registrarEvento(
+      ctx, exemplarId, exemplar.livroId,
+      "PERDA", "Nao esta mais na estante",
+      ativo?.membroId, membro._id
+    );
+    await createFieldAuditLogs(ctx, exemplar, await ctx.db.get(exemplarId), "exemplares");
+  },
+});
+
+export const voltarParaEstante = mutation({
+  args: { exemplarId: v.id("exemplares") },
+  handler: async (ctx, { exemplarId }) => {
+    const { membro } = await requirePermission(ctx, "biblioteca:emprestar");
+
+    const exemplar = await ctx.db.get(exemplarId);
+    if (!exemplar) throw new Error("Exemplar nao encontrado");
+    if (exemplar.status !== "PERDIDO") return;
+
+    await ctx.db.patch(exemplarId, { status: "DISPONIVEL" });
+    await registrarEvento(
+      ctx, exemplarId, exemplar.livroId,
+      "OBSERVACAO", "Voltou para a estante",
+      undefined, membro._id
+    );
+    await createFieldAuditLogs(ctx, exemplar, await ctx.db.get(exemplarId), "exemplares");
   },
 });
 
@@ -318,17 +389,14 @@ export const emprestimoSelfService = mutation({
       throw new Error(`Limite de ${LIMITE_EMPRESTIMOS} emprestimos simultaneos`);
     }
 
-    const hoje = new Date().toISOString().split("T")[0];
-    const devolucao = new Date();
-    devolucao.setDate(devolucao.getDate() + PERIODO_PADRAO_DIAS);
-    const dataDevolucao = devolucao.toISOString().split("T")[0];
+    const hoje = getSaoPauloDateString();
 
     const empId = await ctx.db.insert("emprestimos", {
       exemplarId: exemplarParaEmprestar._id,
       livroId: exemplarParaEmprestar.livroId,
       membroId: membro._id,
       dataEmprestimo: hoje,
-      dataPrevistaDevolucao: dataDevolucao,
+      dataPrevistaDevolucao: dataPrevistaDevolucao(hoje),
       status: "ATIVO",
       selfService: true,
       registradoPor: membro._id,
@@ -373,7 +441,7 @@ export const devolverSelfService = mutation({
 
     if (!ativo) throw new Error("Voce nao tem emprestimo ativo deste livro");
 
-    const hoje = new Date().toISOString().split("T")[0];
+    const hoje = getSaoPauloDateString();
     await ctx.db.patch(ativo._id, { status: "DEVOLVIDO", dataDevolucao: hoje });
     await ctx.db.patch(ativo.exemplarId, { status: "DISPONIVEL" });
 
@@ -405,8 +473,8 @@ export const devolver = mutation({
       throw new Error("Sem permissao");
     }
 
-    const hoje = new Date().toISOString().split("T")[0];
-    await ctx.db.patch(emprestimoId, { status: "DEVOLVIDO", dataDevolucao: hoje });
+    const hoje = getSaoPauloDateString();
+    await ctx.db.patch(emprestimoId, { status: "DEVOLVIDO", dataDevolucao: hoje, pessoaWhatsapp: undefined });
     await ctx.db.patch(emprestimo.exemplarId, { status: "DISPONIVEL" });
 
     await registrarEvento(
