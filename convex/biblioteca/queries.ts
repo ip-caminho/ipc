@@ -163,6 +163,7 @@ export const listAtivos = query({
           _id: e._id,
           livroId: e.livroId,
           livroTitulo: livro?.titulo ?? "",
+          capaUrl: livro?.capaUrl,
           pessoa: e.pessoaNome ?? entidade?.nomeCompleto ?? "",
           whatsapp: e.pessoaWhatsapp ?? entidade?.whatsapp,
           dataEmprestimo: e.dataEmprestimo,
@@ -240,6 +241,7 @@ export const buscarLivrosParaEmprestar = query({
           livroId: l._id,
           titulo: l.titulo,
           autores: l.autores,
+          capaUrl: l.capaUrl,
           exemplarId: exemplar?._id ?? null,
           codigo: exemplar?.codigo ?? null,
         };

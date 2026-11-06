@@ -973,6 +973,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "app/(ready)/biblioteca/page.tsx",
       "features/biblioteca/components/Prancheta.tsx",
       "features/biblioteca/components/LivroCard.tsx",
+      "features/biblioteca/components/CapaLivro.tsx",
     ],
     queries: [
       "biblioteca.queries.listAtivos",
@@ -981,7 +982,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "biblioteca.queries.meusEmprestimos",
     ],
     mutations: ["biblioteca.mutations.devolver"],
-    componentes: ["Prancheta", "LivroCard", "PermissionGate", "ModuloGuard"],
+    componentes: ["Prancheta", "LivroCard", "CapaLivro", "MobileFab", "PermissionGate", "ModuloGuard"],
     notas: [
       "Permissao: biblioteca:read/create",
       "Quem tem biblioteca:emprestar abre na prancheta; a lista de livros fica em ?ver=livros",
@@ -1001,7 +1002,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     ],
     queries: ["biblioteca.queries.buscarLivrosParaEmprestar", "biblioteca.queries.buscarPessoas"],
     mutations: ["biblioteca.mutations.emprestar"],
-    componentes: ["EmprestarForm", "PhoneInputBR", "StickyActionBar"],
+    componentes: ["EmprestarForm", "CapaLivro", "PhoneInputBR", "StickyActionBar"],
     notas: [
       "Permissao: biblioteca:emprestar",
       "Prazo fixo de 4 semanas (prazo.ts)",
@@ -1015,6 +1016,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     arquivos: [
       "app/(ready)/biblioteca/[id]/page.tsx",
       "features/biblioteca/components/LivroEditDialog.tsx",
+      "features/biblioteca/components/CapaLivro.tsx",
     ],
     queries: ["biblioteca.queries.getById", "biblioteca.queries.listEmprestimos"],
     mutations: [
