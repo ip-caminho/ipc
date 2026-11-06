@@ -28,6 +28,7 @@ type LivroVivo = {
   cover: THREE.MeshStandardMaterial;
   spine: THREE.MeshStandardMaterial;
   sombra: THREE.Mesh;
+  lombada?: THREE.Mesh;
   tp: THREE.Vector3;
   tq: THREE.Quaternion;
   ts: number;
@@ -276,7 +277,8 @@ export async function criarFileira(host: HTMLElement, opcoes: Opcoes): Promise<C
     it.geos = [
       new THREE.BoxGeometry(w - 0.03, h - 0.03, d - 2 * t),
       new THREE.BoxGeometry(w, h, t),
-      new THREE.BoxGeometry(t, h, d),
+      // Lombada entre as capas: se encostar no plano da capa, as duas disputam os pixels e pisca.
+      new THREE.BoxGeometry(t, h, d - 2 * t),
     ];
     const { edge, cover, spine } = it;
     const paginas = new THREE.Mesh(it.geos[0], matPaginas);
@@ -287,6 +289,7 @@ export async function criarFileira(host: HTMLElement, opcoes: Opcoes): Promise<C
     verso.position.z = -d / 2 + t / 2;
     const lombada = new THREE.Mesh(it.geos[2], [edge, spine, edge, edge, edge, edge]);
     lombada.position.x = -w / 2 + t / 2;
+    it.lombada = lombada;
     [paginas, frente, verso, lombada].forEach((m) => {
       m.userData.i = it.i;
       it.g.add(m);
@@ -303,6 +306,8 @@ export async function criarFileira(host: HTMLElement, opcoes: Opcoes): Promise<C
     it.sombra.scale.set(largura / MIOLO_SOMBRA, (ALTURA_SOMBRA * s) / MIOLO_SOMBRA, 1);
     it.sombra.position.set(it.g.position.x, it.g.position.y - s * (D.h / 2 + 0.012 + 0.03 * frente), 0);
     it.sombra.visible = it.g.visible;
+    // De frente a lombada nem aparece, e a aresta dela chegava a vazar sobre a capa.
+    if (it.lombada) it.lombada.visible = Math.abs(th) > 0.05;
   }
 
   function aplicarLombada(it: LivroVivo, base: string) {
