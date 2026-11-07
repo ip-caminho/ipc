@@ -966,6 +966,27 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "Capas passam por /_next/image: o CDN nao libera CORS para textura",
     ],
   },
+  "/treinamento/mesa-de-som": {
+    nome: "Treino da mesa de som (publico)",
+    pagina: "app/(public)/treinamento/mesa-de-som/page.tsx",
+    arquivos: [
+      "app/(public)/treinamento/mesa-de-som/page.tsx",
+      "features/mesaSom/lib/config.ts",
+      "features/mesaSom/lib/simulador.ts",
+      "features/mesaSom/lib/licoes.ts",
+      "features/mesaSom/hooks/useTreino.ts",
+      "features/mesaSom/hooks/useSinal.ts",
+      "features/mesaSom/hooks/useArrasteCabo.ts",
+      "features/mesaSom/components/mesa.module.css",
+    ],
+    componentes: ["MesaSimulador", "PassoAPasso", "PainelSuperior", "TelaTouch", "PainelTraseiro", "RackPalco", "MapaPalco", "NiveisCaixas"],
+    notas: [
+      "Sem login e sem Convex; fora do menu e do sitemap, com noindex",
+      "Mapa da igreja (canais, caixas, presets) so em features/mesaSom/lib/config.ts",
+      "Licao na URL (?licao=); licoes concluidas em localStorage",
+      "Som e so visual: sinal simulado em useSinal",
+    ],
+  },
   "/biblioteca": {
     nome: "Biblioteca",
     pagina: "app/(ready)/biblioteca/page.tsx",
