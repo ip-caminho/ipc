@@ -256,8 +256,7 @@ type ResultadoImportacao =
 const MAX_CAPA_BYTES = 5 * 1024 * 1024;
 
 async function subirCapa(url: string, codigo: string): Promise<string> {
-  // Algumas livrarias recusam download sem User-Agent de navegador.
-  const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" } });
+  const res = await fetch(url);
   if (!res.ok) throw new Error(`download ${res.status}`);
   const contentType = res.headers.get("content-type") ?? "";
   if (!contentType.startsWith("image/")) throw new Error(`tipo ${contentType}`);
@@ -350,19 +349,22 @@ export const importarAcervo = internalAction({
   },
 });
 
-// Troca a capa de livros ja cadastrados, via CLI: baixa cada imagem, envia ao
-// B2 e grava a URL nova. Usado para trocar miniaturas por capas maiores e
-// preencher as que faltavam.
+// Troca a capa de livros ja cadastrados, via CLI. A imagem chega pronta (JPEG
+// em base64, ja recortada e reduzida localmente): envia ao B2 e grava a URL
+// nova. Usado para trocar miniaturas por capas maiores e preencher as que faltavam.
 export const trocarCapas = internalAction({
   args: {
-    itens: v.array(v.object({ livroId: v.id("livros"), codigo: v.string(), url: v.string() })),
+    itens: v.array(v.object({ livroId: v.id("livros"), codigo: v.string(), jpegBase64: v.string() })),
   },
   handler: async (ctx, { itens }): Promise<{ gravadas: number; ausentes: string[]; erros: string[] }> => {
     const erros: string[] = [];
     const trocas: { livroId: Id<"livros">; capaUrl: string }[] = [];
-    for (const { livroId, codigo, url } of itens) {
+    for (const { livroId, codigo, jpegBase64 } of itens) {
       try {
-        trocas.push({ livroId, capaUrl: await subirCapa(url, codigo) });
+        const body = Uint8Array.from(atob(jpegBase64), (c) => c.charCodeAt(0));
+        if (body.byteLength > MAX_CAPA_BYTES) throw new Error("capa > 5MB");
+        const capaUrl = await putObject(generateObjectKey("biblioteca-capas", codigo, "jpg"), body, "image/jpeg");
+        trocas.push({ livroId, capaUrl });
       } catch (e) {
         erros.push(`${codigo}: ${(e as Error).message}`);
       }
