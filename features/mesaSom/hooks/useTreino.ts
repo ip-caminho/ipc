@@ -2,11 +2,10 @@
 
 import { useCallback, useEffect, useReducer } from "react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
-import { criarTreino, IDS_LICAO, reduzirTreino } from "../lib/licoes";
+import { criarTreino, IDS_LICAO, reduzirTreino, tempoDoCerto } from "../lib/licoes";
 import type { AcaoMesa } from "../lib/simulador";
 
 const CHAVE_FEITAS = "mesa-som-feitas";
-const ESPERA_CERTO_MS = 520;
 const ESPERA_BOOT_MS = 2500;
 const PARSER_LICAO = parseAsStringLiteral(IDS_LICAO).withDefault(IDS_LICAO[0]);
 
@@ -45,14 +44,15 @@ export function useTreino() {
     }
   }, [treino.feitas]);
 
-  // Mostra "Certo." por um instante antes de passar ao próximo passo
+  // Mostra "Certo." tempo suficiente para ler antes de passar ao próximo passo
   const { aguardando, passo } = treino;
+  const espera = tempoDoCerto(treino.msg);
   useEffect(() => {
     if (!aguardando) return;
-    const id = setTimeout(() => despachar({ tipo: "avancar" }), ESPERA_CERTO_MS);
+    const id = setTimeout(() => despachar({ tipo: "avancar" }), espera);
     return () => clearTimeout(id);
     // `passo` também: o passo seguinte pode já nascer cumprido, e `aguardando` nem chega a mudar
-  }, [aguardando, passo]);
+  }, [aguardando, passo, espera]);
 
   const { boot } = treino.s;
   useEffect(() => {

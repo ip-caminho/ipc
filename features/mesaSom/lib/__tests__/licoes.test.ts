@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ZERO } from "../config";
-import { alvosAtuais, cabosNaBandeja, criarTreino, IDS_LICAO, LICOES, reduzirTreino, type Treino } from "../licoes";
+import { alvosAtuais, cabosNaBandeja, criarTreino, IDS_LICAO, LICOES, reduzirTreino, tempoDoCerto, type Treino } from "../licoes";
 import type { AcaoMesa } from "../simulador";
 
 const INICIO = 1_000_000;
@@ -167,6 +167,25 @@ describe("andamento do treino", () => {
     expect(arrastando.s.cabo).toBe("dc");
     const largou = reduzirTreino(arrastando, { tipo: "mesa", acao: { tipo: "largarCabo" }, agora: INICIO });
     expect(largou.s.cabo).toBeNull();
+  });
+
+  it("o que a ação disse fica junto do Certo, com mais tempo para ler", () => {
+    let t = criarTreino("presets", INICIO, []);
+    for (const acao of [{ tipo: "abrirCena" }, { tipo: "selecionarCena", id: "A01" }] as AcaoMesa[]) {
+      t = reduzirTreino(t, { tipo: "mesa", acao, agora: INICIO });
+      t = reduzirTreino(t, { tipo: "avancar" });
+    }
+    t = reduzirTreino(t, { tipo: "mesa", acao: { tipo: "recall" }, agora: INICIO });
+    expect(t.aguardando).toBe(true);
+    expect(t.msg?.t.startsWith("Certo. ")).toBe(true);
+    expect(tempoDoCerto(t.msg)).toBeGreaterThan(tempoDoCerto({ t: "Certo.", k: "ok" }));
+  });
+
+  it("outra ação durante o Certo não apaga a mensagem", () => {
+    const certo = reduzirTreino(criarTreino("mute", INICIO, []), { tipo: "mesa", acao: { tipo: "on", id: 0 }, agora: INICIO });
+    expect(certo.aguardando).toBe(true);
+    const depois = reduzirTreino(certo, { tipo: "mesa", acao: { tipo: "porta", porta: "p-sec" }, agora: INICIO });
+    expect(depois.msg).toEqual(certo.msg);
   });
 
   it("pular até o fim conclui sem contar como feita", () => {
