@@ -110,7 +110,8 @@ export function MesaSimulador() {
             <NiveisCaixas s={s} niveis={niveis} agir={agir} />
           </section>
 
-          <section className={st.bancada} aria-label="Mesa">
+          {/* Toque longo no fader não abre menu de copiar */}
+          <section className={st.bancada} aria-label="Mesa" onContextMenu={(e) => e.preventDefault()}>
             <div className={st.vistas} role="group" aria-label="Lado da mesa">
               {VISTAS.map((v) => (
                 <Button

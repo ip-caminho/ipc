@@ -389,6 +389,10 @@ button.solta-aqui.solta-aqui { outline: 3px solid #fff !important; outline-offse
   .corpo, .grav, .cenas { min-height: 158px; }
   .pg svg { width: 38px; height: 38px; }
 }
+/* Toque longo não seleciona texto nem abre o menu de copiar; toque duplo não dá zoom */
+.bancada, .licoes, .chips, .mist-abas, .mapa-box svg { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.bancada :where(button), .licoes :where(button), .chips :where(button) { touch-action: manipulation; }
+
 @media (prefers-reduced-motion: reduce) {
   .alvo, .transp .piscando { animation: none; }
   .cap, .barra i { transition: none; }
