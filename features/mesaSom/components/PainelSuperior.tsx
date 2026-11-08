@@ -14,7 +14,7 @@ const MARCAS = [...ESCALA.map(([f, d]) => [f, String(Math.abs(d))] as const), [0
   </span>
 ));
 
-const Tira = memo(function Tira({ id, f, on, selecionado, rotulo, nomeAria, alvoFader, alvoOn, agir }: {
+export const Tira = memo(function Tira({ id, f, on, selecionado, rotulo, nomeAria, alvoFader, alvoOn, agir, nome, cor, canal }: {
   id: IdFader;
   f: number;
   on: boolean;
@@ -24,6 +24,10 @@ const Tira = memo(function Tira({ id, f, on, selecionado, rotulo, nomeAria, alvo
   alvoFader: boolean;
   alvoOn: boolean;
   agir: (acao: AcaoMesa) => void;
+  // Só no celular: sem a tela à vista, o nome do canal vai em cima da tira
+  nome?: string;
+  cor?: string;
+  canal?: string;
 }) {
   const [arrastando, setArrastando] = useState(false);
   const cap = useRef<HTMLDivElement>(null);
@@ -39,6 +43,11 @@ const Tira = memo(function Tira({ id, f, on, selecionado, rotulo, nomeAria, alvo
   const faderId = `fader-${id}`;
   return (
     <div className={cn(st.tira, id === "main" && st["tira-main"])}>
+      {nome !== undefined && (
+        <span className={st.etiqueta} style={{ "--cc": cor } as React.CSSProperties}>
+          <b>{canal ? `${rotulo} · ${canal}` : rotulo}</b>{nome}
+        </span>
+      )}
       <button className={cn(st.k, st["k-sel"], selecionado && st.aceso)} id={`sel-${id}`} onClick={() => agir({ tipo: "sel", id })}>SEL</button>
       <button className={cn(st.k, st["k-cue"])} onClick={() => agir({ tipo: "fora" })}>CUE</button>
       <button className={cn(st.k, st["k-on"], on && st.aceso, alvoOn && st.alvo)} id={`on-${id}`} aria-pressed={on} onClick={() => agir({ tipo: "on", id })}>ON</button>
@@ -79,6 +88,50 @@ const Tira = memo(function Tira({ id, f, on, selecionado, rotulo, nomeAria, alvo
   );
 });
 
+export const IDS_FADER: readonly IdFader[] = [0, 1, 2, 3, 4, 5, 6, 7, "main"];
+
+// O que cada tira mostra: igual na mesa inteira e na zona de faders do celular
+export function dadosDaTira(s: Estado, id: IdFader, alvos: ReadonlySet<string>) {
+  const nome = id === "main" ? (s.sof !== null ? "retorno" : "PA") : nomeFader(s, id).n;
+  return {
+    id,
+    f: valorFader(s, id),
+    on: onDoFader(s, id),
+    selecionado: s.sel === id,
+    rotulo: id === "main" ? "MAIN" : String(id + 1),
+    nomeAria: id === "main" ? `Fader MAIN: ${nome}` : `Fader ${id + 1}: ${nome}`,
+    alvoFader: alvos.has(`fader-${id}`),
+    alvoOn: alvos.has(`on-${id}`),
+  };
+}
+
+export function FendaUsb({ ligado, alvo, agir }: { ligado: boolean; alvo: boolean; agir: (acao: AcaoMesa) => void }) {
+  return (
+    <button
+      className={cn(st["caixa-p"], st.usb, ligado && st.ligado, alvo && st.alvo)}
+      id="usb-top"
+      data-porta="usb-top"
+      aria-label="Conector USB para pendrive"
+      onClick={() => agir({ tipo: "porta", porta: "usb-top" })}
+    >
+      <svg viewBox="0 0 40 16" fill="none" stroke="currentColor" strokeWidth="1.6">
+        <path d="M2 8h34M34 5l4 3-4 3M12 8l6-5h6M18 8l5 5h5" />
+        <circle cx="4" cy="8" r="2" fill="currentColor" />
+      </svg>
+      <span className={st.fenda} />
+    </button>
+  );
+}
+
+export function PlacaHome({ agir }: { agir: (acao: AcaoMesa) => void }) {
+  return (
+    <div className={st["placa-home"]}>
+      <svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7" /><path d="M6 10v10h12V10" /></svg>
+      <button className={st["k-azul"]} aria-label="Tecla Home" onClick={() => agir({ tipo: "home" })} />
+    </div>
+  );
+}
+
 function Banco({ rotulo, nome, aceso, alvo, id, aoTocar }: {
   rotulo: string;
   nome: string;
@@ -104,7 +157,6 @@ export function PainelSuperior({ s, sig, niveis, agora, agir, alvos }: {
   alvos: ReadonlySet<string>;
 }) {
   const fora = () => agir({ tipo: "fora" });
-  const ids: IdFader[] = [0, 1, 2, 3, 4, 5, 6, 7, "main"];
   return (
     <div className={cn(st["vista-mesa"], !vivo(s) && st.desl)} id="vista-top">
       <div className={st.mesa}>
@@ -113,19 +165,7 @@ export function PainelSuperior({ s, sig, niveis, agora, agir, alvos }: {
         </div>
 
         <div className={st["col-cima"]}>
-          <button
-            className={cn(st["caixa-p"], st.usb, s.usb && st.ligado, alvos.has("usb-top") && st.alvo)}
-            id="usb-top"
-            data-porta="usb-top"
-            aria-label="Conector USB para pendrive"
-            onClick={() => agir({ tipo: "porta", porta: "usb-top" })}
-          >
-            <svg viewBox="0 0 40 16" fill="none" stroke="currentColor" strokeWidth="1.6">
-              <path d="M2 8h34M34 5l4 3-4 3M12 8l6-5h6M18 8l5 5h5" />
-              <circle cx="4" cy="8" r="2" fill="currentColor" />
-            </svg>
-            <span className={st.fenda} />
-          </button>
+          <FendaUsb ligado={s.usb} alvo={alvos.has("usb-top")} agir={agir} />
           <button className={cn(st["caixa-p"], st.fones, st["so-tela-grande"])} aria-label="Fones de ouvido" onClick={fora}>
             <span className={st.jack} />
             PHONES
@@ -154,10 +194,7 @@ export function PainelSuperior({ s, sig, niveis, agora, agir, alvos }: {
               <Banco rotulo="CUSTOM 2" nome="Custom 2" aoTocar={fora} />
             </div>
           </div>
-          <div className={st["placa-home"]}>
-            <svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7" /><path d="M6 10v10h12V10" /></svg>
-            <button className={st["k-azul"]} aria-label="Tecla Home" onClick={() => agir({ tipo: "home" })} />
-          </div>
+          <PlacaHome agir={agir} />
           <div className={cn(st.grupo, st["so-tela-grande"])}>
             <span className={st["grupo-tit"]}>USER DEFINED KEYS</span>
             <div className={st.usuario}>
@@ -169,23 +206,7 @@ export function PainelSuperior({ s, sig, niveis, agora, agir, alvos }: {
         </div>
 
         <div className={st.tiras}>
-          {ids.map((id) => {
-            const nome = id === "main" ? (s.sof !== null ? "retorno" : "PA") : nomeFader(s, id).n;
-            return (
-              <Tira
-                key={id}
-                id={id}
-                f={valorFader(s, id)}
-                on={onDoFader(s, id)}
-                selecionado={s.sel === id}
-                rotulo={id === "main" ? "MAIN" : String(id + 1)}
-                nomeAria={id === "main" ? `Fader MAIN: ${nome}` : `Fader ${id + 1}: ${nome}`}
-                alvoFader={alvos.has(`fader-${id}`)}
-                alvoOn={alvos.has(`on-${id}`)}
-                agir={agir}
-              />
-            );
-          })}
+          {IDS_FADER.map((id) => <Tira key={id} {...dadosDaTira(s, id, alvos)} agir={agir} />)}
         </div>
         <div className={st.aba} />
       </div>
