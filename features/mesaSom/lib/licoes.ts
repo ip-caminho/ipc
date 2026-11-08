@@ -174,11 +174,17 @@ export function criarTreino(id: string, agora: number, feitas: string[]): Treino
   return { licaoId: licao.id, passo: 0, concluida: false, aguardando: false, msg: null, s, feitas };
 }
 
-function checar(t: Treino): Treino {
+// O que a ação disse continua junto do "Certo.", em vez de ser trocado por ele
+function checar(t: Treino, daAcao?: Mensagem | null): Treino {
   if (t.concluida || t.aguardando) return t;
   const p = licaoPorId(t.licaoId).passos[t.passo];
-  return p?.feito(t.s) ? { ...t, aguardando: true, msg: { t: "Certo.", k: "ok" } } : t;
+  if (!p?.feito(t.s)) return t;
+  const texto = daAcao && daAcao.k !== "erro" ? `Certo. ${daAcao.t}` : "Certo.";
+  return { ...t, aguardando: true, msg: { t: texto, k: "ok" } };
 }
+
+// Quanto tempo o "Certo." fica na tela antes do próximo passo: mais quando há o que ler
+export const tempoDoCerto = (msg: Mensagem | null) => (msg && msg.t.length > "Certo.".length ? 2600 : 1100);
 
 export function reduzirTreino(t: Treino, a: AcaoTreino): Treino {
   switch (a.tipo) {
@@ -187,7 +193,9 @@ export function reduzirTreino(t: Treino, a: AcaoTreino): Treino {
     case "mesa": {
       const r = reduzir(t.s, a.acao, a.agora);
       if (r.s === t.s && r.msg === undefined) return t;
-      return checar({ ...t, s: r.s, msg: r.msg === undefined ? t.msg : r.msg });
+      // Enquanto o "Certo." está na tela, outra ação não o apaga antes da leitura
+      if (t.aguardando) return { ...t, s: r.s };
+      return checar({ ...t, s: r.s, msg: r.msg === undefined ? t.msg : r.msg }, r.msg);
     }
     case "avancar": {
       if (!t.aguardando) return t;
