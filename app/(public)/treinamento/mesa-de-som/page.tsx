@@ -17,7 +17,7 @@ export default function MesaDeSomPage() {
   return (
     <div className={`${legenda.variable} ${corpo.variable} ${painel.variable}`}>
       <Suspense>
-        <MesaSimulador />
+        <MesaSimulador classeFontes={`${legenda.variable} ${corpo.variable} ${painel.variable}`} />
       </Suspense>
     </div>
   );

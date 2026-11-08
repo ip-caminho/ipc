@@ -6,11 +6,13 @@ import { Button } from "@/shared/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/shared/components/ui/collapsible";
 import { cn } from "@/shared/lib/utils/cn";
 import { useArrasteCabo, type Fio } from "../hooks/useArrasteCabo";
+import { useCelular } from "../hooks/useCelular";
 import { useSinal } from "../hooks/useSinal";
 import { useTreino } from "../hooks/useTreino";
 import { alvosAtuais, cabosNaBandeja, LICOES } from "../lib/licoes";
 import { niveisDasCaixas, type Vista } from "../lib/simulador";
 import { MapaPalco, NiveisCaixas } from "./MapaPalco";
+import { MesaCelular } from "./MesaCelular";
 import { PainelSuperior } from "./PainelSuperior";
 import { PainelTraseiro } from "./PainelTraseiro";
 import { PassoAPasso } from "./PassoAPasso";
@@ -55,7 +57,8 @@ function DesenhoFio({ fio }: { fio: Fio }) {
   );
 }
 
-export function MesaSimulador() {
+export function MesaSimulador({ classeFontes }: { classeFontes?: string }) {
+  const celular = useCelular();
   const { treino, agir, recomecar, pular, abrirLicao } = useTreino();
   const { s } = treino;
   const aoTique = useCallback((dt: number) => agir({ tipo: "tempo", dt }), [agir]);
@@ -77,95 +80,121 @@ export function MesaSimulador() {
     classePorta: st["solta-aqui"],
   });
 
+  const bandeja = cabos.length > 0 && (
+    <div className={st.bandeja}>
+      {cabos.map((c) => (
+        <button
+          key={c.id}
+          id={`c-${c.id}`}
+          className={cn(st.cabo, c.ligado && st.ligado, alvos.has(`c-${c.id}`) && st.alvo)}
+          style={{ "--cor": c.cor } as React.CSSProperties}
+          aria-pressed={s.cabo === c.id}
+          disabled={c.ligado}
+          onPointerDown={(ev) => iniciar(ev, c.id, c.cor)}
+          onClick={() => agir({ tipo: "cabo", id: c.id })}
+        >
+          {c.nome}
+        </button>
+      ))}
+    </div>
+  );
+  const conferir = (
+    <Collapsible open={conferirAberto} onOpenChange={setConferirAberto} className={st.sups}>
+      <CollapsibleTrigger className={st["sups-tit"]}>
+        <ChevronDown className={cn(st["sups-seta"], conferirAberto && st.aberta)} aria-hidden="true" />
+        Para quem cuida da mesa: a conferir
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        <ul>
+          {A_CONFERIR.map((item) => <li key={item}>{item}</li>)}
+        </ul>
+      </CollapsibleContent>
+    </Collapsible>
+  );
+
+  // Antes de saber a largura, nada: evita mostrar a mesa inteira e trocar por zonas no celular
+  if (celular === null) return <div className={st.raiz} />;
+
   return (
     <div
       className={cn(st.raiz, fio && st["arrastando-cabo"])}
       onClickCapture={barrarCliqueDoArraste}
     >
       <SimbolosConectores />
-      <div className={st.app}>
-        <header className={st.topo}>
-          <h1>Treino da mesa de som</h1>
-          <p>Yamaha DM3 da IP do Caminho. Errar aqui não desliga nada no culto.</p>
-        </header>
+      {celular ? (
+        <MesaCelular
+          treino={treino}
+          s={s}
+          sig={sig}
+          niveis={niveis}
+          agora={agora}
+          agir={agir}
+          alvos={alvos}
+          bandeja={bandeja}
+          conferir={conferir}
+          recomecar={recomecar}
+          pular={pular}
+          abrirLicao={abrirLicao}
+          classeFontes={classeFontes}
+        />
+      ) : (
+        <div className={st.app}>
+          <header className={st.topo}>
+            <h1>Treino da mesa de som</h1>
+            <p>Yamaha DM3 da IP do Caminho. Errar aqui não desliga nada no culto.</p>
+          </header>
 
-        <nav className={st.licoes} aria-label="Lições">
-          {LICOES.map((l) => (
-            <Button
-              key={l.id}
-              variant="ghost"
-              id={`licao-${l.id}`}
-              aria-current={l.id === treino.licaoId}
-              className={cn(treino.feitas.includes(l.id) && st.feita)}
-              onClick={() => (l.id === treino.licaoId ? recomecar() : abrirLicao(l.id))}
-            >
-              {l.curto}
-            </Button>
-          ))}
-        </nav>
+          <nav className={st.licoes} aria-label="Lições">
+            {LICOES.map((l) => (
+              <Button
+                key={l.id}
+                variant="ghost"
+                id={`licao-${l.id}`}
+                aria-current={l.id === treino.licaoId}
+                className={cn(treino.feitas.includes(l.id) && st.feita)}
+                onClick={() => (l.id === treino.licaoId ? recomecar() : abrirLicao(l.id))}
+              >
+                {l.curto}
+              </Button>
+            ))}
+          </nav>
 
-        <main className={st.grade}>
-          <section className={st.guia} aria-label="Instrução">
-            <PassoAPasso treino={treino} agora={agora} aoRecomecar={recomecar} aoPular={pular} aoAbrir={abrirLicao} />
-            <NiveisCaixas s={s} niveis={niveis} agir={agir} />
-          </section>
+          <main className={st.grade}>
+            <section className={st.guia} aria-label="Instrução">
+              <PassoAPasso treino={treino} agora={agora} aoRecomecar={recomecar} aoPular={pular} aoAbrir={abrirLicao} />
+              <NiveisCaixas s={s} niveis={niveis} agir={agir} />
+            </section>
 
-          {/* Toque longo no fader não abre menu de copiar */}
-          <section className={st.bancada} aria-label="Mesa" onContextMenu={(e) => e.preventDefault()}>
-            <div className={st.vistas} role="group" aria-label="Lado da mesa">
-              {VISTAS.map((v) => (
-                <Button
-                  key={v.id}
-                  variant="ghost"
-                  id={`v-${v.id}`}
-                  aria-pressed={s.vista === v.id}
-                  className={cn(alvos.has(`v-${v.id}`) && st.alvo)}
-                  onClick={() => agir({ tipo: "vista", vista: v.id })}
-                >
-                  {v.nome}
-                </Button>
-              ))}
-            </div>
-
-            {cabos.length > 0 && (
-              <div className={st.bandeja}>
-                {cabos.map((c) => (
-                  <button
-                    key={c.id}
-                    id={`c-${c.id}`}
-                    className={cn(st.cabo, c.ligado && st.ligado, alvos.has(`c-${c.id}`) && st.alvo)}
-                    style={{ "--cor": c.cor } as React.CSSProperties}
-                    aria-pressed={s.cabo === c.id}
-                    disabled={c.ligado}
-                    onPointerDown={(ev) => iniciar(ev, c.id, c.cor)}
-                    onClick={() => agir({ tipo: "cabo", id: c.id })}
+            {/* Toque longo no fader não abre menu de copiar */}
+            <section className={st.bancada} aria-label="Mesa" onContextMenu={(e) => e.preventDefault()}>
+              <div className={st.vistas} role="group" aria-label="Lado da mesa">
+                {VISTAS.map((v) => (
+                  <Button
+                    key={v.id}
+                    variant="ghost"
+                    id={`v-${v.id}`}
+                    aria-pressed={s.vista === v.id}
+                    className={cn(alvos.has(`v-${v.id}`) && st.alvo)}
+                    onClick={() => agir({ tipo: "vista", vista: v.id })}
                   >
-                    {c.nome}
-                  </button>
+                    {v.nome}
+                  </Button>
                 ))}
               </div>
-            )}
 
-            {s.vista === "top" && <PainelSuperior s={s} sig={sig} niveis={niveis} agora={agora} agir={agir} alvos={alvos} />}
-            {s.vista === "rear" && <PainelTraseiro s={s} agir={agir} alvos={alvos} />}
-            {s.vista === "rack" && <RackPalco s={s} agir={agir} alvos={alvos} />}
-          </section>
+              {bandeja}
 
-          <MapaPalco s={s} sig={sig} niveis={niveis} agir={agir} />
+              {s.vista === "top" && <PainelSuperior s={s} sig={sig} niveis={niveis} agora={agora} agir={agir} alvos={alvos} />}
+              {s.vista === "rear" && <PainelTraseiro s={s} agir={agir} alvos={alvos} />}
+              {s.vista === "rack" && <RackPalco s={s} agir={agir} alvos={alvos} />}
+            </section>
 
-          <Collapsible open={conferirAberto} onOpenChange={setConferirAberto} className={st.sups}>
-            <CollapsibleTrigger className={st["sups-tit"]}>
-              <ChevronDown className={cn(st["sups-seta"], conferirAberto && st.aberta)} aria-hidden="true" />
-              Para quem cuida da mesa: a conferir
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <ul>
-                {A_CONFERIR.map((item) => <li key={item}>{item}</li>)}
-              </ul>
-            </CollapsibleContent>
-          </Collapsible>
-        </main>
-      </div>
+            <MapaPalco s={s} sig={sig} niveis={niveis} agir={agir} />
+
+            {conferir}
+          </main>
+        </div>
+      )}
       {fio && <DesenhoFio fio={fio} />}
     </div>
   );

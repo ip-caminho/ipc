@@ -1,5 +1,6 @@
 /* A mesa é desenho próprio, nas proporções da foto, sobre a bancada escura da cabine. */
-.raiz {
+/* .gaveta: os Drawers abrem fora da página e precisam das mesmas cores */
+.raiz, .gaveta {
   color-scheme: dark;
   --fundo: #0d0f12;
   --bancada: #15181c;
@@ -390,8 +391,85 @@ button.solta-aqui.solta-aqui { outline: 3px solid #fff !important; outline-offse
   .pg svg { width: 38px; height: 38px; }
 }
 /* Toque longo não seleciona texto nem abre o menu de copiar; toque duplo não dá zoom */
-.bancada, .licoes, .chips, .mist-abas, .mapa-box svg { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
-.bancada :where(button), .licoes :where(button), .chips :where(button) { touch-action: manipulation; }
+.bancada, .licoes, .chips, .mist-abas, .mapa-box svg, .cel-zona, .cel-base, .cel-topo, .gaveta-licoes { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.bancada :where(button), .licoes :where(button), .chips :where(button), .cel :where(button), .gaveta :where(button) { touch-action: manipulation; }
+
+/* Celular em pé: a mesa por zonas, uma parte de cada vez */
+.cel { display: grid; gap: 10px; padding-bottom: calc(112px + env(safe-area-inset-bottom, 0px)); }
+.cel-topo { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.cel-licao { display: inline-flex; align-items: center; gap: 7px; min-height: 44px; padding: 4px 12px 4px 14px; background: var(--bancada); border: 1px solid var(--linha); border-radius: 22px; font-family: var(--f-legenda); font-size: 18px; line-height: 1; }
+.cel-licao span { color: var(--txt-2); font-size: 13px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+.cel-licao b { font-weight: 700; }
+.cel-licao svg { width: 16px; height: 16px; color: var(--txt-2); }
+.cel-titulo { font-family: var(--f-legenda); color: var(--txt-2); font-size: 13px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; text-align: right; }
+.cel-guia { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--fundo); padding-block: 4px; margin-block: -4px; }
+.cel-guia .instr { padding: 8px 12px; gap: 4px; }
+/* O nome da lição já está no botão de cima */
+.cel-guia .instr-topo > span:first-child:not(:last-child) { display: none; }
+.cel-guia .instr-topo { justify-content: flex-end; font-size: 13px; }
+.cel-guia .btn.fant { display: none; }
+.cel-guia .acoes:not(:has(.btn:not(.fant))) { display: none; }
+.cel-pular { min-height: 44px; padding: 4px 6px; background: none; border: 0; color: var(--txt-2); font-size: 14px; text-decoration: underline; text-underline-offset: 3px; }
+
+.cel-zona { display: grid; gap: 8px; min-width: 0; align-content: start; }
+.cel-zona-cab { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.cel-zona-cab h2 { margin: 0; font-family: var(--f-legenda); font-size: 16px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--txt-2); }
+.mini-mapa { width: 66px; height: 38px; flex: none; }
+.mm-corpo { fill: #1d1f22; stroke: #4b5158; stroke-width: 1; }
+.mm-parte { fill: #33373c; transition: fill .25s; }
+.mm-aceso, .mm-aceso rect { fill: var(--guia); }
+.mm-cabo { fill: none; stroke: #4b5158; stroke-width: 1.2; stroke-dasharray: 2 2; }
+
+.mesa.cel-tela, .mesa.cel-mesa { grid-template-areas: none; grid-template-columns: minmax(0, 1fr); padding: 12px 8px 10px; gap: 10px; border-radius: 10px; }
+.cel-tela .moldura { grid-area: auto; }
+.cel-tela .corpo, .cel-tela .grav, .cel-tela .cenas { min-height: 200px; }
+.cel-tela-lado { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.cel-tela-lado .usb { width: auto; min-height: 48px; padding: 4px 12px; }
+.cel-tela-lado .placa-home { margin-left: auto; gap: 12px; padding: 4px 12px; }
+.cel-tela-lado .k-azul { min-height: 40px; width: 54px; }
+
+/* Fader do tamanho que sobra na tela, entre a instrução e a barra de baixo */
+.cel-mesa { --cap: 50px; --alt-fader: clamp(160px, calc(100dvh - 620px), 320px); }
+.cel-tiras .k-cue { min-height: 22px; }
+.gaveta .mapa-box > h3:first-child { display: none; }
+.cel-faders { display: grid; gap: 8px; }
+.cel-bancos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.cel-bancos button { min-height: 44px; border: 1px solid #050505; border-radius: 4px; background: linear-gradient(180deg, #d4d6d8, #8b8e92 58%, #6e7175); color: #1a1b1c; font-family: var(--f-painel); font-weight: 700; font-size: 13px; letter-spacing: .02em; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5), 0 1px 2px rgba(0, 0, 0, .7); }
+.cel-bancos button[aria-pressed="true"] { background: radial-gradient(circle at 50% 40%, #a6ffc9, #20c46d 70%); color: #04261a; box-shadow: 0 0 11px rgba(53, 208, 127, .8); }
+.cel-sof { margin: 0; font-family: var(--f-corpo); font-size: 13px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--txt); background: #1d2a36; border-left: 3px solid var(--guia); padding: 6px 8px; border-radius: 3px; }
+.cel-tiras { display: grid; grid-template-columns: minmax(0, 1fr) 78px; gap: 6px; }
+.cel-rolagem { display: grid; grid-auto-flow: column; grid-auto-columns: 25%; overflow-x: auto; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; scrollbar-width: none; border-radius: 0 0 0 6px; }
+.cel-rolagem::-webkit-scrollbar { display: none; }
+.cel-rolagem .tira { scroll-snap-align: start; }
+.cel-tiras .tira { padding-top: 6px; gap: 6px; }
+.cel-tiras .tira-main { margin-left: 0; border: 1.5px solid var(--serigrafia); border-radius: 0 0 6px 6px; }
+.cel-tiras .num { display: none; }
+.cel-tiras .k-sel { min-height: 36px; }
+.cel-tiras .k-on { min-height: 42px; }
+.cel-tiras .marca b { font-size: 10px; top: -6px; }
+.cel-tiras .marca { left: 18%; right: 28%; }
+.etiqueta { display: grid; text-align: center; background: var(--cc, #555); color: #fff; border-radius: 2px; font-family: var(--f-legenda); font-size: 13.5px; font-weight: 600; line-height: 1.1; padding: 2px 2px 3px; margin-inline: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.etiqueta b { font-size: 11px; font-weight: 600; opacity: .85; }
+
+.cel-base { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; display: grid; gap: 6px; background: rgba(13, 15, 18, .94); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-top: 1px solid var(--linha); padding: 6px max(12px, env(safe-area-inset-right, 0px)) calc(2px + env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px)); }
+.cel-abas { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 2px; }
+.cel-abas button { min-height: 50px; display: grid; justify-items: center; align-content: center; gap: 2px; background: none; border: 0; border-radius: 8px; color: var(--txt-2); font-family: var(--f-legenda); font-size: 13px; font-weight: 600; letter-spacing: .02em; }
+.cel-abas button svg { width: 22px; height: 22px; }
+.cel-abas button[aria-current="true"] { color: var(--txt); background: var(--painel-2); }
+.cel-abas button.alvo { outline-offset: -3px; color: var(--guia); }
+
+.gaveta { background: var(--fundo); color: var(--txt); border-color: var(--linha); font-family: var(--f-corpo); font-size: 15px; line-height: 1.45; }
+.gaveta :where(button) { font: inherit; color: inherit; cursor: pointer; }
+.gaveta-cab { text-align: left; padding: 12px 16px 4px; }
+.gaveta-cab h2 { font-family: var(--f-legenda); font-size: 21px; font-weight: 700; color: var(--txt); }
+.gaveta-cab p { color: var(--txt-2); font-size: 13.5px; }
+.gaveta-corpo { overflow-y: auto; padding: 4px 16px calc(16px + env(safe-area-inset-bottom, 0px)); display: grid; gap: 12px; }
+.gaveta-licoes { display: grid; gap: 4px; }
+.gaveta-licoes button { min-height: 48px; display: flex; align-items: center; gap: 12px; padding: 6px 14px; background: var(--bancada); border: 1px solid var(--linha); border-radius: 6px; text-align: left; font-weight: 500; }
+.gaveta-licoes button span { font-family: var(--f-legenda); font-weight: 700; width: 14px; color: var(--txt-2); }
+.gaveta-licoes button[aria-current="true"] { background: var(--txt); color: var(--fundo); border-color: var(--txt); }
+.gaveta-licoes button[aria-current="true"] span { color: inherit; }
+.gaveta-licoes .feita::after { content: ""; margin-left: auto; width: 8px; height: 8px; border-radius: 50%; background: var(--verde); flex: none; }
 
 @media (prefers-reduced-motion: reduce) {
   .alvo, .transp .piscando { animation: none; }
