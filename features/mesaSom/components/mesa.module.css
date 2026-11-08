@@ -393,6 +393,8 @@ button.solta-aqui.solta-aqui { outline: 3px solid #fff !important; outline-offse
 /* Toque longo não seleciona texto nem abre o menu de copiar; toque duplo não dá zoom */
 .bancada, .licoes, .chips, .mist-abas, .mapa-box svg, .cel-zona, .cel-base, .cel-topo, .gaveta-licoes { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
 .bancada :where(button), .licoes :where(button), .chips :where(button), .cel :where(button), .gaveta :where(button) { touch-action: manipulation; }
+/* O cabo é arrastado pelo dedo: o navegador não pode transformar o gesto em rolagem */
+.raiz .cabo { touch-action: none; }
 
 /* Celular em pé: a mesa por zonas, uma parte de cada vez */
 .cel { display: grid; gap: 10px; padding-bottom: calc(112px + env(safe-area-inset-bottom, 0px)); }
