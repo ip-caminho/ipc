@@ -341,13 +341,31 @@ button.solta-aqui.solta-aqui { outline: 3px solid #fff !important; outline-offse
   .bk-cel .k { min-height: 26px; }
   .bk-cel { font-size: 10.5px; }
 }
-@media (min-width: 1060px) {
-  .grade { grid-template-columns: minmax(0, 1fr) 340px; grid-template-rows: auto minmax(0, 1fr) auto; grid-template-areas: "bancada guia" "bancada mapa" "sups sups"; align-items: start; }
-  .guia { grid-area: guia; position: static; padding: 0; }
+/* Duas colunas já no iPad deitado; a instrução acompanha a rolagem ao lado da mesa */
+@media (min-width: 900px) {
+  .grade { grid-template-columns: minmax(0, 1fr) clamp(280px, 28vw, 340px); grid-template-rows: auto minmax(0, 1fr) auto; grid-template-areas: "bancada guia" "bancada mapa" "sups sups"; align-items: start; }
+  .guia { grid-area: guia; top: max(8px, env(safe-area-inset-top, 0px)); padding: 0; }
   .bancada { grid-area: bancada; }
   .mapa-box { grid-area: mapa; }
   .sups { grid-area: sups; }
   .sups ul { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 28px; }
+}
+/* Tela larga e baixa (iPad deitado): mesa inteira, da tela aos faders, na altura da tela */
+@media (min-width: 900px) and (max-height: 1000px) {
+  .raiz { --alt-fader: clamp(150px, calc(100dvh - 540px), 284px); }
+  .bk-cel .k { min-height: 22px; }
+  .k-azul { min-height: 30px; }
+  .mesa { padding-top: 12px; gap: 6px; }
+  .aba { height: 10px; }
+  .tela { min-height: 250px; }
+  .envios button { min-height: 18px; font-size: 12.5px; }
+  .col-baixo { gap: 6px; }
+  .usuario { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px 10px; }
+  .usuario .k { min-height: 26px; }
+  .tira { padding-top: 6px; gap: 4px; }
+  .tira .k-sel { min-height: 28px; }
+  .tira .k-cue { min-height: 20px; }
+  .tira .k-on { min-height: 30px; }
 }
 @media (min-width: 640px) { .chips { display: none; } }
 @media (max-width: 639px) {
