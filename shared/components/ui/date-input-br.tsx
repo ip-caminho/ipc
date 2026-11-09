@@ -72,7 +72,7 @@ export function DateInputBR({
     ano: null,
   });
 
-  // Última data válida: volta para ela se a pessoa sair com a edição pela metade.
+  // Data de antes da edição: volta para ela se a pessoa sair com a edição pela metade.
   const salva = React.useRef(value);
   const emitido = React.useRef(value);
 
@@ -91,14 +91,13 @@ export function DateInputBR({
 
   function aplicar(novas: PartesData) {
     const iso = validarPartesData(novas, { min }).iso ?? "";
-    // Esvaziar as três caixas é apagar de propósito.
-    if (iso || (!novas.dia && !novas.mes && !novas.ano)) salva.current = iso;
     emitido.current = iso;
     setPartes(novas);
     onChange(iso);
   }
 
   function restaurarSeInvalida() {
+    // Esvaziar as três caixas é apagar de propósito.
     const temTexto = partes.dia || partes.mes || partes.ano;
     if (resultado.iso || !temTexto || !salva.current) return;
     emitido.current = salva.current;
@@ -130,7 +129,10 @@ export function DateInputBR({
       role="group"
       aria-label={nomeData}
       className="space-y-1"
-      onFocus={() => setSaiu(false)}
+      onFocus={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) salva.current = value;
+        setSaiu(false);
+      }}
       onBlur={(e) => {
         if (e.currentTarget.contains(e.relatedTarget as Node | null)) return;
         restaurarSeInvalida();
