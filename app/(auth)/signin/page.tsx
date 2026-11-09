@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuthActions } from "@convex-dev/auth/react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useMutation } from "convex/react";
@@ -148,6 +149,9 @@ export default function SignIn() {
                 </div>
                 <Button type="submit" disabled={loading} className="w-full">
                   {loading ? "Entrando..." : "Entrar"}
+                </Button>
+                <Button asChild variant="link" className="h-11 w-full">
+                  <Link href="/esqueci-senha">Esqueci minha senha</Link>
                 </Button>
               </form>
             </TabsContent>
