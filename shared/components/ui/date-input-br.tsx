@@ -70,21 +70,38 @@ export function DateInputBR({
     ano: null,
   });
 
-  // Sincroniza quando o valor externo muda (ex: pré-preenchimento da família),
-  // sem apagar o que a pessoa ainda está digitando.
+  // Última data válida: volta para ela se a pessoa sair com a edição pela metade.
+  const salva = React.useRef(value);
+  const emitido = React.useRef(value);
+
+  // Sincroniza só quando o valor muda por fora (ex: pré-preenchimento da
+  // família ou reset do formulário), sem apagar o que ainda está sendo digitado.
   React.useEffect(() => {
-    setPartes((atuais) =>
-      (validarPartesData(atuais, { min }).iso ?? "") === value ? atuais : isoParaPartes(value),
-    );
-  }, [value, min]);
+    if (value === emitido.current) return;
+    emitido.current = value;
+    salva.current = value;
+    setPartes(isoParaPartes(value));
+  }, [value]);
 
   const resultado = validarPartesData(partes, { min });
   const erro = resultado.erro && (saiu || !resultado.incompleta) ? resultado.erro : null;
   const idMensagem = `${idBase}-mensagem`;
 
   function aplicar(novas: PartesData) {
+    const iso = validarPartesData(novas, { min }).iso ?? "";
+    // Esvaziar as três caixas é apagar de propósito.
+    if (iso || (!novas.dia && !novas.mes && !novas.ano)) salva.current = iso;
+    emitido.current = iso;
     setPartes(novas);
-    onChange(validarPartesData(novas, { min }).iso ?? "");
+    onChange(iso);
+  }
+
+  function restaurarSeInvalida() {
+    const temTexto = partes.dia || partes.mes || partes.ano;
+    if (resultado.iso || !temTexto || !salva.current) return;
+    emitido.current = salva.current;
+    setPartes(isoParaPartes(salva.current));
+    onChange(salva.current);
   }
 
   function alterar(indice: number, bruto: string) {
@@ -112,7 +129,9 @@ export function DateInputBR({
       className="space-y-1"
       onFocus={() => setSaiu(false)}
       onBlur={(e) => {
-        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setSaiu(true);
+        if (e.currentTarget.contains(e.relatedTarget as Node | null)) return;
+        restaurarSeInvalida();
+        setSaiu(true);
       }}
     >
       <div className="grid max-w-xs grid-cols-[1fr_1fr_1.5fr] gap-2">
