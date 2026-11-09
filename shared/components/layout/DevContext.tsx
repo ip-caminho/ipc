@@ -94,7 +94,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "shared/components/layout/DetailHeader.tsx",
     ],
     mutations: ["membros.mutations.create"],
-    componentes: ["MembroForm", "PermissionGate", "DetailHeader", "StickyActionBar (Salvar fixo no mobile)"],
+    componentes: ["DateInputBR", "MembroForm", "PermissionGate", "DetailHeader", "StickyActionBar (Salvar fixo no mobile)"],
     notas: ["Permissao: membros:create + ModuloGuard modulo=membros. MembroForm completo (pessoal + eclesiastico); dados pessoais via mapFormToEntidadeData (features/membros/lib/mappers.ts)", "Mobile: MembroForm com hideTitle + StickyActionBar com o botao de salvar (pb-28 libera o fim da pagina)"],
   },
   "/membros": {
@@ -152,7 +152,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
     ],
     queries: ["membros.queries.getById", "membros.eclesiastico.getFamily", "membros.familia.redeFamiliar", "membros.familia.buscarEntidadesFamilia", "membros.acesso.getStatusAcesso"],
     mutations: ["membros.mutations.update", "membros.eclesiastico.updateEclesiastico", "membros.eclesiastico.marcarCampoVerificado", "membros.eclesiastico.vincularConjugeAdmin", "membros.eclesiastico.desvincularConjugeAdmin", "membros.eclesiastico.adicionarFilhoAdmin", "membros.eclesiastico.vincularFilhoExistenteAdmin", "membros.eclesiastico.removerFilhoAdmin", "membros.eclesiastico.vincularParenteAdmin", "membros.acesso.gerarLink", "membros.acesso.resetarAcesso"],
-    componentes: ["DadosBasicosSection", "EclesiasticoForm", "MembroForm", "AcessoSection", "AtosPastoraisSection", "CargosHistoricoSection", "FamiliaArvoreSection", "ArvoreFamiliar", "FamiliaDrawer", "PermissionGate", "DetailHeader (sticky, com nome)", "StickyActionBar (EclesiasticoForm/MembroForm)", "ResponsiveDialog (Atos pastorais, Cargos)", "AlertDialog (AcessoSection)"],
+    componentes: ["DateInputBR", "DadosBasicosSection", "EclesiasticoForm", "MembroForm", "AcessoSection", "AtosPastoraisSection", "CargosHistoricoSection", "FamiliaArvoreSection", "ArvoreFamiliar", "FamiliaDrawer", "PermissionGate", "DetailHeader (sticky, com nome)", "StickyActionBar (EclesiasticoForm/MembroForm)", "ResponsiveDialog (Atos pastorais, Cargos)", "AlertDialog (AcessoSection)"],
     notas: [
       "Detalhe UNICO do membro (fold de /membros/[id]). Gate externo: rol:read + ModuloGuard modulo=membros",
       "Arvore familiar (FamiliaArvoreSection -> ArvoreFamiliar, D3): rede derivada de membros.conjugeId + tabela responsaveis via redeFamiliar (BFS). So aparece com rede > 1 pessoa",
@@ -737,7 +737,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "educacional.mutations.updateVoluntario",
       "educacional.mutations.removeVoluntario",
     ],
-    componentes: [
+    componentes: ["DateInputBR", 
       "CriancaCard", "CriancaForm", "CriancaDetalhe",
       "RelatorioForm", "EducacionalResumo", "TurmaFilterChips",
       "EscalaGrade", "EscalaDiaForm",
@@ -926,7 +926,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "membros.selfService.vincularFilhoExistente",
       "membros.solicitacoes.solicitarCadastroFamiliar",
     ],
-    componentes: ["FamiliaSection (busca-e-vincula + solicitar cadastro)", "SectionEditButton/EditBar (edicao por secao)"],
+    componentes: ["DateInputBR", "FamiliaSection (busca-e-vincula + solicitar cadastro)", "SectionEditButton/EditBar (edicao por secao)"],
     notas: [
       "Self-service: membro edita seus proprios dados (edicao autocontida por secao)",
       "Familia: vincula cadastrado ou solicita cadastro a secretaria (fila em /admin/solicitacoes-familia)",
@@ -1571,7 +1571,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "membros.selfService.getMyProfile (se logado, pre-preenche)",
     ],
     mutations: ["public.inscricoesEvento.responder (via route handler /api/inscricoes/responder)"],
-    componentes: ["InscricaoForm (RHF+Zod dinamico)", "LoginModalInline (telefone+senha)"],
+    componentes: ["DateInputBR", "InscricaoForm (RHF+Zod dinamico)", "LoginModalInline (telefone+senha)"],
     notas: [
       "Auth opcional: membro logado tem campos de sistema read-only (vazio vira editavel)",
       "Honeypot 'website' + rate limit por ipHash (5/h) + LGPD obrigatorio",
