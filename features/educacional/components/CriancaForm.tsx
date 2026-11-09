@@ -92,7 +92,7 @@ export function CriancaForm({
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-1">
               <Label>Data de nascimento</Label>
-              <DateInputFieldBR control={form.control} name="dataNascimento" mostrarIdade />
+              <DateInputFieldBR rotulo="Data de nascimento" control={form.control} name="dataNascimento" mostrarIdade />
             </div>
             <div className="space-y-1">
               <Label>Sexo</Label>

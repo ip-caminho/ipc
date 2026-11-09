@@ -336,6 +336,7 @@ export function FamiliaSection() {
                           <div className="space-y-1">
                             <Label className="text-xs">Data de nascimento</Label>
                             <DateInputBR
+                              rotulo="Data de nascimento do cônjuge"
                               value={conjugeForm.dataNascimento}
                               onChange={(iso) =>
                                 setConjugeForm((p) => ({ ...p, dataNascimento: iso }))
@@ -493,6 +494,7 @@ export function FamiliaSection() {
                     <div className="space-y-1">
                       <Label className="text-xs">Data de nascimento</Label>
                       <DateInputBR
+                        rotulo="Data de nascimento do filho"
                         value={filhoForm.dataNascimento}
                         onChange={(iso) =>
                           setFilhoForm((p) => ({ ...p, dataNascimento: iso }))
@@ -532,6 +534,7 @@ export function FamiliaSection() {
                     <div className="space-y-1 pl-6 border-l-2 border-primary/30">
                       <Label className="text-xs">Data do batismo</Label>
                       <DateInputBR
+                        rotulo="Data do batismo do filho"
                         value={filhoForm.dataBatismo}
                         onChange={(iso) =>
                           setFilhoForm((p) => ({ ...p, dataBatismo: iso }))

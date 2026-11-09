@@ -102,7 +102,7 @@ export default function ConvitePage() {
           </div>
           <div className="space-y-1">
             <Label htmlFor="dataNascimento">Data de Nascimento</Label>
-            <DateInputBR id="dataNascimento" value={dataNasc} onChange={setDataNasc} mostrarIdade />
+            <DateInputBR rotulo="Data de nascimento" id="dataNascimento" value={dataNasc} onChange={setDataNasc} mostrarIdade />
             <input type="hidden" name="dataNascimento" value={dataNasc} />
           </div>
           <Button type="submit" disabled={loading} className="w-full">

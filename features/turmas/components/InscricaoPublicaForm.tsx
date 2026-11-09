@@ -267,6 +267,7 @@ export function InscricaoPublicaForm({ token }: { token: string }) {
                   name="dataNascimento"
                   render={({ field }) => (
                     <DateInputBR
+                      rotulo="Data de nascimento"
                       id="dataNascimento"
                       className={ENTRADA}
                       value={(field.value as string) ?? ""}
