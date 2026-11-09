@@ -104,7 +104,7 @@ export function DateInputBR({
     onChange(salva.current);
   }
 
-  function alterar(indice: number, bruto: string) {
+  function alterar(indice: number, bruto: string, apagou: boolean) {
     const colada = interpretarDataColada(bruto);
     if (colada) {
       aplicar(colada);
@@ -113,13 +113,12 @@ export function DateInputBR({
     }
     const { campo, digitos, salta } = CAMPOS[indice];
     const texto = bruto.replace(/\D/g, "").slice(0, digitos);
-    const cresceu = texto.length > partes[campo].length;
     const novas = { ...partes, [campo]: texto };
     aplicar(novas);
     const proximo = CAMPOS[indice + 1];
     // Valor inválido (mês 13) segura o foco na caixa para corrigir ali mesmo.
     const { erro, incompleta } = validarPartesData(novas, { min });
-    if (proximo && cresceu && (!erro || incompleta) && (texto.length === digitos || Number(texto) > salta)) {
+    if (proximo && !apagou && (!erro || incompleta) && (texto.length === digitos || Number(texto) > salta)) {
       caixas.current[proximo.campo]?.focus();
     }
   }
@@ -156,7 +155,13 @@ export function DateInputBR({
                 aria-invalid={erro ? true : undefined}
                 aria-describedby={idMensagem}
                 onFocus={(e) => e.target.select()}
-                onChange={(e) => alterar(indice, e.target.value)}
+                onChange={(e) =>
+                  alterar(
+                    indice,
+                    e.target.value,
+                    (e.nativeEvent as InputEvent).inputType?.startsWith("delete") ?? false,
+                  )
+                }
                 onKeyDown={(e) => {
                   if (e.key !== "Backspace" || partes[campo] || indice === 0) return;
                   e.preventDefault();
