@@ -23,7 +23,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
-import { DatePickerField } from "@shared/components/DatePickerField";
+import { DateInputBR } from "@/shared/components/ui/date-input-br";
+import { formatDataBR } from "@/shared/lib/utils/date";
 import { Heart, Baby, Trash2, Plus, X, Users, UsersRound } from "lucide-react";
 import { toast } from "sonner";
 
@@ -187,7 +188,7 @@ export function FamiliaDrawer({ membroId, entidadeId, nome, open, onOpenChange }
                     <span>
                       {f.nomeCompleto}
                       {f.dataNascimento && (
-                        <span className="ml-1 text-xs text-muted-foreground">({f.dataNascimento})</span>
+                        <span className="ml-1 text-xs text-muted-foreground">({formatDataBR(f.dataNascimento)})</span>
                       )}
                     </span>
                     <Button
@@ -230,10 +231,10 @@ export function FamiliaDrawer({ membroId, entidadeId, nome, open, onOpenChange }
                   <Label className="text-xs">Nome</Label>
                   <Input value={fNome} onChange={(e) => setFNome(e.target.value)} className="h-8 md:h-8 text-sm" />
                 </div>
-                <div className="flex gap-2">
-                  <div className="flex-1 space-y-1">
+                <div className="flex flex-col gap-2">
+                  <div className="space-y-1">
                     <Label className="text-xs">Nascimento</Label>
-                    <DatePickerField value={fNasc} onChange={setFNasc} className="h-8 text-xs" />
+                    <DateInputBR value={fNasc} onChange={setFNasc} mostrarIdade />
                   </div>
                   <div className="w-28 space-y-1">
                     <Label className="text-xs">Sexo</Label>

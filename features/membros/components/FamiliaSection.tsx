@@ -29,7 +29,8 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import { Checkbox } from "@/shared/components/ui/checkbox";
-import { DatePickerField } from "@/shared/components/DatePickerField";
+import { DateInputBR } from "@/shared/components/ui/date-input-br";
+import { formatDataBR } from "@/shared/lib/utils/date";
 import { Users, Search, X, Plus, Heart, Baby, Clock } from "lucide-react";
 import { parseISO } from "date-fns";
 import { toast } from "sonner";
@@ -331,16 +332,15 @@ export function FamiliaSection() {
                             }
                           />
                         </div>
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                           <div className="space-y-1">
                             <Label className="text-xs">Data de nascimento</Label>
-                            <DatePickerField
+                            <DateInputBR
                               value={conjugeForm.dataNascimento}
                               onChange={(iso) =>
                                 setConjugeForm((p) => ({ ...p, dataNascimento: iso }))
                               }
-                              placeholder="dd/mm/aaaa"
-                              maxDate={new Date()}
+                              mostrarIdade
                             />
                           </div>
                           <div className="space-y-1">
@@ -400,7 +400,7 @@ export function FamiliaSection() {
                       <p className="text-sm">{f.nomeCompleto}</p>
                       <p className="text-[10px] text-muted-foreground">
                         {f.tipo === "PAI" || f.tipo === "MAE" ? "Filho(a)" : f.tipo}
-                        {f.dataNascimento && ` · ${f.dataNascimento}`}
+                        {f.dataNascimento && ` · ${formatDataBR(f.dataNascimento)}`}
                       </p>
                     </div>
                   </div>
@@ -489,16 +489,15 @@ export function FamiliaSection() {
                       }
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                     <div className="space-y-1">
                       <Label className="text-xs">Data de nascimento</Label>
-                      <DatePickerField
+                      <DateInputBR
                         value={filhoForm.dataNascimento}
                         onChange={(iso) =>
                           setFilhoForm((p) => ({ ...p, dataNascimento: iso }))
                         }
-                        placeholder="dd/mm/aaaa"
-                        maxDate={new Date()}
+                        mostrarIdade
                       />
                     </div>
                     <div className="space-y-1">
@@ -532,18 +531,12 @@ export function FamiliaSection() {
                   {filhoForm.batizadoNestaIgreja && (
                     <div className="space-y-1 pl-6 border-l-2 border-primary/30">
                       <Label className="text-xs">Data do batismo</Label>
-                      <DatePickerField
+                      <DateInputBR
                         value={filhoForm.dataBatismo}
                         onChange={(iso) =>
                           setFilhoForm((p) => ({ ...p, dataBatismo: iso }))
                         }
-                        placeholder="Selecione a data"
-                        maxDate={new Date()}
-                        minDate={
-                          filhoForm.dataNascimento
-                            ? parseISO(filhoForm.dataNascimento)
-                            : undefined
-                        }
+                        min={filhoForm.dataNascimento || undefined}
                       />
                     </div>
                   )}

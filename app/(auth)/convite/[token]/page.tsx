@@ -7,7 +7,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
-import { DatePickerBR } from "@/shared/components/ui/date-picker-br";
+import { DateInputBR } from "@/shared/components/ui/date-input-br";
 import { Label } from "@/shared/components/ui/label";
 import { AlertTriangle } from "lucide-react";
 import { Logo } from "@shared/components/layout/Logo";
@@ -102,7 +102,7 @@ export default function ConvitePage() {
           </div>
           <div className="space-y-1">
             <Label htmlFor="dataNascimento">Data de Nascimento</Label>
-            <DatePickerBR id="dataNascimento" value={dataNasc} onChange={setDataNasc} />
+            <DateInputBR id="dataNascimento" value={dataNasc} onChange={setDataNasc} mostrarIdade />
             <input type="hidden" name="dataNascimento" value={dataNasc} />
           </div>
           <Button type="submit" disabled={loading} className="w-full">

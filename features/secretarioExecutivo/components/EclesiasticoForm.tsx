@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
-import { DatePickerField } from "@shared/components/DatePickerField";
+import { DateInputBR } from "@/shared/components/ui/date-input-br";
 import { StickyActionBar } from "@shared/components/layout/StickyActionBar";
 import { FileUpload } from "@/shared/files/components/FileUpload";
 import { Church, BookMarked, LogOut, Save, CheckCircle2 } from "lucide-react";
@@ -287,13 +287,11 @@ export function EclesiasticoForm({
                       </Badge>
                     )}
                   </div>
-                  <DatePickerField
+                  <DateInputBR
                     value={valorAtual}
                     onChange={(iso) =>
                       setForm((p) => ({ ...p, [key]: iso }))
                     }
-                    placeholder="dd/mm/aaaa"
-                    maxDate={new Date()}
                   />
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     {verificado ? (
@@ -422,13 +420,11 @@ export function EclesiasticoForm({
             <>
               <div className="space-y-1">
                 <Label className="text-xs">Data da demissao</Label>
-                <DatePickerField
+                <DateInputBR
                   value={form.dataDemissao}
                   onChange={(iso) =>
                     setForm((p) => ({ ...p, dataDemissao: iso }))
                   }
-                  placeholder="dd/mm/aaaa"
-                  maxDate={new Date()}
                 />
               </div>
               {form.formaDemissao === "TRANSFERENCIA" && (
@@ -499,13 +495,11 @@ export function EclesiasticoForm({
               {form.formaDemissao === "FALECIMENTO" && (
                 <div className="space-y-1">
                   <Label className="text-xs">Data do falecimento</Label>
-                  <DatePickerField
+                  <DateInputBR
                     value={form.dataFalecimento}
                     onChange={(iso) =>
                       setForm((p) => ({ ...p, dataFalecimento: iso }))
                     }
-                    placeholder="dd/mm/aaaa"
-                    maxDate={new Date()}
                   />
                 </div>
               )}

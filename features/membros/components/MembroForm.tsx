@@ -4,7 +4,7 @@ import { useForm, type UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
-import { DateFieldBR } from "@/shared/components/ui/date-picker-br";
+import { DateInputFieldBR } from "@/shared/components/ui/date-input-br";
 import { Label } from "@/shared/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
@@ -32,7 +32,7 @@ function Field({ form, name, label, type = "text", placeholder = "", inputMode, 
     <div className="space-y-1">
       <Label htmlFor={name}>{label}</Label>
       {type === "date" ? (
-        <DateFieldBR control={form.control} name={name} id={name} placeholder={placeholder} />
+        <DateInputFieldBR control={form.control} name={name} id={name} mostrarIdade={name === "dataNascimento"} />
       ) : (
         <Input id={name} type={type} placeholder={placeholder} inputMode={inputMode} autoComplete={autoComplete} {...form.register(name)} />
       )}

@@ -20,7 +20,7 @@ import {
 import { PhotoUpload } from "@/shared/files/components/PhotoUpload";
 import { HeaderLayout } from "@shared/components/layout/HeaderLayout";
 import { PageHeader } from "@shared/components/layout/PageHeader";
-import { DatePickerField } from "@shared/components/DatePickerField";
+import { DateInputBR } from "@/shared/components/ui/date-input-br";
 import { toast } from "sonner";
 import Link from "next/link";
 import { MapPin, User, Phone, AlertCircle, CheckCircle2, HeartPulse, Church, ArrowRight, Pencil } from "lucide-react";
@@ -98,7 +98,6 @@ function DataSacramentalRow({
   onNaoLembroToggle,
   verificado,
   pendenteVerificacao,
-  minDate,
 }: {
   label: string;
   value: string;
@@ -107,7 +106,6 @@ function DataSacramentalRow({
   onNaoLembroToggle: (v: boolean) => void;
   verificado: boolean;
   pendenteVerificacao: boolean;
-  minDate?: Date;
 }) {
   return (
     <div className="space-y-1.5">
@@ -123,13 +121,7 @@ function DataSacramentalRow({
         </label>
       </div>
       {!naoLembro && (
-        <DatePickerField
-          value={value}
-          onChange={onChange}
-          placeholder="dd/mm/aaaa"
-          maxDate={new Date()}
-          minDate={minDate}
-        />
+        <DateInputBR value={value} onChange={onChange} />
       )}
       {naoLembro && (
         <p className="text-[11px] text-muted-foreground italic px-1">

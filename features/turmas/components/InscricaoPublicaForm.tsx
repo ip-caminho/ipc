@@ -271,10 +271,10 @@ export function InscricaoPublicaForm({ token }: { token: string }) {
                       className={ENTRADA}
                       value={(field.value as string) ?? ""}
                       onChange={field.onChange}
+                      mostrarIdade
                     />
                   )}
                 />
-                <p className={AJUDA}>Digite só os números: 25121990</p>
               </div>
             )}
 

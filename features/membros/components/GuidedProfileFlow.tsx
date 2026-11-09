@@ -20,7 +20,7 @@ import { FileUpload } from "@/shared/files/components/FileUpload";
 import { toast } from "sonner";
 import { calculateCompleteness } from "@convex/membros/completeness";
 import { ESTADO_CIVIL_OPTIONS, FORMA_ADMISSAO_OPTIONS } from "@features/membros/lib/constants";
-import { DatePickerField } from "@shared/components/DatePickerField";
+import { DateInputBR } from "@/shared/components/ui/date-input-br";
 import { WelcomeStep } from "./guided-steps/WelcomeStep";
 import { StepShell } from "./guided-steps/StepShell";
 import { EmergencyContactStep } from "./guided-steps/EmergencyContactStep";
@@ -592,12 +592,7 @@ function DateStep({
       onBack={onBack}
       saving={saving}
     >
-      <DatePickerField
-        value={value}
-        onChange={setValue}
-        placeholder="dd/mm/aaaa"
-        maxDate={new Date()}
-      />
+      <DateInputBR value={value} onChange={setValue} />
     </StepShell>
   );
 }
