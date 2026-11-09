@@ -32,7 +32,7 @@ function Field({ form, name, label, type = "text", placeholder = "", inputMode, 
     <div className="space-y-1">
       <Label htmlFor={name}>{label}</Label>
       {type === "date" ? (
-        <DateInputFieldBR control={form.control} name={name} id={name} mostrarIdade={name === "dataNascimento"} />
+        <DateInputFieldBR rotulo={label} control={form.control} name={name} id={name} mostrarIdade={name === "dataNascimento"} />
       ) : (
         <Input id={name} type={type} placeholder={placeholder} inputMode={inputMode} autoComplete={autoComplete} {...form.register(name)} />
       )}

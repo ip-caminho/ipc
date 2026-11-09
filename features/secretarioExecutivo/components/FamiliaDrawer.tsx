@@ -234,7 +234,7 @@ export function FamiliaDrawer({ membroId, entidadeId, nome, open, onOpenChange }
                 <div className="flex flex-col gap-2">
                   <div className="space-y-1">
                     <Label className="text-xs">Nascimento</Label>
-                    <DateInputBR value={fNasc} onChange={setFNasc} mostrarIdade />
+                    <DateInputBR rotulo="Data de nascimento do filho" value={fNasc} onChange={setFNasc} mostrarIdade />
                   </div>
                   <div className="w-28 space-y-1">
                     <Label className="text-xs">Sexo</Label>

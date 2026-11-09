@@ -592,7 +592,7 @@ function DateStep({
       onBack={onBack}
       saving={saving}
     >
-      <DateInputBR value={value} onChange={setValue} />
+      <DateInputBR rotulo={title} value={value} onChange={setValue} />
     </StepShell>
   );
 }

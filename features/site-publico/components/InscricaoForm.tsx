@@ -271,7 +271,7 @@ export function InscricaoForm({ inscricao }: { inscricao: InscricaoEventoPublica
                   )}
                 </Label>
                 {campo === "dataNascimento" ? (
-                  <DateInputFieldBR control={form.control} name={key} id={key} mostrarIdade />
+                  <DateInputFieldBR rotulo={meta.label} control={form.control} name={key} id={key} mostrarIdade />
                 ) : (
                   <Input id={key} type={meta.type} {...form.register(key)} />
                 )}

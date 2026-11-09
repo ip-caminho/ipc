@@ -26,6 +26,7 @@ import {
 
 type Props = {
   id?: string;
+  rotulo: string; // nome da data para leitor de tela (ex: "Data de nascimento")
   value: string; // ISO yyyy-mm-dd (ou "")
   onChange: (iso: string) => void;
   className?: string;
@@ -54,6 +55,7 @@ function dataPorExtenso(iso: string, mostrarIdade?: boolean): string {
 
 export function DateInputBR({
   id,
+  rotulo: nomeData,
   value,
   onChange,
   className,
@@ -125,6 +127,8 @@ export function DateInputBR({
 
   return (
     <div
+      role="group"
+      aria-label={nomeData}
       className="space-y-1"
       onFocus={() => setSaiu(false)}
       onBlur={(e) => {

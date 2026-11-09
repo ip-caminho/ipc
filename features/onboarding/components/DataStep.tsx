@@ -91,6 +91,7 @@ export function DataStep({ nomeCompleto, whatsapp, formData, onUpdate, onNext, o
           <div className="space-y-1">
             <Label htmlFor="ob-nasc" className="text-xs">Data de nascimento *</Label>
             <DateInputBR
+              rotulo="Data de nascimento"
               id="ob-nasc"
               value={formData.dataNascimento}
               onChange={(iso) => onUpdate({ dataNascimento: iso })}

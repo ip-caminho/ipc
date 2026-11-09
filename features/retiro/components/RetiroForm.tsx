@@ -544,6 +544,7 @@ export function RetiroForm({
                       name={`participantes.${i}.dataNascimento`}
                       render={({ field }) => (
                         <DateInputBR
+                          rotulo={`Nascimento do participante ${i + 1}`}
                           id={`p-nasc-${i}`}
                           className={ALTURA_CAMPO}
                           value={field.value}

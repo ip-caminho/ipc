@@ -121,7 +121,7 @@ function DataSacramentalRow({
         </label>
       </div>
       {!naoLembro && (
-        <DateInputBR value={value} onChange={onChange} />
+        <DateInputBR rotulo={label} value={value} onChange={onChange} />
       )}
       {naoLembro && (
         <p className="text-[11px] text-muted-foreground italic px-1">

@@ -288,6 +288,7 @@ export function EclesiasticoForm({
                     )}
                   </div>
                   <DateInputBR
+                    rotulo={label}
                     value={valorAtual}
                     onChange={(iso) =>
                       setForm((p) => ({ ...p, [key]: iso }))
@@ -421,6 +422,7 @@ export function EclesiasticoForm({
               <div className="space-y-1">
                 <Label className="text-xs">Data da demissao</Label>
                 <DateInputBR
+                  rotulo="Data da demissão"
                   value={form.dataDemissao}
                   onChange={(iso) =>
                     setForm((p) => ({ ...p, dataDemissao: iso }))
@@ -496,6 +498,7 @@ export function EclesiasticoForm({
                 <div className="space-y-1">
                   <Label className="text-xs">Data do falecimento</Label>
                   <DateInputBR
+                    rotulo="Data do falecimento"
                     value={form.dataFalecimento}
                     onChange={(iso) =>
                       setForm((p) => ({ ...p, dataFalecimento: iso }))

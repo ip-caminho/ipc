@@ -297,6 +297,7 @@ export function InscricaoEditForm({
                       name={`participantes.${i}.dataNascimento`}
                       render={({ field }) => (
                         <DateInputBR
+                          rotulo={`Nascimento do participante ${i + 1}`}
                           id={`p-nasc-${i}`}
                           className={ALTURA}
                           value={field.value}
