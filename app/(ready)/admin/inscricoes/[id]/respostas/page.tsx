@@ -156,7 +156,7 @@ function RespostasContent({ inscricaoId }: { inscricaoId: Id<"inscricoesEvento">
     ];
     // Monta valores crus; a escapagem acontece uma única vez no join.
     const linhas = listaFiltrada.map((r) => [
-      ...camposSistema.map((c) => valorSistema(c, r.dadosSistema?.[c]) ?? ""),
+      ...camposSistema.map((c) => r.dadosSistema?.[c] ?? ""),
       ...camposCustom.map((c) => r.dadosCustom?.[c.id] ?? ""),
       r.status === "LISTA_ESPERA" ? "Lista de espera" : "Confirmada",
       r.membroId ? "Membro" : "Anônimo",
