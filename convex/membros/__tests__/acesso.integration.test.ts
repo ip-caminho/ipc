@@ -132,7 +132,10 @@ describe("acesso — verificarAcessoDireto", () => {
         telefone: "11999998888",
         cpfPrefix: "52998",
       })
-    ).rejects.toThrow("ja ativado");
+    ).rejects.toMatchObject({
+      name: "ConvexError",
+      data: expect.stringContaining("Acesso ja ativado. Entre com sua senha."),
+    });
   });
 });
 

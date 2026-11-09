@@ -1,5 +1,5 @@
 import { mutation, query, type QueryCtx } from "../_generated/server";
-import { v } from "convex/values";
+import { v, ConvexError } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { requirePermission } from "../_shared/requirePermission";
 import { normalizeToE164 } from "../_shared/phoneUtils";
@@ -84,7 +84,7 @@ export const verificarAcessoDireto = mutation({
   handler: async (ctx, { telefone, cpfPrefix }) => {
     const prefix = cpfPrefix.replace(/\D/g, "");
     if (prefix.length !== 5) {
-      throw new Error("Informe os 5 primeiros digitos do CPF");
+      throw new ConvexError("Informe os 5 primeiros digitos do CPF");
     }
 
     // Compara so os digitos (E164) dos dois lados: robusto a formatacao
@@ -101,24 +101,24 @@ export const verificarAcessoDireto = mutation({
 
     // Mensagem generica para nao revelar se o telefone existe
     const erroGenerico = "Telefone ou CPF nao conferem";
-    if (!entidade) throw new Error(erroGenerico);
+    if (!entidade) throw new ConvexError(erroGenerico);
 
     const cpfDigits = (entidade.cpf || "").replace(/\D/g, "");
     if (!cpfDigits || cpfDigits.slice(0, 5) !== prefix) {
-      throw new Error(erroGenerico);
+      throw new ConvexError(erroGenerico);
     }
     if (entidade.status !== "ATIVO") {
-      throw new Error("Cadastro nao esta ativo. Procure a secretaria.");
+      throw new ConvexError("Cadastro nao esta ativo. Procure a secretaria.");
     }
 
     const membro = await ctx.db
       .query("membros")
       .withIndex("by_entidade", (q) => q.eq("entidadeId", entidade._id))
       .first();
-    if (!membro) throw new Error(erroGenerico);
+    if (!membro) throw new ConvexError(erroGenerico);
 
     if (membro.userId) {
-      throw new Error("Acesso ja ativado. Entre com sua senha.");
+      throw new ConvexError("Acesso ja ativado. Entre com sua senha.");
     }
 
     const token = gerarToken();
