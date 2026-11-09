@@ -27,6 +27,7 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import { DatePickerField } from "@shared/components/DatePickerField";
+import { formatDataBR } from "@/shared/lib/utils/date";
 import { ExternalLink, History, Users, UserPlus, Heart, Briefcase } from "lucide-react";
 import { cn } from "@shared/lib/utils/cn";
 import { CARGO_ECLESIASTICO_OPTIONS } from "@features/membros/lib/constants";
@@ -251,7 +252,7 @@ function CardDependente({ dep }: { dep: MembroEclesiastico }) {
         <Badge variant="secondary" className="shrink-0 text-xs">Dependente</Badge>
       </div>
       <p className="text-xs text-muted-foreground">
-        {dep.dataNascimento ? `Nascimento: ${dep.dataNascimento}` : "Sem dados eclesiasticos (nao e membro)"}
+        {dep.dataNascimento ? `Nascimento: ${formatDataBR(dep.dataNascimento)}` : "Sem dados eclesiasticos (nao e membro)"}
       </p>
     </div>
   );
@@ -394,7 +395,7 @@ function LinhaMembro({ membro, agrupar, readOnly }: { membro: MembroEclesiastico
         </CelulaEdit>
       </TableCell>
       <TableCell>
-        <CelulaEdit readOnly={readOnly} display={membro.dataConversao || "—"} width="w-[150px]">
+        <CelulaEdit readOnly={readOnly} display={formatDataBR(membro.dataConversao) || "—"} width="w-[150px]">
           {(close) => (
             <DatePickerField
               defaultOpen
@@ -407,7 +408,7 @@ function LinhaMembro({ membro, agrupar, readOnly }: { membro: MembroEclesiastico
         </CelulaEdit>
       </TableCell>
       <TableCell>
-        <CelulaEdit readOnly={readOnly} display={membro.dataBatismo || "—"} width="w-[150px]">
+        <CelulaEdit readOnly={readOnly} display={formatDataBR(membro.dataBatismo) || "—"} width="w-[150px]">
           {(close) => (
             <DatePickerField
               defaultOpen
@@ -420,7 +421,7 @@ function LinhaMembro({ membro, agrupar, readOnly }: { membro: MembroEclesiastico
         </CelulaEdit>
       </TableCell>
       <TableCell>
-        <CelulaEdit readOnly={readOnly} display={membro.dataMembresia || "—"} width="w-[150px]">
+        <CelulaEdit readOnly={readOnly} display={formatDataBR(membro.dataMembresia) || "—"} width="w-[150px]">
           {(close) => (
             <DatePickerField
               defaultOpen
@@ -472,7 +473,7 @@ function LinhaDependente({ dep, readOnly }: { dep: MembroEclesiastico; readOnly?
         <Badge variant="secondary" className="text-xs">Dependente · nao membro</Badge>
       </TableCell>
       <TableCell colSpan={NUM_COLS - 3} className="text-xs text-muted-foreground">
-        {dep.dataNascimento ? `Nascimento: ${dep.dataNascimento}` : "Sem dados eclesiasticos (nao e membro)"}
+        {dep.dataNascimento ? `Nascimento: ${formatDataBR(dep.dataNascimento)}` : "Sem dados eclesiasticos (nao e membro)"}
       </TableCell>
       <TableCell>
         {readOnly ? (

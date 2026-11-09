@@ -15,6 +15,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { Input } from "@/shared/components/ui/input";
 import { Skeleton } from "@/shared/components/ui/skeleton";
+import { formatDataBR } from "@/shared/lib/utils/date";
 import {
   Table,
   TableBody,
@@ -56,6 +57,9 @@ const SISTEMA_LABEL: Record<string, string> = {
   dataNascimento: "Nascimento",
   sexo: "Sexo",
 };
+
+const valorSistema = (campo: string, valor?: string) =>
+  campo === "dataNascimento" ? formatDataBR(valor) : valor;
 
 type StatusResposta = "CONFIRMADA" | "LISTA_ESPERA";
 type FiltroStatus = "TODAS" | StatusResposta;
@@ -152,7 +156,7 @@ function RespostasContent({ inscricaoId }: { inscricaoId: Id<"inscricoesEvento">
     ];
     // Monta valores crus; a escapagem acontece uma única vez no join.
     const linhas = listaFiltrada.map((r) => [
-      ...camposSistema.map((c) => r.dadosSistema?.[c] ?? ""),
+      ...camposSistema.map((c) => valorSistema(c, r.dadosSistema?.[c]) ?? ""),
       ...camposCustom.map((c) => r.dadosCustom?.[c.id] ?? ""),
       r.status === "LISTA_ESPERA" ? "Lista de espera" : "Confirmada",
       r.membroId ? "Membro" : "Anônimo",
@@ -247,7 +251,7 @@ function RespostasContent({ inscricaoId }: { inscricaoId: Id<"inscricoesEvento">
                 {listaFiltrada.map((r) => (
                   <TableRow key={r._id}>
                     {camposSistema.map((c) => (
-                      <TableCell key={c}>{r.dadosSistema?.[c] ?? "—"}</TableCell>
+                      <TableCell key={c}>{valorSistema(c, r.dadosSistema?.[c]) ?? "—"}</TableCell>
                     ))}
                     {camposCustom.map((c) => {
                       const v = r.dadosCustom?.[c.id];

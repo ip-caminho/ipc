@@ -2,7 +2,7 @@
 
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
-import { DatePickerBR } from "@/shared/components/ui/date-picker-br";
+import { DateInputBR } from "@/shared/components/ui/date-input-br";
 import { Label } from "@/shared/components/ui/label";
 import {
   Select,
@@ -77,7 +77,7 @@ export function DataStep({ nomeCompleto, whatsapp, formData, onUpdate, onNext, o
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="space-y-1">
             <Label htmlFor="ob-cpf" className="text-xs">CPF *</Label>
             <Input
@@ -90,10 +90,11 @@ export function DataStep({ nomeCompleto, whatsapp, formData, onUpdate, onNext, o
           </div>
           <div className="space-y-1">
             <Label htmlFor="ob-nasc" className="text-xs">Data de nascimento *</Label>
-            <DatePickerBR
+            <DateInputBR
               id="ob-nasc"
               value={formData.dataNascimento}
               onChange={(iso) => onUpdate({ dataNascimento: iso })}
+              mostrarIdade
             />
           </div>
         </div>

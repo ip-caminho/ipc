@@ -11,6 +11,8 @@ import type { InscricaoEventoPublica } from "@convex/public/inscricoesEvento";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
+import { DateInputFieldBR } from "@/shared/components/ui/date-input-br";
+import { formatDataBR } from "@/shared/lib/utils/date";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import {
@@ -33,7 +35,7 @@ const SISTEMA_META: Record<
   whatsapp: { label: "WhatsApp", type: "tel" },
   email: { label: "E-mail", type: "email" },
   telefone: { label: "Telefone", type: "tel" },
-  dataNascimento: { label: "Data de nascimento", type: "date" },
+  dataNascimento: { label: "Data de nascimento", type: "text" },
   sexo: { label: "Sexo", type: "text" },
 };
 
@@ -249,7 +251,7 @@ export function InscricaoForm({ inscricao }: { inscricao: InscricaoEventoPublica
                     {meta.label}
                   </Label>
                   <div className="flex h-10 items-center border border-[#E5E3DC] bg-[#FAFAF7] px-3 font-[family-name:var(--font-source-sans)] text-[14px] text-[#1A1A1A]">
-                    {valorPerfil(campo)}
+                    {campo === "dataNascimento" ? formatDataBR(valorPerfil(campo)) : valorPerfil(campo)}
                   </div>
                 </div>
               );
@@ -268,7 +270,11 @@ export function InscricaoForm({ inscricao }: { inscricao: InscricaoEventoPublica
                     </span>
                   )}
                 </Label>
-                <Input id={key} type={meta.type} {...form.register(key)} />
+                {campo === "dataNascimento" ? (
+                  <DateInputFieldBR control={form.control} name={key} id={key} mostrarIdade />
+                ) : (
+                  <Input id={key} type={meta.type} {...form.register(key)} />
+                )}
                 {errors[key] && (
                   <p className="text-xs text-destructive">{String(errors[key]?.message)}</p>
                 )}
