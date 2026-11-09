@@ -4,8 +4,10 @@ import { useAuthActions } from "@convex-dev/auth/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useMutation } from "convex/react";
+import { ConvexError } from "convex/values";
 import { api } from "@/convex/_generated/api";
 import { loginIdFromPhone } from "@shared/lib/acesso";
+import { getConvexErrorMessage } from "@/shared/lib/utils/convexError";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
@@ -94,7 +96,9 @@ export default function SignIn() {
       const { token } = await verificarAcessoDireto({ telefone, cpfPrefix });
       router.push(`/ativar/${token}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Nao foi possivel verificar");
+      // Falha inesperada nao tem mensagem util: evita mostrar o texto tecnico do Convex
+      const fallback = "Nao foi possivel verificar";
+      setError(err instanceof ConvexError ? getConvexErrorMessage(err, fallback) : fallback);
       setLoading(false);
     }
   }
