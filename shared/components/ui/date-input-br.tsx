@@ -1,102 +1,173 @@
 "use client";
 
 import * as React from "react";
+import { differenceInYears, format, parseISO } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import {
+  Controller,
+  type Control,
+  type FieldValues,
+  type Path,
+} from "react-hook-form";
 import { Input } from "@/shared/components/ui/input";
+import { Label } from "@/shared/components/ui/label";
+import { cn } from "@/shared/lib/utils/cn";
+import {
+  interpretarDataColada,
+  isoParaPartes,
+  validarPartesData,
+  type PartesData,
+} from "@/shared/lib/utils/date";
 
-// Input de data digitavel (dd/mm/aaaa) com teclado numerico. Alternativa ao
-// DatePickerBR (calendario) para casos em que digitar e mais rapido que
-// navegar — ex: data de nascimento no formulario do retiro. Emite ISO
-// (yyyy-mm-dd) quando a data esta completa e valida; "" enquanto incompleta.
+// Data digitada em três caixas rotuladas, com salto automático e confirmação
+// por extenso: dia e mês não têm como ser confundidos. Para datas passadas que
+// a pessoa sabe de cor (nascimento, batismo). Emite ISO (yyyy-mm-dd) quando a
+// data está completa e válida; "" enquanto não está.
 
 type Props = {
   id?: string;
   value: string; // ISO yyyy-mm-dd (ou "")
   onChange: (iso: string) => void;
-  placeholder?: string;
   className?: string;
   disabled?: boolean;
+  min?: string; // ISO yyyy-mm-dd: bloqueia datas anteriores
+  mostrarIdade?: boolean;
 };
 
-function isoParaBR(iso: string): string {
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
-  return m ? `${m[3]}/${m[2]}/${m[1]}` : "";
-}
+type Campo = keyof PartesData;
 
-// Formata os digitos como dd/mm/aaaa, inserindo as barras automaticamente.
-function mascara(v: string): string {
-  const d = v.replace(/\D/g, "").slice(0, 8);
-  if (d.length <= 2) return d;
-  if (d.length <= 4) return `${d.slice(0, 2)}/${d.slice(2)}`;
-  return `${d.slice(0, 2)}/${d.slice(2, 4)}/${d.slice(4)}`;
-}
+const CAMPOS: { campo: Campo; rotulo: string; digitos: number; salta: number }[] = [
+  // `salta`: acima deste primeiro dígito, o valor já está definido.
+  { campo: "dia", rotulo: "Dia", digitos: 2, salta: 3 },
+  { campo: "mes", rotulo: "Mês", digitos: 2, salta: 1 },
+  { campo: "ano", rotulo: "Ano", digitos: 4, salta: 9 },
+];
 
-// Converte dd/mm/aaaa -> ISO, validando dia/mes reais (rejeita 31/02, etc.).
-function brParaISO(br: string): string | null {
-  const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(br);
-  if (!m) return null;
-  const [, dd, mm, yyyy] = m;
-  const dia = Number(dd);
-  const mes = Number(mm);
-  const ano = Number(yyyy);
-  if (mes < 1 || mes > 12 || dia < 1 || dia > 31) return null;
-  const iso = `${yyyy}-${mm}-${dd}`;
-  const dt = new Date(`${iso}T00:00:00`);
-  if (
-    Number.isNaN(dt.getTime()) ||
-    dt.getUTCFullYear() !== ano ||
-    dt.getUTCMonth() + 1 !== mes ||
-    dt.getUTCDate() !== dia
-  ) {
-    return null;
-  }
-  return iso;
+function dataPorExtenso(iso: string, mostrarIdade?: boolean): string {
+  const data = parseISO(iso);
+  const extenso = format(data, "d 'de' MMMM 'de' yyyy", { locale: ptBR });
+  if (!mostrarIdade) return extenso;
+  const anos = differenceInYears(new Date(), data);
+  const idade = anos === 0 ? "menos de 1 ano" : anos === 1 ? "1 ano" : `${anos} anos`;
+  return `${extenso} · ${idade}`;
 }
 
 export function DateInputBR({
   id,
   value,
   onChange,
-  placeholder = "dd/mm/aaaa",
   className,
   disabled,
+  min,
+  mostrarIdade,
 }: Props) {
-  const [texto, setTexto] = React.useState(() => isoParaBR(value));
-  const [tocado, setTocado] = React.useState(false);
+  const idBase = React.useId();
+  const [partes, setPartes] = React.useState(() => isoParaPartes(value));
+  const [saiu, setSaiu] = React.useState(false);
+  const caixas = React.useRef<Record<Campo, HTMLInputElement | null>>({
+    dia: null,
+    mes: null,
+    ano: null,
+  });
 
-  // Sincroniza quando o valor externo muda (ex: pre-preenchimento da familia).
+  // Sincroniza quando o valor externo muda (ex: pré-preenchimento da família),
+  // sem apagar o que a pessoa ainda está digitando.
   React.useEffect(() => {
-    setTexto((atual) => (brParaISO(atual) === value ? atual : isoParaBR(value)));
-  }, [value]);
+    setPartes((atuais) =>
+      (validarPartesData(atuais, { min }).iso ?? "") === value ? atuais : isoParaPartes(value),
+    );
+  }, [value, min]);
 
-  // Inválido só depois de sair do campo: evita "erro" enquanto ainda digita.
-  // Pega tanto data incompleta (ano com 2 dígitos) quanto impossível (31/02).
-  const invalido = tocado && texto.length > 0 && brParaISO(texto) === null;
+  const resultado = validarPartesData(partes, { min });
+  const erro = resultado.erro && (saiu || !resultado.incompleta) ? resultado.erro : null;
+  const idMensagem = `${idBase}-mensagem`;
+
+  function aplicar(novas: PartesData) {
+    setPartes(novas);
+    onChange(validarPartesData(novas, { min }).iso ?? "");
+  }
+
+  function alterar(indice: number, bruto: string) {
+    const colada = interpretarDataColada(bruto);
+    if (colada) {
+      aplicar(colada);
+      caixas.current.ano?.focus();
+      return;
+    }
+    const { campo, digitos, salta } = CAMPOS[indice];
+    const texto = bruto.replace(/\D/g, "").slice(0, digitos);
+    const cresceu = texto.length > partes[campo].length;
+    const novas = { ...partes, [campo]: texto };
+    aplicar(novas);
+    const proximo = CAMPOS[indice + 1];
+    // Valor inválido (mês 13) segura o foco na caixa para corrigir ali mesmo.
+    const { erro, incompleta } = validarPartesData(novas, { min });
+    if (proximo && cresceu && (!erro || incompleta) && (texto.length === digitos || Number(texto) > salta)) {
+      caixas.current[proximo.campo]?.focus();
+    }
+  }
 
   return (
-    <div>
-      <Input
-        id={id}
-        type="text"
-        inputMode="numeric"
-        autoComplete="off"
-        placeholder={placeholder}
-        value={texto}
-        maxLength={10}
-        disabled={disabled}
-        className={className}
-        aria-invalid={invalido || undefined}
-        onBlur={() => setTocado(true)}
-        onChange={(e) => {
-          const mascarado = mascara(e.target.value);
-          setTexto(mascarado);
-          onChange(brParaISO(mascarado) ?? "");
-        }}
-      />
-      {invalido && (
-        <p className="mt-1 text-[12px] text-[#B3261E]">
-          Informe dia, mês e ano completos (dd/mm/aaaa).
-        </p>
-      )}
+    <div
+      className="space-y-1"
+      onFocus={() => setSaiu(false)}
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setSaiu(true);
+      }}
+    >
+      <div className="grid max-w-xs grid-cols-[1fr_1fr_1.5fr] gap-2">
+        {CAMPOS.map(({ campo, rotulo }, indice) => {
+          const idCaixa = indice === 0 && id ? id : `${idBase}-${campo}`;
+          return (
+            <div key={campo} className="min-w-0 space-y-0.5">
+              <Label htmlFor={idCaixa} className="text-xs font-normal text-muted-foreground">
+                {rotulo}
+              </Label>
+              <Input
+                id={idCaixa}
+                ref={(el) => {
+                  caixas.current[campo] = el;
+                }}
+                type="text"
+                inputMode="numeric"
+                autoComplete="off"
+                value={partes[campo]}
+                disabled={disabled}
+                className={cn("px-1 text-center", className)}
+                aria-invalid={erro ? true : undefined}
+                aria-describedby={idMensagem}
+                onFocus={(e) => e.target.select()}
+                onChange={(e) => alterar(indice, e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key !== "Backspace" || partes[campo] || indice === 0) return;
+                  e.preventDefault();
+                  caixas.current[CAMPOS[indice - 1].campo]?.focus();
+                }}
+              />
+            </div>
+          );
+        })}
+      </div>
+      <p id={idMensagem} aria-live="polite" className={cn("text-xs", erro ? "text-destructive" : "text-muted-foreground")}>
+        {erro ?? (resultado.iso ? dataPorExtenso(resultado.iso, mostrarIdade) : null)}
+      </p>
     </div>
+  );
+}
+
+// Wrapper para React Hook Form: <DateInputFieldBR control={form.control} name="data" />
+export function DateInputFieldBR<T extends FieldValues>({
+  control,
+  name,
+  ...props
+}: Omit<Props, "value" | "onChange"> & { control: Control<T>; name: Path<T> }) {
+  return (
+    <Controller
+      control={control}
+      name={name}
+      render={({ field }) => (
+        <DateInputBR {...props} value={(field.value as string) ?? ""} onChange={field.onChange} />
+      )}
+    />
   );
 }
