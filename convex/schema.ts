@@ -383,6 +383,21 @@ export default defineSchema({
     .index("by_status", ["status"])
     .index("by_membro", ["membroId"]),
 
+  recuperacoesSenha: defineTable({
+    token: v.string(),
+    membroId: v.id("membros"),
+    expiraEm: v.number(),
+    usadoEm: v.optional(v.number()),
+  })
+    .index("by_token", ["token"])
+    .index("by_membro", ["membroId"]),
+
+  recuperacaoTentativas: defineTable({
+    chave: v.string(), // hash do telefone informado
+    falhas: v.number(),
+    janelaInicio: v.number(),
+  }).index("by_chave", ["chave"]),
+
   auditLogs: defineTable({
     action: v.string(),
     referenciaTabela: v.string(),
