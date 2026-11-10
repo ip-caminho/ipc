@@ -108,7 +108,7 @@ export const verificarAcessoDireto = mutation({
       agora
     );
     if (bloqueado) return { status: "bloqueado" };
-    // So o contador do telefone zera no acerto; o outro dado nao e exclusivo de uma pessoa
+    // No acerto, zera apenas parte dos contadores
     const contadoresDoTelefone = contadores.slice(0, 1);
 
     const entidades = await ctx.db.query("entidades").collect();
