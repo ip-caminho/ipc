@@ -187,7 +187,7 @@ describe("acesso — verificarAcessoDireto", () => {
       expect((await verificar(t, CERTO)).status).toBe("ok");
     });
 
-    it("acumula quando so um dos dados muda entre as tentativas", async () => {
+    it("bloqueia variando um dos dados entre as tentativas", async () => {
       const t = convexTest(schema, modules);
       await seedMembroSemAcesso(t);
       // Telefone variando, prefixo fixo
@@ -197,7 +197,7 @@ describe("acesso — verificarAcessoDireto", () => {
       expect(await verificar(t, CERTO)).toEqual({ status: "bloqueado" });
     });
 
-    it("acumula quando o prefixo varia e o telefone e fixo", async () => {
+    it("bloqueia variando o outro dado entre as tentativas", async () => {
       const t = convexTest(schema, modules);
       await seedMembroSemAcesso(t);
       for (let i = 0; i < MAX_FALHAS; i++) {
