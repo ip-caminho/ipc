@@ -33,6 +33,19 @@ function mascararData(valor: string): string {
   return `${d.slice(0, 2)}/${d.slice(2, 4)}/${d.slice(4)}`;
 }
 
+/** Barra na tela o que nem existe no calendario, para nao gastar tentativa. */
+function dataValida(valor: string): boolean {
+  if (valor.length !== 10) return false;
+  const [dia, mes, ano] = valor.split("/").map(Number);
+  const data = new Date(ano, mes - 1, dia);
+  return (
+    ano >= 1900 &&
+    data.getMonth() === mes - 1 &&
+    data.getDate() === dia &&
+    data.getTime() <= Date.now()
+  );
+}
+
 function dataParaIso(valor: string): string {
   const [dia, mes, ano] = valor.split("/");
   return `${ano}-${mes}-${dia}`;
@@ -56,8 +69,8 @@ export default function EsqueciSenhaPage() {
   async function handleVerificar(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
-    if (nascimento.length !== 10) {
-      setError("Informe a data de nascimento completa (dd/mm/aaaa).");
+    if (!dataValida(nascimento)) {
+      setError("Informe uma data de nascimento válida (dd/mm/aaaa).");
       return;
     }
     const fd = new FormData(e.currentTarget);
