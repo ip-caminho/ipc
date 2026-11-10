@@ -3,11 +3,10 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { FileText } from "lucide-react";
-import { format, isSunday, nextSunday, parseISO } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { useQuery } from "convex/react";
 
 import { api } from "@/convex/_generated/api";
+import { proximoCultoLabel } from "@features/dashboard/lib/proximoCultoLabel";
 import { useAuth } from "@shared/providers/PermissionsProvider";
 import { cn } from "@/shared/lib/utils/cn";
 
@@ -45,21 +44,10 @@ export function BoletimCard() {
     return () => clearInterval(id);
   }, []);
 
-  const fallbackLabel = useMemo(() => {
-    const reference = new Date();
-    const proximo = isSunday(reference) ? reference : nextSunday(reference);
-    return format(proximo, "EEEE',' HH'h'", { locale: ptBR });
-  }, []);
-
-  const proximoCultoLabel = useMemo(() => {
-    if (!status?.proximoCulto) return fallbackLabel;
-    const data = parseISO(status.proximoCulto.data);
-    const horario = status.proximoCulto.horario;
-    if (horario) {
-      return `${format(data, "EEEE", { locale: ptBR })}, ${horario}`;
-    }
-    return format(data, "EEEE',' HH'h'", { locale: ptBR });
-  }, [status?.proximoCulto, fallbackLabel]);
+  const label = useMemo(
+    () => proximoCultoLabel(status?.proximoCulto, now),
+    [status?.proximoCulto, now],
+  );
 
   if (!podeVerBoletim) return null;
 
@@ -90,7 +78,7 @@ export function BoletimCard() {
   return (
     <Link
       href="/boletim"
-      aria-label={`Próximo culto, ${proximoCultoLabel}`}
+      aria-label={`Próximo culto, ${label}`}
       className={cn(
         "flex items-center gap-3 rounded-xl p-3.5 min-h-[64px]",
         "bg-secondary text-secondary-foreground active:opacity-90 transition-opacity",
@@ -100,7 +88,7 @@ export function BoletimCard() {
       <div className="flex-1 min-w-0">
         <p className="text-[15px] font-medium">Próximo culto</p>
         <p className="mt-0.5 text-[11px] text-muted-foreground">
-          {proximoCultoLabel}
+          {label}
         </p>
       </div>
     </Link>
