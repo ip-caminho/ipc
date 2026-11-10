@@ -158,7 +158,7 @@ export default function LoteGravacaoPage() {
             <span className="hidden md:inline">Arraste áudios aqui ou clique para selecionar</span>
           </p>
           <p className="text-xs text-muted-foreground mt-1">
-            MP3, M4A, WAV — a data e extraida do nome (ex: 2025 03 30 sermao.mp3)
+            MP3, M4A, WAV — a data é extraída do nome (ex: 2025 03 30 sermao.mp3)
           </p>
           <input
             ref={inputRef}
@@ -186,7 +186,7 @@ export default function LoteGravacaoPage() {
                 {errorCount > 0 && <> — <span className="text-red-600">{errorCount} erro(s)</span></>}
               </p>
               {allDone && (
-                <Badge variant="default" className="text-xs">Concluido</Badge>
+                <Badge variant="default" className="text-xs">Concluído</Badge>
               )}
             </div>
 

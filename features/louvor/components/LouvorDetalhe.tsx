@@ -283,7 +283,7 @@ export function LouvorDetalhe({ louvorId, onBack }: LouvorDetalheProps) {
       {/* YouTube embed */}
       {louvor.youtubeUrl && (
         <div className="space-y-2">
-          <h3 className="text-sm font-medium">Video</h3>
+          <h3 className="text-sm font-medium">Vídeo</h3>
           <YouTubeEmbed url={louvor.youtubeUrl} />
         </div>
       )}

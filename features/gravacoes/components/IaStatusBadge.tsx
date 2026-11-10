@@ -19,7 +19,7 @@ const STATUS_CONFIG: Record<string, { label: string; variant: "default" | "secon
   BAIXANDO: { label: "IA: Baixando áudio", variant: "secondary", animate: true },
   TRANSCREVENDO: { label: "IA: Transcrevendo", variant: "secondary", animate: true },
   ANALISANDO: { label: "IA: Analisando", variant: "secondary", animate: true },
-  CONCLUIDO: { label: "IA: Concluido", variant: "default" },
+  CONCLUIDO: { label: "IA: Concluído", variant: "default" },
   ERRO: { label: "IA: Erro", variant: "destructive" },
 };
 
