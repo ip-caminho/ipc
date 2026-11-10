@@ -175,7 +175,7 @@ describe("acesso — verificarAcessoDireto", () => {
       expect(res.status).toBe("ok");
     });
 
-    it("zera os contadores do fluxo no acerto", async () => {
+    it("o acerto zera as falhas do telefone", async () => {
       const t = convexTest(schema, modules);
       await seedMembroSemAcesso(t);
       for (let i = 0; i < MAX_FALHAS - 1; i++) {
@@ -216,17 +216,23 @@ describe("acesso — verificarAcessoDireto", () => {
       expect(await verificar(t, CERTO)).toEqual({ status: "bloqueado" });
     });
 
-    it("o acerto nao apaga as falhas do dado compartilhado", async () => {
-      const t = convexTest(schema, modules);
-      await seedMembroSemAcesso(t);
-      for (let i = 0; i < MAX_FALHAS - 1; i++) {
-        await verificar(t, { telefone: `1190000000${i}`, cpfPrefix: CERTO.cpfPrefix });
+    it.each([
+      ["cadastro ativo", "ATIVO", "ok"],
+      ["cadastro nao ativo", "INATIVO", "inativo"],
+    ] as const)(
+      "o acerto preserva as falhas do outro dado, %s",
+      async (_, status, esperado) => {
+        const t = convexTest(schema, modules);
+        await seedMembroSemAcesso(t, { status });
+        for (let i = 0; i < MAX_FALHAS - 1; i++) {
+          await verificar(t, { telefone: `1190000000${i}`, cpfPrefix: CERTO.cpfPrefix });
+        }
+        expect((await verificar(t, CERTO)).status).toBe(esperado);
+        // Uma falha a mais completa o acumulado, que seguia gravado apos o acerto
+        await verificar(t, { telefone: "11900000009", cpfPrefix: CERTO.cpfPrefix });
+        expect(await verificar(t, CERTO)).toEqual({ status: "bloqueado" });
       }
-      expect((await verificar(t, CERTO)).status).toBe("ok");
-      // Uma falha a mais completa o acumulado, que seguia gravado apos o acerto
-      await verificar(t, { telefone: "11900000009", cpfPrefix: CERTO.cpfPrefix });
-      expect(await verificar(t, CERTO)).toEqual({ status: "bloqueado" });
-    });
+    );
 
     it.each([
       ["com membro vinculado", true],
