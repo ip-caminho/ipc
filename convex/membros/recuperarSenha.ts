@@ -1,6 +1,6 @@
 import { invalidateSessions, modifyAccountCredentials } from "@convex-dev/auth/server";
 import { v } from "convex/values";
-import { internal } from "../_generated/api";
+import { makeFunctionReference } from "convex/server";
 import type { Doc, Id } from "../_generated/dataModel";
 import {
   action,
@@ -16,6 +16,27 @@ const VALIDADE_TOKEN_MS = 15 * 60 * 1000;
 const SENHA_MIN = 8;
 const SENHA_MAX = 128;
 const LOTE_LIMPEZA = 500;
+
+type ContaConsumida = {
+  userId: Id<"users">;
+  membroId: Id<"membros">;
+  contaId: Id<"authAccounts">;
+  loginId: string;
+};
+
+// Referencias por string: evita TS2589 (profundidade da arvore `internal`).
+const refConsumirToken = makeFunctionReference<
+  "mutation",
+  { token: string },
+  ContaConsumida | null
+>("membros/recuperarSenha:consumirToken");
+const refRegistrarTrocaSenha = makeFunctionReference<
+  "mutation",
+  Omit<ContaConsumida, "loginId">
+>("membros/recuperarSenha:registrarTrocaSenha");
+const refLimparExpirados = makeFunctionReference<"mutation", Record<string, never>>(
+  "membros/recuperarSenha:limparExpirados"
+);
 
 const soDigitos = (valor: string) => valor.replace(/\D/g, "");
 const telefoneDigitos = (valor?: string) =>
@@ -194,12 +215,7 @@ export const consumirToken = internalMutation({
   handler: async (
     ctx,
     { token }
-  ): Promise<{
-    userId: Id<"users">;
-    membroId: Id<"membros">;
-    contaId: Id<"authAccounts">;
-    loginId: string;
-  } | null> => {
+  ): Promise<ContaConsumida | null> => {
     const pedido = await ctx.db
       .query("recuperacoesSenha")
       .withIndex("by_token", (q) => q.eq("token", token))
@@ -239,7 +255,7 @@ export const registrarTrocaSenha = internalMutation({
     membroId: v.id("membros"),
     contaId: v.id("authAccounts"),
   },
-  handler: async (ctx, { userId, membroId, contaId }) => {
+  handler: async (ctx, { userId, membroId, contaId }): Promise<void> => {
     // Sem isso, quem errou a senha varias vezes seguiria bloqueado com a nova
     const limite = await ctx.db
       .query("authRateLimits")
@@ -261,7 +277,7 @@ export const registrarTrocaSenha = internalMutation({
 /** Rotina diaria: a rota e publica, entao as tabelas nao podem crescer sem limite. */
 export const limparExpirados = internalMutation({
   args: {},
-  handler: async (ctx) => {
+  handler: async (ctx): Promise<void> => {
     const agora = Date.now();
     const tentativas = await ctx.db
       .query("recuperacaoTentativas")
@@ -277,7 +293,7 @@ export const limparExpirados = internalMutation({
     }
 
     if (tentativas.length === LOTE_LIMPEZA || pedidos.length === LOTE_LIMPEZA) {
-      await ctx.scheduler.runAfter(0, internal.membros.recuperarSenha.limparExpirados, {});
+      await ctx.scheduler.runAfter(0, refLimparExpirados, {});
     }
   },
 });
@@ -297,17 +313,14 @@ export const redefinirSenha = action({
       return { status: "senha_invalida" };
     }
 
-    const conta = await ctx.runMutation(
-      internal.membros.recuperarSenha.consumirToken,
-      { token }
-    );
+    const conta = await ctx.runMutation(refConsumirToken, { token });
     if (!conta) return { status: "expirado" };
 
     await modifyAccountCredentials(ctx, {
       provider: "password",
       account: { id: conta.loginId, secret: novaSenha },
     });
-    await ctx.runMutation(internal.membros.recuperarSenha.registrarTrocaSenha, {
+    await ctx.runMutation(refRegistrarTrocaSenha, {
       userId: conta.userId,
       membroId: conta.membroId,
       contaId: conta.contaId,
