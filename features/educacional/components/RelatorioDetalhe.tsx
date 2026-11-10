@@ -67,7 +67,7 @@ export function RelatorioDetalhe({
           <>
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                {relatorio.numero != null && <span>Licao {relatorio.numero}</span>}
+                {relatorio.numero != null && <span>Lição {relatorio.numero}</span>}
                 <Badge
                   variant="secondary"
                   className={TURMA_COLORS[relatorio.turma] || ""}

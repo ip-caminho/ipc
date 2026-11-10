@@ -33,13 +33,13 @@ export function EducacionalPaisWidget() {
               </div>
               {c.proximaEscalaData && c.professores.length > 0 && (
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Proxima aula ({format(parseISO(c.proximaEscalaData), "dd/MM/yyyy", { locale: ptBR })}): {c.professores.join(", ")}
+                  Próxima aula ({format(parseISO(c.proximaEscalaData), "dd/MM/yyyy", { locale: ptBR })}): {c.professores.join(", ")}
                 </p>
               )}
               {c.ultimaLicao && (
                 <div className="mt-1 border-t border-border/60 pt-1">
                   <p className="text-[10px] text-muted-foreground">
-                    Ultima licao ({format(parseISO(c.ultimaLicao.data), "dd/MM", { locale: ptBR })})
+                    Última lição ({format(parseISO(c.ultimaLicao.data), "dd/MM", { locale: ptBR })})
                     {c.ultimaLicao.tema ? `: ${c.ultimaLicao.tema}` : ""}
                   </p>
                   {c.ultimaLicao.passagemMemorizar && (
@@ -49,7 +49,7 @@ export function EducacionalPaisWidget() {
                   )}
                   {c.ultimaLicao.licaoDeCasa && (
                     <p className="text-[10px] text-muted-foreground">
-                      Licao de casa: {c.ultimaLicao.licaoDeCasa}
+                      Lição de casa: {c.ultimaLicao.licaoDeCasa}
                     </p>
                   )}
                 </div>

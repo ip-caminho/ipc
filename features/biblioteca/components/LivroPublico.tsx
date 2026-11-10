@@ -117,7 +117,7 @@ export function LivroPublico({ codigo }: { codigo: string }) {
             {meuEmprestimo ? (
               <div className="space-y-2 border-t pt-3">
                 <p className="text-sm">
-                  Voce pegou este livro emprestado. Devolucao prevista:{" "}
+                  Você pegou este livro emprestado. Devolução prevista:{" "}
                   <span className="font-medium">{meuEmprestimo.dataPrevistaDevolucao}</span>
                 </p>
                 <Button className="w-full" onClick={handleDevolver} disabled={acao}>

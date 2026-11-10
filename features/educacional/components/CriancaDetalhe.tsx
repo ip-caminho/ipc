@@ -126,7 +126,7 @@ export function CriancaDetalhe({ entidadeId, onBack, onEdit, onDelete }: Crianca
             )}
             {(transicao || divergente) && (
               <div>
-                <p className="text-muted-foreground">Proxima turma</p>
+                <p className="text-muted-foreground">Próxima turma</p>
                 {divergente ? (
                   <p className="text-yellow-600">
                     Turma desatualizada pela coorte (reenquadrar)
@@ -162,7 +162,7 @@ export function CriancaDetalhe({ entidadeId, onBack, onEdit, onDelete }: Crianca
         <CardHeader>
           <CardTitle className="text-sm flex items-center gap-2">
             <Users className="h-4 w-4" />
-            Responsaveis
+            Responsáveis
             <Badge variant="secondary">{crianca.responsaveis.length}</Badge>
           </CardTitle>
         </CardHeader>

@@ -193,7 +193,7 @@ export default function ImprimirCertificadosPage() {
             </p>
 
             <p style={{ fontSize: "11pt", marginTop: "10mm" }}>
-              Sao Paulo, {formatDateLong(c.emitidoEm)}
+              São Paulo, {formatDateLong(c.emitidoEm)}
             </p>
 
             <div

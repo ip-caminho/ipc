@@ -525,7 +525,7 @@ export default function EducacionalPage() {
             </TabsTrigger>
             <TabsTrigger value="aniversarios" className="hidden gap-1.5 md:inline-flex">
               <Cake className="h-4 w-4" />
-              Aniversarios
+              Aniversários
             </TabsTrigger>
             {canReadVol && (
               <TabsTrigger value="voluntarios" className="hidden gap-1.5 md:inline-flex">
@@ -643,7 +643,7 @@ export default function EducacionalPage() {
                         {grupo.label}
                       </Badge>
                       <span className="text-xs text-muted-foreground">
-                        {grupo.criancas.length} crianca
+                        {grupo.criancas.length} criança
                         {grupo.criancas.length !== 1 ? "s" : ""}
                       </span>
                     </div>
@@ -662,7 +662,7 @@ export default function EducacionalPage() {
             ) : (
               <>
                 <p className="text-sm text-muted-foreground">
-                  {criancasFiltradas!.length} crianca
+                  {criancasFiltradas!.length} criança
                   {criancasFiltradas!.length !== 1 ? "s" : ""}
                 </p>
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -719,7 +719,7 @@ export default function EducacionalPage() {
 
               {!eduMinisterio && (
                 <p className="text-sm text-muted-foreground">
-                  Ministerio &quot;Educacional&quot; nao encontrado. Crie-o em Ministerios.
+                  Ministério &quot;Educacional&quot; não encontrado. Crie-o em Ministérios.
                 </p>
               )}
 
