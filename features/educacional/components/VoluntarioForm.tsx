@@ -95,7 +95,7 @@ export function VoluntarioForm({
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {isEditing ? "Editar Voluntario" : "Novo Voluntario"}
+            {isEditing ? "Editar Voluntário" : "Novo Voluntário"}
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
@@ -119,7 +119,7 @@ export function VoluntarioForm({
                       disabled={m.jaVoluntario}
                     >
                       {m.nome}
-                      {m.jaVoluntario ? " (ja voluntario)" : ""}
+                      {m.jaVoluntario ? " (já voluntário)" : ""}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -214,7 +214,7 @@ export function VoluntarioForm({
           </div>
 
           <div className="space-y-1">
-            <Label>Observacoes</Label>
+            <Label>Observações</Label>
             <Textarea {...form.register("observacoes")} rows={2} />
           </div>
 

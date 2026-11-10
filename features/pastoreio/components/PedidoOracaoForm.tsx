@@ -51,7 +51,7 @@ export function PedidoOracaoForm({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Novo Pedido de Oracao</DialogTitle>
+          <DialogTitle>Novo Pedido de Oração</DialogTitle>
         </DialogHeader>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
           <div className="space-y-1">
@@ -59,7 +59,7 @@ export function PedidoOracaoForm({
             <Textarea
               id="descricao"
               rows={4}
-              placeholder="Escreva aqui seu pedido de oracao..."
+              placeholder="Escreva aqui seu pedido de oração..."
               {...form.register("descricao")}
             />
             {form.formState.errors.descricao && (

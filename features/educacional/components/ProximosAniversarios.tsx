@@ -34,13 +34,13 @@ type Aniversario = {
 const GRUPOS: { titulo: string; inclui: (dias: number) => boolean }[] = [
   { titulo: "Hoje", inclui: (d) => d === 0 },
   { titulo: "Esta semana", inclui: (d) => d >= 1 && d <= 7 },
-  { titulo: "Este mes", inclui: (d) => d >= 8 && d <= 30 },
+  { titulo: "Este mês", inclui: (d) => d >= 8 && d <= 30 },
   { titulo: "Depois", inclui: (d) => d > 30 },
 ];
 
 function rotuloProximidade(dias: number): string {
   if (dias === 0) return "Hoje";
-  if (dias === 1) return "Amanha";
+  if (dias === 1) return "Amanhã";
   if (dias <= 30) return `Em ${dias} dias`;
   return "";
 }
@@ -64,7 +64,7 @@ function AniversarioCard({ a, hoje }: { a: Aniversario; hoje: boolean }) {
               />
               <span className="text-xs text-muted-foreground">
                 {format(parseISO(a.dataNascimento), "dd/MM", { locale: ptBR })}
-                {" · fara "}
+                {" · fará "}
                 {a.faraIdade}
               </span>
             </div>
@@ -110,7 +110,7 @@ export function ProximosAniversarios() {
         <EduEmptyState
           icon={Cake}
           title="Sem aniversarios"
-          description="Nenhuma crianca com data de nascimento cadastrada nesta selecao."
+          description="Nenhuma criança com data de nascimento cadastrada nesta seleção."
         />
       ) : (
         <div className="space-y-6">

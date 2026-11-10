@@ -1,7 +1,7 @@
 import { z } from "zod/v4";
 
 export const criancaFormSchema = z.object({
-  nomeCompleto: z.string().min(1, "Nome obrigatorio"),
+  nomeCompleto: z.string().min(1, "Nome obrigatório"),
   dataNascimento: z.string().optional(),
   sexo: z.enum(["M", "F"]).optional(),
   turma: z.string().min(1, "Selecione a turma"),

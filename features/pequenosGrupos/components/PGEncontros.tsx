@@ -27,10 +27,10 @@ export function PGEncontros({ pgId, membros, canEdit }: PGEncontrosProps) {
   const [editingId, setEditingId] = useState<Id<"pgEncontros"> | null>(null);
 
   const handleRemove = async (encontroId: Id<"pgEncontros">) => {
-    if (!confirm("Excluir este encontro e todas as presencas?")) return;
+    if (!confirm("Excluir este encontro e todas as presenças?")) return;
     try {
       await removeEncontro({ encontroId });
-      toast.success("Encontro excluido");
+      toast.success("Encontro excluído");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao excluir");
     }

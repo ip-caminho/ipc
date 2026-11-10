@@ -137,7 +137,7 @@ export default function NovoLivroPage() {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground mb-3">
-                Busque por ISBN ou titulo no Google Books — os dados serao preenchidos automaticamente.
+                Busque por ISBN ou título no Google Books — os dados serão preenchidos automaticamente.
               </p>
               <BookSearch onSelect={handleSelectBook} />
 
@@ -185,7 +185,7 @@ export default function NovoLivroPage() {
                 </div>
               )}
               <div>
-                <Label htmlFor="titulo">Titulo *</Label>
+                <Label htmlFor="titulo">Título *</Label>
                 <Input id="titulo" {...form.register("titulo")} />
               </div>
 
@@ -238,7 +238,7 @@ export default function NovoLivroPage() {
               </div>
 
               <div>
-                <Label htmlFor="descricao">Descricao</Label>
+                <Label htmlFor="descricao">Descrição</Label>
                 <Textarea id="descricao" {...form.register("descricao")} rows={3} />
               </div>
 

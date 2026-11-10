@@ -41,9 +41,9 @@ import type { AnotacaoFormValues } from "@features/pastoreio/lib/validations";
 
 const CARGO_LABELS: Record<string, string> = {
   MEMBRO_COMUNGANTE: "Membro",
-  MEMBRO_NAO_COMUNGANTE: "Nao Comungante",
-  DIACONO: "Diacono",
-  PRESBITERO: "Presbitero",
+  MEMBRO_NAO_COMUNGANTE: "Não Comungante",
+  DIACONO: "Diácono",
+  PRESBITERO: "Presbítero",
   PASTOR: "Pastor",
 };
 
@@ -131,7 +131,7 @@ export default function PastoreioPage() {
     if (!confirm("Excluir esta visita?")) return;
     try {
       await removeVisita({ id: id as Id<"visitasPastorais"> });
-      toast.success("Visita excluida");
+      toast.success("Visita excluída");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro");
     }
@@ -140,7 +140,7 @@ export default function PastoreioPage() {
   const handleCreatePedido = async (data: PedidoOracaoFormValues) => {
     try {
       await createPedido({ descricao: data.descricao });
-      toast.success("Pedido de oracao enviado");
+      toast.success("Pedido de oração enviado");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro");
     }
@@ -173,17 +173,17 @@ export default function PastoreioPage() {
         membroId: data.membroId as Id<"membros">,
         texto: data.texto,
       });
-      toast.success("Anotacao salva");
+      toast.success("Anotação salva");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro");
     }
   };
 
   const handleDeleteAnotacao = async (id: string) => {
-    if (!confirm("Excluir esta anotacao?")) return;
+    if (!confirm("Excluir esta anotação?")) return;
     try {
       await removeAnotacao({ id: id as Id<"anotacoesPastorais"> });
-      toast.success("Anotacao excluida");
+      toast.success("Anotação excluída");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro");
     }
@@ -201,7 +201,7 @@ export default function PastoreioPage() {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm text-muted-foreground">
-                Visitas este mes
+                Visitas este mês
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -221,7 +221,7 @@ export default function PastoreioPage() {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm text-muted-foreground">
-                Anotacoes recentes
+                Anotações recentes
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -247,12 +247,12 @@ export default function PastoreioPage() {
           )}
           <TabsTrigger value="pedidos" className="gap-1.5">
             <HandHeart className="h-4 w-4" />
-            Pedidos de Oracao
+            Pedidos de Oração
           </TabsTrigger>
           {canReadPastoreio && (
             <TabsTrigger value="anotacoes" className="gap-1.5">
               <FileText className="h-4 w-4" />
-              Anotacoes
+              Anotações
             </TabsTrigger>
           )}
         </TabsList>
@@ -361,7 +361,7 @@ export default function PastoreioPage() {
             <p className="text-sm text-muted-foreground">Carregando...</p>
           ) : pedidos.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              Nenhum pedido de oracao
+              Nenhum pedido de oração
             </p>
           ) : (
             <div className="grid gap-3 sm:grid-cols-2">
@@ -385,7 +385,7 @@ export default function PastoreioPage() {
               <PermissionGate permission="pastoreio:create">
                 <Button onClick={() => setAnotacaoFormOpen(true)}>
                   <Plus className="h-4 w-4 mr-2" />
-                  Nova anotacao
+                  Nova anotação
                 </Button>
               </PermissionGate>
             </div>
@@ -393,7 +393,7 @@ export default function PastoreioPage() {
               <p className="text-sm text-muted-foreground">Carregando...</p>
             ) : anotacoes.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                Nenhuma anotacao pastoral
+                Nenhuma anotação pastoral
               </p>
             ) : (
               <div className="grid gap-3 sm:grid-cols-2">

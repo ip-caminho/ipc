@@ -120,7 +120,7 @@ function DroppableColumn({
       <CardContent className="flex-1 space-y-1.5 min-h-[60px]">
         {membros.length === 0 ? (
           <p className="text-xs text-muted-foreground py-4 text-center">
-            Arraste membros para ca
+            Arraste membros para cá
           </p>
         ) : (
           membros.map((m) => (

@@ -47,9 +47,9 @@ const CARGO_LABELS: Record<string, string> = {
 
 const ADMISSAO_LABELS: Record<string, string> = {
   BATISMO: "Batismo",
-  PROFISSAO_FE: "Profissao de Fe",
-  TRANSFERENCIA: "Transferencia",
-  JURISDICAO: "Jurisdicao",
+  PROFISSAO_FE: "Profissão de Fé",
+  TRANSFERENCIA: "Transferência",
+  JURISDICAO: "Jurisdição",
 };
 
 const ESTADO_CIVIL_LABELS: Record<string, string> = {
@@ -57,7 +57,7 @@ const ESTADO_CIVIL_LABELS: Record<string, string> = {
   CASADO: "Casado(a)",
   DIVORCIADO: "Divorciado(a)",
   VIUVO: "Viuvo(a)",
-  UNIAO_ESTAVEL: "Uniao Estavel",
+  UNIAO_ESTAVEL: "União Estável",
 };
 
 function formatDate(d: string | null | undefined): string {
@@ -129,7 +129,7 @@ export function MembroPerfilPastoral({
     return <p className="text-sm text-muted-foreground">Carregando...</p>;
   }
   if (!perfil) {
-    return <p className="text-sm text-muted-foreground">Membro nao encontrado</p>;
+    return <p className="text-sm text-muted-foreground">Membro não encontrado</p>;
   }
 
   const { membro, entidade, conjuge } = perfil;
@@ -229,7 +229,7 @@ export function MembroPerfilPastoral({
           </div>
         </Section>
 
-        <Section title="Dados Eclesiasticos" icon={Church}>
+        <Section title="Dados Eclesiásticos" icon={Church}>
           <div className="space-y-2 text-sm">
             {membro.rol && (
               <p>
@@ -244,7 +244,7 @@ export function MembroPerfilPastoral({
             )}
             {membro.formaAdmissao && (
               <p>
-                <span className="text-muted-foreground">Admissao:</span>{" "}
+                <span className="text-muted-foreground">Admissão:</span>{" "}
                 {ADMISSAO_LABELS[membro.formaAdmissao] || membro.formaAdmissao}
               </p>
             )}
@@ -256,13 +256,13 @@ export function MembroPerfilPastoral({
             )}
             {membro.dataConversao && (
               <p>
-                <span className="text-muted-foreground">Conversao:</span>{" "}
+                <span className="text-muted-foreground">Conversão:</span>{" "}
                 {formatDate(membro.dataConversao)}
               </p>
             )}
             {membro.igrejaProcedencia && (
               <p>
-                <span className="text-muted-foreground">Procedencia:</span>{" "}
+                <span className="text-muted-foreground">Procedência:</span>{" "}
                 {membro.igrejaProcedencia}
               </p>
             )}
@@ -284,7 +284,7 @@ export function MembroPerfilPastoral({
 
       {/* Familia */}
       {(conjuge || (membro.filhos && membro.filhos.length > 0)) && (
-        <Section title="Familia" icon={Heart}>
+        <Section title="Família" icon={Heart}>
           <div className="space-y-2 text-sm">
             {conjuge && (
               <div>
@@ -369,7 +369,7 @@ export function MembroPerfilPastoral({
 
         {/* Pedidos de Oracao */}
         <Section
-          title="Pedidos de Oracao"
+          title="Pedidos de Oração"
           icon={HandHeart}
           count={perfil.totalPedidos}
         >
@@ -399,12 +399,12 @@ export function MembroPerfilPastoral({
 
         {/* Anotacoes */}
         <Section
-          title="Anotacoes Pastorais"
+          title="Anotações Pastorais"
           icon={FileText}
           count={perfil.totalAnotacoes}
         >
           {perfil.anotacoes.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nenhuma anotacao</p>
+            <p className="text-sm text-muted-foreground">Nenhuma anotação</p>
           ) : (
             <ul className="space-y-2">
               {perfil.anotacoes.map((a: any) => (

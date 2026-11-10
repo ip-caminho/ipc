@@ -25,15 +25,15 @@ export const TURMA_RING: Record<string, string> = {
 
 export const USO_IMAGEM_OPTIONS = [
   { value: "AUTORIZADO", label: "Autorizado" },
-  { value: "NAO_AUTORIZADO", label: "Nao autorizado" },
-  { value: "PENDENTE", label: "Nao assinado" },
+  { value: "NAO_AUTORIZADO", label: "Não autorizado" },
+  { value: "PENDENTE", label: "Não assinado" },
 ];
 
 // Rotulo do estado de uso de imagem por valor (fonte unica para cards/detalhe).
 export const USO_IMAGEM_LABELS: Record<string, string> = {
   AUTORIZADO: "Autorizado",
-  NAO_AUTORIZADO: "Nao autorizado",
-  PENDENTE: "Nao assinado",
+  NAO_AUTORIZADO: "Não autorizado",
+  PENDENTE: "Não assinado",
 };
 
 // Rotulo curto para badges compactos (card).
@@ -57,19 +57,19 @@ export const USO_IMAGEM_COLORS: Record<string, string> = {
 };
 
 export const TIPO_RESPONSAVEL_OPTIONS = [
-  { value: "MAE", label: "Mae" },
+  { value: "MAE", label: "Mãe" },
   { value: "PAI", label: "Pai" },
   { value: "AVO", label: "Avo/Avo" },
   { value: "TUTOR", label: "Tutor(a)" },
-  { value: "RESPONSAVEL", label: "Responsavel" },
+  { value: "RESPONSAVEL", label: "Responsável" },
 ];
 
 export const TIPO_RESPONSAVEL_LABELS: Record<string, string> = {
-  MAE: "Mae",
+  MAE: "Mãe",
   PAI: "Pai",
   AVO: "Avo/Avo",
   TUTOR: "Tutor(a)",
-  RESPONSAVEL: "Responsavel",
+  RESPONSAVEL: "Responsável",
 };
 
 // Papel na escala é normalizado para o mesmo enum dos voluntários
@@ -107,15 +107,15 @@ export const PAPEL_VOLUNTARIO_COLORS: Record<string, string> = {
 // Status do curso CBCM (espelha CBCM_OPTIONS de features/membros — labels
 // alinhados: "Nao Iniciado" com I maiusculo, igual ao de membros).
 export const CBCM_OPTIONS = [
-  { value: "NAO_INICIADO", label: "Nao Iniciado" },
+  { value: "NAO_INICIADO", label: "Não Iniciado" },
   { value: "CURSANDO", label: "Cursando" },
-  { value: "CONCLUIDO", label: "Concluido" },
+  { value: "CONCLUIDO", label: "Concluído" },
 ];
 
 export const CBCM_LABELS: Record<string, string> = {
-  NAO_INICIADO: "Nao Iniciado",
+  NAO_INICIADO: "Não Iniciado",
   CURSANDO: "Cursando",
-  CONCLUIDO: "Concluido",
+  CONCLUIDO: "Concluído",
 };
 
 export const CBCM_COLORS: Record<string, string> = {

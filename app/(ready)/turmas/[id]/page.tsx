@@ -93,7 +93,7 @@ export default function TurmaDetalhePage() {
   const [presencaLocal, setPresencaLocal] = useState<Record<string, boolean>>({});
 
   if (turma === undefined) return <div className="p-6">Carregando...</div>;
-  if (turma === null) return <div className="p-6">Turma nao encontrada</div>;
+  if (turma === null) return <div className="p-6">Turma não encontrada</div>;
 
   // O instrutor da turma faz a chamada mesmo sem turmas:manage_inscricoes — e
   // o mesmo gate do backend (requireGestaoTurma). Sem isso, professor que e
@@ -176,7 +176,7 @@ export default function TurmaDetalhePage() {
 
   async function handleCriarMarco() {
     if (!marcoTitulo.trim() || !marcoData) {
-      toast.error("Informe titulo e data do marco");
+      toast.error("Informe título e data do marco");
       return;
     }
     try {
@@ -188,7 +188,7 @@ export default function TurmaDetalhePage() {
       setMarcoTitulo("");
       setMarcoData("");
       toast.success(
-        criados.length ? "Marco criado no calendario" : "Esse marco ja estava no calendario"
+        criados.length ? "Marco criado no calendário" : "Esse marco já estava no calendário"
       );
     } catch (err: unknown) {
       toast.error((err as Error).message);
@@ -269,9 +269,9 @@ export default function TurmaDetalhePage() {
               </span>
               {(turma.inscricoesDe || turma.inscricoesAte) && (
                 <span>
-                  Inscricoes
+                  Inscrições
                   {turma.inscricoesDe && ` de ${formatDate(turma.inscricoesDe)}`}
-                  {turma.inscricoesAte && ` ate ${formatDate(turma.inscricoesAte)}`}
+                  {turma.inscricoesAte && ` até ${formatDate(turma.inscricoesAte)}`}
                 </span>
               )}
             </div>
@@ -300,7 +300,7 @@ export default function TurmaDetalhePage() {
               {shareUrl && (
                 <Button variant="outline" size="sm" onClick={handleCopyLink}>
                   <Copy className="h-3.5 w-3.5 mr-1" />
-                  Link de inscricao
+                  Link de inscrição
                 </Button>
               )}
             </div>
@@ -309,8 +309,8 @@ export default function TurmaDetalhePage() {
 
         <Tabs defaultValue="inscricoes">
           <TabsList>
-            <TabsTrigger value="inscricoes">Inscricoes ({inscricoes?.length ?? 0})</TabsTrigger>
-            <TabsTrigger value="presenca">Presenca ({encontros?.length ?? 0})</TabsTrigger>
+            <TabsTrigger value="inscricoes">Inscrições ({inscricoes?.length ?? 0})</TabsTrigger>
+            <TabsTrigger value="presenca">Presença ({encontros?.length ?? 0})</TabsTrigger>
             {can("turmas:manage_inscricoes") && (
               <TabsTrigger value="certificados">Certificados</TabsTrigger>
             )}
@@ -320,7 +320,7 @@ export default function TurmaDetalhePage() {
             {!inscricoes ? (
               <p className="text-sm text-muted-foreground">Carregando...</p>
             ) : inscricoes.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-8">Nenhuma inscricao</p>
+              <p className="text-sm text-muted-foreground text-center py-8">Nenhuma inscrição</p>
             ) : (
               <div className="space-y-2">
                 {inscricoes.map((i) => (
@@ -373,7 +373,7 @@ export default function TurmaDetalhePage() {
                             className="text-xs text-red-500"
                             onClick={async () => {
                               await cancelarInscricao({ id: i._id });
-                              toast.success("Inscricao cancelada");
+                              toast.success("Inscrição cancelada");
                             }}
                           >
                             Cancelar
@@ -437,11 +437,11 @@ export default function TurmaDetalhePage() {
                       />
                     </div>
                     <div className="flex-1 min-w-[150px]">
-                      <label className="text-xs text-muted-foreground">Titulo (opcional)</label>
+                      <label className="text-xs text-muted-foreground">Título (opcional)</label>
                       <Input
                         value={novoEncontroTitulo}
                         onChange={(e) => setNovoEncontroTitulo(e.target.value)}
-                        placeholder="Ex: Aula 1 - Introducao"
+                        placeholder="Ex: Aula 1 - Introdução"
                       />
                     </div>
                     <Button size="sm" onClick={handleCriarEncontro}>
@@ -470,12 +470,12 @@ export default function TurmaDetalhePage() {
                     <CollapsibleContent className="pt-3 space-y-3">
                       <div className="flex items-end gap-2 flex-wrap">
                         <div className="flex-1 min-w-[160px]">
-                          <label className="text-xs text-muted-foreground">Titulo</label>
+                          <label className="text-xs text-muted-foreground">Título</label>
                           <Input
                             className="h-10 md:h-10"
                             value={marcoTitulo}
                             onChange={(e) => setMarcoTitulo(e.target.value)}
-                            placeholder="Ex: Apresentacao dos Novos Membros e Batismo"
+                            placeholder="Ex: Apresentação dos Novos Membros e Batismo"
                           />
                         </div>
                         <div>
@@ -495,11 +495,11 @@ export default function TurmaDetalhePage() {
                           checked={marcoPublicar}
                           onCheckedChange={(c) => setMarcoPublicar(c === true)}
                         />
-                        Publicar tambem na agenda do site
+                        Publicar também na agenda do site
                       </label>
                       <p className="text-xs text-muted-foreground">
-                        Vai para o calendario da igreja, nao para a lista de aulas — sem
-                        chamada e fora da conta de frequencia.
+                        Vai para o calendário da igreja, não para a lista de aulas — sem
+                        chamada e fora da conta de frequência.
                       </p>
                     </CollapsibleContent>
                   </CardContent>
@@ -532,7 +532,7 @@ export default function TurmaDetalhePage() {
                     </Button>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Semanais: a partir da data de inicio, no dia da semana da turma. Em
+                    Semanais: a partir da data de início, no dia da semana da turma. Em
                     branco, usa o total de aulas do curso.
                   </p>
 
@@ -556,7 +556,7 @@ export default function TurmaDetalhePage() {
                       Gerar nas datas informadas
                     </Button>
                     <p className="text-xs text-muted-foreground">
-                      Use quando o curso pula datas. O titulo de cada aula vem do plano do
+                      Use quando o curso pula datas. O título de cada aula vem do plano do
                       curso, quando existir.
                     </p>
                   </div>
@@ -620,7 +620,7 @@ export default function TurmaDetalhePage() {
                           ) : (
                             <>
                               <p className="text-xs text-muted-foreground">
-                                Todos comecam como presentes. Desmarque quem faltou.
+                                Todos começam como presentes. Desmarque quem faltou.
                               </p>
                               {presencas.map((p) => {
                                 const checked = presencaLocal[p.inscricaoId] ?? p.presente;

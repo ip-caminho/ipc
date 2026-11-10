@@ -162,7 +162,7 @@ function SalasContent() {
                   </div>
 
                   {livre ? (
-                    <p className="text-sm text-green-600 dark:text-green-400">Disponivel o dia todo</p>
+                    <p className="text-sm text-green-600 dark:text-green-400">Disponível o dia todo</p>
                   ) : (
                     <div className="space-y-1">
                       {salaReservas.map((r: any) => (

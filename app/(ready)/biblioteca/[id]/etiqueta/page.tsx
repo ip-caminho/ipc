@@ -21,7 +21,7 @@ export default function EtiquetaPage() {
   }, []);
 
   if (livro === undefined) return <div className="p-6">Carregando...</div>;
-  if (livro === null) return <div className="p-6">Livro nao encontrado</div>;
+  if (livro === null) return <div className="p-6">Livro não encontrado</div>;
 
   return (
     <ModuloGuard modulo="biblioteca">
@@ -49,7 +49,7 @@ export default function EtiquetaPage() {
           <p className="text-sm text-muted-foreground">{livro.titulo}</p>
           <p className="text-xs text-muted-foreground mt-1">
             {livro.exemplares.length} etiqueta{livro.exemplares.length !== 1 ? "s" : ""}.
-            QR code aponta para a ficha publica do livro.
+            QR code aponta para a ficha pública do livro.
           </p>
         </div>
 

@@ -104,7 +104,7 @@ export default function PequenosGruposPage() {
       </div>
       {viewMode === "remanejamento" && (
         <p className="text-sm text-muted-foreground">
-          Arraste os membros entre os grupos. As alteracoes sao salvas automaticamente.
+          Arraste os membros entre os grupos. As alterações são salvas automaticamente.
         </p>
       )}
 

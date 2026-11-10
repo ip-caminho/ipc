@@ -106,17 +106,17 @@ export function PGForm({
             </div>
 
             <div className="space-y-1">
-              <Label htmlFor="descricao">Descricao</Label>
+              <Label htmlFor="descricao">Descrição</Label>
               <Textarea id="descricao" {...form.register("descricao")} />
             </div>
 
             <div className="space-y-1">
-              <Label>Lider *</Label>
+              <Label>Líder *</Label>
               <ResponsiveSelect
                 options={liderOptions}
                 value={form.watch("liderId")}
                 onValueChange={(v) => form.setValue("liderId", v)}
-                placeholder="Selecione o lider"
+                placeholder="Selecione o líder"
                 searchPlaceholder="Buscar membro..."
                 emptyMessage="Nenhum membro encontrado"
                 title="Selecionar líder"
@@ -129,7 +129,7 @@ export function PGForm({
             </div>
 
             <div className="space-y-1">
-              <Label>Co-lider</Label>
+              <Label>Co-líder</Label>
               <ResponsiveSelect
                 options={coliderOptions}
                 value={form.watch("coliderId") || ""}
@@ -165,7 +165,7 @@ export function PGForm({
               </div>
 
               <div className="space-y-1">
-                <Label htmlFor="horario">Horario</Label>
+                <Label htmlFor="horario">Horário</Label>
                 <Input
                   id="horario"
                   placeholder="19:30"

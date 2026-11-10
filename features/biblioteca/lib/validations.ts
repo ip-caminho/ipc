@@ -1,8 +1,8 @@
 import { z } from "zod/v4";
 
 export const livroFormSchema = z.object({
-  titulo: z.string().min(1, "Titulo obrigatorio"),
-  autores: z.string().min(1, "Autor obrigatorio"), // separados por virgula
+  titulo: z.string().min(1, "Título obrigatório"),
+  autores: z.string().min(1, "Autor obrigatório"), // separados por virgula
   editora: z.string().optional(),
   isbn: z.string().optional(),
   ano: z.number().optional(),

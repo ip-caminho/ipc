@@ -1,10 +1,10 @@
 export const DIA_SEMANA_OPTIONS = [
   { value: "SEGUNDA", label: "Segunda-feira" },
-  { value: "TERCA", label: "Terca-feira" },
+  { value: "TERCA", label: "Terça-feira" },
   { value: "QUARTA", label: "Quarta-feira" },
   { value: "QUINTA", label: "Quinta-feira" },
   { value: "SEXTA", label: "Sexta-feira" },
-  { value: "SABADO", label: "Sabado" },
+  { value: "SABADO", label: "Sábado" },
   { value: "DOMINGO", label: "Domingo" },
 ] as const;
 
@@ -20,10 +20,10 @@ export const PG_STATUS_COLORS: Record<string, string> = {
 
 export const DIA_SEMANA_LABELS: Record<string, string> = {
   SEGUNDA: "Segunda",
-  TERCA: "Terca",
+  TERCA: "Terça",
   QUARTA: "Quarta",
   QUINTA: "Quinta",
   SEXTA: "Sexta",
-  SABADO: "Sabado",
+  SABADO: "Sábado",
   DOMINGO: "Domingo",
 };

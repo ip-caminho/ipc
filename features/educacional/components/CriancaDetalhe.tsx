@@ -40,7 +40,7 @@ export function CriancaDetalhe({ entidadeId, onBack, onEdit, onDelete }: Crianca
     return <p className="text-sm text-muted-foreground">Carregando...</p>;
   }
   if (!crianca) {
-    return <p className="text-sm text-muted-foreground">Crianca nao encontrada</p>;
+    return <p className="text-sm text-muted-foreground">Criança não encontrada</p>;
   }
 
   const turmaColor = TURMA_COLORS[crianca.turma] || "bg-gray-100 text-gray-800";
@@ -144,13 +144,13 @@ export function CriancaDetalhe({ entidadeId, onBack, onEdit, onDelete }: Crianca
 
           {crianca.observacoesMedicas && (
             <div>
-              <p className="text-sm text-muted-foreground">Observacoes medicas</p>
+              <p className="text-sm text-muted-foreground">Observações médicas</p>
               <p className="text-sm whitespace-pre-wrap">{crianca.observacoesMedicas}</p>
             </div>
           )}
           {crianca.observacoesFamilia && (
             <div>
-              <p className="text-sm text-muted-foreground">Observacoes da familia</p>
+              <p className="text-sm text-muted-foreground">Observações da família</p>
               <p className="text-sm whitespace-pre-wrap">{crianca.observacoesFamilia}</p>
             </div>
           )}
@@ -168,7 +168,7 @@ export function CriancaDetalhe({ entidadeId, onBack, onEdit, onDelete }: Crianca
         </CardHeader>
         <CardContent>
           {crianca.responsaveis.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nenhum responsavel cadastrado</p>
+            <p className="text-sm text-muted-foreground">Nenhum responsável cadastrado</p>
           ) : (
             <ul className="space-y-2">
               {crianca.responsaveis.map((r: any) => (
@@ -193,13 +193,13 @@ export function CriancaDetalhe({ entidadeId, onBack, onEdit, onDelete }: Crianca
         <CardHeader>
           <CardTitle className="text-sm flex items-center gap-2">
             <ClipboardList className="h-4 w-4" />
-            Presencas
+            Presenças
             <Badge variant="secondary">{crianca.presencas.length}</Badge>
           </CardTitle>
         </CardHeader>
         <CardContent>
           {crianca.presencas.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nenhuma presenca registrada</p>
+            <p className="text-sm text-muted-foreground">Nenhuma presença registrada</p>
           ) : (
             <ul className="space-y-1">
               {crianca.presencas.slice(-10).reverse().map((p: any, i: number) => (

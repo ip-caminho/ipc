@@ -156,10 +156,10 @@ export function RelatorioForm({
     form.setValue("voluntarios", novos);
     const faltantes = sugestao.length - novos.length;
     if (novos.length === 0) {
-      toast.info("Nenhum escalado consta no cadastro de voluntarios desta turma");
+      toast.info("Nenhum escalado consta no cadastro de voluntários desta turma");
     } else if (faltantes > 0) {
       toast.info(
-        `${novos.length} preenchido(s); ${faltantes} escalado(s) fora do cadastro de voluntarios`
+        `${novos.length} preenchido(s); ${faltantes} escalado(s) fora do cadastro de voluntários`
       );
     }
   };
@@ -169,7 +169,7 @@ export function RelatorioForm({
       <ResponsiveDialogContent>
         <ResponsiveDialogHeader>
           <ResponsiveDialogTitle>
-            {isEditing ? "Editar Relatorio" : "Novo Relatorio"}
+            {isEditing ? "Editar Relatório" : "Novo Relatório"}
           </ResponsiveDialogTitle>
         </ResponsiveDialogHeader>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="contents">
@@ -229,7 +229,7 @@ export function RelatorioForm({
           )}
 
           <div className="space-y-1">
-            <Label>Numero da licao</Label>
+            <Label>Número da lição</Label>
             <Input type="number" {...form.register("numero")} placeholder="Ex: 12" />
           </div>
 
@@ -237,7 +237,7 @@ export function RelatorioForm({
           {turmaSelecionada && (
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-2">
-                <Label>Voluntarios ({voluntarios.length})</Label>
+                <Label>Voluntários ({voluntarios.length})</Label>
                 <Button
                   type="button"
                   variant="outline"
@@ -253,7 +253,7 @@ export function RelatorioForm({
                 <p className="text-sm text-muted-foreground">Carregando...</p>
               ) : voluntariosDisponiveis.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
-                  Nenhum voluntario cadastrado nesta turma
+                  Nenhum voluntário cadastrado nesta turma
                 </p>
               ) : (
                 <div className="space-y-3 max-h-56 overflow-y-auto border rounded-md p-2">
@@ -289,7 +289,7 @@ export function RelatorioForm({
             </div>
           )}
 
-          <SecTitle>Conteudo da licao</SecTitle>
+          <SecTitle>Conteúdo da lição</SecTitle>
           <div className="space-y-1">
             <Label>Tema</Label>
             <Input {...form.register("tema")} />
@@ -300,7 +300,7 @@ export function RelatorioForm({
             <Textarea
               {...form.register("textosBaseText")}
               rows={2}
-              placeholder={"Joao 3:16\nSalmo 23"}
+              placeholder={"João 3:16\nSalmo 23"}
             />
           </div>
 
@@ -310,17 +310,17 @@ export function RelatorioForm({
           </div>
 
           <div className="space-y-1">
-            <Label>Historia</Label>
+            <Label>História</Label>
             <Textarea {...form.register("historia")} rows={3} />
           </div>
 
           <div className="space-y-1">
-            <Label>Aplicacao</Label>
+            <Label>Aplicação</Label>
             <Textarea {...form.register("aplicacao")} rows={2} />
           </div>
 
           <div className="space-y-1">
-            <Label>Licao de casa</Label>
+            <Label>Lição de casa</Label>
             <Textarea {...form.register("licaoDeCasa")} rows={2} />
           </div>
 
@@ -331,7 +331,7 @@ export function RelatorioForm({
           </div>
 
           <div className="space-y-1">
-            <Label>Observacoes e sugestoes internas</Label>
+            <Label>Observações e sugestões internas</Label>
             <Textarea {...form.register("observacoes")} rows={2} />
           </div>
         </ResponsiveDialogBody>

@@ -1,32 +1,32 @@
 import { z } from "zod/v4";
 
 export const cursoFormSchema = z.object({
-  nome: z.string().min(1, "Nome obrigatorio"),
+  nome: z.string().min(1, "Nome obrigatório"),
   descricao: z.string().optional(),
   ementa: z.string().optional(),
   cargaHoraria: z.number().min(1).optional(),
   totalAulas: z.number().min(1).optional(),
   frequenciaMinima: z
     .number()
-    .min(0, "Minimo 0")
-    .max(100, "Maximo 100"),
+    .min(0, "Mínimo 0")
+    .max(100, "Máximo 100"),
   criterioAprovacao: z.enum(["PERCENTUAL", "MAX_FALTAS"]).optional(),
-  maxFaltas: z.number().min(0, "Minimo 0").optional(),
+  maxFaltas: z.number().min(0, "Mínimo 0").optional(),
 }).refine(
   (v) => v.criterioAprovacao !== "MAX_FALTAS" || typeof v.maxFaltas === "number",
-  { message: "Informe o maximo de faltas", path: ["maxFaltas"] }
+  { message: "Informe o máximo de faltas", path: ["maxFaltas"] }
 );
 
 export type CursoFormValues = z.infer<typeof cursoFormSchema>;
 
 export const turmaFormSchema = z.object({
-  nome: z.string().min(1, "Nome obrigatorio"),
+  nome: z.string().min(1, "Nome obrigatório"),
   cursoId: z.string().optional(),
   tipo: z.enum(["NOVOS_MEMBROS", "CATACUMENOS", "OUTRO"]).optional(),
   instrutorId: z.string().optional(),
   instrutorNome: z.string().optional(),
   descricao: z.string().optional(),
-  dataInicio: z.string().min(1, "Data de inicio obrigatoria"),
+  dataInicio: z.string().min(1, "Data de início obrigatória"),
   dataFim: z.string().optional(),
   inscricoesDe: z.string().optional(),
   inscricoesAte: z.string().optional(),
@@ -54,10 +54,10 @@ export const turmaFormSchema = z.object({
 export type TurmaFormValues = z.infer<typeof turmaFormSchema>;
 
 export const inscricaoPublicSchema = z.object({
-  nomeCompleto: z.string().min(1, "Nome obrigatorio"),
+  nomeCompleto: z.string().min(1, "Nome obrigatório"),
   whatsapp: z.string().optional(),
-  email: z.string().email("Email invalido").optional().or(z.literal("")),
+  email: z.string().email("Email inválido").optional().or(z.literal("")),
   dataNascimento: z.string().optional(),
   sexo: z.string().optional(),
-  lgpdConsentimento: z.literal(true, { message: "Consentimento obrigatorio" }),
+  lgpdConsentimento: z.literal(true, { message: "Consentimento obrigatório" }),
 });

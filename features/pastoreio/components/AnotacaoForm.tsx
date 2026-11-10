@@ -63,7 +63,7 @@ export function AnotacaoForm({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Nova Anotacao Pastoral</DialogTitle>
+          <DialogTitle>Nova Anotação Pastoral</DialogTitle>
         </DialogHeader>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
           <div className="space-y-1">
@@ -91,11 +91,11 @@ export function AnotacaoForm({
           </div>
 
           <div className="space-y-1">
-            <Label htmlFor="texto">Anotacao *</Label>
+            <Label htmlFor="texto">Anotação *</Label>
             <Textarea
               id="texto"
               rows={4}
-              placeholder="Escreva aqui a anotacao pastoral..."
+              placeholder="Escreva aqui a anotação pastoral..."
               {...form.register("texto")}
             />
             {form.formState.errors.texto && (

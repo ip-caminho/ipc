@@ -62,7 +62,7 @@ export function RelatorioDetalhe({
         {relatorio === undefined ? (
           <p className="text-sm text-muted-foreground">Carregando...</p>
         ) : !relatorio ? (
-          <p className="text-sm text-muted-foreground">Relatorio nao encontrado</p>
+          <p className="text-sm text-muted-foreground">Relatório não encontrado</p>
         ) : (
           <>
             <DialogHeader>
@@ -86,12 +86,12 @@ export function RelatorioDetalhe({
                 <Campo label="Textos-base" valor={relatorio.textosBase.join("\n")} />
               )}
               <Campo label="Passagem para memorizar" valor={relatorio.passagemMemorizar} />
-              <Campo label="Historia" valor={relatorio.historia} />
-              <Campo label="Aplicacao" valor={relatorio.aplicacao} />
-              <Campo label="Licao de casa" valor={relatorio.licaoDeCasa} />
+              <Campo label="História" valor={relatorio.historia} />
+              <Campo label="Aplicação" valor={relatorio.aplicacao} />
+              <Campo label="Lição de casa" valor={relatorio.licaoDeCasa} />
               {relatorio.voluntarios.length > 0 ? (
                 <Campo
-                  label="Voluntarios"
+                  label="Voluntários"
                   valor={relatorio.voluntarios
                     .map((v) => `${v.nome}${PAPEL_LABEL[v.papel] ? ` (${PAPEL_LABEL[v.papel]})` : ""}`)
                     .join("\n")}
@@ -102,7 +102,7 @@ export function RelatorioDetalhe({
               {relatorio.visitantes && relatorio.visitantes.length > 0 && (
                 <Campo label="Visitantes" valor={relatorio.visitantes.join("\n")} />
               )}
-              <Campo label="Observacoes e sugestoes internas" valor={relatorio.observacoes} />
+              <Campo label="Observações e sugestões internas" valor={relatorio.observacoes} />
 
               <div>
                 <p className="text-xs text-muted-foreground">
@@ -125,8 +125,8 @@ export function RelatorioDetalhe({
                 Compartilhar no WhatsApp
               </Button>
               <p className="text-xs text-muted-foreground text-center">
-                Envia titulo, data, professores e a licao. Presenca e observacoes
-                internas nao vao na mensagem.
+                Envia título, data, professores e a lição. Presença e observações
+                internas não vão na mensagem.
               </p>
 
               {((canEdit && onEdit) || (canDelete && onDelete && id)) && (

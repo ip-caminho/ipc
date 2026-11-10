@@ -108,7 +108,7 @@ export function CursoFormDialog({ open, onOpenChange, curso }: Props) {
                 placeholder="Ex: Curso de Novos Membros"
               />
               <p className="text-xs text-muted-foreground mt-1">
-                E o nome que sai impresso no certificado.
+                É o nome que sai impresso no certificado.
               </p>
               {form.formState.errors.nome && (
                 <p className="text-xs text-destructive mt-1">
@@ -118,12 +118,12 @@ export function CursoFormDialog({ open, onOpenChange, curso }: Props) {
             </div>
 
             <div>
-              <Label htmlFor="descricao">Descricao</Label>
+              <Label htmlFor="descricao">Descrição</Label>
               <Textarea
                 id="descricao"
                 {...form.register("descricao")}
                 rows={2}
-                placeholder="Aparece na pagina publica de inscricao"
+                placeholder="Aparece na página pública de inscrição"
               />
             </div>
 
@@ -133,13 +133,13 @@ export function CursoFormDialog({ open, onOpenChange, curso }: Props) {
                 id="ementa"
                 {...form.register("ementa")}
                 rows={3}
-                placeholder="Conteudo programatico"
+                placeholder="Conteúdo programático"
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <Label htmlFor="cargaHoraria">Carga horaria</Label>
+                <Label htmlFor="cargaHoraria">Carga horária</Label>
                 <Input
                   id="cargaHoraria"
                   type="number"
@@ -159,7 +159,7 @@ export function CursoFormDialog({ open, onOpenChange, curso }: Props) {
                 />
               </div>
               <div>
-                <Label>Criterio de aprovacao</Label>
+                <Label>Critério de aprovação</Label>
                 <Select
                   value={form.watch("criterioAprovacao") ?? "PERCENTUAL"}
                   onValueChange={(v) =>
@@ -170,14 +170,14 @@ export function CursoFormDialog({ open, onOpenChange, curso }: Props) {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="PERCENTUAL">Frequencia minima (%)</SelectItem>
-                    <SelectItem value="MAX_FALTAS">Maximo de faltas</SelectItem>
+                    <SelectItem value="PERCENTUAL">Frequência mínima (%)</SelectItem>
+                    <SelectItem value="MAX_FALTAS">Máximo de faltas</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               {form.watch("criterioAprovacao") === "MAX_FALTAS" ? (
                 <div>
-                  <Label htmlFor="maxFaltas">Maximo de faltas</Label>
+                  <Label htmlFor="maxFaltas">Máximo de faltas</Label>
                   <Input
                     id="maxFaltas"
                     type="number"
@@ -193,7 +193,7 @@ export function CursoFormDialog({ open, onOpenChange, curso }: Props) {
                 </div>
               ) : (
                 <div>
-                  <Label htmlFor="frequenciaMinima">Frequencia minima (%)</Label>
+                  <Label htmlFor="frequenciaMinima">Frequência mínima (%)</Label>
                   <Input
                     id="frequenciaMinima"
                     type="number"
@@ -210,11 +210,11 @@ export function CursoFormDialog({ open, onOpenChange, curso }: Props) {
             </div>
 
             <p className="text-xs text-muted-foreground">
-              O total de aulas gera automaticamente os encontros da turma. O criterio de
-              aprovacao e copiado para a turma quando ela e criada — mudar aqui nao altera
+              O total de aulas gera automaticamente os encontros da turma. O critério de
+              aprovação é copiado para a turma quando ela é criada — mudar aqui não altera
               turma em andamento. Use &ldquo;maximo de faltas&rdquo; quando o curso for
               comunicado assim (ex: &ldquo;limite de 3 faltas nos 8 encontros&rdquo;), porque
-              em percentual o numero muda se uma aula for cancelada.
+              em percentual o número muda se uma aula for cancelada.
             </p>
           </ResponsiveDialogBody>
           <ResponsiveDialogFooter>

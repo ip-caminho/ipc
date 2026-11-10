@@ -20,7 +20,7 @@ interface AgendaTabProps {
 const TIPO_LABEL: Record<string, string> = {
   pg: "PG",
   evento: "Evento",
-  reuniao: "Reuniao",
+  reuniao: "Reunião",
 };
 
 export function AgendaTab({ ministerioId }: AgendaTabProps) {
@@ -61,14 +61,14 @@ export function AgendaTab({ ministerioId }: AgendaTabProps) {
             size="sm"
             onClick={() => setHistorico(true)}
           >
-            Historico
+            Histórico
           </Button>
         </div>
         {can("calendario:read") && (
           <Button variant="outline" size="sm" asChild>
             <Link href="/calendario">
               <ExternalLink className="h-4 w-4 mr-1" />
-              Calendario geral
+              Calendário geral
             </Link>
           </Button>
         )}
@@ -79,8 +79,8 @@ export function AgendaTab({ ministerioId }: AgendaTabProps) {
       ) : lista.length === 0 ? (
         <EduEmptyState
           icon={CalendarDays}
-          title={historico ? "Sem historico" : "Nenhum evento proximo"}
-          description="Eventos do departamento aparecem aqui quando vinculados ao ministerio Educacional no calendario."
+          title={historico ? "Sem histórico" : "Nenhum evento próximo"}
+          description="Eventos do departamento aparecem aqui quando vinculados ao ministério Educacional no calendário."
         />
       ) : (
         <div className="space-y-0">
@@ -95,7 +95,7 @@ export function AgendaTab({ ministerioId }: AgendaTabProps) {
                 <p className="text-xs font-medium text-primary">
                   {format(parseISO(e.data), "dd/MM/yyyy (EEEE)", { locale: ptBR })}
                   {e.dataFim && e.dataFim !== e.data
-                    ? ` ate ${format(parseISO(e.dataFim), "dd/MM/yyyy", { locale: ptBR })}`
+                    ? ` até ${format(parseISO(e.dataFim), "dd/MM/yyyy", { locale: ptBR })}`
                     : ""}
                 </p>
                 <div className="mt-0.5 flex items-center gap-2">

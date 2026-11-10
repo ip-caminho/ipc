@@ -11,14 +11,14 @@ export const visitaFormSchema = z.object({
 export type VisitaFormValues = z.infer<typeof visitaFormSchema>;
 
 export const pedidoOracaoFormSchema = z.object({
-  descricao: z.string().min(3, "Descreva seu pedido de oracao"),
+  descricao: z.string().min(3, "Descreva seu pedido de oração"),
 });
 
 export type PedidoOracaoFormValues = z.infer<typeof pedidoOracaoFormSchema>;
 
 export const anotacaoFormSchema = z.object({
   membroId: z.string().min(1, "Selecione o membro"),
-  texto: z.string().min(3, "Escreva a anotacao"),
+  texto: z.string().min(3, "Escreva a anotação"),
 });
 
 export type AnotacaoFormValues = z.infer<typeof anotacaoFormSchema>;
