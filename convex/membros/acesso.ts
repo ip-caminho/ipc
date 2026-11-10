@@ -108,6 +108,8 @@ export const verificarAcessoDireto = mutation({
       agora
     );
     if (bloqueado) return { status: "bloqueado" };
+    // So o contador do telefone zera no acerto; o outro dado nao e exclusivo de uma pessoa
+    const contadoresDoTelefone = contadores.slice(0, 1);
 
     const entidades = await ctx.db.query("entidades").collect();
     const entidade = entidades.find(
@@ -126,7 +128,7 @@ export const verificarAcessoDireto = mutation({
       return { status: "nao_confere" };
     }
     if (entidade.status !== "ATIVO") {
-      await zerarTentativas(ctx, contadores);
+      await zerarTentativas(ctx, contadoresDoTelefone);
       return { status: "inativo" };
     }
 
@@ -139,7 +141,7 @@ export const verificarAcessoDireto = mutation({
       return { status: "nao_confere" };
     }
 
-    await zerarTentativas(ctx, contadores);
+    await zerarTentativas(ctx, contadoresDoTelefone);
     if (membro.userId) return { status: "ja_ativado" };
 
     const token = gerarToken();
