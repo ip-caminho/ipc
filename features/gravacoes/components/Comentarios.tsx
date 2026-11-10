@@ -63,7 +63,7 @@ function ComentarioItem({
   const handleDelete = async () => {
     try {
       await removeComment({ id: comentario._id });
-      toast.success("Comentario excluido");
+      toast.success("Comentário excluído");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao excluir");
     }
@@ -191,7 +191,7 @@ export function ComentarioInput({ gravacaoId, onCreated }: { gravacaoId: Id<"gra
     <div className="flex items-center gap-2">
       <input
         className="flex-1 text-base md:text-sm rounded-xl border border-border bg-background px-4 py-3 placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-        placeholder="Escreva um comentario..."
+        placeholder="Escreva um comentário..."
         enterKeyHint="send"
         value={newComment}
         onChange={(e) => setNewComment(e.target.value)}

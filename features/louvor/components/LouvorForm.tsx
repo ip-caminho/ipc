@@ -106,7 +106,7 @@ export function LouvorForm({
           {/* Titulo + Artista */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label htmlFor="titulo">Titulo *</Label>
+              <Label htmlFor="titulo">Título *</Label>
               <Input id="titulo" {...form.register("titulo")} />
               {form.formState.errors.titulo && (
                 <p className="text-xs text-destructive">
@@ -181,7 +181,7 @@ export function LouvorForm({
 
           {/* Tags */}
           <div className="space-y-1">
-            <Label htmlFor="tags">Tags (separadas por virgula)</Label>
+            <Label htmlFor="tags">Tags (separadas por vírgula)</Label>
             <Input
               id="tags"
               placeholder="adoracao, louvor, contemporaneo"
@@ -210,7 +210,7 @@ export function LouvorForm({
           {/* Conteudo + Preview lado a lado */}
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <Label htmlFor="conteudo">Conteudo (cifra/letra)</Label>
+              <Label htmlFor="conteudo">Conteúdo (cifra/letra)</Label>
               {formato && (
                 <Badge variant="outline" className="text-xs">
                   {formato === "chordpro" ? "ChordPro" : "Texto com cifras"}
@@ -262,7 +262,7 @@ export function LouvorForm({
 
           {/* Observacoes */}
           <div className="space-y-1">
-            <Label htmlFor="observacoes">Observacoes</Label>
+            <Label htmlFor="observacoes">Observações</Label>
             <Textarea id="observacoes" {...form.register("observacoes")} />
           </div>
 

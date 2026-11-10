@@ -30,7 +30,7 @@ export function PerfilDesatualizadoCard() {
         <p className="text-sm font-medium">Atualize seu perfil</p>
         <p className="text-xs text-muted-foreground mt-0.5">
           {atualizadoEm
-            ? "Seus dados nao sao confirmados ha mais de 6 meses"
+            ? "Seus dados não são confirmados há mais de 6 meses"
             : "Seu cadastro nunca foi confirmado"}
         </p>
       </div>

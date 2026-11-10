@@ -41,11 +41,11 @@ export function ProfileCompletenessCard() {
         <Icon className={cn("h-5 w-5 shrink-0", color)} />
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium">
-            Seu perfil esta {data.percentage}% completo
+            Seu perfil está {data.percentage}% completo
           </p>
           {data.isStale && data.percentage === 100 && (
             <p className="text-xs text-muted-foreground mt-0.5">
-              Confirme seus dados — ultima atualizacao ha mais de 6 meses
+              Confirme seus dados — última atualização há mais de 6 meses
             </p>
           )}
         </div>

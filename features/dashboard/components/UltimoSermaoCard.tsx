@@ -46,7 +46,7 @@ export function UltimoSermaoCard() {
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground">
-          Ultimo sermao
+          Último sermão
         </p>
         <p className="text-sm font-medium truncate mt-0.5">
           {ultimo.titulo}

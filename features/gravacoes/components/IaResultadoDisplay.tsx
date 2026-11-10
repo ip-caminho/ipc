@@ -75,7 +75,7 @@ export function IaResultadoDisplay({ iaResultado, iaTranscricao }: IaResultadoDi
             {iaResultado && <TabsTrigger value="resumo">Resumo</TabsTrigger>}
             {iaResultado?.frasesRedesSociais && <TabsTrigger value="frases">Frases</TabsTrigger>}
             {iaResultado?.descricoesInstagram && <TabsTrigger value="instagram">Instagram</TabsTrigger>}
-            {iaTranscricao && <TabsTrigger value="transcricao">Transcricao</TabsTrigger>}
+            {iaTranscricao && <TabsTrigger value="transcricao">Transcrição</TabsTrigger>}
           </TabsList>
 
           {/* Resumo Tab */}
@@ -112,7 +112,7 @@ export function IaResultadoDisplay({ iaResultado, iaTranscricao }: IaResultadoDi
               {/* Aplicacao Pratica */}
               {iaResultado.aplicacaoPratica && iaResultado.aplicacaoPratica.length > 0 && (
                 <div className="space-y-1">
-                  <p className="text-sm font-medium">Aplicacao Pratica</p>
+                  <p className="text-sm font-medium">Aplicação Prática</p>
                   <ul className="text-sm space-y-1 list-disc list-inside text-muted-foreground">
                     {iaResultado.aplicacaoPratica.map((ap, i) => (
                       <li key={i}>{ap}</li>
@@ -124,7 +124,7 @@ export function IaResultadoDisplay({ iaResultado, iaTranscricao }: IaResultadoDi
               {/* Momento de Interacao */}
               {iaResultado.momentoInteracao && (
                 <div className="space-y-1">
-                  <p className="text-sm font-medium">Momento de Interacao</p>
+                  <p className="text-sm font-medium">Momento de Interação</p>
                   <p className="text-sm text-muted-foreground">{iaResultado.momentoInteracao}</p>
                 </div>
               )}
@@ -183,7 +183,7 @@ export function IaResultadoDisplay({ iaResultado, iaTranscricao }: IaResultadoDi
                   <p className="text-sm font-medium">
                     Descricoes Instagram ({iaResultado.descricoesInstagram.length})
                   </p>
-                  <CopyAllButton items={iaResultado.descricoesInstagram} label="Descricoes" />
+                  <CopyAllButton items={iaResultado.descricoesInstagram} label="Descrições" />
                 </div>
                 <div className="space-y-2">
                   {iaResultado.descricoesInstagram.map((desc, i) => (
@@ -208,8 +208,8 @@ export function IaResultadoDisplay({ iaResultado, iaTranscricao }: IaResultadoDi
             <TabsContent value="transcricao" className="mt-4">
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium">Transcricao Completa</p>
-                  <CopyButton text={iaTranscricao} label="Transcricao" />
+                  <p className="text-sm font-medium">Transcrição Completa</p>
+                  <CopyButton text={iaTranscricao} label="Transcrição" />
                 </div>
                 <Collapsible open={transcricaoAberta} onOpenChange={setTranscricaoAberta}>
                   <div className="text-sm whitespace-pre-wrap text-muted-foreground bg-muted/50 p-3 rounded-md max-h-64 overflow-y-auto">

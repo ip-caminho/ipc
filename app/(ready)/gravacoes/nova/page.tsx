@@ -25,10 +25,10 @@ const TIPO_ICONS: Record<string, typeof Mic> = {
 };
 
 const TIPO_DESCRIPTIONS: Record<string, string> = {
-  SERMAO: "Gravacao completa do culto. A IA vai identificar o sermao e os avisos automaticamente.",
-  ESTUDO_BIBLICO: "Estudo biblico gravado. A IA vai gerar resumo, pontos-chave e conteudo para redes sociais.",
-  PALESTRA: "Palestra ou conferencia. A IA vai gerar resumo e conteudo para redes sociais.",
-  OUTRO: "Outro tipo de gravacao (assembleia, reuniao, etc). A IA vai gerar resumo e conteudo basico.",
+  SERMAO: "Gravação completa do culto. A IA vai identificar o sermão e os avisos automaticamente.",
+  ESTUDO_BIBLICO: "Estudo bíblico gravado. A IA vai gerar resumo, pontos-chave e conteúdo para redes sociais.",
+  PALESTRA: "Palestra ou conferência. A IA vai gerar resumo e conteúdo para redes sociais.",
+  OUTRO: "Outro tipo de gravação (assembleia, reunião, etc). A IA vai gerar resumo e conteúdo básico.",
 };
 
 function getLastSunday(): string {
@@ -64,9 +64,9 @@ export default function NovaGravacaoPage() {
       });
       setGravacaoId(id);
       setStep("done");
-      toast.success("Audio enviado com sucesso");
+      toast.success("Áudio enviado com sucesso");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao criar gravacao");
+      toast.error(error instanceof Error ? error.message : "Erro ao criar gravação");
       setCreating(false);
     }
   };
@@ -103,8 +103,8 @@ export default function NovaGravacaoPage() {
         <Card>
           <CardContent className="pt-6 space-y-4">
             <div>
-              <h2 className="text-lg font-semibold">Qual o tipo da gravacao?</h2>
-              <p className="text-sm text-muted-foreground">Isso define como a IA vai processar o conteudo.</p>
+              <h2 className="text-lg font-semibold">Qual o tipo da gravação?</h2>
+              <p className="text-sm text-muted-foreground">Isso define como a IA vai processar o conteúdo.</p>
             </div>
 
             <div className="grid gap-2">
@@ -183,9 +183,9 @@ export default function NovaGravacaoPage() {
         <Card>
           <CardContent className="pt-6 space-y-4">
             <div>
-              <h2 className="text-lg font-semibold">Envie o audio</h2>
+              <h2 className="text-lg font-semibold">Envie o áudio</h2>
               <p className="text-sm text-muted-foreground">
-                MP3, M4A ou WAV. O audio sera comprimido automaticamente antes do envio.
+                MP3, M4A ou WAV. O áudio será comprimido automaticamente antes do envio.
               </p>
             </div>
 
@@ -201,7 +201,7 @@ export default function NovaGravacaoPage() {
             {creating && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
                 <Sparkles className="h-4 w-4 animate-pulse" />
-                Criando gravacao e iniciando processamento...
+                Criando gravação e iniciando processamento...
               </div>
             )}
 
@@ -224,16 +224,16 @@ export default function NovaGravacaoPage() {
                 <Check className="h-6 w-6 text-green-600 dark:text-green-400" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">Audio enviado com sucesso</h2>
+                <h2 className="text-lg font-semibold">Áudio enviado com sucesso</h2>
                 <p className="text-sm text-muted-foreground mt-1">
-                  O processamento com IA esta acontecendo em segundo plano. Voce pode fechar esta pagina — sera notificado quando terminar.
+                  O processamento com IA está acontecendo em segundo plano. Você pode fechar esta página — será notificado quando terminar.
                 </p>
               </div>
             </div>
 
             <div className="flex gap-2">
               <Button variant="outline" onClick={() => router.push("/admin/gravacoes")} className="flex-1">
-                Ver gravacoes
+                Ver gravações
               </Button>
               {gravacaoId && (
                 <Button onClick={() => router.push(`/gravacoes/${gravacaoId}/admin`)} className="flex-1">
@@ -255,7 +255,7 @@ export default function NovaGravacaoPage() {
               }}
             >
               <Upload className="h-4 w-4 mr-1" />
-              Enviar outro audio
+              Enviar outro áudio
             </Button>
           </CardContent>
         </Card>

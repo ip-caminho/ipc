@@ -26,11 +26,11 @@ function getLastSunday(): string {
 }
 
 const gravacaoSchema = z.object({
-  titulo: z.string().min(3, "Titulo deve ter pelo menos 3 caracteres"),
+  titulo: z.string().min(3, "Título deve ter pelo menos 3 caracteres"),
   tipo: z.enum(["SERMAO", "ESTUDO_BIBLICO", "PALESTRA", "OUTRO"]),
   serieId: z.string().optional(),
   pregadorNome: z.string().optional(),
-  data: z.string().min(1, "Data e obrigatoria"),
+  data: z.string().min(1, "Data é obrigatória"),
   descricao: z.string().optional(),
   resumo: z.string().optional(),
   textoBase: z.string().optional(),
@@ -77,12 +77,12 @@ export function GravacaoForm({ defaultValues, onSubmit, isEditing, entityId }: G
     <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>{isEditing ? "Editar Gravacao" : "Nova Gravacao"}</CardTitle>
+          <CardTitle>{isEditing ? "Editar Gravação" : "Nova Gravação"}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1">
-              <Label htmlFor="titulo">Titulo *</Label>
+              <Label htmlFor="titulo">Título *</Label>
               <Input id="titulo" {...form.register("titulo")} />
               {form.formState.errors.titulo && (
                 <p className="text-xs text-destructive">{form.formState.errors.titulo.message}</p>
@@ -117,7 +117,7 @@ export function GravacaoForm({ defaultValues, onSubmit, isEditing, entityId }: G
             </div>
 
             <div className="space-y-1">
-              <Label htmlFor="textoBase">Texto Base (Referencia Biblica)</Label>
+              <Label htmlFor="textoBase">Texto Base (Referência Bíblica)</Label>
               <BiblePassageInput
                 id="textoBase"
                 variant="form"
@@ -145,13 +145,13 @@ export function GravacaoForm({ defaultValues, onSubmit, isEditing, entityId }: G
             </div>
 
             <div className="space-y-1">
-              <Label htmlFor="tags">Tags (separadas por virgula)</Label>
+              <Label htmlFor="tags">Tags (separadas por vírgula)</Label>
               <Input id="tags" placeholder="fe, esperanca, amor" {...form.register("tags")} />
             </div>
           </div>
 
           <div className="space-y-1">
-            <Label htmlFor="descricao">Descricao</Label>
+            <Label htmlFor="descricao">Descrição</Label>
             <textarea
               id="descricao"
               className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
@@ -169,7 +169,7 @@ export function GravacaoForm({ defaultValues, onSubmit, isEditing, entityId }: G
           </div>
 
           <div className="space-y-2">
-            <Label>Audio</Label>
+            <Label>Áudio</Label>
             <FileUpload
               folder="gravacoes-audio"
               entityId={uploadEntityId}
@@ -177,7 +177,7 @@ export function GravacaoForm({ defaultValues, onSubmit, isEditing, entityId }: G
               maxSizeMB={100}
               value={audioUrl || undefined}
               onChange={(url) => form.setValue("audioUrl", url || "")}
-              label="Arraste ou clique para enviar o audio (MP3, M4A, WAV)"
+              label="Arraste ou clique para enviar o áudio (MP3, M4A, WAV)"
             />
           </div>
         </CardContent>
@@ -185,7 +185,7 @@ export function GravacaoForm({ defaultValues, onSubmit, isEditing, entityId }: G
 
       <div className="flex gap-2 justify-end">
         <Button type="submit" disabled={loading}>
-          {loading ? "Salvando..." : isEditing ? "Salvar Alteracoes" : "Criar Gravacao"}
+          {loading ? "Salvando..." : isEditing ? "Salvar Alterações" : "Criar Gravação"}
         </Button>
       </div>
     </form>

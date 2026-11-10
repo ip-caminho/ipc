@@ -219,7 +219,7 @@ export function LouvorOrdemSection({ cultoId, louvores, temCeia, canEdit, dataLa
             {/* Adicionar musica */}
             {canEdit && (
               <div className="space-y-1.5 pb-4 border-b">
-                <p className="text-xs font-medium text-muted-foreground">Adicionar musica</p>
+                <p className="text-xs font-medium text-muted-foreground">Adicionar música</p>
                 <LouvorPicker
                   onSelect={(id, titulo, tom) => {
                     const insertAt = findNextInsertPosition(localItems, temCeia);
@@ -232,7 +232,7 @@ export function LouvorOrdemSection({ cultoId, louvores, temCeia, canEdit, dataLa
                     });
                     save(next);
                   }}
-                  placeholder="Selecionar do repertorio..."
+                  placeholder="Selecionar do repertório..."
                 />
               </div>
             )}
@@ -262,7 +262,7 @@ export function LouvorOrdemSection({ cultoId, louvores, temCeia, canEdit, dataLa
                       overIdx === section.sepFlatIndex + 1 && dragIdx !== null && "border-primary bg-primary/5",
                     )}
                   >
-                    Arraste uma musica aqui
+                    Arraste uma música aqui
                   </div>
                 )}
                 <div className="space-y-2">
@@ -336,7 +336,7 @@ function groupBySection(items: OrderItem[]): SectionGroup[] {
     } else if (current) {
       current.musicas.push({ titulo: item.titulo, tom: item.tom, flatIndex: i });
     } else {
-      current = { label: "Inicio", sepFlatIndex: -1, musicas: [{ titulo: item.titulo, tom: item.tom, flatIndex: i }] };
+      current = { label: "Início", sepFlatIndex: -1, musicas: [{ titulo: item.titulo, tom: item.tom, flatIndex: i }] };
       sections.push(current);
     }
   }

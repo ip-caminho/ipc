@@ -100,7 +100,7 @@ function LouvorContent() {
       });
       toast.success("Música criada");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao criar musica");
+      toast.error(error instanceof Error ? error.message : "Erro ao criar música");
     }
   };
 
@@ -223,7 +223,7 @@ function LouvorContent() {
             </div>
           ) : louvores.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
-              <p className="text-base text-muted-foreground">Nenhuma musica encontrada.</p>
+              <p className="text-base text-muted-foreground">Nenhuma música encontrada.</p>
               <button
                 onClick={clearFilters}
                 className="mt-3 text-base text-primary underline-offset-2 hover:underline min-h-[44px]"

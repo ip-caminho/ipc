@@ -22,7 +22,7 @@ export function ComentariosRecentesCard() {
   return (
     <div className="flex flex-col gap-2">
       <p className="text-xs font-medium tracking-wider uppercase text-muted-foreground px-1">
-        Comentarios recentes
+        Comentários recentes
       </p>
       <div className="flex flex-col gap-2">
         {grupos.map((g) => (
@@ -41,7 +41,7 @@ export function ComentariosRecentesCard() {
                 </p>
                 <span className="shrink-0 text-xs font-medium text-muted-foreground">
                   {g.comentariosCount}{" "}
-                  {g.comentariosCount === 1 ? "comentario" : "comentarios"}
+                  {g.comentariosCount === 1 ? "comentário" : "comentários"}
                 </span>
               </div>
               {g.ultimoComentario && (

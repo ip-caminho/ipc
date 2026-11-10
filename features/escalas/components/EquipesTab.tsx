@@ -46,7 +46,7 @@ import type { Id } from "@/convex/_generated/dataModel";
 const INSTRUMENTOS = [
   { value: "voz", label: "Voz" },
   { value: "teclado", label: "Teclado" },
-  { value: "violao", label: "Violao" },
+  { value: "violao", label: "Violão" },
   { value: "guitarra", label: "Guitarra" },
   { value: "baixo", label: "Baixo" },
   { value: "bateria", label: "Bateria" },
@@ -148,7 +148,7 @@ function NovaEquipeDialog({ open, onOpenChange }: { open: boolean; onOpenChange:
           <Input
             value={nome}
             onChange={(e) => setNome(e.target.value)}
-            placeholder="Ex: Diaconia, Intercessao, Recepcao..."
+            placeholder="Ex: Diaconia, Intercessão, Recepção..."
             autoFocus
             onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
           />
