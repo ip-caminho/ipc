@@ -24,9 +24,9 @@ export function EmergencyContactStep({ formData, onUpdate, onNext, onBack }: Pro
   return (
     <div className="space-y-5 py-4">
       <div className="text-center space-y-1">
-        <h2 className="text-lg font-semibold">Contato de emergencia</h2>
+        <h2 className="text-lg font-semibold">Contato de emergência</h2>
         <p className="text-xs text-muted-foreground">
-          Opcional — alguem que podemos contatar se necessario
+          Opcional — alguém que podemos contatar se necessário
         </p>
       </div>
 
@@ -56,7 +56,7 @@ export function EmergencyContactStep({ formData, onUpdate, onNext, onBack }: Pro
             id="ob-ce-parentesco"
             value={formData.parentesco}
             onChange={(e) => onUpdate({ parentesco: e.target.value })}
-            placeholder="Ex: Mae, Esposo, Irma"
+            placeholder="Ex: Mãe, Esposo, Irmã"
           />
         </div>
       </div>

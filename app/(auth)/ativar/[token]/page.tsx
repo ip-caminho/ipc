@@ -81,12 +81,12 @@ export default function AtivarPage() {
   if (dados.status !== "valido") {
     const msg =
       dados.status === "expirado"
-        ? "Este link expirou. Peca um novo a secretaria."
+        ? "Este link expirou. Peça um novo a secretaria."
         : dados.status === "ja_ativado"
-          ? "Este acesso ja foi ativado. Va para a tela de login e entre com sua senha."
+          ? "Este acesso já foi ativado. Vá para a tela de login e entre com sua senha."
           : dados.status === "telefone_em_uso"
             ? "Este telefone já é usado no acesso de outra pessoa. Procure a secretaria."
-            : "Link invalido.";
+            : "Link inválido.";
     return (
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
@@ -116,7 +116,7 @@ export default function AtivarPage() {
       return;
     }
     if (senha !== confirma) {
-      setError("As senhas nao conferem");
+      setError("As senhas não conferem");
       return;
     }
 
@@ -132,7 +132,7 @@ export default function AtivarPage() {
       setPendingToken(token);
     } catch {
       setError(
-        "Nao foi possivel ativar. Se voce ja tentou antes, use exatamente a mesma senha."
+        "Não foi possível ativar. Se você já tentou antes, use exatamente a mesma senha."
       );
       setLoading(false);
     }
@@ -144,7 +144,7 @@ export default function AtivarPage() {
         <div className="flex justify-center mb-2">
           <Logo className="h-12" />
         </div>
-        <CardTitle>Ola, {dados.nome.split(" ")[0]}</CardTitle>
+        <CardTitle>Olá, {dados.nome.split(" ")[0]}</CardTitle>
         <CardDescription>Crie uma senha para acessar o sistema</CardDescription>
       </CardHeader>
       <CardContent>

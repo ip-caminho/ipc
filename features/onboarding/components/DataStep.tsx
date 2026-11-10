@@ -62,7 +62,7 @@ export function DataStep({ nomeCompleto, whatsapp, formData, onUpdate, onNext, o
         </div>
         <div className="space-y-1">
           <Label className="text-xs text-muted-foreground">WhatsApp</Label>
-          <p className="text-sm">{whatsapp || "Nao informado"}</p>
+          <p className="text-sm">{whatsapp || "Não informado"}</p>
         </div>
       </div>
 
@@ -147,12 +147,12 @@ export function DataStep({ nomeCompleto, whatsapp, formData, onUpdate, onNext, o
         </div>
 
         <div className="space-y-1">
-          <Label htmlFor="ob-profissao" className="text-xs">Profissao *</Label>
+          <Label htmlFor="ob-profissao" className="text-xs">Profissão *</Label>
           <Input
             id="ob-profissao"
             value={formData.profissao}
             onChange={(e) => onUpdate({ profissao: e.target.value })}
-            placeholder="Sua profissao"
+            placeholder="Sua profissão"
           />
         </div>
 
@@ -163,16 +163,16 @@ export function DataStep({ nomeCompleto, whatsapp, formData, onUpdate, onNext, o
               id="ob-pai"
               value={formData.pai}
               onChange={(e) => onUpdate({ pai: e.target.value })}
-              placeholder="Filiacao (opcional)"
+              placeholder="Filiação (opcional)"
             />
           </div>
           <div className="space-y-1">
-            <Label htmlFor="ob-mae" className="text-xs">Nome da mae</Label>
+            <Label htmlFor="ob-mae" className="text-xs">Nome da mãe</Label>
             <Input
               id="ob-mae"
               value={formData.mae}
               onChange={(e) => onUpdate({ mae: e.target.value })}
-              placeholder="Filiacao (opcional)"
+              placeholder="Filiação (opcional)"
             />
           </div>
         </div>

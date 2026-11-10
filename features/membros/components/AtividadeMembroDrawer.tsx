@@ -16,8 +16,8 @@ import { LogIn, FilePlus, Pencil, Trash2 } from "lucide-react";
 const TABELA_LABEL: Record<string, string> = {
   membros: "membro",
   entidades: "perfil",
-  gravacoes: "gravacao",
-  auth: "autenticacao",
+  gravacoes: "gravação",
+  auth: "autenticação",
 };
 
 function formatarData(ms: number): string {
@@ -71,7 +71,7 @@ export function AtividadeMembroDrawer({
       <SheetContent className="w-full sm:max-w-md overflow-y-auto">
         <SheetHeader>
           <SheetTitle>Atividade — {nome}</SheetTitle>
-          <SheetDescription>Acessos e acoes principais na plataforma</SheetDescription>
+          <SheetDescription>Acessos e ações principais na plataforma</SheetDescription>
         </SheetHeader>
         <div className="px-4 pb-6">
           {atividade === undefined ? (

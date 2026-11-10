@@ -45,7 +45,7 @@ export function LgpdConsentDialog() {
 
   const handleAceitar = async () => {
     if (!aceiteBasico) {
-      toast.error("E necessario aceitar o consentimento de cadastro basico");
+      toast.error("É necessário aceitar o consentimento de cadastro básico");
       return;
     }
     setSalvando(true);
@@ -73,9 +73,9 @@ export function LgpdConsentDialog() {
         </ResponsiveDialogHeader>
         <ResponsiveDialogBody>
           <p>
-            A IPC trata seus dados pessoais para fins de cadastro de membros, exercicio das
-            atividades eclesiasticas e comunicacao pastoral, conforme Arts 5o II e 11 da
-            LGPD (que reconhece dados de conviccao religiosa como sensiveis).
+            A IPC trata seus dados pessoais para fins de cadastro de membros, exercício das
+            atividades eclesiásticas e comunicação pastoral, conforme Arts 5o II e 11 da
+            LGPD (que reconhece dados de convicção religiosa como sensíveis).
           </p>
           <label className="flex items-start gap-2 cursor-pointer p-3 rounded-md border hover:bg-muted/50">
             <Checkbox
@@ -84,10 +84,10 @@ export function LgpdConsentDialog() {
               className="mt-0.5 size-5"
             />
             <div>
-              <p className="font-medium">Cadastro basico (obrigatorio)</p>
+              <p className="font-medium">Cadastro básico (obrigatório)</p>
               <p className="text-xs text-muted-foreground">
-                Concordo que a IPC mantenha meus dados pessoais (nome, contato, endereco,
-                familia, dados eclesiasticos) para fins de cadastro de membro e exercicio
+                Concordo que a IPC mantenha meus dados pessoais (nome, contato, endereço,
+                família, dados eclesiásticos) para fins de cadastro de membro e exercício
                 pastoral.
               </p>
             </div>
@@ -99,15 +99,15 @@ export function LgpdConsentDialog() {
               className="mt-0.5 size-5"
             />
             <div>
-              <p className="font-medium">Comunicacao via WhatsApp (opcional)</p>
+              <p className="font-medium">Comunicação via WhatsApp (opcional)</p>
               <p className="text-xs text-muted-foreground">
-                Aceito receber comunicados, lembretes e mensagens pastorais pelo numero
+                Aceito receber comunicados, lembretes e mensagens pastorais pelo número
                 cadastrado. Posso revogar a qualquer momento.
               </p>
             </div>
           </label>
           <p className="text-xs text-muted-foreground">
-            Voce pode revogar seus consentimentos a qualquer momento entrando em contato
+            Você pode revogar seus consentimentos a qualquer momento entrando em contato
             com a secretaria. Versao do termo: {VERSAO}.
           </p>
         </ResponsiveDialogBody>

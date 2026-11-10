@@ -31,8 +31,8 @@ import { toast } from "sonner";
 
 const CARGO_OPTIONS = [
   { value: "PASTOR", label: "Pastor" },
-  { value: "PRESBITERO", label: "Presbitero" },
-  { value: "DIACONO", label: "Diacono" },
+  { value: "PRESBITERO", label: "Presbítero" },
+  { value: "DIACONO", label: "Diácono" },
 ] as const;
 
 type Cargo = (typeof CARGO_OPTIONS)[number]["value"];
@@ -76,7 +76,7 @@ export function CargosHistoricoSection({ membroId }: { membroId: Id<"membros"> }
 
   const handleIniciar = async () => {
     if (!form.mandatoInicio) {
-      toast.error("Informe o inicio do mandato");
+      toast.error("Informe o início do mandato");
       return;
     }
     setSaving(true);
@@ -124,7 +124,7 @@ export function CargosHistoricoSection({ membroId }: { membroId: Id<"membros"> }
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
         <CardTitle className="text-sm text-muted-foreground flex items-center gap-1.5">
-          <Briefcase className="h-3.5 w-3.5" /> Cargos Eclesiasticos (historico)
+          <Briefcase className="h-3.5 w-3.5" /> Cargos Eclesiásticos (histórico)
         </CardTitle>
         <Button
           size="sm"
@@ -206,7 +206,7 @@ export function CargosHistoricoSection({ membroId }: { membroId: Id<"membros"> }
                   </Select>
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs">Inicio do mandato *</Label>
+                  <Label className="text-xs">Início do mandato *</Label>
                   <DatePickerBR
                     value={form.mandatoInicio}
                     onChange={(iso) =>
@@ -232,7 +232,7 @@ export function CargosHistoricoSection({ membroId }: { membroId: Id<"membros"> }
                 previsto alimenta os alertas de mandatos vencidos / a vencer.
               </p>
               <div className="space-y-1">
-                <Label className="text-xs">Observacoes</Label>
+                <Label className="text-xs">Observações</Label>
                 <Textarea
                   rows={2}
                   value={form.observacoes}

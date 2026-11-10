@@ -32,10 +32,10 @@ import { toast } from "sonner";
 
 const TIPO_OPTIONS = [
   { value: "BATISMO", label: "Batismo" },
-  { value: "PROFISSAO_FE", label: "Profissao de Fe" },
+  { value: "PROFISSAO_FE", label: "Profissão de Fé" },
   { value: "CASAMENTO", label: "Casamento" },
   { value: "FUNERAL", label: "Funeral" },
-  { value: "RESTAURACAO", label: "Restauracao" },
+  { value: "RESTAURACAO", label: "Restauração" },
   { value: "OUTRO", label: "Outro" },
 ] as const;
 
@@ -211,7 +211,7 @@ export function AtosPastoraisSection({ membroId }: { membroId: Id<"membros"> }) 
                 <Input
                   value={form.local}
                   onChange={(e) => setForm((p) => ({ ...p, local: e.target.value }))}
-                  placeholder="Ex: IPC Sao Paulo, Capela X"
+                  placeholder="Ex: IPC São Paulo, Capela X"
                 />
               </div>
               <div className="space-y-1">
@@ -219,7 +219,7 @@ export function AtosPastoraisSection({ membroId }: { membroId: Id<"membros"> }) 
                 <Input
                   value={form.oficiante}
                   onChange={(e) => setForm((p) => ({ ...p, oficiante: e.target.value }))}
-                  placeholder="Nome do pastor/presbitero que oficiou"
+                  placeholder="Nome do pastor/presbítero que oficiou"
                 />
               </div>
               <div className="space-y-1">
@@ -227,11 +227,11 @@ export function AtosPastoraisSection({ membroId }: { membroId: Id<"membros"> }) 
                 <Input
                   value={form.padrinhos}
                   onChange={(e) => setForm((p) => ({ ...p, padrinhos: e.target.value }))}
-                  placeholder="Joao Silva, Maria Souza"
+                  placeholder="João Silva, Maria Souza"
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">Livro/Folha (registro fisico)</Label>
+                <Label className="text-xs">Livro/Folha (registro físico)</Label>
                 <Input
                   value={form.livroFolha}
                   onChange={(e) => setForm((p) => ({ ...p, livroFolha: e.target.value }))}
@@ -239,7 +239,7 @@ export function AtosPastoraisSection({ membroId }: { membroId: Id<"membros"> }) 
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">Observacoes</Label>
+                <Label className="text-xs">Observações</Label>
                 <Textarea
                   rows={2}
                   value={form.observacoes}

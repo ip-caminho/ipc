@@ -390,7 +390,7 @@ export function ArvoreFamiliar({
   if (layout.units.length === 0) {
     return (
       <p className="py-12 text-center text-sm text-muted-foreground">
-        Sem vinculos familiares ainda.
+        Sem vínculos familiares ainda.
       </p>
     );
   }
@@ -420,7 +420,7 @@ export function ArvoreFamiliar({
           altura,
         )}
         role="group"
-        aria-label="Arvore familiar"
+        aria-label="Árvore familiar"
       >
         {/* fundo: clicar no vazio limpa a selecao (pan continua via arrastar) */}
         <div className="absolute inset-0" onClick={() => setPilha([])} />
@@ -518,7 +518,7 @@ export function ArvoreFamiliar({
                         {onEditar && p.membroId && (
                           <button
                             type="button"
-                            aria-label="Editar vinculos"
+                            aria-label="Editar vínculos"
                             onClick={(e) => {
                               e.stopPropagation();
                               onEditar(p);

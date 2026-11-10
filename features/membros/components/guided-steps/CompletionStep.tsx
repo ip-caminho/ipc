@@ -38,7 +38,7 @@ export function CompletionStep({ firstName, percentage }: Props) {
       </div>
       <div>
         <h2 className="text-xl font-semibold">
-          {percentage === 100 ? "Perfil completo!" : `Otimo trabalho, ${firstName}!`}
+          {percentage === 100 ? "Perfil completo!" : `Ótimo trabalho, ${firstName}!`}
         </h2>
         <p className={cn("text-2xl font-bold mt-1", color)}>{percentage}%</p>
       </div>

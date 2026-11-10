@@ -46,7 +46,7 @@ export function FamiliaArvoreSection({ membroId }: { membroId: Id<"membros"> }) 
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-sm text-muted-foreground flex items-center gap-1.5">
-          <Users className="h-3.5 w-3.5" /> Arvore familiar
+          <Users className="h-3.5 w-3.5" /> Árvore familiar
         </CardTitle>
       </CardHeader>
       <CardContent>

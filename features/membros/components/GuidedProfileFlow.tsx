@@ -131,7 +131,7 @@ export function GuidedProfileFlow() {
   }
 
   if (!profile || !ent) {
-    return <p className="text-muted-foreground text-center py-12">Perfil nao encontrado.</p>;
+    return <p className="text-muted-foreground text-center py-12">Perfil não encontrado.</p>;
   }
 
   const firstName = ent.apelido || ent.nomeCompleto?.split(" ")[0] || "";
@@ -310,7 +310,7 @@ export function GuidedProfileFlow() {
 
           {step.key === "profissao" && (
             <SimpleInputStep
-              title="Profissao"
+              title="Profissão"
               fieldKey="profissao"
               initial={ent.profissao || ""}
               placeholder="Ex: Engenheiro, Professor"
@@ -325,7 +325,7 @@ export function GuidedProfileFlow() {
           {step.key === "dataBatismo" && (
             <DateStep
               title="Data de batismo"
-              subtitle="Se nao lembrar, pode pular"
+              subtitle="Se não lembrar, pode pular"
               initial={membro?.dataBatismo || ""}
               percentage={completeness.percentage}
               onSave={(iso) => saveMembroField({ dataBatismo: iso || null })}
@@ -469,7 +469,7 @@ function ContactStep({
   return (
     <StepShell
       title="Contato"
-      subtitle="Email ou telefone secundario"
+      subtitle="Email ou telefone secundário"
       percentage={percentage}
       onNext={() => onSave({ email, telefone })}
       onSkip={onSkip}
@@ -519,7 +519,7 @@ function AddressGuidedStep({
 
   return (
     <StepShell
-      title="Endereco"
+      title="Endereço"
       subtitle="Opcional — pode preencher depois"
       percentage={percentage}
       onNext={() => onSave({ endereco: form })}
@@ -538,7 +538,7 @@ function AddressGuidedStep({
         </div>
         <div className="grid grid-cols-3 gap-2">
           <div className="space-y-1">
-            <Label className="text-xs">Numero</Label>
+            <Label className="text-xs">Número</Label>
             <Input value={form.numero} onChange={set("numero")} />
           </div>
           <div className="col-span-2 space-y-1">

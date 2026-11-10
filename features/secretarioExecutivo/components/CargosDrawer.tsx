@@ -27,8 +27,8 @@ export function CargosDrawer({
         <SheetHeader>
           <SheetTitle>Cargos / Mandato — {nome}</SheetTitle>
           <SheetDescription>
-            Registre o cargo (presbitero/diacono/pastor) com inicio e fim previsto, e
-            encerre mandatos. Mandato IPB: ate 5 anos.
+            Registre o cargo (presbítero/diácono/pastor) com início e fim previsto, e
+            encerre mandatos. Mandato IPB: até 5 anos.
           </SheetDescription>
         </SheetHeader>
         <div className="px-4 pb-8">

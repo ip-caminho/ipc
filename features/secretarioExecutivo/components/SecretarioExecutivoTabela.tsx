@@ -45,7 +45,7 @@ const STATUS_OPTIONS = [
   { value: "ATIVO", label: "Ativo" },
   { value: "INATIVO", label: "Ausente" },
   { value: "TRANSFERIDO", label: "Transferido" },
-  { value: "DESLIGADO", label: "Excluido" },
+  { value: "DESLIGADO", label: "Excluído" },
   { value: "FALECIDO", label: "Falecido" },
 ] as const;
 
@@ -177,12 +177,12 @@ function AcoesMembro({ ctl, href, readOnly }: { ctl: ReturnType<typeof useLinhaM
           <button type="button" onClick={() => ctl.setCargosOpen(true)} className="text-muted-foreground hover:text-foreground" title="Cargos / mandato">
             <Briefcase className="h-4 w-4" />
           </button>
-          <button type="button" onClick={() => ctl.setFamOpen(true)} className="text-muted-foreground hover:text-foreground" title="Familia (conjuge / filhos)">
+          <button type="button" onClick={() => ctl.setFamOpen(true)} className="text-muted-foreground hover:text-foreground" title="Família (cônjuge / filhos)">
             <Heart className="h-4 w-4" />
           </button>
         </>
       )}
-      <button type="button" onClick={() => ctl.setHistOpen(true)} className="text-muted-foreground hover:text-foreground" title="Historico / reverter">
+      <button type="button" onClick={() => ctl.setHistOpen(true)} className="text-muted-foreground hover:text-foreground" title="Histórico / reverter">
         <History className="h-4 w-4" />
       </button>
       <Link href={href} className="text-muted-foreground hover:text-foreground" title="Abrir detalhe">
@@ -230,7 +230,7 @@ function CardMembro({ membro, agrupar }: { membro: MembroEclesiastico; agrupar: 
             Civ. capaz: <span className="text-yellow-700">Menor</span>
           </span>
         )}
-        {membro.numeroMatricula && <span>Matricula: {membro.numeroMatricula}</span>}
+        {membro.numeroMatricula && <span>Matrícula: {membro.numeroMatricula}</span>}
         {membro.dataMembresia && <span>Membresia: {membro.dataMembresia}</span>}
       </div>
     </Link>
@@ -252,7 +252,7 @@ function CardDependente({ dep }: { dep: MembroEclesiastico }) {
         <Badge variant="secondary" className="shrink-0 text-xs">Dependente</Badge>
       </div>
       <p className="text-xs text-muted-foreground">
-        {dep.dataNascimento ? `Nascimento: ${formatDataBR(dep.dataNascimento)}` : "Sem dados eclesiasticos (nao e membro)"}
+        {dep.dataNascimento ? `Nascimento: ${formatDataBR(dep.dataNascimento)}` : "Sem dados eclesiásticos (não é membro)"}
       </p>
     </div>
   );
@@ -450,7 +450,7 @@ function LinhaDependente({ dep, readOnly }: { dep: MembroEclesiastico; readOnly?
     setLoading(true);
     try {
       await tornarMembro({ entidadeId: dep.entidadeId as Id<"entidades"> });
-      toast.success("Agora e membro — edite os dados eclesiasticos");
+      toast.success("Agora é membro — edite os dados eclesiásticos");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro ao tornar membro");
     } finally {
@@ -470,10 +470,10 @@ function LinhaDependente({ dep, readOnly }: { dep: MembroEclesiastico; readOnly?
         </span>
       </TableCell>
       <TableCell>
-        <Badge variant="secondary" className="text-xs">Dependente · nao membro</Badge>
+        <Badge variant="secondary" className="text-xs">Dependente · não membro</Badge>
       </TableCell>
       <TableCell colSpan={NUM_COLS - 3} className="text-xs text-muted-foreground">
-        {dep.dataNascimento ? `Nascimento: ${formatDataBR(dep.dataNascimento)}` : "Sem dados eclesiasticos (nao e membro)"}
+        {dep.dataNascimento ? `Nascimento: ${formatDataBR(dep.dataNascimento)}` : "Sem dados eclesiásticos (não é membro)"}
       </TableCell>
       <TableCell>
         {readOnly ? (
@@ -614,11 +614,11 @@ export function SecretarioExecutivoTabela({
           <TableRow>
             <TableHead className={cn(COL_NOME, "top-0 z-30 whitespace-nowrap")}>Nome</TableHead>
             <TableHead className={COL_HEAD}>Status</TableHead>
-            <TableHead className={COL_HEAD}>Cargo eclesiastico</TableHead>
+            <TableHead className={COL_HEAD}>Cargo eclesiástico</TableHead>
             <TableHead className={COL_HEAD}>Rol</TableHead>
             <TableHead className={COL_HEAD}>Civ. capaz</TableHead>
-            <TableHead className={COL_HEAD}>Matricula</TableHead>
-            <TableHead className={COL_HEAD}>Conversao</TableHead>
+            <TableHead className={COL_HEAD}>Matrícula</TableHead>
+            <TableHead className={COL_HEAD}>Conversão</TableHead>
             <TableHead className={COL_HEAD}>Batismo</TableHead>
             <TableHead className={COL_HEAD}>Membresia</TableHead>
             <TableHead className={COL_HEAD}></TableHead>

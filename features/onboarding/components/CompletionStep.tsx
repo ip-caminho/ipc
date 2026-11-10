@@ -24,7 +24,7 @@ export function CompletionStep({ firstName }: Props) {
       <div>
         <h2 className="text-xl font-semibold">Tudo pronto, {firstName}!</h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Redirecionando para o inicio...
+          Redirecionando para o início...
         </p>
       </div>
     </div>

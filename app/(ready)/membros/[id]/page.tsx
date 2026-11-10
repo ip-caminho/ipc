@@ -54,7 +54,7 @@ export default function SecretarioExecutivoDetalhePage() {
     return (
       <HeaderLayout>
         <DetailHeader backHref="/membros" />
-        <p className="text-muted-foreground">Membro nao encontrado.</p>
+        <p className="text-muted-foreground">Membro não encontrado.</p>
       </HeaderLayout>
     );
   }
@@ -64,7 +64,7 @@ export default function SecretarioExecutivoDetalhePage() {
     return (
       <HeaderLayout>
         <DetailHeader backHref="/membros" />
-        <p className="text-muted-foreground">Entidade nao encontrada.</p>
+        <p className="text-muted-foreground">Entidade não encontrada.</p>
       </HeaderLayout>
     );
   }

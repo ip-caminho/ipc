@@ -62,7 +62,7 @@ export function SolicitacoesPanel() {
     setProcessando(true);
     try {
       await rejeitar({ solicitacaoId: rejeitando, motivo: motivo.trim() || undefined });
-      toast.success("Solicitacao rejeitada");
+      toast.success("Solicitação rejeitada");
       setRejeitando(null);
       setMotivo("");
     } catch (e) {
@@ -109,7 +109,7 @@ export function SolicitacoesPanel() {
                     ) : (
                       <Heart className="h-3 w-3" />
                     )}
-                    {s.tipoVinculo === "FILHO" ? "Filho(a)" : "Conjuge"}
+                    {s.tipoVinculo === "FILHO" ? "Filho(a)" : "Cônjuge"}
                   </Badge>
                 </div>
                 <p className="text-sm text-muted-foreground">
@@ -144,9 +144,9 @@ export function SolicitacoesPanel() {
                 <TableRow>
                   <TableHead>Solicitante</TableHead>
                   <TableHead>Familiar</TableHead>
-                  <TableHead>Vinculo</TableHead>
+                  <TableHead>Vínculo</TableHead>
                   <TableHead>Nascimento</TableHead>
-                  <TableHead className="text-right">Acoes</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -168,7 +168,7 @@ export function SolicitacoesPanel() {
                         ) : (
                           <Heart className="h-3 w-3" />
                         )}
-                        {s.tipoVinculo === "FILHO" ? "Filho(a)" : "Conjuge"}
+                        {s.tipoVinculo === "FILHO" ? "Filho(a)" : "Cônjuge"}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
@@ -206,9 +206,9 @@ export function SolicitacoesPanel() {
       <AlertDialog open={rejeitando !== null} onOpenChange={(o) => !o && setRejeitando(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Rejeitar solicitacao?</AlertDialogTitle>
+            <AlertDialogTitle>Rejeitar solicitação?</AlertDialogTitle>
             <AlertDialogDescription>
-              Nenhum cadastro sera criado. Voce pode registrar um motivo (opcional).
+              Nenhum cadastro será criado. Você pode registrar um motivo (opcional).
             </AlertDialogDescription>
           </AlertDialogHeader>
           <Textarea

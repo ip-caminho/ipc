@@ -62,11 +62,11 @@ export function HistoricoEclesiasticoDrawer({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
         <SheetHeader>
-          <SheetTitle>Historico — {nome}</SheetTitle>
+          <SheetTitle>Histórico — {nome}</SheetTitle>
           <SheetDescription>
             {podeReverter
-              ? 'Alteracoes eclesiasticas. Use "Reverter" para desfazer um ajuste.'
-              : "Alteracoes eclesiasticas."}
+              ? 'Alterações eclesiásticas. Use "Reverter" para desfazer um ajuste.'
+              : "Alterações eclesiásticas."}
           </SheetDescription>
         </SheetHeader>
         <div className="px-4 pb-6">
@@ -77,7 +77,7 @@ export function HistoricoEclesiasticoDrawer({
               ))}
             </div>
           ) : historico.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nenhuma alteracao registrada.</p>
+            <p className="text-sm text-muted-foreground">Nenhuma alteração registrada.</p>
           ) : (
             <ul className="space-y-3">
               {historico.map((item) => (

@@ -79,7 +79,7 @@ export function AcessoSection({ membroId }: { membroId: Id<"membros"> }) {
 
   function enviarWhatsApp() {
     const fone = status?.whatsapp ? normalizeToE164(status.whatsapp).replace(/\D/g, "") : "";
-    const msg = `Ola, ${status?.nome?.split(" ")[0] || ""}! Seu acesso ao sistema da igreja esta pronto. Crie sua senha neste link (valido por 7 dias): ${link}`;
+    const msg = `Olá, ${status?.nome?.split(" ")[0] || ""}! Seu acesso ao sistema da igreja está pronto. Crie sua senha neste link (válido por 7 dias): ${link}`;
     const url = fone
       ? `https://wa.me/${fone}?text=${encodeURIComponent(msg)}`
       : `https://wa.me/?text=${encodeURIComponent(msg)}`;
@@ -102,7 +102,7 @@ export function AcessoSection({ membroId }: { membroId: Id<"membros"> }) {
             <Badge variant="secondary">Sem acesso</Badge>
           )}
           {status.ativado && !status.onboardingCompleto && (
-            <Badge variant="outline">Dados nao confirmados</Badge>
+            <Badge variant="outline">Dados não confirmados</Badge>
           )}
           {!status.ativado && status.temLinkPendente && (
             <Badge variant="outline">Link pendente</Badge>
@@ -126,7 +126,7 @@ export function AcessoSection({ membroId }: { membroId: Id<"membros"> }) {
               <AlertDialogHeader>
                 <AlertDialogTitle>Resetar o acesso?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  A pessoa perde o login atual e podera se cadastrar de novo (criar nova senha).
+                  A pessoa perde o login atual e poderá se cadastrar de novo (criar nova senha).
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -142,7 +142,7 @@ export function AcessoSection({ membroId }: { membroId: Id<"membros"> }) {
             <DialogHeader>
               <DialogTitle>Link de acesso</DialogTitle>
               <DialogDescription>
-                Envie este link para o membro criar a senha. Valido por 7 dias.
+                Envie este link para o membro criar a senha. Válido por 7 dias.
               </DialogDescription>
             </DialogHeader>
             <div className="flex items-center gap-2">

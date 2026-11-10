@@ -40,7 +40,7 @@ import { cn } from "@shared/lib/utils/cn";
 
 const ROLE_LABELS: Record<string, string> = {
   pastor: "Pastor",
-  presbitero: "Presbitero",
+  presbitero: "Presbítero",
   obreiro: "Obreiro",
   secretaria: "Secretaria",
   secretario_executivo: "Sec. Executivo",
@@ -262,9 +262,9 @@ export function PermissionMatrix() {
 
     try {
       await updateRolePermissions({ role, permissions: newPermissions });
-      toast.success("Permissao atualizada");
+      toast.success("Permissão atualizada");
     } catch (e: any) {
-      toast.error(e.message || "Erro ao atualizar permissao");
+      toast.error(e.message || "Erro ao atualizar permissão");
     } finally {
       setPendingToggles((prev) => { const n = new Map(prev); n.delete(key); return n; });
     }
@@ -280,9 +280,9 @@ export function PermissionMatrix() {
 
     try {
       await setMembroPermission({ membroId, permission, hasPermission: hasIt });
-      toast.success("Permissao atualizada");
+      toast.success("Permissão atualizada");
     } catch (e: any) {
-      toast.error(e.message || "Erro ao atualizar permissao");
+      toast.error(e.message || "Erro ao atualizar permissão");
     } finally {
       setPendingToggles((prev) => { const n = new Map(prev); n.delete(key); return n; });
     }

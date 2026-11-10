@@ -116,7 +116,7 @@ export function MembroForm({ defaultValues, onSubmit, isEditing, entityId, perso
       !data.cartaTransferencia &&
       !eraTransferenciaSemCarta
     ) {
-      form.setError("cartaTransferencia", { message: "Anexe a carta de transferencia" });
+      form.setError("cartaTransferencia", { message: "Anexe a carta de transferência" });
       return;
     }
     setLoading(true);
@@ -149,7 +149,7 @@ export function MembroForm({ defaultValues, onSubmit, isEditing, entityId, perso
             <div className="sm:col-span-2">
               <Field form={form} name="nomeCompleto" label="Nome Completo *" autoComplete="name" />
             </div>
-            <Field form={form} name="apelido" label="Apelido" placeholder="Como e conhecido" />
+            <Field form={form} name="apelido" label="Apelido" placeholder="Como é conhecido" />
             <Field form={form} name="dataNascimento" label="Data de Nascimento" type="date" />
             <SelectField form={form} name="sexo" label="Sexo" options={SEXO_OPTIONS} />
           </Section>
@@ -175,15 +175,15 @@ export function MembroForm({ defaultValues, onSubmit, isEditing, entityId, perso
                     ))}
                   </SelectContent>
                 </Select>
-                <Input placeholder="Numero do documento" {...form.register("rg")} />
+                <Input placeholder="Número do documento" {...form.register("rg")} />
               </div>
             </div>
             <SelectField form={form} name="estadoCivil" label="Estado Civil" options={ESTADO_CIVIL_OPTIONS} />
             <Field form={form} name="nacionalidade" label="Nacionalidade" />
             <Field form={form} name="pai" label="Nome do Pai" />
-            <Field form={form} name="mae" label="Nome da Mae" />
-            <Field form={form} name="profissao" label="Profissao" />
-            <SelectField form={form} name="formacao" label="Formacao" options={FORMACAO_OPTIONS} />
+            <Field form={form} name="mae" label="Nome da Mãe" />
+            <Field form={form} name="profissao" label="Profissão" />
+            <SelectField form={form} name="formacao" label="Formação" options={FORMACAO_OPTIONS} />
           </Section>
 
           <Section title="Endereço" defaultOpen={false}>
@@ -200,40 +200,40 @@ export function MembroForm({ defaultValues, onSubmit, isEditing, entityId, perso
             /* vinculoIgreja e cbcm sao campos de entidade — sem esta secao
                ficariam ineditaveis (a secao eclesiastica completa fica oculta
                e o EclesiasticoForm nao os possui) */
-            <Section title="Vinculo com a Igreja" defaultOpen={false}>
-              <SelectField form={form} name="vinculoIgreja" label="Vinculo com a Igreja" options={VINCULO_IGREJA_OPTIONS} />
+            <Section title="Vínculo com a Igreja" defaultOpen={false}>
+              <SelectField form={form} name="vinculoIgreja" label="Vínculo com a Igreja" options={VINCULO_IGREJA_OPTIONS} />
               <SelectField form={form} name="cbcm" label="CBCM" options={CBCM_OPTIONS} />
             </Section>
           )}
 
           {!personalOnly && (
           <>
-          <Section title="Dados Eclesiasticos" defaultOpen={false}>
-            <SelectField form={form} name="vinculoIgreja" label="Vinculo com a Igreja" options={VINCULO_IGREJA_OPTIONS} />
+          <Section title="Dados Eclesiásticos" defaultOpen={false}>
+            <SelectField form={form} name="vinculoIgreja" label="Vínculo com a Igreja" options={VINCULO_IGREJA_OPTIONS} />
             <SelectField form={form} name="role" label="Perfil no Sistema" options={ROLE_OPTIONS} />
-            <Field form={form} name="rol" label="Numero do Rol" inputMode="numeric" />
-            <Field form={form} name="numeroMatricula" label="Numero de Matricula (IPB)" inputMode="numeric" />
+            <Field form={form} name="rol" label="Número do Rol" inputMode="numeric" />
+            <Field form={form} name="numeroMatricula" label="Número de Matrícula (IPB)" inputMode="numeric" />
             <Field form={form} name="dataMembresia" label="Data da Membresia" type="date" />
-            <SelectField form={form} name="formaAdmissao" label="Forma de Admissao" options={FORMA_ADMISSAO_OPTIONS} />
-            <SelectField form={form} name="cargoEclesiastico" label="Cargo Eclesiastico" options={CARGO_ECLESIASTICO_OPTIONS} />
-            <Field form={form} name="dataConversao" label="Data de Conversao" type="date" />
+            <SelectField form={form} name="formaAdmissao" label="Forma de Admissão" options={FORMA_ADMISSAO_OPTIONS} />
+            <SelectField form={form} name="cargoEclesiastico" label="Cargo Eclesiástico" options={CARGO_ECLESIASTICO_OPTIONS} />
+            <Field form={form} name="dataConversao" label="Data de Conversão" type="date" />
             <Field form={form} name="dataBatismo" label="Data de Batismo" type="date" />
-            <Field form={form} name="igrejaProcedencia" label="Igreja de Procedencia" />
+            <Field form={form} name="igrejaProcedencia" label="Igreja de Procedência" />
             <SelectField form={form} name="cbcm" label="CBCM" options={CBCM_OPTIONS} />
             <div className="space-y-1 sm:col-span-2 lg:col-span-3">
-              <Label htmlFor="observacoesPastorais">Observacoes Pastorais</Label>
+              <Label htmlFor="observacoesPastorais">Observações Pastorais</Label>
               <Textarea
                 id="observacoesPastorais"
                 rows={3}
-                placeholder="Anotacoes da secretaria/pastoral (visivel apenas para admins e equipe pastoral)"
+                placeholder="Anotações da secretaria/pastoral (visível apenas para admins e equipe pastoral)"
                 {...form.register("observacoesPastorais")}
               />
             </div>
           </Section>
 
-          <Section title="Demissao / Saida do Rol" defaultOpen={false}>
+          <Section title="Demissão / Saída do Rol" defaultOpen={false}>
             <div className="space-y-1">
-              <Label>Forma de Demissao</Label>
+              <Label>Forma de Demissão</Label>
               <Select
                 value={form.watch("formaDemissao") || ""}
                 onValueChange={(v) => {
@@ -256,12 +256,12 @@ export function MembroForm({ defaultValues, onSubmit, isEditing, entityId, perso
                 </SelectContent>
               </Select>
             </div>
-            <Field form={form} name="dataDemissao" label="Data da Demissao" type="date" />
-            <Field form={form} name="igrejaDestino" label="Igreja de Destino (transferencia)" />
+            <Field form={form} name="dataDemissao" label="Data da Demissão" type="date" />
+            <Field form={form} name="igrejaDestino" label="Igreja de Destino (transferência)" />
             <Field form={form} name="dataFalecimento" label="Data de Falecimento" type="date" />
             {form.watch("formaDemissao") === "TRANSFERENCIA" && (
               <div className="space-y-1 sm:col-span-2 lg:col-span-3">
-                <Label>Carta de Transferencia *</Label>
+                <Label>Carta de Transferência *</Label>
                 <FileUpload
                   folder="membros/cartas-transferencia"
                   entityId={uploadEntityId}
@@ -279,13 +279,13 @@ export function MembroForm({ defaultValues, onSubmit, isEditing, entityId, perso
             )}
             {form.watch("formaDemissao") === "EXCLUSAO" && (
               <>
-                <SelectField form={form} name="motivoDemissao" label="Motivo da Exclusao" options={MOTIVO_DEMISSAO_OPTIONS} />
+                <SelectField form={form} name="motivoDemissao" label="Motivo da Exclusão" options={MOTIVO_DEMISSAO_OPTIONS} />
                 <div className="space-y-1 sm:col-span-2 lg:col-span-3">
-                  <Label htmlFor="motivoDemissaoObs">Observacao do Motivo</Label>
+                  <Label htmlFor="motivoDemissaoObs">Observação do Motivo</Label>
                   <Textarea
                     id="motivoDemissaoObs"
                     rows={2}
-                    placeholder="Detalhe o motivo da exclusao (opcional)"
+                    placeholder="Detalhe o motivo da exclusão (opcional)"
                     {...form.register("motivoDemissaoObs")}
                   />
                 </div>
@@ -300,7 +300,7 @@ export function MembroForm({ defaultValues, onSubmit, isEditing, entityId, perso
       {isEditing ? (
         <div className="flex gap-2 justify-end">
           <Button type="submit" disabled={loading}>
-            {loading ? "Salvando..." : "Salvar Alteracoes"}
+            {loading ? "Salvando..." : "Salvar Alterações"}
           </Button>
         </div>
       ) : (

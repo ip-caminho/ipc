@@ -129,18 +129,18 @@ export function FamiliaSection() {
   const handleVincularConjuge = async (entId: Id<"entidades">, nome: string) => {
     try {
       await vincularConjuge({ conjugeEntidadeId: entId });
-      toast.success(`${nome} vinculado(a) como conjuge`);
+      toast.success(`${nome} vinculado(a) como cônjuge`);
       setSearchConjuge("");
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Erro ao vincular conjuge");
+      toast.error(e instanceof Error ? e.message : "Erro ao vincular cônjuge");
     }
   };
 
   const handleDesvincularConjuge = async () => {
-    if (!confirm("Remover vinculo de conjuge?")) return;
+    if (!confirm("Remover vínculo de cônjuge?")) return;
     try {
       await desvincularConjuge();
-      toast.success("Conjuge removido");
+      toast.success("Cônjuge removido");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao remover");
     }
@@ -161,7 +161,7 @@ export function FamiliaSection() {
           sexo: conjugeForm.sexo || undefined,
         },
       });
-      toast.success("Solicitacao enviada a secretaria");
+      toast.success("Solicitação enviada a secretaria");
       setConjugeForm({ nomeCompleto: "", dataNascimento: "", sexo: "" });
       setOpenConjuge(false);
       setSearchConjuge("");
@@ -197,7 +197,7 @@ export function FamiliaSection() {
               : undefined,
         },
       });
-      toast.success("Solicitacao enviada a secretaria");
+      toast.success("Solicitação enviada a secretaria");
       setFilhoForm({
         nomeCompleto: "",
         dataNascimento: "",
@@ -216,7 +216,7 @@ export function FamiliaSection() {
   };
 
   const handleRemoverFilho = async (entId: Id<"entidades">, nome: string) => {
-    if (!confirm(`Remover ${nome} da lista de filhos? A pessoa nao sera excluida.`)) return;
+    if (!confirm(`Remover ${nome} da lista de filhos? A pessoa não será excluída.`)) return;
     try {
       await removerFilho({ filhoEntidadeId: entId });
       toast.success("Filho removido");
@@ -229,7 +229,7 @@ export function FamiliaSection() {
     try {
       const res = await vincularFilho({ filhoEntidadeId: entId });
       toast.success(
-        res?.jaVinculado ? `${nome} ja estava vinculado(a)` : `${nome} vinculado(a) como filho(a)`
+        res?.jaVinculado ? `${nome} já estava vinculado(a)` : `${nome} vinculado(a) como filho(a)`
       );
       setSearchFilho("");
     } catch (e) {
@@ -241,14 +241,14 @@ export function FamiliaSection() {
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-sm text-muted-foreground flex items-center gap-1.5">
-          <Users className="h-3.5 w-3.5" /> Familia
+          <Users className="h-3.5 w-3.5" /> Família
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-5">
         {/* Conjuge */}
         <div className="space-y-2">
           <Label className="text-xs flex items-center gap-1">
-            <Heart className="h-3 w-3" /> Conjuge
+            <Heart className="h-3 w-3" /> Cônjuge
           </Label>
           {familia?.conjuge ? (
             <div className="flex items-center justify-between gap-2 p-2 rounded-md border">
@@ -263,7 +263,7 @@ export function FamiliaSection() {
                 size="sm"
                 variant="ghost"
                 onClick={handleDesvincularConjuge}
-                aria-label="Remover conjuge"
+                aria-label="Remover cônjuge"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -305,23 +305,23 @@ export function FamiliaSection() {
               )}
               <div className="flex items-center justify-between gap-2 pt-1">
                 <p className="text-[11px] text-muted-foreground">
-                  Nao encontrou? Solicite o cadastro.
+                  Não encontrou? Solicite o cadastro.
                 </p>
                 <ResponsiveDialog open={openConjuge} onOpenChange={setOpenConjuge}>
                   <ResponsiveDialogTrigger asChild>
                     <Button size="sm" variant="outline" className="h-11 md:h-8">
-                      <Plus className="h-3 w-3 mr-1" /> Solicitar conjuge
+                      <Plus className="h-3 w-3 mr-1" /> Solicitar cônjuge
                     </Button>
                   </ResponsiveDialogTrigger>
                   <ResponsiveDialogContent>
                     <ResponsiveDialogHeader>
-                      <ResponsiveDialogTitle>Solicitar cadastro do conjuge</ResponsiveDialogTitle>
+                      <ResponsiveDialogTitle>Solicitar cadastro do cônjuge</ResponsiveDialogTitle>
                     </ResponsiveDialogHeader>
                     <ResponsiveDialogBody>
                       <div className="space-y-4">
                         <p className="text-xs text-muted-foreground">
-                          A secretaria vai revisar e cadastrar. Voce sera vinculado(a)
-                          automaticamente apos a aprovacao.
+                          A secretaria vai revisar e cadastrar. Você será vinculado(a)
+                          automaticamente após a aprovação.
                         </p>
                         <div className="space-y-1">
                           <Label className="text-xs">Nome completo *</Label>
@@ -432,7 +432,7 @@ export function FamiliaSection() {
             <Search className="h-4 w-4 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input
               className="pl-8"
-              placeholder="Buscar filho ja cadastrado..."
+              placeholder="Buscar filho já cadastrado..."
               value={searchFilho}
               onChange={(e) => setSearchFilho(e.target.value)}
             />
@@ -463,7 +463,7 @@ export function FamiliaSection() {
           {/* Fallback: solicitar cadastro de filho ainda nao cadastrado */}
           <div className="flex items-center justify-between gap-2 pt-1">
             <p className="text-[11px] text-muted-foreground">
-              Nao encontrou? Solicite o cadastro.
+              Não encontrou? Solicite o cadastro.
             </p>
             <ResponsiveDialog open={openFilho} onOpenChange={setOpenFilho}>
               <ResponsiveDialogTrigger asChild>
@@ -478,8 +478,8 @@ export function FamiliaSection() {
                 <ResponsiveDialogBody>
                 <div className="space-y-4">
                   <p className="text-xs text-muted-foreground">
-                    A secretaria vai revisar e cadastrar. O vinculo aparece
-                    automaticamente apos a aprovacao.
+                    A secretaria vai revisar e cadastrar. O vínculo aparece
+                    automaticamente após a aprovação.
                   </p>
                   <div className="space-y-1">
                     <Label className="text-xs">Nome completo *</Label>
@@ -567,7 +567,7 @@ export function FamiliaSection() {
                         </div>
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-xs">Autorizacao de uso de imagem</Label>
+                        <Label className="text-xs">Autorização de uso de imagem</Label>
                         <Select
                           value={filhoForm.usoImagem}
                           onValueChange={(v) =>
@@ -579,16 +579,16 @@ export function FamiliaSection() {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="AUTORIZADO">
-                              Autorizado (fotos, videos)
+                              Autorizado (fotos, vídeos)
                             </SelectItem>
-                            <SelectItem value="NAO_AUTORIZADO">Nao autorizado</SelectItem>
+                            <SelectItem value="NAO_AUTORIZADO">Não autorizado</SelectItem>
                             <SelectItem value="PENDENTE">Decidir depois</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                       <div className="space-y-1">
                         <Label className="text-xs">
-                          Observacoes medicas (alergias, restricoes, medicamentos)
+                          Observações médicas (alergias, restrições, medicamentos)
                         </Label>
                         <Textarea
                           rows={3}
