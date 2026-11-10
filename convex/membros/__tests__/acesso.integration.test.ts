@@ -273,7 +273,63 @@ describe("acesso — concluirAtivacao", () => {
 
     await expect(
       identity.mutation(api.membros.acesso.concluirAtivacao, { token })
-    ).rejects.toThrow("expirado");
+    ).rejects.toMatchObject({
+      name: "ConvexError",
+      data: expect.stringContaining("Este link expirou. Peca um novo a secretaria."),
+    });
+  });
+
+  it("rejeita cadastro que nao esta ativo com orientacao", async () => {
+    const t = convexTest(schema, modules);
+    const { membroId } = await seedMembroSemAcesso(t, { status: "INATIVO" });
+    const { identity } = await seedUser(t);
+
+    const token = "tok-inativo";
+    await t.run(async (ctx) =>
+      ctx.db.insert("membroConvites", {
+        token,
+        status: "PENDENTE",
+        expiraEm: Date.now() + 60_000,
+        membroId,
+        origem: "link",
+      })
+    );
+
+    await expect(
+      identity.mutation(api.membros.acesso.concluirAtivacao, { token })
+    ).rejects.toMatchObject({
+      name: "ConvexError",
+      data: expect.stringContaining("Cadastro nao esta ativo. Procure a secretaria."),
+    });
+  });
+
+  it("rejeita conta ja vinculada a outro cadastro com orientacao", async () => {
+    const t = convexTest(schema, modules);
+    const { membroId } = await seedMembroSemAcesso(t);
+    const { membroId: outroMembroId } = await seedMembroSemAcesso(t, {
+      whatsapp: "11988887777",
+      cpf: "11144477735",
+    });
+    const { userId, identity } = await seedUser(t);
+    await t.run(async (ctx) => ctx.db.patch(outroMembroId, { userId }));
+
+    const token = "tok-vinculado";
+    await t.run(async (ctx) =>
+      ctx.db.insert("membroConvites", {
+        token,
+        status: "PENDENTE",
+        expiraEm: Date.now() + 60_000,
+        membroId,
+        origem: "link",
+      })
+    );
+
+    await expect(
+      identity.mutation(api.membros.acesso.concluirAtivacao, { token })
+    ).rejects.toMatchObject({
+      name: "ConvexError",
+      data: expect.stringContaining("Esta conta ja esta vinculada a outro cadastro. Procure a secretaria."),
+    });
   });
 });
 

@@ -185,23 +185,23 @@ export const concluirAtivacao = mutation({
       .withIndex("by_token", (q) => q.eq("token", token))
       .first();
 
-    if (!convite || !convite.membroId) throw new Error("Token invalido");
+    if (!convite || !convite.membroId) throw new ConvexError("Link invalido.");
 
     const membro = await ctx.db.get(convite.membroId);
     if (!membro) throw new Error("Membro nao encontrado");
 
     // Idempotente: se o effect do client reexecutar (ex: auth oscilou),
-    // a segunda chamada nao pode falhar com "Token expirado".
+    // a segunda chamada nao pode falhar como link expirado.
     if (convite.status === "ACEITO" && membro.userId === userId) {
       return { ok: true, membroId: membro._id };
     }
     if (convite.status !== "PENDENTE" || convite.expiraEm < Date.now()) {
-      throw new Error("Token expirado");
+      throw new ConvexError("Este link expirou. Peca um novo a secretaria.");
     }
 
     const entidade = await ctx.db.get(membro.entidadeId);
     if (!entidade || entidade.status !== "ATIVO") {
-      throw new Error("Cadastro nao esta ativo");
+      throw new ConvexError("Cadastro nao esta ativo. Procure a secretaria.");
     }
 
     // userId ja vinculado a outro membro?
@@ -210,10 +210,10 @@ export const concluirAtivacao = mutation({
       .withIndex("by_user_id", (q) => q.eq("userId", userId))
       .first();
     if (jaVinculado && jaVinculado._id !== membro._id) {
-      throw new Error("Usuario ja vinculado a outro membro");
+      throw new ConvexError("Esta conta ja esta vinculada a outro cadastro. Procure a secretaria.");
     }
     if (membro.userId && membro.userId !== userId) {
-      throw new Error("Membro ja vinculado a outro usuario");
+      throw new ConvexError("Este cadastro ja esta vinculado a outra conta. Procure a secretaria.");
     }
 
     await ctx.db.patch(membro._id, {
