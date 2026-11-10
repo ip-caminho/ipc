@@ -80,7 +80,7 @@ const legendaRol = (
     <strong>Rol:</strong>{" "}
     <span className="text-emerald-700">Principal</span> = comungantes (profissão de fé;
     subcategoria civilmente capazes) · <span className="text-sky-700">Separado</span> =
-    nao comungantes (batismo infantil) · <span className="text-yellow-700">Ausente</span> =
+    não comungantes (batismo infantil) · <span className="text-yellow-700">Ausente</span> =
     paradeiro ignorado · <span className="text-foreground">Arquivo</span> = transferidos,
     excluídos e falecidos. Edição salva ao sair do campo; o Rol é derivado de cargo + status.
   </>

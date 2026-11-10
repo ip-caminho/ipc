@@ -161,7 +161,7 @@ export function FamiliaSection() {
           sexo: conjugeForm.sexo || undefined,
         },
       });
-      toast.success("Solicitação enviada a secretaria");
+      toast.success("Solicitação enviada à secretaria");
       setConjugeForm({ nomeCompleto: "", dataNascimento: "", sexo: "" });
       setOpenConjuge(false);
       setSearchConjuge("");
@@ -197,7 +197,7 @@ export function FamiliaSection() {
               : undefined,
         },
       });
-      toast.success("Solicitação enviada a secretaria");
+      toast.success("Solicitação enviada à secretaria");
       setFilhoForm({
         nomeCompleto: "",
         dataNascimento: "",

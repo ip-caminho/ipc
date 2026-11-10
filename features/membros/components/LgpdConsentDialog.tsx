@@ -68,13 +68,13 @@ export function LgpdConsentDialog() {
         <ResponsiveDialogHeader>
           <ResponsiveDialogTitle>Termo de Consentimento (LGPD)</ResponsiveDialogTitle>
           <ResponsiveDialogDescription>
-            Lei 13.709/2018 (Lei Geral de Protecao de Dados)
+            Lei 13.709/2018 (Lei Geral de Proteção de Dados)
           </ResponsiveDialogDescription>
         </ResponsiveDialogHeader>
         <ResponsiveDialogBody>
           <p>
             A IPC trata seus dados pessoais para fins de cadastro de membros, exercício das
-            atividades eclesiásticas e comunicação pastoral, conforme Arts 5o II e 11 da
+            atividades eclesiásticas e comunicação pastoral, conforme Arts. 5º, II, e 11 da
             LGPD (que reconhece dados de convicção religiosa como sensíveis).
           </p>
           <label className="flex items-start gap-2 cursor-pointer p-3 rounded-md border hover:bg-muted/50">
@@ -108,7 +108,7 @@ export function LgpdConsentDialog() {
           </label>
           <p className="text-xs text-muted-foreground">
             Você pode revogar seus consentimentos a qualquer momento entrando em contato
-            com a secretaria. Versao do termo: {VERSAO}.
+            com a secretaria. Versão do termo: {VERSAO}.
           </p>
         </ResponsiveDialogBody>
         <ResponsiveDialogFooter>

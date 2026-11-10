@@ -252,7 +252,7 @@ export function AcessoPanel() {
               {statusBadge(row)}
             </div>
             <p className="text-sm text-muted-foreground">
-              Ultimo acesso {formatarData(row.ultimoAcessoEm)}
+              Último acesso {formatarData(row.ultimoAcessoEm)}
             </p>
             <div className="flex gap-2">
               {!row.ativado && (
@@ -284,7 +284,7 @@ export function AcessoPanel() {
             <TableRow>
               <TableHead>Nome</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="hidden sm:table-cell">Metodo</TableHead>
+              <TableHead className="hidden sm:table-cell">Método</TableHead>
               <TableHead className="hidden sm:table-cell">Último acesso</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>

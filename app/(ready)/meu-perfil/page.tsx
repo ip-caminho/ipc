@@ -145,8 +145,8 @@ function DataSacramentalRow({
 function tempoDesde(timestamp: number | undefined): string {
   if (!timestamp) return "nunca";
   const meses = Math.floor((Date.now() - timestamp) / (30 * 24 * 60 * 60 * 1000));
-  if (meses < 1) return "menos de um mes";
-  if (meses === 1) return "1 mes";
+  if (meses < 1) return "menos de um mês";
+  if (meses === 1) return "1 mês";
   if (meses < 12) return `${meses} meses`;
   const anos = Math.floor(meses / 12);
   return anos === 1 ? "1 ano" : `${anos} anos`;
@@ -431,7 +431,7 @@ export default function MeuPerfilPage() {
             <div className="flex-1 space-y-1">
               <p className="text-sm font-medium">
                 {perfilAtualizadoEm
-                  ? `Seu cadastro foi atualizado ha ${tempoDesde(perfilAtualizadoEm)}.`
+                  ? `Seu cadastro foi atualizado há ${tempoDesde(perfilAtualizadoEm)}.`
                   : "Seu cadastro nunca foi confirmado."}
               </p>
               <p className="text-xs text-muted-foreground md:mb-0">

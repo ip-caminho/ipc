@@ -81,7 +81,7 @@ export default function AtivarPage() {
   if (dados.status !== "valido") {
     const msg =
       dados.status === "expirado"
-        ? "Este link expirou. Peça um novo a secretaria."
+        ? "Este link expirou. Peça um novo à secretaria."
         : dados.status === "ja_ativado"
           ? "Este acesso já foi ativado. Vá para a tela de login e entre com sua senha."
           : dados.status === "telefone_em_uso"
