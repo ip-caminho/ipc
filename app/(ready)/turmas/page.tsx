@@ -37,7 +37,7 @@ export default function TurmasPage() {
         </div>
 
         <Tabs defaultValue="ABERTA">
-          <TabsList>
+          <TabsList className="w-full justify-start overflow-x-auto scrollbar-none md:w-fit">
             <TabsTrigger value="ABERTA">Abertas</TabsTrigger>
             <TabsTrigger value="EM_ANDAMENTO">Em andamento</TabsTrigger>
             <TabsTrigger value="ENCERRADA">Encerradas</TabsTrigger>
