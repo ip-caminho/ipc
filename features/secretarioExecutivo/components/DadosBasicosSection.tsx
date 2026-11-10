@@ -143,7 +143,7 @@ export function DadosBasicosSection({
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm text-muted-foreground flex items-center gap-1.5">
-            <User className="h-3.5 w-3.5" /> Identificacao
+            <User className="h-3.5 w-3.5" /> Identificação
           </CardTitle>
         </CardHeader>
         <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -153,9 +153,9 @@ export function DadosBasicosSection({
           <Row label="Sexo" value={entidade.sexo === "M" ? "Masculino" : entidade.sexo === "F" ? "Feminino" : undefined} />
           <Row label="Estado civil" value={estadoCivilLabel} />
           <Row label="Pai" value={entidade.pai} />
-          <Row label="Mae" value={entidade.mae} />
-          <Row label="Profissao" value={entidade.profissao} />
-          <Row label="Formacao" value={formacaoLabel} />
+          <Row label="Mãe" value={entidade.mae} />
+          <Row label="Profissão" value={entidade.profissao} />
+          <Row label="Formação" value={formacaoLabel} />
         </CardContent>
       </Card>
 
@@ -178,7 +178,7 @@ export function DadosBasicosSection({
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm text-muted-foreground flex items-center gap-1.5">
-              <MapPin className="h-3.5 w-3.5" /> Endereco
+              <MapPin className="h-3.5 w-3.5" /> Endereço
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -192,7 +192,7 @@ export function DadosBasicosSection({
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm text-muted-foreground flex items-center gap-1.5">
-              <Users className="h-3.5 w-3.5" /> Familia
+              <Users className="h-3.5 w-3.5" /> Família
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -206,7 +206,7 @@ export function DadosBasicosSection({
                 </Avatar>
                 <div>
                   <p className="text-sm">{familia.conjuge.nomeCompleto}</p>
-                  <p className="text-[10px] text-muted-foreground">Conjuge</p>
+                  <p className="text-[10px] text-muted-foreground">Cônjuge</p>
                 </div>
               </div>
             )}

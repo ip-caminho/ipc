@@ -39,7 +39,7 @@ export default function ConvitePage() {
       <Card className="w-full max-w-sm">
         <CardContent className="p-6 text-center space-y-2">
           <AlertTriangle className="h-8 w-8 text-destructive mx-auto" />
-          <p className="font-medium">Convite invalido ou expirado</p>
+          <p className="font-medium">Convite inválido ou expirado</p>
           <p className="text-sm text-muted-foreground">
             Solicite um novo convite ao administrador da igreja.
           </p>

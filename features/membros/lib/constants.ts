@@ -16,28 +16,28 @@ export const CARGO_ECLESIASTICO_OPTIONS = [
 
 export const FORMA_ADMISSAO_OPTIONS = [
   { value: "BATISMO", label: "Batismo" },
-  { value: "PROFISSAO_FE", label: "Profissao de Fe" },
-  { value: "TRANSFERENCIA", label: "Transferencia" },
-  { value: "JURISDICAO", label: "Jurisdicao" },
-  { value: "RESTAURACAO", label: "Restauracao" },
-  { value: "BATISMO_INFANCIA", label: "Batismo na Infancia" },
-  { value: "JURISDICAO_EX_OFFICIO", label: "Jurisdicao Ex Officio" },
-  { value: "DESIGNACAO_PRESBITERIO", label: "Designacao do Presbiterio" },
+  { value: "PROFISSAO_FE", label: "Profissão de Fé" },
+  { value: "TRANSFERENCIA", label: "Transferência" },
+  { value: "JURISDICAO", label: "Jurisdição" },
+  { value: "RESTAURACAO", label: "Restauração" },
+  { value: "BATISMO_INFANCIA", label: "Batismo na Infância" },
+  { value: "JURISDICAO_EX_OFFICIO", label: "Jurisdição Ex Officio" },
+  { value: "DESIGNACAO_PRESBITERIO", label: "Designação do Presbitério" },
 ] as const;
 
 export const FORMA_DEMISSAO_OPTIONS = [
-  { value: "TRANSFERENCIA", label: "Transferencia" },
-  { value: "EXCLUSAO", label: "Exclusao Disciplinar" },
+  { value: "TRANSFERENCIA", label: "Transferência" },
+  { value: "EXCLUSAO", label: "Exclusão Disciplinar" },
   { value: "FALECIMENTO", label: "Falecimento" },
-  { value: "PEDIDO_DEMISSAO", label: "Pedido de Demissao" },
-  { value: "JURISDICAO", label: "Mudanca de Jurisdicao" },
+  { value: "PEDIDO_DEMISSAO", label: "Pedido de Demissão" },
+  { value: "JURISDICAO", label: "Mudança de Jurisdição" },
 ] as const;
 
 export const MOTIVO_DEMISSAO_OPTIONS = [
   { value: "DISCIPLINA", label: "Disciplina" },
-  { value: "AUSENCIA_PROLONGADA", label: "Ausencia prolongada" },
+  { value: "AUSENCIA_PROLONGADA", label: "Ausência prolongada" },
   { value: "ABANDONO", label: "Abandono" },
-  { value: "PEDIDO_PROPRIO", label: "Pedido proprio" },
+  { value: "PEDIDO_PROPRIO", label: "Pedido próprio" },
   { value: "OUTRO", label: "Outro" },
 ] as const;
 
@@ -56,15 +56,15 @@ export const ESTADO_CIVIL_OPTIONS = [
   { value: "SOLTEIRO", label: "Solteiro(a)" },
   { value: "CASADO", label: "Casado(a)" },
   { value: "DIVORCIADO", label: "Divorciado(a)" },
-  { value: "VIUVO", label: "Viuvo(a)" },
-  { value: "UNIAO_ESTAVEL", label: "Uniao Estavel" },
+  { value: "VIUVO", label: "Viúvo(a)" },
+  { value: "UNIAO_ESTAVEL", label: "União Estável" },
 ] as const;
 
 export const FORMACAO_OPTIONS = [
   { value: "FUNDAMENTAL", label: "Fundamental" },
-  { value: "MEDIO", label: "Medio" },
+  { value: "MEDIO", label: "Médio" },
   { value: "SUPERIOR", label: "Superior" },
-  { value: "POS_GRADUACAO", label: "Pos-Graduacao" },
+  { value: "POS_GRADUACAO", label: "Pós-Graduação" },
   { value: "MESTRADO", label: "Mestrado" },
   { value: "DOUTORADO", label: "Doutorado" },
 ] as const;
@@ -74,7 +74,7 @@ export const VINCULO_IGREJA_OPTIONS = [
   { value: "FREQUENTADOR", label: "Frequentador" },
   { value: "VISITANTE", label: "Visitante" },
   { value: "EX_MEMBRO", label: "Ex-membro" },
-  { value: "NAO_MEMBRO", label: "Nao-membro" },
+  { value: "NAO_MEMBRO", label: "Não-membro" },
 ] as const;
 
 // MEMBRO/DEPENDENTE nao sao papeis: membresia deriva de `membros` +
@@ -89,15 +89,15 @@ export const PAPEL_OPTIONS = [
 export const ROLE_OPTIONS = [
   { value: "admin", label: "Administrador" },
   { value: "secretaria", label: "Secretaria" },
-  { value: "secretario_executivo", label: "Secretario Executivo" },
+  { value: "secretario_executivo", label: "Secretário Executivo" },
   { value: "obreiro", label: "Obreiro" },
   { value: "membro", label: "Membro" },
 ] as const;
 
 export const CBCM_OPTIONS = [
-  { value: "NAO_INICIADO", label: "Nao Iniciado" },
+  { value: "NAO_INICIADO", label: "Não Iniciado" },
   { value: "CURSANDO", label: "Cursando" },
-  { value: "CONCLUIDO", label: "Concluido" },
+  { value: "CONCLUIDO", label: "Concluído" },
 ] as const;
 
 export const STATUS_COLORS: Record<string, string> = {

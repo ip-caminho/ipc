@@ -58,7 +58,7 @@ export function WelcomeStep({ firstName, percentage, missingLabels, onStart }: P
       )}
 
       <Button className="w-full" size="lg" onClick={onStart}>
-        {percentage === 0 ? "Comecar" : "Continuar"}
+        {percentage === 0 ? "Começar" : "Continuar"}
         <ArrowRight className="h-4 w-4 ml-1" />
       </Button>
     </div>

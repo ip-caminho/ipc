@@ -18,12 +18,12 @@ export function WelcomeStep({ firstName, onNext }: Props) {
       <div className="space-y-2">
         <h1 className="text-2xl font-bold">Bem-vindo a IPC, {firstName}!</h1>
         <p className="text-sm text-muted-foreground max-w-xs mx-auto">
-          Este app conecta voce a sua comunidade. Vamos configurar seu perfil em poucos passos.
+          Este app conecta você a sua comunidade. Vamos configurar seu perfil em poucos passos.
         </p>
       </div>
 
       <Button className="w-full" size="lg" onClick={onNext}>
-        Comecar
+        Começar
         <ArrowRight className="h-4 w-4 ml-1" />
       </Button>
     </div>

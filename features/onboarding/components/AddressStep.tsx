@@ -27,7 +27,7 @@ export function AddressStep({ formData, onUpdate, onNext, onBack }: Props) {
   return (
     <div className="space-y-5 py-4">
       <div className="text-center space-y-1">
-        <h2 className="text-lg font-semibold">Endereco</h2>
+        <h2 className="text-lg font-semibold">Endereço</h2>
         <p className="text-xs text-muted-foreground">
           Opcional — pode preencher depois no perfil
         </p>
@@ -54,7 +54,7 @@ export function AddressStep({ formData, onUpdate, onNext, onBack }: Props) {
         </div>
         <div className="grid grid-cols-3 gap-2">
           <div className="space-y-1">
-            <Label htmlFor="ob-numero" className="text-xs">Numero</Label>
+            <Label htmlFor="ob-numero" className="text-xs">Número</Label>
             <Input
               id="ob-numero"
               value={formData.numero}
@@ -79,7 +79,7 @@ export function AddressStep({ formData, onUpdate, onNext, onBack }: Props) {
               id="ob-cidade"
               value={formData.cidade}
               onChange={(e) => onUpdate({ cidade: e.target.value })}
-              placeholder="Sao Paulo"
+              placeholder="São Paulo"
             />
           </div>
           <div className="space-y-1">

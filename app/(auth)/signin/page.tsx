@@ -28,9 +28,9 @@ function normalizePhone(raw: string): string {
 }
 
 const MENSAGENS_PRIMEIRO_ACESSO = {
-  nao_confere: "Telefone ou CPF nao conferem",
-  inativo: "Cadastro nao esta ativo. Procure a secretaria.",
-  ja_ativado: "Acesso ja ativado. Entre com sua senha.",
+  nao_confere: "Telefone ou CPF não conferem",
+  inativo: "Cadastro não está ativo. Procure a secretaria.",
+  ja_ativado: "Acesso já ativado. Entre com sua senha.",
   bloqueado: "Muitas tentativas. Tente de novo mais tarde ou procure a secretaria.",
 } as const;
 
@@ -110,7 +110,7 @@ export default function SignIn() {
       setLoading(false);
     } catch (err) {
       // Falha inesperada nao tem mensagem util: evita mostrar o texto tecnico do Convex
-      const fallback = "Nao foi possivel verificar";
+      const fallback = "Não foi possível verificar";
       setError(err instanceof ConvexError ? getConvexErrorMessage(err, fallback) : fallback);
       setLoading(false);
     }
@@ -130,7 +130,7 @@ export default function SignIn() {
         {bypassMode ? (
           <>
             <p className="text-xs text-yellow-600 bg-yellow-50 p-2 rounded border border-yellow-200 mb-4">
-              Modo de bypass ativo - login sem verificacao
+              Modo de bypass ativo - login sem verificação
             </p>
             <form className="flex flex-col gap-4" onSubmit={handleBypass}>
               <div className="space-y-2">
@@ -171,14 +171,14 @@ export default function SignIn() {
             <TabsContent value="primeiro">
               <form className="flex flex-col gap-4" onSubmit={handlePrimeiroAcesso}>
                 <p className="text-sm text-muted-foreground">
-                  Primeiro acesso: informe seu telefone e os 5 primeiros digitos do seu CPF.
+                  Primeiro acesso: informe seu telefone e os 5 primeiros dígitos do seu CPF.
                 </p>
                 <div className="space-y-2">
                   <Label htmlFor="phone-p">Telefone</Label>
                   <Input id="phone-p" type="tel" name="phone" placeholder="11999991111" required />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="cpf">5 primeiros digitos do CPF</Label>
+                  <Label htmlFor="cpf">5 primeiros dígitos do CPF</Label>
                   <Input
                     id="cpf"
                     type="tel"

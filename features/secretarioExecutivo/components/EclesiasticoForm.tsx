@@ -34,12 +34,12 @@ import {
 
 const TIPO_ROL_OPTIONS = [
   { value: "COMUNGANTE", label: "Comungante" },
-  { value: "NAO_COMUNGANTE", label: "Nao comungante" },
+  { value: "NAO_COMUNGANTE", label: "Não comungante" },
   { value: "PARADEIRO_IGNORADO", label: "Paradeiro ignorado" },
 ] as const;
 
 const SAC_CAMPOS = [
-  { key: "dataConversao", label: "Data de conversao" },
+  { key: "dataConversao", label: "Data de conversão" },
   { key: "dataBatismo", label: "Data de batismo" },
   { key: "dataMembresia", label: "Membresia desde" },
 ] as const;
@@ -136,7 +136,7 @@ export function EclesiasticoForm({
       !form.cartaTransferencia &&
       !eraTransferenciaSemCarta
     ) {
-      toast.error("Anexe a carta de transferencia antes de salvar");
+      toast.error("Anexe a carta de transferência antes de salvar");
       return;
     }
     setSaving(true);
@@ -166,7 +166,7 @@ export function EclesiasticoForm({
       k("motivoDemissaoObs");
 
       await updateEclesiastico({ membroId, data });
-      toast.success("Dados eclesiasticos atualizados");
+      toast.success("Dados eclesiásticos atualizados");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao salvar");
     } finally {
@@ -180,7 +180,7 @@ export function EclesiasticoForm({
   const handleVerificar = async (campo: string, desmarcar: boolean) => {
     try {
       await marcarCampo({ entidadeId, campo, desmarcar });
-      toast.success(desmarcar ? "Verificacao removida" : "Campo verificado");
+      toast.success(desmarcar ? "Verificação removida" : "Campo verificado");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro");
     }
@@ -200,7 +200,7 @@ export function EclesiasticoForm({
         </CardHeader>
         <CardContent className="grid gap-3 sm:grid-cols-2">
           <div className="space-y-1">
-            <Label className="text-xs">Cargo eclesiastico</Label>
+            <Label className="text-xs">Cargo eclesiástico</Label>
             <Select
               value={form.cargoEclesiastico}
               onValueChange={(v) =>
@@ -220,7 +220,7 @@ export function EclesiasticoForm({
             </Select>
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Numero do rol</Label>
+            <Label className="text-xs">Número do rol</Label>
             <Input
               value={form.rol}
               inputMode="numeric"
@@ -237,7 +237,7 @@ export function EclesiasticoForm({
               }
             >
               <SelectTrigger>
-                <SelectValue placeholder="Derivado do cargo (padrao)" />
+                <SelectValue placeholder="Derivado do cargo (padrão)" />
               </SelectTrigger>
               <SelectContent>
                 {TIPO_ROL_OPTIONS.map((o) => (
@@ -249,14 +249,14 @@ export function EclesiasticoForm({
             </Select>
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Numero de matricula</Label>
+            <Label className="text-xs">Número de matrícula</Label>
             <Input
               value={form.numeroMatricula}
               inputMode="numeric"
               onChange={(e) =>
                 setForm((p) => ({ ...p, numeroMatricula: e.target.value }))
               }
-              placeholder="Numeracao do rol"
+              placeholder="Numeração do rol"
             />
           </div>
         </CardContent>
@@ -266,7 +266,7 @@ export function EclesiasticoForm({
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm text-muted-foreground flex items-center gap-1.5">
-            <BookMarked className="h-3.5 w-3.5" /> Sacramentos e admissao
+            <BookMarked className="h-3.5 w-3.5" /> Sacramentos e admissão
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -306,7 +306,7 @@ export function EclesiasticoForm({
                       </p>
                     ) : (
                       <span className="text-[10px] text-muted-foreground">
-                        {valorAtual ? "Nao verificado" : ""}
+                        {valorAtual ? "Não verificado" : ""}
                       </span>
                     )}
                     <Button
@@ -328,7 +328,7 @@ export function EclesiasticoForm({
 
           <div className="grid gap-3 sm:grid-cols-2 pt-3 border-t">
             <div className="space-y-1">
-              <Label className="text-xs">Forma de admissao</Label>
+              <Label className="text-xs">Forma de admissão</Label>
               <Select
                 value={form.formaAdmissao}
                 onValueChange={(v) =>
@@ -349,7 +349,7 @@ export function EclesiasticoForm({
             </div>
             {isTransferencia && (
               <div className="space-y-1">
-                <Label className="text-xs">Igreja de procedencia</Label>
+                <Label className="text-xs">Igreja de procedência</Label>
                 <Input
                   value={form.igrejaProcedencia}
                   onChange={(e) =>
@@ -365,7 +365,7 @@ export function EclesiasticoForm({
           </div>
 
           <div className="space-y-1">
-            <Label className="text-xs">Observacoes pastorais</Label>
+            <Label className="text-xs">Observações pastorais</Label>
             <Textarea
               rows={3}
               value={form.observacoesPastorais}
@@ -385,12 +385,12 @@ export function EclesiasticoForm({
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm text-muted-foreground flex items-center gap-1.5">
-            <LogOut className="h-3.5 w-3.5" /> Demissao / saida do rol
+            <LogOut className="h-3.5 w-3.5" /> Demissão / saída do rol
           </CardTitle>
         </CardHeader>
         <CardContent className="grid gap-3 sm:grid-cols-2">
           <div className="space-y-1">
-            <Label className="text-xs">Forma de demissao</Label>
+            <Label className="text-xs">Forma de demissão</Label>
             <Select
               value={form.formaDemissao}
               onValueChange={(v) =>
@@ -420,7 +420,7 @@ export function EclesiasticoForm({
           {isDemitido && (
             <>
               <div className="space-y-1">
-                <Label className="text-xs">Data da demissao</Label>
+                <Label className="text-xs">Data da demissão</Label>
                 <DateInputBR
                   rotulo="Data da demissão"
                   value={form.dataDemissao}
@@ -442,7 +442,7 @@ export function EclesiasticoForm({
                     />
                   </div>
                   <div className="space-y-1 sm:col-span-2">
-                    <Label className="text-xs">Carta de transferencia *</Label>
+                    <Label className="text-xs">Carta de transferência *</Label>
                     <FileUpload
                       folder="membros/cartas-transferencia"
                       entityId={entidadeId}
@@ -459,7 +459,7 @@ export function EclesiasticoForm({
               {form.formaDemissao === "EXCLUSAO" && (
                 <>
                   <div className="space-y-1">
-                    <Label className="text-xs">Motivo da exclusao</Label>
+                    <Label className="text-xs">Motivo da exclusão</Label>
                     <Select
                       value={form.motivoDemissao}
                       onValueChange={(v) =>
@@ -479,7 +479,7 @@ export function EclesiasticoForm({
                     </Select>
                   </div>
                   <div className="space-y-1 sm:col-span-2">
-                    <Label className="text-xs">Observacao do motivo</Label>
+                    <Label className="text-xs">Observação do motivo</Label>
                     <Textarea
                       rows={2}
                       value={form.motivoDemissaoObs}
@@ -489,7 +489,7 @@ export function EclesiasticoForm({
                           motivoDemissaoObs: e.target.value,
                         }))
                       }
-                      placeholder="Detalhe o motivo da exclusao (opcional)"
+                      placeholder="Detalhe o motivo da exclusão (opcional)"
                     />
                   </div>
                 </>
@@ -516,18 +516,18 @@ export function EclesiasticoForm({
         <StickyActionBar className="md:hidden">
           <Button onClick={handleSave} disabled={saving}>
             <Save className="h-4 w-4 mr-1" />
-            {saving ? "Salvando..." : "Salvar alteracoes eclesiasticas"}
+            {saving ? "Salvando..." : "Salvar alterações eclesiásticas"}
           </Button>
         </StickyActionBar>
       )}
       <div className="hidden md:block sticky bottom-0 py-3">
         <Button onClick={handleSave} disabled={saving || !hasChanges}>
           <Save className="h-4 w-4 mr-1" />
-          {saving ? "Salvando..." : "Salvar alteracoes eclesiasticas"}
+          {saving ? "Salvando..." : "Salvar alterações eclesiásticas"}
         </Button>
         {hasChanges && (
           <p className="text-[11px] text-muted-foreground inline-block ml-3">
-            Alteracoes pendentes
+            Alterações pendentes
           </p>
         )}
       </div>

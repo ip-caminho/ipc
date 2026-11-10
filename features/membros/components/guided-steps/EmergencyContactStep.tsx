@@ -39,8 +39,8 @@ export function EmergencyContactStep({ percentage, value, onSave, onSkip, onBack
 
   return (
     <StepShell
-      title="Contato de emergencia"
-      subtitle="Alguem que podemos contatar se necessario"
+      title="Contato de emergência"
+      subtitle="Alguém que podemos contatar se necessário"
       percentage={percentage}
       onNext={() => onSave({ nome, telefone, parentesco })}
       onSkip={onSkip}
@@ -93,7 +93,7 @@ export function EmergencyContactStep({ percentage, value, onSave, onSkip, onBack
           <Input
             value={parentesco}
             onChange={(e) => setParentesco(e.target.value)}
-            placeholder="Ex: Conjuge, Mae, Irmao"
+            placeholder="Ex: Cônjuge, Mãe, Irmão"
           />
         </div>
       </div>

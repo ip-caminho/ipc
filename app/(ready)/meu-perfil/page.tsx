@@ -115,9 +115,9 @@ function DataSacramentalRow({
           <Checkbox
             checked={naoLembro}
             onCheckedChange={(v) => onNaoLembroToggle(!!v)}
-            aria-label={`Nao lembro: ${label}`}
+            aria-label={`Não lembro: ${label}`}
           />
-          Nao lembro
+          Não lembro
         </label>
       </div>
       {!naoLembro && (
@@ -125,12 +125,12 @@ function DataSacramentalRow({
       )}
       {naoLembro && (
         <p className="text-[11px] text-muted-foreground italic px-1">
-          Sera preenchido pela secretaria com base no livro de registros.
+          Será preenchido pela secretaria com base no livro de registros.
         </p>
       )}
       {!naoLembro && value && !verificado && pendenteVerificacao && (
         <p className="text-[11px] text-yellow-700 dark:text-yellow-400 px-1">
-          Aguardando confirmacao da secretaria.
+          Aguardando confirmação da secretaria.
         </p>
       )}
       {verificado && (
@@ -215,7 +215,7 @@ export default function MeuPerfilPage() {
       <div className="max-w-2xl mx-auto">
         <Card>
           <CardContent className="p-6">
-            <p className="text-muted-foreground">Perfil nao encontrado.</p>
+            <p className="text-muted-foreground">Perfil não encontrado.</p>
           </CardContent>
         </Card>
       </div>
@@ -305,7 +305,7 @@ export default function MeuPerfilPage() {
     try {
       if (section === "membresia") {
         if (!datasChanged && !incertosChanged) {
-          toast.info("Nenhuma alteracao");
+          toast.info("Nenhuma alteração");
           setEditingSection(null);
           return;
         }
@@ -331,13 +331,13 @@ export default function MeuPerfilPage() {
       } else {
         const data = buildSectionData(section);
         if (Object.keys(data).length === 0) {
-          toast.info("Nenhuma alteracao");
+          toast.info("Nenhuma alteração");
           setEditingSection(null);
           return;
         }
         await updateProfile({ data });
       }
-      toast.success("Alteracoes salvas");
+      toast.success("Alterações salvas");
       setEditingSection(null);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao salvar");
@@ -443,7 +443,7 @@ export default function MeuPerfilPage() {
                 className="w-full h-11 mt-2 md:hidden"
               >
                 <CheckCircle2 className="h-4 w-4 mr-1" />
-                {confirming ? "Confirmando..." : "Meus dados estao corretos"}
+                {confirming ? "Confirmando..." : "Meus dados estão corretos"}
               </Button>
             </div>
           </CardContent>
@@ -506,15 +506,15 @@ export default function MeuPerfilPage() {
               <Input value={formData.nomeCompleto || ""} onChange={set("nomeCompleto")} />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">Como e conhecido na igreja?</Label>
+              <Label className="text-xs">Como é conhecido na igreja?</Label>
               <Input value={formData.apelido || ""} onChange={set("apelido")} placeholder={ent?.nomeCompleto?.split(" ")[0]} />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">Profissao</Label>
+              <Label className="text-xs">Profissão</Label>
               <Input value={formData.profissao || ""} onChange={set("profissao")} placeholder="Ex: Engenheiro" />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">Formacao</Label>
+              <Label className="text-xs">Formação</Label>
               <Select
                 value={formData.formacao || ""}
                 onValueChange={(v) => setFormData((p) => ({ ...p, formacao: v }))}
@@ -579,9 +579,9 @@ export default function MeuPerfilPage() {
           ) : (
           <div className="grid gap-2 sm:grid-cols-2">
             <ReadOnlyField label="Nome completo" value={ent?.nomeCompleto} span={2} />
-            <ReadOnlyField label="Como e conhecido" value={ent?.apelido} />
-            <ReadOnlyField label="Profissao" value={ent?.profissao} />
-            <ReadOnlyField label="Formacao" value={formacaoLabel} />
+            <ReadOnlyField label="Como é conhecido" value={ent?.apelido} />
+            <ReadOnlyField label="Profissão" value={ent?.profissao} />
+            <ReadOnlyField label="Formação" value={formacaoLabel} />
             <ReadOnlyField label="CPF" value={ent?.cpf} />
             <ReadOnlyField label="Estado civil" value={ESTADO_CIVIL_OPTIONS.find((o) => o.value === ent?.estadoCivil)?.label} />
             <ReadOnlyField label="Nacionalidade" value={ent?.nacionalidade} />
@@ -643,7 +643,7 @@ export default function MeuPerfilPage() {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm text-muted-foreground flex items-center gap-1.5">
-            <HeartPulse className="h-3.5 w-3.5" /> Contato de emergencia
+            <HeartPulse className="h-3.5 w-3.5" /> Contato de emergência
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -659,7 +659,7 @@ export default function MeuPerfilPage() {
             </div>
             <div className="space-y-1">
               <Label className="text-xs">Parentesco</Label>
-              <Input value={formData.contatoEmergenciaParentesco || ""} onChange={set("contatoEmergenciaParentesco")} placeholder="Ex: Conjuge, Mae, Irmao" />
+              <Input value={formData.contatoEmergenciaParentesco || ""} onChange={set("contatoEmergenciaParentesco")} placeholder="Ex: Cônjuge, Mãe, Irmão" />
             </div>
           </div>
           ) : (
@@ -685,7 +685,7 @@ export default function MeuPerfilPage() {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm text-muted-foreground flex items-center gap-1.5">
-            <MapPin className="h-3.5 w-3.5" /> Endereco
+            <MapPin className="h-3.5 w-3.5" /> Endereço
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -696,7 +696,7 @@ export default function MeuPerfilPage() {
               <Input value={formData.logradouro || ""} onChange={set("logradouro")} placeholder="Rua, Avenida..." />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">Numero</Label>
+              <Label className="text-xs">Número</Label>
               <Input value={formData.numero || ""} onChange={set("numero")} />
             </div>
             <div className="space-y-1">
@@ -723,7 +723,7 @@ export default function MeuPerfilPage() {
           ) : (
           <div className="grid gap-2 sm:grid-cols-2">
             <ReadOnlyField label="Logradouro" value={endereco?.logradouro} span={2} />
-            <ReadOnlyField label="Numero" value={endereco?.numero} />
+            <ReadOnlyField label="Número" value={endereco?.numero} />
             <ReadOnlyField label="Complemento" value={endereco?.complemento} />
             <ReadOnlyField label="Bairro" value={endereco?.bairro} />
             <ReadOnlyField label="Cidade" value={endereco?.cidade} />
@@ -762,7 +762,7 @@ export default function MeuPerfilPage() {
             </div>
             {formacaoLabel && (
               <div className="space-y-0.5">
-                <Label className="text-xs">Formacao</Label>
+                <Label className="text-xs">Formação</Label>
                 <p className="text-sm">{formacaoLabel}</p>
               </div>
             )}
@@ -770,7 +770,7 @@ export default function MeuPerfilPage() {
 
           <div className="grid gap-3 sm:grid-cols-3 pt-2 border-t">
             <div className="space-y-0.5">
-              <Label className="text-xs">Forma de admissao</Label>
+              <Label className="text-xs">Forma de admissão</Label>
               <p className="text-sm">{FORMA_ADMISSAO_OPTIONS.find((o) => o.value === profile.formaAdmissao)?.label || "-"}</p>
             </div>
             <div className="space-y-0.5">
@@ -783,7 +783,7 @@ export default function MeuPerfilPage() {
           <>
           <div className="grid gap-3 sm:grid-cols-2 pt-2 border-t">
             <DataSacramentalRow
-              label="Data de conversao"
+              label="Data de conversão"
               value={datasMembresia.dataConversao}
               onChange={(iso) =>
                 setDatasMembresia((p) => ({ ...p, dataConversao: iso }))
@@ -825,7 +825,7 @@ export default function MeuPerfilPage() {
           </div>
 
           <p className="text-[11px] text-muted-foreground">
-            Voce pode editar suas datas sacramentais. A secretaria vai confirmar com
+            Você pode editar suas datas sacramentais. A secretaria vai confirmar com
             o livro de registros depois.
           </p>
           <EditBar
@@ -838,7 +838,7 @@ export default function MeuPerfilPage() {
           <>
           <div className="grid gap-3 sm:grid-cols-2 pt-2 border-t">
             <ReadOnlyField
-              label="Data de conversao"
+              label="Data de conversão"
               value={
                 dadosIncertos.includes("dataConversao")
                   ? "Aguardando secretaria"
@@ -872,11 +872,11 @@ export default function MeuPerfilPage() {
           className="w-full"
         >
           <CheckCircle2 className="h-4 w-4 mr-1" />
-          {confirming ? "Confirmando..." : "Meus dados estao corretos"}
+          {confirming ? "Confirmando..." : "Meus dados estão corretos"}
         </Button>
       </div>
       <p className="text-[11px] text-muted-foreground text-center pb-4">
-        Cada secao e salva ao clicar em Salvar. Foto e familia sao salvas automaticamente.
+        Cada seção é salva ao clicar em Salvar. Foto e família são salvas automaticamente.
       </p>
     </div>
     </HeaderLayout>

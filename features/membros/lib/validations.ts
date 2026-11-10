@@ -18,7 +18,7 @@ export const membroFormSchema = z.object({
   formacao: z.enum(["FUNDAMENTAL", "MEDIO", "SUPERIOR", "POS_GRADUACAO", "MESTRADO", "DOUTORADO"]).optional(),
   whatsapp: z.string().optional(),
   telefone: z.string().optional(),
-  email: z.email("Email invalido").optional().or(z.literal("")),
+  email: z.email("Email inválido").optional().or(z.literal("")),
 
   // Endereco
   logradouro: z.string().optional(),

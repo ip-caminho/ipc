@@ -144,15 +144,15 @@ export function FamiliaDrawer({ membroId, entidadeId, nome, open, onOpenChange }
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-md overflow-y-auto">
         <SheetHeader>
-          <SheetTitle>Familia — {nome}</SheetTitle>
-          <SheetDescription>Vincule conjuge e filhos deste membro.</SheetDescription>
+          <SheetTitle>Família — {nome}</SheetTitle>
+          <SheetDescription>Vincule cônjuge e filhos deste membro.</SheetDescription>
         </SheetHeader>
 
         <div className="px-4 pb-8 space-y-6">
           {/* Conjuge */}
           <section className="space-y-2">
             <h3 className="flex items-center gap-2 text-sm font-semibold">
-              <Heart className="h-4 w-4 text-rose-500" /> Conjuge
+              <Heart className="h-4 w-4 text-rose-500" /> Cônjuge
             </h3>
             {familia?.conjuge ? (
               <div className="flex items-center justify-between rounded-md border p-2 text-sm">
@@ -160,7 +160,7 @@ export function FamiliaDrawer({ membroId, entidadeId, nome, open, onOpenChange }
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => acao(() => desvincularConjuge({ membroId }), "Conjuge desvinculado")}
+                  onClick={() => acao(() => desvincularConjuge({ membroId }), "Cônjuge desvinculado")}
                 >
                   <X className="h-3.5 w-3.5 mr-1" /> Desvincular
                 </Button>
@@ -168,9 +168,9 @@ export function FamiliaDrawer({ membroId, entidadeId, nome, open, onOpenChange }
             ) : (
               <BuscaEntidade
                 excluirEntidadeId={entidadeId}
-                placeholder="Buscar pessoa para vincular como conjuge..."
+                placeholder="Buscar pessoa para vincular como cônjuge..."
                 onSelecionar={(eid) =>
-                  acao(() => vincularConjuge({ membroId, conjugeEntidadeId: eid }), "Conjuge vinculado")
+                  acao(() => vincularConjuge({ membroId, conjugeEntidadeId: eid }), "Cônjuge vinculado")
                 }
               />
             )}
@@ -194,11 +194,11 @@ export function FamiliaDrawer({ membroId, entidadeId, nome, open, onOpenChange }
                     <Button
                       variant="ghost"
                       size="icon"
-                      title="Remover vinculo"
+                      title="Remover vínculo"
                       onClick={() =>
                         acao(
                           () => removerFilho({ responsavelMembroId: membroId, filhoEntidadeId: f.entidadeId as Id<"entidades"> }),
-                          "Vinculo removido"
+                          "Vínculo removido"
                         )
                       }
                     >
@@ -212,7 +212,7 @@ export function FamiliaDrawer({ membroId, entidadeId, nome, open, onOpenChange }
             )}
 
             <div className="pt-1">
-              <p className="text-xs text-muted-foreground mb-1">Vincular filho que ja existe:</p>
+              <p className="text-xs text-muted-foreground mb-1">Vincular filho que já existe:</p>
               <BuscaEntidade
                 excluirEntidadeId={entidadeId}
                 placeholder="Buscar pessoa..."
@@ -251,7 +251,7 @@ export function FamiliaDrawer({ membroId, entidadeId, nome, open, onOpenChange }
                   <Checkbox checked={fBatismoInfantil} onCheckedChange={(c) => setFBatismoInfantil(c === true)} className="mt-0.5" />
                   <span>
                     Recebeu batismo infantil — registra como{" "}
-                    <strong>membro nao comungante</strong> (Rol Separado). Sem
+                    <strong>membro não comungante</strong> (Rol Separado). Sem
                     batismo, fica como dependente.
                   </span>
                 </label>
@@ -272,10 +272,10 @@ export function FamiliaDrawer({ membroId, entidadeId, nome, open, onOpenChange }
           {/* Pai / mae */}
           <section className="space-y-2">
             <h3 className="flex items-center gap-2 text-sm font-semibold">
-              <Users className="h-4 w-4 text-amber-600" /> Pai / mae
+              <Users className="h-4 w-4 text-amber-600" /> Pai / mãe
             </h3>
             <p className="text-xs text-muted-foreground">
-              Vincular pai/mae que ja existe. Para desvincular, abra o pai/mae e
+              Vincular pai/mãe que já existe. Para desvincular, abra o pai/mãe e
               remova esta pessoa da lista de filhos.
             </p>
             <BuscaEntidade
@@ -289,7 +289,7 @@ export function FamiliaDrawer({ membroId, entidadeId, nome, open, onOpenChange }
                       focoEntidadeId: entidadeId as Id<"entidades">,
                       outraEntidadeId: eid,
                     }),
-                  "Pai/mae vinculado"
+                  "Pai/mãe vinculado"
                 )
               }
             />
@@ -301,11 +301,11 @@ export function FamiliaDrawer({ membroId, entidadeId, nome, open, onOpenChange }
               <UsersRound className="h-4 w-4 text-violet-500" /> Irmaos
             </h3>
             <p className="text-xs text-muted-foreground">
-              Vincular um irmao copia os pais desta pessoa. Cadastre o pai/mae antes.
+              Vincular um irmão copia os pais desta pessoa. Cadastre o pai/mãe antes.
             </p>
             <BuscaEntidade
               excluirEntidadeId={entidadeId}
-              placeholder="Buscar pessoa para vincular como irmao..."
+              placeholder="Buscar pessoa para vincular como irmão..."
               onSelecionar={(eid) =>
                 acao(
                   () =>
@@ -314,7 +314,7 @@ export function FamiliaDrawer({ membroId, entidadeId, nome, open, onOpenChange }
                       focoEntidadeId: entidadeId as Id<"entidades">,
                       outraEntidadeId: eid,
                     }),
-                  "Irmao vinculado"
+                  "Irmão vinculado"
                 )
               }
             />

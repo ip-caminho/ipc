@@ -77,7 +77,7 @@ function statusBadge(row: Row) {
 }
 
 function mensagemWa(nome: string, link: string): string {
-  return `Ola, ${nome.split(" ")[0]}! Seu acesso ao sistema da igreja esta pronto. Crie sua senha neste link (valido por 7 dias): ${link}`;
+  return `Olá, ${nome.split(" ")[0]}! Seu acesso ao sistema da igreja está pronto. Crie sua senha neste link (válido por 7 dias): ${link}`;
 }
 
 function ResumoCard({
@@ -124,7 +124,7 @@ export function AcessoPanel() {
   }
 
   async function resetar(row: Row) {
-    if (!confirm(`Resetar o acesso de ${row.nome}? Perde o login atual e podera se cadastrar de novo (nova senha).`)) return;
+    if (!confirm(`Resetar o acesso de ${row.nome}? Perde o login atual e poderá se cadastrar de novo (nova senha).`)) return;
     try {
       await resetarAcesso({ membroId: row.membroId });
       toast.success("Acesso resetado");
@@ -229,7 +229,7 @@ export function AcessoPanel() {
         <ResumoCard label="Com acesso" valor={data.resumo.ativados} ativo={filtro === "ativados"} onClick={() => alternarFiltro("ativados")} />
         <ResumoCard label="Link pendente" valor={data.resumo.pendentes} ativo={filtro === "pendentes"} onClick={() => alternarFiltro("pendentes")} />
         <ResumoCard label="Sem acesso" valor={data.resumo.semAcesso} ativo={filtro === "sem"} onClick={() => alternarFiltro("sem")} />
-        <ResumoCard label="Adesao" valor={`${data.resumo.adesao}%`} />
+        <ResumoCard label="Adesão" valor={`${data.resumo.adesao}%`} />
       </div>
 
       <div className="flex md:justify-end">
@@ -285,8 +285,8 @@ export function AcessoPanel() {
               <TableHead>Nome</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="hidden sm:table-cell">Metodo</TableHead>
-              <TableHead className="hidden sm:table-cell">Ultimo acesso</TableHead>
-              <TableHead className="text-right">Acoes</TableHead>
+              <TableHead className="hidden sm:table-cell">Último acesso</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -339,7 +339,7 @@ export function AcessoPanel() {
         <ResponsiveDialogContent>
           <ResponsiveDialogHeader>
             <ResponsiveDialogTitle>Link de acesso</ResponsiveDialogTitle>
-            <ResponsiveDialogDescription>Valido por 7 dias. Envie ao membro criar a senha.</ResponsiveDialogDescription>
+            <ResponsiveDialogDescription>Válido por 7 dias. Envie ao membro criar a senha.</ResponsiveDialogDescription>
           </ResponsiveDialogHeader>
           {link && (
             <ResponsiveDialogBody className="space-y-4">
