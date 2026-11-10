@@ -27,6 +27,13 @@ function normalizePhone(raw: string): string {
   return p;
 }
 
+const MENSAGENS_PRIMEIRO_ACESSO = {
+  nao_confere: "Telefone ou CPF nao conferem",
+  inativo: "Cadastro nao esta ativo. Procure a secretaria.",
+  ja_ativado: "Acesso ja ativado. Entre com sua senha.",
+  bloqueado: "Muitas tentativas. Tente de novo mais tarde ou procure a secretaria.",
+} as const;
+
 export default function SignIn() {
   const { signIn } = useAuthActions();
   const router = useRouter();
@@ -94,8 +101,13 @@ export default function SignIn() {
     const telefone = fd.get("phone") as string;
     const cpfPrefix = (fd.get("cpf") as string).replace(/\D/g, "");
     try {
-      const { token } = await verificarAcessoDireto({ telefone, cpfPrefix });
-      router.push(`/ativar/${token}`);
+      const resultado = await verificarAcessoDireto({ telefone, cpfPrefix });
+      if (resultado.status === "ok") {
+        router.push(`/ativar/${resultado.token}`);
+        return;
+      }
+      setError(MENSAGENS_PRIMEIRO_ACESSO[resultado.status]);
+      setLoading(false);
     } catch (err) {
       // Falha inesperada nao tem mensagem util: evita mostrar o texto tecnico do Convex
       const fallback = "Nao foi possivel verificar";
