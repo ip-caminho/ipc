@@ -4,7 +4,9 @@ import { useAuthActions } from "@convex-dev/auth/react";
 import { useRouter, useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useConvexAuth } from "convex/react";
+import { ConvexError } from "convex/values";
 import { api } from "@/convex/_generated/api";
+import { getConvexErrorMessage } from "@/shared/lib/utils/convexError";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
@@ -50,7 +52,9 @@ export default function AtivarPage() {
         if (!cancelled) router.push("/dashboard");
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : "Erro ao vincular acesso");
+          // Falha inesperada nao tem mensagem util: evita mostrar o texto tecnico do Convex
+          const fallback = "Erro ao vincular acesso";
+          setError(err instanceof ConvexError ? getConvexErrorMessage(err, fallback) : fallback);
           setLoading(false);
           setPendingToken(null);
         }
