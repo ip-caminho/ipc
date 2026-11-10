@@ -3,6 +3,7 @@ import { describe, it, expect } from "vitest";
 import { api } from "../../_generated/api";
 import schema from "../../schema";
 import { modules } from "../../test.setup";
+import { MAX_FALHAS, JANELA_FALHAS_MS } from "../tentativas";
 
 async function seedUser(t: ReturnType<typeof convexTest>) {
   const userId = await t.run(async (ctx) => ctx.db.insert("users", {}));
@@ -17,6 +18,7 @@ async function seedMembroSemAcesso(
     whatsapp?: string;
     cpf?: string;
     nome?: string;
+    dataNascimento?: string;
     status?: "ATIVO" | "INATIVO" | "TRANSFERIDO" | "FALECIDO" | "DESLIGADO";
   } = {}
 ) {
@@ -28,6 +30,7 @@ async function seedMembroSemAcesso(
       nomeCompleto: over.nome ?? "Fulano de Tal",
       whatsapp: over.whatsapp ?? "11999998888",
       cpf: over.cpf ?? "52998824725",
+      ...(over.dataNascimento ? { dataNascimento: over.dataNascimento } : {}),
     });
     const membroId = await ctx.db.insert("membros", { entidadeId, role: "membro" });
     return { entidadeId, membroId };
@@ -54,10 +57,12 @@ describe("acesso — verificarAcessoDireto", () => {
     const t = convexTest(schema, modules);
     const { membroId } = await seedMembroSemAcesso(t);
 
-    const { token } = await t.mutation(api.membros.acesso.verificarAcessoDireto, {
+    const res = await t.mutation(api.membros.acesso.verificarAcessoDireto, {
       telefone: "11999998888",
       cpfPrefix: "52998",
     });
+    expect(res.status).toBe("ok");
+    const token = res.status === "ok" ? res.token : "";
 
     expect(token).toBeTruthy();
     const convite = await t.run(async (ctx) =>
@@ -86,10 +91,12 @@ describe("acesso — verificarAcessoDireto", () => {
       return { membroId: mId };
     });
 
-    const { token } = await t.mutation(api.membros.acesso.verificarAcessoDireto, {
+    const res = await t.mutation(api.membros.acesso.verificarAcessoDireto, {
       telefone: "1133224455",
       cpfPrefix: "52998",
     });
+    expect(res.status).toBe("ok");
+    const token = res.status === "ok" ? res.token : "";
     expect(token).toBeTruthy();
     const convite = await t.run(async (ctx) =>
       ctx.db.query("membroConvites").withIndex("by_token", (q) => q.eq("token", token)).first()
@@ -101,12 +108,11 @@ describe("acesso — verificarAcessoDireto", () => {
     const t = convexTest(schema, modules);
     await seedMembroSemAcesso(t);
 
-    await expect(
-      t.mutation(api.membros.acesso.verificarAcessoDireto, {
-        telefone: "11999998888",
-        cpfPrefix: "00000",
-      })
-    ).rejects.toThrow("nao conferem");
+    const res = await t.mutation(api.membros.acesso.verificarAcessoDireto, {
+      telefone: "11999998888",
+      cpfPrefix: "00000",
+    });
+    expect(res).toEqual({ status: "nao_confere" });
   });
 
   it("rejeita prefixo com menos de 5 digitos", async () => {
@@ -127,14 +133,142 @@ describe("acesso — verificarAcessoDireto", () => {
     const fakeUser = await t.run(async (ctx) => ctx.db.insert("users", {}));
     await t.run(async (ctx) => ctx.db.patch(membroId, { userId: fakeUser }));
 
-    await expect(
-      t.mutation(api.membros.acesso.verificarAcessoDireto, {
-        telefone: "11999998888",
-        cpfPrefix: "52998",
-      })
-    ).rejects.toMatchObject({
-      name: "ConvexError",
-      data: expect.stringContaining("Acesso ja ativado. Entre com sua senha."),
+    const res = await t.mutation(api.membros.acesso.verificarAcessoDireto, {
+      telefone: "11999998888",
+      cpfPrefix: "52998",
+    });
+    expect(res).toEqual({ status: "ja_ativado" });
+  });
+
+  describe("controle de tentativas", () => {
+    const CERTO = { telefone: "11999998888", cpfPrefix: "52998" };
+    const ERRADO = { telefone: "11999998888", cpfPrefix: "00000" };
+    const verificar = (t: ReturnType<typeof convexTest>, args: typeof CERTO) =>
+      t.mutation(api.membros.acesso.verificarAcessoDireto, args);
+    const contarConvites = (t: ReturnType<typeof convexTest>) =>
+      t.run(async (ctx) => (await ctx.db.query("membroConvites").collect()).length);
+    const listarTentativas = (t: ReturnType<typeof convexTest>) =>
+      t.run(async (ctx) => ctx.db.query("recuperacaoTentativas").collect());
+    const envelhecerJanelas = (t: ReturnType<typeof convexTest>) =>
+      t.run(async (ctx) => {
+        for (const r of await ctx.db.query("recuperacaoTentativas").collect()) {
+          await ctx.db.patch(r._id, { janelaInicio: Date.now() - JANELA_FALHAS_MS - 60_000 });
+        }
+      });
+
+    it("bloqueia depois de erros repetidos, mesmo com os dados certos", async () => {
+      const t = convexTest(schema, modules);
+      await seedMembroSemAcesso(t);
+      for (let i = 0; i < MAX_FALHAS; i++) {
+        expect(await verificar(t, ERRADO)).toEqual({ status: "nao_confere" });
+      }
+      expect(await verificar(t, CERTO)).toEqual({ status: "bloqueado" });
+      expect(await contarConvites(t)).toBe(0);
+    });
+
+    it("libera de novo quando a janela vence", async () => {
+      const t = convexTest(schema, modules);
+      await seedMembroSemAcesso(t);
+      for (let i = 0; i < MAX_FALHAS; i++) await verificar(t, ERRADO);
+      await envelhecerJanelas(t);
+      const res = await verificar(t, CERTO);
+      expect(res.status).toBe("ok");
+    });
+
+    it("zera os contadores do fluxo no acerto", async () => {
+      const t = convexTest(schema, modules);
+      await seedMembroSemAcesso(t);
+      for (let i = 0; i < MAX_FALHAS - 1; i++) {
+        await verificar(t, { telefone: CERTO.telefone, cpfPrefix: `0000${i}` });
+      }
+      expect((await verificar(t, CERTO)).status).toBe("ok");
+      // Se o acerto nao zerasse o contador do telefone, esta falha o bloquearia
+      await verificar(t, { telefone: CERTO.telefone, cpfPrefix: "00009" });
+      expect((await verificar(t, CERTO)).status).toBe("ok");
+    });
+
+    it("acumula quando so um dos dados muda entre as tentativas", async () => {
+      const t = convexTest(schema, modules);
+      await seedMembroSemAcesso(t);
+      // Telefone variando, prefixo fixo
+      for (let i = 0; i < MAX_FALHAS; i++) {
+        await verificar(t, { telefone: `1190000000${i}`, cpfPrefix: "52998" });
+      }
+      expect(await verificar(t, CERTO)).toEqual({ status: "bloqueado" });
+    });
+
+    it("acumula quando o prefixo varia e o telefone e fixo", async () => {
+      const t = convexTest(schema, modules);
+      await seedMembroSemAcesso(t);
+      for (let i = 0; i < MAX_FALHAS; i++) {
+        await verificar(t, { telefone: "11999998888", cpfPrefix: `0000${i}` });
+      }
+      expect(await verificar(t, CERTO)).toEqual({ status: "bloqueado" });
+    });
+
+    it("acumula quando o mesmo telefone vem em formatos diferentes", async () => {
+      const t = convexTest(schema, modules);
+      await seedMembroSemAcesso(t);
+      const formatos = ["11999998888", "(11) 99999-8888", "+55 11 99999-8888", "11 99999 8888", "5511999998888"];
+      for (let i = 0; i < MAX_FALHAS; i++) {
+        await verificar(t, { telefone: formatos[i % formatos.length], cpfPrefix: "00000" });
+      }
+      expect(await verificar(t, CERTO)).toEqual({ status: "bloqueado" });
+    });
+
+    it.each([
+      ["com membro vinculado", true],
+      ["sem membro vinculado", false],
+    ])("retorna inativo com dados certos e cadastro nao ativo, %s", async (_, comMembro) => {
+      const t = convexTest(schema, modules);
+      if (comMembro) {
+        await seedMembroSemAcesso(t, { status: "INATIVO" });
+      } else {
+        await t.run(async (ctx) => {
+          await ctx.db.insert("entidades", {
+            tipoEntidade: "PF",
+            papeis: [],
+            status: "INATIVO",
+            nomeCompleto: "Sem Membro",
+            whatsapp: "11999998888",
+            cpf: "52998824725",
+          });
+        });
+      }
+      expect(await verificar(t, CERTO)).toEqual({ status: "inativo" });
+      expect(await contarConvites(t)).toBe(0);
+    });
+
+    it("os dois fluxos nao interferem um no outro", async () => {
+      const t = convexTest(schema, modules);
+      await seedMembroSemAcesso(t, { dataNascimento: "1980-05-20" });
+      const recuperar = (over: { cpf?: string } = {}) =>
+        t.mutation(api.membros.recuperarSenha.solicitarRecuperacao, {
+          telefone: "11999998888",
+          cpf: "529.988.247-25",
+          dataNascimento: "1980-05-20",
+          ...over,
+        });
+
+      // Falhas do primeiro acesso nao bloqueiam a recuperacao
+      for (let i = 0; i < MAX_FALHAS; i++) await verificar(t, ERRADO);
+      expect(await verificar(t, CERTO)).toEqual({ status: "bloqueado" });
+      expect(await recuperar()).toEqual({ status: "primeiro_acesso" });
+
+      // Falhas da recuperacao nao bloqueiam o primeiro acesso e seus registros ficam
+      const t2 = convexTest(schema, modules);
+      await seedMembroSemAcesso(t2, { dataNascimento: "1980-05-20" });
+      const recuperar2 = (cpf: string) =>
+        t2.mutation(api.membros.recuperarSenha.solicitarRecuperacao, {
+          telefone: "11999998888",
+          cpf,
+          dataNascimento: "1980-05-20",
+        });
+      for (let i = 0; i < MAX_FALHAS; i++) await recuperar2("111.444.777-35");
+      expect(await recuperar2("529.988.247-25")).toEqual({ status: "bloqueado" });
+      const antes = (await listarTentativas(t2)).length;
+      expect((await verificar(t2, CERTO)).status).toBe("ok");
+      expect(await listarTentativas(t2)).toHaveLength(antes);
     });
   });
 });
