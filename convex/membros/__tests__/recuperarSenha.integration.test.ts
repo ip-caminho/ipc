@@ -112,19 +112,32 @@ describe("recuperarSenha — solicitarRecuperacao", () => {
     for (let i = 0; i < 5; i++) await solicitar(t, { cpf: "11144477735" });
 
     await t.run(async (ctx) => {
-      const [tentativa] = await ctx.db.query("recuperacaoTentativas").collect();
-      await ctx.db.patch(tentativa._id, {
-        janelaInicio: Date.now() - 61 * 60 * 1000,
-      });
+      for (const tentativa of await ctx.db.query("recuperacaoTentativas").collect()) {
+        await ctx.db.patch(tentativa._id, {
+          janelaInicio: Date.now() - 61 * 60 * 1000,
+        });
+      }
     });
 
     expect((await solicitar(t)).status).toBe("ok");
   });
 
+  it("bloqueia o CPF mesmo variando o telefone a cada tentativa", async () => {
+    const t = convexTest(schema, modules);
+    await seedMembro(t);
+
+    for (let i = 0; i < 5; i++) {
+      const res = await solicitar(t, { telefone: `1190000000${i}` });
+      expect(res.status).toBe("nao_confere");
+    }
+
+    expect((await solicitar(t)).status).toBe("bloqueado");
+  });
+
   it("zera as falhas quando os dados conferem", async () => {
     const t = convexTest(schema, modules);
     await seedMembro(t);
-    await solicitar(t, { cpf: "11144477735" });
+    await solicitar(t, { dataNascimento: "1980-05-21" });
 
     await solicitar(t);
 
@@ -181,7 +194,7 @@ describe("recuperarSenha — consumirToken", () => {
     return res.token;
   }
 
-  it("devolve a conta, audita e limpa o bloqueio de login", async () => {
+  it("devolve a conta sem auditar nem liberar o login antes da troca", async () => {
     const t = convexTest(schema, modules);
     const { userId, membroId, contaId } = await seedMembro(t);
     await t.run((ctx) =>
@@ -196,13 +209,15 @@ describe("recuperarSenha — consumirToken", () => {
       token: await pedidoValido(t),
     });
 
-    expect(conta).toEqual({ userId, loginId: "5511999998888@membro.local" });
+    expect(conta).toEqual({
+      userId,
+      membroId,
+      contaId,
+      loginId: "5511999998888@membro.local",
+    });
     await t.run(async (ctx) => {
-      expect(await ctx.db.query("authRateLimits").collect()).toHaveLength(0);
-      const logs = await ctx.db.query("auditLogs").collect();
-      expect(logs).toHaveLength(1);
-      expect(logs[0].action).toBe("PASSWORD_RESET");
-      expect(logs[0].membroId).toBe(membroId);
+      expect(await ctx.db.query("authRateLimits").collect()).toHaveLength(1);
+      expect(await ctx.db.query("auditLogs").collect()).toHaveLength(0);
     });
   });
 
@@ -242,6 +257,46 @@ describe("recuperarSenha — consumirToken", () => {
   });
 });
 
+describe("recuperarSenha — limparExpirados", () => {
+  it("apaga so os registros vencidos", async () => {
+    const t = convexTest(schema, modules);
+    const { membroId } = await seedMembro(t);
+    const agora = Date.now();
+    const horaEMeia = 90 * 60 * 1000;
+    await t.run(async (ctx) => {
+      await ctx.db.insert("recuperacaoTentativas", {
+        chave: "vencida",
+        falhas: 5,
+        janelaInicio: agora - horaEMeia,
+      });
+      await ctx.db.insert("recuperacaoTentativas", {
+        chave: "aberta",
+        falhas: 5,
+        janelaInicio: agora,
+      });
+      await ctx.db.insert("recuperacoesSenha", {
+        token: "vencido",
+        membroId,
+        expiraEm: agora - 1,
+      });
+      await ctx.db.insert("recuperacoesSenha", {
+        token: "valido",
+        membroId,
+        expiraEm: agora + 60_000,
+      });
+    });
+
+    await t.mutation(internal.membros.recuperarSenha.limparExpirados, {});
+
+    await t.run(async (ctx) => {
+      const tentativas = await ctx.db.query("recuperacaoTentativas").collect();
+      const pedidos = await ctx.db.query("recuperacoesSenha").collect();
+      expect(tentativas.map((r) => r.chave)).toEqual(["aberta"]);
+      expect(pedidos.map((r) => r.token)).toEqual(["valido"]);
+    });
+  });
+});
+
 describe("recuperarSenha — redefinirSenha", () => {
   it("nao consome o token quando a senha e curta", async () => {
     const t = convexTest(schema, modules);
@@ -261,13 +316,18 @@ describe("recuperarSenha — redefinirSenha", () => {
 
   it("troca a senha, derruba as sessoes e impede reuso do token", async () => {
     const t = convexTest(schema, modules);
-    const { userId, contaId } = await seedMembro(t);
-    await t.run((ctx) =>
-      ctx.db.insert("authSessions", {
+    const { userId, membroId, contaId } = await seedMembro(t);
+    await t.run(async (ctx) => {
+      await ctx.db.insert("authSessions", {
         userId: userId!,
         expirationTime: Date.now() + 60_000,
-      })
-    );
+      });
+      await ctx.db.insert("authRateLimits", {
+        identifier: contaId as string,
+        lastAttemptTime: Date.now(),
+        attemptsLeft: 0,
+      });
+    });
     const res = await solicitar(t);
     if (res.status !== "ok") throw new Error("pedido nao gerado");
     const redefinir = api.membros.recuperarSenha.redefinirSenha;
@@ -283,6 +343,11 @@ describe("recuperarSenha — redefinirSenha", () => {
       expect(conta?.secret).toBeTruthy();
       expect(conta?.secret).not.toBe("hash-antigo");
       expect(await ctx.db.query("authSessions").collect()).toHaveLength(0);
+      expect(await ctx.db.query("authRateLimits").collect()).toHaveLength(0);
+      const logs = await ctx.db.query("auditLogs").collect();
+      expect(logs).toHaveLength(1);
+      expect(logs[0].action).toBe("PASSWORD_RESET");
+      expect(logs[0].membroId).toBe(membroId);
     });
     expect(
       (await t.action(redefinir, { token: res.token, novaSenha: "outra-senha-456" })).status
