@@ -4,6 +4,7 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 import { requirePermission } from "../_shared/requirePermission";
 import { normalizeToE164 } from "../_shared/phoneUtils";
 import type { Doc } from "../_generated/dataModel";
+import { lerTentativas, registrarFalha, zerarTentativas } from "./tentativas";
 
 const SETE_DIAS_MS = 7 * 24 * 60 * 60 * 1000;
 const TRINTA_MIN_MS = 30 * 60 * 1000;
@@ -74,14 +75,20 @@ export const gerarLink = mutation({
   },
 });
 
+type ResultadoAcessoDireto =
+  | { status: "ok"; token: string }
+  | { status: "nao_confere" | "bloqueado" | "inativo" | "ja_ativado" };
+
 /**
  * Login direto (primeiro acesso): a pessoa prova identidade com
  * telefone + 5 primeiros digitos do CPF. Se bater, gera um token de
  * ativacao curto e retorna — o client redireciona para /ativar/<token>.
+ * Depois da leitura dos contadores retorna status em vez de lancar:
+ * um throw desfaria a gravacao da falha (e a zeragem no acerto).
  */
 export const verificarAcessoDireto = mutation({
   args: { telefone: v.string(), cpfPrefix: v.string() },
-  handler: async (ctx, { telefone, cpfPrefix }) => {
+  handler: async (ctx, { telefone, cpfPrefix }): Promise<ResultadoAcessoDireto> => {
     const prefix = cpfPrefix.replace(/\D/g, "");
     if (prefix.length !== 5) {
       throw new ConvexError("Informe os 5 primeiros digitos do CPF");
@@ -93,44 +100,58 @@ export const verificarAcessoDireto = mutation({
     const alvoDigits = normalizeToE164(telefone).replace(/\D/g, "");
     const soDigitos = (v?: string) => (v ? normalizeToE164(v).replace(/\D/g, "") : "");
 
+    // Contadores proprios do fluxo, separados dos da recuperacao de senha
+    const agora = Date.now();
+    const { contadores, bloqueado } = await lerTentativas(
+      ctx,
+      [`acesso-telefone:${alvoDigits}`, `acesso-cpf:${prefix}`],
+      agora
+    );
+    if (bloqueado) return { status: "bloqueado" };
+
     const entidades = await ctx.db.query("entidades").collect();
     const entidade = entidades.find(
       (e) =>
         soDigitos(e.whatsapp) === alvoDigits || soDigitos(e.telefone) === alvoDigits
     );
 
-    // Mensagem generica para nao revelar se o telefone existe
-    const erroGenerico = "Telefone ou CPF nao conferem";
-    if (!entidade) throw new ConvexError(erroGenerico);
+    if (!entidade) {
+      await registrarFalha(ctx, contadores, agora);
+      return { status: "nao_confere" };
+    }
 
     const cpfDigits = (entidade.cpf || "").replace(/\D/g, "");
     if (!cpfDigits || cpfDigits.slice(0, 5) !== prefix) {
-      throw new ConvexError(erroGenerico);
+      await registrarFalha(ctx, contadores, agora);
+      return { status: "nao_confere" };
     }
     if (entidade.status !== "ATIVO") {
-      throw new ConvexError("Cadastro nao esta ativo. Procure a secretaria.");
+      await zerarTentativas(ctx, contadores);
+      return { status: "inativo" };
     }
 
     const membro = await ctx.db
       .query("membros")
       .withIndex("by_entidade", (q) => q.eq("entidadeId", entidade._id))
       .first();
-    if (!membro) throw new ConvexError(erroGenerico);
-
-    if (membro.userId) {
-      throw new ConvexError("Acesso ja ativado. Entre com sua senha.");
+    if (!membro) {
+      await registrarFalha(ctx, contadores, agora);
+      return { status: "nao_confere" };
     }
+
+    await zerarTentativas(ctx, contadores);
+    if (membro.userId) return { status: "ja_ativado" };
 
     const token = gerarToken();
     await ctx.db.insert("membroConvites", {
       token,
       status: "PENDENTE",
-      expiraEm: Date.now() + TRINTA_MIN_MS,
+      expiraEm: agora + TRINTA_MIN_MS,
       membroId: membro._id,
       origem: "direto",
     });
 
-    return { token };
+    return { status: "ok", token };
   },
 });
 
