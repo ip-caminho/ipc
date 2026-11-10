@@ -93,7 +93,7 @@ export default function LotePage() {
   async function handleSalvar() {
     const validos = livros.filter((l) => l.titulo && l.autores.length > 0);
     if (validos.length === 0) {
-      toast.error("Adicione ao menos um livro valido");
+      toast.error("Adicione ao menos um livro válido");
       return;
     }
     setSalvando(true);
@@ -132,7 +132,7 @@ export default function LotePage() {
           <CardHeader>
             <CardTitle>Cadastro em lote</CardTitle>
             <p className="text-sm text-muted-foreground">
-              Escaneie ou digite os ISBNs sequencialmente. Os dados sao buscados no Google Books automaticamente.
+              Escaneie ou digite os ISBNs sequencialmente. Os dados são buscados no Google Books automaticamente.
             </p>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -184,13 +184,13 @@ export default function LotePage() {
                             <Input
                               value={l.titulo}
                               onChange={(e) => atualizarLivro(l.tempId, { titulo: e.target.value })}
-                              placeholder="Titulo"
+                              placeholder="Título"
                               className="h-8 md:h-8 text-xs"
                             />
                             <Input
                               value={l.autores.join(", ")}
                               onChange={(e) => atualizarLivro(l.tempId, { autores: e.target.value.split(",").map((a) => a.trim()).filter(Boolean) })}
-                              placeholder="Autores (separe por virgula)"
+                              placeholder="Autores (separe por vírgula)"
                               className="h-8 md:h-8 text-xs"
                             />
                           </>

@@ -192,14 +192,14 @@ export function TurmaFormDialog({ open, onOpenChange, turma }: Props) {
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground mt-1">
-              O curso define a frequencia minima e gera as aulas automaticamente.
+              O curso define a frequência mínima e gera as aulas automaticamente.
             </p>
           </div>
           )}
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="dataInicio">Inicio</Label>
+              <Label htmlFor="dataInicio">Início</Label>
               <DateFieldBR control={form.control} name="dataInicio" id="dataInicio" />
             </div>
             <div>
@@ -210,9 +210,9 @@ export function TurmaFormDialog({ open, onOpenChange, turma }: Props) {
 
           <div className="rounded-lg border p-3 space-y-3">
             <div>
-              <Label className="text-sm">Inscricoes</Label>
+              <Label className="text-sm">Inscrições</Label>
               <p className="text-xs text-muted-foreground">
-                Periodo em que o formulario publico aceita inscricao. Deixe vazio para
+                Período em que o formulário público aceita inscrição. Deixe vazio para
                 aceitar enquanto a turma estiver aberta e houver vaga.
               </p>
             </div>
@@ -236,7 +236,7 @@ export function TurmaFormDialog({ open, onOpenChange, turma }: Props) {
                 onCheckedChange={(c) => form.setValue("publicarNoSite", c === true)}
               />
               <span className="text-sm">
-                Divulgar no site da igreja enquanto a inscricao estiver aberta
+                Divulgar no site da igreja enquanto a inscrição estiver aberta
               </span>
             </Label>
 
@@ -264,7 +264,7 @@ export function TurmaFormDialog({ open, onOpenChange, turma }: Props) {
               </Select>
             </div>
             <div>
-              <Label htmlFor="horario">Horario</Label>
+              <Label htmlFor="horario">Horário</Label>
               <Input id="horario" {...form.register("horario")} placeholder="19:30" />
             </div>
             <div>
@@ -292,13 +292,13 @@ export function TurmaFormDialog({ open, onOpenChange, turma }: Props) {
           </div>
 
           <div>
-            <Label htmlFor="descricao">Descricao</Label>
+            <Label htmlFor="descricao">Descrição</Label>
             <Textarea id="descricao" {...form.register("descricao")} rows={2} />
           </div>
 
           {!editando && (
           <div>
-            <Label>Campos do formulario de inscricao</Label>
+            <Label>Campos do formulário de inscrição</Label>
             <div className="space-y-2 mt-1">
               {CAMPOS_SISTEMA_OPTIONS.map((campo) => (
                 <label key={campo.value} className="flex items-center gap-2 text-sm">

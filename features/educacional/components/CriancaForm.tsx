@@ -77,7 +77,7 @@ export function CriancaForm({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>
-            {isEditing ? "Editar Crianca" : "Nova Crianca"}
+            {isEditing ? "Editar Criança" : "Nova Criança"}
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
@@ -182,13 +182,13 @@ export function CriancaForm({
 
           {canMedical && (
             <div className="space-y-1">
-              <Label>Observacoes medicas</Label>
+              <Label>Observações médicas</Label>
               <Textarea {...form.register("observacoesMedicas")} rows={2} />
             </div>
           )}
 
           <div className="space-y-1">
-            <Label>Observacoes da familia</Label>
+            <Label>Observações da família</Label>
             <Textarea {...form.register("observacoesFamilia")} rows={2} />
           </div>
 

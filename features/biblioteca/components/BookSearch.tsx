@@ -104,7 +104,7 @@ export function BookSearch({ onSelect }: BookSearchProps) {
         <Input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Buscar por ISBN ou titulo..."
+          placeholder="Buscar por ISBN ou título..."
           className="pl-9"
         />
         {loading && (

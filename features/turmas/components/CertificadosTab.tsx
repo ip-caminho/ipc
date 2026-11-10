@@ -47,7 +47,7 @@ export function CertificadosTab({ turmaId }: Props) {
   if (painel === null) {
     return (
       <p className="text-sm text-muted-foreground">
-        Voce nao tem permissao para gerenciar certificados desta turma.
+        Você não tem permissão para gerenciar certificados desta turma.
       </p>
     );
   }
@@ -80,7 +80,7 @@ export function CertificadosTab({ turmaId }: Props) {
           <div className="flex flex-wrap items-end gap-3">
             <div className="space-y-2">
               <div className="flex flex-wrap items-center gap-2">
-                <Label className="text-xs">Criterio de aprovacao</Label>
+                <Label className="text-xs">Critério de aprovação</Label>
                 <Select
                   value={painel.criterioAprovacao}
                   onValueChange={(v) =>
@@ -93,7 +93,7 @@ export function CertificadosTab({ turmaId }: Props) {
                           // a secretaria ajusta no campo ao lado.
                           maxFaltas: v === "MAX_FALTAS" ? maxFaltas : undefined,
                         }),
-                      "Criterio atualizado"
+                      "Critério atualizado"
                     )
                   }
                 >
@@ -101,8 +101,8 @@ export function CertificadosTab({ turmaId }: Props) {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="PERCENTUAL">Frequencia minima (%)</SelectItem>
-                    <SelectItem value="MAX_FALTAS">Maximo de faltas</SelectItem>
+                    <SelectItem value="PERCENTUAL">Frequência mínima (%)</SelectItem>
+                    <SelectItem value="MAX_FALTAS">Máximo de faltas</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -160,7 +160,7 @@ export function CertificadosTab({ turmaId }: Props) {
                           frequenciaMinima: Number(minimaEditada),
                         });
                         setMinimaEditada("");
-                      }, "Frequencia minima atualizada")
+                      }, "Frequência mínima atualizada")
                     }
                   >
                     Salvar
@@ -192,9 +192,9 @@ export function CertificadosTab({ turmaId }: Props) {
             </div>
           </div>
           <p className="text-xs text-muted-foreground">
-            O criterio e semaforo, nao trava: da para emitir para quem ficou fora. A
-            impressao sai em lote, um certificado por pagina, com os dados congelados no
-            momento da emissao.
+            O critério é semáforo, não trava: dá para emitir para quem ficou fora. A
+            impressão sai em lote, um certificado por página, com os dados congelados no
+            momento da emissão.
           </p>
         </CardContent>
       </Card>
@@ -228,7 +228,7 @@ export function CertificadosTab({ turmaId }: Props) {
                       </Badge>
                     ) : semApuracao ? (
                       <Badge variant="outline" className="shrink-0">
-                        Sem apuracao
+                        Sem apuração
                       </Badge>
                     ) : (
                       <Badge
@@ -254,8 +254,8 @@ export function CertificadosTab({ turmaId }: Props) {
                         Nome impresso: <span className="font-medium">{a.certificado.nomeImpresso}</span>
                         {" · "}
                         {a.certificado.criterioAprovacao === "MAX_FALTAS"
-                          ? `${a.certificado.faltas ?? 0} faltas no momento da emissao`
-                          : `${a.certificado.percentualFrequencia}% no momento da emissao`}
+                          ? `${a.certificado.faltas ?? 0} faltas no momento da emissão`
+                          : `${a.certificado.percentualFrequencia}% no momento da emissão`}
                       </p>
                       <p>Codigo: {a.certificado.codigo}</p>
                       <Button
@@ -319,7 +319,7 @@ export function CertificadosTab({ turmaId }: Props) {
                         value={notaTexto}
                         rows={3}
                         maxLength={500}
-                        placeholder="Anotacao sobre o aluno (opcional)"
+                        placeholder="Anotação sobre o aluno (opcional)"
                         onChange={(e) => setNotaTexto(e.target.value)}
                       />
                       <div className="flex gap-2">
@@ -334,10 +334,10 @@ export function CertificadosTab({ turmaId }: Props) {
                                 texto: notaTexto,
                               });
                               setNotaAberta(null);
-                            }, "Anotacao salva")
+                            }, "Anotação salva")
                           }
                         >
-                          Salvar anotacao
+                          Salvar anotação
                         </Button>
                         <Button
                           variant="ghost"
@@ -360,7 +360,7 @@ export function CertificadosTab({ turmaId }: Props) {
                     >
                       <Pencil className="h-3 w-3 inline mr-1" />
                       {a.observacoesInstrutor
-                        ? `Anotacao: ${a.observacoesInstrutor}`
+                        ? `Anotação: ${a.observacoesInstrutor}`
                         : "Anotar sobre o aluno"}
                     </button>
                   )}

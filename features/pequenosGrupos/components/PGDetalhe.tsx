@@ -79,7 +79,7 @@ export function PGDetalhe({ pgId, onBack }: PGDetalheProps) {
     return <p className="text-sm text-muted-foreground">Carregando...</p>;
   }
   if (!pg) {
-    return <p className="text-sm text-muted-foreground">PG nao encontrado</p>;
+    return <p className="text-sm text-muted-foreground">PG não encontrado</p>;
   }
 
   const handleUpdate = async (data: PGFormValues) => {
@@ -106,7 +106,7 @@ export function PGDetalhe({ pgId, onBack }: PGDetalheProps) {
     if (!confirm("Tem certeza que deseja excluir este PG?")) return;
     try {
       await removePG({ id: pgId });
-      toast.success("PG excluido");
+      toast.success("PG excluído");
       onBack();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao excluir");
@@ -182,11 +182,11 @@ export function PGDetalhe({ pgId, onBack }: PGDetalheProps) {
           )}
           <div className="grid gap-2 text-sm sm:grid-cols-2">
             <p>
-              <span className="font-medium">Lider:</span> {pg.liderNome}
+              <span className="font-medium">Líder:</span> {pg.liderNome}
             </p>
             {pg.coliderNome && (
               <p>
-                <span className="font-medium">Co-lider:</span> {pg.coliderNome}
+                <span className="font-medium">Co-líder:</span> {pg.coliderNome}
               </p>
             )}
             {pg.diaSemana && (
@@ -218,7 +218,7 @@ export function PGDetalhe({ pgId, onBack }: PGDetalheProps) {
           </TabsTrigger>
           <TabsTrigger value="frequencia" className="shrink-0 gap-1.5">
             <BarChart3 className="h-3.5 w-3.5" />
-            Frequencia
+            Frequência
           </TabsTrigger>
         </TabsList>
 
@@ -339,7 +339,7 @@ export function PGDetalhe({ pgId, onBack }: PGDetalheProps) {
               </p>
             ) : membrosDisponiveis.length === 0 ? (
               <p className="py-6 text-center text-sm text-muted-foreground">
-                {busca ? "Nenhum membro encontrado" : "Nenhum membro disponivel"}
+                {busca ? "Nenhum membro encontrado" : "Nenhum membro disponível"}
               </p>
             ) : (
               <ul className="space-y-0.5">

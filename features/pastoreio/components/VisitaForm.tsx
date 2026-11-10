@@ -156,7 +156,7 @@ export function VisitaForm({
             </div>
 
             <div className="space-y-1">
-              <Label htmlFor="observacoes">Observacoes</Label>
+              <Label htmlFor="observacoes">Observações</Label>
               <Textarea
                 id="observacoes"
                 rows={3}

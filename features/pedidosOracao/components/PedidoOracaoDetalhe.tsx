@@ -246,7 +246,7 @@ export function PedidoOracaoDetalhe({
                 <div className="flex items-center gap-2">
                   <Megaphone className="h-3 w-3 text-primary" />
                   <span className="text-xs font-medium text-primary">
-                    Nova atualizacao
+                    Nova atualização
                   </span>
                 </div>
                 <div className="flex items-center gap-2">

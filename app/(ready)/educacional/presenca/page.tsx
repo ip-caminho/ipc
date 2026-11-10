@@ -74,10 +74,10 @@ export default function PresencaPage() {
       await createRelatorio({
         turma,
         data,
-        professores: professores.trim() || "Nao informado",
+        professores: professores.trim() || "Não informado",
         presentes: Array.from(presentes) as Id<"entidades">[],
       });
-      toast.success(`Presenca registrada — ${presentes.size} crianca(s)`);
+      toast.success(`Presença registrada — ${presentes.size} criança(s)`);
       setSaved(true);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao salvar");
@@ -95,8 +95,8 @@ export default function PresencaPage() {
           <div className="h-16 w-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
             <Check className="h-8 w-8 text-green-600 dark:text-green-400" />
           </div>
-          <h2 className="text-lg font-semibold">Presenca registrada</h2>
-          <p className="text-sm text-muted-foreground">{presentes.size} crianca(s) presentes</p>
+          <h2 className="text-lg font-semibold">Presença registrada</h2>
+          <p className="text-sm text-muted-foreground">{presentes.size} criança(s) presentes</p>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => {
               setTurma(null);
@@ -122,7 +122,7 @@ export default function PresencaPage() {
       <PermissionGate permission="relatorio_edu:write">
         <HeaderLayout>
         <div className="space-y-4">
-          <DetailHeader backHref="/educacional" title="Lista de Presenca" />
+          <DetailHeader backHref="/educacional" title="Lista de Presença" />
 
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">Selecione a turma</p>
@@ -162,7 +162,7 @@ export default function PresencaPage() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-lg font-bold">Presenca — {turmaLabel}</h1>
+            <h1 className="text-lg font-bold">Presença — {turmaLabel}</h1>
             <p className="text-xs text-muted-foreground">{presentes.size} presente(s)</p>
           </div>
         </div>
@@ -188,7 +188,7 @@ export default function PresencaPage() {
         {criancas === undefined ? (
           <Skeleton className="h-48" />
         ) : sortedCriancas.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-8">Nenhuma crianca nesta turma</p>
+          <p className="text-sm text-muted-foreground text-center py-8">Nenhuma criança nesta turma</p>
         ) : (
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
             {sortedCriancas.map((c: any) => {
@@ -247,7 +247,7 @@ export default function PresencaPage() {
                 disabled={saving || presentes.size === 0}
                 onClick={handleSalvar}
               >
-                {saving ? "Salvando..." : `Registrar presenca (${presentes.size})`}
+                {saving ? "Salvando..." : `Registrar presença (${presentes.size})`}
               </Button>
             </StickyActionBar>
           </>

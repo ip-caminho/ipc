@@ -207,7 +207,7 @@ export function ReservaForm({
             <Input
               value={motivo}
               onChange={(e) => setMotivo(e.target.value)}
-              placeholder="Ex: Ensaio, reuniao, aula..."
+              placeholder="Ex: Ensaio, reunião, aula..."
               className="text-base"
               autoFocus
             />

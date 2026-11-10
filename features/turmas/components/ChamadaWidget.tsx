@@ -121,7 +121,7 @@ export function ChamadaWidget() {
         presencas: lista,
         observacoes: anotacao.trim() || undefined,
       });
-      toast.success("Presenca salva");
+      toast.success("Presença salva");
       fechar();
     } catch (err: unknown) {
       toast.error((err as Error).message);
@@ -290,7 +290,7 @@ export function ChamadaWidget() {
                             className="h-10 md:h-10 px-2 text-muted-foreground"
                           >
                             {anotacaoAberta
-                              ? "Ocultar anotacao"
+                              ? "Ocultar anotação"
                               : "+ Anotar algo sobre a aula (opcional)"}
                           </Button>
                         </CollapsibleTrigger>

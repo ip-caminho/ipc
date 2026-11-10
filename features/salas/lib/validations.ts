@@ -1,12 +1,12 @@
 import { z } from "zod/v4";
 
 export const reservaFormSchema = z.object({
-  data: z.string().min(1, "Data e obrigatoria"),
-  horaInicio: z.string().min(1, "Horario de inicio e obrigatorio"),
-  horaFim: z.string().min(1, "Horario de termino e obrigatorio"),
+  data: z.string().min(1, "Data é obrigatória"),
+  horaInicio: z.string().min(1, "Horário de início é obrigatório"),
+  horaFim: z.string().min(1, "Horário de término é obrigatório"),
   motivo: z.string().min(3, "Motivo deve ter pelo menos 3 caracteres"),
 }).refine((data) => data.horaFim > data.horaInicio, {
-  message: "Horario de termino deve ser posterior ao inicio",
+  message: "Horário de término deve ser posterior ao início",
   path: ["horaFim"],
 });
 

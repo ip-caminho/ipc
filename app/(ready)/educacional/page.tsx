@@ -90,7 +90,7 @@ export default function EducacionalPage() {
         id,
       });
       if (!rel) {
-        toast.error("Relatorio nao encontrado");
+        toast.error("Relatório não encontrado");
         return;
       }
       await shareRelatorioWhatsApp(rel);
@@ -248,7 +248,7 @@ export default function EducacionalPage() {
         observacoesFamilia: data.observacoesFamilia || undefined,
         ovelhinhaId: (data.ovelhinhaId as Id<"membros">) || undefined,
       });
-      toast.success("Crianca cadastrada");
+      toast.success("Criança cadastrada");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro");
     }
@@ -268,7 +268,7 @@ export default function EducacionalPage() {
         observacoesFamilia: data.observacoesFamilia || undefined,
         ovelhinhaId: data.ovelhinhaId ? (data.ovelhinhaId as Id<"membros">) : null,
       });
-      toast.success("Crianca atualizada");
+      toast.success("Criança atualizada");
       setEditingCrianca(null);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro");
@@ -279,7 +279,7 @@ export default function EducacionalPage() {
     if (!selectedEntidadeId) return;
     try {
       await removeCrianca({ entidadeId: selectedEntidadeId });
-      toast.success("Crianca excluida");
+      toast.success("Criança excluída");
       setSelectedEntidadeId(null);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro");
@@ -310,7 +310,7 @@ export default function EducacionalPage() {
         licaoDeCasa: data.licaoDeCasa || undefined,
         visitantes: toLines(data.visitantesText),
       });
-      toast.success(editingRelatorio ? "Relatorio atualizado" : "Relatorio criado");
+      toast.success(editingRelatorio ? "Relatório atualizado" : "Relatório criado");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro");
     }
@@ -348,7 +348,7 @@ export default function EducacionalPage() {
     if (!removeRelatorioTarget) return;
     try {
       await removeRelatorio({ id: removeRelatorioTarget });
-      toast.success("Relatorio excluido");
+      toast.success("Relatório excluído");
       setSelectedRelatorioId(null);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro");
@@ -455,8 +455,8 @@ export default function EducacionalPage() {
         <AlertDialog open={removeCriancaOpen} onOpenChange={setRemoveCriancaOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Excluir esta crianca?</AlertDialogTitle>
-              <AlertDialogDescription>Esta acao nao pode ser desfeita.</AlertDialogDescription>
+              <AlertDialogTitle>Excluir esta criança?</AlertDialogTitle>
+              <AlertDialogDescription>Esta ação não pode ser desfeita.</AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel className="h-11 md:h-9">Cancelar</AlertDialogCancel>
@@ -497,7 +497,7 @@ export default function EducacionalPage() {
       <div className="space-y-4">
         <PageHeader
           title="Educacional Infantil"
-          subtitle="Turmas, voluntarios, licoes e agenda do departamento"
+          subtitle="Turmas, voluntários, lições e agenda do departamento"
           subtitleClassName="hidden md:block"
         />
         <div className="flex items-center justify-end">
@@ -505,7 +505,7 @@ export default function EducacionalPage() {
             <Button asChild className="w-full h-12 md:w-auto md:h-9">
               <Link href="/educacional/presenca">
                 <ClipboardList className="h-4 w-4 mr-1" />
-                Presenca
+                Presença
               </Link>
             </Button>
           )}
@@ -530,7 +530,7 @@ export default function EducacionalPage() {
             {canReadVol && (
               <TabsTrigger value="voluntarios" className="hidden gap-1.5 md:inline-flex">
                 <Heart className="h-4 w-4" />
-                Voluntarios
+                Voluntários
               </TabsTrigger>
             )}
             {canReadEdu && (
@@ -548,7 +548,7 @@ export default function EducacionalPage() {
             {canReadEdu && (
               <TabsTrigger value="relatorios" className="gap-1.5 px-1 md:px-2">
                 <ClipboardList className="hidden h-4 w-4 md:block" />
-                Relatorios
+                Relatórios
               </TabsTrigger>
             )}
           </TabsList>
@@ -605,7 +605,7 @@ export default function EducacionalPage() {
                   </Button>
                   <Button onClick={() => setCriancaFormOpen(true)}>
                     <Plus className="h-4 w-4 mr-2" />
-                    Nova Crianca
+                    Nova Criança
                   </Button>
                 </div>
               </PermissionGate>
@@ -616,17 +616,17 @@ export default function EducacionalPage() {
             ) : (criancasFiltradas?.length ?? 0) === 0 ? (
               <EduEmptyState
                 icon={Baby}
-                title="Nenhuma crianca"
+                title="Nenhuma criança"
                 description={
                   turmaFilter === "all"
-                    ? "Cadastre as criancas do departamento infantil."
-                    : "Nenhuma crianca nesta turma."
+                    ? "Cadastre as crianças do departamento infantil."
+                    : "Nenhuma criança nesta turma."
                 }
                 action={
                   canManage && turmaFilter === "all" ? (
                     <Button onClick={() => setCriancaFormOpen(true)}>
                       <Plus className="h-4 w-4 mr-2" />
-                      Nova Crianca
+                      Nova Criança
                     </Button>
                   ) : undefined
                 }
@@ -775,7 +775,7 @@ export default function EducacionalPage() {
                 <PermissionGate permission="relatorio_edu:write">
                   <Button onClick={handleNovoRelatorio}>
                     <Plus className="h-4 w-4 mr-2" />
-                    Novo Relatorio
+                    Novo Relatório
                   </Button>
                 </PermissionGate>
               </div>
@@ -785,8 +785,8 @@ export default function EducacionalPage() {
               ) : relatorios.length === 0 ? (
                 <EduEmptyState
                   icon={ClipboardList}
-                  title="Nenhuma licao registrada"
-                  description="Registre as licoes com tema, historia, aplicacao e presenca."
+                  title="Nenhuma lição registrada"
+                  description="Registre as lições com tema, história, aplicação e presença."
                 />
               ) : (
                 <div className="grid gap-3 sm:grid-cols-2">
@@ -800,7 +800,7 @@ export default function EducacionalPage() {
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="text-sm font-medium">
-                              {r.numero != null ? `Licao ${r.numero} · ` : ""}
+                              {r.numero != null ? `Lição ${r.numero} · ` : ""}
                               {format(parseISO(r.data), "dd/MM/yyyy", { locale: ptBR })}
                             </p>
                             <Badge
@@ -915,9 +915,9 @@ export default function EducacionalPage() {
         >
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Excluir relatorio?</AlertDialogTitle>
+              <AlertDialogTitle>Excluir relatório?</AlertDialogTitle>
               <AlertDialogDescription>
-                O relatorio e a presenca vinculada serao removidos. Esta acao nao
+                O relatório e a presença vinculada serão removidos. Esta ação não
                 pode ser desfeita.
               </AlertDialogDescription>
             </AlertDialogHeader>

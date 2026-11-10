@@ -28,7 +28,7 @@ function cacStatus(cacValidade?: string): { label: string; color: string; alerta
   const dataFmt = format(validade, "dd/MM/yyyy", { locale: ptBR });
   if (dias < 0) return { label: `CAC vencido (${dataFmt})`, color: "bg-red-100 text-red-800", alerta: true };
   if (dias <= 30) return { label: `CAC vence ${dataFmt}`, color: "bg-yellow-100 text-yellow-800", alerta: true };
-  return { label: `CAC ate ${dataFmt}`, color: "bg-green-100 text-green-800", alerta: false };
+  return { label: `CAC até ${dataFmt}`, color: "bg-green-100 text-green-800", alerta: false };
 }
 
 interface VoluntarioCardProps {

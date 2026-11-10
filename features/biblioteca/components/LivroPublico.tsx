@@ -36,7 +36,7 @@ export function LivroPublico({ codigo }: { codigo: string }) {
       <div className="min-h-dvh flex items-center justify-center p-4">
         <Card className="max-w-md">
           <CardContent className="p-6 text-center">
-            <p className="text-sm">Livro nao encontrado</p>
+            <p className="text-sm">Livro não encontrado</p>
             <Link href="/" className="text-xs underline mt-2 inline-block">Voltar ao site</Link>
           </CardContent>
         </Card>
@@ -52,7 +52,7 @@ export function LivroPublico({ codigo }: { codigo: string }) {
     setAcao(true);
     try {
       await emprestar({ codigo });
-      toast.success("Emprestimo registrado!");
+      toast.success("Empréstimo registrado!");
     } catch (err: unknown) {
       toast.error((err as Error).message);
     }

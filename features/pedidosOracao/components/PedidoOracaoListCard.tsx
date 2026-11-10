@@ -58,8 +58,8 @@ export function PedidoOracaoListCard({
       });
       toast.success(
         result.orando
-          ? "Voce esta orando por este pedido"
-          : "Removido da lista de oracao"
+          ? "Você está orando por este pedido"
+          : "Removido da lista de oração"
       );
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro");

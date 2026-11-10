@@ -136,13 +136,13 @@ export function PGEncontroForm({ open, onOpenChange, pgId, membros, editingEncon
           </div>
 
           <div className="space-y-1">
-            <Label>Observacoes</Label>
-            <Input value={observacoes} onChange={(e) => setObservacoes(e.target.value)} placeholder="Observacoes" />
+            <Label>Observações</Label>
+            <Input value={observacoes} onChange={(e) => setObservacoes(e.target.value)} placeholder="Observações" />
           </div>
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label>Presenca ({presentes.size}/{membros.length})</Label>
+              <Label>Presença ({presentes.size}/{membros.length})</Label>
               <Button variant="ghost" size="sm" className="h-6 md:h-6 text-xs" onClick={toggleTodos}>
                 {presentes.size === membros.length ? "Desmarcar todos" : "Marcar todos"}
               </Button>

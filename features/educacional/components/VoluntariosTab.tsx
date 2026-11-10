@@ -55,7 +55,7 @@ export function VoluntariosTab() {
         certificadoCacUrl: data.certificadoCacUrl || undefined,
         observacoes: data.observacoes || undefined,
       });
-      toast.success("Voluntario cadastrado");
+      toast.success("Voluntário cadastrado");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro");
     }
@@ -73,7 +73,7 @@ export function VoluntariosTab() {
         certificadoCacUrl: data.certificadoCacUrl || null,
         observacoes: data.observacoes || null,
       });
-      toast.success("Voluntario atualizado");
+      toast.success("Voluntário atualizado");
       setEditing(null);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro");
@@ -81,10 +81,10 @@ export function VoluntariosTab() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Remover este voluntario?")) return;
+    if (!confirm("Remover este voluntário?")) return;
     try {
       await removeVoluntario({ id: id as Id<"eduVoluntarios"> });
-      toast.success("Voluntario removido");
+      toast.success("Voluntário removido");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro");
     }
@@ -96,10 +96,10 @@ export function VoluntariosTab() {
         <div className="flex flex-wrap gap-2">
           <Select value={papelFilter} onValueChange={setPapelFilter}>
             <SelectTrigger className="w-40">
-              <SelectValue placeholder="Todos os papeis" />
+              <SelectValue placeholder="Todos os papéis" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todos os papeis</SelectItem>
+              <SelectItem value="all">Todos os papéis</SelectItem>
               {PAPEL_VOLUNTARIO_OPTIONS.map((opt) => (
                 <SelectItem key={opt.value} value={opt.value}>
                   {opt.label}
@@ -124,7 +124,7 @@ export function VoluntariosTab() {
         <PermissionGate permission="voluntarios_edu:manage">
           <Button onClick={() => setFormOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
-            Novo Voluntario
+            Novo Voluntário
           </Button>
         </PermissionGate>
       </div>
@@ -134,17 +134,17 @@ export function VoluntariosTab() {
       ) : voluntarios.length === 0 ? (
         <EduEmptyState
           icon={HeartHandshake}
-          title="Nenhum voluntario"
+          title="Nenhum voluntário"
           description={
             papelFilter !== "all" || turmaFilter !== "all"
-              ? "Nenhum voluntario para os filtros selecionados."
+              ? "Nenhum voluntário para os filtros selecionados."
               : "Cadastre os professores, auxiliares e apoios do departamento."
           }
           action={
             canManage && papelFilter === "all" && turmaFilter === "all" ? (
               <Button onClick={() => setFormOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" />
-                Novo Voluntario
+                Novo Voluntário
               </Button>
             ) : undefined
           }
