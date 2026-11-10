@@ -43,9 +43,9 @@ Sequência do handler, preservando a ordem atual das checagens:
 1. Formato do CPF inválido → continua `throw new ConvexError(...)` (`acesso.ts:86-88`). Acontece antes de qualquer leitura ou escrita e não conta como tentativa.
 2. `lerTentativas`; se bloqueado → `{ status: "bloqueado" }`, sem buscar o cadastro e sem escrever.
 3. Cadastro não encontrado ou CPF não confere (`acesso.ts:104`, `:108`) → `registrarFalha` e `nao_confere`.
-4. Cadastro não ativo (`:110`) → `zerarTentativas` e `inativo`. Fica antes da busca do membro, como hoje, para a mensagem desse caso não mudar.
+4. Cadastro não ativo (`:110`) → zera parte dos contadores e `inativo`. Fica antes da busca do membro, como hoje, para a mensagem desse caso não mudar.
 5. Cadastro sem membro (`:118`) → `registrarFalha` e `nao_confere`.
-6. `zerarTentativas`; depois `ja_ativado` (`:120`) ou criação do convite e `{ status: "ok", token }`.
+6. Zera parte dos contadores; depois `ja_ativado` (`:120`) ou criação do convite e `{ status: "ok", token }`.
 
 `inativo` e `ja_ativado` são retorno, e não `throw`, porque a zeragem é uma escrita e seria desfeita.
 
@@ -102,7 +102,7 @@ As chaves usam os valores já normalizados pelo handler (`alvoDigits`, `acesso.t
 Os laços usam o limite importado de `tentativas.ts`, sem número escrito no teste; a passagem do tempo é simulada regravando `janelaInicio`, como em `recuperarSenha.integration.test.ts:114-120`.
 1. Erros repetidos levam a `bloqueado`, mesmo informando depois os dados certos, e nenhum convite é criado.
 2. Vencida a janela, os dados certos voltam a gerar token.
-3. Acerto antes do limite apaga os contadores do fluxo.
+3. Acerto antes do limite apaga só parte dos contadores do fluxo.
 4. A contagem acumula quando só um dos dados muda entre as tentativas e quando o mesmo telefone é digitado em formatos diferentes.
 5. Cadastro não ativo com dados certos retorna `inativo`, com e sem membro vinculado (hoje sem cobertura).
 6. Os dois fluxos não interferem um no outro, nos dois sentidos. Para isso `seedMembroSemAcesso` (`:14-35`) passa a aceitar `dataNascimento`: sem ele `solicitarRecuperacao` só devolve `nao_confere`; com ele, o esperado para esse membro é `primeiro_acesso`. Na outra direção, criar antes os registros da recuperação e conferir que continuam na tabela.
@@ -127,4 +127,4 @@ Os diffs abaixo são contra `origin/main`, depois de `git fetch origin main`.
 - [ ] Em `handlePrimeiroAcesso`, todo caminho que não redireciona chama `setLoading(false)`.
 - [ ] `npm run lint` passa.
 - [ ] Screenshot a 390px da aba "Primeiro acesso" com a mensagem de bloqueio, o texto cabendo na caixa de erro e o botão liberado. Ambiente: frontend local sem bypass, Convex de desenvolvimento e telefone inventado. Nunca provocar o bloqueio em produção.
-- [ ] Fora das constantes em `tentativas.ts`, nenhum arquivo alterado, mensagem de commit ou texto do PR cita o valor do limite ou da janela, nem descreve como a contagem é feita.
+- [ ] Fora das constantes em `tentativas.ts`, nenhum arquivo alterado, mensagem de commit ou texto do PR cita o valor do limite ou da janela.
