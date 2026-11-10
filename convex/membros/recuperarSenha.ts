@@ -9,9 +9,13 @@ import {
   type MutationCtx,
 } from "../_generated/server";
 import { normalizeToE164 } from "../_shared/phoneUtils";
+import {
+  JANELA_FALHAS_MS,
+  lerTentativas,
+  registrarFalha,
+  zerarTentativas,
+} from "./tentativas";
 
-const MAX_FALHAS = 5;
-const JANELA_FALHAS_MS = 60 * 60 * 1000;
 const VALIDADE_TOKEN_MS = 15 * 60 * 1000;
 const SENHA_MIN = 8;
 const SENHA_MAX = 128;
@@ -44,17 +48,6 @@ const telefoneDigitos = (valor?: string) =>
 
 function gerarToken(): string {
   return Array.from(crypto.getRandomValues(new Uint8Array(32)))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
-
-/** Evita guardar o telefone em claro na tabela de tentativas. */
-async function chaveDeTentativa(telefone: string): Promise<string> {
-  const hash = await crypto.subtle.digest(
-    "SHA-256",
-    new TextEncoder().encode(telefone)
-  );
-  return Array.from(new Uint8Array(hash))
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
 }
@@ -131,27 +124,13 @@ export const solicitarRecuperacao = mutation({
     const cpf = soDigitos(args.cpf);
     const agora = Date.now();
 
-    // Conta por telefone e por CPF: com uma chave so, variar o outro dado
-    // renovaria as tentativas a cada chute.
-    const contadores = await Promise.all(
-      [`telefone:${telefone}`, `cpf:${cpf}`].map(async (origem) => {
-        const chave = await chaveDeTentativa(origem);
-        const tentativa = await ctx.db
-          .query("recuperacaoTentativas")
-          .withIndex("by_chave", (q) => q.eq("chave", chave))
-          .unique();
-        const janelaAberta =
-          tentativa !== null && agora - tentativa.janelaInicio < JANELA_FALHAS_MS;
-        return { chave, tentativa, janelaAberta };
-      })
+    // Conta por telefone e por CPF
+    const { contadores, bloqueado } = await lerTentativas(
+      ctx,
+      [`telefone:${telefone}`, `cpf:${cpf}`],
+      agora
     );
-    if (
-      contadores.some(
-        (c) => c.janelaAberta && c.tentativa !== null && c.tentativa.falhas >= MAX_FALHAS
-      )
-    ) {
-      return { status: "bloqueado" };
-    }
+    if (bloqueado) return { status: "bloqueado" };
 
     const entidade = await encontrarEntidade(
       ctx,
@@ -167,25 +146,11 @@ export const solicitarRecuperacao = mutation({
       : null;
 
     if (!entidade || !membro) {
-      for (const { chave, tentativa, janelaAberta } of contadores) {
-        if (!tentativa) {
-          await ctx.db.insert("recuperacaoTentativas", {
-            chave,
-            falhas: 1,
-            janelaInicio: agora,
-          });
-        } else if (janelaAberta) {
-          await ctx.db.patch(tentativa._id, { falhas: tentativa.falhas + 1 });
-        } else {
-          await ctx.db.patch(tentativa._id, { falhas: 1, janelaInicio: agora });
-        }
-      }
+      await registrarFalha(ctx, contadores, agora);
       return { status: "nao_confere" };
     }
 
-    for (const { tentativa } of contadores) {
-      if (tentativa) await ctx.db.delete(tentativa._id);
-    }
+    await zerarTentativas(ctx, contadores);
 
     if (entidade.status !== "ATIVO") return { status: "procure_secretaria" };
     if (!membro.userId) return { status: "primeiro_acesso" };
