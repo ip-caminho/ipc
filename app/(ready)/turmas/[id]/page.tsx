@@ -462,7 +462,7 @@ export default function TurmaDetalhePage() {
                     <CollapsibleTrigger asChild>
                       <Button variant="ghost" className="h-10 md:h-10 px-2 w-full justify-between">
                         <span className="text-sm font-medium">
-                          Marcos no calendario (entrevistas, batismo)
+                          Marcos no calendário (entrevistas, batismo)
                         </span>
                         <Plus className="h-4 w-4" />
                       </Button>

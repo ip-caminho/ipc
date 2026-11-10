@@ -32,7 +32,7 @@ export function PGFrequencia({ pgId }: PGFrequenciaProps) {
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-base">
-          Frequencia — {resumo.totalEncontros} encontro{resumo.totalEncontros > 1 ? "s" : ""}
+          Frequência — {resumo.totalEncontros} encontro{resumo.totalEncontros > 1 ? "s" : ""}
         </CardTitle>
       </CardHeader>
       <CardContent>

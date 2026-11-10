@@ -111,7 +111,7 @@ export function PedidoOracaoListCard({
                 {pedido.isOwner && (
                   <span className="text-muted-foreground font-normal">
                     {" "}
-                    (voce)
+                    (você)
                   </span>
                 )}
               </p>

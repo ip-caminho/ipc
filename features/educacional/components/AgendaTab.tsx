@@ -33,7 +33,7 @@ export function AgendaTab({ ministerioId }: AgendaTabProps) {
   if (!ministerioId) {
     return (
       <p className="text-sm text-muted-foreground">
-        Ministerio &quot;Educacional&quot; nao encontrado. Crie-o em Ministerios para usar a agenda.
+        Ministério &quot;Educacional&quot; não encontrado. Crie-o em Ministérios para usar a agenda.
       </p>
     );
   }
@@ -54,7 +54,7 @@ export function AgendaTab({ ministerioId }: AgendaTabProps) {
             size="sm"
             onClick={() => setHistorico(false)}
           >
-            Proximos
+            Próximos
           </Button>
           <Button
             variant={historico ? "default" : "outline"}

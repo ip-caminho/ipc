@@ -109,7 +109,7 @@ export function ProximosAniversarios() {
       ) : aniversarios.length === 0 ? (
         <EduEmptyState
           icon={Cake}
-          title="Sem aniversarios"
+          title="Sem aniversários"
           description="Nenhuma criança com data de nascimento cadastrada nesta seleção."
         />
       ) : (
