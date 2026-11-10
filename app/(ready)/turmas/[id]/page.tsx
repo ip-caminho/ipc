@@ -48,7 +48,7 @@ function rotuloPergunta(
 /** Link do WhatsApp com uma saudacao pronta — a secretaria so completa. */
 function linkWhatsApp(whatsapp: string, nome: string, turmaNome: string): string {
   const primeiro = nome.trim().split(/\s+/)[0] ?? "";
-  const texto = `Ola, ${primeiro}! Falo da Igreja Presbiteriana do Caminho sobre a turma ${turmaNome}.`;
+  const texto = `Olá, ${primeiro}! Falo da Igreja Presbiteriana do Caminho sobre a turma ${turmaNome}.`;
   return `https://wa.me/${cleanPhoneForWhatsApp(whatsapp)}?text=${encodeURIComponent(texto)}`;
 }
 

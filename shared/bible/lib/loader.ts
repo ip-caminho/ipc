@@ -13,7 +13,7 @@ export async function loadBibleData(): Promise<BibleData> {
 
   pendingPromise = fetch("/bible/naa.json")
     .then((res) => {
-      if (!res.ok) throw new Error(`Erro ao carregar dados da Biblia: ${res.status}`);
+      if (!res.ok) throw new Error(`Erro ao carregar dados da Bíblia: ${res.status}`);
       return res.json() as Promise<BibleData>;
     })
     .then((data) => {

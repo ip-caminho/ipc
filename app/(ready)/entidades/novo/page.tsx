@@ -95,7 +95,7 @@ export default function NovaEntidadePage() {
             </div>
 
             <div className="space-y-1">
-              <Label htmlFor="nomeRazaoSocial">Razao Social</Label>
+              <Label htmlFor="nomeRazaoSocial">Razão Social</Label>
               <Input id="nomeRazaoSocial" name="nomeRazaoSocial" required />
             </div>
             <div className="space-y-1">
@@ -107,7 +107,7 @@ export default function NovaEntidadePage() {
               <Input id="cnpj" name="cnpj" placeholder="00.000.000/0000-00" inputMode="numeric" autoComplete="off" />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="responsavelNome">Responsavel</Label>
+              <Label htmlFor="responsavelNome">Responsável</Label>
               <Input id="responsavelNome" name="responsavelNome" />
             </div>
 

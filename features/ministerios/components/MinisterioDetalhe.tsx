@@ -53,7 +53,7 @@ export function MinisterioDetalhe({ ministerioId, onBack }: MinisterioDetalhePro
     return <p className="text-sm text-muted-foreground">Carregando...</p>;
   }
   if (!ministerio) {
-    return <p className="text-sm text-muted-foreground">Ministerio nao encontrado</p>;
+    return <p className="text-sm text-muted-foreground">Ministério não encontrado</p>;
   }
 
   const handleUpdate = async (data: MinisterioFormValues) => {
@@ -65,17 +65,17 @@ export function MinisterioDetalhe({ ministerioId, onBack }: MinisterioDetalhePro
         papeis: data.papeis,
         subgrupos: data.subgrupos || undefined,
       });
-      toast.success("Ministerio atualizado");
+      toast.success("Ministério atualizado");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao atualizar");
     }
   };
 
   const handleRemove = async () => {
-    if (!confirm("Tem certeza que deseja excluir este ministerio?")) return;
+    if (!confirm("Tem certeza que deseja excluir este ministério?")) return;
     try {
       await removeMin({ id: ministerioId });
-      toast.success("Ministerio excluido");
+      toast.success("Ministério excluído");
       onBack();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao excluir");
@@ -104,7 +104,7 @@ export function MinisterioDetalhe({ ministerioId, onBack }: MinisterioDetalhePro
   const handleRemoveMembro = async (mmId: Id<"ministerioMembros">) => {
     try {
       await removeMembroMut({ id: mmId });
-      toast.success("Membro removido do ministerio");
+      toast.success("Membro removido do ministério");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao remover");
     }
@@ -183,7 +183,7 @@ export function MinisterioDetalhe({ ministerioId, onBack }: MinisterioDetalhePro
         </CardHeader>
         <CardContent>
           {membrosAtivos.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nenhum membro neste ministerio</p>
+            <p className="text-sm text-muted-foreground">Nenhum membro neste ministério</p>
           ) : (
             <div className="space-y-2">
               {membrosAtivos.map((mm: any) => (
@@ -251,7 +251,7 @@ export function MinisterioDetalhe({ ministerioId, onBack }: MinisterioDetalhePro
       <Dialog open={addMembroOpen} onOpenChange={setAddMembroOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Adicionar membro ao ministerio</DialogTitle>
+            <DialogTitle>Adicionar membro ao ministério</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <div className="space-y-1">

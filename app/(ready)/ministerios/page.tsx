@@ -33,9 +33,9 @@ export default function MinisteriosPage() {
         papeis: data.papeis,
         subgrupos: data.subgrupos && data.subgrupos.length > 0 ? data.subgrupos : undefined,
       });
-      toast.success("Ministerio criado");
+      toast.success("Ministério criado");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao criar ministerio");
+      toast.error(error instanceof Error ? error.message : "Erro ao criar ministério");
     }
   };
 
@@ -51,12 +51,12 @@ export default function MinisteriosPage() {
     <ModuloGuard modulo="ministerios">
       <HeaderLayout>
       <div className="space-y-4">
-        <PageHeader title="Ministerios" />
+        <PageHeader title="Ministérios" />
         <div className="flex items-center justify-end">
           <PermissionGate permission="ministerios:create">
             <Button onClick={() => setCreateOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
-              Novo Ministerio
+              Novo Ministério
             </Button>
           </PermissionGate>
         </div>
@@ -65,7 +65,7 @@ export default function MinisteriosPage() {
           <p className="text-sm text-muted-foreground">Carregando...</p>
         ) : ministerios.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            Nenhum ministerio cadastrado
+            Nenhum ministério cadastrado
           </p>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

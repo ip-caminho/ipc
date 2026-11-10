@@ -75,14 +75,14 @@ function AvisoForm({
   return (
     <div className="border rounded-lg p-4 space-y-3 bg-card">
       <Input
-        placeholder="Titulo do aviso"
+        placeholder="Título do aviso"
         value={titulo}
         onChange={(e) => setTitulo(e.target.value)}
         className="text-sm"
         autoFocus
       />
       <Textarea
-        placeholder="Descricao (opcional)"
+        placeholder="Descrição (opcional)"
         value={descricao}
         onChange={(e) => setDescricao(e.target.value)}
         className="text-sm min-h-[60px] md:min-h-[60px]"
@@ -166,7 +166,7 @@ function AvisoCard({
     if (!confirm("Excluir este aviso?")) return;
     try {
       await removeAviso({ id: aviso._id });
-      toast.success("Aviso excluido");
+      toast.success("Aviso excluído");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro");
     }

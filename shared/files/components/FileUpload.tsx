@@ -57,11 +57,11 @@ export function FileUpload({
         fileToUpload = await compress(file);
         const compressedSize = (fileToUpload.size / 1024 / 1024).toFixed(1);
         if (fileToUpload !== file) {
-          toast.info(`Audio comprimido: ${originalSize}MB → ${compressedSize}MB`);
+          toast.info(`Áudio comprimido: ${originalSize}MB → ${compressedSize}MB`);
         }
         // Validate after compression
         if (fileToUpload.size > maxSizeMB * 1024 * 1024) {
-          toast.error(`Audio comprimido ainda muito grande (${compressedSize}MB, max ${maxSizeMB}MB)`);
+          toast.error(`Áudio comprimido ainda muito grande (${compressedSize}MB, max ${maxSizeMB}MB)`);
           return;
         }
       }
@@ -132,7 +132,7 @@ export function FileUpload({
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           <span className="text-xs text-muted-foreground">
             {isCompressing
-              ? `Comprimindo audio... ${compressProgress}%`
+              ? `Comprimindo áudio... ${compressProgress}%`
               : `Enviando... ${uploadProgress}%`}
           </span>
         </div>

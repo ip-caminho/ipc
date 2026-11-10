@@ -48,7 +48,7 @@ interface LouvorPickerProps {
   placeholder?: string;
 }
 
-export function LouvorPicker({ value, onSelect, placeholder = "Selecionar musica..." }: LouvorPickerProps) {
+export function LouvorPicker({ value, onSelect, placeholder = "Selecionar música..." }: LouvorPickerProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
 
@@ -91,7 +91,7 @@ export function LouvorPicker({ value, onSelect, placeholder = "Selecionar musica
             onValueChange={setSearch}
           />
           <CommandList>
-            <CommandEmpty>Nenhuma musica encontrada</CommandEmpty>
+            <CommandEmpty>Nenhuma música encontrada</CommandEmpty>
             {filtered.length > 0 && (
               <CommandGroup>
                 {filtered.map((r: any) => (

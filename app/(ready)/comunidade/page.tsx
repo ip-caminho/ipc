@@ -13,7 +13,7 @@ export default function ComunidadePage() {
             <ContinueListeningCard />
           </div>
 
-          <RecentByTipo titulo="Pregacoes" tipo="SERMAO" />
+          <RecentByTipo titulo="Pregações" tipo="SERMAO" />
           <RecentByTipo titulo="Estudos" tipo="ESTUDO_BIBLICO" />
           <RecentByTipo titulo="Palestras" tipo="PALESTRA" />
         </div>

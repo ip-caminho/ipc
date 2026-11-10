@@ -27,7 +27,7 @@ import { toast } from "sonner";
 import Link from "next/link";
 
 const TIPO_CONFIG: Record<string, { label: string; icon: typeof Mic; color: string; bg: string }> = {
-  SERMAO: { label: "Sermao", icon: Mic, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-950/30" },
+  SERMAO: { label: "Sermão", icon: Mic, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-950/30" },
   ESTUDO_BIBLICO: { label: "Estudo", icon: BookOpen, color: "text-violet-600 dark:text-violet-400", bg: "bg-violet-50 dark:bg-violet-950/30" },
   PALESTRA: { label: "Palestra", icon: Presentation, color: "text-teal-600 dark:text-teal-400", bg: "bg-teal-50 dark:bg-teal-950/30" },
   OUTRO: { label: "Outro", icon: FileAudio, color: "text-yellow-600 dark:text-yellow-400", bg: "bg-yellow-50 dark:bg-yellow-950/30" },
@@ -52,10 +52,10 @@ function GravacaoRow({ g }: { g: any }) {
     try {
       if (isPublished) {
         await unpublishGravacao({ id: g._id, data: { status: "RASCUNHO" } });
-        toast.success("Gravacao despublicada");
+        toast.success("Gravação despublicada");
       } else {
         await publishGravacao({ id: g._id });
-        toast.success("Gravacao publicada");
+        toast.success("Gravação publicada");
       }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao alterar status");
@@ -346,7 +346,7 @@ export default function AdminGravacoesPage() {
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <p className="text-muted-foreground text-center py-8">Nenhuma gravacao encontrada</p>
+          <p className="text-muted-foreground text-center py-8">Nenhuma gravação encontrada</p>
         ) : isMobile ? (
           // Mobile: cards compactos
           <div className="border rounded-md overflow-hidden divide-y">

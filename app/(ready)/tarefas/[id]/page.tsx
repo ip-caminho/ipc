@@ -44,7 +44,7 @@ export default function TarefaDetalhePage() {
   const [editOpen, setEditOpen] = useState(false);
 
   if (tarefa === undefined) return <div className="p-6">Carregando...</div>;
-  if (tarefa === null) return <div className="p-6">Tarefa nao encontrada</div>;
+  if (tarefa === null) return <div className="p-6">Tarefa não encontrada</div>;
 
   const canEdit = tarefa.isOwner || can("tarefas:update");
   const canDelete = tarefa.isOwner || can("tarefas:delete");
@@ -63,7 +63,7 @@ export default function TarefaDetalhePage() {
     if (!confirm("Excluir esta tarefa?")) return;
     try {
       await removeTarefa({ id: id as Id<"tarefas"> });
-      toast.success("Tarefa excluida");
+      toast.success("Tarefa excluída");
       router.push("/tarefas");
     } catch (err: any) {
       toast.error(err.message);

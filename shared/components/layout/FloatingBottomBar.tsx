@@ -124,7 +124,7 @@ export function FloatingBottomBar() {
         ref={navRef}
         className={cn("md:hidden fixed bottom-4 left-4 right-4 z-40", tecladoAberto && "hidden")}
         style={{ marginBottom: "env(safe-area-inset-bottom)" }}
-        aria-label="Navegacao principal"
+        aria-label="Navegação principal"
       >
         <div
           className={cn(

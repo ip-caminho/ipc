@@ -110,7 +110,7 @@ export function MinisterioForm({
           </div>
 
           <div className="space-y-1">
-            <Label htmlFor="descricao">Descricao</Label>
+            <Label htmlFor="descricao">Descrição</Label>
             <Textarea id="descricao" {...form.register("descricao")} />
           </div>
 
