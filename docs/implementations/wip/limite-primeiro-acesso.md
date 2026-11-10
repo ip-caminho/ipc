@@ -52,7 +52,7 @@ Sequência do handler, preservando a ordem atual das checagens:
 ### 3. Contadores próprios do fluxo
 Mesma tabela, mesmo limite, mesma janela e mesma limpeza diária, com contadores próprios do primeiro acesso, sem alterar os da recuperação. Assim `solicitarRecuperacao` não muda de comportamento e os registros já existentes em produção continuam válidos.
 
-A contagem segue o modelo da recuperação, com um contador para cada dado informado. As chaves usam os valores já normalizados pelo handler (`alvoDigits`, `acesso.ts:93`, e `prefix`, `acesso.ts:85`), nunca o texto digitado.
+As chaves usam os valores já normalizados pelo handler (`alvoDigits`, `acesso.ts:93`, e `prefix`, `acesso.ts:85`), nunca o texto digitado.
 
 ### 4. Contrato com a tela de signin
 `handlePrimeiroAcesso` (`app/(auth)/signin/page.tsx:89-105`) passa a mapear o status:
@@ -79,7 +79,7 @@ A contagem segue o modelo da recuperação, com um contador para cada dado infor
 ## Riscos
 - **Regressão na recuperação de senha** ao mover o código. Mitigação: testes existentes de `recuperarSenha` sem edição.
 - **Contrato da mutation muda.** Tela antiga sobre backend novo redireciona para um link de ativação inválido em todo desfecho que não seja `ok` (`signin/page.tsx:97-98`). Tela nova sobre backend antigo recebe resposta sem `status` e o acerto não redireciona. Mitigação: seguir a ordem de publicação abaixo, sem intervalo entre os passos.
-- **Pessoa legítima bloqueada por erros de terceiros.** Aqui o risco é maior que na recuperação, porque um dos dados contados não é exclusivo de uma pessoa. Aceito; a mensagem orienta a procurar a secretaria.
+- **Pessoa legítima bloqueada por erros de terceiros.** Aceito; a mensagem orienta a procurar a secretaria.
 
 ## Arquivos a Criar/Modificar
 | Arquivo | Ação | Descrição |

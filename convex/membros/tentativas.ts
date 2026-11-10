@@ -22,8 +22,7 @@ async function chaveDeTentativa(origem: string): Promise<string> {
 }
 
 /**
- * Le um contador por origem (cada dado informado conta separado: com uma chave
- * so, variar o outro dado renovaria as tentativas a cada chute).
+ * Le os contadores das origens informadas, na mesma ordem.
  */
 export async function lerTentativas(
   ctx: MutationCtx,
