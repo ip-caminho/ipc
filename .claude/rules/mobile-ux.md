@@ -53,35 +53,20 @@ A maioria das telas exige login (papel admin). Usar `scripts/screenshot-auth.sh`
 ```bash
 scripts/screenshot-auth.sh /secretario-executivo tmp/rol-mobile.png 390 844
 scripts/screenshot-auth.sh /secretario-executivo tmp/rol-desktop.png 1280 900
-# preview de branch (slug do team da igreja na Vercel):
-SCREENSHOT_BASE_URL=https://ipc-git-<branch>-<team-slug>.vercel.app \
-  scripts/screenshot-auth.sh /membros tmp/membros.png
 ```
 
 - Loga via aba "Entrar" (telefone+senha) e navega até a rota.
 - Credenciais saem de `.env.local` (gitignored): `SCREENSHOT_PHONE` e
   `SCREENSHOT_PASSWORD` — conta admin do André. NUNCA commitar essas vars.
 - Base padrão = prod (dados reais). O bypass local (`NEXT_PUBLIC_AUTH_BYPASS_MODE`)
-  cria usuário sem papel, então não serve para telas admin — por isso prod/preview.
+  cria usuário sem papel, então não serve para telas admin — por isso prod.
 - Depois, ler o PNG com a tool Read e avaliar.
 
-## 3. Preview deploys (revisar antes do main)
+## 3. Revisão antes do main
 
-O projeto Vercel é git-connected — **todo push de branch gera um preview
-automático**. Não publicar UI direto no main pra revisar; usar a branch.
-
-- URL do preview: `https://ipc-git-<branch-slug>-<team-slug>.vercel.app`
-  (branch slug = nome da branch com `/`→`-`). A URL exata também sai via Vercel
-  MCP (`list_deployments`) ou no PR.
-- ATENÇÃO: previews têm Vercel Authentication ligada → respondem **401** para
-  acesso headless (agent-browser/curl). Para checar preview automaticamente,
-  configurar "Protection Bypass for Automation" (segredo) e enviar header
-  `x-vercel-protection-bypass: <segredo>` no agent-browser (`--headers`). Sem
-  isso, o agent-browser só verifica **prod** (após merge); previews servem para
-  revisão manual do André (logado na Vercel).
-- Fluxo: trabalhar na branch → `git push origin <branch>` → Vercel builda
-  preview → agente abre no agent-browser (mobile) e/ou manda a URL pro André
-  revisar no celular → só depois `merge --ff-only` no main.
+Não publicar UI direto no main pra revisar. Fluxo: trabalhar na branch → abrir
+PR → André aprova → `merge --ff-only` no main. Com login, o agent-browser só
+verifica **prod** (após o merge).
 
 Vercel (conta institucional da igreja desde 06/2026; projeto antigo na conta
 pessoal foi descontinuado):
@@ -94,7 +79,6 @@ pessoal foi descontinuado):
 - [ ] Screenshot a 390px (agent-browser) revisado antes de entregar
 - [ ] Tap targets ≥ 44px
 - [ ] Tabela editável vira card de leitura no mobile
-- [ ] Se possível, revisar no preview da branch antes do main
 
 ## Checklist de convenções compartilhadas (shell F2)
 - [ ] Grid de cards no mobile: `grid-cols-[minmax(0,1fr)]`; item flex com `truncate` leva `min-w-0`
