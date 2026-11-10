@@ -140,7 +140,7 @@ function ContatosTab() {
     <div className="space-y-4">
       <BuscaInput value={search} onChange={setSearch} />
       <p className="text-xs text-muted-foreground">
-        Pessoas cadastradas que ainda nao sao membros (visitantes, contatos).
+        Pessoas cadastradas que ainda não são membros (visitantes, contatos).
         Ao se tornarem membros, passam para o rol.
       </p>
 

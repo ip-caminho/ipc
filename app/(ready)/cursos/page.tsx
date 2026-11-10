@@ -53,7 +53,7 @@ export default function CursosPage() {
 
           <div className="flex items-center justify-between gap-2">
             <p className="text-sm text-muted-foreground">
-              O catalogo. Cada turma e uma oferta datada de um curso.
+              O catálogo. Cada turma é uma oferta datada de um curso.
             </p>
             <PermissionGate permission="turmas:create">
               <Button onClick={abrirNovo} size="sm" className="h-10 md:h-10 shrink-0">
@@ -93,8 +93,8 @@ export default function CursosPage() {
                       <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
                         <span>
                           {curso.criterioAprovacao === "MAX_FALTAS"
-                            ? `Maximo de ${curso.maxFaltas ?? 0} ${(curso.maxFaltas ?? 0) === 1 ? "falta" : "faltas"}`
-                            : `Frequencia minima: ${curso.frequenciaMinima}%`}
+                            ? `Máximo de ${curso.maxFaltas ?? 0} ${(curso.maxFaltas ?? 0) === 1 ? "falta" : "faltas"}`
+                            : `Frequência mínima: ${curso.frequenciaMinima}%`}
                         </span>
                         {curso.totalAulas ? <span>{curso.totalAulas} aulas</span> : null}
                         {curso.cargaHoraria ? <span>{curso.cargaHoraria}h</span> : null}

@@ -138,13 +138,13 @@ export function AppSidebar() {
                   className="data-[state=open]:bg-sidebar-accent"
                 >
                   <Avatar className="h-8 w-8">
-                    {foto && <PrivateAvatarImage src={foto} alt={name || "Usuario"} />}
+                    {foto && <PrivateAvatarImage src={foto} alt={name || "Usuário"} />}
                     <AvatarFallback>
                       {name?.charAt(0)?.toUpperCase() || "?"}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0 text-left leading-tight">
-                    <p className="text-sm font-medium truncate">{name || "Usuario"}</p>
+                    <p className="text-sm font-medium truncate">{name || "Usuário"}</p>
                     <p className="text-xs text-muted-foreground truncate">{role || ""}</p>
                   </div>
                   <ChevronsUpDown className="ml-auto h-4 w-4 shrink-0" />
@@ -152,7 +152,7 @@ export function AppSidebar() {
               </DropdownMenuTrigger>
               <DropdownMenuContent side="top" align="start" className="min-w-56">
                 <DropdownMenuLabel className="flex flex-col gap-0.5">
-                  <span className="truncate text-sm font-medium">{name || "Usuario"}</span>
+                  <span className="truncate text-sm font-medium">{name || "Usuário"}</span>
                   {role && (
                     <span className="truncate text-xs text-muted-foreground font-normal">
                       {role}

@@ -163,7 +163,7 @@ export function ReservaForm({
 
       {/* Grid de horários */}
       <div className="space-y-2">
-        <Label>Selecione os horarios</Label>
+        <Label>Selecione os horários</Label>
         <div className="grid grid-cols-4 gap-2">
           {TIME_OPTIONS.map((t) => {
             const disabled = isSlotDisabled(t);
@@ -217,7 +217,7 @@ export function ReservaForm({
             disabled={loading || !motivo.trim()}
             onClick={handleSubmit}
           >
-            {loading ? "Reservando..." : ranges.length > 1 ? `Reservar ${ranges.length} horarios` : `Reservar ${rangeLabel}`}
+            {loading ? "Reservando..." : ranges.length > 1 ? `Reservar ${ranges.length} horários` : `Reservar ${rangeLabel}`}
           </Button>
         </div>
       )}

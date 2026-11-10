@@ -156,7 +156,7 @@ export default function AtivarPage() {
               type="password"
               value={senha}
               onChange={(e) => setSenha(e.target.value)}
-              placeholder="Minimo 8 caracteres"
+              placeholder="Mínimo 8 caracteres"
               autoComplete="new-password"
               required
             />

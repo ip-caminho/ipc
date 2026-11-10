@@ -361,7 +361,7 @@ export default function AdminGravacoesPage() {
               <thead className="sticky top-0 z-20 bg-muted">
                 <tr className="border-b">
                   <th className="py-2 px-3 w-8" />
-                  <SortHeader label="Titulo" field="titulo" currentField={sortField} currentDir={sortDir} onSort={handleSort} />
+                  <SortHeader label="Título" field="titulo" currentField={sortField} currentDir={sortDir} onSort={handleSort} />
                   <SortHeader label="Data" field="data" currentField={sortField} currentDir={sortDir} onSort={handleSort} />
                   <SortHeader label="Status" field="status" currentField={sortField} currentDir={sortDir} onSort={handleSort} />
                   <th className="py-2 px-3 text-left text-xs font-medium text-muted-foreground">IA</th>

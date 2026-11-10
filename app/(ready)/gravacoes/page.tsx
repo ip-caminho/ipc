@@ -22,7 +22,7 @@ import { extractBookName } from "@features/gravacoes/lib/bible";
 const VALID_TIPOS = new Set(["SERMAO", "ESTUDO_BIBLICO", "PALESTRA", "OUTRO"]);
 
 const TIPO_TITULO: Record<string, string> = {
-  SERMAO: "Pregacoes",
+  SERMAO: "Pregações",
   ESTUDO_BIBLICO: "Estudos",
   PALESTRA: "Palestras",
   OUTRO: "Outros",
