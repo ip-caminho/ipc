@@ -208,7 +208,7 @@ export function BoletimContent() {
             <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
               Culto Dominical
             </p>
-            <p className="text-lg mt-1 capitalize text-foreground">{dataFormatada}</p>
+            <p className="text-lg mt-1 text-foreground">{dataFormatada}</p>
             <p className="text-base text-muted-foreground mt-0.5">{boletim.horario || "10:00"}h</p>
           </div>
         </div>
