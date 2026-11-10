@@ -187,7 +187,7 @@ export default function MultimidiaPage() {
               <CardContent>
                 {painel.checklist.length === 0 ? (
                   <div className="text-center py-4">
-                    <p className="text-sm text-muted-foreground mb-2">Checklist nao inicializado</p>
+                    <p className="text-sm text-muted-foreground mb-2">Checklist não inicializado</p>
                     {can("multimidia:update") && (
                       <Button size="sm" variant="outline" onClick={handleInitChecklist}>
                         Inicializar checklist

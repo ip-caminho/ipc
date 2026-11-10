@@ -81,7 +81,7 @@ export default function ModulosPage() {
           <Card>
             <CardContent className="py-6">
               <p className="text-muted-foreground text-center">
-                Nenhum modulo cadastrado. Execute o seed: <code>npx convex run modulos.mutations:seedModulos</code>
+                Nenhum módulo cadastrado. Execute o seed: <code>npx convex run modulos.mutations:seedModulos</code>
               </p>
             </CardContent>
           </Card>

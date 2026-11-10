@@ -63,7 +63,7 @@ export function ComentariosThread({ entidadeTipo, entidadeId, showTipo }: Coment
       setTexto("");
       setReplyTo(null);
     } catch (err: any) {
-      toast.error(err.message || "Erro ao enviar comentario");
+      toast.error(err.message || "Erro ao enviar comentário");
     }
     setSending(false);
   }
@@ -71,7 +71,7 @@ export function ComentariosThread({ entidadeTipo, entidadeId, showTipo }: Coment
   async function handleRemove(id: Id<"comentarios">) {
     try {
       await removeComentario({ id });
-      toast.success("Comentario removido");
+      toast.success("Comentário removido");
     } catch (err: any) {
       toast.error(err.message || "Erro ao remover");
     }
@@ -183,7 +183,7 @@ export function ComentariosThread({ entidadeTipo, entidadeId, showTipo }: Coment
     <div className="space-y-1">
       {topLevel.length === 0 && (
         <p className="text-sm text-muted-foreground py-4 text-center">
-          Nenhum comentario ainda
+          Nenhum comentário ainda
         </p>
       )}
       {topLevel.map((c) => renderComentario(c))}
@@ -204,7 +204,7 @@ export function ComentariosThread({ entidadeTipo, entidadeId, showTipo }: Coment
           <Textarea
             value={texto}
             onChange={(e) => setTexto(e.target.value)}
-            placeholder="Escreva um comentario..."
+            placeholder="Escreva um comentário..."
             rows={1}
             className="text-sm min-h-[36px] md:min-h-[36px] flex-1"
           />

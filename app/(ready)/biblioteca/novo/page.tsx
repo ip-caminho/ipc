@@ -52,7 +52,7 @@ export default function NovoLivroPage() {
         condicao: "BOM",
       });
       setStep("form");
-      toast.success("Dados extraidos da capa");
+      toast.success("Dados extraídos da capa");
     } catch (err: unknown) {
       toast.error((err as Error).message || "Erro no OCR");
     }

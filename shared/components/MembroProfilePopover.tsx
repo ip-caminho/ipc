@@ -12,9 +12,9 @@ import type { Id } from "@/convex/_generated/dataModel";
 
 const CARGO_LABELS: Record<string, string> = {
   MEMBRO_COMUNGANTE: "Membro Comungante",
-  MEMBRO_NAO_COMUNGANTE: "Membro Nao Comungante",
-  DIACONO: "Diacono",
-  PRESBITERO: "Presbitero",
+  MEMBRO_NAO_COMUNGANTE: "Membro Não Comungante",
+  DIACONO: "Diácono",
+  PRESBITERO: "Presbítero",
   PASTOR: "Pastor",
 };
 
@@ -52,7 +52,7 @@ function ProfileCard({ membroId }: { membroId: Id<"membros"> }) {
   }
 
   if (!profile) {
-    return <div className="p-4 text-sm text-muted-foreground">Perfil nao encontrado</div>;
+    return <div className="p-4 text-sm text-muted-foreground">Perfil não encontrado</div>;
   }
 
   return (

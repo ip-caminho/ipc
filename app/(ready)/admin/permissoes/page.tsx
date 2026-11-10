@@ -56,10 +56,10 @@ const AVAILABLE_ROLES = ["membro", "obreiro", "secretaria", "secretario_executiv
 const ROLE_LABELS: Record<string, string> = {
   admin: "Admin",
   pastor: "Pastor",
-  presbitero: "Presbitero",
+  presbitero: "Presbítero",
   obreiro: "Obreiro",
   secretaria: "Secretaria",
-  secretario_executivo: "Secretario Executivo",
+  secretario_executivo: "Secretário Executivo",
   membro: "Membro",
 };
 
@@ -118,7 +118,7 @@ function MembrosTab() {
   const handleReset = async (membroId: string) => {
     try {
       await syncWithRole({ membroId: membroId as Id<"membros"> });
-      toast.success("Resetado para padrao do papel");
+      toast.success("Resetado para padrão do papel");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro");
     }
@@ -428,7 +428,7 @@ function ConvitesTab() {
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-sm text-muted-foreground">
-          Para novos membros que nao tem cadastro. Membros ja cadastrados com WhatsApp sao vinculados automaticamente no login.
+          Para novos membros que não têm cadastro. Membros já cadastrados com WhatsApp são vinculados automaticamente no login.
         </p>
         <div className="flex gap-2">
           <Button onClick={() => handleGenerateInvite("membro")}>Convite Membro</Button>
@@ -460,7 +460,7 @@ function ModoTab() {
       await setModoQuiosque({ ativo: proximoValor });
       toast.success(
         proximoValor
-          ? "Modo quiosque ativado — usuarios nao-admin so verao os sermoes"
+          ? "Modo quiosque ativado — usuários não-admin só verão os sermões"
           : "Modo quiosque desativado",
       );
     } catch (error) {
@@ -475,15 +475,15 @@ function ModoTab() {
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-sm text-muted-foreground">
-          Quando ativado, todos os usuarios <strong>exceto admin</strong> veem
-          apenas a tela de sermoes — sem sidebar, sem outras paginas. Util para
-          terminais publicos da igreja ou para limitar o acesso a um experimento
+          Quando ativado, todos os usuários <strong>exceto admin</strong> veem
+          apenas a tela de sermões — sem sidebar, sem outras páginas. Útil para
+          terminais públicos da igreja ou para limitar o acesso a um experimento
           minimalista.
         </p>
         <div className="flex items-center gap-3 rounded-md border p-3">
           <MonitorSmartphone className="h-5 w-5 text-muted-foreground" />
           <div className="flex-1">
-            <p className="text-sm font-medium">Limitar usuarios a tela de sermoes</p>
+            <p className="text-sm font-medium">Limitar usuários à tela de sermões</p>
             <p className="text-xs text-muted-foreground">
               Admin continua com acesso completo
             </p>
@@ -568,12 +568,12 @@ export default function PermissoesPage() {
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <p className="text-sm text-muted-foreground">
-                      Esta funcao depende de novas APIs que ainda nao foram
+                      Esta função depende de novas APIs que ainda não foram
                       publicadas no backend Convex. Rode{" "}
                       <code className="rounded bg-muted px-1.5 py-0.5 text-xs">
                         npx convex deploy
                       </code>{" "}
-                      e recarregue a pagina.
+                      e recarregue a página.
                     </p>
                   </CardContent>
                 </Card>

@@ -9,9 +9,9 @@ export const MINISTERIO_STATUS_COLORS: Record<string, string> = {
 };
 
 export const CBCM_OPTIONS = [
-  { value: "NAO_INICIADO", label: "Nao Iniciado" },
+  { value: "NAO_INICIADO", label: "Não Iniciado" },
   { value: "CURSANDO", label: "Cursando" },
-  { value: "CONCLUIDO", label: "Concluido" },
+  { value: "CONCLUIDO", label: "Concluído" },
 ] as const;
 
 export const CBCM_COLORS: Record<string, string> = {
@@ -21,7 +21,7 @@ export const CBCM_COLORS: Record<string, string> = {
 };
 
 export const CBCM_LABELS: Record<string, string> = {
-  NAO_INICIADO: "Nao Iniciado",
+  NAO_INICIADO: "Não Iniciado",
   CURSANDO: "Cursando",
-  CONCLUIDO: "Concluido",
+  CONCLUIDO: "Concluído",
 };
