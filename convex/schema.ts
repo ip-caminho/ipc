@@ -390,13 +390,16 @@ export default defineSchema({
     usadoEm: v.optional(v.number()),
   })
     .index("by_token", ["token"])
-    .index("by_membro", ["membroId"]),
+    .index("by_membro", ["membroId"])
+    .index("by_expira", ["expiraEm"]),
 
   recuperacaoTentativas: defineTable({
-    chave: v.string(), // hash do telefone informado
+    chave: v.string(), // hash do telefone ou do CPF informado
     falhas: v.number(),
     janelaInicio: v.number(),
-  }).index("by_chave", ["chave"]),
+  })
+    .index("by_chave", ["chave"])
+    .index("by_janela", ["janelaInicio"]),
 
   auditLogs: defineTable({
     action: v.string(),

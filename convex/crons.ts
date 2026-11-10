@@ -15,4 +15,14 @@ crons.daily(
   refParadeiroIgnorado
 );
 
+const refLimparRecuperacaoSenha = makeFunctionReference<"mutation", Record<string, never>>(
+  "membros/recuperarSenha:limparExpirados"
+);
+
+crons.daily(
+  "limpar recuperacao de senha",
+  { hourUTC: 6, minuteUTC: 30 }, // 03:30 BRT
+  refLimparRecuperacaoSenha
+);
+
 export default crons;

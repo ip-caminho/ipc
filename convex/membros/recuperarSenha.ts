@@ -15,6 +15,7 @@ const JANELA_FALHAS_MS = 60 * 60 * 1000;
 const VALIDADE_TOKEN_MS = 15 * 60 * 1000;
 const SENHA_MIN = 8;
 const SENHA_MAX = 128;
+const LOTE_LIMPEZA = 500;
 
 const soDigitos = (valor: string) => valor.replace(/\D/g, "");
 const telefoneDigitos = (valor?: string) =>
@@ -106,22 +107,34 @@ export const solicitarRecuperacao = mutation({
   },
   handler: async (ctx, args): Promise<ResultadoSolicitacao> => {
     const telefone = telefoneDigitos(args.telefone);
-    const chave = await chaveDeTentativa(telefone);
+    const cpf = soDigitos(args.cpf);
     const agora = Date.now();
 
-    const tentativa = await ctx.db
-      .query("recuperacaoTentativas")
-      .withIndex("by_chave", (q) => q.eq("chave", chave))
-      .unique();
-    const janelaAberta =
-      tentativa !== null && agora - tentativa.janelaInicio < JANELA_FALHAS_MS;
-    if (janelaAberta && tentativa.falhas >= MAX_FALHAS) {
+    // Conta por telefone e por CPF: com uma chave so, variar o outro dado
+    // renovaria as tentativas a cada chute.
+    const contadores = await Promise.all(
+      [`telefone:${telefone}`, `cpf:${cpf}`].map(async (origem) => {
+        const chave = await chaveDeTentativa(origem);
+        const tentativa = await ctx.db
+          .query("recuperacaoTentativas")
+          .withIndex("by_chave", (q) => q.eq("chave", chave))
+          .unique();
+        const janelaAberta =
+          tentativa !== null && agora - tentativa.janelaInicio < JANELA_FALHAS_MS;
+        return { chave, tentativa, janelaAberta };
+      })
+    );
+    if (
+      contadores.some(
+        (c) => c.janelaAberta && c.tentativa !== null && c.tentativa.falhas >= MAX_FALHAS
+      )
+    ) {
       return { status: "bloqueado" };
     }
 
     const entidade = await encontrarEntidade(
       ctx,
-      soDigitos(args.cpf),
+      cpf,
       telefone,
       normalizarData(args.dataNascimento)
     );
@@ -133,21 +146,25 @@ export const solicitarRecuperacao = mutation({
       : null;
 
     if (!entidade || !membro) {
-      if (!tentativa) {
-        await ctx.db.insert("recuperacaoTentativas", {
-          chave,
-          falhas: 1,
-          janelaInicio: agora,
-        });
-      } else if (janelaAberta) {
-        await ctx.db.patch(tentativa._id, { falhas: tentativa.falhas + 1 });
-      } else {
-        await ctx.db.patch(tentativa._id, { falhas: 1, janelaInicio: agora });
+      for (const { chave, tentativa, janelaAberta } of contadores) {
+        if (!tentativa) {
+          await ctx.db.insert("recuperacaoTentativas", {
+            chave,
+            falhas: 1,
+            janelaInicio: agora,
+          });
+        } else if (janelaAberta) {
+          await ctx.db.patch(tentativa._id, { falhas: tentativa.falhas + 1 });
+        } else {
+          await ctx.db.patch(tentativa._id, { falhas: 1, janelaInicio: agora });
+        }
       }
       return { status: "nao_confere" };
     }
 
-    if (tentativa) await ctx.db.delete(tentativa._id);
+    for (const { tentativa } of contadores) {
+      if (tentativa) await ctx.db.delete(tentativa._id);
+    }
 
     if (entidade.status !== "ATIVO") return { status: "procure_secretaria" };
     if (!membro.userId) return { status: "primeiro_acesso" };
@@ -177,7 +194,12 @@ export const consumirToken = internalMutation({
   handler: async (
     ctx,
     { token }
-  ): Promise<{ userId: Id<"users">; loginId: string } | null> => {
+  ): Promise<{
+    userId: Id<"users">;
+    membroId: Id<"membros">;
+    contaId: Id<"authAccounts">;
+    loginId: string;
+  } | null> => {
     const pedido = await ctx.db
       .query("recuperacoesSenha")
       .withIndex("by_token", (q) => q.eq("token", token))
@@ -201,10 +223,27 @@ export const consumirToken = internalMutation({
       .unique();
     if (!conta) return null;
 
+    return {
+      userId,
+      membroId: membro._id,
+      contaId: conta._id,
+      loginId: conta.providerAccountId,
+    };
+  },
+});
+
+/** Roda so depois que a senha mudou, para o historico refletir o que ocorreu. */
+export const registrarTrocaSenha = internalMutation({
+  args: {
+    userId: v.id("users"),
+    membroId: v.id("membros"),
+    contaId: v.id("authAccounts"),
+  },
+  handler: async (ctx, { userId, membroId, contaId }) => {
     // Sem isso, quem errou a senha varias vezes seguiria bloqueado com a nova
     const limite = await ctx.db
       .query("authRateLimits")
-      .withIndex("identifier", (q) => q.eq("identifier", conta._id))
+      .withIndex("identifier", (q) => q.eq("identifier", contaId))
       .unique();
     if (limite) await ctx.db.delete(limite._id);
 
@@ -213,11 +252,33 @@ export const consumirToken = internalMutation({
       referenciaTabela: "auth",
       referenciaId: userId,
       userId,
-      membroId: membro._id,
+      membroId,
       createdAt: Date.now(),
     });
+  },
+});
 
-    return { userId, loginId: conta.providerAccountId };
+/** Rotina diaria: a rota e publica, entao as tabelas nao podem crescer sem limite. */
+export const limparExpirados = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const agora = Date.now();
+    const tentativas = await ctx.db
+      .query("recuperacaoTentativas")
+      .withIndex("by_janela", (q) => q.lt("janelaInicio", agora - JANELA_FALHAS_MS))
+      .take(LOTE_LIMPEZA);
+    const pedidos = await ctx.db
+      .query("recuperacoesSenha")
+      .withIndex("by_expira", (q) => q.lt("expiraEm", agora))
+      .take(LOTE_LIMPEZA);
+
+    for (const registro of [...tentativas, ...pedidos]) {
+      await ctx.db.delete(registro._id);
+    }
+
+    if (tentativas.length === LOTE_LIMPEZA || pedidos.length === LOTE_LIMPEZA) {
+      await ctx.scheduler.runAfter(0, internal.membros.recuperarSenha.limparExpirados, {});
+    }
   },
 });
 
@@ -245,6 +306,11 @@ export const redefinirSenha = action({
     await modifyAccountCredentials(ctx, {
       provider: "password",
       account: { id: conta.loginId, secret: novaSenha },
+    });
+    await ctx.runMutation(internal.membros.recuperarSenha.registrarTrocaSenha, {
+      userId: conta.userId,
+      membroId: conta.membroId,
+      contaId: conta.contaId,
     });
     await invalidateSessions(ctx, { userId: conta.userId });
 
