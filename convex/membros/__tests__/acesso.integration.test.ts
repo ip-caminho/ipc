@@ -529,4 +529,56 @@ describe("acesso — getAtivacaoByToken", () => {
     const res = await t.query(api.membros.acesso.getAtivacaoByToken, { token });
     expect(res.status).toBe("ja_ativado");
   });
+
+  it("retorna telefone_em_uso quando o numero ja tem conta de outro membro", async () => {
+    const t = convexTest(schema, modules);
+    const { membroId: outroMembroId } = await seedMembroSemAcesso(t);
+    const { membroId } = await seedMembroSemAcesso(t, { cpf: "11144477735" });
+    const token = "tok-em-uso";
+    await t.run(async (ctx) => {
+      const userId = await ctx.db.insert("users", {});
+      await ctx.db.patch(outroMembroId, { userId });
+      await ctx.db.insert("authAccounts", {
+        userId,
+        provider: "password",
+        providerAccountId: "5511999998888@membro.local",
+        secret: "hash",
+      });
+      await ctx.db.insert("membroConvites", {
+        token,
+        status: "PENDENTE",
+        expiraEm: Date.now() + 60_000,
+        membroId,
+        origem: "link",
+      });
+    });
+
+    const res = await t.query(api.membros.acesso.getAtivacaoByToken, { token });
+    expect(res.status).toBe("telefone_em_uso");
+  });
+
+  it("segue valido quando a conta do numero ainda nao tem membro (nova tentativa)", async () => {
+    const t = convexTest(schema, modules);
+    const { membroId } = await seedMembroSemAcesso(t);
+    const token = "tok-retentativa";
+    await t.run(async (ctx) => {
+      const userId = await ctx.db.insert("users", {});
+      await ctx.db.insert("authAccounts", {
+        userId,
+        provider: "password",
+        providerAccountId: "5511999998888@membro.local",
+        secret: "hash",
+      });
+      await ctx.db.insert("membroConvites", {
+        token,
+        status: "PENDENTE",
+        expiraEm: Date.now() + 60_000,
+        membroId,
+        origem: "link",
+      });
+    });
+
+    const res = await t.query(api.membros.acesso.getAtivacaoByToken, { token });
+    expect(res.status).toBe("valido");
+  });
 });
