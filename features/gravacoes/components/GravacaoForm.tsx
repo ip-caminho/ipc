@@ -127,7 +127,7 @@ export function GravacaoForm({ defaultValues, onSubmit, isEditing, entityId }: G
             </div>
 
             <div className="space-y-1">
-              <Label>Serie</Label>
+              <Label>Série</Label>
               <Select
                 value={form.watch("serieId") || "NONE"}
                 onValueChange={(v) => form.setValue("serieId", v === "NONE" ? undefined : v)}

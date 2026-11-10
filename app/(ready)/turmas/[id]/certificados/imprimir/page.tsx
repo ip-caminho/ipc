@@ -36,7 +36,7 @@ export default function ImprimirCertificadosPage() {
     return (
       <div className="p-6 space-y-3">
         <p className="text-sm">
-          Nenhum certificado emitido nesta turma (ou sem permissao para ver).
+          Nenhum certificado emitido nesta turma (ou sem permissão para ver).
         </p>
         <p className="text-sm text-muted-foreground">
           Emita na aba Certificados da turma e volte aqui para imprimir.

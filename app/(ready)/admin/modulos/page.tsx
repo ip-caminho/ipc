@@ -43,7 +43,7 @@ export default function ModulosPage() {
       await toggle({ slug });
       toast.success(`${label} ${ativo ? "desativado" : "ativado"}`);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao alterar modulo");
+      toast.error(error instanceof Error ? error.message : "Erro ao alterar módulo");
     }
   };
 
