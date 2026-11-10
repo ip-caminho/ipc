@@ -145,7 +145,7 @@ export default function ProximoDomingoPage() {
         {/* Data destaque */}
         <div className="text-center py-4 border rounded-lg bg-muted/30">
           <Church className="h-8 w-8 mx-auto mb-2 text-primary" />
-          <p className="text-lg font-medium capitalize">{dataFormatada}</p>
+          <p className="text-lg font-medium first-letter:uppercase">{dataFormatada}</p>
           <p className="text-sm text-muted-foreground">{domingo.horario || "10:00"}h</p>
         </div>
 
@@ -222,8 +222,9 @@ export default function ProximoDomingoPage() {
               }
             }
 
-            // Pregacao no final se nao foi inserida
-            if (!pregacaoInserida) {
+            // Pregacao no final se nao foi inserida (so com separadores;
+            // sem separadores o fallback abaixo ja adiciona a pregacao)
+            if (!pregacaoInserida && louvores.some((l) => l.startsWith("---"))) {
               const pregacao = getEscala("PREGACAO")[0];
               if (pregacao) {
                 items.push(renderEscalaCard("pregacao", "Pregação", pregacao));
