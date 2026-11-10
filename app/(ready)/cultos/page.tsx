@@ -519,7 +519,7 @@ export default function CultosPage() {
   const handleDeleteCulto = async (id: Id<"cultos">) => {
     try {
       await deleteCulto({ id });
-      toast.success("Culto excluido");
+      toast.success("Culto excluído");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro");
     }
@@ -611,7 +611,7 @@ export default function CultosPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir este culto?</AlertDialogTitle>
             <AlertDialogDescription>
-              O culto e toda a sua escala serao excluidos. Esta acao nao pode ser desfeita.
+              O culto e toda a sua escala serão excluídos. Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

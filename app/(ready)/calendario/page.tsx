@@ -254,7 +254,7 @@ function CalendarioContent() {
     try {
       await removeEvento({ id: editEvento._id as Id<"calendarioEventos"> });
       await revalidarSite("agenda");
-      toast.success("Evento excluido");
+      toast.success("Evento excluído");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao excluir");
     }
@@ -266,7 +266,7 @@ function CalendarioContent() {
       onValueChange={(val) => setFiltroMinisterio(val === "__all__" ? "" : val)}
     >
       <SelectTrigger className="w-full md:w-[200px]">
-        <SelectValue placeholder="Todos os ministerios" />
+        <SelectValue placeholder="Todos os ministérios" />
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="__all__">Todos os ministérios</SelectItem>
@@ -292,7 +292,7 @@ function CalendarioContent() {
     <ModuloGuard modulo="calendario">
       <HeaderLayout>
         <div className="space-y-4">
-          <PageHeader title="Calendario" />
+          <PageHeader title="Calendário" />
 
           {/* Barra: navegação + período */}
           <div className="flex flex-wrap items-center justify-between gap-2">

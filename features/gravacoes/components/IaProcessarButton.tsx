@@ -75,8 +75,8 @@ export function IaProcessarButton({ gravacaoId, iaStatus, hasAudio }: IaProcessa
           </AlertDialogTitle>
           <AlertDialogDescription>
             {isRetry
-              ? "O audio sera transcrito novamente e uma nova analise sera gerada. Os resultados anteriores serao substituidos."
-              : "O audio sera transcrito automaticamente e uma analise teologica sera gerada com tema central, pontos-chave, frases para redes sociais e descricao para YouTube."}
+              ? "O áudio será transcrito novamente e uma nova análise será gerada. Os resultados anteriores serão substituídos."
+              : "O áudio será transcrito automaticamente e uma análise teológica será gerada com tema central, pontos-chave, frases para redes sociais e descrição para YouTube."}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

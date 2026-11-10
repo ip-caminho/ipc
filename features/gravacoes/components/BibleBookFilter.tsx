@@ -79,7 +79,7 @@ export function BibleBookFilter({ gravacoes, selected, onSelect }: BibleBookFilt
       className="gap-1.5"
     >
       <BookOpen className="h-3.5 w-3.5" />
-      {selected || "Livros da Biblia"}
+      {selected || "Livros da Bíblia"}
       {selected && (
         <span
           role="button"

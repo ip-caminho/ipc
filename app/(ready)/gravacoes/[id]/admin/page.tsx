@@ -102,7 +102,7 @@ function DadosEditor({ gravacao }: { gravacao: any }) {
     <Card>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base">Dados da gravacao</CardTitle>
+          <CardTitle className="text-base">Dados da gravação</CardTitle>
           <Button size="sm" onClick={save} disabled={saving} className="hidden md:inline-flex">
             <Save className="h-3.5 w-3.5 mr-1" />
             {saving ? "Salvando..." : "Salvar"}
@@ -121,7 +121,7 @@ function DadosEditor({ gravacao }: { gravacao: any }) {
           </div>
         )}
         <div className="space-y-1">
-          <Label>Titulo</Label>
+          <Label>Título</Label>
           <Input value={form.titulo} onChange={(e) => set("titulo", e.target.value)} />
         </div>
 
@@ -155,7 +155,7 @@ function DadosEditor({ gravacao }: { gravacao: any }) {
         </div>
 
         <div className="space-y-1">
-          <Label>Descricao</Label>
+          <Label>Descrição</Label>
           <Textarea
             value={form.descricao}
             onChange={(e) => set("descricao", e.target.value)}
@@ -273,12 +273,12 @@ function AvisosEditor({ gravacaoId, avisos: initial }: { gravacaoId: Id<"gravaco
               </Button>
             </div>
             <Input
-              placeholder="Titulo do aviso"
+              placeholder="Título do aviso"
               value={aviso.titulo}
               onChange={(e) => update(i, "titulo", e.target.value)}
             />
             <Textarea
-              placeholder="Descricao"
+              placeholder="Descrição"
               value={aviso.descricao}
               onChange={(e) => update(i, "descricao", e.target.value)}
               className="min-h-[60px] md:min-h-[60px]"
@@ -334,7 +334,7 @@ function AudioTab({ gravacao }: { gravacao: any }) {
       a.remove();
       URL.revokeObjectURL(url);
     } catch {
-      toast.error("Erro ao baixar audio");
+      toast.error("Erro ao baixar áudio");
     } finally {
       setBaixando(false);
     }
@@ -343,17 +343,17 @@ function AudioTab({ gravacao }: { gravacao: any }) {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-base">Audio completo</CardTitle>
+        <CardTitle className="text-base">Áudio completo</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="flex flex-wrap items-center gap-2">
           <Button variant="outline" size="sm" onClick={handlePlay} className="h-11 md:h-8">
             {isFullPlaying ? <Pause className="h-4 w-4 mr-1.5" /> : <Play className="h-4 w-4 mr-1.5" />}
-            {isFullPlaying ? "Pausar" : "Ouvir audio completo"}
+            {isFullPlaying ? "Pausar" : "Ouvir áudio completo"}
           </Button>
           <Button variant="outline" size="sm" onClick={handleDownload} disabled={baixando} className="h-11 md:h-8">
             <Download className="h-4 w-4 mr-1.5" />
-            {baixando ? "Baixando..." : "Baixar audio"}
+            {baixando ? "Baixando..." : "Baixar áudio"}
           </Button>
         </div>
       </CardContent>
@@ -379,18 +379,18 @@ export default function GravacaoAdminPage() {
     return <Skeleton className="h-96 w-full max-w-4xl" />;
   }
   if (!gravacao) {
-    return <p className="text-muted-foreground">Gravacao nao encontrada</p>;
+    return <p className="text-muted-foreground">Gravação não encontrada</p>;
   }
 
   const isManager = can("gravacoes:update") || can("gravacoes:process_ai");
   if (!isManager) {
-    return <p className="text-muted-foreground">Sem permissao</p>;
+    return <p className="text-muted-foreground">Sem permissão</p>;
   }
 
   const handlePublish = async () => {
     try {
       await publishGravacao({ id: gravacao._id });
-      toast.success("Gravacao publicada");
+      toast.success("Gravação publicada");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao publicar");
     }
@@ -399,7 +399,7 @@ export default function GravacaoAdminPage() {
   const handleUnpublish = async () => {
     try {
       await unpublishGravacao({ id: gravacao._id, data: { status: "RASCUNHO" } });
-      toast.success("Gravacao despublicada");
+      toast.success("Gravação despublicada");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao despublicar");
     }
@@ -408,7 +408,7 @@ export default function GravacaoAdminPage() {
   const handleRemove = async () => {
     try {
       await removeGravacao({ id: gravacao._id });
-      toast.success("Gravacao excluida");
+      toast.success("Gravação excluída");
       router.push("/admin/gravacoes");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao excluir");
@@ -472,7 +472,7 @@ export default function GravacaoAdminPage() {
           <div className="min-w-0">
             <h1 className="text-lg font-bold truncate">{gravacao.titulo}</h1>
             <div className="flex items-center gap-2">
-              <p className="text-xs text-muted-foreground">Administracao</p>
+              <p className="text-xs text-muted-foreground">Administração</p>
               <IaStatusBadge iaStatus={gravacao.iaStatus} iaErro={gravacao.iaErro} />
             </div>
           </div>
@@ -525,7 +525,7 @@ export default function GravacaoAdminPage() {
           <TabsTrigger value="resultado" className="shrink-0 px-3">Resultado IA</TabsTrigger>
           <TabsTrigger value="segmentos" className="shrink-0 px-3">Trechos</TabsTrigger>
           {gravacao.audioUrl && (
-            <TabsTrigger value="audio" className="shrink-0 px-3">Audio</TabsTrigger>
+            <TabsTrigger value="audio" className="shrink-0 px-3">Áudio</TabsTrigger>
           )}
         </TabsList>
 
@@ -554,7 +554,7 @@ export default function GravacaoAdminPage() {
                 </EmptyMedia>
                 <EmptyTitle>Sem resultado de IA</EmptyTitle>
                 <EmptyDescription>
-                  Processe a gravacao para gerar tema, pontos-chave e frases.
+                  Processe a gravação para gerar tema, pontos-chave e frases.
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>
@@ -574,9 +574,9 @@ export default function GravacaoAdminPage() {
           ) : (
             <Empty className="border">
               <EmptyHeader>
-                <EmptyTitle>Nenhum audio disponivel</EmptyTitle>
+                <EmptyTitle>Nenhum áudio disponível</EmptyTitle>
                 <EmptyDescription>
-                  Faca upload do audio para editar os trechos.
+                  Faça upload do áudio para editar os trechos.
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>
@@ -593,9 +593,9 @@ export default function GravacaoAdminPage() {
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Excluir gravacao?</AlertDialogTitle>
+            <AlertDialogTitle>Excluir gravação?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta acao nao pode ser desfeita. A gravacao e seus dados serao removidos permanentemente.
+              Esta ação não pode ser desfeita. A gravação e seus dados serão removidos permanentemente.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

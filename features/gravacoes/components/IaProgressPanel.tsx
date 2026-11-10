@@ -28,9 +28,9 @@ interface Step {
 }
 
 const ALL_STEPS: Step[] = [
-  { key: "BAIXANDO", label: "Baixando audio do YouTube" },
-  { key: "TRANSCREVENDO", label: "Transcrevendo audio" },
-  { key: "ANALISANDO", label: "Analisando conteudo" },
+  { key: "BAIXANDO", label: "Baixando áudio do YouTube" },
+  { key: "TRANSCREVENDO", label: "Transcrevendo áudio" },
+  { key: "ANALISANDO", label: "Analisando conteúdo" },
   { key: "CONCLUIDO", label: "Concluido" },
 ];
 
@@ -112,7 +112,7 @@ export function IaProgressPanel({ gravacaoId, iaStatus, iaErro, iaTranscricao, y
           {iaErro && (
             <details className="text-xs">
               <summary className="flex min-h-11 cursor-pointer items-center text-muted-foreground">
-                Detalhes tecnicos
+                Detalhes técnicos
               </summary>
               <p className="text-destructive/80 bg-destructive/5 rounded p-2 break-words">{iaErro}</p>
             </details>

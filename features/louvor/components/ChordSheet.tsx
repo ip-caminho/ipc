@@ -24,7 +24,7 @@ export function ChordSheet({
   if (!conteudo) {
     return (
       <p className="text-sm text-muted-foreground italic">
-        Nenhum conteudo cadastrado
+        Nenhum conteúdo cadastrado
       </p>
     );
   }

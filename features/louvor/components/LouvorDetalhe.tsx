@@ -105,7 +105,7 @@ export function LouvorDetalhe({ louvorId, onBack }: LouvorDetalheProps) {
   };
 
   const handleDelete = async () => {
-    if (!confirm("Excluir esta musica?")) return;
+    if (!confirm("Excluir esta música?")) return;
     try {
       await removeLouvor({ id: louvorId });
       toast.success("Música excluída");
@@ -291,7 +291,7 @@ export function LouvorDetalhe({ louvorId, onBack }: LouvorDetalheProps) {
       {/* Observacoes */}
       {louvor.observacoes && can("louvor:update") && (
         <div className="space-y-2">
-          <h3 className="text-sm font-medium">Observacoes</h3>
+          <h3 className="text-sm font-medium">Observações</h3>
           <p className="text-sm text-muted-foreground whitespace-pre-wrap">{louvor.observacoes}</p>
         </div>
       )}

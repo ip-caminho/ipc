@@ -106,7 +106,7 @@ export default function MetricasLouvorPage() {
           <CardHeader className="pb-3">
             <CardTitle className="text-sm flex items-center gap-2">
               <Clock className="h-4 w-4" />
-              Nao tocadas recentemente
+              Não tocadas recentemente
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -117,7 +117,7 @@ export default function MetricasLouvorPage() {
                 ))}
               </div>
             ) : naoTocados.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">Todas as musicas tocaram recentemente</p>
+              <p className="text-sm text-muted-foreground text-center py-4">Todas as músicas tocaram recentemente</p>
             ) : (
               <div className="space-y-2">
                 {naoTocados.slice(0, 20).map((item) => (

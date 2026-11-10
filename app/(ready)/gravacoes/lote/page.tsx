@@ -75,7 +75,7 @@ export default function LoteGravacaoPage() {
       }));
 
     if (newFiles.length === 0) {
-      toast.error("Nenhum arquivo de audio selecionado");
+      toast.error("Nenhum arquivo de áudio selecionado");
       return;
     }
     setFiles((prev) => [...prev, ...newFiles]);
@@ -154,8 +154,8 @@ export default function LoteGravacaoPage() {
         >
           <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
           <p className="text-sm text-muted-foreground">
-            <span className="md:hidden">Toque para escolher os audios</span>
-            <span className="hidden md:inline">Arraste audios aqui ou clique para selecionar</span>
+            <span className="md:hidden">Toque para escolher os áudios</span>
+            <span className="hidden md:inline">Arraste áudios aqui ou clique para selecionar</span>
           </p>
           <p className="text-xs text-muted-foreground mt-1">
             MP3, M4A, WAV — a data e extraida do nome (ex: 2025 03 30 sermao.mp3)
@@ -283,7 +283,7 @@ export default function LoteGravacaoPage() {
             {allDone && (
               <div className="flex gap-2">
                 <Button variant="outline" asChild className="flex-1">
-                  <Link href="/admin/gravacoes">Ver gravacoes</Link>
+                  <Link href="/admin/gravacoes">Ver gravações</Link>
                 </Button>
                 <Button
                   variant="ghost"

@@ -1,8 +1,8 @@
 import { z } from "zod/v4";
 
 export const eventoFormSchema = z.object({
-  titulo: z.string().min(2, "Titulo deve ter pelo menos 2 caracteres"),
-  data: z.string().min(1, "Data e obrigatoria"),
+  titulo: z.string().min(2, "Título deve ter pelo menos 2 caracteres"),
+  data: z.string().min(1, "Data é obrigatória"),
   dataFim: z.string().optional(),
   ministerioId: z.string().optional(),
   descricao: z.string().optional(),

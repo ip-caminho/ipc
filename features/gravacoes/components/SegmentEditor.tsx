@@ -170,7 +170,7 @@ export function SegmentEditor({
     const ia = hhmmssToSeconds(iAvisos);
     const fa = hhmmssToSeconds(fAvisos);
     if (is != null && fs != null) {
-      r.push({ start: is, end: fs, color: "hsla(210, 80%, 55%, 0.15)", label: "Sermao" });
+      r.push({ start: is, end: fs, color: "hsla(210, 80%, 55%, 0.15)", label: "Sermão" });
     }
     if (ia != null && fa != null) {
       r.push({ start: ia, end: fa, color: "hsla(40, 90%, 55%, 0.2)", label: "Avisos" });
@@ -263,7 +263,7 @@ export function SegmentEditor({
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
           <Scissors className="h-4 w-4" />
-          Ajustar trechos do audio
+          Ajustar trechos do áudio
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -335,7 +335,7 @@ export function SegmentEditor({
             <div className="flex items-center gap-4 text-[10px] text-muted-foreground">
               <span className="flex items-center gap-1">
                 <span className="inline-block w-3 h-3 rounded-sm" style={{ background: "hsla(210, 80%, 55%, 0.3)" }} />
-                Sermao
+                Sermão
               </span>
               <span className="flex items-center gap-1">
                 <span className="inline-block w-3 h-3 rounded-sm" style={{ background: "hsla(40, 90%, 55%, 0.4)" }} />
@@ -361,14 +361,14 @@ export function SegmentEditor({
         {/* Sermao */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">Sermao</span>
+            <span className="text-sm font-medium">Sermão</span>
             {hhmmssToSeconds(iSermao) != null && hhmmssToSeconds(fSermao) != null && (
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 className="h-7 md:h-7 text-xs gap-1"
-                onClick={() => playPreview(hhmmssToSeconds(iSermao)!, "Sermao (inicio)")}
+                onClick={() => playPreview(hhmmssToSeconds(iSermao)!, "Sermão (início)")}
               >
                 <Play className="h-3 w-3" /> Ouvir trecho
               </Button>
@@ -376,7 +376,7 @@ export function SegmentEditor({
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <Label className="text-xs">Inicio</Label>
+              <Label className="text-xs">Início</Label>
               <div className="flex gap-1.5">
                 <Input
                   value={iSermao}
@@ -389,7 +389,7 @@ export function SegmentEditor({
                   variant="outline"
                   size="icon"
                   className="shrink-0"
-                  title="Usar posicao atual"
+                  title="Usar posição atual"
                   onClick={() => captureTime(setISermao)}
                 >
                   <RotateCcw className="h-3 w-3" />
@@ -401,7 +401,7 @@ export function SegmentEditor({
                     size="icon"
                     className="shrink-0"
                     title="Ouvir 5s a partir deste ponto"
-                    onClick={() => playPreview(hhmmssToSeconds(iSermao)!, "Inicio sermao")}
+                    onClick={() => playPreview(hhmmssToSeconds(iSermao)!, "Início sermão")}
                   >
                     <Volume2 className="h-3 w-3" />
                   </Button>
@@ -423,7 +423,7 @@ export function SegmentEditor({
                   variant="outline"
                   size="icon"
                   className="shrink-0"
-                  title="Usar posicao atual"
+                  title="Usar posição atual"
                   onClick={() => captureTime(setFSermao)}
                 >
                   <RotateCcw className="h-3 w-3" />
@@ -435,7 +435,7 @@ export function SegmentEditor({
                     size="icon"
                     className="shrink-0"
                     title="Ouvir 5s antes deste ponto"
-                    onClick={() => playPreview(Math.max(0, hhmmssToSeconds(fSermao)! - 5), "Fim sermao")}
+                    onClick={() => playPreview(Math.max(0, hhmmssToSeconds(fSermao)! - 5), "Fim sermão")}
                   >
                     <Volume2 className="h-3 w-3" />
                   </Button>
@@ -455,7 +455,7 @@ export function SegmentEditor({
                 variant="outline"
                 size="sm"
                 className="h-7 md:h-7 text-xs gap-1"
-                onClick={() => playPreview(hhmmssToSeconds(iAvisos)!, "Avisos (inicio)")}
+                onClick={() => playPreview(hhmmssToSeconds(iAvisos)!, "Avisos (início)")}
               >
                 <Play className="h-3 w-3" /> Ouvir trecho
               </Button>
@@ -463,7 +463,7 @@ export function SegmentEditor({
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <Label className="text-xs">Inicio</Label>
+              <Label className="text-xs">Início</Label>
               <div className="flex gap-1.5">
                 <Input
                   value={iAvisos}
@@ -476,7 +476,7 @@ export function SegmentEditor({
                   variant="outline"
                   size="icon"
                   className="shrink-0"
-                  title="Usar posicao atual"
+                  title="Usar posição atual"
                   onClick={() => captureTime(setIAvisos)}
                 >
                   <RotateCcw className="h-3 w-3" />
@@ -488,7 +488,7 @@ export function SegmentEditor({
                     size="icon"
                     className="shrink-0"
                     title="Ouvir 5s a partir deste ponto"
-                    onClick={() => playPreview(hhmmssToSeconds(iAvisos)!, "Inicio avisos")}
+                    onClick={() => playPreview(hhmmssToSeconds(iAvisos)!, "Início avisos")}
                   >
                     <Volume2 className="h-3 w-3" />
                   </Button>
@@ -510,7 +510,7 @@ export function SegmentEditor({
                   variant="outline"
                   size="icon"
                   className="shrink-0"
-                  title="Usar posicao atual"
+                  title="Usar posição atual"
                   onClick={() => captureTime(setFAvisos)}
                 >
                   <RotateCcw className="h-3 w-3" />
