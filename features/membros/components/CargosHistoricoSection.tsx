@@ -228,7 +228,7 @@ export function CargosHistoricoSection({ membroId }: { membroId: Id<"membros"> }
                 </div>
               </div>
               <p className="text-[11px] text-muted-foreground -mt-1">
-                Mandato IPB: ate 5 anos (sugestao automatica, editavel). O fim
+                Mandato IPB: até 5 anos (sugestão automática, editável). O fim
                 previsto alimenta os alertas de mandatos vencidos / a vencer.
               </p>
               <div className="space-y-1">

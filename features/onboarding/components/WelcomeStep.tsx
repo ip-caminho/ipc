@@ -16,7 +16,7 @@ export function WelcomeStep({ firstName, onNext }: Props) {
       </div>
 
       <div className="space-y-2">
-        <h1 className="text-2xl font-bold">Bem-vindo a IPC, {firstName}!</h1>
+        <h1 className="text-2xl font-bold">Bem-vindo à IPC, {firstName}!</h1>
         <p className="text-sm text-muted-foreground max-w-xs mx-auto">
           Este app conecta você a sua comunidade. Vamos configurar seu perfil em poucos passos.
         </p>

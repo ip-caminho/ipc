@@ -298,7 +298,7 @@ export function FamiliaDrawer({ membroId, entidadeId, nome, open, onOpenChange }
           {/* Irmaos */}
           <section className="space-y-2">
             <h3 className="flex items-center gap-2 text-sm font-semibold">
-              <UsersRound className="h-4 w-4 text-violet-500" /> Irmaos
+              <UsersRound className="h-4 w-4 text-violet-500" /> Irmãos
             </h3>
             <p className="text-xs text-muted-foreground">
               Vincular um irmão copia os pais desta pessoa. Cadastre o pai/mãe antes.

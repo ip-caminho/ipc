@@ -495,7 +495,7 @@ function CabecalhoFamilia({ nome, total }: { nome: string; total: number }) {
       <TableCell colSpan={NUM_COLS} className={cn(COL_NOME, "bg-muted/60 py-2")}>
         <div className="flex items-center gap-2 text-sm font-semibold">
           <Users className="h-4 w-4 text-muted-foreground" />
-          Familia {nome || "(sem chefe definido)"}
+          Família {nome || "(sem chefe definido)"}
           <span className="text-xs font-normal text-muted-foreground">
             · {total} pessoa{total !== 1 ? "s" : ""}
           </span>
@@ -577,7 +577,7 @@ export function SecretarioExecutivoTabela({
             {novaFamilia && (
               <div className="flex items-center gap-2 pt-2 text-sm font-semibold">
                 <Users className="h-4 w-4 text-muted-foreground" />
-                Familia {m.familiaHeadNome || "(sem chefe definido)"}
+                Família {m.familiaHeadNome || "(sem chefe definido)"}
                 <span className="text-xs font-normal text-muted-foreground">
                   · {totalPorFamilia.get(m.familiaHeadId ?? "") ?? 1} pessoa
                   {(totalPorFamilia.get(m.familiaHeadId ?? "") ?? 1) !== 1 ? "s" : ""}

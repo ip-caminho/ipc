@@ -79,7 +79,7 @@ export default function ConvitePage() {
         <div className="flex justify-center mb-2">
           <Logo className="h-12" />
         </div>
-        <CardTitle>Bem-vindo a IPC</CardTitle>
+        <CardTitle>Bem-vindo à IPC</CardTitle>
         <CardDescription>Preencha seus dados para completar o cadastro</CardDescription>
       </CardHeader>
       <CardContent>
