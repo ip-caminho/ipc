@@ -211,8 +211,20 @@ describe("acesso — verificarAcessoDireto", () => {
       await seedMembroSemAcesso(t);
       const formatos = ["11999998888", "(11) 99999-8888", "+55 11 99999-8888", "11 99999 8888", "5511999998888"];
       for (let i = 0; i < MAX_FALHAS; i++) {
-        await verificar(t, { telefone: formatos[i % formatos.length], cpfPrefix: "00000" });
+        await verificar(t, { telefone: formatos[i % formatos.length], cpfPrefix: `0000${i}` });
       }
+      expect(await verificar(t, CERTO)).toEqual({ status: "bloqueado" });
+    });
+
+    it("o acerto nao apaga as falhas do dado compartilhado", async () => {
+      const t = convexTest(schema, modules);
+      await seedMembroSemAcesso(t);
+      for (let i = 0; i < MAX_FALHAS - 1; i++) {
+        await verificar(t, { telefone: `1190000000${i}`, cpfPrefix: CERTO.cpfPrefix });
+      }
+      expect((await verificar(t, CERTO)).status).toBe("ok");
+      // Uma falha a mais completa o acumulado, que seguia gravado apos o acerto
+      await verificar(t, { telefone: "11900000009", cpfPrefix: CERTO.cpfPrefix });
       expect(await verificar(t, CERTO)).toEqual({ status: "bloqueado" });
     });
 
