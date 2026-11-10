@@ -185,10 +185,29 @@ export const getAtivacaoByToken = query({
     const phone = telefoneDoMembro(entidade);
     if (!phone) return { status: "invalido" as const };
 
+    // O login deriva do telefone: número com conta de outro membro não pode
+    // seguir para a senha, pois o Password provider abriria a conta existente.
+    const loginId = loginIdFromPhone(phone);
+    const conta = await ctx.db
+      .query("authAccounts")
+      .withIndex("providerAndAccountId", (q) =>
+        q.eq("provider", "password").eq("providerAccountId", loginId)
+      )
+      .first();
+    if (conta) {
+      const dono = await ctx.db
+        .query("membros")
+        .withIndex("by_user_id", (q) => q.eq("userId", conta.userId))
+        .first();
+      if (dono && dono._id !== membro._id) {
+        return { status: "telefone_em_uso" as const };
+      }
+    }
+
     return {
       status: "valido" as const,
       nome: entidade.nomeCompleto || "",
-      loginId: loginIdFromPhone(phone),
+      loginId,
     };
   },
 });

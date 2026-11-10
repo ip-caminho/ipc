@@ -22,7 +22,7 @@ import { Logo } from "@shared/components/layout/Logo";
 
 export default function AtivarPage() {
   const { token } = useParams<{ token: string }>();
-  const { signIn } = useAuthActions();
+  const { signIn, signOut } = useAuthActions();
   const router = useRouter();
   // @ts-ignore Convex TS2589
   const dados = useQuery(api.membros.acesso.getAtivacaoByToken, { token });
@@ -51,6 +51,9 @@ export default function AtivarPage() {
         }
         if (!cancelled) router.push("/dashboard");
       } catch (err) {
+        // Recusa definitiva: a sessão recém-aberta não pertence a este cadastro.
+        // Vale mesmo com a página saindo da tela, por isso fica fora do `cancelled`.
+        if (err instanceof ConvexError) void signOut().catch(() => {});
         if (!cancelled) {
           // Falha inesperada nao tem mensagem util: evita mostrar o texto tecnico do Convex
           const fallback = "Erro ao vincular acesso";
@@ -63,7 +66,7 @@ export default function AtivarPage() {
     return () => {
       cancelled = true;
     };
-  }, [isAuthenticated, pendingToken, concluir, logLogin, router]);
+  }, [isAuthenticated, pendingToken, concluir, logLogin, router, signOut]);
 
   // Ativacao em andamento: a query reage ao convite ACEITO e mudaria de
   // status antes do redirect — nao trocar a tela por mensagem de erro.
@@ -81,7 +84,9 @@ export default function AtivarPage() {
         ? "Este link expirou. Peca um novo a secretaria."
         : dados.status === "ja_ativado"
           ? "Este acesso ja foi ativado. Va para a tela de login e entre com sua senha."
-          : "Link invalido.";
+          : dados.status === "telefone_em_uso"
+            ? "Este telefone já é usado no acesso de outra pessoa. Procure a secretaria."
+            : "Link invalido.";
     return (
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
