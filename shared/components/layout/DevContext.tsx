@@ -1229,19 +1229,29 @@ const CONTEXT_MAP: Record<string, PageContext> = {
   "/signin": {
     nome: "Login",
     pagina: "app/(auth)/signin/page.tsx",
-    arquivos: ["app/(auth)/signin/page.tsx", "shared/lib/acesso.ts"],
+    arquivos: [
+      "app/(auth)/signin/page.tsx",
+      "shared/lib/acesso.ts",
+      "convex/membros/acesso.ts",
+      "convex/membros/tentativas.ts",
+    ],
     mutations: ["audit.mutations.logLogin", "membros.acesso.verificarAcessoDireto"],
     notas: [
       "Abas: Entrar (telefone+senha) e Primeiro acesso (telefone + 5 digitos do CPF)",
       "Login por senha (provider Password); bypass em dev via NEXT_PUBLIC_AUTH_BYPASS_MODE",
       "Identificador de login derivado do telefone (loginIdFromPhone)",
       "Link para /esqueci-senha na aba Entrar",
+      "Primeiro acesso tem controle de tentativas (convex/membros/tentativas.ts, o mesmo da recuperacao); a mutation retorna status em vez de lancar",
     ],
   },
   "/esqueci-senha": {
     nome: "Esqueci minha senha",
     pagina: "app/(auth)/esqueci-senha/page.tsx",
-    arquivos: ["app/(auth)/esqueci-senha/page.tsx", "convex/membros/recuperarSenha.ts"],
+    arquivos: [
+      "app/(auth)/esqueci-senha/page.tsx",
+      "convex/membros/recuperarSenha.ts",
+      "convex/membros/tentativas.ts",
+    ],
     mutations: [
       "membros.recuperarSenha.solicitarRecuperacao",
       "membros.recuperarSenha.redefinirSenha (action)",
@@ -1251,6 +1261,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "Publica: confere dados do cadastro e troca a senha em duas etapas na mesma tela",
       "Mantem conta, vinculo e cadastro; encerra as sessoes ativas",
       "Contas com permissoes alem de membro sao encaminhadas ao painel de acesso",
+      "Controle de tentativas vem de convex/membros/tentativas.ts (compartilhado com o Primeiro acesso)",
     ],
   },
   "/ativar/[token]": {
