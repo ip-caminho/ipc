@@ -242,7 +242,7 @@ export function BibleBookFilter({ gravacoes, selected, onSelect }: BibleBookFilt
                                 <span className="font-medium">{book.name}</span>
                                 {count > 0 && (
                                   <span className="text-muted-foreground ml-1.5">
-                                    {count} {count === 1 ? "gravacao" : "gravacoes"}
+                                    {count} {count === 1 ? "gravação" : "gravações"}
                                   </span>
                                 )}
                               </TooltipContent>

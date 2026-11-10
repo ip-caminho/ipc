@@ -95,7 +95,7 @@ export function LouvorForm({
     <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
       <ResponsiveDialogContent className="md:max-w-[90vw]">
         <ResponsiveDialogHeader>
-          <ResponsiveDialogTitle>{isEditing ? "Editar" : "Nova"} Musica</ResponsiveDialogTitle>
+          <ResponsiveDialogTitle>{isEditing ? "Editar" : "Nova"} Música</ResponsiveDialogTitle>
         </ResponsiveDialogHeader>
         <form
           id="louvor-form"

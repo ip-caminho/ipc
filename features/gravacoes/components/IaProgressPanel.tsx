@@ -31,7 +31,7 @@ const ALL_STEPS: Step[] = [
   { key: "BAIXANDO", label: "Baixando áudio do YouTube" },
   { key: "TRANSCREVENDO", label: "Transcrevendo áudio" },
   { key: "ANALISANDO", label: "Analisando conteúdo" },
-  { key: "CONCLUIDO", label: "Concluido" },
+  { key: "CONCLUIDO", label: "Concluído" },
 ];
 
 function getVisibleSteps(isYoutube: boolean): Step[] {

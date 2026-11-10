@@ -101,7 +101,7 @@ function BootstrapForm() {
                 }
               }}
             >
-              Ja sou admin (religar sessao)
+              Já sou admin (religar sessão)
             </Button>
           </div>
         </CardContent>
