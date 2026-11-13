@@ -126,8 +126,8 @@ export const criarAusencia = mutation({
           : formatBR(dataInicio);
       await ctx.scheduler.runAfter(0, getPushRef(), {
         roles: ROLES_LIDERANCA,
-        title: "Aviso de ausencia",
-        body: `${nome} estara ausente em ${periodo}${motivo ? ` — ${motivo}` : ""}`,
+        title: "Aviso de ausência",
+        body: `${nome} estará ausente em ${periodo}${motivo ? ` — ${motivo}` : ""}`,
         url: "/ausencias",
       });
     }
