@@ -238,7 +238,7 @@ describe("turmas: janela de inscricao", () => {
     await expect(
       // @ts-ignore Convex TS2589 (instanciacao de tipo profunda)
       t.mutation(api.turmas.mutations.registrar, { token: tokens.futura, ...inscricao })
-    ).rejects.toThrow(/ainda nao comecaram/i);
+    ).rejects.toThrow(/ainda não começaram/i);
 
     const id = await t.mutation(api.turmas.mutations.registrar, {
       token: tokens.livre,
@@ -408,7 +408,7 @@ describe("aulas por datas explicitas e plano do curso", () => {
         turmaId,
         datas: ["20/09/2026"],
       })
-    ).rejects.toThrow(/invalida/i);
+    ).rejects.toThrow(/inválida/i);
 
     const criadas = await as(t, gestor).mutation(api.turmas.mutations.gerarAulas, {
       turmaId,
@@ -493,7 +493,7 @@ describe("registrar — validacao das respostas no servidor", () => {
         ...base,
         respostasExtras: [{ perguntaId: "batismo", valor: "Talvez" }],
       })
-    ).rejects.toThrow(/Opcao invalida/i);
+    ).rejects.toThrow(/Opção inválida/i);
   });
 
   it("recusa duas respostas em pergunta de escolha unica", async () => {
@@ -512,7 +512,7 @@ describe("registrar — validacao das respostas no servidor", () => {
           },
         ],
       })
-    ).rejects.toThrow(/uma resposta so/i);
+    ).rejects.toThrow(/uma resposta só/i);
   });
 
   it("aceita resposta valida e descarta pergunta que nao e da turma", async () => {

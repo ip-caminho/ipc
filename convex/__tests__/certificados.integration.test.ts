@@ -415,7 +415,7 @@ describe("criterio MAX_FALTAS ponta a ponta", () => {
         nome: "Sem limite",
         criterioAprovacao: "MAX_FALTAS",
       })
-    ).rejects.toThrow(/maximo de faltas/i);
+    ).rejects.toThrow(/máximo de faltas/i);
   });
 
   it("setCriterioAprovacao troca a regra da turma e exige gestao", async () => {
@@ -450,7 +450,7 @@ describe("criterio MAX_FALTAS ponta a ponta", () => {
         turmaId,
         criterioAprovacao: "MAX_FALTAS",
       })
-    ).rejects.toThrow(/maximo de faltas/i);
+    ).rejects.toThrow(/máximo de faltas/i);
 
     const comum = await seedUser(t, { role: "membro" });
     await expect(

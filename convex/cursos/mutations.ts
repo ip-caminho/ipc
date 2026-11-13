@@ -11,14 +11,14 @@ function validaCriterio(
 ) {
   if (criterio !== "MAX_FALTAS") return;
   if (maxFaltas === undefined || !Number.isFinite(maxFaltas) || maxFaltas < 0) {
-    throw new Error("Informe o maximo de faltas permitido");
+    throw new Error("Informe o máximo de faltas permitido");
   }
 }
 
 function validaFrequencia(valor: number | undefined): number | undefined {
   if (valor === undefined) return undefined;
   if (!Number.isFinite(valor) || valor < 0 || valor > 100) {
-    throw new Error("Frequencia minima deve estar entre 0 e 100");
+    throw new Error("Frequência mínima deve estar entre 0 e 100");
   }
   return Math.round(valor);
 }
@@ -87,7 +87,7 @@ export const update = mutation({
   handler: async (ctx, { id, ...updates }) => {
     await requirePermission(ctx, "turmas:update");
     const oldRecord = await ctx.db.get(id);
-    if (!oldRecord) throw new Error("Curso nao encontrado");
+    if (!oldRecord) throw new Error("Curso não encontrado");
 
     validaFrequencia(updates.frequenciaMinima);
     // Valida no estado final: o patch pode trocar so uma das duas pontas.
@@ -119,7 +119,7 @@ export const setStatus = mutation({
   handler: async (ctx, { id, status }) => {
     await requirePermission(ctx, "turmas:update");
     const oldRecord = await ctx.db.get(id);
-    if (!oldRecord) throw new Error("Curso nao encontrado");
+    if (!oldRecord) throw new Error("Curso não encontrado");
     if (oldRecord.status === status) return;
 
     // Curso inativo sai do select de turmas novas, mas o historico fica.

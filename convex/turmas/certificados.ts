@@ -34,7 +34,7 @@ async function codigoUnico(ctx: MutationCtx): Promise<string> {
       .first();
     if (!existe) return codigo;
   }
-  throw new Error("Nao foi possivel gerar um codigo unico");
+  throw new Error("Não foi possível gerar um código único");
 }
 
 async function certificadoAtivo(ctx: MutationCtx, inscricaoId: Id<"inscricoes">) {
@@ -159,23 +159,23 @@ export const emitir = mutation({
     const { membro } = await requirePermission(ctx, "turmas:manage_inscricoes");
 
     const inscricao = await ctx.db.get(inscricaoId);
-    if (!inscricao) throw new Error("Inscricao nao encontrada");
+    if (!inscricao) throw new Error("Inscrição não encontrada");
     if (inscricao.status !== "CONFIRMADA") {
-      throw new Error("So inscricao confirmada recebe certificado");
+      throw new Error("Só inscrição confirmada recebe certificado");
     }
     if (await certificadoAtivo(ctx, inscricaoId)) {
-      throw new Error("Ja existe certificado ativo. Revogue antes de emitir outro");
+      throw new Error("Já existe certificado ativo. Revogue antes de emitir outro");
     }
 
     const turma = await ctx.db.get(inscricao.turmaId);
-    if (!turma) throw new Error("Turma nao encontrada");
+    if (!turma) throw new Error("Turma não encontrada");
     const curso = turma.cursoId ? await ctx.db.get(turma.cursoId) : null;
 
     const resumo = (await resumoFrequenciaTurma(ctx, turma._id)).find(
       (a) => a.inscricaoId === inscricaoId
     );
     if (!resumo || resumo.percentual === null) {
-      throw new Error("Sem frequencia apurada: nenhuma aula com chamada feita");
+      throw new Error("Sem frequência apurada: nenhuma aula com chamada feita");
     }
 
     // Frequencia abaixo do minimo NAO bloqueia: o minimo e semaforo, a decisao
@@ -205,7 +205,7 @@ export const emitirAptos = mutation({
     const { membro } = await requirePermission(ctx, "turmas:manage_inscricoes");
 
     const turma = await ctx.db.get(turmaId);
-    if (!turma) throw new Error("Turma nao encontrada");
+    if (!turma) throw new Error("Turma não encontrada");
     const curso = turma.cursoId ? await ctx.db.get(turma.cursoId) : null;
 
     const alunos = await resumoFrequenciaTurma(ctx, turmaId);
@@ -245,8 +245,8 @@ export const revogar = mutation({
   handler: async (ctx, { id }) => {
     const { membro } = await requirePermission(ctx, "turmas:manage_inscricoes");
     const certificado = await ctx.db.get(id);
-    if (!certificado) throw new Error("Certificado nao encontrado");
-    if (certificado.revogadoEm) throw new Error("Certificado ja revogado");
+    if (!certificado) throw new Error("Certificado não encontrado");
+    if (certificado.revogadoEm) throw new Error("Certificado já revogado");
 
     // Revogar nao apaga: mantem o rastro do que foi entregue.
     await ctx.db.patch(id, { revogadoEm: Date.now(), revogadoPor: membro._id });
@@ -259,7 +259,7 @@ export const setObservacoesInstrutor = mutation({
   handler: async (ctx, { inscricaoId, texto }) => {
     await requirePermission(ctx, "turmas:manage_inscricoes");
     const oldRecord = await ctx.db.get(inscricaoId);
-    if (!oldRecord) throw new Error("Inscricao nao encontrada");
+    if (!oldRecord) throw new Error("Inscrição não encontrada");
 
     await ctx.db.patch(inscricaoId, {
       observacoesInstrutor: truncarObservacao(texto),
