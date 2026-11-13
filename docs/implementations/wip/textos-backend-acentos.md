@@ -111,11 +111,16 @@ do laço (uma leitura só).
   - `modulos.label` e `modulos.descricao` — por `slug` (índice `by_slug`);
   - `ministerios.nome` e `ministerios.descricao` — um `collect()` da tabela (não há índice por nome);
   - `multimidiaChecklistTemplate.item` — 5 pares, um `collect()` da tabela (7 linhas, sem índice:
-    `convex/schema.ts:1361-1365`). As cópias em `multimidiaChecklist` **não** são lidas nem escritas.
+    `convex/schema.ts:1361-1365`). As cópias em `multimidiaChecklist` **não** são lidas nem escritas;
+  - seeds de turmas já gravados (textos antigos de `git show origin/main:convex/turmas/seeds.ts`):
+    curso "Curso de Novos Membros" (`descricao`, `ementa`, `planoAulas[].titulo`, 4 títulos),
+    turma "Novos Membros 2/2026" (`descricao`) e `turmaEncontros.titulo` (copiado do plano).
+    Curso localizado por `by_status` (ATIVO, depois INATIVO), turma por `by_curso` e encontros por
+    `by_turma`, todos com `take`, sem `.filter()`. `detalhe` do plano e `observacoes` não são tocados.
 - Regra: troca **só** quando o valor gravado é exatamente o texto antigo. Texto editado pelo admin,
   já corrigido ou diferente em qualquer caractere fica como está. `slug` nunca é escrito.
 - Idempotente por construção: a segunda execução não encontra texto antigo.
-- Retorno: `{ dryRun, funcoes, modulos, ministerios, checklistTemplate }`, cada um com o número de documentos alterados
+- Retorno: `{ dryRun, funcoes, modulos, ministerios, checklistTemplate, cursos, turmas, turmaEncontros }`, cada um com o número de documentos alterados
   (ou que seriam alterados, em `dryRun`). Sem `ctx.db.patch` quando `dryRun` é `true`.
 - Sem audit log: correção técnica de grafia, feita por função interna sem usuário.
 
@@ -129,17 +134,18 @@ npx convex run migration/textosAcentos:run '{"dryRun":true}' --prod
 npx convex run migration/textosAcentos:run '{"dryRun":false}' --prod
 ```
 Contagem esperada num banco semeado e nunca editado: `funcoes` 3, `modulos` 14, `ministerios` 5,
-`checklistTemplate` 5.
+`checklistTemplate` 5, `cursos` 1, `turmas` 1, `turmaEncontros` até 4 (os 4 títulos acentuados do plano).
 Em produção pode ser menor (texto editado ou módulo ausente); número maior que esse é erro.
 
 ### Teste
-`convex/__tests__/textosAcentosMigracao.integration.test.ts` (convex-test), cinco casos:
-1. texto exatamente igual ao antigo é trocado, nas quatro tabelas, e o `slug` continua igual;
+`convex/__tests__/textosAcentosMigracao.integration.test.ts` (convex-test), sete casos:
+1. texto exatamente igual ao antigo é trocado, nas sete tabelas, e o `slug` continua igual;
 2. texto editado (ex.: `funcoes.label` "Pregação da Palavra", `ministerios.descricao` própria) não muda;
 3. segunda execução devolve zero em todas as tabelas;
 4. `dryRun: true` e chamada sem argumento devolvem as contagens e não gravam;
 5. um documento de `multimidiaChecklist` com o texto antigo continua igual depois da migração.
-Mais um caso para o seed: com um ministério "Multimidia" já gravado, `seedMinisterios` não insere outro.
+Mais dois casos para o seed: com "Multimidia" já gravado, `seedMinisterios` não insere outro; rodado duas vezes, termina com 5 ministérios.
+Casos de turmas: troca exata de curso, turma e encontros; texto editado não muda; `dryRun` confere todas as tabelas, inclusive que `modulos` e o item do checklist não mudaram.
 `convex/__tests__/seedsInternal.integration.test.ts` roda `seedModulos` de verdade (`:45`), mas não
 compara texto; não muda.
 
@@ -232,7 +238,7 @@ Em cada PR:
   `slug`/`key` é idêntico antes e depois.
 
 Só no PR1:
-- Migração em dev: `dryRun` mostra as contagens esperadas (até 3 / 14 / 5 / 5); a execução real devolve os
+- Migração em dev: `dryRun` mostra as contagens esperadas (até 3 / 14 / 5 / 5 / 1 / 1 / 4); a execução real devolve os
   mesmos números; nova execução devolve zero.
 - Navegador, local (`npm run dev`, depois da migração em dev), a 390px e a 1280px:
   - planejamento de cultos (`/cultos`): rótulos "Confissão", "Pregação", "Multimídia";

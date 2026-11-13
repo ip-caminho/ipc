@@ -33,14 +33,61 @@ const rodar = (t: T, args: { dryRun?: boolean }) =>
     modulos: number;
     ministerios: number;
     checklistTemplate: number;
+    cursos: number;
+    turmas: number;
+    turmaEncontros: number;
   }>;
 
+const ZERO_TURMAS = { cursos: 0, turmas: 0, turmaEncontros: 0 };
+const NM_TITULO_ANTIGO = "Introducao: Paulo e a Igreja de Efeso";
+const NM_TURMA_ANTIGA =
+  "Seja bem-vindo(a)! Este questionario tem o proposito de conhecer melhor os " +
+  "participantes interessados no Estudo para Candidatos a Novos Membros, um curso " +
+  "voltado para aqueles que desejam integrar oficialmente a Igreja Presbiteriana do " +
+  "Caminho. Ao enviar este formulario, voce demonstra interesse em participar e esta " +
+  "ciente dos compromissos envolvidos, incluindo o limite de 3 faltas e a entrevista " +
+  "final com os presbiteros.";
+const NM_DESCRICAO_ANTIGA =
+  "O curso tem como proposito apresentar os fundamentos biblicos que sustentam " +
+  "nossa identidade como igreja presbiteriana, segundo os principios da Escritura " +
+  "Sagrada. Ao longo dos encontros, estudaremos a Epistola de Paulo aos Efesios e o " +
+  "livro Recriados Pela Graca, do pastor Bernardo Cho, buscando compreender como o " +
+  "poder da ressurreicao de Cristo molda a vida, a comunhao e o testemunho da Igreja.";
+
+async function semearTurmas(t: T, editado = false) {
+  return await t.run(async (ctx) => {
+    const cursoId = await ctx.db.insert("cursos", {
+      nome: "Curso de Novos Membros",
+      descricao: editado ? "Descrição própria do curso" : NM_DESCRICAO_ANTIGA,
+      ementa: "Ementa já editada",
+      planoAulas: [{ titulo: editado ? "Aula inaugural" : NM_TITULO_ANTIGO, detalhe: "p. 9" }, { titulo: "Conversa sobre a IPB" }],
+      frequenciaMinima: 75,
+      status: "ATIVO",
+      criadoEm: 1,
+    });
+    const turmaId = await ctx.db.insert("turmas", {
+      nome: "Novos Membros 2/2026",
+      cursoId,
+      descricao: editado ? "Descrição própria da turma" : NM_TURMA_ANTIGA,
+      dataInicio: "2026-09-20",
+      vagasOcupadas: 0,
+      status: "ABERTA",
+      camposSistema: [],
+      token: "tok",
+      criadoEm: 1,
+    });
+    await ctx.db.insert("turmaEncontros", { turmaId, data: "2026-09-20", titulo: editado ? "Aula inaugural" : NM_TITULO_ANTIGO, criadoEm: 1 });
+    await ctx.db.insert("turmaEncontros", { turmaId, data: "2026-09-27", titulo: "Conversa sobre a IPB", criadoEm: 1 });
+    return { cursoId, turmaId };
+  });
+}
+
 describe("migration/textosAcentos", () => {
-  it("troca o texto exatamente igual ao antigo nas quatro tabelas e mantém o slug", async () => {
+  it("troca o texto exatamente igual ao antigo nas tabelas semeadas e mantém o slug", async () => {
     const t = convexTest(schema, modules);
     await semear(t);
     const r = await rodar(t, { dryRun: false });
-    expect(r).toEqual({ dryRun: false, funcoes: 3, modulos: 2, ministerios: 2, checklistTemplate: 1 });
+    expect(r).toEqual({ dryRun: false, funcoes: 3, modulos: 2, ministerios: 2, checklistTemplate: 1, ...ZERO_TURMAS });
 
     await t.run(async (ctx) => {
       const funcoes = await ctx.db.query("funcoes").collect();
@@ -94,13 +141,14 @@ describe("migration/textosAcentos", () => {
     await semear(t);
     await rodar(t, { dryRun: false });
     const r = await rodar(t, { dryRun: false });
-    expect(r).toEqual({ dryRun: false, funcoes: 0, modulos: 0, ministerios: 0, checklistTemplate: 0 });
+    expect(r).toEqual({ dryRun: false, funcoes: 0, modulos: 0, ministerios: 0, checklistTemplate: 0, ...ZERO_TURMAS });
   });
 
   it("dryRun e chamada sem argumento contam e não gravam", async () => {
     const t = convexTest(schema, modules);
     await semear(t);
-    const esperado = { funcoes: 3, modulos: 2, ministerios: 2, checklistTemplate: 1 };
+    await semearTurmas(t);
+    const esperado = { funcoes: 3, modulos: 2, ministerios: 2, checklistTemplate: 1, cursos: 1, turmas: 1, turmaEncontros: 1 };
     expect(await rodar(t, { dryRun: true })).toEqual({ dryRun: true, ...esperado });
     expect(await rodar(t, {})).toEqual({ dryRun: true, ...esperado });
     await t.run(async (ctx) => {
@@ -108,6 +156,16 @@ describe("migration/textosAcentos", () => {
       expect(labels).toContain("Confissao");
       const m = await ctx.db.query("ministerios").collect();
       expect(m.map((x) => x.nome)).toContain("Multimidia");
+      const mod = await ctx.db.query("modulos").withIndex("by_slug", (q) => q.eq("slug", "diretorio")).unique();
+      expect(mod?.label).toBe("Diretorio");
+      expect(mod?.descricao).toBe("Diretorio de contatos");
+      const item = await ctx.db.query("multimidiaChecklistTemplate").first();
+      expect(item?.item).toBe("Montar apresentacao");
+      expect((await ctx.db.query("cursos").first())?.planoAulas?.[0].titulo).toBe(NM_TITULO_ANTIGO);
+      expect((await ctx.db.query("turmas").first())?.descricao).toBe(NM_TURMA_ANTIGA);
+      expect((await ctx.db.query("cursos").first())?.descricao).toBe(NM_DESCRICAO_ANTIGA);
+      const encontros = await ctx.db.query("turmaEncontros").collect();
+      expect(encontros.map((e) => e.titulo)).toContain(NM_TITULO_ANTIGO);
     });
   });
 
@@ -129,6 +187,41 @@ describe("migration/textosAcentos", () => {
   });
 });
 
+describe("migration/textosAcentos — turmas", () => {
+  it("troca curso, turma e encontros só quando o texto é exatamente o antigo", async () => {
+    const t = convexTest(schema, modules);
+    await semearTurmas(t);
+    const r = await rodar(t, { dryRun: false });
+    expect(r).toMatchObject({ cursos: 1, turmas: 1, turmaEncontros: 1 });
+    await t.run(async (ctx) => {
+      const curso = await ctx.db.query("cursos").first();
+      expect(curso?.descricao).toContain("propósito apresentar os fundamentos bíblicos");
+      expect(curso?.descricao).toContain("Epístola de Paulo aos Efésios");
+      expect(curso?.planoAulas?.[0]).toEqual({ titulo: "Introdução: Paulo e a Igreja de Éfeso", detalhe: "p. 9" });
+      expect(curso?.planoAulas?.[1].titulo).toBe("Conversa sobre a IPB");
+      expect(curso?.ementa).toBe("Ementa já editada");
+      const turma = await ctx.db.query("turmas").first();
+      expect(turma?.descricao).toContain("questionário tem o propósito");
+      const encontros = await ctx.db.query("turmaEncontros").collect();
+      expect(encontros.map((e) => e.titulo).sort()).toEqual(["Conversa sobre a IPB", "Introdução: Paulo e a Igreja de Éfeso"]);
+    });
+    expect(await rodar(t, { dryRun: false })).toMatchObject(ZERO_TURMAS);
+  });
+
+  it("não mexe em texto editado de curso, turma e encontros", async () => {
+    const t = convexTest(schema, modules);
+    await semearTurmas(t, true);
+    expect(await rodar(t, { dryRun: false })).toMatchObject(ZERO_TURMAS);
+    await t.run(async (ctx) => {
+      expect((await ctx.db.query("cursos").first())?.descricao).toBe("Descrição própria do curso");
+      expect((await ctx.db.query("cursos").first())?.planoAulas?.[0].titulo).toBe("Aula inaugural");
+      expect((await ctx.db.query("turmas").first())?.descricao).toBe("Descrição própria da turma");
+      const encontros = await ctx.db.query("turmaEncontros").collect();
+      expect(encontros.map((e) => e.titulo)).toContain("Aula inaugural");
+    });
+  });
+});
+
 describe("seedMinisterios", () => {
   it("não insere outro ministério quando já existe 'Multimidia' sem acento", async () => {
     const t = convexTest(schema, modules);
@@ -141,6 +234,31 @@ describe("seedMinisterios", () => {
       const todos = await ctx.db.query("ministerios").collect();
       expect(todos.filter((m) => m.nome.startsWith("Multim"))).toHaveLength(1);
       expect(todos).toHaveLength(5);
+    });
+  });
+
+  it("não duplica quando 'Multimídia' (com acento) já está gravado", async () => {
+    const t = convexTest(schema, modules);
+    await t.run(async (ctx) => {
+      await ctx.db.insert("ministerios", { nome: "Multimídia", papeis: [], status: "ATIVO", criadoEm: 1 });
+    });
+    // @ts-ignore Convex TS2589 (instanciacao de tipo profunda)
+    await t.mutation(internal.ministerios.mutations.seedMinisterios, {});
+    await t.run(async (ctx) => {
+      const todos = await ctx.db.query("ministerios").collect();
+      expect(todos.filter((m) => m.nome.startsWith("Multim"))).toHaveLength(1);
+      expect(todos).toHaveLength(5);
+    });
+  });
+
+  it("rodado duas vezes termina com 5 ministérios", async () => {
+    const t = convexTest(schema, modules);
+    // @ts-ignore Convex TS2589 (instanciacao de tipo profunda)
+    await t.mutation(internal.ministerios.mutations.seedMinisterios, {});
+    // @ts-ignore Convex TS2589 (instanciacao de tipo profunda)
+    await t.mutation(internal.ministerios.mutations.seedMinisterios, {});
+    await t.run(async (ctx) => {
+      expect(await ctx.db.query("ministerios").collect()).toHaveLength(5);
     });
   });
 });

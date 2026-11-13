@@ -8,6 +8,8 @@ import { v } from "convex/values";
  * Aqui cada campo troca SÓ quando o valor gravado é exatamente o texto antigo
  * (texto editado pelo admin ou já corrigido fica como está). `slug` nunca é escrito.
  * Idempotente: a segunda execução não encontra texto antigo.
+ * Também cobre o curso "Curso de Novos Membros", a turma "Novos Membros 2/2026" e os
+ * títulos de seus encontros (copiados do plano do curso).
  * `multimidiaChecklist` (cópias por culto) não é lida nem escrita.
  *
  * Os textos antigos são literais (cópia do `main` antes do PR1), não importados
@@ -64,6 +66,59 @@ const CHECKLIST_ITENS: Par[] = [
   ["Conferir audio/microfone", "Conferir áudio/microfone"],
 ];
 
+const CURSO_NOME = "Curso de Novos Membros";
+const TURMA_NOME = "Novos Membros 2/2026";
+
+const NM_DESCRICAO: Par = [
+  "O curso tem como proposito apresentar os fundamentos biblicos que sustentam " +
+    "nossa identidade como igreja presbiteriana, segundo os principios da Escritura " +
+    "Sagrada. Ao longo dos encontros, estudaremos a Epistola de Paulo aos Efesios e o " +
+    "livro Recriados Pela Graca, do pastor Bernardo Cho, buscando compreender como o " +
+    "poder da ressurreicao de Cristo molda a vida, a comunhao e o testemunho da Igreja.",
+  "O curso tem como propósito apresentar os fundamentos bíblicos que sustentam " +
+    "nossa identidade como igreja presbiteriana, segundo os princípios da Escritura " +
+    "Sagrada. Ao longo dos encontros, estudaremos a Epístola de Paulo aos Efésios e o " +
+    "livro Recriados Pela Graça, do pastor Bernardo Cho, buscando compreender como o " +
+    "poder da ressurreição de Cristo molda a vida, a comunhão e o testemunho da Igreja.",
+];
+
+const NM_EMENTA: Par = [
+  "Material: Biblia Sagrada e Recriados Pela Graca (Bernardo Cho). Leitura previa do " +
+    "capitulo correspondente a cada encontro. Limite de 3 faltas para conclusao. Apos o " +
+    "curso: entrevista com os presbiteros e apresentacao dos novos membros com batismo.",
+  "Material: Bíblia Sagrada e Recriados Pela Graça (Bernardo Cho). Leitura prévia do " +
+    "capítulo correspondente a cada encontro. Limite de 3 faltas para conclusão. Após o " +
+    "curso: entrevista com os presbíteros e apresentação dos novos membros com batismo.",
+];
+
+const NM_TITULOS: Par[] = [
+  ["Introducao: Paulo e a Igreja de Efeso", "Introdução: Paulo e a Igreja de Éfeso"],
+  ["Poemas a partir de ruinas · Um povo de shalom", "Poemas a partir de ruínas · Um povo de shalom"],
+  [
+    "O misterio pelo qual vale a pena sofrer · Cheios da plenitude de Deus",
+    "O mistério pelo qual vale a pena sofrer · Cheios da plenitude de Deus",
+  ],
+  [
+    "Separacao das obras das trevas · Unidade no casamento",
+    "Separação das obras das trevas · Unidade no casamento",
+  ],
+];
+
+const NM_TURMA_DESCRICAO: Par = [
+  "Seja bem-vindo(a)! Este questionario tem o proposito de conhecer melhor os " +
+    "participantes interessados no Estudo para Candidatos a Novos Membros, um curso " +
+    "voltado para aqueles que desejam integrar oficialmente a Igreja Presbiteriana do " +
+    "Caminho. Ao enviar este formulario, voce demonstra interesse em participar e esta " +
+    "ciente dos compromissos envolvidos, incluindo o limite de 3 faltas e a entrevista " +
+    "final com os presbiteros.",
+  "Seja bem-vindo(a)! Este questionário tem o propósito de conhecer melhor os " +
+    "participantes interessados no Estudo para Candidatos a Novos Membros, um curso " +
+    "voltado para aqueles que desejam integrar oficialmente a Igreja Presbiteriana do " +
+    "Caminho. Ao enviar este formulário, você demonstra interesse em participar e está " +
+    "ciente dos compromissos envolvidos, incluindo o limite de 3 faltas e a entrevista " +
+    "final com os presbíteros.",
+];
+
 function novoTexto(atual: string | undefined, pares: readonly Par[]): string | undefined {
   if (atual === undefined) return undefined;
   const par = pares.find(([antigo]) => antigo === atual);
@@ -75,7 +130,7 @@ export const run = internalMutation({
     dryRun: v.optional(v.boolean()),
   },
   handler: async (ctx, { dryRun = true }) => {
-    const stats = { dryRun, funcoes: 0, modulos: 0, ministerios: 0, checklistTemplate: 0 };
+    const stats = { dryRun, funcoes: 0, modulos: 0, ministerios: 0, checklistTemplate: 0, cursos: 0, turmas: 0, turmaEncontros: 0 };
 
     for (const f of FUNCOES) {
       const doc = await ctx.db
@@ -127,6 +182,65 @@ export const run = internalMutation({
       if (item === undefined) continue;
       stats.checklistTemplate++;
       if (!dryRun) await ctx.db.patch(doc._id, { item });
+    }
+
+    // Curso e turma de Novos Membros: localizados por índice (by_status / by_curso)
+    let curso = null;
+    for (const status of ["ATIVO", "INATIVO"] as const) {
+      const lote = await ctx.db
+        .query("cursos")
+        .withIndex("by_status", (q) => q.eq("status", status))
+        .take(100);
+      curso = lote.find((c) => c.nome === CURSO_NOME) ?? null;
+      if (curso) break;
+    }
+    if (curso) {
+      const patch: {
+        descricao?: string;
+        ementa?: string;
+        planoAulas?: { titulo: string; detalhe?: string }[];
+      } = {};
+      const descricao = novoTexto(curso.descricao, [NM_DESCRICAO]);
+      if (descricao !== undefined) patch.descricao = descricao;
+      const ementa = novoTexto(curso.ementa, [NM_EMENTA]);
+      if (ementa !== undefined) patch.ementa = ementa;
+      if (curso.planoAulas) {
+        let mudou = false;
+        const plano = curso.planoAulas.map((a) => {
+          const titulo = novoTexto(a.titulo, NM_TITULOS);
+          if (titulo === undefined) return a;
+          mudou = true;
+          return { ...a, titulo };
+        });
+        if (mudou) patch.planoAulas = plano;
+      }
+      if (Object.keys(patch).length > 0) {
+        stats.cursos++;
+        if (!dryRun) await ctx.db.patch(curso._id, patch);
+      }
+
+      const turmas = await ctx.db
+        .query("turmas")
+        .withIndex("by_curso", (q) => q.eq("cursoId", curso._id))
+        .take(100);
+      const turma = turmas.find((t) => t.nome === TURMA_NOME);
+      if (turma) {
+        const descricaoTurma = novoTexto(turma.descricao, [NM_TURMA_DESCRICAO]);
+        if (descricaoTurma !== undefined) {
+          stats.turmas++;
+          if (!dryRun) await ctx.db.patch(turma._id, { descricao: descricaoTurma });
+        }
+        const encontros = await ctx.db
+          .query("turmaEncontros")
+          .withIndex("by_turma", (q) => q.eq("turmaId", turma._id))
+          .take(200);
+        for (const e of encontros) {
+          const titulo = novoTexto(e.titulo, NM_TITULOS);
+          if (titulo === undefined) continue;
+          stats.turmaEncontros++;
+          if (!dryRun) await ctx.db.patch(e._id, { titulo });
+        }
+      }
     }
 
     return stats;
