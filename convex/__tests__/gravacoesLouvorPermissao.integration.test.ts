@@ -154,6 +154,20 @@ describe("gravacoes.ai — createFrom* exigem o mesmo gate pago de startProcessi
       audioUrl: "https://cdn.yhc.com.br/x.mp3",
     });
     expect(id).toBeDefined();
+
+    // O pipeline de IA foi agendado (processSermon).
+    const agendadas = await t.run(async (ctx) =>
+      await ctx.db.system.query("_scheduled_functions").collect(),
+    );
+    expect(agendadas.filter((f) => f.name.includes("processSermon"))).toHaveLength(1);
+
+    // Cancela: o timer real do convex-test disparava no teste seguinte (outro
+    // banco) e estourava "Write outside of transaction" em _scheduled_functions.
+    await t.run(async (ctx) => {
+      for (const f of await ctx.db.system.query("_scheduled_functions").collect()) {
+        await ctx.scheduler.cancel(f._id);
+      }
+    });
   });
 });
 
