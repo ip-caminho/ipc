@@ -20,9 +20,10 @@ import {
   AlertDialogTitle,
 } from "@/shared/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { Plus, Users } from "lucide-react";
+import { Plus, Trash2, Users } from "lucide-react";
 import { InscricaoBuilder } from "@features/site-publico/components/InscricaoBuilder";
 import { revalidarSite } from "@features/site-publico/lib/revalidate";
+import { getConvexErrorMessage } from "@shared/lib/utils/convexError";
 
 function formatData(ts?: number): string {
   if (ts == null) return "—";
@@ -36,9 +37,11 @@ export function InscricoesPanel() {
   // @ts-ignore Convex TS2589
   const inscricoes = useQuery(api.inscricoesEvento.queries.listarTodas);
   const encerrar = useMutation(api.inscricoesEvento.mutations.encerrar);
+  const excluir = useMutation(api.inscricoesEvento.mutations.excluir);
   const [builderOpen, setBuilderOpen] = useState(false);
   const [editId, setEditId] = useState<Id<"inscricoesEvento"> | undefined>(undefined);
   const [encerrarId, setEncerrarId] = useState<Id<"inscricoesEvento"> | null>(null);
+  const [excluirId, setExcluirId] = useState<Id<"inscricoesEvento"> | null>(null);
 
   function novaInscricao() {
     setEditId(undefined);
@@ -58,6 +61,19 @@ export function InscricoesPanel() {
       toast.success("Inscrição encerrada");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao encerrar");
+    }
+  }
+
+  async function confirmarExcluir() {
+    if (!excluirId) return;
+    const id = excluirId;
+    setExcluirId(null);
+    try {
+      await excluir({ id });
+      await revalidarSite("inscricoes");
+      toast.success("Formulário excluído");
+    } catch (e) {
+      toast.error(getConvexErrorMessage(e, "Erro ao excluir"));
     }
   }
 
@@ -106,11 +122,23 @@ export function InscricoesPanel() {
                   <Button variant="outline" size="sm" className="h-11 md:h-8" onClick={() => editar(i._id)}>
                     Editar
                   </Button>
-                  {i.ativa && (
-                    <Button variant="outline" size="sm" className="ml-auto h-11 text-destructive md:ml-0 md:h-8 md:border-transparent md:bg-transparent md:shadow-none md:hover:bg-accent" onClick={() => setEncerrarId(i._id)}>
-                      Encerrar
+                  <div className="ml-auto flex gap-2 md:ml-0">
+                    {i.ativa && (
+                      <Button variant="outline" size="sm" className="h-11 text-destructive md:h-8 md:border-transparent md:bg-transparent md:shadow-none md:hover:bg-accent" onClick={() => setEncerrarId(i._id)}>
+                        Encerrar
+                      </Button>
+                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      aria-label="Excluir formulário"
+                      className="h-11 w-11 text-destructive md:h-8 md:w-auto md:border-transparent md:bg-transparent md:shadow-none md:hover:bg-accent"
+                      onClick={() => setExcluirId(i._id)}
+                    >
+                      <Trash2 className="h-4 w-4 md:mr-1 md:h-3.5 md:w-3.5" />
+                      <span className="hidden md:inline">Excluir</span>
                     </Button>
-                  )}
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -133,6 +161,21 @@ export function InscricoesPanel() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={confirmarEncerrar}>Encerrar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={excluirId !== null} onOpenChange={(o) => !o && setExcluirId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir formulário?</AlertDialogTitle>
+            <AlertDialogDescription>
+              O formulário será apagado e não poderá ser recuperado. Só é possível excluir um formulário sem respostas; se houver alguma, exclua as respostas antes.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmarExcluir}>Excluir</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

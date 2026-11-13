@@ -1754,12 +1754,14 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "inscricoesEvento.mutations.criar",
       "inscricoesEvento.mutations.atualizar",
       "inscricoesEvento.mutations.encerrar",
+      "inscricoesEvento.mutations.excluir",
     ],
-    componentes: ["InscricoesPanel (lista + builder + AlertDialog encerrar)", "InscricaoBuilder (seletor camposSistema + editor camposCustom)"],
+    componentes: ["InscricoesPanel (lista + builder + AlertDialog encerrar + AlertDialog excluir)", "InscricaoBuilder (seletor camposSistema + editor camposCustom)"],
     notas: [
       "Item de Secretaria (saiu do hub do site). Permissao: inscricoes:manage. Auditado",
       "/admin/site-publico/inscricoes redireciona p/ ca (bookmarks antigos)",
       "Respostas de cada inscricao em /admin/inscricoes/[id]/respostas",
+      "Excluir so com zero respostas (qualquer status); backend recusa e orienta a excluir as respostas antes",
     ],
   },
   "/admin/inscricoes/[id]/respostas": {
