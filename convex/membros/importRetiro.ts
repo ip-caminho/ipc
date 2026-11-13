@@ -382,7 +382,7 @@ export const corrigirNascimento = internalMutation({
   },
   handler: async (ctx, args) => {
     const e = await ctx.db.get(args.entidadeId);
-    if (!e) throw new Error("entidade nao encontrada");
+    if (!e) throw new Error("entidade não encontrada");
     const antes = e.dataNascimento ?? null;
     if (!args.dryRun) {
       await ctx.db.patch(args.entidadeId, { dataNascimento: args.dataNascimento });

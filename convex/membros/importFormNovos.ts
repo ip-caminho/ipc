@@ -127,7 +127,7 @@ export const preencherVazios = internalMutation({
       .query("entidades")
       .withIndex("by_cpf", (q) => q.eq("cpf", cpf))
       .first();
-    if (!ent) throw new Error(`Entidade com cpf ${cpf} nao encontrada`);
+    if (!ent) throw new Error(`Entidade com cpf ${cpf} não encontrada`);
 
     const vazio = (x: unknown) => x === undefined || x === null || x === "";
     const preenchidos: string[] = [];

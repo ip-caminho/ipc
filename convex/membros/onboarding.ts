@@ -76,14 +76,14 @@ export const completeOnboarding = mutation({
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Nao autenticado");
+    if (!userId) throw new Error("Não autenticado");
 
     const membro = await ctx.db
       .query("membros")
       .withIndex("by_user_id", (q) => q.eq("userId", userId))
       .first();
 
-    if (!membro) throw new Error("Membro nao encontrado");
+    if (!membro) throw new Error("Membro não encontrado");
 
     const updates: Record<string, unknown> = {};
     if (args.foto !== undefined) updates.foto = args.foto;

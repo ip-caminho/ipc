@@ -122,13 +122,13 @@ export const aprovarSolicitacao = mutation({
     const { membro: revisor } = await requirePermission(ctx, "membros:create");
 
     const solicitacao = await ctx.db.get(solicitacaoId);
-    if (!solicitacao) throw new Error("Solicitacao nao encontrada");
+    if (!solicitacao) throw new Error("Solicitação não encontrada");
     if (solicitacao.status !== "PENDENTE") {
-      throw new Error("Solicitacao ja foi revisada");
+      throw new Error("Solicitação já foi revisada");
     }
 
     const solicitante = await ctx.db.get(solicitacao.solicitadoPor);
-    if (!solicitante) throw new Error("Solicitante nao encontrado");
+    if (!solicitante) throw new Error("Solicitante não encontrado");
 
     const entidadeCriadaId =
       solicitacao.tipoVinculo === "FILHO"
@@ -157,9 +157,9 @@ export const rejeitarSolicitacao = mutation({
     const { membro: revisor } = await requirePermission(ctx, "membros:create");
 
     const solicitacao = await ctx.db.get(solicitacaoId);
-    if (!solicitacao) throw new Error("Solicitacao nao encontrada");
+    if (!solicitacao) throw new Error("Solicitação não encontrada");
     if (solicitacao.status !== "PENDENTE") {
-      throw new Error("Solicitacao ja foi revisada");
+      throw new Error("Solicitação já foi revisada");
     }
 
     await ctx.db.patch(solicitacaoId, {

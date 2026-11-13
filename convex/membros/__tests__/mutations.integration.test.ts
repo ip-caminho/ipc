@@ -92,7 +92,7 @@ describe("membros — criação atômica", () => {
 
     await expect(
       identity.mutation(api.membros.mutations.create, { nomeCompleto: "Novo" })
-    ).rejects.toThrow("Sem permissao");
+    ).rejects.toThrow("Sem permissão");
   });
 
   it("bloqueia não-admin de criar membro com papel admin", async () => {
@@ -244,7 +244,7 @@ describe("membros — update", () => {
         id: membroId,
         membroData: { role: "admin" },
       })
-    ).rejects.toThrow("Permissoes");
+    ).rejects.toThrow("Permissões");
   });
 
   it("bloqueia membro comum de editar (auto-escalação)", async () => {
@@ -266,7 +266,7 @@ describe("membros — update", () => {
         id: membroId,
         membroData: { role: "secretaria" },
       })
-    ).rejects.toThrow("Sem permissao");
+    ).rejects.toThrow("Sem permissão");
   });
 });
 

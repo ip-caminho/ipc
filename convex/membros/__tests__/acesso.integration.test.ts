@@ -427,7 +427,7 @@ describe("acesso — concluirAtivacao", () => {
       identity.mutation(api.membros.acesso.concluirAtivacao, { token })
     ).rejects.toMatchObject({
       name: "ConvexError",
-      data: expect.stringContaining("Este link expirou. Peca um novo a secretaria."),
+      data: expect.stringContaining("Este link expirou. Peça um novo à secretaria."),
     });
   });
 
@@ -451,7 +451,7 @@ describe("acesso — concluirAtivacao", () => {
       identity.mutation(api.membros.acesso.concluirAtivacao, { token })
     ).rejects.toMatchObject({
       name: "ConvexError",
-      data: expect.stringContaining("Cadastro nao esta ativo. Procure a secretaria."),
+      data: expect.stringContaining("Cadastro não está ativo. Procure a secretaria."),
     });
   });
 
@@ -480,7 +480,7 @@ describe("acesso — concluirAtivacao", () => {
       identity.mutation(api.membros.acesso.concluirAtivacao, { token })
     ).rejects.toMatchObject({
       name: "ConvexError",
-      data: expect.stringContaining("Esta conta ja esta vinculada a outro cadastro. Procure a secretaria."),
+      data: expect.stringContaining("Esta conta já está vinculada a outro cadastro. Procure a secretaria."),
     });
   });
 });

@@ -39,12 +39,12 @@ export const gerarLink = mutation({
     const { membro: caller } = await requirePermission(ctx, "acesso:manage");
 
     const membro = await ctx.db.get(membroId);
-    if (!membro) throw new Error("Membro nao encontrado");
+    if (!membro) throw new Error("Membro não encontrado");
 
     const entidade = await ctx.db.get(membro.entidadeId);
-    if (!entidade) throw new Error("Entidade nao encontrada");
+    if (!entidade) throw new Error("Entidade não encontrada");
     if (entidade.status !== "ATIVO") {
-      throw new Error("Membro nao esta ATIVO — acesso bloqueado");
+      throw new Error("Membro não está ATIVO — acesso bloqueado");
     }
     if (!telefoneDoMembro(entidade)) {
       throw new Error("Membro sem telefone/WhatsApp cadastrado");
@@ -91,7 +91,7 @@ export const verificarAcessoDireto = mutation({
   handler: async (ctx, { telefone, cpfPrefix }): Promise<ResultadoAcessoDireto> => {
     const prefix = cpfPrefix.replace(/\D/g, "");
     if (prefix.length !== 5) {
-      throw new ConvexError("Informe os 5 primeiros digitos do CPF");
+      throw new ConvexError("Informe os 5 primeiros dígitos do CPF");
     }
 
     // Compara so os digitos (E164) dos dois lados: robusto a formatacao
@@ -220,17 +220,17 @@ export const concluirAtivacao = mutation({
   args: { token: v.string() },
   handler: async (ctx, { token }) => {
     const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Nao autenticado");
+    if (!userId) throw new Error("Não autenticado");
 
     const convite = await ctx.db
       .query("membroConvites")
       .withIndex("by_token", (q) => q.eq("token", token))
       .first();
 
-    if (!convite || !convite.membroId) throw new ConvexError("Link invalido.");
+    if (!convite || !convite.membroId) throw new ConvexError("Link inválido.");
 
     const membro = await ctx.db.get(convite.membroId);
-    if (!membro) throw new Error("Membro nao encontrado");
+    if (!membro) throw new Error("Membro não encontrado");
 
     // Idempotente: se o effect do client reexecutar (ex: auth oscilou),
     // a segunda chamada nao pode falhar como link expirado.
@@ -238,12 +238,12 @@ export const concluirAtivacao = mutation({
       return { ok: true, membroId: membro._id };
     }
     if (convite.status !== "PENDENTE" || convite.expiraEm < Date.now()) {
-      throw new ConvexError("Este link expirou. Peca um novo a secretaria.");
+      throw new ConvexError("Este link expirou. Peça um novo à secretaria.");
     }
 
     const entidade = await ctx.db.get(membro.entidadeId);
     if (!entidade || entidade.status !== "ATIVO") {
-      throw new ConvexError("Cadastro nao esta ativo. Procure a secretaria.");
+      throw new ConvexError("Cadastro não está ativo. Procure a secretaria.");
     }
 
     // userId ja vinculado a outro membro?
@@ -252,10 +252,10 @@ export const concluirAtivacao = mutation({
       .withIndex("by_user_id", (q) => q.eq("userId", userId))
       .first();
     if (jaVinculado && jaVinculado._id !== membro._id) {
-      throw new ConvexError("Esta conta ja esta vinculada a outro cadastro. Procure a secretaria.");
+      throw new ConvexError("Esta conta já está vinculada a outro cadastro. Procure a secretaria.");
     }
     if (membro.userId && membro.userId !== userId) {
-      throw new ConvexError("Este cadastro ja esta vinculado a outra conta. Procure a secretaria.");
+      throw new ConvexError("Este cadastro já está vinculado a outra conta. Procure a secretaria.");
     }
 
     await ctx.db.patch(membro._id, {
@@ -309,7 +309,7 @@ export const resetarAcesso = mutation({
   handler: async (ctx, { membroId }) => {
     await requirePermission(ctx, "acesso:manage");
     const membro = await ctx.db.get(membroId);
-    if (!membro) throw new Error("Membro nao encontrado");
+    if (!membro) throw new Error("Membro não encontrado");
 
     const userId = membro.userId;
     await ctx.db.patch(membroId, { userId: undefined, onboardingCompleto: undefined });

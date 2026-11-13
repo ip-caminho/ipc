@@ -68,7 +68,7 @@ describe("membros.convites.generateInvite — exige permissao", () => {
     const userId = await seedUser(t, { role: "admin" });
     await expect(
       as(t, userId).mutation(api.membros.convites.generateInvite, { role: "pastorr" })
-    ).rejects.toThrow(/Papel invalido/);
+    ).rejects.toThrow(/Papel inválido/);
   });
 
   // "comunicacao" foi removido do codigo em 07/2026 mas segue orfao na tabela
@@ -80,7 +80,7 @@ describe("membros.convites.generateInvite — exige permissao", () => {
       as(t, userId).mutation(api.membros.convites.generateInvite, {
         role: "comunicacao",
       })
-    ).rejects.toThrow(/Papel invalido/);
+    ).rejects.toThrow(/Papel inválido/);
   });
 
   it("quem tem membros:create convida membro comum (sem regressao)", async () => {
