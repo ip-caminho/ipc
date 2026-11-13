@@ -109,7 +109,7 @@ describe("inscricoesEvento.mutations.excluir", () => {
 
     await expect(
       as(t, comum).mutation(api.inscricoesEvento.mutations.excluir, { id })
-    ).rejects.toThrow(/Sem permissao/);
+    ).rejects.toThrow(/Sem permissão/);
 
     await t.run(async (ctx) => {
       expect(await ctx.db.get(id)).not.toBeNull();

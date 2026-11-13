@@ -11,12 +11,12 @@ import type { Id } from "../_generated/dataModel";
 
 async function requireAuth(ctx: any) {
   const userId = await getAuthUserId(ctx);
-  if (!userId) throw new Error("Nao autenticado");
+  if (!userId) throw new Error("Não autenticado");
   const membro = await ctx.db
     .query("membros")
     .withIndex("by_user_id", (q: any) => q.eq("userId", userId))
     .first();
-  if (!membro) throw new Error("Membro nao encontrado");
+  if (!membro) throw new Error("Membro não encontrado");
   return { userId, membro };
 }
 
@@ -28,13 +28,13 @@ async function requireAuth(ctx: any) {
  */
 async function requireGestaoTurma(ctx: any, turmaId: Id<"turmas">) {
   const turma = await ctx.db.get(turmaId);
-  if (!turma) throw new Error("Turma nao encontrada");
+  if (!turma) throw new Error("Turma não encontrada");
 
   const gestor = await checkPermission(ctx, "turmas:manage_inscricoes");
   if (gestor) return { turma, membro: gestor.membro };
 
   const { membro } = await requireAuth(ctx);
-  if (turma.instrutorId !== membro._id) throw new Error("Sem permissao");
+  if (turma.instrutorId !== membro._id) throw new Error("Sem permissão");
   return { turma, membro };
 }
 
@@ -133,7 +133,7 @@ export const create = mutation({
     }))),
     // Datas dos encontros. Quando vem, manda mais que o totalAulas do curso —
     // sem isso a turma nasceria com cadencia semanal errada e gerarAulas
-    // passaria a recusar ("Esta turma ja tem aulas").
+    // passaria a recusar ("Esta turma já tem aulas").
     datasAulas: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
@@ -144,11 +144,11 @@ export const create = mutation({
       args.inscricoesAte &&
       args.inscricoesAte < args.inscricoesDe
     ) {
-      throw new Error("O fim das inscricoes nao pode ser antes da abertura");
+      throw new Error("O fim das inscrições não pode ser antes da abertura");
     }
 
     const curso = args.cursoId ? await ctx.db.get(args.cursoId) : null;
-    if (args.cursoId && !curso) throw new Error("Curso nao encontrado");
+    if (args.cursoId && !curso) throw new Error("Curso não encontrado");
 
     const { datasAulas, ...camposDaTurma } = args;
 
@@ -193,13 +193,13 @@ export const gerarAulas = mutation({
   handler: async (ctx, { turmaId, totalAulas, datas }) => {
     const { membro } = await requirePermission(ctx, "turmas:update");
     const turma = await ctx.db.get(turmaId);
-    if (!turma) throw new Error("Turma nao encontrada");
+    if (!turma) throw new Error("Turma não encontrada");
 
     const curso = turma.cursoId ? await ctx.db.get(turma.cursoId) : null;
 
     if (datas?.length) {
       const invalida = datas.find((d) => !/^\d{4}-\d{2}-\d{2}$/.test(d));
-      if (invalida) throw new Error(`Data invalida: ${invalida}`);
+      if (invalida) throw new Error(`Data inválida: ${invalida}`);
     } else {
       const quantas = totalAulas ?? curso?.totalAulas;
       if (!quantas || quantas < 1) {
@@ -215,7 +215,7 @@ export const gerarAulas = mutation({
       plano: curso?.planoAulas,
       membroId: membro._id,
     });
-    if (criadas === 0) throw new Error("Esta turma ja tem aulas");
+    if (criadas === 0) throw new Error("Esta turma já tem aulas");
     return criadas;
   },
 });
@@ -238,11 +238,11 @@ export const criarEventosDaTurma = mutation({
   handler: async (ctx, { turmaId, marcos, publicarNoSite }) => {
     await requirePermission(ctx, "turmas:update");
     const turma = await ctx.db.get(turmaId);
-    if (!turma) throw new Error("Turma nao encontrada");
+    if (!turma) throw new Error("Turma não encontrada");
 
     if (!(await checkPermission(ctx, "calendario:create"))) {
       throw new Error(
-        "Sem permissao para criar evento no calendario (calendario:create)"
+        "Sem permissão para criar evento no calendário (calendario:create)"
       );
     }
 
@@ -255,7 +255,7 @@ export const criarEventosDaTurma = mutation({
     const criados: string[] = [];
     for (const marco of marcos) {
       if (!/^\d{4}-\d{2}-\d{2}$/.test(marco.data)) {
-        throw new Error(`Data invalida: ${marco.data}`);
+        throw new Error(`Data inválida: ${marco.data}`);
       }
       const titulo = `${marco.titulo.trim()} — ${turma.nome}`;
       // Idempotente: rodar de novo nao duplica o evento.
@@ -286,10 +286,10 @@ export const setFrequenciaMinima = mutation({
       frequenciaMinima < 0 ||
       frequenciaMinima > 100
     ) {
-      throw new Error("Frequencia minima deve estar entre 0 e 100");
+      throw new Error("Frequência mínima deve estar entre 0 e 100");
     }
     const oldRecord = await ctx.db.get(turmaId);
-    if (!oldRecord) throw new Error("Turma nao encontrada");
+    if (!oldRecord) throw new Error("Turma não encontrada");
 
     await ctx.db.patch(turmaId, { frequenciaMinima: Math.round(frequenciaMinima) });
     const newRecord = await ctx.db.get(turmaId);
@@ -310,11 +310,11 @@ export const setCriterioAprovacao = mutation({
   handler: async (ctx, { turmaId, criterioAprovacao, maxFaltas }) => {
     await requirePermission(ctx, "turmas:manage_inscricoes");
     const oldRecord = await ctx.db.get(turmaId);
-    if (!oldRecord) throw new Error("Turma nao encontrada");
+    if (!oldRecord) throw new Error("Turma não encontrada");
 
     if (criterioAprovacao === "MAX_FALTAS") {
       if (maxFaltas === undefined || !Number.isFinite(maxFaltas) || maxFaltas < 0) {
-        throw new Error("Informe o maximo de faltas permitido");
+        throw new Error("Informe o máximo de faltas permitido");
       }
     }
 
@@ -375,7 +375,7 @@ export const update = mutation({
       ? (patch.inscricoesAte as string | undefined)
       : oldRecord?.inscricoesAte) as string | undefined;
     if (de && ate && ate < de) {
-      throw new Error("O fim das inscricoes nao pode ser antes da abertura");
+      throw new Error("O fim das inscrições não pode ser antes da abertura");
     }
     if (Object.keys(patch).length > 0) {
       await ctx.db.patch(id, patch);
@@ -398,7 +398,7 @@ export const updateStatus = mutation({
   handler: async (ctx, { id, status }) => {
     await requirePermission(ctx, "turmas:update");
     const turma = await ctx.db.get(id);
-    if (!turma) throw new Error("Turma nao encontrada");
+    if (!turma) throw new Error("Turma não encontrada");
 
     if (turma.status === status) return; // sem mudanca
 
@@ -441,25 +441,25 @@ export const registrar = mutation({
     lgpdConsentimento: v.boolean(),
   },
   handler: async (ctx, { token, dadosSistema, respostasExtras, lgpdConsentimento }) => {
-    if (!lgpdConsentimento) throw new Error("Consentimento LGPD obrigatorio");
+    if (!lgpdConsentimento) throw new Error("Consentimento LGPD obrigatório");
 
     const turma = await ctx.db
       .query("turmas")
       .withIndex("by_token", (q) => q.eq("token", token))
       .first();
-    if (!turma) throw new Error("Turma nao encontrada");
+    if (!turma) throw new Error("Turma não encontrada");
 
     // Janela de inscricao checada no servidor: a pagina publica tambem esconde
     // o formulario, mas o token e a mutation sao acessiveis sem auth.
     const janela = avaliarJanelaInscricao(turma, getSaoPauloDateString());
     if (!janela.aberta) {
       if (janela.motivo === "AINDA_NAO_COMECOU") {
-        throw new Error("As inscricoes ainda nao comecaram");
+        throw new Error("As inscrições ainda não começaram");
       }
       if (janela.motivo === "ENCERRADA") {
-        throw new Error("As inscricoes para esta turma foram encerradas");
+        throw new Error("As inscrições para esta turma foram encerradas");
       }
-      throw new Error("Turma nao esta aceitando inscricoes");
+      throw new Error("Turma não está aceitando inscrições");
     }
 
     // Respostas validadas AQUI, nao so no cliente: `registrar` e publica e
@@ -485,10 +485,10 @@ export const registrar = mutation({
         const validas = new Set(pergunta.opcoes ?? []);
         const invalida = marcadas.find((v) => !validas.has(v));
         if (invalida) {
-          throw new Error(`Opcao invalida em "${pergunta.label}": ${invalida}`);
+          throw new Error(`Opção inválida em "${pergunta.label}": ${invalida}`);
         }
         if (pergunta.tipo === "ESCOLHA_UNICA" && marcadas.length > 1) {
-          throw new Error(`"${pergunta.label}" aceita uma resposta so`);
+          throw new Error(`"${pergunta.label}" aceita uma resposta só`);
         }
       }
     }
@@ -517,7 +517,7 @@ export const registrar = mutation({
           .withIndex("by_turma", (q) => q.eq("turmaId", turma._id))
           .collect();
         if (existing.some((i) => i.membroId === membroId && i.status !== "CANCELADA")) {
-          throw new Error("Voce ja esta inscrito nesta turma");
+          throw new Error("Você já está inscrito nesta turma");
         }
       }
     } else if (dados.whatsapp) {
@@ -529,7 +529,7 @@ export const registrar = mutation({
       if (existing.some((i) =>
         i.dadosSistema.whatsapp === dados.whatsapp && i.status !== "CANCELADA"
       )) {
-        throw new Error("Ja existe inscricao com este WhatsApp");
+        throw new Error("Já existe inscrição com este WhatsApp");
       }
     }
 
@@ -561,8 +561,8 @@ export const cancelarInscricao = mutation({
   handler: async (ctx, { id }) => {
     await requirePermission(ctx, "turmas:manage_inscricoes");
     const inscricao = await ctx.db.get(id);
-    if (!inscricao) throw new Error("Inscricao nao encontrada");
-    if (inscricao.status === "CANCELADA") throw new Error("Inscricao ja cancelada");
+    if (!inscricao) throw new Error("Inscrição não encontrada");
+    if (inscricao.status === "CANCELADA") throw new Error("Inscrição já cancelada");
 
     await ctx.db.patch(id, { status: "CANCELADA", canceladoEm: Date.now() });
     await createActionAuditLog(ctx, "CANCEL", "inscricoes", id as string);
@@ -613,7 +613,7 @@ export const removeEncontro = mutation({
   args: { id: v.id("turmaEncontros") },
   handler: async (ctx, { id }) => {
     const encontro = await ctx.db.get(id);
-    if (!encontro) throw new Error("Encontro nao encontrado");
+    if (!encontro) throw new Error("Encontro não encontrado");
     await requireGestaoTurma(ctx, encontro.turmaId);
     // Remove presencas associadas
     const presencas = await ctx.db
@@ -637,7 +637,7 @@ export const salvarPresencas = mutation({
   },
   handler: async (ctx, { encontroId, presencas, observacoes }) => {
     const encontro = await ctx.db.get(encontroId);
-    if (!encontro) throw new Error("Encontro nao encontrado");
+    if (!encontro) throw new Error("Encontro não encontrado");
     const { membro } = await requireGestaoTurma(ctx, encontro.turmaId);
 
     // Le as presencas existentes UMA vez (antes era um collect por aluno

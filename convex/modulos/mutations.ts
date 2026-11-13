@@ -34,7 +34,7 @@ export const toggleModulo = mutation({
       .first();
 
     if (!membro || membro.role !== "admin") {
-      throw new Error("Apenas admin pode alterar modulos");
+      throw new Error("Apenas admin pode alterar módulos");
     }
 
     const modulo = await ctx.db
@@ -42,7 +42,7 @@ export const toggleModulo = mutation({
       .withIndex("by_slug", (q) => q.eq("slug", slug))
       .first();
 
-    if (!modulo) throw new Error("Modulo nao encontrado");
+    if (!modulo) throw new Error("Módulo não encontrado");
 
     await ctx.db.patch(modulo._id, { ativo: !modulo.ativo });
     await createActionAuditLog(ctx, "TOGGLE", "modulos", modulo._id as string);

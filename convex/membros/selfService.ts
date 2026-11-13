@@ -185,11 +185,11 @@ export const vincularConjuge = mutation({
     if (!myMembro) throw new Error("Member not found");
 
     if (myMembro.entidadeId === conjugeEntidadeId) {
-      throw new Error("Nao e possivel se vincular a si mesmo");
+      throw new Error("Não é possível se vincular a si mesmo");
     }
 
     const conjugeEntidade = await ctx.db.get(conjugeEntidadeId);
-    if (!conjugeEntidade) throw new Error("Conjuge nao encontrado");
+    if (!conjugeEntidade) throw new Error("Cônjuge não encontrado");
 
     await ctx.db.patch(myMembro._id, { conjugeId: conjugeEntidadeId });
     await espelharConjuge(ctx, myMembro.entidadeId, conjugeEntidadeId);
@@ -246,7 +246,7 @@ export const vincularFilhoExistente = mutation({
     if (!myMembro) throw new Error("Member not found");
 
     if (filhoEntidadeId === myMembro.entidadeId) {
-      throw new Error("Nao e possivel se vincular como proprio filho");
+      throw new Error("Não é possível se vincular como próprio filho");
     }
 
     // Idempotente — nao duplica se ja existe vinculo

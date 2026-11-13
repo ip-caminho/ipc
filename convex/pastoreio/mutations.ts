@@ -13,7 +13,7 @@ async function getAuthContextWithPerms(ctx: any) {
     .query("membros")
     .withIndex("by_user_id", (q: any) => q.eq("userId", userId))
     .first();
-  if (!membro) throw new Error("Membro nao encontrado");
+  if (!membro) throw new Error("Membro não encontrado");
 
   const rolePerms = await ctx.db
     .query("rolePermissions")
@@ -77,7 +77,7 @@ export const updateVisita = mutation({
     await requirePermission(ctx, "pastoreio:update");
 
     const visita = await ctx.db.get(id);
-    if (!visita) throw new Error("Visita nao encontrada");
+    if (!visita) throw new Error("Visita não encontrada");
 
     const cleanUpdates: Record<string, any> = {};
     for (const [key, value] of Object.entries(updates)) {
@@ -95,7 +95,7 @@ export const removeVisita = mutation({
     await requirePermission(ctx, "pastoreio:delete");
 
     const visita = await ctx.db.get(id);
-    if (!visita) throw new Error("Visita nao encontrada");
+    if (!visita) throw new Error("Visita não encontrada");
 
     await ctx.db.delete(id);
     await createActionAuditLog(ctx, "DELETE", "visitasPastorais", id);
@@ -112,7 +112,7 @@ export const createPedidoOracao = mutation({
     const auth = await getAuthContextWithPerms(ctx);
 
     if (!auth.can("pedidos_oracao:create") && !auth.can("pastoreio:create")) {
-      throw new Error("Sem permissao");
+      throw new Error("Sem permissão");
     }
 
     const id = await ctx.db.insert("pedidosOracao", {
@@ -140,12 +140,12 @@ export const updatePedidoOracao = mutation({
     const auth = await getAuthContextWithPerms(ctx);
 
     const pedido = await ctx.db.get(id);
-    if (!pedido) throw new Error("Pedido nao encontrado");
+    if (!pedido) throw new Error("Pedido não encontrado");
 
     // Membro so pode editar os proprios, lideranca pode editar qualquer
     const isOwner = pedido.membroId === auth.membro._id;
     if (!isOwner && !auth.can("pastoreio:update")) {
-      throw new Error("Sem permissao");
+      throw new Error("Sem permissão");
     }
 
     const cleanUpdates: Record<string, any> = {};
@@ -165,11 +165,11 @@ export const arquivarPedidoOracao = mutation({
     const auth = await getAuthContextWithPerms(ctx);
 
     const pedido = await ctx.db.get(id);
-    if (!pedido) throw new Error("Pedido nao encontrado");
+    if (!pedido) throw new Error("Pedido não encontrado");
 
     const isOwner = pedido.membroId === auth.membro._id;
     if (!isOwner && !auth.can("pastoreio:update")) {
-      throw new Error("Sem permissao");
+      throw new Error("Sem permissão");
     }
 
     await ctx.db.patch(id, {
@@ -210,7 +210,7 @@ export const updateAnotacao = mutation({
     await requirePermission(ctx, "pastoreio:update");
 
     const anotacao = await ctx.db.get(id);
-    if (!anotacao) throw new Error("Anotacao nao encontrada");
+    if (!anotacao) throw new Error("Anotação não encontrada");
 
     await ctx.db.patch(id, {
       texto,
@@ -226,7 +226,7 @@ export const removeAnotacao = mutation({
     await requirePermission(ctx, "pastoreio:delete");
 
     const anotacao = await ctx.db.get(id);
-    if (!anotacao) throw new Error("Anotacao nao encontrada");
+    if (!anotacao) throw new Error("Anotação não encontrada");
 
     await ctx.db.delete(id);
     await createActionAuditLog(ctx, "DELETE", "anotacoesPastorais", id);

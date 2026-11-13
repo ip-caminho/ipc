@@ -58,7 +58,7 @@ export const createCrianca = mutation({
     if (args.responsaveis) {
       for (const resp of args.responsaveis) {
         const respEntidade = await ctx.db.get(resp.entidadeId);
-        if (!respEntidade) throw new Error("Responsavel nao encontrado");
+        if (!respEntidade) throw new Error("Responsável não encontrado");
 
         await ctx.db.insert("responsaveis", {
           criancaEntidadeId: entidadeId,
@@ -100,7 +100,7 @@ export const updateCrianca = mutation({
       .query("criancaPerfil")
       .withIndex("by_entidade", (q) => q.eq("entidadeId", entidadeId))
       .first();
-    if (!perfil) throw new Error("Crianca nao encontrada");
+    if (!perfil) throw new Error("Criança não encontrada");
 
     // Atualizar entidade
     const entidadeUpdates: Record<string, any> = {};
@@ -144,7 +144,7 @@ export const removeCrianca = mutation({
       .query("criancaPerfil")
       .withIndex("by_entidade", (q) => q.eq("entidadeId", entidadeId))
       .first();
-    if (!perfil) throw new Error("Crianca nao encontrada");
+    if (!perfil) throw new Error("Criança não encontrada");
 
     // Remover responsaveis
     const resps = await ctx.db
@@ -192,9 +192,9 @@ export const addResponsavel = mutation({
 
     // Validar entidades
     const crianca = await ctx.db.get(args.criancaEntidadeId);
-    if (!crianca) throw new Error("Crianca nao encontrada");
+    if (!crianca) throw new Error("Criança não encontrada");
     const responsavel = await ctx.db.get(args.responsavelEntidadeId);
-    if (!responsavel) throw new Error("Responsavel nao encontrado");
+    if (!responsavel) throw new Error("Responsável não encontrado");
 
     // Verificar duplicata
     const existing = await ctx.db
@@ -202,7 +202,7 @@ export const addResponsavel = mutation({
       .withIndex("by_crianca", (q) => q.eq("criancaEntidadeId", args.criancaEntidadeId))
       .collect();
     const dup = existing.find((r) => r.responsavelEntidadeId === args.responsavelEntidadeId);
-    if (dup) throw new Error("Responsavel ja cadastrado para esta crianca");
+    if (dup) throw new Error("Responsável já cadastrado para esta criança");
 
     return ctx.db.insert("responsaveis", {
       ...args,
@@ -217,7 +217,7 @@ export const removeResponsavel = mutation({
     await requirePermission(ctx, "criancas:manage");
 
     const resp = await ctx.db.get(id);
-    if (!resp) throw new Error("Responsavel nao encontrado");
+    if (!resp) throw new Error("Responsável não encontrado");
 
     await ctx.db.delete(id);
   },
@@ -285,13 +285,13 @@ export const createVoluntario = mutation({
     await requirePermission(ctx, "voluntarios_edu:manage");
 
     const membro = await ctx.db.get(args.membroId);
-    if (!membro) throw new Error("Membro nao encontrado");
+    if (!membro) throw new Error("Membro não encontrado");
 
     const existing = await ctx.db
       .query("eduVoluntarios")
       .withIndex("by_membro", (q) => q.eq("membroId", args.membroId))
       .first();
-    if (existing) throw new Error("Este membro ja e voluntario do educacional");
+    if (existing) throw new Error("Este membro já é voluntário do educacional");
 
     const id = await ctx.db.insert("eduVoluntarios", {
       ...args,
@@ -317,7 +317,7 @@ export const updateVoluntario = mutation({
     await requirePermission(ctx, "voluntarios_edu:manage");
 
     const vol = await ctx.db.get(id);
-    if (!vol) throw new Error("Voluntario nao encontrado");
+    if (!vol) throw new Error("Voluntário não encontrado");
 
     const patch: Record<string, any> = {};
     if (updates.papelEdu !== undefined) patch.papelEdu = updates.papelEdu;
@@ -344,7 +344,7 @@ export const removeVoluntario = mutation({
     await requirePermission(ctx, "voluntarios_edu:manage");
 
     const vol = await ctx.db.get(id);
-    if (!vol) throw new Error("Voluntario nao encontrado");
+    if (!vol) throw new Error("Voluntário não encontrado");
 
     await ctx.db.delete(id);
     await apagarArquivosSumidos(ctx, "eduVoluntarios", vol, null);
@@ -431,7 +431,7 @@ export const removeRelatorio = mutation({
     await requirePermission(ctx, "relatorio_edu:delete");
 
     const relatorio = await ctx.db.get(id);
-    if (!relatorio) throw new Error("Relatorio nao encontrado");
+    if (!relatorio) throw new Error("Relatório não encontrado");
 
     const presencas = await ctx.db
       .query("eduPresencas")
@@ -475,7 +475,7 @@ export const removeEscala = mutation({
     await requirePermission(ctx, "escala_edu:manage");
 
     const escala = await ctx.db.get(id);
-    if (!escala) throw new Error("Escala nao encontrada");
+    if (!escala) throw new Error("Escala não encontrada");
 
     await ctx.db.delete(id);
   },
@@ -693,7 +693,7 @@ export const seedCriancas = internalMutation({
     // Verifica se ja tem criancas cadastradas
     const existing = await ctx.db.query("criancaPerfil").first();
     if (existing) {
-      throw new Error("Ja existem criancas cadastradas. Seed cancelado para evitar duplicatas.");
+      throw new Error("Já existem crianças cadastradas. Seed cancelado para evitar duplicatas.");
     }
 
     let count = 0;

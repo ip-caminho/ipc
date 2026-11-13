@@ -49,7 +49,7 @@ export const update = mutation({
     await requirePermission(ctx, "gravacoes:update");
 
     const oldRecord = await ctx.db.get(id);
-    if (!oldRecord) throw new Error("Gravacao not found");
+    if (!oldRecord) throw new Error("Gravação not found");
 
     // Player e UI preferem inicioConteudo/fimConteudo. Ao editar o trecho do
     // sermao (inicioSermao/fimSermao), sincroniza esses campos — senao o
@@ -75,7 +75,7 @@ export const publish = mutation({
     await requirePermission(ctx, "gravacoes:update");
 
     const oldRecord = await ctx.db.get(id);
-    if (!oldRecord) throw new Error("Gravacao not found");
+    if (!oldRecord) throw new Error("Gravação not found");
 
     await ctx.db.patch(id, { status: "PUBLICADO" });
     const newRecord = await ctx.db.get(id);
@@ -92,7 +92,7 @@ export const remove = mutation({
     await requirePermission(ctx, "gravacoes:delete");
 
     const gravacao = await ctx.db.get(id);
-    if (!gravacao) throw new Error("Gravacao nao encontrada");
+    if (!gravacao) throw new Error("Gravação não encontrada");
 
     // Delete audio file from B2
     if (gravacao.audioUrl) {
@@ -159,7 +159,7 @@ export const corrigirAvisosCulto = mutation({
   handler: async (ctx, { gravacaoId, avisos }) => {
     await requirePermission(ctx, "site_publico:manage");
     const old = await ctx.db.get(gravacaoId);
-    if (!old) throw new Error("Gravacao nao encontrada");
+    if (!old) throw new Error("Gravação não encontrada");
     await ctx.db.patch(gravacaoId, { iaAvisos: avisos });
     const novo = await ctx.db.get(gravacaoId);
     await createFieldAuditLogs(ctx, old, novo, "gravacoes", gravacaoId);

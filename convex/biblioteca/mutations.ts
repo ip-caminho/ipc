@@ -11,12 +11,12 @@ import { dataPrevistaDevolucao } from "./prazo";
 
 async function requireAuth(ctx: any) {
   const userId = await getAuthUserId(ctx);
-  if (!userId) throw new Error("Nao autenticado");
+  if (!userId) throw new Error("Não autenticado");
   const membro = await ctx.db
     .query("membros")
     .withIndex("by_user_id", (q: any) => q.eq("userId", userId))
     .first();
-  if (!membro) throw new Error("Membro nao encontrado");
+  if (!membro) throw new Error("Membro não encontrado");
   return { userId, membro };
 }
 
@@ -241,8 +241,8 @@ export const emprestar = mutation({
     const { membro: registrador } = await requirePermission(ctx, "biblioteca:emprestar");
 
     const exemplar = await ctx.db.get(exemplarId);
-    if (!exemplar) throw new Error("Exemplar nao encontrado");
-    if (exemplar.status !== "DISPONIVEL") throw new Error("Exemplar nao esta disponivel");
+    if (!exemplar) throw new Error("Exemplar não encontrado");
+    if (exemplar.status !== "DISPONIVEL") throw new Error("Exemplar não está disponível");
 
     const nomeDigitado = pessoaNome?.trim();
     let nome: string;
@@ -258,7 +258,7 @@ export const emprestar = mutation({
         .collect();
       const emprestimosAtivos = ativos.filter((e) => e.status === "ATIVO");
       if (emprestimosAtivos.length >= LIMITE_EMPRESTIMOS) {
-        throw new Error(`Limite de ${LIMITE_EMPRESTIMOS} emprestimos simultaneos`);
+        throw new Error(`Limite de ${LIMITE_EMPRESTIMOS} empréstimos simultâneos`);
       }
 
       const membroDest = await ctx.db.get(membroId);
@@ -309,7 +309,7 @@ export const retirarDaEstante = mutation({
     const { membro } = await requirePermission(ctx, "biblioteca:emprestar");
 
     const exemplar = await ctx.db.get(exemplarId);
-    if (!exemplar) throw new Error("Exemplar nao encontrado");
+    if (!exemplar) throw new Error("Exemplar não encontrado");
     if (exemplar.status === "PERDIDO") return;
 
     const emprestimos = await ctx.db
@@ -342,7 +342,7 @@ export const voltarParaEstante = mutation({
     const { membro } = await requirePermission(ctx, "biblioteca:emprestar");
 
     const exemplar = await ctx.db.get(exemplarId);
-    if (!exemplar) throw new Error("Exemplar nao encontrado");
+    if (!exemplar) throw new Error("Exemplar não encontrado");
     if (exemplar.status !== "PERDIDO") return;
 
     await ctx.db.patch(exemplarId, { status: "DISPONIVEL" });
@@ -366,7 +366,7 @@ export const emprestimoSelfService = mutation({
       .query("exemplares")
       .withIndex("by_codigo", (q) => q.eq("codigo", codigo))
       .first();
-    if (!exemplar) throw new Error("Exemplar nao encontrado");
+    if (!exemplar) throw new Error("Exemplar não encontrado");
 
     // Se o exemplar escaneado nao esta disponivel, tenta outro do mesmo livro
     let exemplarParaEmprestar = exemplar;
@@ -376,7 +376,7 @@ export const emprestimoSelfService = mutation({
         .withIndex("by_livro", (q) => q.eq("livroId", exemplar.livroId))
         .collect();
       const disponivel = outros.find((e) => e.status === "DISPONIVEL");
-      if (!disponivel) throw new Error("Nenhum exemplar disponivel");
+      if (!disponivel) throw new Error("Nenhum exemplar disponível");
       exemplarParaEmprestar = disponivel;
     }
 
@@ -386,7 +386,7 @@ export const emprestimoSelfService = mutation({
       .withIndex("by_membro", (q) => q.eq("membroId", membro._id))
       .collect();
     if (ativos.filter((e) => e.status === "ATIVO").length >= LIMITE_EMPRESTIMOS) {
-      throw new Error(`Limite de ${LIMITE_EMPRESTIMOS} emprestimos simultaneos`);
+      throw new Error(`Limite de ${LIMITE_EMPRESTIMOS} empréstimos simultâneos`);
     }
 
     const hoje = getSaoPauloDateString();
@@ -427,7 +427,7 @@ export const devolverSelfService = mutation({
       .query("exemplares")
       .withIndex("by_codigo", (q) => q.eq("codigo", codigo))
       .first();
-    if (!exemplar) throw new Error("Exemplar nao encontrado");
+    if (!exemplar) throw new Error("Exemplar não encontrado");
 
     // Buscar emprestimo ativo do membro para este livro
     const emprestimos = await ctx.db
@@ -439,7 +439,7 @@ export const devolverSelfService = mutation({
       (e) => e.status === "ATIVO" && e.livroId === exemplar.livroId
     );
 
-    if (!ativo) throw new Error("Voce nao tem emprestimo ativo deste livro");
+    if (!ativo) throw new Error("Você não tem empréstimo ativo deste livro");
 
     const hoje = getSaoPauloDateString();
     await ctx.db.patch(ativo._id, { status: "DEVOLVIDO", dataDevolucao: hoje });
@@ -459,8 +459,8 @@ export const devolver = mutation({
   args: { emprestimoId: v.id("emprestimos") },
   handler: async (ctx, { emprestimoId }) => {
     const emprestimo = await ctx.db.get(emprestimoId);
-    if (!emprestimo) throw new Error("Emprestimo nao encontrado");
-    if (emprestimo.status !== "ATIVO") throw new Error("Emprestimo ja devolvido");
+    if (!emprestimo) throw new Error("Empréstimo não encontrado");
+    if (emprestimo.status !== "ATIVO") throw new Error("Empréstimo já devolvido");
 
     // Quem registra emprestimos devolve qualquer um; o membro devolve o
     // proprio (a pagina /biblioteca/meus-emprestimos usa esta mutation, e
@@ -470,7 +470,7 @@ export const devolver = mutation({
       ? gestor.membro
       : (await requireAuth(ctx)).membro;
     if (!gestor && emprestimo.membroId !== membro._id) {
-      throw new Error("Sem permissao");
+      throw new Error("Sem permissão");
     }
 
     const hoje = getSaoPauloDateString();

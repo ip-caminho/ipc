@@ -65,7 +65,7 @@ export const sendPushToAll = action({
       "_shared/requirePermission:currentUserHasPermission",
       { permission: "*" }
     );
-    if (!isAdmin) throw new Error("Sem permissao");
+    if (!isAdmin) throw new Error("Sem permissão");
 
     setupVapid();
 

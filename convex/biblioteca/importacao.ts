@@ -384,16 +384,16 @@ export const removerLivroDeTeste = internalMutation({
   args: { livroId: v.id("livros"), tituloEsperado: v.string() },
   handler: async (ctx, { livroId, tituloEsperado }) => {
     const livro = await ctx.db.get(livroId);
-    if (!livro) throw new Error("Livro nao encontrado");
+    if (!livro) throw new Error("Livro não encontrado");
     if (livro.titulo !== tituloEsperado) {
-      throw new Error(`Titulo nao confere: "${livro.titulo}"`);
+      throw new Error(`Título não confere: "${livro.titulo}"`);
     }
     const emprestimos = await ctx.db
       .query("emprestimos")
       .withIndex("by_livro", (q) => q.eq("livroId", livroId))
       .collect();
     if (emprestimos.some((e) => e.status === "ATIVO")) {
-      throw new Error("Livro tem emprestimo ativo");
+      throw new Error("Livro tem empréstimo ativo");
     }
     const exemplares = await ctx.db
       .query("exemplares")

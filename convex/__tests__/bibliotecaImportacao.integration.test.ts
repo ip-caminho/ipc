@@ -253,13 +253,13 @@ describe("biblioteca.importacao.removerLivroDeTeste", () => {
         livroId: ativo,
         tituloEsperado: "Outro titulo",
       })
-    ).rejects.toThrow(/Titulo nao confere/);
+    ).rejects.toThrow(/Título não confere/);
     await expect(
       t.mutation(internal.biblioteca.importacao.removerLivroDeTeste, {
         livroId: ativo,
         tituloEsperado: "Livro de teste",
       })
-    ).rejects.toThrow(/emprestimo ativo/);
+    ).rejects.toThrow(/empréstimo ativo/);
     const livro = await t.run(async (ctx) => await ctx.db.get(ativo));
     expect(livro).not.toBeNull();
   });

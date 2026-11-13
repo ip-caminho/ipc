@@ -62,7 +62,7 @@ export const create = mutation({
       .query("funcoes")
       .withIndex("by_slug", (q) => q.eq("slug", args.slug))
       .first();
-    if (existing) throw new Error("Funcao com esse slug ja existe");
+    if (existing) throw new Error("Função com esse slug já existe");
 
     // Get max ordem
     const all = await ctx.db.query("funcoes").collect();
@@ -113,7 +113,7 @@ export const toggle = mutation({
     if (!membro || membro.role !== "admin") throw new Error("Apenas admin");
 
     const funcao = await ctx.db.get(id);
-    if (!funcao) throw new Error("Funcao nao encontrada");
+    if (!funcao) throw new Error("Função não encontrada");
 
     await ctx.db.patch(id, { ativo: !funcao.ativo });
   },

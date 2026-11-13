@@ -43,7 +43,7 @@ export const getReadUrls = action({
   args: { urls: v.array(v.string()) },
   handler: async (ctx, args): Promise<(string | null)[]> => {
     if (args.urls.length === 0) return [];
-    if (args.urls.length > 200) throw new Error("Muitas URLs por chamada (max 200)");
+    if (args.urls.length > 200) throw new Error("Muitas URLs por chamada (máx 200)");
     // @ts-ignore Convex TS2589 (instanciacao de tipo profunda)
     const permitidas: boolean[] = await ctx.runQuery(internal.files.authz.checkReadAccess, {
       urls: args.urls,
@@ -84,10 +84,10 @@ export const getPublicAudioUploadUrl = action({
   handler: async (_ctx, args) => {
     const expected = process.env.AUDIO_UPLOAD_TOKEN;
     if (!expected || args.token !== expected) {
-      throw new Error("Link invalido ou expirado");
+      throw new Error("Link inválido ou expirado");
     }
     if (!args.mimeType.startsWith("audio/")) {
-      throw new Error("Apenas arquivos de audio sao aceitos");
+      throw new Error("Apenas arquivos de áudio são aceitos");
     }
     const ext = args.fileName.split(".").pop() || "mp3";
     const key = generateObjectKey("gravacoes-audio", "publico", ext);

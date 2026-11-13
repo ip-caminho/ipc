@@ -65,7 +65,7 @@ export async function requirePermission(ctx: any, permission: string) {
   const { userId, membro, perms } = ctxData;
 
   if (!(await allows(ctx, membro, perms, permission))) {
-    throw new Error("Sem permissao");
+    throw new Error("Sem permissão");
   }
 
   return { userId, membro };
@@ -103,7 +103,7 @@ export async function requireAnyPermission(ctx: any, permissions: string[]) {
       break;
     }
   }
-  if (!ok) throw new Error("Sem permissao");
+  if (!ok) throw new Error("Sem permissão");
 
   return { userId, membro };
 }

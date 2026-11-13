@@ -173,7 +173,7 @@ export const migrar = internalAction({
     // base inteira sem ter movido nada. Melhor nao comecar.
     if (privadoIndisponivel()) {
       throw new Error(
-        "BACKBLAZE_BUCKET_PRIVADO nao configurado — configure antes de migrar",
+        "BACKBLAZE_BUCKET_PRIVADO não configurado — configure antes de migrar",
       );
     }
     const alvos = args.alvo ? [args.alvo] : [...ALVOS];

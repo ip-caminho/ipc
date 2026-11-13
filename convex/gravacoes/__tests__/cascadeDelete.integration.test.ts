@@ -224,6 +224,6 @@ describe("gravacoes cascade delete", () => {
     const asUser = t.withIdentity({ subject: `${ids.userId}|s` });
     await expect(
       asUser.mutation(api.gravacoes.mutations.remove, { id: ids.tempId })
-    ).rejects.toThrow("Gravacao nao encontrada");
+    ).rejects.toThrow("Gravação não encontrada");
   });
 });

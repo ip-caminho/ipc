@@ -48,7 +48,7 @@ export const inspecionar = internalQuery({
   handler: async (ctx, { dupEntidadeId, destinoEntidadeId }) => {
     const dup = await ctx.db.get(dupEntidadeId);
     const destino = await ctx.db.get(destinoEntidadeId);
-    if (!dup || !destino) throw new Error("Entidade nao encontrada");
+    if (!dup || !destino) throw new Error("Entidade não encontrada");
     const dupMem = await acharPorEntidade(ctx, dupEntidadeId);
     const destinoMem = await acharPorEntidade(ctx, destinoEntidadeId);
 
@@ -81,10 +81,10 @@ export const mesclar = internalMutation({
   handler: async (ctx, { dupEntidadeId, destinoEntidadeId }) => {
     const dup = await ctx.db.get(dupEntidadeId);
     const destino = await ctx.db.get(destinoEntidadeId);
-    if (!dup || !destino) throw new Error("Entidade nao encontrada");
+    if (!dup || !destino) throw new Error("Entidade não encontrada");
     const dupMem = await acharPorEntidade(ctx, dupEntidadeId);
     const destinoMem = await acharPorEntidade(ctx, destinoEntidadeId);
-    if (dupMem?.userId) throw new Error("Duplicado tem login — mesclar na outra direcao");
+    if (dupMem?.userId) throw new Error("Duplicado tem login — mesclar na outra direção");
 
     const acoes: string[] = [];
 
@@ -253,7 +253,7 @@ export const renomear = internalMutation({
   args: { entidadeId: v.id("entidades"), nome: v.string() },
   handler: async (ctx, { entidadeId, nome }) => {
     const antes = await ctx.db.get(entidadeId);
-    if (!antes) throw new Error("Entidade nao encontrada");
+    if (!antes) throw new Error("Entidade não encontrada");
     await ctx.db.patch(entidadeId, { nomeCompleto: nome });
     const depois = await ctx.db.get(entidadeId);
     await createFieldAuditLogs(ctx, antes, depois, "entidades");
@@ -267,7 +267,7 @@ export const limparCampos = internalMutation({
   args: { entidadeId: v.id("entidades"), campos: v.array(v.string()) },
   handler: async (ctx, { entidadeId, campos }) => {
     const antes = await ctx.db.get(entidadeId);
-    if (!antes) throw new Error("Entidade nao encontrada");
+    if (!antes) throw new Error("Entidade não encontrada");
     const patch: Record<string, undefined> = {};
     for (const c of campos) patch[c] = undefined;
     await ctx.db.patch(entidadeId, patch);

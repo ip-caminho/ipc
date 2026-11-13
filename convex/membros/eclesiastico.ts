@@ -79,10 +79,10 @@ export const updateEclesiastico = mutation({
       .query("membros")
       .withIndex("by_user_id", (q) => q.eq("userId", userId))
       .first();
-    if (!editor) throw new Error("Editor nao encontrado");
+    if (!editor) throw new Error("Editor não encontrado");
 
     const membro = await ctx.db.get(membroId);
-    if (!membro) throw new Error("Membro nao encontrado");
+    if (!membro) throw new Error("Membro não encontrado");
 
     const filtered: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(data ?? {})) {
@@ -128,10 +128,10 @@ export const marcarCampoVerificado = mutation({
       .query("membros")
       .withIndex("by_user_id", (q) => q.eq("userId", userId))
       .first();
-    if (!verificador) throw new Error("Verificador nao encontrado");
+    if (!verificador) throw new Error("Verificador não encontrado");
 
     const entidade = await ctx.db.get(entidadeId);
-    if (!entidade) throw new Error("Entidade nao encontrada");
+    if (!entidade) throw new Error("Entidade não encontrada");
 
     const atuais = entidade.camposVerificados ?? [];
     const semCampo = atuais.filter((c) => c.campo !== campo);
@@ -531,7 +531,7 @@ export const tornarMembro = mutation({
     ]);
 
     const entidade = await ctx.db.get(entidadeId);
-    if (!entidade) throw new Error("Entidade nao encontrada");
+    if (!entidade) throw new Error("Entidade não encontrada");
 
     const existente = await ctx.db
       .query("membros")
@@ -586,7 +586,7 @@ export const updateStatus = mutation({
       "membros:update",
     ]);
     const entidade = await ctx.db.get(entidadeId);
-    if (!entidade) throw new Error("Entidade nao encontrada");
+    if (!entidade) throw new Error("Entidade não encontrada");
     if (entidade.status === status) return { changed: false };
 
     const old = { ...entidade };
@@ -616,14 +616,14 @@ export const vincularConjugeAdmin = mutation({
   handler: async (ctx, { membroId, conjugeEntidadeId }) => {
     await requireAnyPermission(ctx, PERM_FAMILIA);
     const membro = await ctx.db.get(membroId);
-    if (!membro) throw new Error("Membro nao encontrado");
+    if (!membro) throw new Error("Membro não encontrado");
     if (membro.entidadeId === conjugeEntidadeId) {
-      throw new Error("Nao e possivel vincular a propria pessoa");
+      throw new Error("Não é possível vincular a própria pessoa");
     }
     const conjuge = await ctx.db.get(conjugeEntidadeId);
-    if (!conjuge) throw new Error("Conjuge nao encontrado");
+    if (!conjuge) throw new Error("Cônjuge não encontrado");
     if (conjuge.tipoEntidade !== "PF") {
-      throw new Error("So e possivel vincular pessoas fisicas");
+      throw new Error("Só é possível vincular pessoas físicas");
     }
 
     // O alvo ja esta casado? (membro dele com conjugeId, ou alguem apontando
@@ -634,14 +634,14 @@ export const vincularConjugeAdmin = mutation({
       .withIndex("by_entidade", (q) => q.eq("entidadeId", conjugeEntidadeId))
       .first();
     if (conjugeMembro?.conjugeId && conjugeMembro.conjugeId !== membro.entidadeId) {
-      throw new Error("Essa pessoa ja tem conjuge vinculado");
+      throw new Error("Essa pessoa já tem cônjuge vinculado");
     }
     const apontam = await ctx.db
       .query("membros")
       .withIndex("by_conjuge", (q) => q.eq("conjugeId", conjugeEntidadeId))
       .collect();
     if (apontam.some((m) => m.entidadeId !== membro.entidadeId)) {
-      throw new Error("Essa pessoa ja tem conjuge vinculado");
+      throw new Error("Essa pessoa já tem cônjuge vinculado");
     }
 
     await ctx.db.patch(membroId, { conjugeId: conjugeEntidadeId });
@@ -656,7 +656,7 @@ export const desvincularConjugeAdmin = mutation({
   handler: async (ctx, { membroId }) => {
     await requireAnyPermission(ctx, PERM_FAMILIA);
     const membro = await ctx.db.get(membroId);
-    if (!membro) throw new Error("Membro nao encontrado");
+    if (!membro) throw new Error("Membro não encontrado");
     await ctx.db.patch(membroId, { conjugeId: undefined });
     // Limpa TODOS os ponteiros reversos para esta entidade (nao so o conjuge
     // atual): senao redeFamiliar ainda mostra o casamento pelo lado reverso.
@@ -686,9 +686,9 @@ export const adicionarFilhoAdmin = mutation({
   handler: async (ctx, args) => {
     await requireAnyPermission(ctx, PERM_FAMILIA);
     const responsavel = await ctx.db.get(args.responsavelMembroId);
-    if (!responsavel) throw new Error("Responsavel nao encontrado");
+    if (!responsavel) throw new Error("Responsável não encontrado");
     const respEntidade = await ctx.db.get(responsavel.entidadeId);
-    if (!respEntidade) throw new Error("Entidade do responsavel nao encontrada");
+    if (!respEntidade) throw new Error("Entidade do responsável não encontrada");
 
     const filhoEntidadeId = await ctx.db.insert("entidades", {
       tipoEntidade: "PF",
@@ -729,14 +729,14 @@ export const vincularFilhoExistenteAdmin = mutation({
   handler: async (ctx, { responsavelMembroId, filhoEntidadeId }) => {
     await requireAnyPermission(ctx, PERM_FAMILIA);
     const responsavel = await ctx.db.get(responsavelMembroId);
-    if (!responsavel) throw new Error("Responsavel nao encontrado");
+    if (!responsavel) throw new Error("Responsável não encontrado");
     if (filhoEntidadeId === responsavel.entidadeId) {
-      throw new Error("Nao e possivel vincular como proprio filho");
+      throw new Error("Não é possível vincular como próprio filho");
     }
     const filhoEnt = await ctx.db.get(filhoEntidadeId);
-    if (!filhoEnt) throw new Error("Pessoa nao encontrada");
+    if (!filhoEnt) throw new Error("Pessoa não encontrada");
     if (filhoEnt.tipoEntidade !== "PF") {
-      throw new Error("So e possivel vincular pessoas fisicas");
+      throw new Error("Só é possível vincular pessoas físicas");
     }
     const existente = await ctx.db
       .query("responsaveis")
@@ -765,7 +765,7 @@ export const removerFilhoAdmin = mutation({
   handler: async (ctx, { responsavelMembroId, filhoEntidadeId }) => {
     await requireAnyPermission(ctx, PERM_FAMILIA);
     const responsavel = await ctx.db.get(responsavelMembroId);
-    if (!responsavel) throw new Error("Responsavel nao encontrado");
+    if (!responsavel) throw new Error("Responsável não encontrado");
     const links = await ctx.db
       .query("responsaveis")
       .withIndex("by_crianca", (q) => q.eq("criancaEntidadeId", filhoEntidadeId))
@@ -794,16 +794,16 @@ export const vincularParenteAdmin = mutation({
   handler: async (ctx, { parentesco, focoEntidadeId, outraEntidadeId }) => {
     await requireAnyPermission(ctx, PERM_FAMILIA);
     if (focoEntidadeId === outraEntidadeId) {
-      throw new Error("Nao e possivel vincular a propria pessoa");
+      throw new Error("Não é possível vincular a própria pessoa");
     }
     const [foco, outra] = await Promise.all([
       ctx.db.get(focoEntidadeId),
       ctx.db.get(outraEntidadeId),
     ]);
-    if (!foco) throw new Error("Pessoa nao encontrada");
-    if (!outra) throw new Error("Pessoa nao encontrada");
+    if (!foco) throw new Error("Pessoa não encontrada");
+    if (!outra) throw new Error("Pessoa não encontrada");
     if (foco.tipoEntidade !== "PF" || outra.tipoEntidade !== "PF") {
-      throw new Error("So e possivel vincular pessoas fisicas");
+      throw new Error("Só é possível vincular pessoas físicas");
     }
 
     if (parentesco === "pai") {
@@ -820,7 +820,7 @@ export const vincularParenteAdmin = mutation({
           for (const r of filhosDele) {
             const c = r.criancaEntidadeId as string;
             if (c === outraEntidadeId) {
-              throw new Error("Vinculo invalido: geraria um ciclo na arvore");
+              throw new Error("Vínculo inválido: geraria um ciclo na árvore");
             }
             if (!visitados.has(c)) {
               visitados.add(c);
@@ -857,7 +857,7 @@ export const vincularParenteAdmin = mutation({
         .collect()
     ).filter((r) => r.tipo === "PAI" || r.tipo === "MAE");
     if (paisRef.length === 0) {
-      throw new Error("Cadastre o pai/mae desta pessoa antes de vincular um irmao");
+      throw new Error("Cadastre o pai/mãe desta pessoa antes de vincular um irmão");
     }
     const idsPaisRef = new Set(paisRef.map((r) => r.responsavelEntidadeId as string));
 
@@ -870,7 +870,7 @@ export const vincularParenteAdmin = mutation({
         .collect()
     ).filter((r) => r.tipo === "PAI" || r.tipo === "MAE");
     if (paisOutra.some((r) => !idsPaisRef.has(r.responsavelEntidadeId as string))) {
-      throw new Error("Essa pessoa ja tem outro pai/mae cadastrado");
+      throw new Error("Essa pessoa já tem outro pai/mãe cadastrado");
     }
 
     let inseridos = 0;

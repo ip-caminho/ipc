@@ -21,7 +21,7 @@ export const generateInvite = mutation({
     const papel = role || "membro";
 
     if (!PAPEIS_VALIDOS.has(papel)) {
-      throw new Error(`Papel invalido: ${papel}`);
+      throw new Error(`Papel inválido: ${papel}`);
     }
 
     // Conceder qualquer papel com poder (isto e, diferente de "membro") e

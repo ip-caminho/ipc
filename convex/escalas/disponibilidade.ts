@@ -12,7 +12,7 @@ async function requireAuth(ctx: any) {
     .query("membros")
     .withIndex("by_user_id", (q: any) => q.eq("userId", userId))
     .first();
-  if (!membro) throw new Error("Membro nao encontrado");
+  if (!membro) throw new Error("Membro não encontrado");
 
   return { userId, membro };
 }

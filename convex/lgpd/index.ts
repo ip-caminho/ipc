@@ -37,7 +37,7 @@ export const aceitar = mutation({
       .query("membros")
       .withIndex("by_user_id", (q) => q.eq("userId", userId))
       .first();
-    if (!membro) throw new Error("Membro nao encontrado");
+    if (!membro) throw new Error("Membro não encontrado");
 
     // Idempotente: se ja existe aceite ativo para essa finalidade na versao atual, nao duplica
     const existentes = await ctx.db
@@ -66,13 +66,13 @@ export const revogar = mutation({
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
     const c = await ctx.db.get(id);
-    if (!c) throw new Error("Consentimento nao encontrado");
+    if (!c) throw new Error("Consentimento não encontrado");
     const membro = await ctx.db
       .query("membros")
       .withIndex("by_user_id", (q) => q.eq("userId", userId))
       .first();
     if (!membro || membro._id !== c.membroId) {
-      throw new Error("Apenas o proprio membro pode revogar consentimento");
+      throw new Error("Apenas o próprio membro pode revogar consentimento");
     }
     await ctx.db.patch(id, { revogadoEm: Date.now() });
     return { ok: true };

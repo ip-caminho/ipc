@@ -45,7 +45,7 @@ export const update = mutation({
     await requirePermission(ctx, "calendario:update");
 
     const evento = await ctx.db.get(id);
-    if (!evento) throw new Error("Evento nao encontrado");
+    if (!evento) throw new Error("Evento não encontrado");
 
     const cleanUpdates: Record<string, any> = {};
     for (const [key, value] of Object.entries(updates)) {
@@ -66,7 +66,7 @@ export const remove = mutation({
     await requirePermission(ctx, "calendario:delete");
 
     const evento = await ctx.db.get(id);
-    if (!evento) throw new Error("Evento nao encontrado");
+    if (!evento) throw new Error("Evento não encontrado");
 
     await ctx.db.delete(id);
     await createActionAuditLog(ctx, "DELETE", "calendarioEventos", id);

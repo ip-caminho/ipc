@@ -52,12 +52,12 @@ export const createRascunho = mutation({
   },
   handler: async (ctx, args) => {
     if (!tokenOk(args.token)) {
-      throw new Error("Link invalido ou expirado");
+      throw new Error("Link inválido ou expirado");
     }
     // So aceita URL gerada pelo nosso B2 na pasta de audio — evita injecao de URL
     const prefixo = getPublicUrl("gravacoes-audio/");
     if (!args.audioUrl.startsWith(prefixo)) {
-      throw new Error("Audio invalido");
+      throw new Error("Áudio inválido");
     }
 
     const { iso, br } = hojeBR();

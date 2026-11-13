@@ -327,7 +327,7 @@ describe("listParaSecretario — agrupamento por familia", () => {
         focoEntidadeId: foco.entidadeId,
         outraEntidadeId: irmao.entidadeId,
       })
-    ).rejects.toThrow(/pai\/mae/i);
+    ).rejects.toThrow(/pai\/mãe/i);
   });
 
   it("getResumoSecretario conta categorias do rol", async () => {

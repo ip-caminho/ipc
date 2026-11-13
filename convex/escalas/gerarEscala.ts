@@ -20,7 +20,7 @@ export const gerarEscalaPorEquipe = mutation({
     await requirePermission(ctx, "escalas:update");
 
     const config = FUNCOES_CONFIG[funcao];
-    if (!config) throw new Error("Funcao invalida");
+    if (!config) throw new Error("Função inválida");
 
     // 1. Buscar cultos no período
     const allCultos = await ctx.db.query("cultos").order("asc").collect();

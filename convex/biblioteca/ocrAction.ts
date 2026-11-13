@@ -34,10 +34,10 @@ export const extractBookData = action({
       "_shared/requirePermission:currentUserHasPermission",
       { permission: "biblioteca:create" }
     );
-    if (!ok) throw new Error("Sem permissao");
+    if (!ok) throw new Error("Sem permissão");
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) throw new Error("ANTHROPIC_API_KEY nao configurada");
+    if (!apiKey) throw new Error("ANTHROPIC_API_KEY não configurada");
 
     // Baixar imagem
     const imgRes = await fetch(imageUrl);

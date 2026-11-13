@@ -32,17 +32,17 @@ export const vincularCasaisRetiro = internalMutation({
       const ea = await ctx.db.get(a);
       const eb = await ctx.db.get(b);
       if (!ea || !eb) {
-        erros.push({ ref: `${a}/${b}`, motivo: "entidade nao encontrada" });
+        erros.push({ ref: `${a}/${b}`, motivo: "entidade não encontrada" });
         continue;
       }
       const ma = await membroDe(a);
       const mb = await membroDe(b);
       if (!ma || !mb) {
-        erros.push({ ref: `${ea.nomeCompleto} / ${eb.nomeCompleto}`, motivo: "membro nao encontrado" });
+        erros.push({ ref: `${ea.nomeCompleto} / ${eb.nomeCompleto}`, motivo: "membro não encontrado" });
         continue;
       }
       if (ma.conjugeId || mb.conjugeId) {
-        pulados.push({ a: ea.nomeCompleto ?? "?", b: eb.nomeCompleto ?? "?", motivo: "ja tem conjuge" });
+        pulados.push({ a: ea.nomeCompleto ?? "?", b: eb.nomeCompleto ?? "?", motivo: "já tem cônjuge" });
         continue;
       }
       if (!args.dryRun) {
@@ -55,7 +55,7 @@ export const vincularCasaisRetiro = internalMutation({
     for (const id of args.limparNascimento ?? []) {
       const e = await ctx.db.get(id);
       if (!e) {
-        erros.push({ ref: id, motivo: "entidade nao encontrada (limparNascimento)" });
+        erros.push({ ref: id, motivo: "entidade não encontrada (limparNascimento)" });
         continue;
       }
       if (e.dataNascimento === undefined) continue;
@@ -88,7 +88,7 @@ export const corrigirVinculoIgreja = internalMutation({
   },
   handler: async (ctx, args) => {
     const e = await ctx.db.get(args.entidadeId);
-    if (!e) return { erro: "entidade nao encontrada" };
+    if (!e) return { erro: "entidade não encontrada" };
     const de = e.vinculoIgreja ?? null;
     if (!args.dryRun) await ctx.db.patch(args.entidadeId, { vinculoIgreja: args.vinculo });
     return { dryRun: !!args.dryRun, nome: e.nomeCompleto, de, para: args.vinculo };
@@ -107,7 +107,7 @@ export const reativarComoMembro = internalMutation({
     for (const id of args.entidadeIds) {
       const e = await ctx.db.get(id);
       if (!e) {
-        erros.push({ id, motivo: "nao encontrada" });
+        erros.push({ id, motivo: "não encontrada" });
         continue;
       }
       const m = await ctx.db
@@ -115,7 +115,7 @@ export const reativarComoMembro = internalMutation({
         .withIndex("by_entidade", (q) => q.eq("entidadeId", id))
         .first();
       if (m?.formaDemissao || m?.dataDemissao) {
-        erros.push({ id, motivo: `tem registro de demissao (${m?.formaDemissao ?? m?.dataDemissao}) — nao reativar automaticamente` });
+        erros.push({ id, motivo: `tem registro de demissão (${m?.formaDemissao ?? m?.dataDemissao}) — não reativar automaticamente` });
         continue;
       }
       alterados.push({ nome: e.nomeCompleto ?? "?", de: `${e.status}/${e.vinculoIgreja ?? "—"}`, para: "ATIVO/MEMBRO" });
@@ -139,7 +139,7 @@ export const tornarFilhosMembros = internalMutation({
     for (const entidadeId of args.entidadeIds) {
       const e = await ctx.db.get(entidadeId);
       if (!e) {
-        erros.push({ id: entidadeId, motivo: "entidade nao encontrada" });
+        erros.push({ id: entidadeId, motivo: "entidade não encontrada" });
         continue;
       }
       const existente = await ctx.db
@@ -181,7 +181,7 @@ export const fundirDuplicata = internalMutation({
     if (duplicataId === canonicaId) return { erro: "ids iguais" };
     const dup = await ctx.db.get(duplicataId);
     const can = await ctx.db.get(canonicaId);
-    if (!dup || !can) return { erro: "entidade nao encontrada" };
+    if (!dup || !can) return { erro: "entidade não encontrada" };
 
     const rel = async (crianca: Id<"entidades">) =>
       ctx.db.query("responsaveis").withIndex("by_crianca", (q) => q.eq("criancaEntidadeId", crianca)).collect();
@@ -382,7 +382,7 @@ export const corrigirNascimento = internalMutation({
   },
   handler: async (ctx, args) => {
     const e = await ctx.db.get(args.entidadeId);
-    if (!e) throw new Error("entidade nao encontrada");
+    if (!e) throw new Error("entidade não encontrada");
     const antes = e.dataNascimento ?? null;
     if (!args.dryRun) {
       await ctx.db.patch(args.entidadeId, { dataNascimento: args.dataNascimento });

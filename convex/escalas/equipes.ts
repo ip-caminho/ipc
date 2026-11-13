@@ -181,7 +181,7 @@ export const removeMembro = mutation({
   handler: async (ctx, { id }) => {
     await requirePermission(ctx, "escalas:update");
     const em = await ctx.db.get(id);
-    if (!em) throw new Error("Registro nao encontrado");
+    if (!em) throw new Error("Registro não encontrado");
     await ctx.db.delete(id);
   },
 });
@@ -191,7 +191,7 @@ export const toggleAtivo = mutation({
   handler: async (ctx, { id }) => {
     await requirePermission(ctx, "escalas:update");
     const em = await ctx.db.get(id);
-    if (!em) throw new Error("Registro nao encontrado");
+    if (!em) throw new Error("Registro não encontrado");
     await ctx.db.patch(id, { ativo: !em.ativo });
   },
 });
@@ -201,7 +201,7 @@ export const toggleCondutor = mutation({
   handler: async (ctx, { id }) => {
     await requirePermission(ctx, "escalas:update");
     const em = await ctx.db.get(id);
-    if (!em) throw new Error("Registro nao encontrado");
+    if (!em) throw new Error("Registro não encontrado");
     await ctx.db.patch(id, { condutor: !em.condutor });
   },
 });
@@ -214,7 +214,7 @@ export const updateInstrumentos = mutation({
   handler: async (ctx, { id, instrumentos }) => {
     await requirePermission(ctx, "escalas:update");
     const em = await ctx.db.get(id);
-    if (!em) throw new Error("Registro nao encontrado");
+    if (!em) throw new Error("Registro não encontrado");
     await ctx.db.patch(id, { instrumentos: instrumentos.length > 0 ? instrumentos : undefined });
   },
 });

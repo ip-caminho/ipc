@@ -42,7 +42,7 @@ export const relinkAdmin = mutation({
     // poderia se tornar admin roubando o vinculo. Em producao o admin ja esta
     // vinculado, entao esta funcao vira inofensiva.
     if (admin.userId) {
-      throw new Error("Admin ja vinculado a um usuario");
+      throw new Error("Admin já vinculado a um usuário");
     }
 
     // Atualiza o userId do admin pro user atual

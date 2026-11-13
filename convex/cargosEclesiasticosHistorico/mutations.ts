@@ -26,7 +26,7 @@ export const iniciarMandato = mutation({
       .query("membros")
       .withIndex("by_user_id", (q) => q.eq("userId", userId))
       .first();
-    if (!registrador) throw new Error("Registrador nao encontrado");
+    if (!registrador) throw new Error("Registrador não encontrado");
 
     const id = await ctx.db.insert("cargosEclesiasticosHistorico", {
       ...args,
@@ -47,7 +47,7 @@ export const encerrarMandato = mutation({
   handler: async (ctx, { id, mandatoFim, status }) => {
     await requireAnyPermission(ctx, ["rol:update", "membros:update"]);
     const cargo = await ctx.db.get(id);
-    if (!cargo) throw new Error("Mandato nao encontrado");
+    if (!cargo) throw new Error("Mandato não encontrado");
     await ctx.db.patch(id, {
       mandatoFim,
       status: status ?? "ENCERRADO",

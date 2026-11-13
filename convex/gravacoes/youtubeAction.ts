@@ -32,7 +32,7 @@ function extractVideoId(url: string): string {
     const match = url.match(pattern);
     if (match) return match[1];
   }
-  throw new Error("URL do YouTube invalida — nao foi possivel extrair o ID do video");
+  throw new Error("URL do YouTube inválida — não foi possível extrair o ID do vídeo");
 }
 
 export const downloadYouTubeAudio = internalAction({
@@ -79,7 +79,7 @@ export const downloadYouTubeAudio = internalAction({
       const audioBuffer = Buffer.concat(chunks);
 
       if (audioBuffer.length < 1000) {
-        throw new Error("Audio muito pequeno ou vazio — download pode ter falhado");
+        throw new Error("Áudio muito pequeno ou vazio — download pode ter falhado");
       }
 
       // Determine file extension from mime type

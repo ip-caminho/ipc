@@ -12,7 +12,7 @@ export const garantirCultosFuturos = mutation({
     // Escreve cultos no banco. Exige login — nao permissao nem internal: o
     // layout de /escalas dispara isto no mount para qualquer membro que abre a
     // tela. Sem gate, um anonimo inseria cultos (idempotente ate 31/dez).
-    if (!(await getAuthUserId(ctx))) throw new Error("Nao autenticado");
+    if (!(await getAuthUserId(ctx))) throw new Error("Não autenticado");
 
     const sp = getSaoPauloDate();
     const hoje = new Date(sp.year, sp.month - 1, sp.day);
@@ -92,7 +92,7 @@ export const updateCulto = mutation({
     await requirePermission(ctx, "escalas:update");
 
     const culto = await ctx.db.get(id);
-    if (!culto) throw new Error("Culto nao encontrado");
+    if (!culto) throw new Error("Culto não encontrado");
 
     const cleanUpdates: Record<string, any> = {};
     for (const [key, value] of Object.entries(updates)) {
@@ -109,7 +109,7 @@ export const publishCulto = mutation({
   handler: async (ctx, { id }) => {
     await requirePermission(ctx, "escalas:update");
     const culto = await ctx.db.get(id);
-    if (!culto) throw new Error("Culto nao encontrado");
+    if (!culto) throw new Error("Culto não encontrado");
     await ctx.db.patch(id, { status: "PUBLICADO" });
     const updated = await ctx.db.get(id);
     await createFieldAuditLogs(ctx, culto, updated, "cultos");
@@ -121,7 +121,7 @@ export const unpublishCulto = mutation({
   handler: async (ctx, { id }) => {
     await requirePermission(ctx, "escalas:update");
     const culto = await ctx.db.get(id);
-    if (!culto) throw new Error("Culto nao encontrado");
+    if (!culto) throw new Error("Culto não encontrado");
     await ctx.db.patch(id, { status: "RASCUNHO" });
     const updated = await ctx.db.get(id);
     await createFieldAuditLogs(ctx, culto, updated, "cultos");
@@ -134,7 +134,7 @@ export const deleteCulto = mutation({
     await requirePermission(ctx, "escalas:delete");
 
     const culto = await ctx.db.get(id);
-    if (!culto) throw new Error("Culto nao encontrado");
+    if (!culto) throw new Error("Culto não encontrado");
 
     // Cascade delete escalas
     const escalas = await ctx.db
@@ -172,7 +172,7 @@ export const upsertEscala = mutation({
     await requirePermission(ctx, "escalas:update");
 
     const culto = await ctx.db.get(cultoId);
-    if (!culto) throw new Error("Culto nao encontrado");
+    if (!culto) throw new Error("Culto não encontrado");
 
     // Trava reversa: nao escalar quem esta marcado como ausente/indisponivel na data.
     if (membroId) {
@@ -244,7 +244,7 @@ export const updatePassagem = mutation({
   handler: async (ctx, { id, passagemBiblica }) => {
     await requirePermission(ctx, "escalas:update");
     const escala = await ctx.db.get(id);
-    if (!escala) throw new Error("Escala nao encontrada");
+    if (!escala) throw new Error("Escala não encontrada");
     await ctx.db.patch(id, { passagemBiblica: passagemBiblica || undefined });
   },
 });
@@ -258,7 +258,7 @@ export const updateLouvores = mutation({
   handler: async (ctx, { cultoId, louvores }) => {
     await requirePermission(ctx, "escalas:update");
     const culto = await ctx.db.get(cultoId);
-    if (!culto) throw new Error("Culto nao encontrado");
+    if (!culto) throw new Error("Culto não encontrado");
     await ctx.db.patch(cultoId, { louvores });
   },
 });
@@ -274,7 +274,7 @@ export const addEscala = mutation({
     await requirePermission(ctx, "escalas:update");
 
     const culto = await ctx.db.get(cultoId);
-    if (!culto) throw new Error("Culto nao encontrado");
+    if (!culto) throw new Error("Culto não encontrado");
 
     // Verificar se membro já está em outra função neste culto
     const todasEscalas = await ctx.db
@@ -303,7 +303,7 @@ export const removeEscala = mutation({
   handler: async (ctx, { id }) => {
     await requirePermission(ctx, "escalas:update");
     const escala = await ctx.db.get(id);
-    if (!escala) throw new Error("Escala nao encontrada");
+    if (!escala) throw new Error("Escala não encontrada");
     await ctx.db.delete(id);
   },
 });

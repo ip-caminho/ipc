@@ -11,7 +11,7 @@ async function requireAuth(ctx: any) {
     .query("membros")
     .withIndex("by_user_id", (q: any) => q.eq("userId", userId))
     .first();
-  if (!membro) throw new Error("Membro nao encontrado");
+  if (!membro) throw new Error("Membro não encontrado");
 
   return { userId, membro };
 }
@@ -100,7 +100,7 @@ export const updateStatus = mutation({
     const { membro } = await requireAuth(ctx);
 
     const pedido = await ctx.db.get(id);
-    if (!pedido) throw new Error("Pedido nao encontrado");
+    if (!pedido) throw new Error("Pedido não encontrado");
 
     // Apenas o dono ou lideranca pode mudar status
     if (pedido.membroId !== membro._id && membro.role !== "admin") {
@@ -113,7 +113,7 @@ export const updateStatus = mutation({
         ? membro.permissions
         : (rolePerms?.permissions ?? []);
       if (!perms.includes("*") && !perms.includes("pastoreio:update")) {
-        throw new Error("Sem permissao");
+        throw new Error("Sem permissão");
       }
     }
 
@@ -134,11 +134,11 @@ export const addComentario = mutation({
     const { membro } = await requireAuth(ctx);
 
     const pedido = await ctx.db.get(pedidoId);
-    if (!pedido) throw new Error("Pedido nao encontrado");
+    if (!pedido) throw new Error("Pedido não encontrado");
 
     // Apenas o dono do pedido pode postar atualizacoes
     if (tipo === "ATUALIZACAO" && pedido.membroId !== membro._id) {
-      throw new Error("Apenas o autor pode postar atualizacoes");
+      throw new Error("Apenas o autor pode postar atualizações");
     }
 
     const id = await ctx.db.insert("comentarios", {
@@ -163,11 +163,11 @@ export const removeComentario = mutation({
     const { membro } = await requireAuth(ctx);
 
     const comentario = await ctx.db.get(id);
-    if (!comentario) throw new Error("Comentario nao encontrado");
+    if (!comentario) throw new Error("Comentário não encontrado");
 
     // Apenas o autor do comentario pode excluir
     if (comentario.membroId !== membro._id && membro.role !== "admin") {
-      throw new Error("Sem permissao");
+      throw new Error("Sem permissão");
     }
 
     await ctx.db.delete(id);
@@ -184,7 +184,7 @@ async function toggleOrandoImpl(ctx: any, pedidoId: any) {
   const { membro } = await requireAuth(ctx);
 
   const pedido = await ctx.db.get(pedidoId);
-  if (!pedido) throw new Error("Pedido nao encontrado");
+  if (!pedido) throw new Error("Pedido não encontrado");
 
   const existing = await ctx.db
     .query("pedidoOracaoIntercessores")
@@ -250,13 +250,13 @@ export const addUpdate = mutation({
     const { membro } = await requireAuth(ctx);
 
     const pedido = await ctx.db.get(pedidoId);
-    if (!pedido) throw new Error("Pedido nao encontrado");
+    if (!pedido) throw new Error("Pedido não encontrado");
 
     if (pedido.membroId !== membro._id) {
-      throw new Error("Apenas o autor pode postar atualizacoes");
+      throw new Error("Apenas o autor pode postar atualizações");
     }
     if (texto.trim().length < 10) {
-      throw new Error("Atualizacao precisa ter ao menos 10 caracteres");
+      throw new Error("Atualização precisa ter ao menos 10 caracteres");
     }
 
     const now = Date.now();
@@ -298,7 +298,7 @@ export const archiveRequest = mutation({
     const { membro } = await requireAuth(ctx);
 
     const pedido = await ctx.db.get(pedidoId);
-    if (!pedido) throw new Error("Pedido nao encontrado");
+    if (!pedido) throw new Error("Pedido não encontrado");
     if (pedido.membroId !== membro._id) {
       throw new Error("Apenas o autor pode arquivar");
     }

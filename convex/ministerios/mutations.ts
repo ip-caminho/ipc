@@ -41,7 +41,7 @@ export const update = mutation({
     await requirePermission(ctx, "ministerios:update");
 
     const ministerio = await ctx.db.get(id);
-    if (!ministerio) throw new Error("Ministerio nao encontrado");
+    if (!ministerio) throw new Error("Ministério não encontrado");
 
     const cleanUpdates: Record<string, any> = {};
     for (const [key, value] of Object.entries(updates)) {
@@ -62,7 +62,7 @@ export const remove = mutation({
     await requirePermission(ctx, "ministerios:delete");
 
     const ministerio = await ctx.db.get(id);
-    if (!ministerio) throw new Error("Ministerio nao encontrado");
+    if (!ministerio) throw new Error("Ministério não encontrado");
 
     // Cascade delete membros do ministerio
     const membros = await ctx.db
@@ -89,7 +89,7 @@ export const addMembro = mutation({
     await requirePermission(ctx, "ministerios:update");
 
     const ministerio = await ctx.db.get(ministerioId);
-    if (!ministerio) throw new Error("Ministerio nao encontrado");
+    if (!ministerio) throw new Error("Ministério não encontrado");
 
     // Check if already exists
     const existing = await ctx.db
@@ -100,7 +100,7 @@ export const addMembro = mutation({
       .first();
 
     if (existing) {
-      throw new Error("Membro ja esta neste ministerio");
+      throw new Error("Membro já está neste ministério");
     }
 
     const id = await ctx.db.insert("ministerioMembros", {
@@ -128,7 +128,7 @@ export const updateMembro = mutation({
     await requirePermission(ctx, "ministerios:update");
 
     const mm = await ctx.db.get(id);
-    if (!mm) throw new Error("Registro nao encontrado");
+    if (!mm) throw new Error("Registro não encontrado");
 
     const cleanUpdates: Record<string, any> = { atualizadoEm: Date.now() };
     for (const [key, value] of Object.entries(updates)) {
@@ -145,7 +145,7 @@ export const removeMembro = mutation({
     await requirePermission(ctx, "ministerios:update");
 
     const mm = await ctx.db.get(id);
-    if (!mm) throw new Error("Registro nao encontrado");
+    if (!mm) throw new Error("Registro não encontrado");
 
     await ctx.db.delete(id);
     await createActionAuditLog(ctx, "REMOVE_MEMBRO", "ministerioMembros", id as string);

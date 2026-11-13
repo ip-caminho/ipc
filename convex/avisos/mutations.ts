@@ -40,7 +40,7 @@ export const update = mutation({
     await requirePermission(ctx, "avisos:manage");
 
     const aviso = await ctx.db.get(id);
-    if (!aviso) throw new Error("Aviso nao encontrado");
+    if (!aviso) throw new Error("Aviso não encontrado");
 
     const cleanUpdates: Record<string, any> = {};
     for (const [key, value] of Object.entries(updates)) {
@@ -61,7 +61,7 @@ export const remove = mutation({
     await requirePermission(ctx, "avisos:manage");
 
     const aviso = await ctx.db.get(id);
-    if (!aviso) throw new Error("Aviso nao encontrado");
+    if (!aviso) throw new Error("Aviso não encontrado");
 
     await ctx.db.delete(id);
     await createActionAuditLog(ctx, "DELETE", "avisos", id as string);

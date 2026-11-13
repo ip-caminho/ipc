@@ -118,7 +118,7 @@ export const update = mutation({
       // Troca de papel so via preferencias/rbac.updateMembroRole (admin),
       // que tambem limpa o snapshot de permissions[]
       if ("role" in membroData) {
-        throw new Error("Papel (role) e alterado apenas na tela de Permissoes");
+        throw new Error("Papel (role) é alterado apenas na tela de Permissões");
       }
       // Dados eclesiasticos (membro) exigem rol:update
       if (caller.role !== "admin") {

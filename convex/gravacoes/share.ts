@@ -21,9 +21,9 @@ export const gerarShareLink = mutation({
     await requirePermission(ctx, "gravacoes:share");
 
     const g = await ctx.db.get(gravacaoId);
-    if (!g) throw new Error("Gravacao nao encontrada");
+    if (!g) throw new Error("Gravação não encontrada");
     if (g.status !== "PUBLICADO") {
-      throw new Error("So gravacoes publicadas podem ser compartilhadas");
+      throw new Error("Só gravações publicadas podem ser compartilhadas");
     }
 
     if (g.shareToken) return { token: g.shareToken };
@@ -40,7 +40,7 @@ export const revogarShareLink = mutation({
   handler: async (ctx, { gravacaoId }) => {
     await requirePermission(ctx, "gravacoes:share");
     const g = await ctx.db.get(gravacaoId);
-    if (!g) throw new Error("Gravacao nao encontrada");
+    if (!g) throw new Error("Gravação não encontrada");
     await ctx.db.patch(gravacaoId, { shareToken: undefined });
     return { ok: true };
   },

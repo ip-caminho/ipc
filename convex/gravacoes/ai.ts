@@ -228,7 +228,7 @@ export const startProcessing = mutation({
       .withIndex("by_user_id", (q) => q.eq("userId", userId))
       .first();
 
-    if (!membro) throw new Error("Membro nao encontrado");
+    if (!membro) throw new Error("Membro não encontrado");
 
     // Check permission: admin wildcard or explicit permission
     const hasPermission =
@@ -242,20 +242,20 @@ export const startProcessing = mutation({
         .first();
       const perms = rolePerms?.permissions ?? [];
       if (!perms.includes("gravacoes:process_ai") && !perms.includes("*")) {
-        throw new Error("Sem permissao para processar com IA");
+        throw new Error("Sem permissão para processar com IA");
       }
     }
 
     const gravacao = await ctx.db.get(id);
-    if (!gravacao) throw new Error("Gravacao nao encontrada");
+    if (!gravacao) throw new Error("Gravação não encontrada");
 
     if (gravacao.iaStatus === "BAIXANDO" || gravacao.iaStatus === "TRANSCREVENDO" || gravacao.iaStatus === "ANALISANDO") {
-      throw new Error("Processamento ja em andamento");
+      throw new Error("Processamento já em andamento");
     }
 
     // Retry YouTube download
     if (retryFrom === "BAIXANDO") {
-      if (!gravacao.youtubeUrl) throw new Error("Gravacao sem URL do YouTube");
+      if (!gravacao.youtubeUrl) throw new Error("Gravação sem URL do YouTube");
 
       await ctx.db.patch(id, {
         iaStatus: "BAIXANDO",
@@ -271,7 +271,7 @@ export const startProcessing = mutation({
       return id;
     }
 
-    if (!gravacao.audioUrl) throw new Error("Gravacao sem audio para processar");
+    if (!gravacao.audioUrl) throw new Error("Gravação sem áudio para processar");
 
     // Retry from analysis: skip Deepgram, reuse existing transcription
     // (gravacoesIA; fallback ao campo legado pre-migracao)

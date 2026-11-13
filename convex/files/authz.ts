@@ -62,7 +62,7 @@ export const checkUploadAccess = internalQuery({
   handler: async (ctx, args) => {
     const allowed = FOLDER_PERMISSIONS[args.folder];
     if (!allowed) {
-      throw new Error(`Upload nao permitido para a pasta "${args.folder}"`);
+      throw new Error(`Upload não permitido para a pasta "${args.folder}"`);
     }
     await requireAnyPermission(ctx, allowed);
     return true;
