@@ -510,8 +510,8 @@ export const setMembroPermission = mutation({
     await requireAdmin(ctx);
 
     const membro = await ctx.db.get(membroId);
-    if (!membro) throw new Error("Membro nao encontrado");
-    if (membro.role === "admin") throw new Error("Nao e possivel editar permissoes de admin");
+    if (!membro) throw new Error("Membro não encontrado");
+    if (membro.role === "admin") throw new Error("Não é possível editar permissões de admin");
 
     // Get current effective permissions
     let currentPerms: string[];
@@ -934,11 +934,11 @@ export const applyVolunteerSet = mutation({
     await requireAdmin(ctx);
 
     const membro = await ctx.db.get(membroId);
-    if (!membro) throw new Error("Membro nao encontrado");
-    if (membro.role === "admin") throw new Error("Admin ja tem todas as permissoes");
+    if (!membro) throw new Error("Membro não encontrado");
+    if (membro.role === "admin") throw new Error("Admin já tem todas as permissões");
 
     const volSet = VOLUNTEER_PERMISSION_SETS[setKey];
-    if (!volSet) throw new Error("Conjunto de permissoes invalido");
+    if (!volSet) throw new Error("Conjunto de permissões inválido");
 
     // Pegar permissões atuais (ou do role)
     let currentPerms: string[];
@@ -983,9 +983,9 @@ export const updateMembroRole = mutation({
     await requireAdmin(ctx);
 
     const membro = await ctx.db.get(membroId);
-    if (!membro) throw new Error("Membro nao encontrado");
+    if (!membro) throw new Error("Membro não encontrado");
     if (membro.role === "admin" && role !== "admin") {
-      throw new Error("Nao e possivel rebaixar admin por aqui");
+      throw new Error("Não é possível rebaixar admin por aqui");
     }
 
     // Ao trocar role, limpar permissões customizadas (volta pro padrão do novo role)
@@ -1001,7 +1001,7 @@ export const syncMembroWithRole = mutation({
     await requireAdmin(ctx);
 
     const membro = await ctx.db.get(membroId);
-    if (!membro) throw new Error("Membro nao encontrado");
+    if (!membro) throw new Error("Membro não encontrado");
 
     // Clear custom permissions — will fall back to role defaults
     await ctx.db.patch(membroId, { permissions: [] });

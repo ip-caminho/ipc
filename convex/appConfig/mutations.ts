@@ -13,7 +13,7 @@ async function requireAdmin(ctx: any) {
     .first();
 
   if (!membro || membro.role !== "admin") {
-    throw new Error("Apenas admin pode alterar a configuracao do app");
+    throw new Error("Apenas admin pode alterar a configuração do app");
   }
 
   return { userId, membro };

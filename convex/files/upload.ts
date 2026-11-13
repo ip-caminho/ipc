@@ -84,10 +84,10 @@ export const getPublicAudioUploadUrl = action({
   handler: async (_ctx, args) => {
     const expected = process.env.AUDIO_UPLOAD_TOKEN;
     if (!expected || args.token !== expected) {
-      throw new Error("Link invalido ou expirado");
+      throw new Error("Link inválido ou expirado");
     }
     if (!args.mimeType.startsWith("audio/")) {
-      throw new Error("Apenas arquivos de audio sao aceitos");
+      throw new Error("Apenas arquivos de áudio são aceitos");
     }
     const ext = args.fileName.split(".").pop() || "mp3";
     const key = generateObjectKey("gravacoes-audio", "publico", ext);

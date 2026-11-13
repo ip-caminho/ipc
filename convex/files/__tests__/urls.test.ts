@@ -53,7 +53,7 @@ describe("files/urls", () => {
     });
 
     it("lanca para pasta nao registrada, em vez de escolher um bucket", () => {
-      expect(() => bucketForKey("pasta-nova/x.png")).toThrow(/nao registrada/i);
+      expect(() => bucketForKey("pasta-nova/x.png")).toThrow(/não registrada/i);
     });
   });
 

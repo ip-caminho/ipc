@@ -52,7 +52,7 @@ export function readTtlSegundos(key: string): number {
 export function getBucketName(bucketKey: BucketKey): string {
   if (bucketKey === "publico") {
     const nome = process.env.BACKBLAZE_BUCKET_PUBLICO || process.env.BACKBLAZE_BUCKET_NAME;
-    if (!nome) throw new Error("BACKBLAZE_BUCKET_PUBLICO nao configurado");
+    if (!nome) throw new Error("BACKBLAZE_BUCKET_PUBLICO não configurado");
     return nome;
   }
   const privado = process.env.BACKBLAZE_BUCKET_PRIVADO;
@@ -93,7 +93,7 @@ export function bucketForKey(key: string): BucketKey {
   const folder = folderFromKey(key);
   if (!folder) {
     throw new Error(
-      `Pasta nao registrada para "${key}" — registre em FOLDER_BUCKET (convex/files/urls.ts)`,
+      `Pasta não registrada para "${key}" — registre em FOLDER_BUCKET (convex/files/urls.ts)`,
     );
   }
   return FOLDER_BUCKET[folder];
@@ -112,7 +112,7 @@ export function getPublicUrl(key: string): string {
 /** URL canonica do bucket fechado — nao assinada, e o que fica salvo no banco. */
 export function getPrivateCanonicalUrl(key: string): string {
   const endpoint = process.env.BACKBLAZE_ENDPOINT;
-  if (!endpoint) throw new Error("BACKBLAZE_ENDPOINT nao configurado");
+  if (!endpoint) throw new Error("BACKBLAZE_ENDPOINT não configurado");
   return `https://${endpoint}/${getBucketName("privado")}/${key}`;
 }
 
