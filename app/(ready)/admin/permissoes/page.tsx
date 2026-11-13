@@ -223,8 +223,8 @@ function MembrosTab() {
                     const hasAny = activeCount > 0;
                     const hasAll = activeCount === permsInSet.length;
                     const shortLabel = vs.label
-                      .replace("Voluntário ", "")
-                      .replace("Líder ", "L.")
+                      .replace(/^Volunt[aá]rio /, "")
+                      .replace(/^L[ií]der /, "L.")
                       .replace("Facilitador ", "F.")
                       .replace("Organizador ", "O.");
                     return (
