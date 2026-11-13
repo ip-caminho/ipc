@@ -65,7 +65,10 @@ describe("inscricoesEvento.mutations.excluir", () => {
           q.eq("referenciaTabela", "inscricoesEvento").eq("referenciaId", id)
         )
         .collect();
-      expect(logs.some((l) => l.action === "DELETE")).toBe(true);
+      const del = logs.find((l) => l.action === "DELETE");
+      expect(del).toBeDefined();
+      expect(del?.field).toBe("titulo");
+      expect(del?.to).toBe("Evento de teste (evento-teste)");
     });
   });
 
@@ -106,10 +109,23 @@ describe("inscricoesEvento.mutations.excluir", () => {
 
     await expect(
       as(t, comum).mutation(api.inscricoesEvento.mutations.excluir, { id })
-    ).rejects.toThrow();
+    ).rejects.toThrow(/Sem permissao/);
 
     await t.run(async (ctx) => {
       expect(await ctx.db.get(id)).not.toBeNull();
     });
+  });
+
+  it("recusa formulário inexistente", async () => {
+    const t = convexTest(schema, modules);
+    const id = await seedInscricao(t);
+    await t.run(async (ctx) => {
+      await ctx.db.delete(id);
+    });
+    const gestor = await seedGestor(t);
+
+    await expect(
+      as(t, gestor).mutation(api.inscricoesEvento.mutations.excluir, { id })
+    ).rejects.toThrow(/Formulário não encontrado/);
   });
 });

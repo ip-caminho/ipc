@@ -41,7 +41,7 @@ export function InscricoesPanel() {
   const [builderOpen, setBuilderOpen] = useState(false);
   const [editId, setEditId] = useState<Id<"inscricoesEvento"> | undefined>(undefined);
   const [encerrarId, setEncerrarId] = useState<Id<"inscricoesEvento"> | null>(null);
-  const [excluirId, setExcluirId] = useState<Id<"inscricoesEvento"> | null>(null);
+  const [excluirAlvo, setExcluirAlvo] = useState<{ id: Id<"inscricoesEvento">; titulo: string } | null>(null);
 
   function novaInscricao() {
     setEditId(undefined);
@@ -65,9 +65,9 @@ export function InscricoesPanel() {
   }
 
   async function confirmarExcluir() {
-    if (!excluirId) return;
-    const id = excluirId;
-    setExcluirId(null);
+    if (!excluirAlvo) return;
+    const id = excluirAlvo.id;
+    setExcluirAlvo(null);
     try {
       await excluir({ id });
       await revalidarSite("inscricoes");
@@ -133,7 +133,7 @@ export function InscricoesPanel() {
                       size="sm"
                       aria-label="Excluir formulário"
                       className="h-11 w-11 text-destructive md:h-8 md:w-auto md:border-transparent md:bg-transparent md:shadow-none md:hover:bg-accent"
-                      onClick={() => setExcluirId(i._id)}
+                      onClick={() => setExcluirAlvo({ id: i._id, titulo: i.titulo })}
                     >
                       <Trash2 className="h-4 w-4 md:mr-1 md:h-3.5 md:w-3.5" />
                       <span className="hidden md:inline">Excluir</span>
@@ -165,10 +165,10 @@ export function InscricoesPanel() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <AlertDialog open={excluirId !== null} onOpenChange={(o) => !o && setExcluirId(null)}>
+      <AlertDialog open={excluirAlvo !== null} onOpenChange={(o) => !o && setExcluirAlvo(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Excluir formulário?</AlertDialogTitle>
+            <AlertDialogTitle>Excluir &ldquo;{excluirAlvo?.titulo}&rdquo;?</AlertDialogTitle>
             <AlertDialogDescription>
               O formulário será apagado e não poderá ser recuperado. Só é possível excluir um formulário sem respostas; se houver alguma, exclua as respostas antes.
             </AlertDialogDescription>
