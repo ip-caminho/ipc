@@ -188,7 +188,7 @@ export const INITIAL_ROLE_PERMISSIONS: Record<string, string[]> = {
 
 export const VOLUNTEER_PERMISSION_SETS: Record<string, { label: string; permissions: string[] }> = {
   voluntario_louvor: {
-    label: "Voluntario Louvor",
+    label: "Voluntário Louvor",
     permissions: [
       "louvor:create", "louvor:update", "louvor:metricas",
       "escalas:update", // editar setlist
@@ -214,20 +214,20 @@ export const VOLUNTEER_PERMISSION_SETS: Record<string, { label: string; permissi
     ],
   },
   voluntario_multimidia: {
-    label: "Voluntario Multimidia",
+    label: "Voluntário Multimídia",
     permissions: [
       "gravacoes:create", "gravacoes:update", "gravacoes:process_ai",
       "multimidia:read", "multimidia:create", "multimidia:update",
     ],
   },
   voluntario_biblioteca: {
-    label: "Voluntario Biblioteca",
+    label: "Voluntário Biblioteca",
     permissions: [
       "biblioteca:read", "biblioteca:create", "biblioteca:update", "biblioteca:emprestar",
     ],
   },
   lider_biblioteca: {
-    label: "Lider Biblioteca",
+    label: "Líder Biblioteca",
     permissions: [
       "biblioteca:read", "biblioteca:create", "biblioteca:update", "biblioteca:delete", "biblioteca:emprestar",
     ],
