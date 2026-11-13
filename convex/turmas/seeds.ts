@@ -387,42 +387,42 @@ export const removerTurmasExceto = internalMutation({
 //    precisam vir de lista explicita
 
 const NM_DESCRICAO =
-  "O curso tem como proposito apresentar os fundamentos biblicos que sustentam " +
-  "nossa identidade como igreja presbiteriana, segundo os principios da Escritura " +
-  "Sagrada. Ao longo dos encontros, estudaremos a Epistola de Paulo aos Efesios e o " +
-  "livro Recriados Pela Graca, do pastor Bernardo Cho, buscando compreender como o " +
-  "poder da ressurreicao de Cristo molda a vida, a comunhao e o testemunho da Igreja.";
+  "O curso tem como propósito apresentar os fundamentos bíblicos que sustentam " +
+  "nossa identidade como igreja presbiteriana, segundo os princípios da Escritura " +
+  "Sagrada. Ao longo dos encontros, estudaremos a Epístola de Paulo aos Efésios e o " +
+  "livro Recriados Pela Graça, do pastor Bernardo Cho, buscando compreender como o " +
+  "poder da ressurreição de Cristo molda a vida, a comunhão e o testemunho da Igreja.";
 
 const NM_EMENTA =
-  "Material: Biblia Sagrada e Recriados Pela Graca (Bernardo Cho). Leitura previa do " +
-  "capitulo correspondente a cada encontro. Limite de 3 faltas para conclusao. Apos o " +
-  "curso: entrevista com os presbiteros e apresentacao dos novos membros com batismo.";
+  "Material: Bíblia Sagrada e Recriados Pela Graça (Bernardo Cho). Leitura prévia do " +
+  "capítulo correspondente a cada encontro. Limite de 3 faltas para conclusão. Após o " +
+  "curso: entrevista com os presbíteros e apresentação dos novos membros com batismo.";
 
 const NM_PLANO = [
-  { titulo: "Introducao: Paulo e a Igreja de Efeso", detalhe: "p. 9" },
+  { titulo: "Introdução: Paulo e a Igreja de Éfeso", detalhe: "p. 9" },
   {
     titulo: "Mais ricos do que pensamos · Ponto, ponto, ponto",
-    detalhe: "caps. 1-2 (p. 31 e 49) — Efesios 1.1-14 e 1.15-23",
+    detalhe: "caps. 1-2 (p. 31 e 49) — Efésios 1.1-14 e 1.15-23",
   },
   {
-    titulo: "Poemas a partir de ruinas · Um povo de shalom",
-    detalhe: "caps. 3-4 (p. 61 e 73) — Efesios 2.1-10 e 2.11-22",
+    titulo: "Poemas a partir de ruínas · Um povo de shalom",
+    detalhe: "caps. 3-4 (p. 61 e 73) — Efésios 2.1-10 e 2.11-22",
   },
   {
-    titulo: "O misterio pelo qual vale a pena sofrer · Cheios da plenitude de Deus",
-    detalhe: "caps. 5-6 (p. 85 e 99) — Efesios 3.1-13 e 3.14-21",
+    titulo: "O mistério pelo qual vale a pena sofrer · Cheios da plenitude de Deus",
+    detalhe: "caps. 5-6 (p. 85 e 99) — Efésios 3.1-13 e 3.14-21",
   },
   {
     titulo: "Unidade · Imitadores de Deus",
-    detalhe: "caps. 7-8 (p. 109 e 131) — Efesios 4.1-16 e 4.17—5.2",
+    detalhe: "caps. 7-8 (p. 109 e 131) — Efésios 4.1-16 e 4.17—5.2",
   },
   {
-    titulo: "Separacao das obras das trevas · Unidade no casamento",
-    detalhe: "caps. 9-10 (p. 145 e 159) — Efesios 5.1-20 e 5.15-33",
+    titulo: "Separação das obras das trevas · Unidade no casamento",
+    detalhe: "caps. 9-10 (p. 145 e 159) — Efésios 5.1-20 e 5.15-33",
   },
   {
     titulo: "Unidade no lar · Permanecendo firmes no evangelho",
-    detalhe: "caps. 11-12 (p. 177 e 187) — Efesios 6.1-9 e 6.10-24",
+    detalhe: "caps. 11-12 (p. 177 e 187) — Efésios 6.1-9 e 6.10-24",
   },
   { titulo: "Conversa sobre a IPB", detalhe: undefined },
 ];
@@ -439,12 +439,12 @@ const NM_DATAS = [
 ];
 
 const NM_APRESENTACAO =
-  "Seja bem-vindo(a)! Este questionario tem o proposito de conhecer melhor os " +
+  "Seja bem-vindo(a)! Este questionário tem o propósito de conhecer melhor os " +
   "participantes interessados no Estudo para Candidatos a Novos Membros, um curso " +
   "voltado para aqueles que desejam integrar oficialmente a Igreja Presbiteriana do " +
-  "Caminho. Ao enviar este formulario, voce demonstra interesse em participar e esta " +
+  "Caminho. Ao enviar este formulário, você demonstra interesse em participar e está " +
   "ciente dos compromissos envolvidos, incluindo o limite de 3 faltas e a entrevista " +
-  "final com os presbiteros.";
+  "final com os presbíteros.";
 
 const NM_PERGUNTAS = [
   { id: "endereco", label: "Endereço (bairro/cidade)", obrigatorio: true, tipo: "TEXTO" as const },

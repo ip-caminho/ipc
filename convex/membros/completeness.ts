@@ -52,17 +52,17 @@ export const REQUIRED_FIELDS: FieldDef[] = [
   },
   {
     key: "endereco",
-    label: "Endereco",
+    label: "Endereço",
     check: (e) =>
       !!(e.endereco?.logradouro && e.endereco?.cidade && e.endereco?.estado && e.endereco?.cep),
   },
   {
     key: "contatoEmergencia",
-    label: "Contato de emergencia",
+    label: "Contato de emergência",
     check: (e) =>
       !!(e.contatoEmergencia?.nome && e.contatoEmergencia?.telefone && e.contatoEmergencia?.parentesco),
   },
-  { key: "profissao", label: "Profissao", check: (e) => !!e.profissao },
+  { key: "profissao", label: "Profissão", check: (e) => !!e.profissao },
   { key: "foto", label: "Foto", check: (e) => !!e.foto },
   // Data de batismo e dado eclesiastico (preenchido pela secretaria) — fora
   // da regua de completude do auto-cadastro do membro.
