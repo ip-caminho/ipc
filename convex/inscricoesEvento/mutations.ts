@@ -115,7 +115,7 @@ export const excluir = mutation({
   handler: async (ctx, { id }) => {
     await requirePermission(ctx, "inscricoes:manage");
     const inscricao = await ctx.db.get(id);
-    if (!inscricao) throw new Error("Inscrição não encontrada");
+    if (!inscricao) throw new ConvexError("Formulário não encontrado");
     const resposta = await ctx.db
       .query("respostasInscricaoEvento")
       .withIndex("by_inscricao", (q) => q.eq("inscricaoId", id))
@@ -126,7 +126,10 @@ export const excluir = mutation({
       );
     }
     await ctx.db.delete(id);
-    await createActionAuditLog(ctx, "DELETE", "inscricoesEvento", id);
+    await createActionAuditLog(ctx, "DELETE", "inscricoesEvento", id, {
+      field: "titulo",
+      to: `${inscricao.titulo} (${inscricao.slug})`,
+    });
     return id;
   },
 });
