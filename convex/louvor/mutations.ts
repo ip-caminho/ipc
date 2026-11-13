@@ -41,7 +41,7 @@ export const update = mutation({
     await requirePermission(ctx, "louvor:update");
 
     const oldRecord = await ctx.db.get(id);
-    if (!oldRecord) throw new Error("Louvor nao encontrado");
+    if (!oldRecord) throw new Error("Louvor não encontrado");
 
     await ctx.db.patch(id, { ...data, atualizadoEm: Date.now() });
     const newRecord = await ctx.db.get(id);
@@ -84,7 +84,7 @@ export const remove = mutation({
     await requirePermission(ctx, "louvor:delete");
 
     const louvor = await ctx.db.get(id);
-    if (!louvor) throw new Error("Louvor nao encontrado");
+    if (!louvor) throw new Error("Louvor não encontrado");
 
     await createActionAuditLog(ctx, "DELETE", "louvores", id);
     await ctx.db.delete(id);

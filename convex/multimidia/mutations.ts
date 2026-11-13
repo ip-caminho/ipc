@@ -7,12 +7,12 @@ import { requirePermission } from "../_shared/requirePermission";
 
 async function requireAuth(ctx: any) {
   const userId = await getAuthUserId(ctx);
-  if (!userId) throw new Error("Nao autenticado");
+  if (!userId) throw new Error("Não autenticado");
   const membro = await ctx.db
     .query("membros")
     .withIndex("by_user_id", (q: any) => q.eq("userId", userId))
     .first();
-  if (!membro) throw new Error("Membro nao encontrado");
+  if (!membro) throw new Error("Membro não encontrado");
   return { userId, membro };
 }
 
@@ -97,7 +97,7 @@ export const toggleChecklistItem = mutation({
     const { membro } = await requirePermission(ctx, "multimidia:update");
 
     const item = await ctx.db.get(id);
-    if (!item) throw new Error("Item nao encontrado");
+    if (!item) throw new Error("Item não encontrado");
 
     await ctx.db.patch(id, {
       concluido: !item.concluido,
@@ -130,9 +130,9 @@ export const removeNota = mutation({
   handler: async (ctx, { id }) => {
     const { membro } = await requireAuth(ctx);
     const nota = await ctx.db.get(id);
-    if (!nota) throw new Error("Nota nao encontrada");
+    if (!nota) throw new Error("Nota não encontrada");
     if (nota.membroId !== membro._id && membro.role !== "admin") {
-      throw new Error("Sem permissao");
+      throw new Error("Sem permissão");
     }
     await ctx.db.delete(id);
   },

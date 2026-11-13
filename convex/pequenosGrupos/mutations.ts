@@ -42,7 +42,7 @@ export const update = mutation({
     await requirePermission(ctx, "pequenos_grupos:update");
 
     const pg = await ctx.db.get(id);
-    if (!pg) throw new Error("Pequeno grupo nao encontrado");
+    if (!pg) throw new Error("Pequeno grupo não encontrado");
 
     const cleanUpdates: Record<string, any> = {};
     for (const [key, value] of Object.entries(updates)) {
@@ -63,7 +63,7 @@ export const remove = mutation({
     await requirePermission(ctx, "pequenos_grupos:delete");
 
     const pg = await ctx.db.get(id);
-    if (!pg) throw new Error("Pequeno grupo nao encontrado");
+    if (!pg) throw new Error("Pequeno grupo não encontrado");
 
     // Cascade delete membros do PG
     const membros = await ctx.db
@@ -88,7 +88,7 @@ export const addMembro = mutation({
     await requirePermission(ctx, "pequenos_grupos:update");
 
     const pg = await ctx.db.get(pgId);
-    if (!pg) throw new Error("Pequeno grupo nao encontrado");
+    if (!pg) throw new Error("Pequeno grupo não encontrado");
 
     // So impede duplicidade dentro do mesmo PG — um membro pode estar em varios.
     const existing = await ctx.db
@@ -97,7 +97,7 @@ export const addMembro = mutation({
       .collect();
 
     if (existing.some((e) => e.membroId === membroId)) {
-      throw new Error("Membro ja esta neste PG");
+      throw new Error("Membro já está neste PG");
     }
 
     const id = await ctx.db.insert("pgMembros", { pgId, membroId });
@@ -133,7 +133,7 @@ export const moveMembro = mutation({
     // Adiciona ao PG de destino
     if (toPgId) {
       const pg = await ctx.db.get(toPgId);
-      if (!pg) throw new Error("PG de destino nao encontrado");
+      if (!pg) throw new Error("PG de destino não encontrado");
 
       const existingInTarget = await ctx.db
         .query("pgMembros")
@@ -153,7 +153,7 @@ export const removeMembro = mutation({
     await requirePermission(ctx, "pequenos_grupos:update");
 
     const pgMembro = await ctx.db.get(id);
-    if (!pgMembro) throw new Error("Registro nao encontrado");
+    if (!pgMembro) throw new Error("Registro não encontrado");
 
     await ctx.db.delete(id);
     await createActionAuditLog(ctx, "REMOVE_MEMBRO", "pgMembros", id as string);
@@ -174,14 +174,14 @@ export const createEncontro = mutation({
     await requirePermission(ctx, "pequenos_grupos:update");
 
     const pg = await ctx.db.get(pgId);
-    if (!pg) throw new Error("Pequeno grupo nao encontrado");
+    if (!pg) throw new Error("Pequeno grupo não encontrado");
 
     // Valida unicidade pgId+data
     const existing = await ctx.db
       .query("pgEncontros")
       .withIndex("by_pg_data", (q) => q.eq("pgId", pgId).eq("data", data))
       .first();
-    if (existing) throw new Error("Ja existe um encontro nesta data para este PG");
+    if (existing) throw new Error("Já existe um encontro nesta data para este PG");
 
     const encontroId = await ctx.db.insert("pgEncontros", {
       pgId,
@@ -211,7 +211,7 @@ export const updateEncontroPresencas = mutation({
     await requirePermission(ctx, "pequenos_grupos:update");
 
     const encontro = await ctx.db.get(encontroId);
-    if (!encontro) throw new Error("Encontro nao encontrado");
+    if (!encontro) throw new Error("Encontro não encontrado");
 
     // Atualiza dados do encontro
     const updates: Record<string, any> = {};
@@ -242,7 +242,7 @@ export const removeEncontro = mutation({
     await requirePermission(ctx, "pequenos_grupos:update");
 
     const encontro = await ctx.db.get(encontroId);
-    if (!encontro) throw new Error("Encontro nao encontrado");
+    if (!encontro) throw new Error("Encontro não encontrado");
 
     // Cascade: remove presencas
     const presencas = await ctx.db

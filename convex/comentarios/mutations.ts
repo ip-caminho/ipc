@@ -16,13 +16,13 @@ async function bumpTarefaComentarios(ctx: any, entidadeTipo: string, entidadeId:
 
 async function requireAuth(ctx: any) {
   const userId = await getAuthUserId(ctx);
-  if (!userId) throw new Error("Nao autenticado");
+  if (!userId) throw new Error("Não autenticado");
 
   const membro = await ctx.db
     .query("membros")
     .withIndex("by_user_id", (q: any) => q.eq("userId", userId))
     .first();
-  if (!membro) throw new Error("Membro nao encontrado");
+  if (!membro) throw new Error("Membro não encontrado");
 
   return { userId, membro };
 }
@@ -62,11 +62,11 @@ export const remove = mutation({
     const { membro } = await requireAuth(ctx);
 
     const comentario = await ctx.db.get(id);
-    if (!comentario) throw new Error("Comentario nao encontrado");
+    if (!comentario) throw new Error("Comentário não encontrado");
 
     // Apenas o autor ou admin pode excluir
     if (comentario.membroId !== membro._id && membro.role !== "admin") {
-      throw new Error("Sem permissao para excluir este comentario");
+      throw new Error("Sem permissão para excluir este comentário");
     }
 
     // Remove respostas (replies)

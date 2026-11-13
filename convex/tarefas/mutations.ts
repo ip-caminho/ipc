@@ -6,13 +6,13 @@ import { createActionAuditLog, createFieldAuditLogs } from "../_shared/auditHelp
 
 async function requireAuth(ctx: any) {
   const userId = await getAuthUserId(ctx);
-  if (!userId) throw new Error("Nao autenticado");
+  if (!userId) throw new Error("Não autenticado");
 
   const membro = await ctx.db
     .query("membros")
     .withIndex("by_user_id", (q: any) => q.eq("userId", userId))
     .first();
-  if (!membro) throw new Error("Membro nao encontrado");
+  if (!membro) throw new Error("Membro não encontrado");
 
   const rolePerms = await ctx.db
     .query("rolePermissions")
@@ -55,7 +55,7 @@ export const create = mutation({
     const { membro, permissions } = await requireAuth(ctx);
 
     if (!hasPermission(permissions, "tarefas:create")) {
-      throw new Error("Sem permissao para criar tarefas");
+      throw new Error("Sem permissão para criar tarefas");
     }
 
     const id = await ctx.db.insert("tarefas", {
@@ -94,12 +94,12 @@ export const update = mutation({
     const { membro, permissions } = await requireAuth(ctx);
 
     const tarefa = await ctx.db.get(id);
-    if (!tarefa) throw new Error("Tarefa nao encontrada");
+    if (!tarefa) throw new Error("Tarefa não encontrada");
 
     // Owner ou permissao tarefas:update
     const isOwner = tarefa.criadoPor === membro._id;
     if (!isOwner && !hasPermission(permissions, "tarefas:update")) {
-      throw new Error("Sem permissao para editar esta tarefa");
+      throw new Error("Sem permissão para editar esta tarefa");
     }
 
     const oldRecord = await ctx.db.get(id);
@@ -131,13 +131,13 @@ export const updateStatus = mutation({
     const { membro, permissions } = await requireAuth(ctx);
 
     const tarefa = await ctx.db.get(id);
-    if (!tarefa) throw new Error("Tarefa nao encontrada");
+    if (!tarefa) throw new Error("Tarefa não encontrada");
 
     // Owner, responsavel, ou permissao
     const isOwner = tarefa.criadoPor === membro._id;
     const isResponsavel = tarefa.responsavelId === membro._id;
     if (!isOwner && !isResponsavel && !hasPermission(permissions, "tarefas:update")) {
-      throw new Error("Sem permissao para alterar status");
+      throw new Error("Sem permissão para alterar status");
     }
 
     const oldRecord = await ctx.db.get(id);
@@ -160,12 +160,12 @@ export const remove = mutation({
     const { membro, permissions } = await requireAuth(ctx);
 
     const tarefa = await ctx.db.get(id);
-    if (!tarefa) throw new Error("Tarefa nao encontrada");
+    if (!tarefa) throw new Error("Tarefa não encontrada");
 
     // Owner ou permissao tarefas:delete
     const isOwner = tarefa.criadoPor === membro._id;
     if (!isOwner && !hasPermission(permissions, "tarefas:delete")) {
-      throw new Error("Sem permissao para excluir esta tarefa");
+      throw new Error("Sem permissão para excluir esta tarefa");
     }
 
     await createActionAuditLog(ctx, "DELETE", "tarefas", id as string);

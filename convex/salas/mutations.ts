@@ -15,11 +15,11 @@ export const createReserva = mutation({
     const { membro } = await requirePermission(ctx, "salas:create");
 
     if (args.horaFim <= args.horaInicio) {
-      throw new Error("Horario de termino deve ser posterior ao inicio");
+      throw new Error("Horário de término deve ser posterior ao início");
     }
 
     const sala = await ctx.db.get(args.salaId);
-    if (!sala || sala.status !== "ATIVO") throw new Error("Sala nao encontrada");
+    if (!sala || sala.status !== "ATIVO") throw new Error("Sala não encontrada");
 
     // Conflict detection
     const existing = await ctx.db
@@ -32,7 +32,7 @@ export const createReserva = mutation({
       .some((r) => args.horaInicio < r.horaFim && args.horaFim > r.horaInicio);
 
     if (hasConflict) {
-      throw new Error("Horario conflita com uma reserva existente");
+      throw new Error("Horário conflita com uma reserva existente");
     }
 
     const id = await ctx.db.insert("reservas", {
@@ -53,15 +53,15 @@ export const cancelReserva = mutation({
     const { membro } = await requirePermission(ctx, "salas:create");
 
     const reserva = await ctx.db.get(id);
-    if (!reserva) throw new Error("Reserva nao encontrada");
-    if (reserva.status !== "ATIVA") throw new Error("Reserva ja cancelada");
+    if (!reserva) throw new Error("Reserva não encontrada");
+    if (reserva.status !== "ATIVA") throw new Error("Reserva já cancelada");
 
     // Não permitir cancelar reservas passadas
     const agora = new Date();
     const hoje = agora.toISOString().split("T")[0];
     const horaAtual = agora.toTimeString().slice(0, 5);
     if (reserva.data < hoje || (reserva.data === hoje && reserva.horaFim <= horaAtual)) {
-      throw new Error("Nao e possivel cancelar uma reserva que ja passou");
+      throw new Error("Não é possível cancelar uma reserva que já passou");
     }
 
     // Owner or salas:delete permission

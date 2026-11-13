@@ -32,7 +32,7 @@ export const registrar = mutation({
       .query("membros")
       .withIndex("by_user_id", (q) => q.eq("userId", userId))
       .first();
-    if (!registrador) throw new Error("Registrador nao encontrado");
+    if (!registrador) throw new Error("Registrador não encontrado");
 
     const id = await ctx.db.insert("atosPastorais", {
       ...args,
@@ -77,7 +77,7 @@ export const atualizar = mutation({
   handler: async (ctx, { id, ...patch }) => {
     await requireAnyPermission(ctx, ["membros:update"]);
     const ato = await ctx.db.get(id);
-    if (!ato) throw new Error("Ato pastoral nao encontrado");
+    if (!ato) throw new Error("Ato pastoral não encontrado");
     await ctx.db.patch(id, patch);
     return id;
   },
