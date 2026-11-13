@@ -134,7 +134,7 @@ npx convex run migration/textosAcentos:run '{"dryRun":true}' --prod
 npx convex run migration/textosAcentos:run '{"dryRun":false}' --prod
 ```
 Contagem esperada num banco semeado e nunca editado: `funcoes` 3, `modulos` 14, `ministerios` 5,
-`checklistTemplate` 5, `cursos` 1, `turmas` 1, `turmaEncontros` até 4 (os 4 títulos acentuados do plano).
+`checklistTemplate` 5, `cursos` 1, `turmas` 1, `turmaEncontros` até 7 (encontros 1 a 7 do plano, com título e/ou observação).
 Em produção pode ser menor (texto editado ou módulo ausente); número maior que esse é erro.
 
 ### Teste
@@ -238,7 +238,7 @@ Em cada PR:
   `slug`/`key` é idêntico antes e depois.
 
 Só no PR1:
-- Migração em dev: `dryRun` mostra as contagens esperadas (até 3 / 14 / 5 / 5 / 1 / 1 / 4); a execução real devolve os
+- Migração em dev: `dryRun` mostra as contagens esperadas (até 3 / 14 / 5 / 5 / 1 / 1 / 7); a execução real devolve os
   mesmos números; nova execução devolve zero.
 - Navegador, local (`npm run dev`, depois da migração em dev), a 390px e a 1280px:
   - planejamento de cultos (`/cultos`): rótulos "Confissão", "Pregação", "Multimídia";
