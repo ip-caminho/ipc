@@ -43,7 +43,7 @@ export const getReadUrls = action({
   args: { urls: v.array(v.string()) },
   handler: async (ctx, args): Promise<(string | null)[]> => {
     if (args.urls.length === 0) return [];
-    if (args.urls.length > 200) throw new Error("Muitas URLs por chamada (max 200)");
+    if (args.urls.length > 200) throw new Error("Muitas URLs por chamada (máx 200)");
     // @ts-ignore Convex TS2589 (instanciacao de tipo profunda)
     const permitidas: boolean[] = await ctx.runQuery(internal.files.authz.checkReadAccess, {
       urls: args.urls,

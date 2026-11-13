@@ -133,7 +133,7 @@ export const create = mutation({
     }))),
     // Datas dos encontros. Quando vem, manda mais que o totalAulas do curso —
     // sem isso a turma nasceria com cadencia semanal errada e gerarAulas
-    // passaria a recusar ("Esta turma ja tem aulas").
+    // passaria a recusar ("Esta turma já tem aulas").
     datasAulas: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
