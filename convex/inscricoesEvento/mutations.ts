@@ -1,5 +1,5 @@
 import { mutation } from "../_generated/server";
-import { v } from "convex/values";
+import { v, ConvexError } from "convex/values";
 import { requirePermission } from "../_shared/requirePermission";
 import { createActionAuditLog, createFieldAuditLogs } from "../_shared/auditHelpers";
 
@@ -104,6 +104,29 @@ export const encerrar = mutation({
     await ctx.db.patch(id, { ativa: false });
     const depois = await ctx.db.get(id);
     await createFieldAuditLogs(ctx, antes, depois, "inscricoesEvento");
+    return id;
+  },
+});
+
+// Exclui um formulário sem nenhuma resposta (qualquer status). ConvexError para
+// a mensagem chegar legível ao cliente em produção.
+export const excluir = mutation({
+  args: { id: v.id("inscricoesEvento") },
+  handler: async (ctx, { id }) => {
+    await requirePermission(ctx, "inscricoes:manage");
+    const inscricao = await ctx.db.get(id);
+    if (!inscricao) throw new Error("Inscrição não encontrada");
+    const resposta = await ctx.db
+      .query("respostasInscricaoEvento")
+      .withIndex("by_inscricao", (q) => q.eq("inscricaoId", id))
+      .first();
+    if (resposta) {
+      throw new ConvexError(
+        "Este formulário tem respostas. Exclua as respostas antes de excluir o formulário.",
+      );
+    }
+    await ctx.db.delete(id);
+    await createActionAuditLog(ctx, "DELETE", "inscricoesEvento", id);
     return id;
   },
 });
