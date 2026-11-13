@@ -8,8 +8,9 @@ import { v } from "convex/values";
  * Aqui cada campo troca SÓ quando o valor gravado é exatamente o texto antigo
  * (texto editado pelo admin ou já corrigido fica como está). `slug` nunca é escrito.
  * Idempotente: a segunda execução não encontra texto antigo.
- * Também cobre o curso "Curso de Novos Membros", a turma "Novos Membros 2/2026" e os
- * títulos e observações de seus encontros (copiados do plano do curso).
+ * Também cobre os cursos "Curso de Novos Membros" (ATIVO e INATIVO), a descrição da turma
+ * "Novos Membros 2/2026" e títulos/observações dos encontros de todas as turmas desses
+ * cursos (copiados do plano do curso).
  * `multimidiaChecklist` (cópias por culto) não é lida nem escrita.
  *
  * Os textos antigos são literais (cópia do `main` antes do PR1), não importados
@@ -18,8 +19,12 @@ import { v } from "convex/values";
  * Padrão `dryRun = true`: sem argumento só conta. Para gravar, `{"dryRun":false}`.
  *
  * Rodar após o deploy do backend:
+ *   # dev
  *   npx convex run migration/textosAcentos:run '{"dryRun":true}'
  *   npx convex run migration/textosAcentos:run '{"dryRun":false}'
+ *   # produção: só depois do deploy do backend e com OK explícito
+ *   npx convex run migration/textosAcentos:run '{"dryRun":true}' --prod
+ *   npx convex run migration/textosAcentos:run '{"dryRun":false}' --prod
  */
 
 // [antigo, novo]
@@ -128,6 +133,9 @@ const NM_TURMA_DESCRICAO: Par = [
     "final com os presbíteros.",
 ];
 
+/** Mapas antigo -> novo de turmas, exportados para o teste conferir contra o main. */
+export const MAPAS_TURMAS = { NM_DESCRICAO, NM_EMENTA, NM_TITULOS, NM_DETALHES, NM_TURMA_DESCRICAO };
+
 function novoTexto(atual: string | undefined, pares: readonly Par[]): string | undefined {
   if (atual === undefined) return undefined;
   const par = pares.find(([antigo]) => antigo === atual);
@@ -193,66 +201,67 @@ export const run = internalMutation({
       if (!dryRun) await ctx.db.patch(doc._id, { item });
     }
 
-    // Curso e turma de Novos Membros: localizados por índice (by_status / by_curso)
-    let curso = null;
+    // Cursos "Curso de Novos Membros" (ATIVO e INATIVO), cada um com todas as suas
+    // turmas. Localizados por índice (by_status / by_curso / by_turma).
     for (const status of ["ATIVO", "INATIVO"] as const) {
       const lote = await ctx.db
         .query("cursos")
         .withIndex("by_status", (q) => q.eq("status", status))
         .take(100);
-      curso = lote.find((c) => c.nome === CURSO_NOME) ?? null;
-      if (curso) break;
-    }
-    if (curso) {
-      const patch: {
-        descricao?: string;
-        ementa?: string;
-        planoAulas?: { titulo: string; detalhe?: string }[];
-      } = {};
-      const descricao = novoTexto(curso.descricao, [NM_DESCRICAO]);
-      if (descricao !== undefined) patch.descricao = descricao;
-      const ementa = novoTexto(curso.ementa, [NM_EMENTA]);
-      if (ementa !== undefined) patch.ementa = ementa;
-      if (curso.planoAulas) {
-        let mudou = false;
-        const plano = curso.planoAulas.map((a) => {
-          const titulo = novoTexto(a.titulo, NM_TITULOS);
-          const detalhe = novoTexto(a.detalhe, NM_DETALHES);
-          if (titulo === undefined && detalhe === undefined) return a;
-          mudou = true;
-          return { ...a, ...(titulo !== undefined && { titulo }), ...(detalhe !== undefined && { detalhe }) };
-        });
-        if (mudou) patch.planoAulas = plano;
-      }
-      if (Object.keys(patch).length > 0) {
-        stats.cursos++;
-        if (!dryRun) await ctx.db.patch(curso._id, patch);
-      }
-
-      const turmas = await ctx.db
-        .query("turmas")
-        .withIndex("by_curso", (q) => q.eq("cursoId", curso._id))
-        .take(100);
-      const turma = turmas.find((t) => t.nome === TURMA_NOME);
-      if (turma) {
-        const descricaoTurma = novoTexto(turma.descricao, [NM_TURMA_DESCRICAO]);
-        if (descricaoTurma !== undefined) {
-          stats.turmas++;
-          if (!dryRun) await ctx.db.patch(turma._id, { descricao: descricaoTurma });
+      for (const curso of lote.filter((c) => c.nome === CURSO_NOME)) {
+        const patch: {
+          descricao?: string;
+          ementa?: string;
+          planoAulas?: { titulo: string; detalhe?: string }[];
+        } = {};
+        const descricao = novoTexto(curso.descricao, [NM_DESCRICAO]);
+        if (descricao !== undefined) patch.descricao = descricao;
+        const ementa = novoTexto(curso.ementa, [NM_EMENTA]);
+        if (ementa !== undefined) patch.ementa = ementa;
+        if (curso.planoAulas) {
+          let mudou = false;
+          const plano = curso.planoAulas.map((a) => {
+            const titulo = novoTexto(a.titulo, NM_TITULOS);
+            const detalhe = novoTexto(a.detalhe, NM_DETALHES);
+            if (titulo === undefined && detalhe === undefined) return a;
+            mudou = true;
+            return { ...a, ...(titulo !== undefined && { titulo }), ...(detalhe !== undefined && { detalhe }) };
+          });
+          if (mudou) patch.planoAulas = plano;
         }
-        const encontros = await ctx.db
-          .query("turmaEncontros")
-          .withIndex("by_turma", (q) => q.eq("turmaId", turma._id))
-          .take(200);
-        for (const e of encontros) {
-          const patchE: { titulo?: string; observacoes?: string } = {};
-          const titulo = novoTexto(e.titulo, NM_TITULOS);
-          if (titulo !== undefined) patchE.titulo = titulo;
-          const observacoes = novoTexto(e.observacoes, NM_DETALHES);
-          if (observacoes !== undefined) patchE.observacoes = observacoes;
-          if (Object.keys(patchE).length === 0) continue;
-          stats.turmaEncontros++;
-          if (!dryRun) await ctx.db.patch(e._id, patchE);
+        if (Object.keys(patch).length > 0) {
+          stats.cursos++;
+          if (!dryRun) await ctx.db.patch(curso._id, patch);
+        }
+
+        const turmas = await ctx.db
+          .query("turmas")
+          .withIndex("by_curso", (q) => q.eq("cursoId", curso._id))
+          .take(100);
+        for (const turma of turmas) {
+          // Descrição só na turma do seed (texto exato); encontros em todas as turmas,
+          // pois turmas criadas pela tela copiam o plano do curso.
+          if (turma.nome === TURMA_NOME) {
+            const descricaoTurma = novoTexto(turma.descricao, [NM_TURMA_DESCRICAO]);
+            if (descricaoTurma !== undefined) {
+              stats.turmas++;
+              if (!dryRun) await ctx.db.patch(turma._id, { descricao: descricaoTurma });
+            }
+          }
+          const encontros = await ctx.db
+            .query("turmaEncontros")
+            .withIndex("by_turma", (q) => q.eq("turmaId", turma._id))
+            .take(200);
+          for (const e of encontros) {
+            const patchE: { titulo?: string; observacoes?: string } = {};
+            const titulo = novoTexto(e.titulo, NM_TITULOS);
+            if (titulo !== undefined) patchE.titulo = titulo;
+            const observacoes = novoTexto(e.observacoes, NM_DETALHES);
+            if (observacoes !== undefined) patchE.observacoes = observacoes;
+            if (Object.keys(patchE).length === 0) continue;
+            stats.turmaEncontros++;
+            if (!dryRun) await ctx.db.patch(e._id, patchE);
+          }
         }
       }
     }

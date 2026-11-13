@@ -115,7 +115,7 @@ do laço (uma leitura só).
   - seeds de turmas já gravados (textos antigos de `git show origin/main:convex/turmas/seeds.ts`):
     curso "Curso de Novos Membros" (`descricao`, `ementa`, `planoAulas[].titulo`, 4 títulos),
     turma "Novos Membros 2/2026" (`descricao`) e `turmaEncontros.titulo` (copiado do plano).
-    Curso localizado por `by_status` (ATIVO, depois INATIVO), turma por `by_curso` e encontros por
+    Todos os cursos com o nome, em `by_status` ATIVO e INATIVO, cada um com todas as turmas por `by_curso` (descrição só da turma do seed) e encontros por
     `by_turma`, todos com `take`, sem `.filter()`. `planoAulas[].detalhe` (6 textos com "Efesios") e `turmaEncontros.observacoes` (cópia do detalhe) entram com a mesma regra; `titulo` e `observacoes` do mesmo encontro contam como um documento.
 - Regra: troca **só** quando o valor gravado é exatamente o texto antigo. Texto editado pelo admin,
   já corrigido ou diferente em qualquer caractere fica como está. `slug` nunca é escrito.
@@ -134,7 +134,7 @@ npx convex run migration/textosAcentos:run '{"dryRun":true}' --prod
 npx convex run migration/textosAcentos:run '{"dryRun":false}' --prod
 ```
 Contagem esperada num banco semeado e nunca editado: `funcoes` 3, `modulos` 14, `ministerios` 5,
-`checklistTemplate` 5, `cursos` 1, `turmas` 1, `turmaEncontros` até 7 (encontros 1 a 7 do plano, com título e/ou observação).
+`checklistTemplate` 5, `cursos` 1, `turmas` 1, `turmaEncontros` até 7 por turma do curso (encontros 1 a 7 do plano, com título e/ou observação; turmas criadas pela tela também entram).
 Em produção pode ser menor (texto editado ou módulo ausente); número maior que esse é erro.
 
 ### Teste

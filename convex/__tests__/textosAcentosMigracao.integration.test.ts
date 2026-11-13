@@ -3,6 +3,7 @@ import { describe, it, expect } from "vitest";
 import { internal } from "../_generated/api";
 import schema from "../schema";
 import { modules } from "../test.setup";
+import { MAPAS_TURMAS } from "../migration/textosAcentos";
 
 type T = ReturnType<typeof convexTest>;
 
@@ -168,6 +169,10 @@ describe("migration/textosAcentos", () => {
       expect((await ctx.db.query("cursos").first())?.descricao).toBe(NM_DESCRICAO_ANTIGA);
       const encontros = await ctx.db.query("turmaEncontros").collect();
       expect(encontros.map((e) => e.titulo)).toContain(NM_TITULO_ANTIGO);
+      expect(encontros.map((e) => e.observacoes)).toContain(NM_DETALHE_ANTIGO);
+      expect((await ctx.db.query("cursos").first())?.planoAulas?.[0].detalhe).toBe(NM_DETALHE_ANTIGO);
+      const min2 = await ctx.db.query("ministerios").collect();
+      expect(min2.map((x) => x.descricao)).toContain("Ministerio de midia e comunicacao");
     });
   });
 
@@ -224,6 +229,86 @@ describe("migration/textosAcentos — turmas", () => {
       expect(encontros.map((e) => e.observacoes)).toContain("Ler o cap. 1");
       expect((await ctx.db.query("cursos").first())?.planoAulas?.[0].detalhe).toBe("Ler o cap. 1");
     });
+  });
+});
+
+describe("migration/textosAcentos — turmas (casos de borda)", () => {
+  const cursoBase = { nome: "Curso de Novos Membros", frequenciaMinima: 75, criadoEm: 1 };
+  const turmaBase = { dataInicio: "2026-09-20", vagasOcupadas: 0, status: "ABERTA" as const, camposSistema: [], criadoEm: 1 };
+
+  it("curso INATIVO e curso duplicado são migrados, cada um com suas turmas", async () => {
+    const t = convexTest(schema, modules);
+    await t.run(async (ctx) => {
+      for (const status of ["ATIVO", "INATIVO"] as const) {
+        const cursoId = await ctx.db.insert("cursos", {
+          ...cursoBase, status, planoAulas: [{ titulo: NM_TITULO_ANTIGO }],
+        });
+        const turmaId = await ctx.db.insert("turmas", { ...turmaBase, nome: `Turma ${status}`, cursoId, token: status });
+        await ctx.db.insert("turmaEncontros", { turmaId, data: "2026-09-20", titulo: NM_TITULO_ANTIGO, criadoEm: 1 });
+      }
+    });
+    expect(await rodar(t, { dryRun: false })).toMatchObject({ cursos: 2, turmas: 0, turmaEncontros: 2 });
+    await t.run(async (ctx) => {
+      const cursos = await ctx.db.query("cursos").collect();
+      expect(cursos.map((c) => c.planoAulas?.[0].titulo)).toEqual(Array(2).fill("Introdução: Paulo e a Igreja de Éfeso"));
+      const e = await ctx.db.query("turmaEncontros").collect();
+      expect(e.map((x) => x.titulo)).toEqual(Array(2).fill("Introdução: Paulo e a Igreja de Éfeso"));
+    });
+  });
+
+  it("migra os encontros de uma segunda turma do mesmo curso, sem mexer na descrição dela", async () => {
+    const t = convexTest(schema, modules);
+    const { cursoId } = await semearTurmas(t);
+    const outra = await t.run(async (ctx) => {
+      const turmaId = await ctx.db.insert("turmas", {
+        ...turmaBase, nome: "Novos Membros 1/2027", cursoId, token: "outra", descricao: NM_TURMA_ANTIGA,
+      });
+      await ctx.db.insert("turmaEncontros", { turmaId, data: "2027-03-07", titulo: NM_TITULO_ANTIGO, observacoes: NM_DETALHE_ANTIGO, criadoEm: 1 });
+      return turmaId;
+    });
+    expect(await rodar(t, { dryRun: false })).toMatchObject({ cursos: 1, turmas: 1, turmaEncontros: 2 });
+    await t.run(async (ctx) => {
+      expect((await ctx.db.get(outra))?.descricao).toBe(NM_TURMA_ANTIGA);
+      const e = await ctx.db.query("turmaEncontros").withIndex("by_turma", (q) => q.eq("turmaId", outra)).collect();
+      expect(e[0].titulo).toBe("Introdução: Paulo e a Igreja de Éfeso");
+      expect(e[0].observacoes).toBe(NM_DETALHE_NOVO);
+    });
+  });
+
+  it("planoAulas misto (antigo, editado, antigo) troca só os antigos", async () => {
+    const t = convexTest(schema, modules);
+    const id = await t.run(async (ctx) =>
+      ctx.db.insert("cursos", {
+        ...cursoBase, status: "ATIVO",
+        planoAulas: [
+          { titulo: NM_TITULO_ANTIGO, detalhe: NM_DETALHE_ANTIGO },
+          { titulo: "Aula editada pelo admin", detalhe: "Leitura própria" },
+          { titulo: "Separacao das obras das trevas · Unidade no casamento" },
+        ],
+      }),
+    );
+    await rodar(t, { dryRun: false });
+    await t.run(async (ctx) => {
+      expect((await ctx.db.get(id))?.planoAulas).toEqual([
+        { titulo: "Introdução: Paulo e a Igreja de Éfeso", detalhe: NM_DETALHE_NOVO },
+        { titulo: "Aula editada pelo admin", detalhe: "Leitura própria" },
+        { titulo: "Separação das obras das trevas · Unidade no casamento" },
+      ]);
+    });
+  });
+
+  it("os textos antigos do mapa batem com os literais do main", () => {
+    const m = MAPAS_TURMAS;
+    expect(m.NM_TITULOS).toHaveLength(4);
+    expect(m.NM_DETALHES).toHaveLength(6);
+    expect(m.NM_TITULOS[0][0]).toBe("Introducao: Paulo e a Igreja de Efeso");
+    expect(m.NM_TITULOS[2][0]).toBe("O misterio pelo qual vale a pena sofrer · Cheios da plenitude de Deus");
+    expect(m.NM_DETALHES[0][0]).toBe("caps. 1-2 (p. 31 e 49) — Efesios 1.1-14 e 1.15-23");
+    expect(m.NM_DETALHES[3][0]).toBe("caps. 7-8 (p. 109 e 131) — Efesios 4.1-16 e 4.17—5.2");
+    expect(m.NM_DESCRICAO[0].startsWith("O curso tem como proposito apresentar os fundamentos biblicos")).toBe(true);
+    expect(m.NM_EMENTA[0].startsWith("Material: Biblia Sagrada e Recriados Pela Graca (Bernardo Cho).")).toBe(true);
+    expect(m.NM_TURMA_DESCRICAO[0]).toBe(NM_TURMA_ANTIGA);
+    expect(m.NM_DESCRICAO[0]).toBe(NM_DESCRICAO_ANTIGA);
   });
 });
 
