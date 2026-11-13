@@ -148,13 +148,13 @@ export const seedChecklistTemplate = internalMutation({
     if (existing.length > 0) return;
 
     const items = [
-      "Montar apresentacao",
-      "Conferir versiculo biblico",
-      "Conferir versao da Biblia",
+      "Montar apresentação",
+      "Conferir versículo bíblico",
+      "Conferir versão da Bíblia",
       "Conferir avisos",
       "Conferir louvores e tons",
-      "Testar projecao",
-      "Conferir audio/microfone",
+      "Testar projeção",
+      "Conferir áudio/microfone",
     ];
 
     for (let i = 0; i < items.length; i++) {
