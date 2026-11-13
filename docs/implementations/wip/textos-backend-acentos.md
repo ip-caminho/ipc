@@ -116,7 +116,7 @@ do laço (uma leitura só).
     curso "Curso de Novos Membros" (`descricao`, `ementa`, `planoAulas[].titulo`, 4 títulos),
     turma "Novos Membros 2/2026" (`descricao`) e `turmaEncontros.titulo` (copiado do plano).
     Curso localizado por `by_status` (ATIVO, depois INATIVO), turma por `by_curso` e encontros por
-    `by_turma`, todos com `take`, sem `.filter()`. `detalhe` do plano e `observacoes` não são tocados.
+    `by_turma`, todos com `take`, sem `.filter()`. `planoAulas[].detalhe` (6 textos com "Efesios") e `turmaEncontros.observacoes` (cópia do detalhe) entram com a mesma regra; `titulo` e `observacoes` do mesmo encontro contam como um documento.
 - Regra: troca **só** quando o valor gravado é exatamente o texto antigo. Texto editado pelo admin,
   já corrigido ou diferente em qualquer caractere fica como está. `slug` nunca é escrito.
 - Idempotente por construção: a segunda execução não encontra texto antigo.

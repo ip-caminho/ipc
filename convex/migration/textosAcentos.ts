@@ -9,7 +9,7 @@ import { v } from "convex/values";
  * (texto editado pelo admin ou já corrigido fica como está). `slug` nunca é escrito.
  * Idempotente: a segunda execução não encontra texto antigo.
  * Também cobre o curso "Curso de Novos Membros", a turma "Novos Membros 2/2026" e os
- * títulos de seus encontros (copiados do plano do curso).
+ * títulos e observações de seus encontros (copiados do plano do curso).
  * `multimidiaChecklist` (cópias por culto) não é lida nem escrita.
  *
  * Os textos antigos são literais (cópia do `main` antes do PR1), não importados
@@ -102,6 +102,15 @@ const NM_TITULOS: Par[] = [
     "Separacao das obras das trevas · Unidade no casamento",
     "Separação das obras das trevas · Unidade no casamento",
   ],
+];
+
+const NM_DETALHES: Par[] = [
+  ["caps. 1-2 (p. 31 e 49) — Efesios 1.1-14 e 1.15-23", "caps. 1-2 (p. 31 e 49) — Efésios 1.1-14 e 1.15-23"],
+  ["caps. 3-4 (p. 61 e 73) — Efesios 2.1-10 e 2.11-22", "caps. 3-4 (p. 61 e 73) — Efésios 2.1-10 e 2.11-22"],
+  ["caps. 5-6 (p. 85 e 99) — Efesios 3.1-13 e 3.14-21", "caps. 5-6 (p. 85 e 99) — Efésios 3.1-13 e 3.14-21"],
+  ["caps. 7-8 (p. 109 e 131) — Efesios 4.1-16 e 4.17—5.2", "caps. 7-8 (p. 109 e 131) — Efésios 4.1-16 e 4.17—5.2"],
+  ["caps. 9-10 (p. 145 e 159) — Efesios 5.1-20 e 5.15-33", "caps. 9-10 (p. 145 e 159) — Efésios 5.1-20 e 5.15-33"],
+  ["caps. 11-12 (p. 177 e 187) — Efesios 6.1-9 e 6.10-24", "caps. 11-12 (p. 177 e 187) — Efésios 6.1-9 e 6.10-24"],
 ];
 
 const NM_TURMA_DESCRICAO: Par = [
@@ -208,9 +217,10 @@ export const run = internalMutation({
         let mudou = false;
         const plano = curso.planoAulas.map((a) => {
           const titulo = novoTexto(a.titulo, NM_TITULOS);
-          if (titulo === undefined) return a;
+          const detalhe = novoTexto(a.detalhe, NM_DETALHES);
+          if (titulo === undefined && detalhe === undefined) return a;
           mudou = true;
-          return { ...a, titulo };
+          return { ...a, ...(titulo !== undefined && { titulo }), ...(detalhe !== undefined && { detalhe }) };
         });
         if (mudou) patch.planoAulas = plano;
       }
@@ -235,10 +245,14 @@ export const run = internalMutation({
           .withIndex("by_turma", (q) => q.eq("turmaId", turma._id))
           .take(200);
         for (const e of encontros) {
+          const patchE: { titulo?: string; observacoes?: string } = {};
           const titulo = novoTexto(e.titulo, NM_TITULOS);
-          if (titulo === undefined) continue;
+          if (titulo !== undefined) patchE.titulo = titulo;
+          const observacoes = novoTexto(e.observacoes, NM_DETALHES);
+          if (observacoes !== undefined) patchE.observacoes = observacoes;
+          if (Object.keys(patchE).length === 0) continue;
           stats.turmaEncontros++;
-          if (!dryRun) await ctx.db.patch(e._id, { titulo });
+          if (!dryRun) await ctx.db.patch(e._id, patchE);
         }
       }
     }

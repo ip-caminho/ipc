@@ -47,6 +47,8 @@ const NM_TURMA_ANTIGA =
   "Caminho. Ao enviar este formulario, voce demonstra interesse em participar e esta " +
   "ciente dos compromissos envolvidos, incluindo o limite de 3 faltas e a entrevista " +
   "final com os presbiteros.";
+const NM_DETALHE_ANTIGO = "caps. 1-2 (p. 31 e 49) — Efesios 1.1-14 e 1.15-23";
+const NM_DETALHE_NOVO = "caps. 1-2 (p. 31 e 49) — Efésios 1.1-14 e 1.15-23";
 const NM_DESCRICAO_ANTIGA =
   "O curso tem como proposito apresentar os fundamentos biblicos que sustentam " +
   "nossa identidade como igreja presbiteriana, segundo os principios da Escritura " +
@@ -60,7 +62,7 @@ async function semearTurmas(t: T, editado = false) {
       nome: "Curso de Novos Membros",
       descricao: editado ? "Descrição própria do curso" : NM_DESCRICAO_ANTIGA,
       ementa: "Ementa já editada",
-      planoAulas: [{ titulo: editado ? "Aula inaugural" : NM_TITULO_ANTIGO, detalhe: "p. 9" }, { titulo: "Conversa sobre a IPB" }],
+      planoAulas: [{ titulo: editado ? "Aula inaugural" : NM_TITULO_ANTIGO, detalhe: editado ? "Ler o cap. 1" : NM_DETALHE_ANTIGO }, { titulo: "Conversa sobre a IPB" }],
       frequenciaMinima: 75,
       status: "ATIVO",
       criadoEm: 1,
@@ -76,7 +78,7 @@ async function semearTurmas(t: T, editado = false) {
       token: "tok",
       criadoEm: 1,
     });
-    await ctx.db.insert("turmaEncontros", { turmaId, data: "2026-09-20", titulo: editado ? "Aula inaugural" : NM_TITULO_ANTIGO, criadoEm: 1 });
+    await ctx.db.insert("turmaEncontros", { turmaId, data: "2026-09-20", titulo: editado ? "Aula inaugural" : NM_TITULO_ANTIGO, observacoes: editado ? "Ler o cap. 1" : NM_DETALHE_ANTIGO, criadoEm: 1 });
     await ctx.db.insert("turmaEncontros", { turmaId, data: "2026-09-27", titulo: "Conversa sobre a IPB", criadoEm: 1 });
     return { cursoId, turmaId };
   });
@@ -197,13 +199,14 @@ describe("migration/textosAcentos — turmas", () => {
       const curso = await ctx.db.query("cursos").first();
       expect(curso?.descricao).toContain("propósito apresentar os fundamentos bíblicos");
       expect(curso?.descricao).toContain("Epístola de Paulo aos Efésios");
-      expect(curso?.planoAulas?.[0]).toEqual({ titulo: "Introdução: Paulo e a Igreja de Éfeso", detalhe: "p. 9" });
+      expect(curso?.planoAulas?.[0]).toEqual({ titulo: "Introdução: Paulo e a Igreja de Éfeso", detalhe: NM_DETALHE_NOVO });
       expect(curso?.planoAulas?.[1].titulo).toBe("Conversa sobre a IPB");
       expect(curso?.ementa).toBe("Ementa já editada");
       const turma = await ctx.db.query("turmas").first();
       expect(turma?.descricao).toContain("questionário tem o propósito");
       const encontros = await ctx.db.query("turmaEncontros").collect();
       expect(encontros.map((e) => e.titulo).sort()).toEqual(["Conversa sobre a IPB", "Introdução: Paulo e a Igreja de Éfeso"]);
+      expect(encontros.map((e) => e.observacoes)).toContain(NM_DETALHE_NOVO);
     });
     expect(await rodar(t, { dryRun: false })).toMatchObject(ZERO_TURMAS);
   });
@@ -218,6 +221,8 @@ describe("migration/textosAcentos — turmas", () => {
       expect((await ctx.db.query("turmas").first())?.descricao).toBe("Descrição própria da turma");
       const encontros = await ctx.db.query("turmaEncontros").collect();
       expect(encontros.map((e) => e.titulo)).toContain("Aula inaugural");
+      expect(encontros.map((e) => e.observacoes)).toContain("Ler o cap. 1");
+      expect((await ctx.db.query("cursos").first())?.planoAulas?.[0].detalhe).toBe("Ler o cap. 1");
     });
   });
 });
