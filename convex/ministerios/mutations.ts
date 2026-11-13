@@ -157,18 +157,19 @@ export const seedMinisterios = internalMutation({
   args: {},
   handler: async (ctx) => {
     const seeds = [
-      { nome: "Educacional Infantil", descricao: "Ministerio de educacao para criancas", papeis: ["Coordenador", "Professor", "Auxiliar"] },
-      { nome: "Louvor", descricao: "Ministerio de louvor e adoracao", papeis: ["Coordenador", "Vocalista", "Instrumentista"] },
-      { nome: "Som", descricao: "Ministerio de sonorizacao", papeis: ["Coordenador", "Operador"] },
-      { nome: "Hospitalidade", descricao: "Ministerio de recepcao e acolhimento", papeis: ["Coordenador", "Recepcionista"] },
-      { nome: "Multimidia", descricao: "Ministerio de midia e comunicacao", papeis: ["Coordenador", "Operador", "Designer"] },
+      { nome: "Educacional Infantil", descricao: "Ministério de educação para crianças", papeis: ["Coordenador", "Professor", "Auxiliar"] },
+      { nome: "Louvor", descricao: "Ministério de louvor e adoração", papeis: ["Coordenador", "Vocalista", "Instrumentista"] },
+      { nome: "Som", descricao: "Ministério de sonorização", papeis: ["Coordenador", "Operador"] },
+      { nome: "Hospitalidade", descricao: "Ministério de recepção e acolhimento", papeis: ["Coordenador", "Recepcionista"] },
+      { nome: "Multimídia", descricao: "Ministério de mídia e comunicação", papeis: ["Coordenador", "Operador", "Designer"] },
     ];
 
+    // Compara sem acento para não duplicar ministério já gravado com a grafia antiga
+    const semAcento = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const existing = await ctx.db.query("ministerios").collect();
+
     for (const seed of seeds) {
-      const existing = await ctx.db
-        .query("ministerios")
-        .collect();
-      if (existing.some((m) => m.nome === seed.nome)) continue;
+      if (existing.some((m) => semAcento(m.nome) === semAcento(seed.nome))) continue;
 
       await ctx.db.insert("ministerios", {
         ...seed,
