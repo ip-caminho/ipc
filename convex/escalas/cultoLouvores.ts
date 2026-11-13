@@ -26,7 +26,7 @@ export const setCultoLouvores = mutation({
     await requirePermission(ctx, "escalas:update");
 
     const culto = await ctx.db.get(cultoId);
-    if (!culto) throw new Error("Culto nao encontrado");
+    if (!culto) throw new Error("Culto não encontrado");
 
     // 1. Deletar existentes
     const existing = await ctx.db
@@ -76,7 +76,7 @@ export const updateCultoLouvorTom = mutation({
   handler: async (ctx, { id, tom }) => {
     await requirePermission(ctx, "escalas:update");
     const item = await ctx.db.get(id);
-    if (!item) throw new Error("Item nao encontrado");
+    if (!item) throw new Error("Item não encontrado");
     await ctx.db.patch(id, { tom });
   },
 });
