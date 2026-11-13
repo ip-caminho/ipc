@@ -192,7 +192,7 @@ export const processSermon = internalAction({
         const built = buildTimestampedTranscription(result);
 
         if (!built.transcription) {
-          throw new Error("Transcricao vazia — verifique o audio");
+          throw new Error("Transcrição vazia — verifique o áudio");
         }
 
         timestampedTranscription = built.timestampedTranscription;
@@ -259,7 +259,7 @@ export const processSermon = internalAction({
       }
 
       if (!iaResultado.temaCentral || !iaResultado.frasesRedesSociais) {
-        throw new Error("Resultado da IA incompleto — campos obrigatorios ausentes");
+        throw new Error("Resultado da IA incompleto — campos obrigatórios ausentes");
       }
 
       // === Step 3: Save IA results + auto-fill gravação fields ===
