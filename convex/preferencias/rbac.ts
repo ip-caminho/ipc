@@ -1,7 +1,14 @@
 import { query, mutation, type MutationCtx, type QueryCtx, internalMutation } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { INITIAL_ROLE_PERMISSIONS as ROLE_DEFAULTS, resolvePermissions, VOLUNTEER_PERMISSION_SETS } from "./rbacHelpers";
+import {
+  INITIAL_ROLE_PERMISSIONS as ROLE_DEFAULTS,
+  inheritsFromMembro,
+  mergeMembroInheritance,
+  resolvePermissions,
+  VOLUNTEER_PERMISSION_SETS,
+} from "./rbacHelpers";
+import { withMembroInheritance } from "../_shared/requirePermission";
 import { derivedEduVoluntarioPerms, mergeDerived } from "../_shared/eduVoluntarioPerms";
 
 // ===== PERMISSION DEFINITIONS =====
@@ -319,10 +326,15 @@ export const getUserPermissionContext = query({
       .query("rolePermissions")
       .withIndex("by_role", (q) => q.eq("role", membro.role))
       .first();
-    const basePerms = resolvePermissions(
-      membro.permissions,
-      rolePermsRecord?.permissions,
-      membro.role
+    // Obreiro herda as permissões do papel membro (união só na leitura).
+    const basePerms = await withMembroInheritance(
+      ctx,
+      membro.role,
+      resolvePermissions(
+        membro.permissions,
+        rolePermsRecord?.permissions,
+        membro.role
+      )
     );
     // Une capacidade derivada de ser voluntário (Prof/Aux) do educacional.
     const permissions = mergeDerived(
@@ -408,6 +420,11 @@ export const getAllMembrosWithPermissions = query({
     if (!callerMembro || callerMembro.role !== "admin") return [];
 
     const membros = await ctx.db.query("membros").collect();
+    // Linha do papel membro lida uma vez (não por obreiro dentro do laço).
+    const membroRole = await ctx.db
+      .query("rolePermissions")
+      .withIndex("by_role", (q) => q.eq("role", "membro"))
+      .first();
     const results = [];
     for (const m of membros) {
       if (m.role === "admin") continue; // admin has wildcard, skip
@@ -419,7 +436,11 @@ export const getAllMembrosWithPermissions = query({
         .query("rolePermissions")
         .withIndex("by_role", (q) => q.eq("role", m.role))
         .first();
-      const permissions = resolvePermissions(m.permissions, rolePerms?.permissions, m.role);
+      const permissions = mergeMembroInheritance(
+        m.role,
+        resolvePermissions(m.permissions, rolePerms?.permissions, m.role),
+        membroRole?.permissions
+      );
 
       results.push({
         _id: m._id,
@@ -512,6 +533,22 @@ export const setMembroPermission = mutation({
     const membro = await ctx.db.get(membroId);
     if (!membro) throw new Error("Membro nao encontrado");
     if (membro.role === "admin") throw new Error("Nao e possivel editar permissoes de admin");
+
+    // Obreiro herda do papel membro: remover uma permissão herdada não tem
+    // efeito (a união volta na leitura) e criaria um snapshot que congela o
+    // obreiro fora das mudanças futuras do papel dele.
+    if (!hasPermission && inheritsFromMembro(membro.role)) {
+      const membroRole = await ctx.db
+        .query("rolePermissions")
+        .withIndex("by_role", (q) => q.eq("role", "membro"))
+        .first();
+      const inherited = membroRole?.permissions ?? ROLE_DEFAULTS.membro ?? [];
+      if (inherited.includes(permission)) {
+        throw new Error(
+          "Permissão herdada do papel Membro: não pode ser removida de um obreiro"
+        );
+      }
+    }
 
     // Get current effective permissions
     let currentPerms: string[];
