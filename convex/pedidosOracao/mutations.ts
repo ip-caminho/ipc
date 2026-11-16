@@ -2,6 +2,7 @@ import { mutation } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { createActionAuditLog, createFieldAuditLogs } from "../_shared/auditHelpers";
+import { withMembroInheritance } from "../_shared/requirePermission";
 
 async function requireAuth(ctx: any) {
   const userId = await getAuthUserId(ctx);
@@ -109,9 +110,10 @@ export const updateStatus = mutation({
         .query("rolePermissions")
         .withIndex("by_role", (q: any) => q.eq("role", membro.role))
         .first();
-      const perms = membro.permissions?.length > 0
+      const base: string[] = membro.permissions?.length > 0
         ? membro.permissions
         : (rolePerms?.permissions ?? []);
+      const perms = await withMembroInheritance(ctx, membro.role, base);
       if (!perms.includes("*") && !perms.includes("pastoreio:update")) {
         throw new Error("Sem permissao");
       }

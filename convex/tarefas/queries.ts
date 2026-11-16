@@ -3,6 +3,7 @@ import { getSaoPauloDateString } from "../_shared/datetime";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { hasPermission, resolvePermissions, INITIAL_ROLE_PERMISSIONS } from "../preferencias/rbacHelpers";
+import { withMembroInheritance } from "../_shared/requirePermission";
 
 async function resolveMembroResumo(ctx: any, membroId: any) {
   if (!membroId) return null;
@@ -31,10 +32,14 @@ async function requireAuthWithPerms(ctx: any) {
     .query("rolePermissions")
     .withIndex("by_role", (q: any) => q.eq("role", membro.role))
     .first();
-  const permissions = resolvePermissions(
-    membro.permissions,
-    rolePerms?.permissions,
-    membro.role
+  const permissions = await withMembroInheritance(
+    ctx,
+    membro.role,
+    resolvePermissions(
+      membro.permissions,
+      rolePerms?.permissions,
+      membro.role
+    )
   );
 
   return { userId, membro, permissions };

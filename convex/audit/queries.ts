@@ -3,6 +3,7 @@ import type { Doc } from "../_generated/dataModel";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { resolvePermissions } from "../preferencias/rbacHelpers";
+import { withMembroInheritance } from "../_shared/requirePermission";
 
 export const list = query({
   args: {
@@ -61,10 +62,14 @@ async function checkAuditRead(ctx: any) {
     .query("rolePermissions")
     .withIndex("by_role", (q: any) => q.eq("role", membro.role))
     .first();
-  const perms = resolvePermissions(
-    membro.permissions,
-    rolePerms?.permissions,
-    membro.role
+  const perms = await withMembroInheritance(
+    ctx,
+    membro.role,
+    resolvePermissions(
+      membro.permissions,
+      rolePerms?.permissions,
+      membro.role
+    )
   );
   if (!perms.includes("*") && !perms.includes("audit:read")) return null;
   return membro;

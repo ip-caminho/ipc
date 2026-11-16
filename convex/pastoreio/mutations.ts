@@ -2,7 +2,7 @@ import { mutation } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { createActionAuditLog } from "../_shared/auditHelpers";
-import { requirePermission } from "../_shared/requirePermission";
+import { requirePermission, withMembroInheritance } from "../_shared/requirePermission";
 import { resolvePermissions } from "../preferencias/rbacHelpers";
 
 async function getAuthContextWithPerms(ctx: any) {
@@ -19,10 +19,14 @@ async function getAuthContextWithPerms(ctx: any) {
     .query("rolePermissions")
     .withIndex("by_role", (q: any) => q.eq("role", membro.role))
     .first();
-  const permissions = resolvePermissions(
-    membro.permissions,
-    rolePerms?.permissions,
-    membro.role
+  const permissions = await withMembroInheritance(
+    ctx,
+    membro.role,
+    resolvePermissions(
+      membro.permissions,
+      rolePerms?.permissions,
+      membro.role
+    )
   );
 
   const can = (perm: string) =>

@@ -3,6 +3,7 @@ import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { hasPermission, resolvePermissions, INITIAL_ROLE_PERMISSIONS } from "../preferencias/rbacHelpers";
 import { createActionAuditLog, createFieldAuditLogs } from "../_shared/auditHelpers";
+import { withMembroInheritance } from "../_shared/requirePermission";
 
 async function requireAuth(ctx: any) {
   const userId = await getAuthUserId(ctx);
@@ -18,10 +19,14 @@ async function requireAuth(ctx: any) {
     .query("rolePermissions")
     .withIndex("by_role", (q: any) => q.eq("role", membro.role))
     .first();
-  const permissions = resolvePermissions(
-    membro.permissions,
-    rolePerms?.permissions,
-    membro.role
+  const permissions = await withMembroInheritance(
+    ctx,
+    membro.role,
+    resolvePermissions(
+      membro.permissions,
+      rolePerms?.permissions,
+      membro.role
+    )
   );
 
   return { userId, membro, permissions };

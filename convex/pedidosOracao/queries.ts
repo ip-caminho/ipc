@@ -1,6 +1,7 @@
 import { query } from "../_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { withMembroInheritance } from "../_shared/requirePermission";
 
 // ===== Helpers para o novo mural (Fase 1) =====
 
@@ -21,9 +22,10 @@ async function isLeaderMembro(ctx: any, membro: any): Promise<boolean> {
     .query("rolePermissions")
     .withIndex("by_role", (q: any) => q.eq("role", membro.role))
     .first();
-  const perms = membro.permissions?.length > 0
+  const base: string[] = membro.permissions?.length > 0
     ? membro.permissions
     : (rolePerms?.permissions ?? []);
+  const perms = await withMembroInheritance(ctx, membro.role, base);
   return perms.includes("*") || perms.includes("pastoreio:update");
 }
 

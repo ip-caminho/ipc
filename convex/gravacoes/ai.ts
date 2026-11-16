@@ -3,7 +3,7 @@ import { getSaoPauloDateString } from "../_shared/datetime";
 import { extrairFrases, titulosSimilares } from "./iaHelpers";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { requirePermission } from "../_shared/requirePermission";
+import { requirePermission, withMembroInheritance } from "../_shared/requirePermission";
 
 // Lazy-load to avoid TS2589 "type instantiation excessively deep"
 function getProcessSermonRef() {
@@ -240,7 +240,11 @@ export const startProcessing = mutation({
         .query("rolePermissions")
         .withIndex("by_role", (q) => q.eq("role", membro.role))
         .first();
-      const perms = rolePerms?.permissions ?? [];
+      const perms = await withMembroInheritance(
+        ctx,
+        membro.role,
+        rolePerms?.permissions ?? []
+      );
       if (!perms.includes("gravacoes:process_ai") && !perms.includes("*")) {
         throw new Error("Sem permissao para processar com IA");
       }
