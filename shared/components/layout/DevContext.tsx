@@ -382,6 +382,7 @@ const CONTEXT_MAP: Record<string, PageContext> = {
       "Somente admin",
       "Tabs: Roles e Permissoes, Convites",
       "Gera links de convite com role (membro/secretaria)",
+      "Obreiro herda as permissoes do papel Membro (uniao calculada na leitura, nunca gravada); na matriz aparecem marcadas e travadas (\"Herdada do papel Membro\")",
       "Mobile: lista so leitura; toque no membro abre Drawer com papel e permissoes (edicao por item). Atribuir admin pede confirmacao (AlertDialog); resetar ao padrao do papel disponivel",
     ],
   },
