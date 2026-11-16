@@ -24,6 +24,7 @@ import { Checkbox } from "@/shared/components/ui/checkbox";
 import { AdminGate } from "@shared/components/auth/RoleGate";
 import { ErrorBoundary } from "@shared/components/ErrorBoundary";
 import { PermissionMatrix } from "@features/preferencias/components/PermissionMatrix";
+import { inheritsFromMembro } from "@convex/preferencias/rbacHelpers";
 import { useAuth } from "@shared/providers/PermissionsProvider";
 import { toast } from "sonner";
 import { Input } from "@/shared/components/ui/input";
@@ -77,6 +78,11 @@ function MembrosTab() {
   // @ts-ignore Convex TS2589
   const membros = useQuery(api.preferencias.rbac.getAllMembrosWithPermissions);
   const volunteerSets = useQuery(api.preferencias.rbac.getVolunteerPermissionSets);
+  // Lista própria de cada papel; a entrada "membro" diz o que o obreiro herda.
+  // @ts-ignore Convex TS2589
+  const rolesWithPermissions = useQuery(api.preferencias.rbac.getAllRolesWithPermissions) as
+    | { role: string; permissions: string[] }[]
+    | undefined;
   const updateRole = useMutation(api.preferencias.rbac.updateMembroRole);
   const setPermission = useMutation(api.preferencias.rbac.setMembroPermission);
   const syncWithRole = useMutation(api.preferencias.rbac.syncMembroWithRole);
@@ -95,7 +101,12 @@ function MembrosTab() {
       .sort((a: any, b: any) => a.name.localeCompare(b.name));
   }, [membros, search]);
 
-  if (!membros) return <Skeleton className="h-64" />;
+  if (!membros || !rolesWithPermissions) return <Skeleton className="h-64" />;
+
+  // Permissão herdada do papel Membro: não dá para desmarcar por membro.
+  const membroRolePerms = rolesWithPermissions.find((r) => r.role === "membro")?.permissions ?? [];
+  const isInherited = (role: string, perm: string) =>
+    inheritsFromMembro(role) && membroRolePerms.includes(perm);
 
   const handleRoleChange = async (membroId: string, role: string) => {
     try {
@@ -253,6 +264,12 @@ function MembrosTab() {
                                     onCheckedChange={(v) =>
                                       handleTogglePermission(m._id, perm, !!v)
                                     }
+                                    disabled={isInherited(m.role, perm)}
+                                    title={
+                                      isInherited(m.role, perm)
+                                        ? "Herdada do papel Membro"
+                                        : undefined
+                                    }
                                   />
                                   <span className="text-xs">{perm}</span>
                                 </label>
@@ -321,10 +338,18 @@ function MembrosTab() {
                                   key={perm}
                                   className="flex min-h-11 cursor-pointer items-center justify-between gap-3 px-3 text-sm"
                                 >
-                                  <span className="min-w-0 break-words">{perm}</span>
+                                  <span className="min-w-0 break-words">
+                                    {perm}
+                                    {isInherited(selected.role, perm) && (
+                                      <span className="block text-xs text-muted-foreground">
+                                        Herdada do papel Membro
+                                      </span>
+                                    )}
+                                  </span>
                                   <Switch
                                     checked={selected.permissions.includes(perm)}
                                     onCheckedChange={(v) => handleTogglePermission(selected._id, perm, !!v)}
+                                    disabled={isInherited(selected.role, perm)}
                                   />
                                 </label>
                               ))}

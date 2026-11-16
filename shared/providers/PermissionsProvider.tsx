@@ -4,7 +4,10 @@ import { createContext, useContext, useMemo, useEffect, useState, useCallback } 
 import { useQuery } from "convex/react";
 import { usePathname, useRouter } from "next/navigation";
 import { api } from "@/convex/_generated/api";
-import { INITIAL_ROLE_PERMISSIONS } from "@convex/preferencias/rbacHelpers";
+import {
+  INITIAL_ROLE_PERMISSIONS,
+  mergeMembroInheritance,
+} from "@convex/preferencias/rbacHelpers";
 import type { AuthContext, Permission, Role } from "@/types/auth";
 
 const PermissionsContext = createContext<AuthContext | null>(null);
@@ -67,8 +70,17 @@ export function PermissionsProvider({
     // Simulacao: usa as permissoes reais do papel (banco); cai na constante do
     // codigo so como fallback (enquanto carrega ou papel nao retornado).
     const dbPerms = rolesPerms?.find((r) => r.role === impersonatedRole)?.permissions;
+    // Obreiro herda do papel membro: une a entrada "membro" (undefined enquanto
+    // carrega, o que cai na constante). O usuario real ja recebe a uniao do backend.
+    const membroDbPerms = rolesPerms?.find((r) => r.role === "membro")?.permissions;
     const permissions = isImpersonating
-      ? new Set(dbPerms ?? INITIAL_ROLE_PERMISSIONS[impersonatedRole] ?? [])
+      ? new Set(
+          mergeMembroInheritance(
+            impersonatedRole,
+            dbPerms ?? INITIAL_ROLE_PERMISSIONS[impersonatedRole] ?? [],
+            membroDbPerms
+          )
+        )
       : new Set(data?.permissions ?? []);
 
     return {

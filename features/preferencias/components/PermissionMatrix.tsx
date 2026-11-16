@@ -37,6 +37,10 @@ import { Input } from "@shared/components/ui/input";
 import { ChevronDown, ChevronRight, Info, Search, Users } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@shared/lib/utils/cn";
+import {
+  inheritsFromMembro,
+  mergeMembroInheritance,
+} from "@convex/preferencias/rbacHelpers";
 
 const ROLE_LABELS: Record<string, string> = {
   pastor: "Pastor",
@@ -55,6 +59,18 @@ const ROLE_COLORS: Record<string, string> = {
   secretario_executivo: "bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-300",
   membro: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
 };
+
+const INHERITED_TITLE = "Herdada do papel Membro";
+
+// Permissão herdada: o papel herda do membro e a entrada "membro" (conjunto
+// efetivo do mapa) a contém. Não dá para desmarcar por papel nem por membro.
+function isInheritedPermission(
+  role: string,
+  permission: string,
+  rolePermsMap: Map<string, Set<string>>
+): boolean {
+  return inheritsFromMembro(role) && (rolePermsMap.get("membro")?.has(permission) ?? false);
+}
 
 const VISIBLE_ROLES = ["membro", "obreiro", "secretaria", "secretario_executivo", "presbitero", "pastor"];
 
@@ -185,7 +201,15 @@ function MembroPermissionPopover({
                     onCheckedChange={(checked) =>
                       onToggle(m._id, permission, !!checked)
                     }
-                    disabled={isCheckboxPending}
+                    disabled={
+                      isCheckboxPending ||
+                      isInheritedPermission(m.role, permission, rolePermsMap)
+                    }
+                    title={
+                      isInheritedPermission(m.role, permission, rolePermsMap)
+                        ? INHERITED_TITLE
+                        : undefined
+                    }
                   />
                   <span className="flex-1 text-sm truncate">{m.name}</span>
                   <Badge
@@ -223,8 +247,13 @@ export function PermissionMatrix() {
 
   const rolePermsMap = useMemo(() => {
     if (!rolesWithPermissions) return new Map<string, Set<string>>();
+    // Conjunto efetivo: o obreiro inclui o que herda do papel membro.
+    const membroPerms = rolesWithPermissions.find((r) => r.role === "membro")?.permissions;
     return new Map(
-      rolesWithPermissions.map((r) => [r.role, new Set(r.permissions)])
+      rolesWithPermissions.map((r) => [
+        r.role,
+        new Set(mergeMembroInheritance(r.role, r.permissions, membroPerms)),
+      ])
     );
   }, [rolesWithPermissions]);
 
@@ -244,17 +273,14 @@ export function PermissionMatrix() {
 
   const handleRoleToggle = async (role: string, permissionKey: string) => {
     const key = `role:${role}:${permissionKey}`;
-    const currentPerms = rolePermsMap.get(role) ?? new Set();
-    const wasChecked = currentPerms.has(permissionKey);
+    // A gravação usa só a lista própria do papel (roleData.permissions), nunca
+    // o mapa efetivo, para não copiar permissões herdadas para a linha do papel.
+    const roleData = rolesWithPermissions?.find((r) => r.role === role);
+    if (!roleData) return;
+    const wasChecked = roleData.permissions.includes(permissionKey);
     const newValue = !wasChecked;
 
     setPendingToggles((prev) => new Map(prev).set(key, newValue));
-
-    const roleData = rolesWithPermissions?.find((r) => r.role === role);
-    if (!roleData) {
-      setPendingToggles((prev) => { const n = new Map(prev); n.delete(key); return n; });
-      return;
-    }
 
     const newPermissions = wasChecked
       ? roleData.permissions.filter((p) => p !== permissionKey)
@@ -381,6 +407,7 @@ export function PermissionMatrix() {
                     {perms.map((perm) => {
                       const isChecked = getRoleCheckboxState(mobileRole, perm.key);
                       const pending = isRoleCheckboxPending(mobileRole, perm.key);
+                      const inherited = isInheritedPermission(mobileRole, perm.key, rolePermsMap);
                       const customCount = membrosWithPermissions.filter((m) => {
                         if (m.role === "admin") return false;
                         const has = m.permissions.includes(perm.key);
@@ -399,13 +426,19 @@ export function PermissionMatrix() {
                                 onCheckedChange={() =>
                                   handleRoleToggle(mobileRole, perm.key)
                                 }
-                                disabled={pending}
+                                disabled={pending || inherited}
+                                title={inherited ? INHERITED_TITLE : undefined}
                               />
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium leading-tight">
                                 {perm.label}
                               </p>
+                              {inherited && (
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {INHERITED_TITLE}
+                                </p>
+                              )}
                               {perm.description && (
                                 <p className="text-xs text-muted-foreground mt-1 leading-snug">
                                   {perm.description}
@@ -508,13 +541,15 @@ export function PermissionMatrix() {
                         {VISIBLE_ROLES.map((role) => {
                           const isChecked = getRoleCheckboxState(role, perm.key);
                           const pending = isRoleCheckboxPending(role, perm.key);
+                          const inherited = isInheritedPermission(role, perm.key, rolePermsMap);
                           return (
                             <TableCell key={`${perm.key}-${role}`} className="text-center">
                               <div className={cn(pending && "opacity-50")}>
                                 <Checkbox
                                   checked={isChecked}
                                   onCheckedChange={() => handleRoleToggle(role, perm.key)}
-                                  disabled={pending}
+                                  disabled={pending || inherited}
+                                  title={inherited ? INHERITED_TITLE : undefined}
                                 />
                               </div>
                             </TableCell>
