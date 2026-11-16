@@ -266,26 +266,30 @@ export function resolvePermissions(
 }
 
 /**
- * Papel que herda as permissões do papel "membro". Único lugar que nomeia
- * o papel que herda.
+ * Se a pessoa herda as permissões do papel "membro". Único lugar que decide
+ * quem herda: todo mundo, menos o admin (que já tem "*"). O papel membro só
+ * herda quando tem snapshot individual; sem snapshot a base dele já é a linha
+ * do membro. Predicado negativo: papel novo ou legado herda sem cadastro.
  */
-export function inheritsFromMembro(role: string): boolean {
-  return role === "obreiro";
+export function inheritsFromMembro(role: string, hasSnapshot: boolean): boolean {
+  if (role === "admin") return false;
+  return role !== "membro" || hasSnapshot;
 }
 
 /**
- * Une a base de permissões de um papel que herda do membro com as permissões
- * da linha do papel "membro" (lidas do banco). Pura: não muta os argumentos e
- * devolve a própria `base` quando o papel não herda ou quando ela tem "*".
+ * Une a base de permissões de quem herda do membro com as permissões da linha
+ * do papel "membro" (lidas do banco). Pura: não muta os argumentos e devolve a
+ * própria `base` quando a pessoa não herda ou quando ela tem "*".
  * `membroRolePermsFromDb` undefined (sem linha) cai em INITIAL_ROLE_PERMISSIONS.membro;
  * lista vazia vale como vazia.
  */
 export function mergeMembroInheritance(
   role: string,
   base: string[],
-  membroRolePermsFromDb: string[] | undefined
+  membroRolePermsFromDb: string[] | undefined,
+  hasSnapshot: boolean
 ): string[] {
-  if (!inheritsFromMembro(role) || base.includes("*")) return base;
+  if (!inheritsFromMembro(role, hasSnapshot) || base.includes("*")) return base;
   const inherited = membroRolePermsFromDb ?? INITIAL_ROLE_PERMISSIONS.membro ?? [];
   return Array.from(new Set([...base, ...inherited]));
 }

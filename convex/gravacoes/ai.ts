@@ -242,7 +242,7 @@ export const startProcessing = mutation({
         .first();
       const perms = await withMembroInheritance(
         ctx,
-        membro.role,
+        membro,
         rolePerms?.permissions ?? []
       );
       if (!perms.includes("gravacoes:process_ai") && !perms.includes("*")) {

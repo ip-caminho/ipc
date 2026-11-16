@@ -25,7 +25,7 @@ async function isLeaderMembro(ctx: any, membro: any): Promise<boolean> {
   const base: string[] = membro.permissions?.length > 0
     ? membro.permissions
     : (rolePerms?.permissions ?? []);
-  const perms = await withMembroInheritance(ctx, membro.role, base);
+  const perms = await withMembroInheritance(ctx, membro, base);
   return perms.includes("*") || perms.includes("pastoreio:update");
 }
 

@@ -13,22 +13,23 @@ import {
 const DERIVED_SET = new Set<string>(EDU_VOLUNTARIO_DERIVED);
 
 /**
- * Herança do papel membro (hoje só o obreiro). Une a `base` já calculada pelo
- * chamador com a linha do papel "membro" do banco. Para papéis que não herdam
- * ou base com "*", devolve a base sem ler o banco. A união é só na leitura:
- * nunca é gravada no snapshot nem na linha do papel.
+ * Herança do papel membro (vale para todo mundo, menos admin). Une a `base` já
+ * calculada pelo chamador com a linha do papel "membro" do banco. Para admin,
+ * membro sem snapshot ou base com "*", devolve a base sem ler o banco. A união
+ * é só na leitura: nunca é gravada no snapshot nem na linha do papel.
  */
 export async function withMembroInheritance(
   ctx: any,
-  role: string,
+  membro: { role: string; permissions?: string[] },
   base: string[]
 ): Promise<string[]> {
-  if (!inheritsFromMembro(role) || base.includes("*")) return base;
+  const hasSnapshot = (membro.permissions?.length ?? 0) > 0;
+  if (!inheritsFromMembro(membro.role, hasSnapshot) || base.includes("*")) return base;
   const membroRole = await ctx.db
     .query("rolePermissions")
     .withIndex("by_role", (q: any) => q.eq("role", "membro"))
     .first();
-  return mergeMembroInheritance(role, base, membroRole?.permissions);
+  return mergeMembroInheritance(membro.role, base, membroRole?.permissions, hasSnapshot);
 }
 
 async function loadAuthAndPerms(ctx: any) {
@@ -50,7 +51,7 @@ async function loadAuthAndPerms(ctx: any) {
   const base: string[] = membro.permissions?.length > 0
     ? membro.permissions
     : (rolePerms?.permissions ?? []);
-  const perms = await withMembroInheritance(ctx, membro.role, base);
+  const perms = await withMembroInheritance(ctx, membro, base);
 
   return { userId, membro, perms };
 }

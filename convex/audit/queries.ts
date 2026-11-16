@@ -64,7 +64,7 @@ async function checkAuditRead(ctx: any) {
     .first();
   const perms = await withMembroInheritance(
     ctx,
-    membro.role,
+    membro,
     resolvePermissions(
       membro.permissions,
       rolePerms?.permissions,

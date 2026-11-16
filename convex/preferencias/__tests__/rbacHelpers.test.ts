@@ -121,65 +121,87 @@ describe("togglePermission", () => {
   });
 });
 
-describe("herança do papel membro pelo obreiro", () => {
+describe("herança do papel membro por todo papel", () => {
   it("U1: constante do obreiro contém gravacoes:read", () => {
     expect(INITIAL_ROLE_PERMISSIONS.obreiro).toContain("gravacoes:read");
   });
 
-  it("U2: inheritsFromMembro é true só para obreiro", () => {
-    expect(inheritsFromMembro("obreiro")).toBe(true);
+  it("U2: inheritsFromMembro vale para todo papel menos admin; membro só com snapshot", () => {
     for (const role of [
-      "membro",
+      "obreiro",
       "presbitero",
       "pastor",
       "secretaria",
       "secretario_executivo",
-      "admin",
+      "comunicacao",
       "papel_inexistente",
     ]) {
-      expect(inheritsFromMembro(role)).toBe(false);
+      expect(inheritsFromMembro(role, false)).toBe(true);
+      expect(inheritsFromMembro(role, true)).toBe(true);
     }
+    expect(inheritsFromMembro("membro", false)).toBe(false);
+    expect(inheritsFromMembro("admin", false)).toBe(false);
+    expect(inheritsFromMembro("membro", true)).toBe(true);
+    expect(inheritsFromMembro("admin", true)).toBe(false);
   });
 
   it("U3: une sem duplicata, base primeiro", () => {
     expect(
-      mergeMembroInheritance("obreiro", ["membros:read"], [
-        "gravacoes:read",
-        "membros:read",
-      ])
+      mergeMembroInheritance(
+        "obreiro",
+        ["membros:read"],
+        ["gravacoes:read", "membros:read"],
+        false
+      )
     ).toEqual(["membros:read", "gravacoes:read"]);
   });
 
   it("U4: sem linha do membro cai na constante do membro", () => {
-    const result = mergeMembroInheritance("obreiro", ["membros:read"], undefined);
+    const result = mergeMembroInheritance("obreiro", ["membros:read"], undefined, false);
     expect(new Set(result)).toEqual(
       new Set(["membros:read", ...INITIAL_ROLE_PERMISSIONS.membro])
     );
   });
 
   it("U5: linha do membro vazia vale como vazia", () => {
-    expect(mergeMembroInheritance("obreiro", ["membros:read"], [])).toEqual([
+    expect(mergeMembroInheritance("obreiro", ["membros:read"], [], false)).toEqual([
       "membros:read",
     ]);
   });
 
-  it("U6: papéis que não herdam devolvem a própria base", () => {
+  it("U6: presbitero e secretario_executivo herdam; admin devolve a própria base", () => {
     for (const role of ["presbitero", "secretario_executivo"]) {
+      expect(
+        mergeMembroInheritance(role, ["membros:read"], ["gravacoes:read"], false)
+      ).toEqual(["membros:read", "gravacoes:read"]);
+    }
+    for (const hasSnapshot of [false, true]) {
       const base = ["membros:read"];
-      expect(mergeMembroInheritance(role, base, ["gravacoes:read"])).toBe(base);
+      expect(mergeMembroInheritance("admin", base, ["gravacoes:read"], hasSnapshot)).toBe(
+        base
+      );
     }
   });
 
   it("U7: base com * devolve a própria base", () => {
     const base = ["*"];
-    expect(mergeMembroInheritance("obreiro", base, ["gravacoes:read"])).toBe(base);
+    expect(mergeMembroInheritance("obreiro", base, ["gravacoes:read"], false)).toBe(base);
   });
 
   it("U8: não muta os arrays de entrada", () => {
     const base = ["membros:read"];
     const membro = ["gravacoes:read"];
-    mergeMembroInheritance("obreiro", base, membro);
+    mergeMembroInheritance("obreiro", base, membro, false);
     expect(base).toEqual(["membros:read"]);
     expect(membro).toEqual(["gravacoes:read"]);
+  });
+
+  it("U9: membro só une quando tem snapshot", () => {
+    const base = ["membros:self_service"];
+    expect(mergeMembroInheritance("membro", base, ["louvor:read"], false)).toBe(base);
+    expect(mergeMembroInheritance("membro", base, ["louvor:read"], true)).toEqual([
+      "membros:self_service",
+      "louvor:read",
+    ]);
   });
 });

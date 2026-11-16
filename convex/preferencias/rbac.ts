@@ -326,10 +326,10 @@ export const getUserPermissionContext = query({
       .query("rolePermissions")
       .withIndex("by_role", (q) => q.eq("role", membro.role))
       .first();
-    // Obreiro herda as permissões do papel membro (união só na leitura).
+    // Todo mundo (menos admin) herda as permissões do papel membro (união só na leitura).
     const basePerms = await withMembroInheritance(
       ctx,
-      membro.role,
+      membro,
       resolvePermissions(
         membro.permissions,
         rolePermsRecord?.permissions,
@@ -420,7 +420,7 @@ export const getAllMembrosWithPermissions = query({
     if (!callerMembro || callerMembro.role !== "admin") return [];
 
     const membros = await ctx.db.query("membros").collect();
-    // Linha do papel membro lida uma vez (não por obreiro dentro do laço).
+    // Linha do papel membro lida uma vez (não por pessoa dentro do laço).
     const membroRole = await ctx.db
       .query("rolePermissions")
       .withIndex("by_role", (q) => q.eq("role", "membro"))
@@ -439,7 +439,8 @@ export const getAllMembrosWithPermissions = query({
       const permissions = mergeMembroInheritance(
         m.role,
         resolvePermissions(m.permissions, rolePerms?.permissions, m.role),
-        membroRole?.permissions
+        membroRole?.permissions,
+        !!(m.permissions && m.permissions.length > 0)
       );
 
       results.push({
@@ -546,14 +547,15 @@ export const setMembroPermission = mutation({
     if (!membro) throw new Error("Membro nao encontrado");
     if (membro.role === "admin") throw new Error("Nao e possivel editar permissoes de admin");
 
-    // Obreiro herda do papel membro: remover uma permissão herdada não tem
-    // efeito (a união volta na leitura) e criaria um snapshot que congela o
-    // obreiro fora das mudanças futuras do papel dele.
-    if (!hasPermission && inheritsFromMembro(membro.role)) {
+    // Todo mundo (menos admin) tem sempre o que o papel membro tem: remover uma
+    // permissão herdada de uma pessoa nunca tem efeito. Com snapshot, a união
+    // devolve na leitura; sem snapshot (ou com a lista esvaziada), a base volta
+    // à linha do papel, que herda ou é a própria linha do membro.
+    if (!hasPermission && inheritsFromMembro(membro.role, true)) {
       const inherited = await loadInheritedFromMembro(ctx);
       if (inherited.includes(permission)) {
         throw new Error(
-          "Permissão herdada do papel Membro: não pode ser removida de um obreiro"
+          "Permissão herdada do papel Membro: não pode ser removida"
         );
       }
     }
@@ -1007,8 +1009,8 @@ export const applyVolunteerSet = mutation({
     } else {
       // Remover permissões do set (exceto as que são do role padrão)
       const roleDefaults = ROLE_DEFAULTS[membro.role] ?? [];
-      // Obreiro herda do membro: não tira do snapshot o que ele herda.
-      const inherited = inheritsFromMembro(membro.role)
+      // Todo mundo herda do membro: não tira do snapshot o que é herdado.
+      const inherited = inheritsFromMembro(membro.role, true)
         ? await loadInheritedFromMembro(ctx)
         : [];
       for (const perm of volSet.permissions) {

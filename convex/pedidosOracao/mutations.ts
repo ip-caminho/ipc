@@ -113,7 +113,7 @@ export const updateStatus = mutation({
       const base: string[] = membro.permissions?.length > 0
         ? membro.permissions
         : (rolePerms?.permissions ?? []);
-      const perms = await withMembroInheritance(ctx, membro.role, base);
+      const perms = await withMembroInheritance(ctx, membro, base);
       if (!perms.includes("*") && !perms.includes("pastoreio:update")) {
         throw new Error("Sem permissao");
       }

@@ -1,9 +1,10 @@
 import { convexTest } from "convex-test";
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { api } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import schema from "../schema";
 import { modules } from "../test.setup";
+import { withMembroInheritance } from "../_shared/requirePermission";
 import { as, seedUser, seedUserComMembro } from "./helpers";
 
 type T = ReturnType<typeof convexTest>;
@@ -26,7 +27,7 @@ async function seedGravacao(t: T) {
   );
 }
 
-describe("obreiro herda o papel membro — gate de gravações (ponto 1)", () => {
+describe("todo papel herda o papel membro — gate de gravações (ponto 1)", () => {
   it("G1: obreiro sem nenhuma linha no banco acessa a gravação", async () => {
     const t = convexTest(schema, modules);
     const userId = await seedUser(t, { role: "obreiro" });
@@ -80,11 +81,55 @@ describe("obreiro herda o papel membro — gate de gravações (ponto 1)", () =>
     expect(g?._id).toBe(gId);
   });
 
-  it("G5: presbitero não herda", async () => {
+  it("G5: presbitero herda", async () => {
     const t = convexTest(schema, modules);
     const userId = await seedUser(t, { role: "presbitero" });
     await seedRolePerms(t, "presbitero", ["membros:read"]);
     await seedRolePerms(t, "membro", ["gravacoes:read"]);
+    const gId = await seedGravacao(t);
+
+    const g = await as(t, userId).query(api.gravacoes.queries.getById, { id: gId });
+    expect(g?._id).toBe(gId);
+    const lista = await as(t, userId).query(api.gravacoes.queries.list, {});
+    expect(lista.map((x: { _id: string }) => x._id)).toContain(gId);
+  });
+
+  it("G6: secretario_executivo ouve gravações (caso da issue)", async () => {
+    const t = convexTest(schema, modules);
+    const userId = await seedUser(t, { role: "secretario_executivo" });
+    await seedRolePerms(t, "secretario_executivo", ["membros:read", "rol:read"]);
+    await seedRolePerms(t, "membro", ["gravacoes:read"]);
+    const gId = await seedGravacao(t);
+
+    const g = await as(t, userId).query(api.gravacoes.queries.getById, { id: gId });
+    expect(g?._id).toBe(gId);
+    const lista = await as(t, userId).query(api.gravacoes.queries.list, {});
+    expect(lista.map((x: { _id: string }) => x._id)).toContain(gId);
+  });
+
+  it("G7: secretario_executivo sem nenhuma linha no banco acessa a gravação", async () => {
+    const t = convexTest(schema, modules);
+    const userId = await seedUser(t, { role: "secretario_executivo" });
+    const gId = await seedGravacao(t);
+
+    const g = await as(t, userId).query(api.gravacoes.queries.getById, { id: gId });
+    expect(g?._id).toBe(gId);
+  });
+
+  it("G8: membro com snapshot recebe louvor:read da linha do membro", async () => {
+    const t = convexTest(schema, modules);
+    const userId = await seedUser(t, {
+      role: "membro",
+      permissions: ["membros:self_service", "gravacoes:read"],
+    });
+    await seedRolePerms(t, "membro", ["membros:self_service", "gravacoes:read", "louvor:read"]);
+
+    expect(await as(t, userId).query(api.louvor.queries.list, {})).toEqual([]);
+  });
+
+  it("G9: membro sem snapshot e sem nenhuma linha não herda nem lê o banco", async () => {
+    const t = convexTest(schema, modules);
+    const userId = await seedUser(t, { role: "membro" });
     const gId = await seedGravacao(t);
 
     await expect(
@@ -109,7 +154,7 @@ async function seedOutroMembro(t: T, role = "membro") {
   return membroId;
 }
 
-describe("obreiro herda o papel membro — demais pontos de checagem", () => {
+describe("todo papel herda o papel membro — demais pontos de checagem", () => {
   it("P2: pedidosOracao/queries (isLeaderMembro) mostra pedido do escopo leaders", async () => {
     const t = convexTest(schema, modules);
     const { ctx } = await prepararObreiro(t, "pastoreio:update");
@@ -251,5 +296,66 @@ describe("obreiro herda o papel membro — demais pontos de checagem", () => {
 
     const lista = await ctx.query(api.audit.queries.list, {});
     expect(lista.map((l: { _id: string }) => l._id)).toContain(logId);
+  });
+
+  it("P11: secretaria com snapshot cria pedido com pedidos_oracao:create do membro", async () => {
+    const t = convexTest(schema, modules);
+    const { userId } = await seedUserComMembro(t, {
+      role: "secretaria",
+      permissions: ["membros:read"],
+    });
+    await seedRolePerms(t, "membro", ["pedidos_oracao:create"]);
+
+    const id = await as(t, userId).mutation(api.pastoreio.mutations.createPedidoOracao, {
+      descricao: "Pedido da secretaria",
+    });
+    expect(id).toBeTruthy();
+  });
+});
+
+// Leitura extra: o helper só lê a linha do membro quando a pessoa herda.
+describe("withMembroInheritance — quando lê o banco", () => {
+  const ctxFalso = (permissions: string[]) => {
+    const query = vi.fn(() => ({
+      withIndex: () => ({ first: async () => ({ permissions }) }),
+    }));
+    return { ctx: { db: { query } }, query };
+  };
+
+  it("L1: membro sem snapshot devolve a própria base sem ler", async () => {
+    for (const membro of [{ role: "membro" }, { role: "membro", permissions: [] }]) {
+      const { ctx, query } = ctxFalso(["louvor:read"]);
+      const base = ["membros:self_service"];
+      expect(await withMembroInheritance(ctx, membro, base)).toBe(base);
+      expect(query).not.toHaveBeenCalled();
+    }
+  });
+
+  it("L2: admin devolve a própria base sem ler", async () => {
+    const { ctx, query } = ctxFalso(["louvor:read"]);
+    const base = ["membros:read"];
+    expect(
+      await withMembroInheritance(ctx, { role: "admin", permissions: ["membros:read"] }, base)
+    ).toBe(base);
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it("L3: membro com snapshot une e lê uma vez", async () => {
+    const { ctx, query } = ctxFalso(["louvor:read"]);
+    const perms = await withMembroInheritance(
+      ctx,
+      { role: "membro", permissions: ["membros:self_service"] },
+      ["membros:self_service"]
+    );
+    expect(perms).toEqual(["membros:self_service", "louvor:read"]);
+    expect(query).toHaveBeenCalledTimes(1);
+    expect(query).toHaveBeenCalledWith("rolePermissions");
+  });
+
+  it("L4: secretario_executivo une e lê uma vez", async () => {
+    const { ctx, query } = ctxFalso(["gravacoes:read"]);
+    const perms = await withMembroInheritance(ctx, { role: "secretario_executivo" }, ["rol:read"]);
+    expect(perms).toEqual(["rol:read", "gravacoes:read"]);
+    expect(query).toHaveBeenCalledTimes(1);
   });
 });

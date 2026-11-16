@@ -91,6 +91,14 @@ describe("RBAC — getUserPermissionContext", () => {
       role: "membro",
       permissions: ["membros:self_service", "diretorio:read", "gravacoes:read", "gravacoes:create"],
     });
+    // Linha do membro dentro do snapshot: a herança não acrescenta nada.
+    await t.run(async (ctx) => {
+      await ctx.db.insert("rolePermissions", {
+        role: "membro",
+        permissions: ["membros:self_service", "gravacoes:read"],
+        updatedAt: Date.now(),
+      });
+    });
 
     const asUser = t.withIdentity({ subject: `${userId}|session-1` });
     const result = await asUser.query(api.preferencias.rbac.getUserPermissionContext, {});
@@ -109,12 +117,19 @@ describe("RBAC — getUserPermissionContext", () => {
         permissions: ["membros:read", "diretorio:read"],
         updatedAt: Date.now(),
       });
+      await ctx.db.insert("rolePermissions", {
+        role: "membro",
+        permissions: ["gravacoes:read"],
+        updatedAt: Date.now(),
+      });
     });
 
     const asUser = t.withIdentity({ subject: `${userId}|session-1` });
     const result = await asUser.query(api.preferencias.rbac.getUserPermissionContext, {});
 
-    expect(result!.permissions).toEqual(["membros:read", "diretorio:read"]);
+    expect([...result!.permissions].sort()).toEqual(
+      ["diretorio:read", "gravacoes:read", "membros:read"].sort()
+    );
   });
 
   it("retorna wildcard * para admin", async () => {
@@ -187,7 +202,7 @@ async function seedRolePerms(
   });
 }
 
-describe("RBAC — obreiro herda as permissões do papel membro", () => {
+describe("RBAC — todo papel herda as permissões do papel membro", () => {
   const ctxPerms = async (t: ReturnType<typeof convexTest>, userId: Id<"users">) => {
     const asUser = t.withIdentity({ subject: `${userId}|session-1` });
     const result = await asUser.query(api.preferencias.rbac.getUserPermissionContext, {});
@@ -253,21 +268,31 @@ describe("RBAC — obreiro herda as permissões do papel membro", () => {
     expect(await ctxPerms(t, userId)).toContain("biblioteca:read");
   });
 
-  it("C6: presbitero e secretario_executivo não herdam", async () => {
+  it("C6: presbitero e secretario_executivo herdam do membro", async () => {
     const t = convexTest(schema, modules);
     const pres = await seedMembroWithRole(t, { role: "presbitero" });
     const sec = await seedMembroWithRole(t, { role: "secretario_executivo" });
     await seedRolePerms(t, "presbitero", ["membros:read"]);
-    await seedRolePerms(t, "membro", ["gravacoes:read"]);
-    expect(await ctxPerms(t, pres.userId)).toEqual(["membros:read"]);
-    expect(await ctxPerms(t, sec.userId)).not.toContain("gravacoes:read");
+    await seedRolePerms(t, "membro", ["gravacoes:read", "pedidos_oracao:create"]);
+    expect([...(await ctxPerms(t, pres.userId))].sort()).toEqual(
+      ["gravacoes:read", "membros:read", "pedidos_oracao:create"].sort()
+    );
+    // Sem linha própria: a base do secretario_executivo é a constante dele.
+    const secPerms = await ctxPerms(t, sec.userId);
+    expect(secPerms).toContain("gravacoes:read");
+    expect(secPerms).toContain("pedidos_oracao:create");
+    expect(secPerms).toContain("rol:read");
   });
 
-  it("C7: getAllMembrosWithPermissions aplica a herança só ao obreiro", async () => {
+  it("C7: getAllMembrosWithPermissions aplica a herança a todo papel e a membro com snapshot", async () => {
     const t = convexTest(schema, modules);
     const admin = await seedMembroWithRole(t, { role: "admin" });
     const obreiro = await seedMembroWithRole(t, { role: "obreiro" });
     const pres = await seedMembroWithRole(t, { role: "presbitero" });
+    const comSnapshot = await seedMembroWithRole(t, {
+      role: "membro",
+      permissions: ["membros:self_service"],
+    });
     await seedRolePerms(t, "obreiro", ["membros:read"]);
     await seedRolePerms(t, "presbitero", ["membros:read"]);
     await seedRolePerms(t, "membro", ["gravacoes:read", "biblioteca:read"]);
@@ -277,11 +302,19 @@ describe("RBAC — obreiro herda as permissões do papel membro", () => {
       .query(api.preferencias.rbac.getAllMembrosWithPermissions, {});
     const o = list.find((m) => m._id === obreiro.membroId)!;
     const p = list.find((m) => m._id === pres.membroId)!;
+    const c = list.find((m) => m._id === comSnapshot.membroId)!;
     expect([...o.permissions].sort()).toEqual(
       ["biblioteca:read", "gravacoes:read", "membros:read"].sort()
     );
     expect(o.hasCustomPermissions).toBe(false);
-    expect(p.permissions).toEqual(["membros:read"]);
+    expect([...p.permissions].sort()).toEqual(
+      ["biblioteca:read", "gravacoes:read", "membros:read"].sort()
+    );
+    expect(p.hasCustomPermissions).toBe(false);
+    expect([...c.permissions].sort()).toEqual(
+      ["biblioteca:read", "gravacoes:read", "membros:self_service"].sort()
+    );
+    expect(c.hasCustomPermissions).toBe(true);
   });
 
   it("C8: setMembroPermission recusa remover permissão herdada de obreiro", async () => {
@@ -340,5 +373,91 @@ describe("RBAC — obreiro herda as permissões do papel membro", () => {
     // A permissão herdada do conjunto não sai do snapshot.
     expect(gravado!.permissions).toEqual(["membros:read", "biblioteca:read"]);
     expect(await ctxPerms(t, obreiro.userId)).toContain("biblioteca:read");
+  });
+
+  it("C10: secretaria com snapshot recebe a linha do membro", async () => {
+    const t = convexTest(schema, modules);
+    const { userId } = await seedMembroWithRole(t, {
+      role: "secretaria",
+      permissions: ["membros:read"],
+    });
+    await seedRolePerms(t, "membro", ["pedidos_oracao:create"]);
+    expect([...(await ctxPerms(t, userId))].sort()).toEqual(
+      ["membros:read", "pedidos_oracao:create"].sort()
+    );
+  });
+
+  it("C11: membro com snapshot sem louvor:read passa a ter (caso de produção)", async () => {
+    const t = convexTest(schema, modules);
+    const { userId } = await seedMembroWithRole(t, {
+      role: "membro",
+      permissions: ["membros:self_service", "gravacoes:read"],
+    });
+    await seedRolePerms(t, "membro", ["membros:self_service", "gravacoes:read", "louvor:read"]);
+    expect([...(await ctxPerms(t, userId))].sort()).toEqual(
+      ["gravacoes:read", "louvor:read", "membros:self_service"].sort()
+    );
+  });
+
+  it("C12: setMembroPermission recusa remover herdada de qualquer pessoa", async () => {
+    const t = convexTest(schema, modules);
+    const admin = await seedMembroWithRole(t, { role: "admin" });
+    const pres = await seedMembroWithRole(t, { role: "presbitero" });
+    const membroSem = await seedMembroWithRole(t, { role: "membro" });
+    const membroCom = await seedMembroWithRole(t, {
+      role: "membro",
+      permissions: ["gravacoes:read", "louvor:create"],
+    });
+    await seedRolePerms(t, "presbitero", ["membros:read"]);
+    await seedRolePerms(t, "membro", ["gravacoes:read", "calendario:read"]);
+    const asAdmin = t.withIdentity({ subject: `${admin.userId}|session-1` });
+
+    for (const alvo of [pres, membroSem]) {
+      await expect(
+        asAdmin.mutation(api.preferencias.rbac.setMembroPermission, {
+          membroId: alvo.membroId,
+          permission: "gravacoes:read",
+          hasPermission: false,
+        })
+      ).rejects.toThrow(/herdada/i);
+      const depois = await t.run(async (ctx) => ctx.db.get(alvo.membroId));
+      expect(depois!.permissions ?? []).toEqual([]);
+    }
+
+    await asAdmin.mutation(api.preferencias.rbac.setMembroPermission, {
+      membroId: membroCom.membroId,
+      permission: "louvor:create",
+      hasPermission: false,
+    });
+    const gravado = await t.run(async (ctx) => ctx.db.get(membroCom.membroId));
+    expect(gravado!.permissions).toEqual(["gravacoes:read"]);
+  });
+
+  it("C13: applyVolunteerSet(apply:false) não remove herdada de secretario_executivo nem de membro com snapshot", async () => {
+    const t = convexTest(schema, modules);
+    const admin = await seedMembroWithRole(t, { role: "admin" });
+    const sec = await seedMembroWithRole(t, {
+      role: "secretario_executivo",
+      permissions: ["membros:read", "biblioteca:read"],
+    });
+    const membro = await seedMembroWithRole(t, {
+      role: "membro",
+      permissions: ["membros:self_service", "biblioteca:read", "biblioteca:create"],
+    });
+    await seedRolePerms(t, "secretario_executivo", ["membros:read", "biblioteca:read"]);
+    await seedRolePerms(t, "membro", ["membros:self_service", "biblioteca:read"]);
+    const asAdmin = t.withIdentity({ subject: `${admin.userId}|session-1` });
+
+    for (const alvo of [sec, membro]) {
+      await asAdmin.mutation(api.preferencias.rbac.applyVolunteerSet, {
+        membroId: alvo.membroId,
+        setKey: "voluntario_biblioteca",
+        apply: false,
+      });
+    }
+    const gSec = await t.run(async (ctx) => ctx.db.get(sec.membroId));
+    const gMembro = await t.run(async (ctx) => ctx.db.get(membro.membroId));
+    expect(gSec!.permissions).toEqual(["membros:read", "biblioteca:read"]);
+    expect(gMembro!.permissions).toEqual(["membros:self_service", "biblioteca:read"]);
   });
 });

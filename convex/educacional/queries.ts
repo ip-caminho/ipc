@@ -25,7 +25,7 @@ async function getAuthContext(ctx: any) {
     .first();
   const basePerms = await withMembroInheritance(
     ctx,
-    membro.role,
+    membro,
     resolvePermissions(
       membro.permissions,
       rolePerms?.permissions,
