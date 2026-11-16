@@ -321,4 +321,24 @@ describe("RBAC — obreiro herda as permissões do papel membro", () => {
     const perms = await ctxPerms(t, obreiro.userId);
     expect([...perms].sort()).toEqual(["gravacoes:read", "tarefas:read"]);
   });
+
+  it("C9: applyVolunteerSet(apply:false) não remove permissão herdada do obreiro sem snapshot", async () => {
+    const t = convexTest(schema, modules);
+    const admin = await seedMembroWithRole(t, { role: "admin" });
+    const obreiro = await seedMembroWithRole(t, { role: "obreiro" });
+    await seedRolePerms(t, "obreiro", ["membros:read", "biblioteca:read"]);
+    await seedRolePerms(t, "membro", ["biblioteca:read"]);
+
+    await t
+      .withIdentity({ subject: `${admin.userId}|session-1` })
+      .mutation(api.preferencias.rbac.applyVolunteerSet, {
+        membroId: obreiro.membroId,
+        setKey: "voluntario_biblioteca",
+        apply: false,
+      });
+    const gravado = await t.run(async (ctx) => ctx.db.get(obreiro.membroId));
+    // A permissão herdada do conjunto não sai do snapshot.
+    expect(gravado!.permissions).toEqual(["membros:read", "biblioteca:read"]);
+    expect(await ctxPerms(t, obreiro.userId)).toContain("biblioteca:read");
+  });
 });

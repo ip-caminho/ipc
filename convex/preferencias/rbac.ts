@@ -521,6 +521,18 @@ export const updateRolePermissions = mutation({
   },
 });
 
+/**
+ * Permissões herdadas do papel membro: linha do banco, senão a constante.
+ * Lista vazia na linha vale como vazia. Leitura indexada de um documento.
+ */
+async function loadInheritedFromMembro(ctx: MutationCtx): Promise<string[]> {
+  const membroRole = await ctx.db
+    .query("rolePermissions")
+    .withIndex("by_role", (q) => q.eq("role", "membro"))
+    .first();
+  return membroRole?.permissions ?? ROLE_DEFAULTS.membro ?? [];
+}
+
 export const setMembroPermission = mutation({
   args: {
     membroId: v.id("membros"),
@@ -538,11 +550,7 @@ export const setMembroPermission = mutation({
     // efeito (a união volta na leitura) e criaria um snapshot que congela o
     // obreiro fora das mudanças futuras do papel dele.
     if (!hasPermission && inheritsFromMembro(membro.role)) {
-      const membroRole = await ctx.db
-        .query("rolePermissions")
-        .withIndex("by_role", (q) => q.eq("role", "membro"))
-        .first();
-      const inherited = membroRole?.permissions ?? ROLE_DEFAULTS.membro ?? [];
+      const inherited = await loadInheritedFromMembro(ctx);
       if (inherited.includes(permission)) {
         throw new Error(
           "Permissão herdada do papel Membro: não pode ser removida de um obreiro"
@@ -999,8 +1007,12 @@ export const applyVolunteerSet = mutation({
     } else {
       // Remover permissões do set (exceto as que são do role padrão)
       const roleDefaults = ROLE_DEFAULTS[membro.role] ?? [];
+      // Obreiro herda do membro: não tira do snapshot o que ele herda.
+      const inherited = inheritsFromMembro(membro.role)
+        ? await loadInheritedFromMembro(ctx)
+        : [];
       for (const perm of volSet.permissions) {
-        if (!roleDefaults.includes(perm)) {
+        if (!roleDefaults.includes(perm) && !inherited.includes(perm)) {
           currentPerms = currentPerms.filter((p) => p !== perm);
         }
       }
