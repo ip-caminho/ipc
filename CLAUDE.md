@@ -40,7 +40,7 @@ types/            # TypeScript types
 
 - **Entidades**: Tabela polimorfica base (PF/PJ com papeis). Membros e extensao com auth + RBAC
 - **Criacao atomica**: Entidade + Membro criados na mesma mutation
-- **RBAC**: 3 roles iniciais (admin, secretaria, membro). Sem heranca — permissoes explicitas, exceto o **obreiro**, que tem sempre tudo o que o papel membro tem (inclusive com permissoes personalizadas). Todo ponto que resolve permissao aplica `withMembroInheritance` (`convex/_shared/requirePermission.ts`) ou `mergeMembroInheritance` (`convex/preferencias/rbacHelpers.ts`)
+- **RBAC**: 3 roles iniciais (admin, secretaria, membro). Permissoes explicitas por papel, com uma heranca: **todo mundo tem sempre tudo o que o papel membro tem** (inclusive com permissoes personalizadas; admin ja tem `*`). Papel novo herda sem configuracao. Todo ponto que resolve permissao aplica `withMembroInheritance` (`convex/_shared/requirePermission.ts`) ou `mergeMembroInheritance` (`convex/preferencias/rbacHelpers.ts`)
 - **Bypass de login (dev)**: controlado pela env var `NEXT_PUBLIC_AUTH_BYPASS_MODE` em `signin/page.tsx` — login direto sem verificacao. Nunca habilitar em producao
 - **Audit**: Campos CPF/RG mascarados nos logs (ex: ***.456.789-**)
 - **Self-service**: Ownership check no backend (membro.userId === ctx.auth.userId)

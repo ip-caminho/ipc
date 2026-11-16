@@ -2,7 +2,7 @@
 
 ## Visao Geral
 
-Pagina administrativa para gestao de permissoes (RBAC) e convites de acesso. Exclusiva para administradores, oferece duas abas: uma matriz interativa de permissoes por role e uma ferramenta de geracao de links de convite. O sistema RBAC suporta 3 roles iniciais (admin, secretaria, membro) sem heranca entre roles, exceto o obreiro, que herda tudo o que o papel membro tem (ver "Resolucao de Permissoes"). As permissoes sao explicitas e podem ser personalizadas por membro individual.
+Pagina administrativa para gestao de permissoes (RBAC) e convites de acesso. Exclusiva para administradores, oferece duas abas: uma matriz interativa de permissoes por role e uma ferramenta de geracao de links de convite. O sistema RBAC suporta 3 roles iniciais (admin, secretaria, membro) com uma unica heranca: toda pessoa herda tudo o que o papel membro tem, com ou sem permissoes personalizadas (ver "Resolucao de Permissoes"). As permissoes sao explicitas e podem ser personalizadas por membro individual.
 
 Rota: `/admin/permissoes`
 
@@ -80,7 +80,7 @@ Prioridade de resolucao:
 2. Permissoes do role no banco (tabela `rolePermissions`)
 3. Defaults hardcoded (`INITIAL_ROLE_PERMISSIONS`)
 
-Excecao: o papel `obreiro` herda o papel `membro`. As permissoes efetivas de um obreiro sao as dele (resolvidas como acima) unidas as da linha `membro` de `rolePermissions` (ou `INITIAL_ROLE_PERMISSIONS.membro` se nao houver linha). A uniao e calculada na leitura (`withMembroInheritance` no backend, `mergeMembroInheritance` no frontend) e nunca e gravada; na matriz as permissoes herdadas aparecem marcadas e travadas, e `setMembroPermission` recusa remove-las de um obreiro.
+Heranca: toda pessoa herda o papel `membro` (admin ja tem `*`; o membro sem permissoes personalizadas ja tem a linha do proprio papel). As permissoes efetivas sao as dela (resolvidas como acima) unidas as da linha `membro` de `rolePermissions` (ou `INITIAL_ROLE_PERMISSIONS.membro` se nao houver linha). A uniao e calculada na leitura (`withMembroInheritance` no backend, `mergeMembroInheritance` no frontend) e nunca e gravada; na matriz as permissoes herdadas aparecem marcadas e travadas, e `setMembroPermission` recusa remove-las de qualquer pessoa.
 
 #### Verificacao (`hasPermission`)
 - Suporta wildcard `"*"` — retorna `true` para qualquer permissao.
@@ -135,7 +135,7 @@ Excecao: o papel `obreiro` herda o papel `membro`. As permissoes efetivas de um 
 
 ## Notas Tecnicas
 
-- O sistema nao tem heranca de roles, exceto obreiro herdando membro (ver "Resolucao de Permissoes"); fora isso as permissoes sao explicitas.
+- O sistema nao tem heranca de roles, exceto todo mundo herdar do membro (ver "Resolucao de Permissoes"); fora isso as permissoes sao explicitas.
 - `VISIBLE_ROLES` exclui admin tanto no frontend quanto no backend.
 - A tabela `rolePermissions` armazena permissoes customizadas por role; se nao existir registro, usa `INITIAL_ROLE_PERMISSIONS`.
 - Quando um membro recebe permissao customizada via `setMembroPermission`, se ele nao tinha customizacoes antes, o sistema copia as permissoes do role como base e aplica a alteracao.
