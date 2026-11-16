@@ -78,7 +78,7 @@ function MembrosTab() {
   // @ts-ignore Convex TS2589
   const membros = useQuery(api.preferencias.rbac.getAllMembrosWithPermissions);
   const volunteerSets = useQuery(api.preferencias.rbac.getVolunteerPermissionSets);
-  // Lista própria de cada papel; a entrada "membro" diz o que o obreiro herda.
+  // Lista própria de cada papel; a entrada "membro" diz o que todo mundo herda.
   // @ts-ignore Convex TS2589
   const rolesWithPermissions = useQuery(api.preferencias.rbac.getAllRolesWithPermissions) as
     | { role: string; permissions: string[] }[]
@@ -106,7 +106,7 @@ function MembrosTab() {
   // Permissão herdada do papel Membro: não dá para desmarcar por membro.
   const membroRolePerms = rolesWithPermissions.find((r) => r.role === "membro")?.permissions ?? [];
   const isInherited = (role: string, perm: string) =>
-    inheritsFromMembro(role) && membroRolePerms.includes(perm);
+    inheritsFromMembro(role, true) && membroRolePerms.includes(perm);
 
   const handleRoleChange = async (membroId: string, role: string) => {
     try {

@@ -62,14 +62,20 @@ const ROLE_COLORS: Record<string, string> = {
 
 const INHERITED_TITLE = "Herdada do papel Membro";
 
-// Permissão herdada: o papel herda do membro e a entrada "membro" (conjunto
-// efetivo do mapa) a contém. Não dá para desmarcar por papel nem por membro.
+// Permissão herdada: todo mundo herda do membro (menos admin) e a entrada
+// "membro" (conjunto efetivo do mapa) a contém. Não dá para desmarcar por papel
+// nem por membro. `hasSnapshot` true vale para uma pessoa (o popover por membro);
+// false vale para a coluna do papel, que deixa a coluna Membro editável.
 function isInheritedPermission(
   role: string,
   permission: string,
-  rolePermsMap: Map<string, Set<string>>
+  rolePermsMap: Map<string, Set<string>>,
+  hasSnapshot: boolean
 ): boolean {
-  return inheritsFromMembro(role) && (rolePermsMap.get("membro")?.has(permission) ?? false);
+  return (
+    inheritsFromMembro(role, hasSnapshot) &&
+    (rolePermsMap.get("membro")?.has(permission) ?? false)
+  );
 }
 
 const VISIBLE_ROLES = ["membro", "obreiro", "secretaria", "secretario_executivo", "presbitero", "pastor"];
@@ -203,10 +209,10 @@ function MembroPermissionPopover({
                     }
                     disabled={
                       isCheckboxPending ||
-                      isInheritedPermission(m.role, permission, rolePermsMap)
+                      isInheritedPermission(m.role, permission, rolePermsMap, true)
                     }
                     title={
-                      isInheritedPermission(m.role, permission, rolePermsMap)
+                      isInheritedPermission(m.role, permission, rolePermsMap, true)
                         ? INHERITED_TITLE
                         : undefined
                     }
@@ -247,12 +253,12 @@ export function PermissionMatrix() {
 
   const rolePermsMap = useMemo(() => {
     if (!rolesWithPermissions) return new Map<string, Set<string>>();
-    // Conjunto efetivo: o obreiro inclui o que herda do papel membro.
+    // Conjunto efetivo: todo papel (menos membro e admin) inclui o que herda do papel membro.
     const membroPerms = rolesWithPermissions.find((r) => r.role === "membro")?.permissions;
     return new Map(
       rolesWithPermissions.map((r) => [
         r.role,
-        new Set(mergeMembroInheritance(r.role, r.permissions, membroPerms)),
+        new Set(mergeMembroInheritance(r.role, r.permissions, membroPerms, false)),
       ])
     );
   }, [rolesWithPermissions]);
@@ -407,7 +413,7 @@ export function PermissionMatrix() {
                     {perms.map((perm) => {
                       const isChecked = getRoleCheckboxState(mobileRole, perm.key);
                       const pending = isRoleCheckboxPending(mobileRole, perm.key);
-                      const inherited = isInheritedPermission(mobileRole, perm.key, rolePermsMap);
+                      const inherited = isInheritedPermission(mobileRole, perm.key, rolePermsMap, false);
                       const customCount = membrosWithPermissions.filter((m) => {
                         if (m.role === "admin") return false;
                         const has = m.permissions.includes(perm.key);
@@ -541,7 +547,7 @@ export function PermissionMatrix() {
                         {VISIBLE_ROLES.map((role) => {
                           const isChecked = getRoleCheckboxState(role, perm.key);
                           const pending = isRoleCheckboxPending(role, perm.key);
-                          const inherited = isInheritedPermission(role, perm.key, rolePermsMap);
+                          const inherited = isInheritedPermission(role, perm.key, rolePermsMap, false);
                           return (
                             <TableCell key={`${perm.key}-${role}`} className="text-center">
                               <div className={cn(pending && "opacity-50")}>

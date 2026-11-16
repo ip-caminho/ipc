@@ -70,7 +70,7 @@ export function PermissionsProvider({
     // Simulacao: usa as permissoes reais do papel (banco); cai na constante do
     // codigo so como fallback (enquanto carrega ou papel nao retornado).
     const dbPerms = rolesPerms?.find((r) => r.role === impersonatedRole)?.permissions;
-    // Obreiro herda do papel membro: une a entrada "membro" (undefined enquanto
+    // Todo papel (menos admin) herda do papel membro: une a entrada "membro" (undefined enquanto
     // carrega, o que cai na constante). O usuario real ja recebe a uniao do backend.
     const membroDbPerms = rolesPerms?.find((r) => r.role === "membro")?.permissions;
     const permissions = isImpersonating
@@ -78,7 +78,8 @@ export function PermissionsProvider({
           mergeMembroInheritance(
             impersonatedRole,
             dbPerms ?? INITIAL_ROLE_PERMISSIONS[impersonatedRole] ?? [],
-            membroDbPerms
+            membroDbPerms,
+            false
           )
         )
       : new Set(data?.permissions ?? []);
