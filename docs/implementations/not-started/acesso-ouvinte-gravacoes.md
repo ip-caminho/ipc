@@ -36,6 +36,7 @@ mas duplica auth, status-check e UI de gestão. Over-engineering para o caso.
 | `membros` | **Adicionar** `acessoExpiraEm: v.optional(v.number())` (timestamp da virada do ano — validade do ouvinte). Registro com `role: "ouvinte"`, `permissions` herdadas do role |
 | `membroConvites` | Nenhuma — reusa fluxo `gerarLink` (`origem: "link"`) |
 | RBAC (`INITIAL_ROLE_PERMISSIONS`) | Adicionar entrada `ouvinte: ["gravacoes:read"]` |
+| RBAC (`inheritsFromMembro`) | **Excluir `ouvinte` da herança do papel membro** (#372: todo papel herda o membro por padrão). Sem isso o ouvinte ganha `membros:self_service`, pedidos de oração, calendário e louvor |
 
 Migração mínima de schema: novo campo opcional `acessoExpiraEm` em `membros`
 (toca `convex/schema.ts` — arquivo sensível). Demais mudanças são em código.
