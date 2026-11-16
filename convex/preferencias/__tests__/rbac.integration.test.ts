@@ -302,13 +302,23 @@ describe("RBAC — obreiro herda as permissões do papel membro", () => {
     const depois = await t.run(async (ctx) => ctx.db.get(obreiro.membroId));
     expect(depois!.permissions ?? []).toEqual([]);
 
+    // Linha do obreiro com duas permissões próprias: remover uma delas (não
+    // herdada) grava o snapshot com a outra, e a herança segue somada.
+    await t.run(async (ctx) => {
+      const linha = await ctx.db
+        .query("rolePermissions")
+        .withIndex("by_role", (q) => q.eq("role", "obreiro"))
+        .first();
+      await ctx.db.patch(linha!._id, { permissions: ["membros:read", "tarefas:read"] });
+    });
     await asAdmin.mutation(api.preferencias.rbac.setMembroPermission, {
       membroId: obreiro.membroId,
       permission: "membros:read",
       hasPermission: false,
     });
     const gravado = await t.run(async (ctx) => ctx.db.get(obreiro.membroId));
-    expect(gravado!.permissions).toBeDefined();
-    expect(gravado!.permissions).not.toContain("membros:read");
+    expect(gravado!.permissions).toEqual(["tarefas:read"]);
+    const perms = await ctxPerms(t, obreiro.userId);
+    expect([...perms].sort()).toEqual(["gravacoes:read", "tarefas:read"]);
   });
 });
