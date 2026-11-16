@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import {
   INITIAL_ROLE_PERMISSIONS,
+  inheritsFromMembro,
+  mergeMembroInheritance,
   resolvePermissions,
   hasPermission,
   togglePermission,
@@ -116,5 +118,68 @@ describe("togglePermission", () => {
     const original = ["a", "b"];
     togglePermission(original, "c", true);
     expect(original).toEqual(["a", "b"]);
+  });
+});
+
+describe("herança do papel membro pelo obreiro", () => {
+  it("U1: constante do obreiro contém gravacoes:read", () => {
+    expect(INITIAL_ROLE_PERMISSIONS.obreiro).toContain("gravacoes:read");
+  });
+
+  it("U2: inheritsFromMembro é true só para obreiro", () => {
+    expect(inheritsFromMembro("obreiro")).toBe(true);
+    for (const role of [
+      "membro",
+      "presbitero",
+      "pastor",
+      "secretaria",
+      "secretario_executivo",
+      "admin",
+      "papel_inexistente",
+    ]) {
+      expect(inheritsFromMembro(role)).toBe(false);
+    }
+  });
+
+  it("U3: une sem duplicata, base primeiro", () => {
+    expect(
+      mergeMembroInheritance("obreiro", ["membros:read"], [
+        "gravacoes:read",
+        "membros:read",
+      ])
+    ).toEqual(["membros:read", "gravacoes:read"]);
+  });
+
+  it("U4: sem linha do membro cai na constante do membro", () => {
+    const result = mergeMembroInheritance("obreiro", ["membros:read"], undefined);
+    expect(new Set(result)).toEqual(
+      new Set(["membros:read", ...INITIAL_ROLE_PERMISSIONS.membro])
+    );
+  });
+
+  it("U5: linha do membro vazia vale como vazia", () => {
+    expect(mergeMembroInheritance("obreiro", ["membros:read"], [])).toEqual([
+      "membros:read",
+    ]);
+  });
+
+  it("U6: papéis que não herdam devolvem a própria base", () => {
+    for (const role of ["presbitero", "secretario_executivo"]) {
+      const base = ["membros:read"];
+      expect(mergeMembroInheritance(role, base, ["gravacoes:read"])).toBe(base);
+    }
+  });
+
+  it("U7: base com * devolve a própria base", () => {
+    const base = ["*"];
+    expect(mergeMembroInheritance("obreiro", base, ["gravacoes:read"])).toBe(base);
+  });
+
+  it("U8: não muta os arrays de entrada", () => {
+    const base = ["membros:read"];
+    const membro = ["gravacoes:read"];
+    mergeMembroInheritance("obreiro", base, membro);
+    expect(base).toEqual(["membros:read"]);
+    expect(membro).toEqual(["gravacoes:read"]);
   });
 });

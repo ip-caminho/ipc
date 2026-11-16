@@ -95,6 +95,8 @@ export const INITIAL_ROLE_PERMISSIONS: Record<string, string[]> = {
     "ausencias:read", "ausencias:manage",
     // Avisos (obreiro lanca avisos do domingo)
     "avisos:create",
+    // Gravações (obreiro herda do membro; constante coerente com o fallback)
+    "gravacoes:read",
     // Tarefas
     "tarefas:read", "tarefas:create", "tarefas:update",
   ],
@@ -261,6 +263,31 @@ export function resolvePermissions(
     return membroPermissions;
   }
   return rolePermissionsFromDb ?? INITIAL_ROLE_PERMISSIONS[role] ?? [];
+}
+
+/**
+ * Papel que herda as permissões do papel "membro". Único lugar que nomeia
+ * o papel que herda.
+ */
+export function inheritsFromMembro(role: string): boolean {
+  return role === "obreiro";
+}
+
+/**
+ * Une a base de permissões de um papel que herda do membro com as permissões
+ * da linha do papel "membro" (lidas do banco). Pura: não muta os argumentos e
+ * devolve a própria `base` quando o papel não herda ou quando ela tem "*".
+ * `membroRolePermsFromDb` undefined (sem linha) cai em INITIAL_ROLE_PERMISSIONS.membro;
+ * lista vazia vale como vazia.
+ */
+export function mergeMembroInheritance(
+  role: string,
+  base: string[],
+  membroRolePermsFromDb: string[] | undefined
+): string[] {
+  if (!inheritsFromMembro(role) || base.includes("*")) return base;
+  const inherited = membroRolePermsFromDb ?? INITIAL_ROLE_PERMISSIONS.membro ?? [];
+  return Array.from(new Set([...base, ...inherited]));
 }
 
 /**
