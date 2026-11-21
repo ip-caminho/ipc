@@ -95,7 +95,7 @@ export const verificarAcessoDireto = mutation({
     }
 
     // Compara so os digitos (E164) dos dois lados: robusto a formatacao
-    // (ex: "(11) 94208-8102" no cadastro vs "11942088102" digitado).
+    // (ex: "(11) 99999-1111" no cadastro vs "11999991111" digitado).
     // Casa contra whatsapp OU telefone fixo (o numero pode estar em qualquer um).
     const alvoDigits = normalizeToE164(telefone).replace(/\D/g, "");
     const soDigitos = (v?: string) => (v ? normalizeToE164(v).replace(/\D/g, "") : "");
