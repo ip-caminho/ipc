@@ -264,3 +264,28 @@ describe("biblioteca.importacao.removerLivroDeTeste", () => {
     expect(livro).not.toBeNull();
   });
 });
+
+describe("biblioteca.importacao.gravarCapas", () => {
+  it("grava a capa nova e ignora livro que nao existe mais", async () => {
+    const t = convexTest(schema, modules);
+    const [livroId, apagadoId] = await t.run(async (ctx) => {
+      const base = { ...livroBase, idioma: "Portugues", criadoEm: 0 };
+      const a = await ctx.db.insert("livros", { ...base, capaUrl: "https://cdn.yhc.com.br/biblioteca-capas/pequena.jpg" });
+      const b = await ctx.db.insert("livros", base);
+      await ctx.db.delete(b);
+      return [a, b];
+    });
+
+    const nova = "https://cdn.yhc.com.br/biblioteca-capas/grande.jpg";
+    const r = await t.mutation(internal.biblioteca.importacao.gravarCapas, {
+      trocas: [
+        { livroId, capaUrl: nova },
+        { livroId: apagadoId, capaUrl: nova },
+      ],
+    });
+
+    expect(r).toEqual({ gravadas: 1, ausentes: [apagadoId] });
+    const livro = await t.run((ctx) => ctx.db.get(livroId));
+    expect(livro?.capaUrl).toBe(nova);
+  });
+});
