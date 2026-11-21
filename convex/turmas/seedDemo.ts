@@ -444,14 +444,14 @@ export const seedConsultaInstrutorDemo = internalMutation({
     const perguntas = [
       {
         id: "tempo_igreja",
-        label: "Ha quanto tempo voce frequenta a Igreja Presbiteriana do Caminho?",
+        label: "Há quanto tempo você frequenta a Igreja Presbiteriana do Caminho?",
         obrigatorio: true,
         tipo: "ESCOLHA_UNICA" as const,
         opcoes: ["Menos de 3 meses", "Entre 3 meses e 1 ano", "Mais de 1 ano"],
       },
       {
         id: "motivacao",
-        label: "O que motivou voce a se inscrever neste estudo?",
+        label: "O que motivou você a se inscrever neste estudo?",
         obrigatorio: true,
         tipo: "ESCOLHA_MULTIPLA" as const,
         opcoes: [
@@ -462,7 +462,7 @@ export const seedConsultaInstrutorDemo = internalMutation({
       },
       {
         id: "expectativa",
-        label: "O que voce espera aprender com este estudo?",
+        label: "O que você espera aprender com este estudo?",
         obrigatorio: false,
         tipo: "TEXTO_LONGO" as const,
       },
@@ -498,13 +498,13 @@ export const seedConsultaInstrutorDemo = internalMutation({
         nome: "Ana Beatriz Ferreira",
         tempo: "Mais de 1 ano",
         motivos: ["Desejo professar publicamente minha fe em Cristo", "Quero ser batizado(a)"],
-        texto: "Quero entender melhor a doutrina antes de professar minha fe.",
+        texto: "Quero entender melhor a doutrina antes de professar minha fé.",
       },
       {
         nome: "Carlos Eduardo Lima",
         tempo: "Menos de 3 meses",
         motivos: ["Quero conhecer mais sobre a fe crista"],
-        texto: "Comecei a frequentar agora e quero conhecer o basico.",
+        texto: "Comecei a frequentar agora e quero conhecer o básico.",
       },
       {
         nome: "Joana Ribeiro dos Santos",

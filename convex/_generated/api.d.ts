@@ -129,6 +129,7 @@ import type * as membros_updatePhotos from "../membros/updatePhotos.js";
 import type * as migration_limparPapeisPessoa from "../migration/limparPapeisPessoa.js";
 import type * as migration_mutations from "../migration/mutations.js";
 import type * as migration_queries from "../migration/queries.js";
+import type * as migration_textosAcentos from "../migration/textosAcentos.js";
 import type * as migration_vinculoIgreja from "../migration/vinculoIgreja.js";
 import type * as ministerios_mutations from "../ministerios/mutations.js";
 import type * as ministerios_queries from "../ministerios/queries.js";
@@ -308,6 +309,7 @@ declare const fullApi: ApiFromModules<{
   "migration/limparPapeisPessoa": typeof migration_limparPapeisPessoa;
   "migration/mutations": typeof migration_mutations;
   "migration/queries": typeof migration_queries;
+  "migration/textosAcentos": typeof migration_textosAcentos;
   "migration/vinculoIgreja": typeof migration_vinculoIgreja;
   "ministerios/mutations": typeof ministerios_mutations;
   "ministerios/queries": typeof ministerios_queries;
